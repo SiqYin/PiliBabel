@@ -2,10 +2,6 @@ import 'dart:async';
 
 import 'package:PiliPlus/common/widgets/refresh_indicator.dart';
 import 'package:PiliPlus/http/loading_state.dart';
-import 'package:PiliPlus/models/common/tab_type.dart';
-import 'package:PiliPlus/pages/common/common_controller.dart';
-import 'package:PiliPlus/pages/live/controller.dart';
-import 'package:PiliPlus/pages/live/widgets/live_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
@@ -20,9 +16,7 @@ import '../../utils/grid.dart';
 import 'controller.dart';
 
 class RcmdPage extends StatefulWidget {
-  const RcmdPage({super.key, required this.tabType});
-
-  final TabType tabType;
+  const RcmdPage({super.key});
 
   @override
   State<RcmdPage> createState() => _RcmdPageState();
@@ -30,9 +24,7 @@ class RcmdPage extends StatefulWidget {
 
 class _RcmdPageState extends State<RcmdPage>
     with AutomaticKeepAliveClientMixin {
-  late final CommonController _controller = widget.tabType == TabType.rcmd
-      ? Get.put<RcmdController>(RcmdController())
-      : Get.put<LiveController>(LiveController());
+  late final _controller = Get.put(RcmdController());
 
   @override
   bool get wantKeepAlive => true;
@@ -124,70 +116,59 @@ class _RcmdPageState extends State<RcmdPage>
               index == loadingState.response.length - 1) {
             _controller.onLoadMore();
           }
-          if (widget.tabType == TabType.rcmd) {
-            if (loadingState is Success) {
-              RcmdController ctr = _controller as RcmdController;
-              if (ctr.savedRcmdTip) {
-                if (ctr.lastRefreshAt == index) {
-                  return GestureDetector(
-                    onTap: () {
-                      _controller.animateToTop();
-                      _controller.onRefresh();
-                    },
-                    child: Card(
-                      child: Container(
-                        alignment: Alignment.center,
-                        padding: const EdgeInsets.symmetric(horizontal: 10),
-                        child: Text(
-                          '上次看到这里\n点击刷新',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
+          if (loadingState is Success) {
+            if (_controller.lastRefreshAt != null) {
+              if (_controller.lastRefreshAt == index) {
+                return GestureDetector(
+                  onTap: () {
+                    _controller.animateToTop();
+                    _controller.onRefresh();
+                  },
+                  child: Card(
+                    child: Container(
+                      alignment: Alignment.center,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Text(
+                        '上次看到这里\n点击刷新',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
                     ),
-                  );
-                }
-                int actualIndex = ctr.lastRefreshAt == null
-                    ? index
-                    : index > ctr.lastRefreshAt!
-                        ? index - 1
-                        : index;
-                return VideoCardV(
-                  videoItem: loadingState.response[actualIndex],
-                  onRemove: () {
-                    if (ctr.lastRefreshAt != null &&
-                        actualIndex < ctr.lastRefreshAt!) {
-                      ctr.lastRefreshAt = ctr.lastRefreshAt! - 1;
-                    }
-                    _controller.loadingState.value = LoadingState.success(
-                        (loadingState.response as List)..removeAt(actualIndex));
-                  },
-                );
-              } else {
-                return VideoCardV(
-                  videoItem: loadingState.response[index],
-                  onRemove: () {
-                    _controller.loadingState.value = LoadingState.success(
-                        (loadingState.response as List)..removeAt(index));
-                  },
+                  ),
                 );
               }
+              int actualIndex = _controller.lastRefreshAt == null
+                  ? index
+                  : index > _controller.lastRefreshAt!
+                      ? index - 1
+                      : index;
+              return VideoCardV(
+                videoItem: loadingState.response[actualIndex],
+                onRemove: () {
+                  if (_controller.lastRefreshAt != null &&
+                      actualIndex < _controller.lastRefreshAt!) {
+                    _controller.lastRefreshAt = _controller.lastRefreshAt! - 1;
+                  }
+                  _controller.loadingState.value = LoadingState.success(
+                      (loadingState.response as List)..removeAt(actualIndex));
+                },
+              );
+            } else {
+              return VideoCardV(
+                videoItem: loadingState.response[index],
+                onRemove: () {
+                  _controller.loadingState.value = LoadingState.success(
+                      (loadingState.response as List)..removeAt(index));
+                },
+              );
             }
-            return const VideoCardVSkeleton();
-          } else {
-            return loadingState is Success
-                ? LiveCardV(
-                    liveItem: loadingState.response[index],
-                  )
-                : const VideoCardVSkeleton();
           }
+          return const VideoCardVSkeleton();
         },
         childCount: loadingState is Success
-            ? widget.tabType == TabType.rcmd &&
-                    (_controller as RcmdController).lastRefreshAt != null
+            ? _controller.lastRefreshAt != null
                 ? loadingState.response.length + 1
                 : loadingState.response.length
             : 10,
