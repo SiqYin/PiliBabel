@@ -22,7 +22,7 @@ class LiveCardV extends StatelessWidget {
       clipBehavior: Clip.hardEdge,
       margin: EdgeInsets.zero,
       child: InkWell(
-        onTap: () async {
+        onTap: () {
           Get.toNamed('/liveRoom?roomid=${liveItem.roomId}',
               arguments: {'liveItem': liveItem, 'heroTag': heroTag});
         },
