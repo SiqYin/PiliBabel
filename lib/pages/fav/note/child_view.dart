@@ -149,6 +149,9 @@ class _FavNoteChildPageState extends State<FavNoteChildPage>
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
+                    if (index == loadingState.response.length - 1) {
+                      _favNoteController.onLoadMore();
+                    }
                     return FavNoteItem(
                       item: loadingState.response[index],
                       ctr: _favNoteController,

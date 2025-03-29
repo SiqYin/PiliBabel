@@ -1,8 +1,5 @@
-import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/pages/fav/note/child_view.dart';
-import 'package:PiliPlus/pages/fav/note/controller.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 
 class FavNotePage extends StatefulWidget {
   const FavNotePage({super.key});
@@ -62,30 +59,30 @@ class _FavNotePageState extends State<FavNotePage>
                 ],
               ),
             ),
-            TextButton(
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
-                visualDensity: VisualDensity(horizontal: -2, vertical: -2),
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              onPressed: () async {
-                final favNoteController = Get.find<FavNoteController>(
-                    tag: _tabController.index == 0 ? 'false' : 'true');
-                if (favNoteController.enableMultiSelect.value) {
-                  favNoteController.onDisable();
-                } else {
-                  if (favNoteController.loadingState.value is Success &&
-                      ((favNoteController.loadingState.value as Success)
-                                  .response as List?)
-                              ?.isNotEmpty ==
-                          true) {
-                    favNoteController.enableMultiSelect.value = true;
-                  }
-                }
-              },
-              child: const Text('管理'),
-            ),
-            const SizedBox(width: 12),
+            // TextButton(
+            //   style: TextButton.styleFrom(
+            //     foregroundColor: Theme.of(context).colorScheme.onSurfaceVariant,
+            //     visualDensity: VisualDensity(horizontal: -2, vertical: -2),
+            //     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            //   ),
+            //   onPressed: () async {
+            //     final favNoteController = Get.find<FavNoteController>(
+            //         tag: _tabController.index == 0 ? 'false' : 'true');
+            //     if (favNoteController.enableMultiSelect.value) {
+            //       favNoteController.onDisable();
+            //     } else {
+            //       if (favNoteController.loadingState.value is Success &&
+            //           ((favNoteController.loadingState.value as Success)
+            //                       .response as List?)
+            //                   ?.isNotEmpty ==
+            //               true) {
+            //         favNoteController.enableMultiSelect.value = true;
+            //       }
+            //     }
+            //   },
+            //   child: const Text('管理'),
+            // ),
+            // const SizedBox(width: 12),
           ],
         ),
         Expanded(
