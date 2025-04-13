@@ -8,7 +8,7 @@ import 'controller.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart';
 
 class EmotePanel extends StatefulWidget {
-  final Function onChoose;
+  final ValueChanged<Emote> onChoose;
   const EmotePanel({super.key, required this.onChoose});
 
   @override
@@ -60,7 +60,7 @@ class _EmotePanelState extends State<EmotePanel>
                                 child: InkWell(
                                   borderRadius: BorderRadius.circular(8),
                                   onTap: () {
-                                    widget.onChoose(e, e.emote![index]);
+                                    widget.onChoose(e.emote![index]);
                                   },
                                   child: Padding(
                                     padding: const EdgeInsets.all(6),
