@@ -1,6 +1,6 @@
 import 'package:PiliPlus/grpc/bilibili/app/im/v1.pb.dart'
-    show SessionMainReply, Session, Offset, SessionPageType;
-import 'package:PiliPlus/grpc/grpc_repo.dart';
+    show Offset, Session, SessionId, SessionMainReply, SessionPageType;
+import 'package:PiliPlus/grpc/im.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/msg.dart';
 import 'package:PiliPlus/models/msg/msgfeed_unread.dart';
@@ -74,7 +74,7 @@ class WhisperController
 
   @override
   Future<LoadingState<SessionMainReply>> customGetData() =>
-      MsgHttp.sessionMain(offset: offset);
+      ImGrpc.sessionMain(offset: offset);
 
   @override
   Future<void> onRefresh() {
@@ -94,13 +94,13 @@ class WhisperController
     }
   }
 
-  Future<void> onSetTop(int index, bool isTop, int? talkerId) async {
-    var res = await MsgHttp.setTop(
-      talkerId: talkerId,
-      opType: isTop ? 1 : 0,
-    );
+  Future<void> onSetTop(int index, bool isTop, SessionId sessionId) async {
+    var res = isTop
+        ? await ImGrpc.unpinSession(sessionId: sessionId)
+        : await ImGrpc.pinSession(sessionId: sessionId);
+
     if (res['status']) {
-      List<Session> list = (loadingState.value as Success).response;
+      List<Session> list = loadingState.value.data!;
       list[index].isPinned = isTop ? false : true;
       if (!isTop) {
         list.insert(0, list.removeAt(index));
@@ -121,7 +121,7 @@ class WhisperController
   }
 
   Future<void> onClearUnread() async {
-    final res = await GrpcRepo.clearUnread(
+    final res = await ImGrpc.clearUnread(
         pageType: SessionPageType.SESSION_PAGE_TYPE_HOME);
     if (res['status']) {
       if (loadingState.value is Success) {
