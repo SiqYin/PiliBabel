@@ -20,9 +20,7 @@ Widget liveRcmdPanel(
   if (liveRcmd == null) {
     return const SizedBox.shrink();
   }
-  int? liveStatus = liveRcmd.liveStatus;
-  Map? watchedShow = liveRcmd.watchedShow;
-  TextSpan? richNodes = richNode(theme, item, context);
+  late TextSpan? richNodes = richNode(theme, item, context);
   late final authorStyle = TextStyle(color: theme.colorScheme.primary);
   return Column(
     crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,13 +95,13 @@ Widget liveRcmdPanel(
                     ),
                   ),
                   PBadge(
-                    text: watchedShow?['text_large'],
+                    text: liveRcmd.watchedShow?.textLarge,
                     top: 6,
                     right: 56,
                     type: PBadgeType.gray,
                   ),
                   PBadge(
-                    text: liveStatus == 1 ? '直播中' : '直播结束',
+                    text: liveRcmd.liveStatus == 1 ? '直播中' : '直播结束',
                     top: 6,
                     right: 6,
                   ),
