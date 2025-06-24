@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:math';
 
+import 'package:PiliPlus/common/widgets/draggable_sheet/draggable_scrollable_sheet_topic.dart'
+    as topic_sheet;
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models_new/dynamic/dyn_topic_top/topic_item.dart';
@@ -19,6 +22,34 @@ class SelectTopicPanel extends StatefulWidget {
 
   final ScrollController? scrollController;
   final ValueChanged<double>? callback;
+
+  static Future<TopicItem?> onSelectTopic(
+    BuildContext context, {
+    double offset = 0,
+    ValueChanged<double>? callback,
+  }) {
+    return showModalBottomSheet<TopicItem?>(
+      context: Get.context!,
+      useSafeArea: true,
+      isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxWidth: min(600, context.mediaQueryShortestSide),
+      ),
+      builder: (context) => topic_sheet.DraggableScrollableSheet(
+        expand: false,
+        snap: true,
+        minChildSize: 0,
+        maxChildSize: 1,
+        initialChildSize: offset == 0 ? 0.65 : 1,
+        initialScrollOffset: offset,
+        snapSizes: const [0.65],
+        builder: (context, scrollController) => SelectTopicPanel(
+          scrollController: scrollController,
+          callback: callback,
+        ),
+      ),
+    );
+  }
 
   @override
   State<SelectTopicPanel> createState() => _SelectTopicPanelState();
