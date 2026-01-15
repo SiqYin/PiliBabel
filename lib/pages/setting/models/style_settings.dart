@@ -776,13 +776,13 @@ void _showQualityDialog({
   });
 }
 
-const _minUiScale = 0.5;
-const _maxUiScale = 2.0;
-
 void _showUiScaleDialog(
   BuildContext context,
   VoidCallback setState,
 ) {
+  const minUiScale = 0.5;
+  const maxUiScale = 2.0;
+
   double uiScale = Pref.uiScale;
   final textController = TextEditingController(
     text: uiScale.toStringAsFixed(2),
@@ -804,10 +804,10 @@ void _showUiScaleDialog(
                 Slider(
                   padding: .zero,
                   value: uiScale,
-                  min: _minUiScale,
-                  max: _maxUiScale,
+                  min: minUiScale,
+                  max: maxUiScale,
                   secondaryTrackValue: 1.0,
-                  divisions: ((_maxUiScale - _minUiScale) * 20).toInt(),
+                  divisions: ((maxUiScale - minUiScale) * 20).toInt(),
                   label: textController.text,
                   onChanged: (value) => setDialogState(() {
                     uiScale = value.toPrecision(2);
@@ -831,8 +831,8 @@ void _showUiScaleDialog(
                   onChanged: (value) {
                     final parsed = double.tryParse(value);
                     if (parsed != null &&
-                        parsed >= _minUiScale &&
-                        parsed <= _maxUiScale) {
+                        parsed >= minUiScale &&
+                        parsed <= maxUiScale) {
                       setDialogState(() {
                         uiScale = parsed;
                       });

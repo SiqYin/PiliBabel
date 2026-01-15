@@ -303,14 +303,9 @@ class AuthorPanel extends StatelessWidget {
               ),
               if (bvid != null)
                 ListTile(
-                  onTap: () async {
+                  onTap: () {
                     Get.back();
-                    try {
-                      final res = await UserHttp.toViewLater(bvid: bvid);
-                      SmartDialog.showToast(res['msg']);
-                    } catch (err) {
-                      SmartDialog.showToast('出错了：${err.toString()}');
-                    }
+                    UserHttp.toViewLater(bvid: bvid);
                   },
                   minLeadingWidth: 0,
                   leading: const Icon(Icons.watch_later_outlined, size: 19),

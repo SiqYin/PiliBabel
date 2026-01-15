@@ -173,8 +173,8 @@ abstract final class DynamicsHttp {
       queryParameters: {
         'platform': 'web',
         'csrf': Accounts.main.csrf,
-        'x-bili-device-req-json': {"platform": "web", "device": "pc"},
-        'x-bili-web-req-json': {"spm_id": "333.999"},
+        'x-bili-device-req-json': '{"platform": "web", "device": "pc"}',
+        'x-bili-web-req-json': '{"spm_id": "333.999"}',
       },
       data: {
         "dyn_req": {

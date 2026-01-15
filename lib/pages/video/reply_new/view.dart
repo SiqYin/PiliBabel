@@ -9,6 +9,7 @@ import 'package:PiliPlus/common/widgets/flutter/text_field/text_field.dart';
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show ReplyInfo;
+import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/main.dart';
 import 'package:PiliPlus/models/common/publish_panel_type.dart';
@@ -416,7 +417,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
       }
     }
     String message = editController.rawText;
-    final result = await VideoHttp.replyAdd(
+    final res = await VideoHttp.replyAdd(
       type: widget.replyType,
       oid: widget.oid,
       root: widget.root,
@@ -428,12 +429,12 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
       pictures: pictures,
       syncToDynamic: _syncToDynamic.value,
     );
-    if (result['status']) {
+    if (res case Success(:final response)) {
       hasPub = true;
-      SmartDialog.showToast(result['data']['success_toast']);
-      Get.back(result: result['data']['reply']);
+      SmartDialog.showToast(response['success_toast']);
+      Get.back(result: response['reply']);
     } else {
-      SmartDialog.showToast(result['msg']);
+      res.toast();
     }
   }
 }
