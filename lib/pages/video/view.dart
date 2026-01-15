@@ -1602,7 +1602,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                       src: videoDetailController.cover.value,
                       width: width,
                       height: height,
-                      forceUseCacheWidth: true,
+                      cacheWidth: true,
                       getPlaceHolder: () => Center(
                         child: Image.asset('assets/images/loading.png'),
                       ),

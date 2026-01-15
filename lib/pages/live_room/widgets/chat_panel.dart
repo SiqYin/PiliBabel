@@ -234,11 +234,7 @@ class LiveRoomChatPanel extends StatelessWidget {
           src: uemote.url,
           type: ImageType.emote,
           width: isUpower ? uemote.width : uemote.width / devicePixelRatio,
-          height: uemote.height == null
-              ? null
-              : isUpower
-              ? uemote.height!
-              : uemote.height! / devicePixelRatio,
+          height: isUpower ? uemote.height : uemote.height / devicePixelRatio,
         ),
       );
     }
