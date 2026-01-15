@@ -124,9 +124,11 @@ class _InteractiveviewerGalleryState extends State<InteractiveviewerGallery>
       ..removeListener(listener)
       ..dispose();
     _transformationController.dispose();
-    for (final item in widget.sources) {
-      if (item.sourceType == SourceType.networkImage) {
-        CachedNetworkImageProvider(_getActualUrl(item.url)).evict();
+    if (widget.quality != _quality) {
+      for (final item in widget.sources) {
+        if (item.sourceType == SourceType.networkImage) {
+          CachedNetworkImageProvider(_getActualUrl(item.url)).evict();
+        }
       }
     }
     super.dispose();

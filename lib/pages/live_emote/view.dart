@@ -75,6 +75,7 @@ class _LiveEmotePanelState extends State<LiveEmotePanel>
                           final width = widthFac * 38;
                           final height = heightFac * 38;
                           return GridView.builder(
+                            physics: const ClampingScrollPhysics(),
                             padding: const EdgeInsets.only(
                               left: 12,
                               right: 12,

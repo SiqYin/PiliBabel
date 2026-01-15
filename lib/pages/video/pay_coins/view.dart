@@ -82,7 +82,7 @@ class _PayCoinsPageState extends State<PayCoinsPage>
 
   Timer? _timer;
   late final RxInt _thunderIndex = (-1).obs;
-  late final List<String> _thunderImages = const [
+  static const List<String> _thunderImages = [
     'assets/images/paycoins/ic_thunder_1.png',
     'assets/images/paycoins/ic_thunder_2.png',
     'assets/images/paycoins/ic_thunder_3.png',

@@ -115,17 +115,12 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
         if (imageList.isNotEmpty) {
           return SizedBox(
             height: 85,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.fromLTRB(15, 0, 15, 10),
-              child: Row(
-                spacing: 10,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: List.generate(
-                  imageList.length,
-                  (index) => buildImage(index, 75),
-                ),
-              ),
+            child: ListView.separated(
+              scrollDirection: .horizontal,
+              padding: const .fromLTRB(15, 0, 15, 10),
+              itemCount: imageList.length,
+              itemBuilder: (_, index) => buildImage(index, 75),
+              separatorBuilder: (_, _) => const SizedBox(width: 10),
             ),
           );
         } else {
@@ -314,6 +309,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
     return SizedBox(
       height: height,
       child: GridView(
+        physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.only(left: 12, bottom: 12, right: 12),
         gridDelegate: gridDelegate,
         children: [
