@@ -105,9 +105,9 @@ class _LiveEmotePanelState extends State<LiveEmotePanel>
                                     }
                                   },
                                   child: CustomTooltip(
-                                    indicator: () => CustomPaint(
+                                    indicator: () => Triangle(
+                                      color: color,
                                       size: const Size(14, 8),
-                                      painter: TrianglePainter(color),
                                     ),
                                     overlayWidget: () => Container(
                                       padding: const EdgeInsets.all(8),

@@ -104,9 +104,9 @@ class _EmotePanelState extends State<EmotePanel>
                               );
                               if (!isTextEmote) {
                                 child = CustomTooltip(
-                                  indicator: () => CustomPaint(
+                                  indicator: () => Triangle(
+                                    color: color,
                                     size: const Size(14, 8),
-                                    painter: TrianglePainter(color),
                                   ),
                                   overlayWidget: () => Container(
                                     padding: const EdgeInsets.all(8),
