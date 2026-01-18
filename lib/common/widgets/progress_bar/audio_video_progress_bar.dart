@@ -365,12 +365,15 @@ class RenderProgressBar extends RenderBox {
        _thumbGlowColor = thumbGlowColor,
        _thumbGlowRadius = thumbGlowRadius,
        _paintThumbGlow = thumbGlowRadius > thumbRadius,
-       _thumbCanPaintOutsideBar = thumbCanPaintOutsideBar {
-    _drag = _EagerHorizontalDragGestureRecognizer()
-      ..onStart = _onDragStart
-      ..onUpdate = _onDragUpdate
-      ..onEnd = _onDragEnd
-      ..onCancel = _finishDrag;
+       _thumbCanPaintOutsideBar = thumbCanPaintOutsideBar,
+       _hitTestSelf = onDragStart != null {
+    if (onDragStart != null) {
+      _drag = _EagerHorizontalDragGestureRecognizer()
+        ..onStart = _onDragStart
+        ..onUpdate = _onDragUpdate
+        ..onEnd = _onDragEnd
+        ..onCancel = _finishDrag;
+    }
     if (!_userIsDraggingThumb) {
       _progress = progress;
       _thumbValue = _proportionOfTotal(_progress);
@@ -380,6 +383,7 @@ class RenderProgressBar extends RenderBox {
   @override
   void dispose() {
     _drag?.dispose();
+    _drag = null;
     super.dispose();
   }
 
@@ -659,8 +663,9 @@ class RenderProgressBar extends RenderBox {
   @override
   double computeMaxIntrinsicHeight(double width) => _heightWhenNoLabels();
 
+  final bool _hitTestSelf;
   @override
-  bool hitTestSelf(Offset position) => true;
+  bool hitTestSelf(Offset position) => _hitTestSelf;
 
   @override
   void handleEvent(PointerEvent event, BoxHitTestEntry entry) {

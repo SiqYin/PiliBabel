@@ -1740,106 +1740,69 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             right: 0,
             child: Obx(
               () {
-                if (plPlayerController.showControls.value) {
-                  return const SizedBox.shrink();
-                }
-
-                switch (plPlayerController.progressType) {
-                  case BtmProgressBehavior.onlyShowFullScreen:
-                    if (!isFullScreen) {
-                      return const SizedBox.shrink();
-                    }
-                  case BtmProgressBehavior.onlyHideFullScreen:
-                    if (isFullScreen) {
-                      return const SizedBox.shrink();
-                    }
-                  default:
-                }
-
-                return Stack(
-                  clipBehavior: Clip.none,
-                  alignment: Alignment.bottomCenter,
-                  children: [
-                    IgnorePointer(
-                      child: RepaintBoundary.wrap(
-                        Obx(() {
-                          final int value =
-                              plPlayerController.sliderPositionSeconds.value;
-                          final int max = plPlayerController
-                              .durationSeconds
-                              .value
-                              .inSeconds;
-                          final int buffer =
-                              plPlayerController.bufferedSeconds.value;
-                          return ProgressBar(
-                            progress: Duration(seconds: value),
-                            buffered: Duration(seconds: buffer),
-                            total: Duration(seconds: max),
-                            progressBarColor: primary,
-                            baseBarColor: const Color(0x33FFFFFF),
-                            bufferedBarColor: bufferedBarColor,
-                            thumbColor: primary,
-                            thumbGlowColor: thumbGlowColor,
-                            barHeight: 3.5,
-                            thumbRadius: 2.5,
-                          );
-                        }),
-                        0,
-                      ),
-                    ),
-                    if (plPlayerController.enableBlock &&
-                        videoDetailController.segmentProgressList.isNotEmpty)
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0.75,
-                        child: IgnorePointer(
-                          child: RepaintBoundary.wrap(
-                            CustomPaint(
-                              size: const Size(double.infinity, 3.5),
-                              painter: SegmentProgressBar(
-                                segmentColors:
-                                    videoDetailController.segmentProgressList,
-                              ),
-                            ),
-                            1,
+                final offstage = switch (plPlayerController.progressType) {
+                  BtmProgressBehavior.onlyShowFullScreen => !isFullScreen,
+                  BtmProgressBehavior.onlyHideFullScreen => isFullScreen,
+                  _ => plPlayerController.showControls.value,
+                };
+                return Offstage(
+                  offstage: offstage,
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    alignment: Alignment.bottomCenter,
+                    children: [
+                      Obx(() {
+                        final int value =
+                            plPlayerController.sliderPositionSeconds.value;
+                        final int max =
+                            plPlayerController.durationSeconds.value.inSeconds;
+                        final int buffer =
+                            plPlayerController.bufferedSeconds.value;
+                        return ProgressBar(
+                          progress: Duration(seconds: value),
+                          buffered: Duration(seconds: buffer),
+                          total: Duration(seconds: max),
+                          progressBarColor: primary,
+                          baseBarColor: const Color(0x33FFFFFF),
+                          bufferedBarColor: bufferedBarColor,
+                          thumbColor: primary,
+                          thumbGlowColor: thumbGlowColor,
+                          barHeight: 3.5,
+                          thumbRadius: 2.5,
+                        );
+                      }),
+                      if (plPlayerController.enableBlock &&
+                          videoDetailController.segmentProgressList.isNotEmpty)
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0.75,
+                          child: SegmentProgressBar(
+                            segments: videoDetailController.segmentProgressList,
                           ),
                         ),
-                      ),
-                    if (plPlayerController.showViewPoints &&
-                        videoDetailController.viewPointList.isNotEmpty &&
-                        videoDetailController.showVP.value) ...[
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 0.75,
-                        child: IgnorePointer(
-                          child: RepaintBoundary.wrap(
-                            CustomPaint(
-                              size: const Size(double.infinity, 3.5),
-                              painter: SegmentProgressBar(
-                                segmentColors:
-                                    videoDetailController.viewPointList,
-                              ),
-                            ),
-                            2,
+                      if (plPlayerController.showViewPoints &&
+                          videoDetailController.viewPointList.isNotEmpty &&
+                          videoDetailController.showVP.value)
+                        Padding(
+                          padding: const .only(bottom: 4.25),
+                          child: ViewPointSegmentProgressBar(
+                            segments: videoDetailController.viewPointList,
+                            onSeek: PlatformUtils.isMobile
+                                ? (position) => plPlayerController.seekTo(
+                                    position,
+                                    isSeek: false,
+                                  )
+                                : null,
                           ),
                         ),
-                      ),
-                      if (PlatformUtils.isMobile)
-                        buildViewPointWidget(
-                          videoDetailController,
-                          plPlayerController,
-                          4.25,
-                          maxWidth,
-                        ),
+                      if (plPlayerController.showDmChart &&
+                          videoDetailController.showDmTrendChart.value)
+                        if (videoDetailController.dmTrend.value?.dataOrNull
+                            case final list?)
+                          buildDmChart(primary, list, videoDetailController),
                     ],
-                    if (plPlayerController.showDmChart &&
-                        videoDetailController.showDmTrendChart.value)
-                      if (videoDetailController.dmTrend.value?.dataOrNull
-                          case final list?)
-                        buildDmChart(primary, list, videoDetailController),
-                  ],
+                  ),
                 );
               },
             ),
@@ -2325,7 +2288,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     // fullscreen
     if (dx > maxWidth) {
       _removeDmAction();
-      return const Positioned(left: 0, top: 0, child: SizedBox.shrink());
+      return const SizedBox.shrink();
     }
 
     final seekOffset = _getValidOffset(item.content.text);
@@ -2346,7 +2309,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
     if (right > (maxWidth - item.xPosition)) {
       _removeDmAction();
-      return const Positioned(left: 0, top: 0, child: SizedBox.shrink());
+      return const SizedBox.shrink();
     }
 
     final extra = item.content.extra;

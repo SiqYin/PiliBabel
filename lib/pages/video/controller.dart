@@ -838,7 +838,11 @@ class VideoDetailController extends GetxController
           segmentList.map((e) {
             double start = (e.segment.first / duration).clamp(0.0, 1.0);
             double end = (e.segment.second / duration).clamp(0.0, 1.0);
-            return Segment(start, end, _getColor(e.segmentType));
+            return Segment(
+              start: start,
+              end: end,
+              color: _getColor(e.segmentType),
+            );
           }),
         );
 
@@ -1453,7 +1457,7 @@ class VideoDetailController extends GetxController
   late final Map<int, String> vttSubtitles = {};
   late final RxInt vttSubtitlesIndex = (-1).obs;
   late final RxBool showVP = true.obs;
-  late final RxList<Segment> viewPointList = <Segment>[].obs;
+  late final RxList<ViewPointSegment> viewPointList = <ViewPointSegment>[].obs;
 
   // 设定字幕轨道
   Future<void> setSubtitle(int index) async {
@@ -1575,14 +1579,13 @@ class VideoDetailController extends GetxController
               0.0,
               1.0,
             );
-            return Segment(
-              start,
-              start,
-              Colors.black.withValues(alpha: 0.5),
-              item.content,
-              item.imgUrl,
-              item.from,
-              item.to,
+            return ViewPointSegment(
+              start: start,
+              end: start,
+              title: item.content,
+              url: item.imgUrl,
+              from: item.from,
+              to: item.to,
             );
           }).toList();
         } catch (_) {}
