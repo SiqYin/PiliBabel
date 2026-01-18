@@ -181,7 +181,7 @@ class ProgressBar extends LeafRenderObjectWidget {
 
   @override
   RenderObject createRenderObject(BuildContext context) {
-    return _RenderProgressBar(
+    return RenderProgressBar(
       progress: progress,
       total: total,
       buffered: buffered ?? Duration.zero,
@@ -203,8 +203,11 @@ class ProgressBar extends LeafRenderObjectWidget {
   }
 
   @override
-  void updateRenderObject(BuildContext context, RenderObject renderObject) {
-    (renderObject as _RenderProgressBar)
+  void updateRenderObject(
+    BuildContext context,
+    RenderProgressBar renderObject,
+  ) {
+    renderObject
       ..total = total
       ..progress = progress
       ..buffered = buffered ?? Duration.zero
@@ -327,8 +330,8 @@ class _EagerHorizontalDragGestureRecognizer
   String get debugDescription => '_EagerHorizontalDragGestureRecognizer';
 }
 
-class _RenderProgressBar extends RenderBox {
-  _RenderProgressBar({
+class RenderProgressBar extends RenderBox {
+  RenderProgressBar({
     required Duration progress,
     required Duration total,
     required Duration buffered,

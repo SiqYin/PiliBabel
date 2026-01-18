@@ -157,8 +157,11 @@ class HistoryItem extends StatelessWidget {
                                 left: 0,
                                 right: 0,
                                 bottom: 0,
-                                child: videoProgressIndicator(
-                                  item.progress == -1
+                                child: VideoProgressIndicator(
+                                  color: theme.colorScheme.primary,
+                                  backgroundColor:
+                                      theme.colorScheme.secondaryContainer,
+                                  progress: item.progress == -1
                                       ? 1
                                       : item.progress! / item.duration!,
                                 ),

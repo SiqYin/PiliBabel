@@ -224,8 +224,11 @@ class DetailItem extends StatelessWidget {
                             child: Stack(
                               clipBehavior: Clip.none,
                               children: [
-                                videoProgressIndicator(
-                                  progress / entry.totalTimeMilli,
+                                VideoProgressIndicator(
+                                  color: theme.colorScheme.primary,
+                                  backgroundColor:
+                                      theme.colorScheme.secondaryContainer,
+                                  progress: progress / entry.totalTimeMilli,
                                 ),
                                 PBadge(
                                   text: progress >= entry.totalTimeMilli - 400
