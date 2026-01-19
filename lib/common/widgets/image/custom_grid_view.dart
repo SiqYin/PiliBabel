@@ -20,7 +20,6 @@ import 'dart:math' show min;
 
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
-import 'package:PiliPlus/common/widgets/flutter/custom_layout.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/models/common/image_preview_type.dart';
@@ -33,6 +32,12 @@ import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/material.dart'
     hide CustomMultiChildLayout, MultiChildLayoutDelegate;
+import 'package:flutter/rendering.dart'
+    show
+        ContainerRenderObjectMixin,
+        RenderBoxContainerDefaultsMixin,
+        MultiChildLayoutParentData,
+        BoxHitTestResult;
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/get_navigation.dart';
@@ -244,14 +249,12 @@ class CustomGridView extends StatelessWidget {
       child: SizedBox(
         width: maxWidth,
         height: imageHeight * row + space * (row - 1),
-        child: CustomMultiChildLayout(
-          delegate: _CustomGridViewDelegate(
-            space: space,
-            itemCount: length,
-            column: column,
-            width: imageWidth,
-            height: imageHeight,
-          ),
+        child: ImageGrid(
+          space: space,
+          itemCount: length,
+          column: column,
+          width: imageWidth,
+          height: imageHeight,
           children: List.generate(length, (index) {
             final item = picArr[index];
             final radius = borderRadius(column, length, index);
@@ -310,8 +313,10 @@ class CustomGridView extends StatelessWidget {
   }
 }
 
-class _CustomGridViewDelegate extends MultiChildLayoutDelegate {
-  _CustomGridViewDelegate({
+class ImageGrid extends MultiChildRenderObjectWidget {
+  const ImageGrid({
+    super.key,
+    super.children,
     required this.space,
     required this.itemCount,
     required this.column,
@@ -326,31 +331,128 @@ class _CustomGridViewDelegate extends MultiChildLayoutDelegate {
   final double height;
 
   @override
-  void performLayout(Size size) {
-    final constraints = BoxConstraints(
+  RenderObject createRenderObject(BuildContext context) {
+    return RenderImageGrid(
+      space: space,
+      itemCount: itemCount,
+      column: column,
+      width: width,
+      height: height,
+    );
+  }
+
+  @override
+  void updateRenderObject(BuildContext context, RenderImageGrid renderObject) {
+    renderObject
+      ..space = space
+      ..itemCount = itemCount
+      ..column = column
+      ..width = width
+      ..height = height;
+  }
+}
+
+class RenderImageGrid extends RenderBox
+    with
+        ContainerRenderObjectMixin<RenderBox, MultiChildLayoutParentData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, MultiChildLayoutParentData> {
+  RenderImageGrid({
+    required double space,
+    required int itemCount,
+    required int column,
+    required double width,
+    required double height,
+  }) : _space = space,
+       _itemCount = itemCount,
+       _column = column,
+       _width = width,
+       _height = height;
+
+  double _space;
+  double get space => _space;
+  set space(double value) {
+    if (_space == value) return;
+    _space = value;
+    markNeedsPaint();
+  }
+
+  int _itemCount;
+  int get itemCount => _itemCount;
+  set itemCount(int value) {
+    if (_itemCount == value) return;
+    _itemCount = value;
+    markNeedsPaint();
+  }
+
+  int _column;
+  int get column => _column;
+  set column(int value) {
+    if (_space == value) return;
+    _column = value;
+    markNeedsPaint();
+  }
+
+  double _width;
+  double get width => _width;
+  set width(double value) {
+    if (_width == value) return;
+    _width = value;
+    markNeedsPaint();
+  }
+
+  double _height;
+  double get height => _height;
+  set height(double value) {
+    if (_height == value) return;
+    _height = value;
+    markNeedsPaint();
+  }
+
+  @override
+  void setupParentData(RenderBox child) {
+    if (child.parentData is! MultiChildLayoutParentData) {
+      child.parentData = MultiChildLayoutParentData();
+    }
+  }
+
+  @override
+  void performLayout() {
+    size = constraints.constrain(constraints.biggest);
+
+    final itemConstraints = BoxConstraints(
       minWidth: width,
       maxWidth: width,
       minHeight: height,
       maxHeight: height,
     );
-    for (int i = 0; i < itemCount; i++) {
-      layoutChild(i, constraints);
-      positionChild(
-        i,
-        Offset(
-          (space + width) * (i % column),
-          (space + height) * (i ~/ column),
-        ),
+    RenderBox? child = firstChild;
+    while (child != null) {
+      final childParentData = child.parentData as MultiChildLayoutParentData;
+      final index = childParentData.id as int;
+      child.layout(itemConstraints, parentUsesSize: true);
+      childParentData.offset = Offset(
+        (space + width) * (index % column),
+        (space + height) * (index ~/ column),
       );
+      child = childParentData.nextSibling;
     }
   }
 
   @override
-  bool shouldRelayout(_CustomGridViewDelegate oldDelegate) {
-    return space != oldDelegate.space ||
-        itemCount != oldDelegate.itemCount ||
-        column != oldDelegate.column ||
-        width != oldDelegate.width ||
-        height != oldDelegate.height;
+  void paint(PaintingContext context, Offset offset) {
+    RenderBox? child = firstChild;
+    while (child != null) {
+      final childParentData = child.parentData as MultiChildLayoutParentData;
+      context.paintChild(child, childParentData.offset + offset);
+      child = childParentData.nextSibling;
+    }
   }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    return defaultHitTestChildren(result, position: position);
+  }
+
+  @override
+  bool get isRepaintBoundary => true;
 }
