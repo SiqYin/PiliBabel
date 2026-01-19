@@ -135,23 +135,22 @@ class RenderProgressBar extends RenderBox {
 
     final radius = Radius.circular(_radius);
     final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final rrect = RRect.fromRectAndCorners(
+      rect,
+      bottomLeft: radius,
+      bottomRight: radius,
+    );
 
     if (progress == 0) {
-      canvas.drawRRect(
-        .fromRectAndCorners(rect, bottomLeft: radius, bottomRight: radius),
-        paint..color = _backgroundColor,
-      );
+      canvas.drawRRect(rrect, paint..color = _backgroundColor);
     } else if (progress == 1) {
-      canvas.drawRRect(
-        .fromRectAndCorners(rect, bottomLeft: radius, bottomRight: radius),
-        paint..color = _color,
-      );
+      canvas.drawRRect(rrect, paint..color = _color);
     } else {
       final w = size.width * progress;
       final left = Rect.fromLTWH(0, 0, w, size.height);
       final right = Rect.fromLTWH(w, 0, size.width - w, size.height);
       canvas
-        ..clipRRect(.fromRectAndRadius(rect, radius))
+        ..clipRRect(rrect)
         ..drawRect(left, paint..color = _color)
         ..drawRect(right, paint..color = _backgroundColor);
     }
