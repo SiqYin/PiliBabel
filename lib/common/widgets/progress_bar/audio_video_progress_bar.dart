@@ -4,6 +4,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter/services.dart'
+    show
+        MouseTrackerAnnotation,
+        PointerEnterEventListener,
+        PointerExitEventListener;
 
 /// The shape of the progress bar at the left and right ends.
 enum BarCapShape {
@@ -330,7 +335,7 @@ class _EagerHorizontalDragGestureRecognizer
   String get debugDescription => '_EagerHorizontalDragGestureRecognizer';
 }
 
-class RenderProgressBar extends RenderBox {
+class RenderProgressBar extends RenderBox implements MouseTrackerAnnotation {
   RenderProgressBar({
     required Duration progress,
     required Duration total,
@@ -838,4 +843,16 @@ class RenderProgressBar extends RenderBox {
     markNeedsPaint();
     markNeedsSemanticsUpdate();
   }
+
+  @override
+  MouseCursor get cursor => SystemMouseCursors.click;
+
+  @override
+  PointerEnterEventListener? onEnter;
+
+  @override
+  PointerExitEventListener? onExit;
+
+  @override
+  bool get validForMouseTracker => false;
 }

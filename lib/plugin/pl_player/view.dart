@@ -2669,7 +2669,7 @@ class _VideoShotImageState extends State<VideoShotImage> {
 
   void _setRect(double width, double height) {
     _size = Size(width, height);
-    _dstRect = Rect.fromLTWH(0, 0, width, height);
+    _dstRect = Rect.fromLTRB(0, 0, width, height);
     _rrect = RRect.fromRectAndRadius(_dstRect, const Radius.circular(10));
   }
 

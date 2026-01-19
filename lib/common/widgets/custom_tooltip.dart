@@ -277,7 +277,7 @@ class Triangle extends LeafRenderObjectWidget {
   RenderObject createRenderObject(BuildContext context) {
     return RenderTriangle(
       color: color,
-      size: size,
+      preferredSize: size,
       type: type,
     );
   }
@@ -296,10 +296,10 @@ class Triangle extends LeafRenderObjectWidget {
 class RenderTriangle extends RenderBox {
   RenderTriangle({
     required Color color,
-    required Size size,
+    required Size preferredSize,
     required TooltipType type,
   }) : _color = color,
-       _preferredSize = size,
+       _preferredSize = preferredSize,
        _type = type;
 
   Color _color;
@@ -321,12 +321,7 @@ class RenderTriangle extends RenderBox {
 
   @override
   void performLayout() {
-    size = computeDryLayout(constraints);
-  }
-
-  @override
-  Size computeDryLayout(BoxConstraints constraints) {
-    return constraints.constrain(_preferredSize);
+    size = constraints.constrain(_preferredSize);
   }
 
   @override

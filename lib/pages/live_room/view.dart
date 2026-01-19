@@ -964,10 +964,10 @@ class _BorderClipper extends CustomClipper<Rect> {
 
   @override
   Rect getClip(Size size) {
-    return Rect.fromLTWH(
+    return Rect.fromLTRB(
       isLeft ? 0 : size.width / 2,
       0,
-      size.width / 2,
+      isLeft ? size.width / 2 : size.width,
       size.height,
     );
   }

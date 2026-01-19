@@ -82,12 +82,7 @@ class RenderArc extends RenderBox {
 
   @override
   void performLayout() {
-    size = computeDryLayout(constraints);
-  }
-
-  @override
-  Size computeDryLayout(BoxConstraints constraints) {
-    return constraints.constrain(_preferredSize);
+    size = constraints.constrain(_preferredSize);
   }
 
   @override

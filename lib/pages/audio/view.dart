@@ -741,7 +741,7 @@ class _AudioPageState extends State<AudioPage> {
     final baseBarColor = colorScheme.brightness.isDark
         ? const Color(0x33FFFFFF)
         : const Color(0x33999999);
-    final child = Obx(
+    return Obx(
       () => ProgressBar(
         progress: _controller.position.value,
         total: _controller.duration.value,
@@ -757,13 +757,6 @@ class _AudioPageState extends State<AudioPage> {
         onSeek: _onSeek,
       ),
     );
-    if (PlatformUtils.isDesktop) {
-      return MouseRegion(
-        cursor: SystemMouseCursors.click,
-        child: child,
-      );
-    }
-    return child;
   }
 
   Widget _buildDuration(ColorScheme colorScheme) {
