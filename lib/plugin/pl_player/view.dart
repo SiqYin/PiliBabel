@@ -1740,10 +1740,13 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             right: 0,
             child: Obx(
               () {
+                final showControls = plPlayerController.showControls.value;
                 final offstage = switch (plPlayerController.progressType) {
-                  BtmProgressBehavior.onlyShowFullScreen => !isFullScreen,
-                  BtmProgressBehavior.onlyHideFullScreen => isFullScreen,
-                  _ => plPlayerController.showControls.value,
+                  BtmProgressBehavior.onlyShowFullScreen =>
+                    showControls || !isFullScreen,
+                  BtmProgressBehavior.onlyHideFullScreen =>
+                    showControls || isFullScreen,
+                  _ => showControls,
                 };
                 return Offstage(
                   offstage: offstage,
