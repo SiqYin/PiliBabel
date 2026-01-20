@@ -528,8 +528,8 @@ abstract final class RequestUtils {
         token: captchaData.token,
         validate: captchaData.validate,
       );
-      if (res case Success(:final response)) {
-        if (response != null && response['is_valid'] == 1) {
+      if (res case Success(:final response?)) {
+        if (response['is_valid'] == 1) {
           final griskId = response['grisk_id'];
           if (griskId is String) {
             onSuccess(griskId);

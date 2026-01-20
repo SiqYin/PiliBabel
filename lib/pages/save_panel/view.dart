@@ -53,12 +53,7 @@ class SavePanel extends StatefulWidget {
         transitionDuration: const Duration(milliseconds: 255),
         transitionBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(
-            opacity: animation.drive(
-              Tween<double>(
-                begin: 0,
-                end: 1,
-              ).chain(CurveTween(curve: Curves.easeInOut)),
-            ),
+            opacity: animation.drive(CurveTween(curve: Curves.easeInOut)),
             child: child,
           );
         },

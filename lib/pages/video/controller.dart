@@ -941,10 +941,12 @@ class VideoDetailController extends GetxController
     return Align(
       alignment: Alignment.centerLeft,
       child: SlideTransition(
-        position: Tween<Offset>(
-          begin: const Offset(-1, 0),
-          end: Offset.zero,
-        ).animate(animation),
+        position: animation.drive(
+          Tween<Offset>(
+            begin: const Offset(-1.0, 0.0),
+            end: Offset.zero,
+          ),
+        ),
         child: Padding(
           padding: const EdgeInsets.only(top: 5),
           child: GestureDetector(

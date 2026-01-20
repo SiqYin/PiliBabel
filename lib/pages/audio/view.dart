@@ -862,6 +862,7 @@ class _AudioPageState extends State<AudioPage> {
                             src: cover,
                             width: 170,
                             height: 170,
+                            cacheWidth: false,
                           ),
                         ),
                       ),

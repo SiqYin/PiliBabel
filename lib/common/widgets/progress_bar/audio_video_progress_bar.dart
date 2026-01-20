@@ -10,14 +10,7 @@ import 'package:flutter/services.dart'
         PointerEnterEventListener,
         PointerExitEventListener;
 
-/// The shape of the progress bar at the left and right ends.
-enum BarCapShape {
-  /// The left and right ends of the bar are round.
-  round,
-
-  /// The left and right ends of the bar are square.
-  square,
-}
+/// https://github.com/suragch/audio_video_progress_bar
 
 /// A progress bar widget to show or set the location of the currently
 /// playing audio or video content.
@@ -36,7 +29,7 @@ class ProgressBar extends LeafRenderObjectWidget {
     super.key,
     required this.progress,
     required this.total,
-    this.buffered,
+    this.buffered = .zero,
     this.onSeek,
     this.onDragStart,
     this.onDragUpdate,
@@ -45,7 +38,6 @@ class ProgressBar extends LeafRenderObjectWidget {
     required this.baseBarColor,
     required this.progressBarColor,
     required this.bufferedBarColor,
-    this.barCapShape = BarCapShape.round,
     this.thumbRadius = 10.0,
     required this.thumbColor,
     required this.thumbGlowColor,
@@ -65,7 +57,7 @@ class ProgressBar extends LeafRenderObjectWidget {
   ///
   /// This is useful for streamed content. If you are playing a local file
   /// then you can leave this out.
-  final Duration? buffered;
+  final Duration buffered;
 
   /// A callback when user moves the thumb.
   ///
@@ -142,12 +134,6 @@ class ProgressBar extends LeafRenderObjectWidget {
   /// a shade darker than [baseBarColor].
   final Color bufferedBarColor;
 
-  /// The shape of the bar at the left and right ends.
-  ///
-  /// This affects the base bar for the total time, the current progress bar,
-  /// and the buffered progress bar. The default is [BarCapShape.round].
-  final BarCapShape barCapShape;
-
   /// The radius of the circle for the moveable progress bar thumb.
   final double thumbRadius;
 
@@ -189,7 +175,7 @@ class ProgressBar extends LeafRenderObjectWidget {
     return RenderProgressBar(
       progress: progress,
       total: total,
-      buffered: buffered ?? Duration.zero,
+      buffered: buffered,
       onSeek: onSeek,
       onDragStart: onDragStart,
       onDragUpdate: onDragUpdate,
@@ -198,7 +184,6 @@ class ProgressBar extends LeafRenderObjectWidget {
       baseBarColor: baseBarColor,
       progressBarColor: progressBarColor,
       bufferedBarColor: bufferedBarColor,
-      barCapShape: barCapShape,
       thumbRadius: thumbRadius,
       thumbColor: thumbColor,
       thumbGlowColor: thumbGlowColor,
@@ -215,7 +200,7 @@ class ProgressBar extends LeafRenderObjectWidget {
     renderObject
       ..total = total
       ..progress = progress
-      ..buffered = buffered ?? Duration.zero
+      ..buffered = buffered
       ..onSeek = onSeek
       ..onDragStart = onDragStart
       ..onDragUpdate = onDragUpdate
@@ -224,7 +209,6 @@ class ProgressBar extends LeafRenderObjectWidget {
       ..baseBarColor = baseBarColor
       ..progressBarColor = progressBarColor
       ..bufferedBarColor = bufferedBarColor
-      ..barCapShape = barCapShape
       ..thumbRadius = thumbRadius
       ..thumbColor = thumbColor
       ..thumbGlowColor = thumbGlowColor
@@ -271,7 +255,6 @@ class ProgressBar extends LeafRenderObjectWidget {
       ..add(ColorProperty('baseBarColor', baseBarColor))
       ..add(ColorProperty('progressBarColor', progressBarColor))
       ..add(ColorProperty('bufferedBarColor', bufferedBarColor))
-      ..add(StringProperty('barCapShape', barCapShape.toString()))
       ..add(DoubleProperty('thumbRadius', thumbRadius))
       ..add(ColorProperty('thumbColor', thumbColor))
       ..add(ColorProperty('thumbGlowColor', thumbGlowColor))
@@ -348,7 +331,6 @@ class RenderProgressBar extends RenderBox implements MouseTrackerAnnotation {
     required Color baseBarColor,
     required Color progressBarColor,
     required Color bufferedBarColor,
-    required BarCapShape barCapShape,
     double thumbRadius = 20.0,
     required Color thumbColor,
     required Color thumbGlowColor,
@@ -364,7 +346,6 @@ class RenderProgressBar extends RenderBox implements MouseTrackerAnnotation {
        _baseBarColor = baseBarColor,
        _progressBarColor = progressBarColor,
        _bufferedBarColor = bufferedBarColor,
-       _barCapShape = barCapShape,
        _thumbRadius = thumbRadius,
        _thumbColor = thumbColor,
        _thumbGlowColor = thumbGlowColor,
@@ -598,14 +579,6 @@ class RenderProgressBar extends RenderBox implements MouseTrackerAnnotation {
     markNeedsPaint();
   }
 
-  BarCapShape get barCapShape => _barCapShape;
-  BarCapShape _barCapShape;
-  set barCapShape(BarCapShape value) {
-    if (_barCapShape == value) return;
-    _barCapShape = value;
-    markNeedsPaint();
-  }
-
   /// The color of the moveable thumb.
   Color get thumbColor => _thumbColor;
   Color _thumbColor;
@@ -765,12 +738,9 @@ class RenderProgressBar extends RenderBox implements MouseTrackerAnnotation {
     required double widthProportion,
     required Color color,
   }) {
-    final strokeCap = (_barCapShape == BarCapShape.round)
-        ? StrokeCap.round
-        : StrokeCap.square;
     final baseBarPaint = Paint()
       ..color = color
-      ..strokeCap = strokeCap
+      ..strokeCap = StrokeCap.round
       ..strokeWidth = _barHeight;
     final capRadius = _barHeight / 2;
     final adjustedWidth = availableSize.width - barHeight;

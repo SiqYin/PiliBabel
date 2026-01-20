@@ -956,7 +956,7 @@ class _BorderIndicator extends LeafRenderObjectWidget {
 
   @override
   RenderObject createRenderObject(BuildContext context) {
-    return RenderBorderIndicator(
+    return _RenderBorderIndicator(
       radius: radius,
       isLeft: isLeft,
     );
@@ -965,7 +965,7 @@ class _BorderIndicator extends LeafRenderObjectWidget {
   @override
   void updateRenderObject(
     BuildContext context,
-    RenderBorderIndicator renderObject,
+    _RenderBorderIndicator renderObject,
   ) {
     renderObject
       ..radius = radius
@@ -973,8 +973,8 @@ class _BorderIndicator extends LeafRenderObjectWidget {
   }
 }
 
-class RenderBorderIndicator extends RenderBox {
-  RenderBorderIndicator({
+class _RenderBorderIndicator extends RenderBox {
+  _RenderBorderIndicator({
     required Radius radius,
     required bool isLeft,
   }) : _radius = radius,
