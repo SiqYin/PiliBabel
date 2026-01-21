@@ -478,7 +478,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     maxHeight = size.height;
 
     final shortestSide = size.shortestSide;
-    final minVideoHeight = shortestSide * 9 / 16;
+    final minVideoHeight = shortestSide / StyleString.aspectRatio16x9;
     final maxVideoHeight = max(size.longestSide * 0.65, shortestSide);
     videoDetailController
       ..isPortrait = isPortrait = maxHeight >= maxWidth
@@ -960,7 +960,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         enableVerticalExpand &&
         !isPortrait) {
       final double videoHeight = maxHeight - padding.vertical;
-      final double width = videoHeight * 9 / 16;
+      final double width = videoHeight / StyleString.aspectRatio16x9;
       final videoWidth = isFullScreen ? maxWidth : width;
       final introWidth = (maxWidth - padding.horizontal - width) / 2;
       final introHeight = maxHeight - padding.top;
@@ -1022,10 +1022,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       width = maxWidth - clampDouble(maxWidth - width, 280, 425);
     }
     final videoWidth = isFullScreen ? maxWidth : width;
-    final double height = width * 9 / 16;
+    final double height = width / StyleString.aspectRatio16x9;
     final videoHeight = isFullScreen ? maxHeight - padding.top : height;
     if (height > maxHeight) {
-      return childSplit(16 / 9);
+      return childSplit(StyleString.aspectRatio16x9);
     }
     final introHeight = maxHeight - height - padding.top;
     final showIntro =
@@ -1396,7 +1396,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       child = childWhenDisabled;
     } else if (maxWidth / maxHeight >= kScreenRatio) {
       child = childWhenDisabledLandscape;
-    } else if (maxWidth * (9 / 16) < (2 / 5) * maxHeight) {
+    } else if (maxWidth / StyleString.aspectRatio16x9 < 0.4 * maxHeight) {
       child = childWhenDisabled;
     } else {
       child = childWhenDisabledAlmostSquare;
@@ -1620,21 +1620,19 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             Positioned(
               left: 16,
               bottom: isFullScreen ? max(75, maxHeight * 0.25) : 75,
-              child: SizedBox(
-                width: MediaQuery.textScalerOf(context).scale(120),
-                child: AnimatedList(
-                  padding: EdgeInsets.zero,
-                  key: videoDetailController.listKey,
-                  reverse: true,
-                  shrinkWrap: true,
-                  initialItemCount: videoDetailController.listData.length,
-                  itemBuilder: (context, index, animation) {
-                    return videoDetailController.buildItem(
-                      videoDetailController.listData[index],
-                      animation,
-                    );
-                  },
-                ),
+              width: MediaQuery.textScalerOf(context).scale(120),
+              child: AnimatedList(
+                padding: EdgeInsets.zero,
+                key: videoDetailController.listKey,
+                reverse: true,
+                shrinkWrap: true,
+                initialItemCount: videoDetailController.listData.length,
+                itemBuilder: (context, index, animation) {
+                  return videoDetailController.buildItem(
+                    videoDetailController.listData[index],
+                    animation,
+                  );
+                },
               ),
             ),
 

@@ -435,7 +435,8 @@ class ChatItem extends StatelessWidget {
                       NetworkImgLayer(
                         type: ImageType.emote,
                         width: constrains.maxWidth,
-                        height: constrains.maxWidth * 9 / 16,
+                        height:
+                            constrains.maxWidth / StyleString.aspectRatio16x9,
                         src: content['cover'],
                       ),
                       PBadge(

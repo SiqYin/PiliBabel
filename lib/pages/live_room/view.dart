@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
+import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
@@ -308,41 +309,38 @@ class _LiveRoomPageState extends State<LiveRoomPage>
           Positioned(
             left: padding.left + 25,
             bottom: 25,
+            width: 255,
             child: Obx(() {
               final item = _liveRoomController.fsSC.value;
               if (item == null) {
                 return const SizedBox.shrink();
               }
               try {
-                return SizedBox(
+                return Stack(
                   key: ValueKey(item.id),
-                  width: 255,
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 6, top: 6),
-                        child: SuperChatCard(
-                          item: item,
-                          onRemove: () => _liveRoomController.fsSC.value = null,
-                          onReport: () => _liveRoomController.reportSC(item),
-                        ),
+                  clipBehavior: Clip.none,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 6, top: 6),
+                      child: SuperChatCard(
+                        item: item,
+                        onRemove: () => _liveRoomController.fsSC.value = null,
+                        onReport: () => _liveRoomController.reportSC(item),
                       ),
-                      Positioned(
-                        right: 0,
-                        top: 0,
-                        child: iconButton(
-                          size: 24,
-                          iconSize: 14,
-                          bgColor: const Color(0xEEFFFFFF),
-                          iconColor: Colors.black54,
-                          icon: const Icon(Icons.clear),
-                          onPressed: () =>
-                              _liveRoomController.fsSC.value = null,
-                        ),
+                    ),
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: iconButton(
+                        size: 24,
+                        iconSize: 14,
+                        bgColor: const Color(0xEEFFFFFF),
+                        iconColor: Colors.black54,
+                        icon: const Icon(Icons.clear),
+                        onPressed: () => _liveRoomController.fsSC.value = null,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 );
               } catch (_) {
                 if (kDebugMode) rethrow;
@@ -428,7 +426,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
   }
 
   Widget _buildPH(bool isFullScreen) {
-    final height = maxWidth * 9 / 16;
+    final height = maxWidth / StyleString.aspectRatio16x9;
     final videoHeight = isFullScreen ? maxHeight - padding.top : height;
     final bottomHeight = maxHeight - padding.top - height - kToolbarHeight;
     return Column(
@@ -476,24 +474,20 @@ class _LiveRoomPageState extends State<LiveRoomPage>
           left: 0,
           right: 0,
           bottom: 55 + bottomHeight,
+          height: maxHeight * 0.32,
           child: Offstage(
             offstage: isFullScreen,
-            child: SizedBox(
-              height: maxHeight * 0.32,
-              child: _buildChatWidget(true),
-            ),
+            child: _buildChatWidget(true),
           ),
         ),
         Positioned(
           left: 0,
           right: 0,
           bottom: 0,
+          height: bottomHeight,
           child: Offstage(
             offstage: isFullScreen,
-            child: SizedBox(
-              height: bottomHeight,
-              child: _buildInputWidget,
-            ),
+            child: _buildInputWidget,
           ),
         ),
       ],
@@ -998,7 +992,7 @@ class _RenderBorderIndicator extends RenderBox {
 
   @override
   void performLayout() {
-    size = constraints.constrain(Size(constraints.maxWidth, _radius.x));
+    size = constraints.constrainDimensions(constraints.maxWidth, _radius.x);
   }
 
   @override
@@ -1011,7 +1005,7 @@ class _RenderBorderIndicator extends RenderBox {
     }
     BoxBorder.paintNonUniformBorder(
       canvas,
-      Rect.fromLTWH(0, 0, width, size.height),
+      Rect.fromLTRB(0, 0, width, size.height),
       borderRadius: BorderRadius.only(
         topLeft: _isLeft ? _radius : .zero,
         topRight: _isLeft ? .zero : _radius,

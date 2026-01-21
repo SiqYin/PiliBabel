@@ -185,7 +185,7 @@ class RenderViewPointProgressBar
 
   @override
   void performLayout() {
-    size = constraints.constrain(Size(constraints.maxWidth, _barHeight));
+    size = constraints.constrainDimensions(constraints.maxWidth, _barHeight);
   }
 
   static const double _barHeight = 15.0;
@@ -334,7 +334,6 @@ class BaseRenderProgressBar<T extends BaseSegment> extends RenderBox {
   BaseRenderProgressBar({
     required double height,
     required List<T> segments,
-    ValueSetter<int>? onSeek,
   }) : _height = height,
        _segments = segments;
 
@@ -356,7 +355,7 @@ class BaseRenderProgressBar<T extends BaseSegment> extends RenderBox {
 
   @override
   void performLayout() {
-    size = constraints.constrain(Size(constraints.maxWidth, height));
+    size = constraints.constrainDimensions(constraints.maxWidth, height);
   }
 
   @override

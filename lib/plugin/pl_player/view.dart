@@ -2459,7 +2459,7 @@ Widget buildDmChart(
         bottom:
             videoDetailController.viewPointList.isNotEmpty &&
                 videoDetailController.showVP.value
-            ? 20.25 + offset
+            ? 19.25 + offset
             : 4.25 + offset,
       ),
       child: LineChart(

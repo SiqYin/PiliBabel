@@ -60,14 +60,13 @@ class ImageModel {
   bool? _isLongPic;
   bool? _isLivePhoto;
 
-  bool get isLongPic => _isLongPic ??= (height / width) > _maxRatio;
+  bool get isLongPic =>
+      _isLongPic ??= (height / width) > StyleString.imgMaxRatio;
   bool get isLivePhoto =>
       _isLivePhoto ??= enableLivePhoto && liveUrl?.isNotEmpty == true;
 
   static bool enableLivePhoto = Pref.enableLivePhoto;
 }
-
-const double _maxRatio = 22 / 9;
 
 class CustomGridView extends StatelessWidget {
   const CustomGridView({
@@ -222,7 +221,7 @@ class CustomGridView extends StatelessWidget {
         if (width != 1) {
           imageWidth = min(imageWidth, width.toDouble());
         }
-        imageHeight = imageWidth * min(ratioHW, _maxRatio);
+        imageHeight = imageWidth * min(ratioHW, StyleString.imgMaxRatio);
       }
     }
 

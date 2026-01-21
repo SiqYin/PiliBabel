@@ -96,7 +96,7 @@ class RenderProgressBar extends RenderBox {
   }
 
   double _radius;
-  double get borderRadius => _radius;
+  double get radius => _radius;
   set radius(double value) {
     if (_radius == value) return;
     _radius = value;
@@ -113,7 +113,7 @@ class RenderProgressBar extends RenderBox {
 
   @override
   void performLayout() {
-    size = constraints.constrain(Size(constraints.maxWidth, _radius));
+    size = constraints.constrainDimensions(constraints.maxWidth, _radius);
   }
 
   @override

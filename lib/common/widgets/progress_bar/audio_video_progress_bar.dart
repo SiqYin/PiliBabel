@@ -662,8 +662,7 @@ class RenderProgressBar extends RenderBox implements MouseTrackerAnnotation {
   Size computeDryLayout(BoxConstraints constraints) {
     final desiredWidth = constraints.maxWidth;
     final desiredHeight = _heightWhenNoLabels();
-    final desiredSize = Size(desiredWidth, desiredHeight);
-    return constraints.constrain(desiredSize);
+    return constraints.constrainDimensions(desiredWidth, desiredHeight);
   }
 
   double _heightWhenNoLabels() {
