@@ -34,6 +34,9 @@ class _CustomTooltipState extends State<CustomTooltip> {
   final OverlayPortalController _overlayController = OverlayPortalController();
 
   LongPressGestureRecognizer? _longPressRecognizer;
+  LongPressGestureRecognizer get longPressRecognizer =>
+      _longPressRecognizer ??= LongPressGestureRecognizer()
+        ..onLongPress = _scheduleShowTooltip;
 
   void _scheduleShowTooltip() {
     _overlayController.show();
@@ -45,9 +48,7 @@ class _CustomTooltipState extends State<CustomTooltip> {
 
   void _handlePointerDown(PointerDownEvent event) {
     assert(mounted);
-    (_longPressRecognizer ??= LongPressGestureRecognizer(
-      debugOwner: this,
-    )..onLongPress = _scheduleShowTooltip).addPointer(event);
+    longPressRecognizer.addPointer(event);
   }
 
   Widget _buildCustomTooltipOverlay(BuildContext context) {
@@ -80,7 +81,7 @@ class _CustomTooltipState extends State<CustomTooltip> {
   @override
   void dispose() {
     _longPressRecognizer
-      ?..onLongPressCancel = null
+      ?..onLongPress = null
       ..dispose();
     _longPressRecognizer = null;
     super.dispose();
