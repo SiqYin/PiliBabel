@@ -140,6 +140,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
   GestureType? _gestureType;
 
+  Offset initialFocalPoint = Offset.zero;
+
   //播放器放缩
   bool interacting = false;
 
@@ -941,7 +943,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     if (details.pointerCount > 1) {
       interacting = true;
     }
-    plPlayerController.initialFocalPoint = localFocalPoint;
+    initialFocalPoint = localFocalPoint;
     // if (kDebugMode) {
     //   debugPrint("_initialFocalPoint$_initialFocalPoint");
     // }
@@ -951,11 +953,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   void _onInteractionUpdate(ScaleUpdateDetails details) {
     showRestoreScaleBtn.value =
         transformationController.value.storage[0] != 1.0;
-    if (interacting || plPlayerController.initialFocalPoint == Offset.zero) {
+    if (interacting || initialFocalPoint == Offset.zero) {
       return;
     }
-    Offset cumulativeDelta =
-        details.localFocalPoint - plPlayerController.initialFocalPoint;
+    Offset cumulativeDelta = details.localFocalPoint - initialFocalPoint;
     if (details.pointerCount > 1 && cumulativeDelta.distanceSquared < 2.25) {
       interacting = true;
       _gestureType = null;
@@ -1083,8 +1084,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     } else if (_gestureType == GestureType.center) {
       // 全屏
       const double threshold = 2.5; // 滑动阈值
-      double cumulativeDy =
-          details.localFocalPoint.dy - plPlayerController.initialFocalPoint.dy;
+      double cumulativeDy = details.localFocalPoint.dy - initialFocalPoint.dy;
 
       void fullScreenTrigger(bool status) {
         plPlayerController.triggerFullScreen(status: status);
@@ -1143,7 +1143,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       plPlayerController.onChangedSliderEnd();
     }
     interacting = false;
-    plPlayerController.initialFocalPoint = Offset.zero;
+    initialFocalPoint = Offset.zero;
     _gestureType = null;
   }
 
@@ -1261,9 +1261,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               status: !isFullScreen,
               inAppFullScreen: isSecondaryBtn,
             )
-            .whenComplete(
-              () => plPlayerController.initialFocalPoint = Offset.zero,
-            );
+            .whenComplete(() => initialFocalPoint = Offset.zero);
         return;
       }
     }

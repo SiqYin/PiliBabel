@@ -7,7 +7,6 @@ import 'package:PiliPlus/common/widgets/mouse_back.dart';
 import 'package:PiliPlus/common/widgets/scale_app.dart';
 import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
-import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/router/app_pages.dart';
 import 'package:PiliPlus/services/account_service.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
@@ -231,33 +230,18 @@ class MyApp extends StatelessWidget {
       return;
     }
 
-    if (Get.routing.route is! GetPageRoute) {
-      Get.back();
-      return;
-    }
-
-    final plCtr = PlPlayerController.instance;
-    if (plCtr != null) {
-      if (plCtr.isFullScreen.value) {
-        plCtr
-          ..triggerFullScreen(status: false)
-          ..controlsLock.value = false
-          ..showControls.value = false;
-        return;
-      }
-
-      if (plCtr.isDesktopPip) {
-        plCtr
-          ..exitDesktopPip().whenComplete(
-            () => plCtr.initialFocalPoint = Offset.zero,
-          )
-          ..controlsLock.value = false
-          ..showControls.value = false;
+    final route = Get.routing.route;
+    if (route is GetPageRoute) {
+      if (route.popDisposition == .doNotPop) {
+        route.onPopInvokedWithResult(false, null);
         return;
       }
     }
 
-    Get.back();
+    final navigator = Get.key.currentState;
+    if (navigator?.canPop() ?? false) {
+      navigator!.pop();
+    }
   }
 
   @override

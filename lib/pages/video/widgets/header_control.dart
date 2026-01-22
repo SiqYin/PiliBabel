@@ -1848,11 +1848,13 @@ class HeaderControlState extends State<HeaderControl>
                     color: Colors.white,
                   ),
                   onPressed: () {
-                    if (plPlayerController.isDesktopPip) {
-                      plPlayerController.exitDesktopPip();
-                    } else if (isFullScreen) {
-                      plPlayerController.triggerFullScreen(status: false);
-                    } else if (PlatformUtils.isMobile &&
+                    if (plPlayerController.onPopInvokedWithResult(
+                      false,
+                      null,
+                    )) {
+                      return;
+                    }
+                    if (PlatformUtils.isMobile &&
                         !horizontalScreen &&
                         !isPortrait) {
                       verticalScreenForTwoSeconds();

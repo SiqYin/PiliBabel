@@ -352,16 +352,8 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       );
     }
     return PopScope(
-      canPop: !isFullScreen,
-      onPopInvokedWithResult: (bool didPop, Object? result) {
-        if (plPlayerController.controlsLock.value) {
-          plPlayerController.onLockControl(false);
-          return;
-        }
-        if (isFullScreen) {
-          plPlayerController.triggerFullScreen(status: false);
-        }
-      },
+      canPop: !isFullScreen && !plPlayerController.isDesktopPip,
+      onPopInvokedWithResult: plPlayerController.onPopInvokedWithResult,
       child: player,
     );
   }
