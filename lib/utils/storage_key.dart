@@ -146,7 +146,8 @@ abstract final class SettingBoxKey {
       downloadPath = 'downloadPath',
       followOrderType = 'followOrderType',
       enableImgMenu = 'enableImgMenu',
-      showDynDispute = 'showDynDispute';
+      showDynDispute = 'showDynDispute',
+      touchSlopH = 'touchSlopH';
 
   static const String minimizeOnExit = 'minimizeOnExit',
       windowSize = 'windowSize',

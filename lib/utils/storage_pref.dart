@@ -947,4 +947,7 @@ abstract final class Pref {
 
   static bool get showDynDispute =>
       _setting.get(SettingBoxKey.showDynDispute, defaultValue: false);
+
+  static double get touchSlopH =>
+      _setting.get(SettingBoxKey.touchSlopH, defaultValue: 24.0);
 }

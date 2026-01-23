@@ -1,5 +1,6 @@
 import 'dart:math' show max;
 
+import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/gestures.dart' show HorizontalDragGestureRecognizer;
 import 'package:flutter/material.dart';
@@ -12,8 +13,10 @@ abstract class CommonSlidePage extends StatefulWidget {
 }
 
 mixin CommonSlideMixin<T extends CommonSlidePage> on State<T>, TickerProvider {
+  static const double offset = 30.0;
   double? _downDx;
   late double _maxWidth;
+  double get maxWidth => _maxWidth;
   late bool _isRTL = false;
   late final bool enableSlide;
   late final AnimationController _animController;
@@ -33,7 +36,6 @@ mixin CommonSlideMixin<T extends CommonSlidePage> on State<T>, TickerProvider {
       _slideDragGestureRecognizer =
           SlideDragGestureRecognizer(
               isDxAllowed: (double dx) {
-                const offset = 30;
                 final isLTR = dx <= offset;
                 final isRTL = dx >= _maxWidth - offset;
                 if (isLTR || isRTL) {
@@ -111,6 +113,8 @@ mixin CommonSlideMixin<T extends CommonSlidePage> on State<T>, TickerProvider {
   );
 }
 
+typedef IsDxAllowed = bool Function(double dx);
+
 class SlideDragGestureRecognizer extends HorizontalDragGestureRecognizer {
   SlideDragGestureRecognizer({
     super.debugOwner,
@@ -119,7 +123,24 @@ class SlideDragGestureRecognizer extends HorizontalDragGestureRecognizer {
     required this.isDxAllowed,
   });
 
-  final bool Function(double dx) isDxAllowed;
+  final IsDxAllowed isDxAllowed;
+
+  @override
+  bool isPointerAllowed(PointerEvent event) {
+    return isDxAllowed(event.localPosition.dx) && super.isPointerAllowed(event);
+  }
+}
+
+class TabBarDragGestureRecognizer
+    extends CustomHorizontalDragGestureRecognizer {
+  TabBarDragGestureRecognizer({
+    super.debugOwner,
+    super.supportedDevices,
+    super.allowedButtonsFilter,
+    required this.isDxAllowed,
+  });
+
+  final IsDxAllowed isDxAllowed;
 
   @override
   bool isPointerAllowed(PointerEvent event) {

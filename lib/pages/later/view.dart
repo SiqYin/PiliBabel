@@ -1,4 +1,6 @@
 import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
+import 'package:PiliPlus/common/widgets/flutter/page/tabs.dart';
+import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart';
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/models/common/later_view_type.dart';
@@ -11,7 +13,7 @@ import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide TabBarView;
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -137,6 +139,8 @@ class _LaterPageState extends State<LaterPage>
                           ? const NeverScrollableScrollPhysics()
                           : const CustomTabBarViewScrollPhysics(),
                       controller: _tabController,
+                      horizontalDragGestureRecognizer:
+                          CustomHorizontalDragGestureRecognizer(),
                       children: LaterViewType.values
                           .map((item) => item.page)
                           .toList(),

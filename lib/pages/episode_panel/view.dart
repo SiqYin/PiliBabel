@@ -7,7 +7,6 @@ import 'package:PiliPlus/common/widgets/flutter/page/tabs.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
-import 'package:PiliPlus/common/widgets/scroll_physics.dart';
 import 'package:PiliPlus/common/widgets/stat/stat.dart';
 import 'package:PiliPlus/http/fav.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -205,30 +204,42 @@ class _EpisodePanelState extends State<EpisodePanel>
     super.dispose();
   }
 
+  late final _isMulti =
+      widget.type == EpisodeType.season && widget.list.length > 1;
+
   @override
   Widget buildPage(ThemeData theme) {
-    final isMulti = widget.type == EpisodeType.season && widget.list.length > 1;
-
-    Widget tabBar() => TabBar(
-      controller: _tabController,
-      padding: const EdgeInsets.only(right: 60),
-      isScrollable: true,
-      tabs: widget.list.map((item) => Tab(text: item.title)).toList(),
-      dividerHeight: 1,
-      dividerColor: theme.dividerColor.withValues(alpha: 0.1),
+    return Material(
+      color: showTitle ? theme.colorScheme.surface : null,
+      type: showTitle ? MaterialType.canvas : MaterialType.transparency,
+      child: Column(
+        children: [
+          _buildToolbar(theme),
+          if (_isMulti)
+            TabBar(
+              controller: _tabController,
+              padding: const EdgeInsets.only(right: 60),
+              isScrollable: true,
+              tabs: widget.list.map((item) => Tab(text: item.title)).toList(),
+              dividerHeight: 1,
+              dividerColor: theme.dividerColor.withValues(alpha: 0.1),
+            ),
+          Expanded(child: enableSlide ? slideList(theme) : buildList(theme)),
+        ],
+      ),
     );
+  }
 
-    if (isMulti && enableSlide) {
-      return CustomTabBarView(
+  @override
+  Widget buildList(ThemeData theme) {
+    if (_isMulti) {
+      return TabBarView<TabBarDragGestureRecognizer>(
         controller: _tabController,
-        physics: const CustomTabBarViewScrollPhysics(),
-        bgColor: theme.colorScheme.surface,
-        header: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildToolbar(theme),
-            tabBar(),
-          ],
+        horizontalDragGestureRecognizer: TabBarDragGestureRecognizer(
+          isDxAllowed: (double dx) => enableSlide
+              ? dx > CommonSlideMixin.offset &&
+                    dx < maxWidth - CommonSlideMixin.offset
+              : true,
         ),
         children: List.generate(
           widget.list.length,
@@ -240,37 +251,6 @@ class _EpisodePanelState extends State<EpisodePanel>
         ),
       );
     }
-
-    return Material(
-      color: showTitle ? theme.colorScheme.surface : null,
-      type: showTitle ? MaterialType.canvas : MaterialType.transparency,
-      child: Column(
-        children: [
-          _buildToolbar(theme),
-          if (isMulti) ...[
-            tabBar(),
-            Expanded(
-              child: tabBarView(
-                controller: _tabController,
-                children: List.generate(
-                  widget.list.length,
-                  (index) => _buildBody(
-                    theme,
-                    index,
-                    widget.list[index].episodes,
-                  ),
-                ),
-              ),
-            ),
-          ] else
-            Expanded(child: enableSlide ? slideList(theme) : buildList(theme)),
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget buildList(ThemeData theme) {
     return _buildBody(theme, 0, _getCurrEpisodes);
   }
 
