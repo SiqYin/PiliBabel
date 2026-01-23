@@ -49,7 +49,7 @@ class LiveRoomChatPanel extends StatelessWidget {
       children: [
         Obx(
           () => ListView.separated(
-            key: const PageStorageKey('live-chat'),
+            key: const PageStorageKey(LiveRoomChatPanel),
             padding: const EdgeInsets.symmetric(horizontal: 12),
             controller: liveRoomController.scrollController,
             separatorBuilder: (_, _) => const SizedBox(height: 8),

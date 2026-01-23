@@ -1050,6 +1050,7 @@ class _LiveDanmakuState extends State<LiveDanmaku> {
 
   @override
   Widget build(BuildContext context) {
+    final option = DanmakuOptions.get(notFullscreen: widget.notFullscreen);
     return Obx(
       () => AnimatedOpacity(
         opacity: plPlayerController.enableShowDanmaku.value
@@ -1061,7 +1062,7 @@ class _LiveDanmakuState extends State<LiveDanmaku> {
             widget.liveRoomController.danmakuController =
                 plPlayerController.danmakuController = e;
           },
-          option: DanmakuOptions.get(notFullscreen: widget.notFullscreen),
+          option: option,
           size: widget.size,
         ),
       ),

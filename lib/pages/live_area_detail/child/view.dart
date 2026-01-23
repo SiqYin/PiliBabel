@@ -81,40 +81,38 @@ class _LiveAreaChildPageState extends State<LiveAreaChildPage>
         slivers: [
           if (_controller.newTags?.isNotEmpty == true)
             SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: SelfSizedHorizontalList(
-                  gapSize: 12,
-                  childBuilder: (index) {
-                    late final item = _controller.newTags![index];
-                    return Obx(
-                      () {
-                        final isCurr = index == _controller.tagIndex.value;
-                        return SearchText(
-                          fontSize: 14,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          text: '${item.name}',
-                          bgColor: isCurr
-                              ? theme.colorScheme.secondaryContainer
-                              : Colors.transparent,
-                          textColor: isCurr
-                              ? theme.colorScheme.onSecondaryContainer
-                              : null,
-                          onTap: (value) {
-                            _controller.onSelectTag(
-                              index,
-                              item.sortType,
-                            );
-                          },
-                        );
-                      },
-                    );
-                  },
-                  itemCount: _controller.newTags!.length,
-                ),
+              child: SelfSizedHorizontalList(
+                padding: const .only(bottom: 12),
+                separatorBuilder: (_, _) => const SizedBox(width: 12),
+                itemBuilder: (context, index) {
+                  late final item = _controller.newTags![index];
+                  return Obx(
+                    () {
+                      final isCurr = index == _controller.tagIndex.value;
+                      return SearchText(
+                        fontSize: 14,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        text: '${item.name}',
+                        bgColor: isCurr
+                            ? theme.colorScheme.secondaryContainer
+                            : Colors.transparent,
+                        textColor: isCurr
+                            ? theme.colorScheme.onSecondaryContainer
+                            : null,
+                        onTap: (value) {
+                          _controller.onSelectTag(
+                            index,
+                            item.sortType,
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+                itemCount: _controller.newTags!.length,
               ),
             ),
           response != null && response.isNotEmpty

@@ -172,31 +172,25 @@ class _PgcIndexPageState extends State<PgcIndexPage>
                   : count ~/ 2
             : count,
         (index) {
+          final isFirst = index == 0;
           List? item = data.order?.isNotEmpty == true
-              ? index == 0
+              ? isFirst
                     ? data.order
                     : data.filter![index - 1].values
               : data.filter![index].values;
-          return item != null && item.isNotEmpty
-              ? Padding(
-                  padding: index == 0
-                      ? EdgeInsets.zero
-                      : const EdgeInsets.only(top: 10),
-                  child: SelfSizedHorizontalList(
-                    gapSize: 12,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    childBuilder: (childIndex) {
-                      return _buildSortWidget(
-                        theme,
-                        index,
-                        data,
-                        item[childIndex],
-                      );
-                    },
-                    itemCount: item.length,
-                  ),
-                )
-              : const SizedBox.shrink();
+          if (item != null && item.isNotEmpty) {
+            return SelfSizedHorizontalList(
+              padding: isFirst
+                  ? const .symmetric(horizontal: 12)
+                  : const .fromLTRB(12, 10, 12, 0),
+              separatorBuilder: (_, _) => const SizedBox(width: 12),
+              itemBuilder: (context, childIndex) {
+                return _buildSortWidget(theme, index, data, item[childIndex]);
+              },
+              itemCount: item.length,
+            );
+          }
+          return const SizedBox.shrink();
         },
       ),
       if (count > 5) ...[

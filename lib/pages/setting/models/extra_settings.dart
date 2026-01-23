@@ -274,17 +274,17 @@ List<SettingsModel> get extraSettings => [
     setKey: SettingBoxKey.expandIntroPanelH,
     defaultVal: false,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '横屏分P/合集列表显示在Tab栏',
-    leading: Icon(Icons.format_list_numbered_rtl_sharp),
+    leading: const Icon(Icons.format_list_numbered_rtl_sharp),
     setKey: SettingBoxKey.horizontalSeasonPanel,
-    defaultVal: false,
+    defaultVal: PlatformUtils.isDesktop,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '横屏播放页在侧栏打开UP主页',
-    leading: Icon(Icons.account_circle_outlined),
+    leading: const Icon(Icons.account_circle_outlined),
     setKey: SettingBoxKey.horizontalMemberPage,
-    defaultVal: false,
+    defaultVal: PlatformUtils.isDesktop,
   ),
   SwitchModel(
     title: '横屏在侧栏打开图片预览',
