@@ -1,10 +1,8 @@
 import 'dart:io';
 
 import 'package:PiliPlus/common/constants.dart';
-import 'package:PiliPlus/common/widgets/flutter/page/page_view.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/flutter/tabs.dart';
-import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/common/nav_bar_config.dart';
 import 'package:PiliPlus/pages/home/view.dart';
@@ -20,7 +18,7 @@ import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/utils.dart';
-import 'package:flutter/material.dart' hide PageView;
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:tray_manager/tray_manager.dart';
@@ -395,11 +393,9 @@ class _MainAppState extends PopScopeState<MainApp>
         children: _mainController.navigationBars.map((i) => i.page).toList(),
       );
     } else {
-      child = PageView<CustomHorizontalDragGestureRecognizer>(
+      child = PageView(
         physics: const NeverScrollableScrollPhysics(),
         controller: _mainController.controller,
-        horizontalDragGestureRecognizer:
-            CustomHorizontalDragGestureRecognizer(),
         children: _mainController.navigationBars.map((i) => i.page).toList(),
       );
     }

@@ -377,6 +377,7 @@ class _EpisodePanelState extends State<EpisodePanel>
     int? view;
     int? danmaku;
     bool? isCharging;
+    bool? cacheWidth;
 
     switch (episode) {
       case Part part:
@@ -384,15 +385,21 @@ class _EpisodePanelState extends State<EpisodePanel>
         title = part.part!;
         duration = part.duration;
         pubdate = part.ctime;
+        cacheWidth = part.dimension?.cacheWidth;
         break;
       case ugc.EpisodeItem item:
         title = item.title!;
-        cover = item.arc?.pic;
         bvid = item.bvid;
-        duration = item.arc?.duration;
-        pubdate = item.arc?.pubdate;
-        view = item.arc?.stat?.view;
-        danmaku = item.arc?.stat?.danmaku;
+        if (item.arc case final arc?) {
+          cover = arc.pic;
+          duration = arc.duration;
+          pubdate = arc.pubdate;
+          if (arc.stat case final stat?) {
+            view = stat.view;
+            danmaku = stat.danmaku;
+          }
+          cacheWidth = arc.dimension?.cacheWidth;
+        }
         if (item.attribute == 8) {
           isCharging = true;
         }
@@ -408,6 +415,7 @@ class _EpisodePanelState extends State<EpisodePanel>
           duration = item.duration == null ? null : item.duration! ~/ 1000;
         }
         pubdate = item.pubTime;
+        cacheWidth = item.dimension?.cacheWidth;
         break;
     }
     late final Color primary = theme.colorScheme.primary;
@@ -468,6 +476,7 @@ class _EpisodePanelState extends State<EpisodePanel>
                           src: cover,
                           width: 140.8,
                           height: 88,
+                          cacheWidth: cacheWidth,
                         ),
                         if (duration != null && duration > 0)
                           PBadge(

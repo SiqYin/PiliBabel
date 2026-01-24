@@ -26,7 +26,7 @@ class CustomHorizontalDragGestureRecognizer
       globalDistanceMoved.abs(),
       gestureSettings,
       pointerDeviceKind,
-      _initialPosition!,
+      _initialPosition,
       lastPosition.global,
     );
   }
@@ -38,7 +38,7 @@ bool _computeHitSlop(
   double globalDistanceMoved,
   DeviceGestureSettings? settings,
   PointerDeviceKind kind,
-  Offset initialPosition,
+  Offset? initialPosition,
   Offset lastPosition,
 ) {
   switch (kind) {
@@ -49,13 +49,13 @@ bool _computeHitSlop(
     case PointerDeviceKind.unknown:
     case PointerDeviceKind.touch:
       return globalDistanceMoved > touchSlopH &&
-          _cacl(initialPosition, lastPosition);
+          _calc(initialPosition!, lastPosition);
     case PointerDeviceKind.trackpad:
       return globalDistanceMoved > (settings?.touchSlop ?? kTouchSlop);
   }
 }
 
-bool _cacl(Offset initialPosition, Offset lastPosition) {
+bool _calc(Offset initialPosition, Offset lastPosition) {
   final offset = lastPosition - initialPosition;
   return offset.dx.abs() > offset.dy.abs() * 3;
 }

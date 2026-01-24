@@ -48,10 +48,11 @@ class _RankPageState extends State<RankPage>
       width: 64,
       child: Obx(() {
         final tabIndex = _rankController.tabIndex.value;
-        return ListView(
+        return ListView.builder(
           padding: .only(bottom: MediaQuery.paddingOf(context).bottom + 105),
-          children: RankType.values.map((e) {
-            final index = e.index;
+          itemCount: RankType.values.length,
+          itemBuilder: (context, index) {
+            final item = RankType.values[index];
             final isCurr = index == tabIndex;
             return IntrinsicHeight(
               child: Material(
@@ -59,15 +60,11 @@ class _RankPageState extends State<RankPage>
                     ? theme.colorScheme.onInverseSurface
                     : theme.colorScheme.surface,
                 child: InkWell(
-                  onTap: () {
-                    if (isCurr) {
-                      _rankController.animateToTop();
-                    } else {
-                      _rankController
-                        ..tabIndex.value = index
-                        ..tabController.animateTo(index);
-                    }
-                  },
+                  onTap: isCurr
+                      ? _rankController.animateToTop
+                      : () => _rankController
+                          ..tabIndex.value = index
+                          ..tabController.animateTo(index),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -85,13 +82,13 @@ class _RankPageState extends State<RankPage>
                           alignment: Alignment.center,
                           padding: const .symmetric(vertical: 7),
                           child: Text(
-                            RankType.values[index].label,
-                            style: TextStyle(
-                              color: isCurr
-                                  ? theme.colorScheme.primary
-                                  : theme.colorScheme.onSurface,
-                              fontSize: 15,
-                            ),
+                            item.label,
+                            style: isCurr
+                                ? TextStyle(
+                                    fontSize: 15,
+                                    color: theme.colorScheme.primary,
+                                  )
+                                : const TextStyle(fontSize: 15),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -102,7 +99,7 @@ class _RankPageState extends State<RankPage>
                 ),
               ),
             );
-          }).toList(),
+          },
         );
       }),
     );
