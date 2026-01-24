@@ -127,7 +127,7 @@ class _HistoryPageState extends State<HistoryPage>
                       ],
                     ),
                     Expanded(
-                      child: TabBarView(
+                      child: TabBarView<CustomHorizontalDragGestureRecognizer>(
                         physics: enableMultiSelect
                             ? const NeverScrollableScrollPhysics()
                             : const CustomTabBarViewScrollPhysics(),

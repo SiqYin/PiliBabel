@@ -22,31 +22,40 @@ class CustomHorizontalDragGestureRecognizer
     PointerDeviceKind pointerDeviceKind,
     double? deviceTouchSlop,
   ) {
-    return globalDistanceMoved.abs() > _computeHitSlop(pointerDeviceKind) &&
-        _cacl(_initialPosition!, lastPosition.global, gestureSettings);
-  }
-
-  static bool _cacl(
-    Offset initialPosition,
-    Offset lastPosition,
-    DeviceGestureSettings? gestureSettings,
-  ) {
-    final offset = lastPosition - initialPosition;
-    return offset.dx.abs() > offset.dy.abs() * 3;
+    return _computeHitSlop(
+      globalDistanceMoved.abs(),
+      gestureSettings,
+      pointerDeviceKind,
+      _initialPosition!,
+      lastPosition.global,
+    );
   }
 }
 
 double touchSlopH = Pref.touchSlopH;
 
-double _computeHitSlop(PointerDeviceKind kind) {
+bool _computeHitSlop(
+  double globalDistanceMoved,
+  DeviceGestureSettings? settings,
+  PointerDeviceKind kind,
+  Offset initialPosition,
+  Offset lastPosition,
+) {
   switch (kind) {
     case PointerDeviceKind.mouse:
-      return kPrecisePointerHitSlop;
+      return globalDistanceMoved > kPrecisePointerHitSlop;
     case PointerDeviceKind.stylus:
     case PointerDeviceKind.invertedStylus:
     case PointerDeviceKind.unknown:
     case PointerDeviceKind.touch:
+      return globalDistanceMoved > touchSlopH &&
+          _cacl(initialPosition, lastPosition);
     case PointerDeviceKind.trackpad:
-      return touchSlopH;
+      return globalDistanceMoved > (settings?.touchSlop ?? kTouchSlop);
   }
+}
+
+bool _cacl(Offset initialPosition, Offset lastPosition) {
+  final offset = lastPosition - initialPosition;
+  return offset.dx.abs() > offset.dy.abs() * 3;
 }

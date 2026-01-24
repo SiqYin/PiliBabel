@@ -134,7 +134,7 @@ class _LaterPageState extends State<LaterPage>
                     },
                   ),
                   Expanded(
-                    child: TabBarView(
+                    child: TabBarView<CustomHorizontalDragGestureRecognizer>(
                       physics: enableMultiSelect
                           ? const NeverScrollableScrollPhysics()
                           : const CustomTabBarViewScrollPhysics(),
