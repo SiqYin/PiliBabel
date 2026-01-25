@@ -496,15 +496,15 @@ class PlPlayerController {
     return _instance != null;
   }
 
-  static void setPlayCallBack(VoidCallback? playCallBack) {
+  static void setPlayCallBack(Future<void>? Function()? playCallBack) {
     _playCallBack = playCallBack;
   }
 
-  static VoidCallback? _playCallBack;
+  static Future<void>? Function()? _playCallBack;
 
-  static void playIfExists() {
+  static Future<void>? playIfExists() {
     // await _instance?.play(repeat: repeat, hideControls: hideControls);
-    _playCallBack?.call();
+    return _playCallBack?.call();
   }
 
   // try to get PlayerStatus
@@ -819,7 +819,7 @@ class PlPlayerController {
     }
 
     // 音轨
-    late final String audioUri;
+    final String audioUri;
     if (isFileSource) {
       audioUri = onlyPlayAudio.value || mediaType == 1
           ? ''
@@ -969,9 +969,9 @@ class PlPlayerController {
   }
 
   late final bool enableAutoEnter = Pref.enableAutoEnter;
-  Future<void> autoEnterFullscreen() async {
+  Future<void>? autoEnterFullscreen() {
     if (enableAutoEnter) {
-      Future.delayed(const Duration(milliseconds: 500), () {
+      return Future.delayed(const Duration(milliseconds: 500), () {
         if (dataStatus.status.value != DataStatus.loaded) {
           _stopListenerForEnterFullScreen();
           _dataListenerForEnterFullScreen = dataStatus.status.listen((status) {
@@ -981,10 +981,11 @@ class PlPlayerController {
             }
           });
         } else {
-          triggerFullScreen(status: true);
+          return triggerFullScreen(status: true);
         }
       });
     }
+    return null;
   }
 
   Set<StreamSubscription> subscriptions = {};
