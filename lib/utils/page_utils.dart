@@ -130,11 +130,11 @@ abstract final class PageUtils {
         builder: (_, setState) {
           void onTap(int choice) {
             if (choice == -1) {
+              String duration = '';
               showDialog(
                 context: context,
                 builder: (context) {
-                  final ThemeData theme = Theme.of(context);
-                  String duration = '';
+                  final theme = Theme.of(context);
                   return AlertDialog(
                     title: const Text('自定义时长'),
                     content: TextField(

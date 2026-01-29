@@ -61,13 +61,11 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
             onTap: () async {
               final result = await showDialog<ThemeType>(
                 context: context,
-                builder: (context) {
-                  return SelectDialog<ThemeType>(
-                    title: '主题模式',
-                    value: ctr.themeType.value,
-                    values: ThemeType.values.map((e) => (e, e.desc)).toList(),
-                  );
-                },
+                builder: (context) => SelectDialog<ThemeType>(
+                  title: '主题模式',
+                  value: ctr.themeType.value,
+                  values: ThemeType.values.map((e) => (e, e.desc)).toList(),
+                ),
               );
               if (result != null) {
                 try {
