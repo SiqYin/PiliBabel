@@ -252,6 +252,9 @@ abstract final class Pref {
   static String get videoSync =>
       _setting.get(SettingBoxKey.videoSync, defaultValue: 'display-resample');
 
+  static String get autosync =>
+      _setting.get(SettingBoxKey.autosync, defaultValue: '30');
+
   static CDNService get defaultCDNService {
     if (_setting.get(SettingBoxKey.CDNService) case final String cdnName) {
       return CDNService.values.byName(cdnName);

@@ -16,6 +16,8 @@ import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/video_utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show FilteringTextInputFormatter;
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 
@@ -149,7 +151,12 @@ List<SettingsModel> get videoSettings => [
     setKey: SettingBoxKey.expandBuffer,
     defaultVal: false,
   ),
-  //video-sync
+  NormalModel(
+    title: '自动同步',
+    leading: const Icon(Icons.sync_rounded),
+    getSubtitle: () => '当前：${Pref.autosync}（此项即mpv的--autosync）',
+    onTap: _showAutoSyncDialog,
+  ),
   NormalModel(
     title: '视频同步',
     leading: const Icon(Icons.view_timeline_outlined),
@@ -446,4 +453,44 @@ Future<void> _showHwDecDialog(
     );
     setState();
   }
+}
+
+void _showAutoSyncDialog(BuildContext context, VoidCallback setState) {
+  String autosync = Pref.autosync.toString();
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: const Text('自动同步'),
+      content: TextFormField(
+        autofocus: true,
+        initialValue: autosync,
+        keyboardType: TextInputType.number,
+        onChanged: (value) => autosync = value,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      ),
+      actions: [
+        TextButton(
+          onPressed: Get.back,
+          child: Text(
+            '取消',
+            style: TextStyle(color: ColorScheme.of(context).outline),
+          ),
+        ),
+        TextButton(
+          onPressed: () async {
+            try {
+              // validate
+              int.parse(autosync);
+              Get.back();
+              await GStorage.setting.put(SettingBoxKey.autosync, autosync);
+              setState();
+            } catch (e) {
+              SmartDialog.showToast(e.toString());
+            }
+          },
+          child: const Text('确定'),
+        ),
+      ],
+    ),
+  );
 }
