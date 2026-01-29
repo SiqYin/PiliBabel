@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math';
 
 import 'package:PiliPlus/common/widgets/color_palette.dart';
 import 'package:PiliPlus/common/widgets/custom_toast.dart';
@@ -83,9 +82,7 @@ List<SettingsModel> get styleSettings => [
     setKey: SettingBoxKey.appFontWeight,
     defaultVal: false,
     leading: const Icon(Icons.text_fields),
-    onChanged: (value) {
-      Get.forceAppUpdate();
-    },
+    onChanged: (value) => Get.forceAppUpdate(),
     onTap: _showFontWeightDialog,
   ),
   NormalModel(
@@ -357,9 +354,7 @@ List<SettingsModel> get styleSettings => [
     leading: const Icon(Icons.exit_to_app_outlined),
     setKey: SettingBoxKey.directExitOnBack,
     defaultVal: false,
-    onChanged: (value) {
-      Get.find<MainController>().directExitOnBack = value;
-    },
+    onChanged: (value) => Get.find<MainController>().directExitOnBack = value,
   ),
   if (Platform.isAndroid)
     NormalModel(
@@ -474,9 +469,7 @@ void _showUiScaleDialog(
           onPressed: () => Navigator.pop(context),
           child: Text(
             '取消',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+            style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
         TextButton(
@@ -516,7 +509,7 @@ void _showSpringDurationDialog(BuildContext context) {
           onPressed: Get.back,
           child: Text(
             '取消',
-            style: TextStyle(color: Theme.of(context).colorScheme.outline),
+            style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
         TextButton(
@@ -602,7 +595,7 @@ void _showSpringDialog(BuildContext context, _) {
           onPressed: Get.back,
           child: Text(
             '取消',
-            style: TextStyle(color: Theme.of(context).colorScheme.outline),
+            style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
         TextButton(
@@ -794,12 +787,8 @@ void _showScrollDialog(BuildContext context) {
       content: TextFormField(
         autofocus: true,
         initialValue: scrollThreshold,
-        keyboardType: const TextInputType.numberWithOptions(
-          decimal: true,
-        ),
-        onChanged: (value) {
-          scrollThreshold = value;
-        },
+        keyboardType: const .numberWithOptions(decimal: true),
+        onChanged: (value) => scrollThreshold = value,
         inputFormatters: [
           FilteringTextInputFormatter.allow(RegExp(r'[\d\.]+')),
         ],
@@ -810,22 +799,19 @@ void _showScrollDialog(BuildContext context) {
           onPressed: Get.back,
           child: Text(
             '取消',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+            style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
         TextButton(
           onPressed: () {
-            Get.back();
-            GStorage.setting.put(
-              SettingBoxKey.scrollThreshold,
-              max(
-                10.0,
-                double.tryParse(scrollThreshold) ?? 50.0,
-              ),
-            );
-            SmartDialog.showToast('重启生效');
+            try {
+              final val = double.parse(scrollThreshold);
+              Get.back();
+              GStorage.setting.put(SettingBoxKey.scrollThreshold, val);
+              SmartDialog.showToast('重启生效');
+            } catch (e) {
+              SmartDialog.showToast(e.toString());
+            }
           },
           child: const Text('确定'),
         ),

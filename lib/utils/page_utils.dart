@@ -154,12 +154,16 @@ abstract final class PageUtils {
                       ),
                       TextButton(
                         onPressed: () {
-                          Get.back();
-                          int choice = int.tryParse(duration) ?? 0;
-                          shutdownTimerService
-                            ..scheduledExitInMinutes = choice
-                            ..startShutdownTimer();
-                          setState(() {});
+                          try {
+                            final choice = int.parse(duration);
+                            Get.back();
+                            shutdownTimerService
+                              ..scheduledExitInMinutes = choice
+                              ..startShutdownTimer();
+                            setState(() {});
+                          } catch (e) {
+                            SmartDialog.showToast(e.toString());
+                          }
                         },
                         child: const Text('确定'),
                       ),

@@ -249,9 +249,8 @@ List<SettingsModel> get playSettings => [
       leading: const Icon(Icons.volume_up_outlined),
       setKey: SettingBoxKey.enableBackgroundPlay,
       defaultVal: true,
-      onChanged: (value) {
-        videoPlayerServiceHandler!.enableBackgroundPlay = value;
-      },
+      onChanged: (value) =>
+          videoPlayerServiceHandler!.enableBackgroundPlay = value,
     ),
   const SwitchModel(
     title: '播放器设置仅对当前生效',

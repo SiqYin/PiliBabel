@@ -195,9 +195,7 @@ Future<void> _showLiveCDNDialog(
           onPressed: Get.back,
           child: Text(
             '取消',
-            style: TextStyle(
-              color: ColorScheme.of(context).outline,
-            ),
+            style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
         TextButton(

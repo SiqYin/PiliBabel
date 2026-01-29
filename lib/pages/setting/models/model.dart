@@ -148,9 +148,7 @@ SettingsModel getBanWordModel({
               onPressed: Get.back,
               child: Text(
                 '取消',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+                style: TextStyle(color: ColorScheme.of(context).outline),
               ),
             ),
             TextButton(
@@ -228,15 +226,17 @@ SettingsModel getVideoFilterSelectModel({
                   onPressed: Get.back,
                   child: Text(
                     '取消',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
+                    style: TextStyle(color: ColorScheme.of(context).outline),
                   ),
                 ),
                 TextButton(
                   onPressed: () {
-                    Get.back();
-                    result = int.tryParse(valueStr) ?? 0;
+                    try {
+                      result = int.parse(valueStr);
+                      Get.back();
+                    } catch (e) {
+                      SmartDialog.showToast(e.toString());
+                    }
                   },
                   child: const Text('确定'),
                 ),

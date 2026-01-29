@@ -700,9 +700,7 @@ Future<void> audioNormalization(
               onPressed: Get.back,
               child: Text(
                 '取消',
-                style: TextStyle(
-                  color: ColorScheme.of(context).outline,
-                ),
+                style: TextStyle(color: ColorScheme.of(context).outline),
               ),
             ),
             TextButton(
@@ -798,9 +796,7 @@ void _showDynDialog(BuildContext context) {
           onPressed: Get.back,
           child: Text(
             '取消',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+            style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
         TextButton(
@@ -840,21 +836,20 @@ void _showReplyLengthDialog(BuildContext context, VoidCallback setState) {
           onPressed: Get.back,
           child: Text(
             '取消',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+            style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
         TextButton(
           onPressed: () async {
-            Get.back();
-            int length = int.tryParse(replyLengthLimit) ?? 6;
-            ReplyItemGrpc.replyLengthLimit = length == 0 ? null : length;
-            await GStorage.setting.put(
-              SettingBoxKey.replyLengthLimit,
-              length,
-            );
-            setState();
+            try {
+              final val = int.parse(replyLengthLimit);
+              Get.back();
+              ReplyItemGrpc.replyLengthLimit = val == 0 ? null : val;
+              await GStorage.setting.put(SettingBoxKey.replyLengthLimit, val);
+              setState();
+            } catch (e) {
+              SmartDialog.showToast(e.toString());
+            }
           },
           child: const Text('确定'),
         ),
@@ -883,22 +878,22 @@ void _showDmHeightDialog(BuildContext context, VoidCallback setState) {
           onPressed: Get.back,
           child: Text(
             '取消',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+            style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
         TextButton(
           onPressed: () async {
-            Get.back();
-            await GStorage.setting.put(
-              SettingBoxKey.danmakuLineHeight,
-              max(
+            try {
+              final val = max(
                 1.0,
-                double.tryParse(danmakuLineHeight)?.toPrecision(1) ?? 1.6,
-              ),
-            );
-            setState();
+                double.parse(danmakuLineHeight).toPrecision(1),
+              );
+              Get.back();
+              await GStorage.setting.put(SettingBoxKey.danmakuLineHeight, val);
+              setState();
+            } catch (e) {
+              SmartDialog.showToast(e.toString());
+            }
           },
           child: const Text('确定'),
         ),
@@ -927,9 +922,7 @@ void _showTouchSlopDialog(BuildContext context, VoidCallback setState) {
           onPressed: Get.back,
           child: Text(
             '取消',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+            style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
         TextButton(
@@ -1210,9 +1203,7 @@ void _showProxyDialog(BuildContext context) {
           onPressed: Get.back,
           child: Text(
             '取消',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+            style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
         TextButton(
@@ -1254,20 +1245,22 @@ void _showCacheDialog(BuildContext context, VoidCallback setState) {
           onPressed: Get.back,
           child: Text(
             '取消',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.outline,
-            ),
+            style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
         TextButton(
           onPressed: () async {
-            Get.back();
-            num value = num.tryParse(valueStr) ?? 0;
-            await GStorage.setting.put(
-              SettingBoxKey.maxCacheSize,
-              value * 1024 * 1024,
-            );
-            setState();
+            try {
+              final val = num.parse(valueStr);
+              Get.back();
+              await GStorage.setting.put(
+                SettingBoxKey.maxCacheSize,
+                val * 1024 * 1024,
+              );
+              setState();
+            } catch (e) {
+              SmartDialog.showToast(e.toString());
+            }
           },
           child: const Text('确定'),
         ),

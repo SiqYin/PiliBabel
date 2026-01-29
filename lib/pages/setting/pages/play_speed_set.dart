@@ -56,7 +56,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
 
   // 添加自定义倍速
   void onAddSpeed() {
-    double? customSpeed;
+    String initialValue = '';
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -65,20 +65,15 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 12),
-            TextField(
+            TextFormField(
               autofocus: true,
-              keyboardType: const TextInputType.numberWithOptions(
-                decimal: true,
-              ),
+              initialValue: initialValue,
+              keyboardType: const .numberWithOptions(decimal: true),
               decoration: const InputDecoration(
                 labelText: '自定义倍速',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(6)),
-                ),
+                border: OutlineInputBorder(borderRadius: .all(.circular(6))),
               ),
-              onChanged: (value) {
-                customSpeed = double.tryParse(value);
-              },
+              onChanged: (value) => initialValue = value,
               inputFormatters: [
                 FilteringTextInputFormatter.allow(RegExp(r'[\d\.]+')),
               ],
@@ -95,17 +90,20 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
           ),
           TextButton(
             onPressed: () {
-              if (customSpeed == null) {
-                SmartDialog.showToast('输入倍数不合法');
-              } else if (speedList.contains(customSpeed)) {
-                SmartDialog.showToast('该倍速已存在');
-              } else {
-                Get.back();
-                speedList
-                  ..add(customSpeed!)
-                  ..sort();
-                video.put(VideoBoxKey.speedsList, speedList);
-                setState(() {});
+              try {
+                final val = double.parse(initialValue);
+                if (speedList.contains(val)) {
+                  SmartDialog.showToast('该倍速已存在');
+                } else {
+                  Get.back();
+                  speedList
+                    ..add(val)
+                    ..sort();
+                  video.put(VideoBoxKey.speedsList, speedList);
+                  setState(() {});
+                }
+              } catch (e) {
+                SmartDialog.showToast(e.toString());
               }
             },
             child: const Text('确认'),
@@ -267,6 +265,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
                 children: List.generate(
                   speedList.length,
                   (index) => FilledButton.tonal(
+                    style: FilledButton.styleFrom(tapTargetSize: .padded),
                     onPressed: () => showBottomSheet(theme, index),
                     child: Text(speedList[index].toString()),
                   ),
