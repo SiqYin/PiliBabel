@@ -18,14 +18,12 @@ import 'package:PiliPlus/models/common/theme/theme_type.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
 import 'package:PiliPlus/pages/mine/controller.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
-import 'package:PiliPlus/pages/setting/pages/color_select.dart';
 import 'package:PiliPlus/pages/setting/slide_color_picker.dart';
 import 'package:PiliPlus/pages/setting/widgets/dual_slide_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/multi_select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/slide_dialog.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
-import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/global_data.dart';
@@ -562,7 +560,6 @@ List<SettingsModel> get styleSettings => [
           Get.find<MineController>().themeType.value = result;
         } catch (_) {}
         GStorage.setting.put(SettingBoxKey.themeMode, result.index);
-        Get.putOrFind(ColorSelectController.new).themeType.value = result;
         Get.changeThemeMode(result.toThemeMode);
         setState();
       }
@@ -692,20 +689,17 @@ List<SettingsModel> get styleSettings => [
   ),
   NormalModel(
     onTap: (context, setState) async {
-      final result = await Get.toNamed('/fontSizeSetting');
-      if (result != null) {
-        Get.putOrFind(ColorSelectController.new).currentTextScale.value =
-            result;
+      final res = await Get.toNamed('/fontSizeSetting');
+      if (res != null) {
+        setState();
       }
     },
     title: '字体大小',
     leading: const Icon(Icons.format_size_outlined),
-    getSubtitle: () =>
-        Get.putOrFind(ColorSelectController.new).currentTextScale.value == 1.0
-        ? '默认'
-        : Get.putOrFind(
-            ColorSelectController.new,
-          ).currentTextScale.value.toString(),
+    getSubtitle: () {
+      final scale = Pref.defaultTextScale;
+      return scale == 1.0 ? '默认' : scale.toString();
+    },
   ),
   NormalModel(
     onTap: (context, setState) => Get.toNamed(

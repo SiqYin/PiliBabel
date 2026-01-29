@@ -38,7 +38,7 @@ class Item {
 }
 
 class _ColorSelectPageState extends State<ColorSelectPage> {
-  final ctr = Get.put(ColorSelectController());
+  final ctr = Get.put(_ColorSelectController());
   FlexSchemeVariant _dynamicSchemeVariant = Pref.schemeVariant;
 
   @override
@@ -270,10 +270,9 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
   }
 }
 
-class ColorSelectController extends GetxController {
+class _ColorSelectController extends GetxController {
   final RxBool dynamicColor = Pref.dynamicColor.obs;
   final RxInt currentColor = Pref.customColor.obs;
-  final RxDouble currentTextScale = Pref.defaultTextScale.obs;
   final Rx<ThemeType> themeType = Pref.themeType.obs;
 
   Box get setting => GStorage.setting;
