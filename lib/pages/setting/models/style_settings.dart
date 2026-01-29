@@ -618,74 +618,10 @@ List<SettingsModel> get styleSettings => [
     title: '默认启动页',
     getSubtitle: () => '当前启动页：${Pref.defaultHomePage.label}',
   ),
-  NormalModel(
+  const NormalModel(
     title: '滑动动画弹簧参数',
-    leading: const Icon(Icons.chrome_reader_mode_outlined),
-    onTap: (context, setState) {
-      final List<String> springDescription = Pref.springDescription
-          .map((i) => i.toString())
-          .toList();
-      showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('弹簧参数'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: List.generate(
-                3,
-                (index) => TextFormField(
-                  autofocus: index == 0,
-                  initialValue: springDescription[index],
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                  onChanged: (value) => springDescription[index] = value,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.allow(RegExp(r'[\d\.]+')),
-                  ],
-                  decoration: InputDecoration(
-                    labelText: const ['mass', 'stiffness', 'damping'][index],
-                  ),
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Get.back();
-                  GStorage.setting.delete(SettingBoxKey.springDescription);
-                  SmartDialog.showToast('重置成功，重启生效');
-                },
-                child: const Text('重置'),
-              ),
-              TextButton(
-                onPressed: Get.back,
-                child: Text(
-                  '取消',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.outline,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () {
-                  try {
-                    final res = springDescription.map(double.parse).toList();
-                    Get.back();
-                    GStorage.setting.put(SettingBoxKey.springDescription, res);
-                    SmartDialog.showToast('设置成功，重启生效');
-                  } catch (e) {
-                    SmartDialog.showToast(e.toString());
-                  }
-                },
-                child: const Text('确定'),
-              ),
-            ],
-          );
-        },
-      );
-    },
+    leading: Icon(Icons.chrome_reader_mode_outlined),
+    onTap: _showSpringDialog,
   ),
   NormalModel(
     onTap: (context, setState) async {
@@ -868,6 +804,137 @@ void _showUiScaleDialog(
                   ScaledWidgetsFlutterBinding.instance.setScaleFactor(uiScale);
                 },
               );
+            },
+            child: const Text('确定'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+void _showSpringDurationDialog(BuildContext context) {
+  String initialValue = '500';
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: const Text('滑动时间'),
+        content: TextFormField(
+          autofocus: true,
+          keyboardType: .number,
+          initialValue: initialValue,
+          onChanged: (value) => initialValue = value,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          decoration: const InputDecoration(suffixText: 'ms'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: Get.back,
+            child: Text(
+              '取消',
+              style: TextStyle(color: Theme.of(context).colorScheme.outline),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              try {
+                final milliseconds = int.parse(initialValue);
+                Get.back();
+                final springDescription =
+                    SpringDescription.withDurationAndBounce(
+                      duration: Duration(milliseconds: milliseconds),
+                    );
+                GStorage.setting.put(
+                  SettingBoxKey.springDescription,
+                  [
+                    springDescription.mass,
+                    springDescription.stiffness,
+                    springDescription.damping,
+                  ],
+                );
+                SmartDialog.showToast('设置成功，重启生效');
+              } catch (e) {
+                SmartDialog.showToast(e.toString());
+              }
+            },
+            child: const Text('确定'),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+void _showSpringDialog(BuildContext context, _) {
+  final List<String> springDescription = Pref.springDescription
+      .map((i) => i.toString())
+      .toList();
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Row(
+          mainAxisAlignment: .spaceBetween,
+          children: [
+            const Text('弹簧参数'),
+            TextButton(
+              style: TextButton.styleFrom(
+                visualDensity: .compact,
+                tapTargetSize: .shrinkWrap,
+              ),
+              onPressed: () {
+                Get.back();
+                _showSpringDurationDialog(context);
+              },
+              child: const Text('滑动时间'),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(
+            3,
+            (index) => TextFormField(
+              autofocus: index == 0,
+              initialValue: springDescription[index],
+              keyboardType: const .numberWithOptions(decimal: true),
+              onChanged: (value) => springDescription[index] = value,
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[\d\.]+')),
+              ],
+              decoration: InputDecoration(
+                labelText: const ['mass', 'stiffness', 'damping'][index],
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Get.back();
+              GStorage.setting.delete(SettingBoxKey.springDescription);
+              SmartDialog.showToast('重置成功，重启生效');
+            },
+            child: const Text('重置'),
+          ),
+          TextButton(
+            onPressed: Get.back,
+            child: Text(
+              '取消',
+              style: TextStyle(color: Theme.of(context).colorScheme.outline),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              try {
+                final res = springDescription.map(double.parse).toList();
+                Get.back();
+                GStorage.setting.put(SettingBoxKey.springDescription, res);
+                SmartDialog.showToast('设置成功，重启生效');
+              } catch (e) {
+                SmartDialog.showToast(e.toString());
+              }
             },
             child: const Text('确定'),
           ),
