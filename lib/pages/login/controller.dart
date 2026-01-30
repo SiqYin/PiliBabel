@@ -761,6 +761,10 @@ class LoginPageController extends GetxController
               ),
             ),
             TextButton(
+              style: TextButton.styleFrom(
+                visualDensity: .compact,
+                tapTargetSize: .shrinkWrap,
+              ),
               onPressed: () {
                 quickSelect = !quickSelect;
                 (context as Element).markNeedsBuild();
