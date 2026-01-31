@@ -33,10 +33,13 @@ class FollowPage extends StatefulWidget {
 
 class _FollowPageState extends State<FollowPage> {
   final _tag = Utils.generateRandomString(8);
-  late final FollowController _followController = Get.put(
-    FollowController(),
-    tag: _tag,
-  );
+  late final FollowController _followController;
+
+  @override
+  void initState() {
+    super.initState();
+    _followController = Get.put(FollowController(), tag: _tag);
+  }
 
   @override
   Widget build(BuildContext context) {

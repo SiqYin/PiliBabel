@@ -25,10 +25,15 @@ class WhisperSettingsPage extends StatefulWidget {
 }
 
 class _WhisperSettingsPageState extends State<WhisperSettingsPage> {
-  late final WhisperSettingsController _controller = Get.put(
-    WhisperSettingsController(imSettingType: widget.imSettingType),
-    tag: widget.imSettingType.name,
-  );
+  late final WhisperSettingsController _controller;
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      WhisperSettingsController(imSettingType: widget.imSettingType),
+      tag: widget.imSettingType.name,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

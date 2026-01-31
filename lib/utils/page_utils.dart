@@ -579,17 +579,15 @@ abstract final class PageUtils {
       vsync: state,
       duration: Duration.zero,
       reverseDuration: Duration.zero,
-    )..forward();
+    );
     state.showBottomSheet(
       constraints: const BoxConstraints(),
-      (context) {
-        return InteractiveviewerGallery(
-          sources: imgList,
-          initIndex: index,
-          quality: GlobalData().imgQuality,
-          onClose: animController.dispose,
-        );
-      },
+      (context) => InteractiveviewerGallery(
+        sources: imgList,
+        initIndex: index,
+        quality: GlobalData().imgQuality,
+        onClose: animController.dispose,
+      ),
       enableDrag: false,
       elevation: 0.0,
       backgroundColor: Colors.transparent,

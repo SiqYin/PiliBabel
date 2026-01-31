@@ -28,16 +28,17 @@ class FavDetailPage extends StatefulWidget {
 }
 
 class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
-  late final FavDetailController _favDetailController = Get.put(
-    FavDetailController(),
-    tag: Utils.makeHeroTag(mediaId),
-  );
+  late final FavDetailController _favDetailController;
   late String mediaId;
 
   @override
   void initState() {
     super.initState();
     mediaId = Get.parameters['mediaId']!;
+    _favDetailController = Get.put(
+      FavDetailController(),
+      tag: Utils.makeHeroTag(mediaId),
+    );
   }
 
   late EdgeInsets padding;

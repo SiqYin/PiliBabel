@@ -40,12 +40,19 @@ class PgcReviewChildPage extends StatefulWidget {
 
 class _PgcReviewChildPageState extends State<PgcReviewChildPage>
     with AutomaticKeepAliveClientMixin {
-  late final _tag = '${widget.mediaId}${widget.type.name}';
-  late final _controller = Get.put(
-    PgcReviewController(type: widget.type, mediaId: widget.mediaId),
-    tag: _tag,
-  );
+  late final String _tag;
+  late final PgcReviewController _controller;
   late final isLongReview = widget.type == PgcReviewType.long;
+
+  @override
+  void initState() {
+    super.initState();
+    _tag = '${widget.mediaId}${widget.type.name}';
+    _controller = Get.put(
+      PgcReviewController(type: widget.type, mediaId: widget.mediaId),
+      tag: _tag,
+    );
+  }
 
   @override
   void dispose() {

@@ -2247,7 +2247,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
   Widget _dmActionItem(
     Widget child, {
-    required FutureOr<void> Function() onTap,
+    required Future<void>? Function() onTap,
   }) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,

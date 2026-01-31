@@ -1120,7 +1120,7 @@ class VideoDetailController extends GetxController
     playerInit();
   }
 
-  FutureOr<void> _initPlayerIfNeeded() {
+  Future<void>? _initPlayerIfNeeded() {
     if (autoPlay.value ||
         (plPlayerController.preInitPlayer && !plPlayerController.processing) &&
             (isFileSource
@@ -1128,6 +1128,7 @@ class VideoDetailController extends GetxController
                 : videoPlayerKey.currentState?.mounted == true)) {
       return playerInit();
     }
+    return null;
   }
 
   Future<void> playerInit({

@@ -20,20 +20,22 @@ import 'package:flutter/gestures.dart' show TapGestureRecognizer;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart' show BoxHitTestEntry;
 
+@immutable
 sealed class BaseSegment {
   final double start;
   final double end;
 
-  BaseSegment({
+  const BaseSegment({
     required this.start,
     required this.end,
   });
 }
 
+@immutable
 class Segment extends BaseSegment {
   final Color color;
 
-  Segment({
+  const Segment({
     required super.start,
     required super.end,
     required this.color,
@@ -54,13 +56,14 @@ class Segment extends BaseSegment {
   int get hashCode => Object.hash(start, end, color);
 }
 
+@immutable
 class ViewPointSegment extends BaseSegment {
   final String? title;
   final String? url;
   final int? from;
   final int? to;
 
-  ViewPointSegment({
+  const ViewPointSegment({
     required super.start,
     required super.end,
     this.title,

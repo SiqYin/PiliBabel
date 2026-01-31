@@ -31,15 +31,21 @@ class MemberOpus extends StatefulWidget {
 
 class _MemberOpusState extends State<MemberOpus>
     with AutomaticKeepAliveClientMixin {
-  late final _controller = Get.put(
-    MemberOpusController(
-      mid: widget.mid,
-      heroTag: widget.heroTag,
-    ),
-    tag: widget.heroTag,
-  );
+  late final MemberOpusController _controller;
 
   late double _maxWidth;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = Get.put(
+      MemberOpusController(
+        mid: widget.mid,
+        heroTag: widget.heroTag,
+      ),
+      tag: widget.heroTag,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
