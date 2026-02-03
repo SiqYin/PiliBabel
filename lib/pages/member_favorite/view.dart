@@ -160,7 +160,6 @@ class _MemberFavoriteState extends State<MemberFavorite>
                 },
               ),
             ),
-            bgColor: null,
           ),
         ),
         Obx(() {
