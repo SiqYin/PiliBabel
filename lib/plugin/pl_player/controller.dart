@@ -230,6 +230,7 @@ class PlPlayerController {
   late bool isDesktopPip = false;
   late Rect _lastWindowBounds;
 
+  late final showWindowTitleBar = Pref.showWindowTitleBar;
   late final RxBool isAlwaysOnTop = false.obs;
   Future<void> setAlwaysOnTop(bool value) {
     isAlwaysOnTop.value = value;
@@ -239,8 +240,8 @@ class PlPlayerController {
   Future<void> exitDesktopPip() {
     isDesktopPip = false;
     return Future.wait([
-      windowManager.setTitleBarStyle(
-          Pref.showWindowTitleBar ? TitleBarStyle.normal : TitleBarStyle.hidden),
+      if (showWindowTitleBar)
+        windowManager.setTitleBarStyle(TitleBarStyle.normal),
       windowManager.setMinimumSize(const Size(400, 700)),
       windowManager.setBounds(_lastWindowBounds),
       setAlwaysOnTop(false),
@@ -255,7 +256,9 @@ class PlPlayerController {
 
     _lastWindowBounds = await windowManager.getBounds();
 
-    windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+    if (showWindowTitleBar) {
+      windowManager.setTitleBarStyle(TitleBarStyle.hidden);
+    }
 
     late final Size size;
     final state = videoController!.player.state;
