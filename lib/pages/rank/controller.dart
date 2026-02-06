@@ -29,7 +29,7 @@ class RankController extends GetxController
     final position = tabScrollController.position;
     final offset = clampDouble(
       (tabHeight * (2 * index + 1) - position.viewportDimension) / 2.0 +
-          (_mainCtr.useBottomNav && (_mainCtr.showBottomBar?.value ?? false)
+          (_mainCtr.useBottomNav && (_mainCtr.showBottomBar?.value ?? true)
               ? 80.0
               : 0.0),
       position.minScrollExtent,
