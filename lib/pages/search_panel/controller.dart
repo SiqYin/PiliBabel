@@ -58,6 +58,10 @@ class SearchPanelController<R extends SearchNumData<T>, T>
 
   StreamSubscription? _listener;
 
+  void cancelListener() {
+    _listener?.cancel();
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -112,11 +116,5 @@ class SearchPanelController<R extends SearchNumData<T>, T>
   Future<void> onReload() {
     scrollController.jumpToTop();
     return super.onReload();
-  }
-
-  @override
-  void onClose() {
-    _listener?.cancel();
-    super.onClose();
   }
 }
