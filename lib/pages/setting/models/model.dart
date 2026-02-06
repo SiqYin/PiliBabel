@@ -33,7 +33,6 @@ sealed class SettingsModel {
 class PopupModel<T extends EnumWithLabel> extends SettingsModel {
   const PopupModel({
     required this.title,
-    super.subtitle,
     super.leading,
     super.contentPadding,
     super.titleStyle,
