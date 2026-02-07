@@ -192,7 +192,7 @@ class _InteractiveviewerGalleryState extends State<InteractiveviewerGallery>
           minScale: widget.minScale,
           onDismissed: Get.back,
           onInteractionEnd: (_) =>
-              _onScaleChanged(_transformationController.value.row0[0]),
+              _onScaleChanged(_transformationController.value.storage[0]),
           child: PageView<ImageHorizontalDragGestureRecognizer>.builder(
             onPageChanged: _onPageChanged,
             controller: _pageController,

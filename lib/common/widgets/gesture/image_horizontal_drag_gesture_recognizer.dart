@@ -26,11 +26,12 @@ class ImageHorizontalDragGestureRecognizer
     if (_initialPosition == null) {
       return true;
     }
-    final scale = transformationController.value.row0[0];
+    final storage = transformationController.value.storage;
+    final scale = storage[0];
     if (scale <= 1.0) {
       return true;
     }
-    final double xOffset = transformationController.value.row0[3];
+    final double xOffset = storage[12];
     final double boundaryEnd = width * scale;
     final int xPos = (boundaryEnd + xOffset).round();
     return (boundaryEnd.round() == xPos &&
