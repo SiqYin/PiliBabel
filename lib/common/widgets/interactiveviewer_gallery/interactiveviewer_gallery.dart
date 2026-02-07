@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:PiliPlus/common/widgets/flutter/page/page_view.dart';
 import 'package:PiliPlus/common/widgets/gesture/image_horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/interactiveviewer_gallery/interactive_viewer_boundary.dart';
+import 'package:PiliPlus/common/widgets/scroll_physics.dart'
+    show CustomTabBarViewScrollPhysics;
 import 'package:PiliPlus/models/common/image_preview_type.dart';
 import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
@@ -191,10 +193,13 @@ class _InteractiveviewerGalleryState extends State<InteractiveviewerGallery>
           onDismissed: Get.back,
           onInteractionEnd: (_) =>
               _onScaleChanged(_transformationController.value.row0[0]),
-          child: PageView.builder(
+          child: PageView<ImageHorizontalDragGestureRecognizer>.builder(
             onPageChanged: _onPageChanged,
             controller: _pageController,
             itemCount: widget.sources.length,
+            physics: const CustomTabBarViewScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
             itemBuilder: (BuildContext context, int index) {
               final item = widget.sources[index];
               final isFileImg = item.sourceType == SourceType.fileImage;
