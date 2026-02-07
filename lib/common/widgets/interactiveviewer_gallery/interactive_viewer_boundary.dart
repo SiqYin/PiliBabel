@@ -75,6 +75,17 @@ class InteractiveViewerBoundaryState extends State<InteractiveViewerBoundary>
     );
 
     _updateMoveAnimation();
+
+    _scaleAnimation = _animateController.drive(
+      Tween<double>(begin: 1.0, end: 0.25),
+    );
+
+    _opacityAnimation = _animateController.drive(
+      DecorationTween(
+        begin: const BoxDecoration(color: Colors.black),
+        end: const BoxDecoration(color: Colors.transparent),
+      ),
+    );
   }
 
   @override
@@ -86,29 +97,10 @@ class InteractiveViewerBoundaryState extends State<InteractiveViewerBoundary>
   void _updateMoveAnimation() {
     final double endX = _offset.dx.sign * (_offset.dx.abs() / _offset.dy.abs());
     final double endY = _offset.dy.sign;
-
     _slideAnimation = _animateController.drive(
       Tween<Offset>(
         begin: Offset.zero,
         end: Offset(endX, endY),
-      ),
-    );
-
-    _scaleAnimation = _animateController.drive(
-      Tween<double>(
-        begin: 1.0,
-        end: 0.25,
-      ),
-    );
-
-    _opacityAnimation = _animateController.drive(
-      DecorationTween(
-        begin: const BoxDecoration(
-          color: Colors.black,
-        ),
-        end: const BoxDecoration(
-          color: Colors.transparent,
-        ),
       ),
     );
   }
