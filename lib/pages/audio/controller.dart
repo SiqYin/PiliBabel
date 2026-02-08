@@ -25,6 +25,7 @@ import 'package:PiliPlus/pages/video/pay_coins/view.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_repeat.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/services/service_locator.dart';
+import 'package:PiliPlus/services/shutdown_timer_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
@@ -131,16 +132,16 @@ class AudioController extends GetxController
     );
   }
 
-  Future<void> onPlay() async {
-    await player?.play();
+  Future<void>? onPlay() {
+    return player?.play();
   }
 
-  Future<void> onPause() async {
-    await player?.pause();
+  Future<void>? onPause() async {
+    return player?.pause();
   }
 
-  Future<void> onSeek(Duration duration) async {
-    await player?.seek(duration);
+  Future<void>? onSeek(Duration duration) {
+    return player?.seek(duration);
   }
 
   void _updateCurrItem(DetailItem item) {
@@ -297,26 +298,30 @@ class AudioController extends GetxController
           false,
         );
         if (completed) {
-          switch (playMode.value) {
-            case PlayRepeat.pause:
-              break;
-            case PlayRepeat.listOrder:
-              playNext(nextPart: true);
-              break;
-            case PlayRepeat.singleCycle:
-              _replay();
-              break;
-            case PlayRepeat.listCycle:
-              if (!playNext(nextPart: true)) {
-                if (index != null && index != 0 && playlist != null) {
-                  playIndex(0);
-                } else {
-                  _replay();
+          if (shutdownTimerService.isWaiting) {
+            shutdownTimerService.handleWaiting();
+          } else {
+            switch (playMode.value) {
+              case PlayRepeat.pause:
+                break;
+              case PlayRepeat.listOrder:
+                playNext(nextPart: true);
+                break;
+              case PlayRepeat.singleCycle:
+                _replay();
+                break;
+              case PlayRepeat.listCycle:
+                if (!playNext(nextPart: true)) {
+                  if (index != null && index != 0 && playlist != null) {
+                    playIndex(0);
+                  } else {
+                    _replay();
+                  }
                 }
-              }
-              break;
-            case PlayRepeat.autoPlayRelated:
-              break;
+                break;
+              case PlayRepeat.autoPlayRelated:
+                break;
+            }
           }
         }
       }),
@@ -673,17 +678,6 @@ class AudioController extends GetxController
     }
   }
 
-  // Timer? _timer;
-
-  // void _cancelTimer() {
-  //   _timer?.cancel();
-  //   _timer = null;
-  // }
-
-  // void showTimerDialog() {
-  //   // TODO
-  // }
-
   @override
   (Object, int) get getFavRidType => (oid, isVideo ? 2 : 12);
 
@@ -724,7 +718,10 @@ class AudioController extends GetxController
 
   @override
   void onClose() {
-    // _cancelTimer();
+    shutdownTimerService
+      ..onPause = null
+      ..isPlaying = null
+      ..reset();
     videoPlayerServiceHandler
       ?..onPlay = null
       ..onPause = null

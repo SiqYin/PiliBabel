@@ -144,7 +144,7 @@ class _InteractiveviewerGalleryState extends State<InteractiveviewerGallery>
       ..removeListener(listener)
       ..dispose();
     _transformationController.dispose();
-    _horizontalDragGestureRecognizer.dispose();
+    // _horizontalDragGestureRecognizer.dispose(); // duplicate
     if (widget.quality != _quality) {
       for (final item in widget.sources) {
         if (item.sourceType == SourceType.networkImage) {

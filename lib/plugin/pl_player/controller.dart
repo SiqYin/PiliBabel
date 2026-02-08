@@ -525,7 +525,7 @@ class PlPlayerController {
     bool notify = true,
     bool isInterrupt = false,
   }) async {
-    if (_instance?.playerStatus.value == PlayerStatus.playing) {
+    if (_instance?.playerStatus.isPlaying ?? false) {
       await _instance?.pause(notify: notify, isInterrupt: isInterrupt);
     }
   }
@@ -558,7 +558,7 @@ class PlPlayerController {
         if (sdkInt < 36) {
           Utils.channel.setMethodCallHandler((call) async {
             if (call.method == 'onUserLeaveHint') {
-              if (playerStatus.playing && _isCurrVideoPage) {
+              if (playerStatus.isPlaying && _isCurrVideoPage) {
                 enterPip();
               }
             }
@@ -1215,7 +1215,7 @@ class PlPlayerController {
           } catch (e) {
             if (kDebugMode) debugPrint('seek failed: $e');
           }
-          // if (playerStatus.value == PlayerStatus.paused) {
+          // if (playerStatus.isPaused) {
           //   play();
           // }
           t.cancel();
@@ -1437,7 +1437,7 @@ class PlPlayerController {
       return;
     }
     if (val) {
-      if (playerStatus.value == PlayerStatus.playing) {
+      if (playerStatus.isPlaying) {
         longPressStatus.value = val;
         HapticFeedback.lightImpact();
         await setPlaybackSpeed(
@@ -1634,14 +1634,13 @@ class PlPlayerController {
     }
     if (!enableHeart || MineController.anonymity.value || progress == 0) {
       return;
-    } else if (playerStatus.value == PlayerStatus.paused) {
+    } else if (playerStatus.isPaused) {
       if (!isManual) {
         return;
       }
     }
     bool isComplete =
-        playerStatus.value == PlayerStatus.completed ||
-        type == HeartBeatType.completed;
+        playerStatus.isCompleted || type == HeartBeatType.completed;
     if ((durationSeconds.value - position.value).inMilliseconds > 1000) {
       isComplete = false;
     }
@@ -1741,7 +1740,7 @@ class PlPlayerController {
     subscriptions.clear();
     _positionListeners.clear();
     _statusListeners.clear();
-    if (playerStatus.playing) {
+    if (playerStatus.isPlaying) {
       WakelockPlus.disable();
     }
     _videoPlayerController?.dispose();

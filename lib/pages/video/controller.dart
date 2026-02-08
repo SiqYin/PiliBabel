@@ -278,7 +278,7 @@ class VideoDetailController extends GetxController
 
   late final watchProgress = GStorage.watchProgress;
   void cacheLocalProgress() {
-    if (plPlayerController.playerStatus.completed) {
+    if (plPlayerController.playerStatus.isCompleted) {
       watchProgress.put(cid.value.toString(), entry.totalTimeMilli);
     } else if (playedTime case final playedTime?) {
       watchProgress.put(cid.value.toString(), playedTime.inMilliseconds);
@@ -1034,7 +1034,8 @@ class VideoDetailController extends GetxController
       SmartDialog.showToast('UP主已关闭弹幕');
       return;
     }
-    final isPlaying = autoPlay.value && plPlayerController.playerStatus.playing;
+    final isPlaying =
+        autoPlay.value && plPlayerController.playerStatus.isPlaying;
     if (isPlaying) {
       await plPlayerController.pause();
     }
@@ -1630,7 +1631,7 @@ class VideoDetailController extends GetxController
 
   void makeHeartBeat() {
     if (plPlayerController.enableHeart &&
-        !plPlayerController.playerStatus.completed &&
+        !plPlayerController.playerStatus.isCompleted &&
         playedTime != null) {
       try {
         plPlayerController.makeHeartBeat(

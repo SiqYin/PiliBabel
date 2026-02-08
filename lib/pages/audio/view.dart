@@ -12,6 +12,7 @@ import 'package:PiliPlus/models/common/image_type.dart';
 import 'package:PiliPlus/pages/audio/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/widgets/action_item.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_repeat.dart';
+import 'package:PiliPlus/services/shutdown_timer_service.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
@@ -90,7 +91,7 @@ class _AudioPageState extends State<AudioPage> {
             builder: (context) {
               return PopupMenuButton<ListOrder>(
                 tooltip: '排序',
-                icon: const Icon(Icons.sort),
+                icon: const Icon(Icons.sort, size: 22),
                 initialValue: _controller.order,
                 onSelected: (value) {
                   _controller.onChangeOrder(value);
@@ -102,10 +103,22 @@ class _AudioPageState extends State<AudioPage> {
               );
             },
           ),
+          IconButton(
+            tooltip: '定时关闭',
+            onPressed: () => shutdownTimerService
+              ..onPause ??= _controller.onPause
+              ..isPlaying ??= (() => _controller.player?.state.playing ?? false)
+              ..showScheduleExitDialog(
+                context,
+                isFullScreen: false,
+              ),
+            icon: const Icon(Icons.schedule, size: 22),
+          ),
           if (_controller.isVideo)
             IconButton(
+              tooltip: '更多',
               onPressed: _showMore,
-              icon: const Icon(Icons.more_vert),
+              icon: const Icon(Icons.more_vert, size: 22),
             ),
           const SizedBox(width: 5),
         ],

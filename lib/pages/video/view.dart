@@ -46,7 +46,8 @@ import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
 import 'package:PiliPlus/plugin/pl_player/view.dart';
 import 'package:PiliPlus/services/service_locator.dart';
-import 'package:PiliPlus/services/shutdown_timer_service.dart';
+import 'package:PiliPlus/services/shutdown_timer_service.dart'
+    show shutdownTimerService;
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
@@ -211,7 +212,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
   // 播放器状态监听
   Future<void> playerListener(PlayerStatus status) async {
-    bool isPlaying = status == PlayerStatus.playing;
+    final isPlaying = status.isPlaying;
     try {
       if (videoDetailController.scrollCtr.hasClients) {
         if (isPlaying) {
@@ -236,7 +237,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       if (kDebugMode) debugPrint('handle player status: $e');
     }
 
-    if (status == PlayerStatus.completed) {
+    if (status.isCompleted) {
       try {
         if (videoDetailController
                 .steinEdgeInfo
@@ -250,36 +251,38 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           return;
         }
       } catch (_) {}
-      shutdownTimerService.handleWaitingFinished();
-      bool notExitFlag = false;
+
+      bool exitFlag = true;
 
       /// 顺序播放 列表循环
-      if (plPlayerController!.playRepeat != PlayRepeat.pause &&
-          plPlayerController!.playRepeat != PlayRepeat.singleCycle) {
-        notExitFlag = introController.nextPlay();
-      }
-
-      /// 单个循环
-      if (plPlayerController!.playRepeat == PlayRepeat.singleCycle) {
-        notExitFlag = true;
-        plPlayerController!.play(repeat: true);
-      }
-
-      // 结束播放退出全屏
-      if (!notExitFlag && autoExitFullscreen) {
-        plPlayerController!.triggerFullScreen(status: false);
-        if (plPlayerController!.longPressStatus.value) {
-          plPlayerController!.setLongPressStatus(false);
-        }
-        if (plPlayerController!.controlsLock.value) {
-          plPlayerController!.onLockControl(false);
+      if (shutdownTimerService.isWaiting) {
+        shutdownTimerService.handleWaiting();
+      } else {
+        switch (plPlayerController!.playRepeat) {
+          case PlayRepeat.singleCycle:
+            exitFlag = false;
+            plPlayerController!.play(repeat: true);
+          case PlayRepeat.listOrder:
+          case PlayRepeat.listCycle:
+          case PlayRepeat.autoPlayRelated:
+            exitFlag = !introController.nextPlay();
+          case PlayRepeat.pause:
         }
       }
-      // 播放完展示控制栏
-      if (Platform.isAndroid && !notExitFlag) {
-        PiPStatus currentStatus = await Floating().pipStatus;
-        if (currentStatus == PiPStatus.disabled) {
-          plPlayerController!.onLockControl(false);
+
+      if (exitFlag) {
+        // 结束播放退出全屏
+        if (autoExitFullscreen) {
+          plPlayerController!.triggerFullScreen(status: false);
+          if (plPlayerController!.controlsLock.value) {
+            plPlayerController!.onLockControl(false);
+          }
+        }
+        // 播放完展示控制栏
+        if (Platform.isAndroid) {
+          if (await Floating().pipStatus == PiPStatus.disabled) {
+            plPlayerController!.onLockControl(false);
+          }
         }
       }
     }
@@ -351,7 +354,6 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     if (!videoDetailController.horizontalScreen) {
       AutoOrientation.portraitUpMode();
     }
-    shutdownTimerService.handleWaitingFinished();
     if (!videoDetailController.plPlayerController.isCloseAll) {
       videoPlayerServiceHandler?.onVideoDetailDispose(heroTag);
       if (plPlayerController != null) {
@@ -416,7 +418,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     WidgetsBinding.instance.addObserver(this);
 
     plPlayerController?.isLive = false;
-    if (videoDetailController.plPlayerController.playerStatus.playing &&
+    if (videoDetailController.plPlayerController.playerStatus.isPlaying &&
         videoDetailController.playerStatus != PlayerStatus.playing) {
       videoDetailController.plPlayerController.pause();
     }
@@ -447,7 +449,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     () async {
       if (videoDetailController.autoPlay.value) {
         await videoDetailController.playerInit(
-          autoplay: videoDetailController.playerStatus == PlayerStatus.playing,
+          autoplay: videoDetailController.playerStatus?.isPlaying ?? false,
         );
       } else if (videoDetailController.plPlayerController.preInitPlayer &&
           !videoDetailController.isQuerying &&
@@ -622,8 +624,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                         videoDetailController.isCollapsing
                   ? animHeight
                   : videoDetailController.isCollapsing ||
-                        plPlayerController?.playerStatus.value ==
-                            PlayerStatus.playing
+                        (plPlayerController?.playerStatus.isPlaying ?? false)
                   ? videoDetailController.minVideoHeight
                   : kToolbarHeight;
               if (videoDetailController.isExpanding &&
@@ -738,7 +739,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                                           Text(
                                             '${videoDetailController.playedTime == null
                                                 ? '立即'
-                                                : plPlayerController!.playerStatus.completed
+                                                : plPlayerController!.playerStatus.isCompleted
                                                 ? '重新'
                                                 : '继续'}播放',
                                             style: TextStyle(
