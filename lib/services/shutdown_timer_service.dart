@@ -33,6 +33,7 @@ class ShutdownTimerService {
   ValueGetter<bool>? isPlaying;
 
   Timer? _shutdownTimer;
+  bool get isActive => _shutdownTimer?.isActive ?? false;
   int _durationInMinutes = 0;
   _ShutdownType _shutdownType = .pause;
 

@@ -11,7 +11,6 @@ import 'package:PiliPlus/http/ua_type.dart';
 import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/models/common/account_type.dart';
 import 'package:PiliPlus/models/common/audio_normalization.dart';
-import 'package:PiliPlus/models/common/sponsor_block/skip_type.dart';
 import 'package:PiliPlus/models/common/super_resolution_type.dart';
 import 'package:PiliPlus/models/common/video/video_type.dart';
 import 'package:PiliPlus/models/user/danmaku_rule.dart';
@@ -19,6 +18,7 @@ import 'package:PiliPlus/models/video/play/url.dart';
 import 'package:PiliPlus/models_new/video/video_shot/data.dart';
 import 'package:PiliPlus/pages/danmaku/danmaku_model.dart';
 import 'package:PiliPlus/pages/mine/controller.dart';
+import 'package:PiliPlus/pages/sponsor_block/block_mixin.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_status.dart';
 import 'package:PiliPlus/plugin/pl_player/models/double_tap_type.dart';
@@ -62,7 +62,7 @@ import 'package:path/path.dart' as path;
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:window_manager/window_manager.dart';
 
-class PlPlayerController {
+class PlPlayerController with BlockConfigMixin {
   Player? _videoPlayerController;
   VideoController? _videoController;
 
@@ -357,19 +357,6 @@ class PlPlayerController {
   final bool showVipDanmaku = Pref.showVipDanmaku; // loop unswitching
   late double subtitleStrokeWidth = Pref.subtitleStrokeWidth;
   late int subtitleFontWeight = Pref.subtitleFontWeight;
-
-  late final pgcSkipType = Pref.pgcSkipType;
-  late final enablePgcSkip = Pref.pgcSkipType != SkipType.disable;
-  // sponsor block
-  late final bool enableSponsorBlock = Pref.enableSponsorBlock;
-  late final bool enableBlock = enableSponsorBlock || enablePgcSkip;
-  late final double blockLimit = Pref.blockLimit;
-  late final blockSettings = Pref.blockSettings;
-  late final List<Color> blockColor = Pref.blockColor;
-  late final Set<String> enableList = blockSettings
-      .where((item) => item.second != SkipType.disable)
-      .map((item) => item.first.name)
-      .toSet();
 
   // settings
   late final showFSActionItem = Pref.showFSActionItem;

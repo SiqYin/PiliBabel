@@ -163,7 +163,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   // 获取视频资源，初始化播放器
   Future<void> videoSourceInit() async {
     videoDetailController.queryVideoUrl();
-    if (videoDetailController.autoPlay.value) {
+    if (videoDetailController.autoPlay) {
       plPlayerController = videoDetailController.plPlayerController;
       plPlayerController!
         ..addStatusLister(playerListener)
@@ -310,7 +310,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       }
     }
     plPlayerController = videoDetailController.plPlayerController;
-    videoDetailController.autoPlay.value = true;
+    videoDetailController.autoPlay = true;
     if (videoDetailController.plPlayerController.preInitPlayer) {
       await plPlayerController!.play();
     } else {
@@ -385,7 +385,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
     }
 
-    videoDetailController.positionSubscription?.cancel();
+    videoDetailController.cancelBlockListener();
 
     introController.cancelTimer();
 
@@ -447,7 +447,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     }
 
     () async {
-      if (videoDetailController.autoPlay.value) {
+      if (videoDetailController.autoPlay) {
         await videoDetailController.playerInit(
           autoplay: videoDetailController.playerStatus?.isPlaying ?? false,
         );
@@ -547,7 +547,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       if (!isPortrait &&
           !isFullScreen &&
           plPlayerController != null &&
-          videoDetailController.autoPlay.value) {
+          videoDetailController.autoPlay) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           plPlayerController!.triggerFullScreen(
             status: true,
@@ -1199,7 +1199,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   );
 
   Widget get manualPlayerWidget => Obx(() {
-    if (!videoDetailController.autoPlay.value) {
+    if (!videoDetailController.autoPlay) {
       return Stack(
         clipBehavior: Clip.none,
         children: [
@@ -1354,7 +1354,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     child: Obx(
       () =>
           videoDetailController.videoState.value is! Success ||
-              !videoDetailController.autoPlay.value ||
+              !videoDetailController.autoPlay ||
               plPlayerController?.videoController == null
           ? const SizedBox.shrink()
           : PLVideoPlayer(
@@ -1415,7 +1415,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         introController: introController,
         onSendDanmaku: videoDetailController.showShootDanmakuSheet,
         canPlay: () {
-          if (videoDetailController.autoPlay.value) {
+          if (videoDetailController.autoPlay) {
             return true;
           }
           handlePlay();
@@ -1594,7 +1594,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         if (isShowing) plPlayer(width: width, height: height),
 
         Obx(() {
-          if (!videoDetailController.autoPlay.value) {
+          if (!videoDetailController.autoPlay) {
             return Positioned.fill(
               child: GestureDetector(
                 onTap: handlePlay,

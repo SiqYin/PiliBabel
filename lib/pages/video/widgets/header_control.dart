@@ -1944,8 +1944,7 @@ class HeaderControlState extends State<HeaderControl>
                           child: IconButton(
                             tooltip: '片段信息',
                             style: btnStyle,
-                            onPressed: () =>
-                                videoDetailCtr.showSBDetail(context),
+                            onPressed: videoDetailCtr.showSBDetail,
                             icon: const Icon(
                               MdiIcons.advertisements,
                               size: 19,
