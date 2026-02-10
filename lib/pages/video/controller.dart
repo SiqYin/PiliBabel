@@ -504,8 +504,6 @@ class VideoDetailController extends GetxController
   Future<void> seekTo(Duration duration, {required bool isSeek}) =>
       plPlayerController.seekTo(duration, isSeek: isSeek);
 
-
-
   @override
   Widget buildItem(Object item, Animation<double> animation) {
     final theme = Get.theme;
