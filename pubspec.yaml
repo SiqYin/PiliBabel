@@ -336,7 +336,7 @@ flutter:
     - path: assets/images/logo/ico/
       platforms: [windows]
     - path: assets/images/logo/desktop/
-      platforms: [windows, linux, macos]
+      platforms: [linux, macos]
     - path: assets/images/live/
     - path: assets/images/video/
     - path: assets/images/paycoins/
