@@ -406,6 +406,9 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
     }
     final containerWidth = widget.containerSize.width;
     final imageWidth = _imageSize.width * _scale;
+    if (imageWidth <= containerWidth) {
+      return true;
+    }
     final dx = (1 - _scale) * containerWidth / 2;
     final dxOffset = (imageWidth - containerWidth) / 2;
     if (initialPosition.dx < lastPosition.global.dx) {

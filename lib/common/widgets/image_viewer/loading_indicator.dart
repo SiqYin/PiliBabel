@@ -100,9 +100,7 @@ class RenderLoadingIndicator extends RenderBox {
         ..drawCircle(
           center,
           radius,
-          paint
-            ..strokeWidth = strokeWidth
-            ..color = Colors.white,
+          paint..color = Colors.white,
         )
         ..drawCircle(
           center,
