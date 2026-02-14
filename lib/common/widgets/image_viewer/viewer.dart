@@ -17,6 +17,8 @@
 
 import 'dart:math' as math;
 
+import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart'
+    show touchSlopH;
 import 'package:PiliPlus/common/widgets/gesture/image_horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/gesture/image_tap_gesture_recognizer.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
@@ -138,17 +140,16 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
     _tapGestureRecognizer = widget.tapGestureRecognizer;
     _horizontalDragGestureRecognizer = widget.horizontalDragGestureRecognizer;
 
-    final gestureSettings = MediaQuery.maybeGestureSettingsOf(Get.context!);
     _scaleGestureRecognizer = ScaleGestureRecognizer(debugOwner: this)
       ..dragStartBehavior = .start
       ..onStart = _onScaleStart
       ..onUpdate = _onScaleUpdate
       ..onEnd = _onScaleEnd
-      ..gestureSettings = gestureSettings;
+      ..gestureSettings = DeviceGestureSettings(touchSlop: touchSlopH);
     _doubleTapGestureRecognizer = DoubleTapGestureRecognizer(debugOwner: this)
       ..onDoubleTapDown = _onDoubleTapDown
       ..onDoubleTap = _onDoubleTap
-      ..gestureSettings = gestureSettings;
+      ..gestureSettings = MediaQuery.maybeGestureSettingsOf(Get.context!);
   }
 
   @override
@@ -418,9 +419,9 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
     final dx = (1 - _scale) * containerWidth / 2;
     final dxOffset = (imageWidth - containerWidth) / 2;
     if (initialPosition.dx < lastPosition.global.dx) {
-      return _position.dx == dx + dxOffset;
+      return _round(_position.dx) == _round(dx + dxOffset);
     } else {
-      return _position.dx == dx - dxOffset;
+      return _round(_position.dx) == _round(dx - dxOffset);
     }
   }
 

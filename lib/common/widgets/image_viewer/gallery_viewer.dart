@@ -118,8 +118,7 @@ class _GalleryViewerState extends State<GalleryViewer>
     if (PlatformUtils.isDesktop) {
       _tapGestureRecognizer.onSecondaryTapUp = _showDesktopMenu;
     }
-    _horizontalDragGestureRecognizer = ImageHorizontalDragGestureRecognizer()
-      ..gestureSettings = gestureSettings;
+    _horizontalDragGestureRecognizer = ImageHorizontalDragGestureRecognizer();
     _longPressGestureRecognizer = LongPressGestureRecognizer()
       ..onLongPress = _onLongPress
       ..gestureSettings = gestureSettings;
