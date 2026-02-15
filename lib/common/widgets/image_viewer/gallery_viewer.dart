@@ -377,7 +377,7 @@ class _GalleryViewerState extends State<GalleryViewer>
             }
             if (frame == null) {
               if (widget.quality == _quality) {
-                return const SizedBox.expand();
+                return child;
               } else {
                 return Image(
                   image: CachedNetworkImageProvider(

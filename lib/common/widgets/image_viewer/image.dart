@@ -595,13 +595,14 @@ class _ImageState extends State<Image> with WidgetsBindingObserver {
       // }
     }
 
-    Widget result;
+    final Size childSize;
+    final bool isLongPic;
+    double? minScale, maxScale;
     if (_imageInfo != null) {
-      double? minScale, maxScale;
       final imgWidth = _imageInfo!.image.width.toDouble();
       final imgHeight = _imageInfo!.image.height.toDouble();
       final imgRatio = imgHeight / imgWidth;
-      final isLongPic =
+      isLongPic =
           imgRatio > StyleString.imgMaxRatio &&
           imgHeight > widget.containerSize.height;
       if (isLongPic) {
@@ -609,25 +610,25 @@ class _ImageState extends State<Image> with WidgetsBindingObserver {
         minScale = compatWidth / widget.containerSize.height * imgRatio;
         maxScale = math.max(widget.maxScale, minScale * 3);
       }
-      result = Viewer(
-        minScale: minScale ?? widget.minScale,
-        maxScale: maxScale ?? widget.maxScale,
-        isLongPic: isLongPic,
-        containerSize: widget.containerSize,
-        childSize: Size(imgWidth, imgHeight),
-        onDragStart: widget.onDragStart,
-        onDragUpdate: widget.onDragUpdate,
-        onDragEnd: widget.onDragEnd,
-        tapGestureRecognizer: widget.tapGestureRecognizer,
-        horizontalDragGestureRecognizer: widget.horizontalDragGestureRecognizer,
-        onChangePage: widget.onChangePage,
-        child: RawImage(
-          image: _imageInfo!.image,
-        ),
-      );
+      childSize = Size(imgWidth, imgHeight);
     } else {
-      result = const SizedBox.expand();
+      childSize = .zero;
+      isLongPic = false;
     }
+    Widget result = Viewer(
+      minScale: minScale ?? widget.minScale,
+      maxScale: maxScale ?? widget.maxScale,
+      isLongPic: isLongPic,
+      containerSize: widget.containerSize,
+      childSize: childSize,
+      onDragStart: widget.onDragStart,
+      onDragUpdate: widget.onDragUpdate,
+      onDragEnd: widget.onDragEnd,
+      tapGestureRecognizer: widget.tapGestureRecognizer,
+      horizontalDragGestureRecognizer: widget.horizontalDragGestureRecognizer,
+      onChangePage: widget.onChangePage,
+      child: RawImage(image: _imageInfo?.image),
+    );
 
     if (!widget.excludeFromSemantics) {
       result = Semantics(
