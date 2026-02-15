@@ -81,6 +81,7 @@ class _GalleryViewerState extends State<GalleryViewer>
   late final PageController _pageController;
 
   late final ImageTapGestureRecognizer _tapGestureRecognizer;
+  late final ImageDoubleTapGestureRecognizer _doubleTapGestureRecognizer;
   late final ImageHorizontalDragGestureRecognizer
   _horizontalDragGestureRecognizer;
   late final LongPressGestureRecognizer _longPressGestureRecognizer;
@@ -122,12 +123,15 @@ class _GalleryViewerState extends State<GalleryViewer>
     if (PlatformUtils.isDesktop) {
       _tapGestureRecognizer.onSecondaryTapUp = _showDesktopMenu;
     }
+    _doubleTapGestureRecognizer = ImageDoubleTapGestureRecognizer()
+      ..onDoubleTap = () {}
+      ..gestureSettings = gestureSettings;
     _horizontalDragGestureRecognizer = ImageHorizontalDragGestureRecognizer();
     _longPressGestureRecognizer = LongPressGestureRecognizer()
       ..onLongPress = _onLongPress
       ..gestureSettings = gestureSettings;
 
-    Future.delayed(const Duration(milliseconds: 410), () {
+    Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
         _tapGestureRecognizer.onTap = _onTap;
       }
@@ -225,6 +229,10 @@ class _GalleryViewerState extends State<GalleryViewer>
     _pageController.dispose();
     _animateController.dispose();
     _tapGestureRecognizer.dispose();
+    _doubleTapGestureRecognizer
+      ..onDoubleTapDown = null
+      ..onDoubleTap = null
+      ..dispose();
     _longPressGestureRecognizer.dispose();
     _currIndex.close();
     if (widget.quality != _quality) {
@@ -239,6 +247,7 @@ class _GalleryViewerState extends State<GalleryViewer>
 
   void _onPointerDown(PointerDownEvent event) {
     _tapGestureRecognizer.addPointer(event);
+    _doubleTapGestureRecognizer.addPointer(event);
     _longPressGestureRecognizer.addPointer(event);
   }
 
@@ -357,6 +366,7 @@ class _GalleryViewerState extends State<GalleryViewer>
           onDragUpdate: _onDragUpdate,
           onDragEnd: _onDragEnd,
           tapGestureRecognizer: _tapGestureRecognizer,
+          doubleTapGestureRecognizer: _doubleTapGestureRecognizer,
           horizontalDragGestureRecognizer: _horizontalDragGestureRecognizer,
           onChangePage: _onChangePage,
         );
@@ -369,6 +379,7 @@ class _GalleryViewerState extends State<GalleryViewer>
           maxScale: widget.maxScale,
           containerSize: _containerSize,
           tapGestureRecognizer: _tapGestureRecognizer,
+          doubleTapGestureRecognizer: _doubleTapGestureRecognizer,
           horizontalDragGestureRecognizer: _horizontalDragGestureRecognizer,
           onChangePage: _onChangePage,
           frameBuilder: (context, child, frame, wasSynchronouslyLoaded) {
@@ -390,6 +401,7 @@ class _GalleryViewerState extends State<GalleryViewer>
                   onDragUpdate: null,
                   onDragEnd: null,
                   tapGestureRecognizer: _tapGestureRecognizer,
+                  doubleTapGestureRecognizer: _doubleTapGestureRecognizer,
                   horizontalDragGestureRecognizer:
                       _horizontalDragGestureRecognizer,
                   onChangePage: _onChangePage,
@@ -428,6 +440,7 @@ class _GalleryViewerState extends State<GalleryViewer>
                   onDragUpdate: _onDragUpdate,
                   onDragEnd: _onDragEnd,
                   tapGestureRecognizer: _tapGestureRecognizer,
+                  doubleTapGestureRecognizer: _doubleTapGestureRecognizer,
                   horizontalDragGestureRecognizer:
                       _horizontalDragGestureRecognizer,
                   onChangePage: _onChangePage,

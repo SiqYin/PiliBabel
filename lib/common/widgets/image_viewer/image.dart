@@ -43,6 +43,7 @@ class Image extends StatefulWidget {
     required this.onDragUpdate,
     required this.onDragEnd,
     required this.tapGestureRecognizer,
+    required this.doubleTapGestureRecognizer,
     required this.horizontalDragGestureRecognizer,
     required this.onChangePage,
   });
@@ -81,6 +82,7 @@ class Image extends StatefulWidget {
     required this.onDragUpdate,
     required this.onDragEnd,
     required this.tapGestureRecognizer,
+    required this.doubleTapGestureRecognizer,
     required this.horizontalDragGestureRecognizer,
     required this.onChangePage,
   }) : image = ResizeImage.resizeIfNeeded(
@@ -126,6 +128,7 @@ class Image extends StatefulWidget {
     required this.onDragUpdate,
     required this.onDragEnd,
     required this.tapGestureRecognizer,
+    required this.doubleTapGestureRecognizer,
     required this.horizontalDragGestureRecognizer,
     required this.onChangePage,
   }) : assert(
@@ -174,6 +177,7 @@ class Image extends StatefulWidget {
     required this.onDragUpdate,
     required this.onDragEnd,
     required this.tapGestureRecognizer,
+    required this.doubleTapGestureRecognizer,
     required this.horizontalDragGestureRecognizer,
     required this.onChangePage,
   }) : image = ResizeImage.resizeIfNeeded(
@@ -222,6 +226,7 @@ class Image extends StatefulWidget {
     required this.onDragUpdate,
     required this.onDragEnd,
     required this.tapGestureRecognizer,
+    required this.doubleTapGestureRecognizer,
     required this.horizontalDragGestureRecognizer,
     required this.onChangePage,
   }) : image = ResizeImage.resizeIfNeeded(
@@ -281,6 +286,7 @@ class Image extends StatefulWidget {
   final ValueChanged<int>? onChangePage;
 
   final ImageTapGestureRecognizer tapGestureRecognizer;
+  final ImageDoubleTapGestureRecognizer doubleTapGestureRecognizer;
   final ImageHorizontalDragGestureRecognizer horizontalDragGestureRecognizer;
 
   @override
@@ -625,6 +631,7 @@ class _ImageState extends State<Image> with WidgetsBindingObserver {
       onDragUpdate: widget.onDragUpdate,
       onDragEnd: widget.onDragEnd,
       tapGestureRecognizer: widget.tapGestureRecognizer,
+      doubleTapGestureRecognizer: widget.doubleTapGestureRecognizer,
       horizontalDragGestureRecognizer: widget.horizontalDragGestureRecognizer,
       onChangePage: widget.onChangePage,
       child: RawImage(image: _imageInfo?.image),

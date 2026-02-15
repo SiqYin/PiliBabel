@@ -28,9 +28,6 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart' show FrictionSimulation;
 import 'package:flutter/services.dart' show HardwareKeyboard;
-import 'package:get/get_core/src/get_main.dart';
-import 'package:get/get_navigation/src/extension_navigation.dart'
-    show GetNavigation;
 
 ///
 /// created by dom on 2026/02/14
@@ -48,6 +45,7 @@ class Viewer extends StatefulWidget {
     required this.onDragUpdate,
     required this.onDragEnd,
     required this.tapGestureRecognizer,
+    required this.doubleTapGestureRecognizer,
     required this.horizontalDragGestureRecognizer,
     required this.onChangePage,
     required this.child,
@@ -66,6 +64,7 @@ class Viewer extends StatefulWidget {
   final ValueChanged<int>? onChangePage;
 
   final ImageTapGestureRecognizer tapGestureRecognizer;
+  final ImageDoubleTapGestureRecognizer doubleTapGestureRecognizer;
   final ImageHorizontalDragGestureRecognizer horizontalDragGestureRecognizer;
 
   @override
@@ -87,18 +86,13 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
   late Size _imageSize;
 
   late final ImageTapGestureRecognizer _tapGestureRecognizer;
+  late final ImageDoubleTapGestureRecognizer _doubleTapGestureRecognizer;
   late final ImageHorizontalDragGestureRecognizer
   _horizontalDragGestureRecognizer;
   late final ScaleGestureRecognizer _scaleGestureRecognizer;
-  late final DoubleTapGestureRecognizer _doubleTapGestureRecognizer;
 
   Offset? _downPos;
-  AnimationController? _animationController;
-  AnimationController get _effectiveAnimationController =>
-      _animationController ??= AnimationController(
-        vsync: this,
-        duration: const Duration(milliseconds: 300),
-      )..addListener(_listener);
+  late final AnimationController _animationController;
 
   late double _scaleFrom, _scaleTo;
   late Offset _positionFrom, _positionTo;
@@ -108,7 +102,7 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
         ..scaleByDouble(_scale, _scale, _scale, 1.0);
 
   void _listener() {
-    final t = Curves.easeOut.transform(_effectiveAnimationController.value);
+    final t = Curves.easeOut.transform(_animationController.value);
     _scale = t.lerp(_scaleFrom, _scaleTo);
     _position = Offset.lerp(_positionFrom, _positionTo, t)!;
     setState(() {});
@@ -142,7 +136,13 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
     super.initState();
     _initSize();
 
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    )..addListener(_listener);
+
     _tapGestureRecognizer = widget.tapGestureRecognizer;
+    _doubleTapGestureRecognizer = widget.doubleTapGestureRecognizer;
     _horizontalDragGestureRecognizer = widget.horizontalDragGestureRecognizer;
 
     _scaleGestureRecognizer = ScaleGestureRecognizer(debugOwner: this)
@@ -151,10 +151,6 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
       ..onUpdate = _onScaleUpdate
       ..onEnd = _onScaleEnd
       ..gestureSettings = DeviceGestureSettings(touchSlop: touchSlopH);
-    _doubleTapGestureRecognizer = DoubleTapGestureRecognizer(debugOwner: this)
-      ..onDoubleTapDown = _onDoubleTapDown
-      ..onDoubleTap = _onDoubleTap
-      ..gestureSettings = MediaQuery.maybeGestureSettingsOf(Get.context!);
   }
 
   @override
@@ -169,11 +165,9 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
   @override
   void dispose() {
     _animationController
-      ?..removeListener(_listener)
+      ..removeListener(_listener)
       ..dispose();
-    _animationController = null;
     _scaleGestureRecognizer.dispose();
-    _doubleTapGestureRecognizer.dispose();
     super.dispose();
   }
 
@@ -221,6 +215,8 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
   }
 
   void _onDoubleTap() {
+    if (!mounted) return;
+    if (_animationController.isAnimating) return;
     EasyThrottle.throttle(
       'VIEWER_TAP',
       const Duration(milliseconds: 555),
@@ -229,7 +225,8 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
   }
 
   void _handleDoubleTap() {
-    if (_effectiveAnimationController.isAnimating) return;
+    if (!mounted) return;
+    if (_animationController.isAnimating) return;
     _scaleFrom = _scale;
     _positionFrom = _position;
 
@@ -250,7 +247,7 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
     _scaleTo = endScale;
     _positionTo = position;
 
-    _effectiveAnimationController
+    _animationController
       ..duration = const Duration(milliseconds: 300)
       ..forward(from: 0);
   }
@@ -261,6 +258,10 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
   }
 
   void _onScaleStart(ScaleStartDetails details) {
+    if (_animationController.isAnimating) {
+      _animationController.stop();
+    }
+
     if (details.pointerCount == 1) {
       if (widget.isLongPic) {
         final imageHeight = _scale * _imageSize.height;
@@ -352,7 +353,7 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
         _positionFrom = _position;
         _positionTo = position;
 
-        _effectiveAnimationController
+        _animationController
           ..duration = Duration(milliseconds: (tFinal * 1000).round())
           ..forward(from: 0);
       case _GestureType.scale:
@@ -376,7 +377,7 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
         //     end: frictionSimulation.x(tFinal),
         //   ).chain(CurveTween(curve: Curves.decelerate)),
         // )..addListener(_handleScaleAnimation);
-        // _effectiveAnimationController
+        // _animationController
         //   ..duration = Duration(milliseconds: (tFinal * 1000).round())
         //   ..forward(from: 0);
         break;
@@ -407,7 +408,10 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
   void _onPointerDown(PointerDownEvent event) {
     _scalePos = event.position;
     _tapGestureRecognizer.addPointer(event);
-    _doubleTapGestureRecognizer.addPointer(event);
+    _doubleTapGestureRecognizer
+      ..onDoubleTapDown = _onDoubleTapDown
+      ..onDoubleTap = _onDoubleTap
+      ..addPointer(event);
     _horizontalDragGestureRecognizer
       ..isBoundaryAllowed = _isBoundaryAllowed
       ..addPointer(event);
