@@ -117,7 +117,7 @@ class _GalleryViewerState extends State<GalleryViewer>
 
     final gestureSettings = MediaQuery.maybeGestureSettingsOf(Get.context!);
     _tapGestureRecognizer = ImageTapGestureRecognizer()
-      ..onTap = _onTap
+      // ..onTap = _onTap
       ..gestureSettings = gestureSettings;
     if (PlatformUtils.isDesktop) {
       _tapGestureRecognizer.onSecondaryTapUp = _showDesktopMenu;
@@ -126,6 +126,12 @@ class _GalleryViewerState extends State<GalleryViewer>
     _longPressGestureRecognizer = LongPressGestureRecognizer()
       ..onLongPress = _onLongPress
       ..gestureSettings = gestureSettings;
+
+    Future.delayed(const Duration(milliseconds: 410), () {
+      if (mounted) {
+        _tapGestureRecognizer.onTap = _onTap;
+      }
+    });
 
     _animateController = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -244,6 +250,8 @@ class _GalleryViewerState extends State<GalleryViewer>
       child: DecoratedBoxTransition(
         decoration: _opacityAnimation,
         child: Stack(
+          fit: .expand,
+          alignment: .center,
           clipBehavior: .none,
           children: [
             LayoutBuilder(
@@ -566,28 +574,25 @@ class _GalleryViewerState extends State<GalleryViewer>
     Widget child,
     ImageChunkEvent? loadingProgress,
   ) {
-    if (loadingProgress != null) {
-      if (loadingProgress.cumulativeBytesLoaded !=
-              loadingProgress.expectedTotalBytes &&
-          loadingProgress.expectedTotalBytes != null) {
-        return Stack(
-          fit: .expand,
-          alignment: .center,
-          clipBehavior: .none,
-          children: [
-            child,
-            Center(
-              child: LoadingIndicator(
-                size: 39.4,
-                progress:
-                    loadingProgress.cumulativeBytesLoaded /
-                    loadingProgress.expectedTotalBytes!,
-              ),
+    return Stack(
+      fit: .expand,
+      alignment: .center,
+      clipBehavior: .none,
+      children: [
+        child,
+        if (loadingProgress != null &&
+            loadingProgress.expectedTotalBytes != null &&
+            loadingProgress.cumulativeBytesLoaded !=
+                loadingProgress.expectedTotalBytes)
+          Center(
+            child: LoadingIndicator(
+              size: 39.4,
+              progress:
+                  loadingProgress.cumulativeBytesLoaded /
+                  loadingProgress.expectedTotalBytes!,
             ),
-          ],
-        );
-      }
-    }
-    return child;
+          ),
+      ],
+    );
   }
 }

@@ -73,7 +73,7 @@ class Viewer extends StatefulWidget {
 }
 
 class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
-  static const double _interactionEndFrictionCoefficient = 0.0001; // 0.0000135
+  double get _interactionEndFrictionCoefficient => 0.0001 * _scale; // 0.0000135
   static const double _scaleFactor = kDefaultMouseScrollToScaleFactor;
 
   _GestureType? _gestureType;
@@ -255,22 +255,31 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
       ..forward(from: 0);
   }
 
+  static bool _calc(Offset initialPosition, Offset lastPosition) {
+    final offset = lastPosition - initialPosition;
+    return offset.dy.abs() > offset.dx.abs();
+  }
+
   void _onScaleStart(ScaleStartDetails details) {
     if (details.pointerCount == 1) {
       if (widget.isLongPic) {
         final imageHeight = _scale * _imageSize.height;
         final containerHeight = widget.containerSize.height;
-        if (_scalePos != null &&
-                (_position.dy.equals(
-                      (imageHeight - _scale * containerHeight) / 2,
-                      1e-6,
-                    ) &&
-                    details.focalPoint.dy > _scalePos!.dy) ||
-            (_position.dy.equals(containerHeight - imageHeight, 1e-6) &&
-                details.focalPoint.dy < _scalePos!.dy)) {
-          _gestureType = .drag;
-          widget.onDragStart?.call(details);
-          return;
+        if (_scalePos != null && _calc(_scalePos!, details.focalPoint)) {
+          final bool drag;
+          if (details.focalPoint.dy > _scalePos!.dy) {
+            drag = _position.dy.equals(
+              (imageHeight - _scale * containerHeight) / 2,
+              1e-6,
+            );
+          } else {
+            drag = _position.dy.equals(containerHeight - imageHeight, 1e-6);
+          }
+          if (drag) {
+            _gestureType = .drag;
+            widget.onDragStart?.call(details);
+            return;
+          }
         }
       } else if (_scale == widget.minScale) {
         _gestureType = .drag;
@@ -319,19 +328,20 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
         if (details.velocity.pixelsPerSecond.distance < kMinFlingVelocity) {
           return;
         }
+        final drag = _interactionEndFrictionCoefficient;
         final FrictionSimulation frictionSimulationX = FrictionSimulation(
-          _interactionEndFrictionCoefficient,
+          drag,
           _position.dx,
           details.velocity.pixelsPerSecond.dx,
         );
         final FrictionSimulation frictionSimulationY = FrictionSimulation(
-          _interactionEndFrictionCoefficient,
+          drag,
           _position.dy,
           details.velocity.pixelsPerSecond.dy,
         );
         final double tFinal = _getFinalTime(
           details.velocity.pixelsPerSecond.distance,
-          _interactionEndFrictionCoefficient,
+          drag,
         );
         final position = _clampPosition(
           Offset(frictionSimulationX.finalX, frictionSimulationY.finalX),
