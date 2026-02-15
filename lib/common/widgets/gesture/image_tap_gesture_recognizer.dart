@@ -1,15 +1,11 @@
 import 'package:flutter/gestures.dart'
-    show TapGestureRecognizer, PointerDownEvent, DoubleTapGestureRecognizer;
+    show
+        GestureRecognizer,
+        TapGestureRecognizer,
+        DoubleTapGestureRecognizer,
+        PointerDownEvent;
 
-class ImageTapGestureRecognizer extends TapGestureRecognizer {
-  ImageTapGestureRecognizer({
-    super.debugOwner,
-    super.supportedDevices,
-    super.allowedButtonsFilter,
-    super.preAcceptSlopTolerance,
-    super.postAcceptSlopTolerance,
-  });
-
+mixin ImageGestureRecognizerMixin on GestureRecognizer {
   int? _pointer;
 
   @override
@@ -22,21 +18,22 @@ class ImageTapGestureRecognizer extends TapGestureRecognizer {
   }
 }
 
-class ImageDoubleTapGestureRecognizer extends DoubleTapGestureRecognizer {
+class ImageTapGestureRecognizer extends TapGestureRecognizer
+    with ImageGestureRecognizerMixin {
+  ImageTapGestureRecognizer({
+    super.debugOwner,
+    super.supportedDevices,
+    super.allowedButtonsFilter,
+    super.preAcceptSlopTolerance,
+    super.postAcceptSlopTolerance,
+  });
+}
+
+class ImageDoubleTapGestureRecognizer extends DoubleTapGestureRecognizer
+    with ImageGestureRecognizerMixin {
   ImageDoubleTapGestureRecognizer({
     super.debugOwner,
     super.supportedDevices,
     super.allowedButtonsFilter,
   });
-
-  int? _pointer;
-
-  @override
-  void addPointer(PointerDownEvent event) {
-    if (_pointer == event.pointer) {
-      return;
-    }
-    _pointer = event.pointer;
-    super.addPointer(event);
-  }
 }
