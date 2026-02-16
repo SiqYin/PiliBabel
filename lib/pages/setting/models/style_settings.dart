@@ -19,10 +19,10 @@ import 'package:PiliPlus/pages/main/controller.dart';
 import 'package:PiliPlus/pages/mine/controller.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
 import 'package:PiliPlus/pages/setting/slide_color_picker.dart';
-import 'package:PiliPlus/pages/setting/widgets/dual_slide_dialog.dart';
+import 'package:PiliPlus/pages/setting/widgets/dual_slider_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/multi_select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
-import 'package:PiliPlus/pages/setting/widgets/slide_dialog.dart';
+import 'package:PiliPlus/pages/setting/widgets/slider_dialog.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
@@ -373,7 +373,7 @@ void _showQualityDialog({
 }) {
   showDialog<double>(
     context: context,
-    builder: (context) => SlideDialog(
+    builder: (context) => SliderDialog(
       value: initValue.toDouble(),
       title: title,
       min: 10,
@@ -622,7 +622,7 @@ void _showSpringDialog(BuildContext context, _) {
 Future<void> _showFontWeightDialog(BuildContext context) async {
   final res = await showDialog<double>(
     context: context,
-    builder: (context) => SlideDialog(
+    builder: (context) => SliderDialog(
       title: 'App字体字重',
       value: Pref.appFontWeight.toDouble() + 1,
       min: 1,
@@ -661,7 +661,7 @@ Future<void> _showCardWidthDialog(
 ) async {
   final res = await showDialog<(double, double)>(
     context: context,
-    builder: (context) => DualSlideDialog(
+    builder: (context) => DualSliderDialog(
       title: '列表最大列宽度（默认240dp）',
       value1: Pref.recommendCardWidth,
       value2: Pref.smallCardWidth,
@@ -879,7 +879,7 @@ Future<void> _showToastDialog(
 ) async {
   final res = await showDialog<double>(
     context: context,
-    builder: (context) => SlideDialog(
+    builder: (context) => SliderDialog(
       title: 'Toast不透明度',
       value: CustomToast.toastOpacity,
       min: 0.0,

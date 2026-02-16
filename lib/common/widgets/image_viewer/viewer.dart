@@ -77,10 +77,26 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
 
   _GestureType? _gestureType;
 
+  final Matrix4 _matrix = Matrix4.identity();
+
+  late double __scale;
+  double get _scale => __scale;
+  set _scale(double value) {
+    __scale = value;
+    _matrix[0] = _matrix[5] = _matrix[10] = value;
+  }
+
+  late Offset __position;
+  Offset get _position => __position;
+  set _position(Offset value) {
+    __position = value;
+    _matrix
+      ..[12] = value.dx
+      ..[13] = value.dy;
+  }
+
   Offset? _scalePos;
-  late double _scale;
   double? _scaleStart;
-  late Offset _position;
   Offset? _referenceFocalPoint;
 
   late Size _imageSize;
@@ -96,10 +112,6 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
 
   late double _scaleFrom, _scaleTo;
   late Offset _positionFrom, _positionTo;
-
-  Matrix4 get _matrix =>
-      Matrix4.translationValues(_position.dx, _position.dy, 0.0)
-        ..scaleByDouble(_scale, _scale, _scale, 1.0);
 
   void _listener() {
     final t = Curves.easeOut.transform(_animationController.value);
@@ -396,7 +408,7 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
       onPointerDown: _onPointerDown,
       onPointerPanZoomStart: _onPointerPanZoomStart,
       onPointerSignal: _onPointerSignal,
-      child: ClipRRect(
+      child: ClipRect(
         child: Transform(
           transform: _matrix,
           child: widget.child,

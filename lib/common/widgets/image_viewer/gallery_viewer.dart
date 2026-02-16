@@ -17,6 +17,7 @@
 
 import 'dart:io' show File, Platform;
 
+import 'package:PiliPlus/common/widgets/colored_box_transition.dart';
 import 'package:PiliPlus/common/widgets/flutter/page/page_view.dart';
 import 'package:PiliPlus/common/widgets/gesture/image_horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/gesture/image_tap_gesture_recognizer.dart';
@@ -52,7 +53,7 @@ class GalleryViewer extends StatefulWidget {
     this.maxScale = 8.0,
     required this.quality,
     required this.sources,
-    this.initIndex = 1,
+    this.initIndex = 0,
   });
 
   final double minScale;
@@ -87,13 +88,11 @@ class _GalleryViewerState extends State<GalleryViewer>
   late final LongPressGestureRecognizer _longPressGestureRecognizer;
 
   late final AnimationController _animateController;
-  late final Animation<Decoration> _opacityAnimation;
+  late final Animation<Color?> _opacityAnimation;
   double dx = 0, dy = 0;
 
   Offset _offset = Offset.zero;
   bool _dragging = false;
-
-  bool get _isActive => _dragging || _animateController.isAnimating;
 
   String _getActualUrl(String url) {
     return _quality != 100
@@ -138,14 +137,16 @@ class _GalleryViewerState extends State<GalleryViewer>
     });
 
     _animateController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: const Duration(
+        milliseconds: 750,
+      ), // reverse only if value <= 0.2
       vsync: this,
     );
 
     _opacityAnimation = _animateController.drive(
-      DecorationTween(
-        begin: const BoxDecoration(color: Colors.black),
-        end: const BoxDecoration(color: Colors.transparent),
+      ColorTween(
+        begin: Colors.black,
+        end: Colors.transparent,
       ),
     );
   }
@@ -189,7 +190,7 @@ class _GalleryViewerState extends State<GalleryViewer>
   }
 
   void _onDragUpdate(ScaleUpdateDetails details) {
-    if (!_isActive || _animateController.isAnimating) {
+    if (!_dragging || _animateController.isAnimating) {
       return;
     }
 
@@ -202,15 +203,11 @@ class _GalleryViewerState extends State<GalleryViewer>
   }
 
   void _onDragEnd(ScaleEndDetails details) {
-    if (!_isActive || _animateController.isAnimating) {
+    if (!_dragging || _animateController.isAnimating) {
       return;
     }
 
     _dragging = false;
-
-    if (_animateController.isCompleted) {
-      return;
-    }
 
     if (!_animateController.isDismissed) {
       if (_animateController.value > 0.2) {
@@ -256,37 +253,35 @@ class _GalleryViewerState extends State<GalleryViewer>
     return Listener(
       behavior: .opaque,
       onPointerDown: _onPointerDown,
-      child: DecoratedBoxTransition(
-        decoration: _opacityAnimation,
-        child: Stack(
-          fit: .expand,
-          alignment: .center,
-          clipBehavior: .none,
-          children: [
-            LayoutBuilder(
-              builder: (context, constraints) {
-                _containerSize = constraints.biggest;
-                return MatrixTransition(
-                  alignment: .topLeft,
-                  animation: _animateController,
-                  onTransform: _onTransform,
-                  child: PageView<ImageHorizontalDragGestureRecognizer>.builder(
-                    controller: _pageController,
-                    onPageChanged: _onPageChanged,
-                    physics: const CustomTabBarViewScrollPhysics(
-                      parent: AlwaysScrollableScrollPhysics(),
-                    ),
-                    itemCount: widget.sources.length,
-                    itemBuilder: _itemBuilder,
-                    horizontalDragGestureRecognizer: () =>
-                        _horizontalDragGestureRecognizer,
+      child: Stack(
+        fit: .expand,
+        alignment: .center,
+        clipBehavior: .none,
+        children: [
+          ColoredBoxTransition(color: _opacityAnimation),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              _containerSize = constraints.biggest;
+              return MatrixTransition(
+                alignment: .topLeft,
+                animation: _animateController,
+                onTransform: _onTransform,
+                child: PageView<ImageHorizontalDragGestureRecognizer>.builder(
+                  controller: _pageController,
+                  onPageChanged: _onPageChanged,
+                  physics: const CustomTabBarViewScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics(),
                   ),
-                );
-              },
-            ),
-            _buildIndicator,
-          ],
-        ),
+                  itemCount: widget.sources.length,
+                  itemBuilder: _itemBuilder,
+                  horizontalDragGestureRecognizer: () =>
+                      _horizontalDragGestureRecognizer,
+                ),
+              );
+            },
+          ),
+          _buildIndicator,
+        ],
       ),
     );
   }
