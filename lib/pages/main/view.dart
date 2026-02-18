@@ -299,17 +299,15 @@ class _MainAppState extends PopScopeState<MainApp>
                   ),
                 )
         : null;
-    if (bottomNav != null) {
-      if (_mainController.barOffset case final bottomBarOffset?) {
-        return Obx(
-          () => CustomHeightWidget(
-            height:
-                _mainController.navHeight *
-                (1 - bottomBarOffset.value / StyleString.topBarHeight),
-            child: bottomNav,
-          ),
-        );
-      }
+    if (bottomNav != null && _mainController.hideBottomBar) {
+      return Obx(
+        () => CustomHeightWidget(
+          height:
+              _mainController.navHeight *
+              (1 - _mainController.barOffset!.value / StyleString.topBarHeight),
+          child: bottomNav,
+        ),
+      );
     }
     return bottomNav;
   }
