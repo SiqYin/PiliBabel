@@ -31,7 +31,9 @@ class MainController extends GetxController
   List<NavigationBarType> navigationBars = <NavigationBarType>[];
 
   RxDouble? barOffset;
+  RxBool? showBottomBar;
   late final bool hideBottomBar;
+  late final barHideType = Pref.barHideType;
   late double navHeight = 80.0;
   bool useBottomNav = false;
   late dynamic controller;
@@ -86,8 +88,13 @@ class MainController extends GetxController
 
     hideBottomBar =
         !useSideBar && navigationBars.length > 1 && Pref.hideBottomBar;
-    if (hideBottomBar || homeController.hideTopBar) {
-      barOffset = RxDouble(0.0);
+    if (hideBottomBar) {
+      switch (barHideType) {
+        case .instant:
+          showBottomBar = RxBool(true);
+        case .sync:
+          barOffset ??= RxDouble(0.0);
+      }
     }
 
     dynamicBadgeMode = Pref.dynamicBadgeMode;
@@ -315,6 +322,12 @@ class MainController extends GetxController
         }
       }
       _lastSelectTime = now;
+    }
+  }
+
+  void setSearchBar() {
+    if (hasHome) {
+      homeController.showTopBar?.value = true;
     }
   }
 

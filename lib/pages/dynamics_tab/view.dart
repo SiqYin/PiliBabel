@@ -46,11 +46,19 @@ class _DynamicsTabPageState
       _mainController.selectedIndex.value == 0;
 
   @override
-  bool onNotification(ScrollNotification notification) {
+  bool onNotificationType1(UserScrollNotification notification) {
     if (checkPage) {
       return false;
     }
-    return super.onNotification(notification);
+    return super.onNotificationType1(notification);
+  }
+
+  @override
+  bool onNotificationType2(ScrollNotification notification) {
+    if (checkPage) {
+      return false;
+    }
+    return super.onNotificationType2(notification);
   }
 
   @override

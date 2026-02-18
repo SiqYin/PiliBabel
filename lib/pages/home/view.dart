@@ -31,38 +31,46 @@ class _HomePageState extends State<HomePage>
   Widget build(BuildContext context) {
     super.build(context);
     final theme = Theme.of(context);
+    Widget tabBar;
+    if (_homeController.tabs.length > 1) {
+      tabBar = Padding(
+        padding: const EdgeInsets.only(top: 4),
+        child: SizedBox(
+          height: 42,
+          width: double.infinity,
+          child: TabBar(
+            controller: _homeController.tabController,
+            tabs: _homeController.tabs.map((e) => Tab(text: e.label)).toList(),
+            isScrollable: true,
+            dividerColor: Colors.transparent,
+            dividerHeight: 0,
+            splashBorderRadius: StyleString.mdRadius,
+            tabAlignment: TabAlignment.center,
+            onTap: (_) {
+              feedBack();
+              if (!_homeController.tabController.indexIsChanging) {
+                _homeController.animateToTop();
+              }
+            },
+          ),
+        ),
+      );
+      if (_homeController.hideTopBar &&
+          _mainController.barHideType == .instant) {
+        tabBar = Material(
+          color: theme.colorScheme.surface,
+          child: tabBar,
+        );
+      }
+    } else {
+      tabBar = const SizedBox(height: 6);
+    }
     return Column(
       children: [
         if (!_mainController.useSideBar &&
             MediaQuery.sizeOf(context).isPortrait)
           customAppBar(theme),
-        if (_homeController.tabs.length > 1)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: SizedBox(
-              height: 42,
-              width: double.infinity,
-              child: TabBar(
-                controller: _homeController.tabController,
-                tabs: _homeController.tabs
-                    .map((e) => Tab(text: e.label))
-                    .toList(),
-                isScrollable: true,
-                dividerColor: Colors.transparent,
-                dividerHeight: 0,
-                splashBorderRadius: StyleString.mdRadius,
-                tabAlignment: TabAlignment.center,
-                onTap: (_) {
-                  feedBack();
-                  if (!_homeController.tabController.indexIsChanging) {
-                    _homeController.animateToTop();
-                  }
-                },
-              ),
-            ),
-          )
-        else
-          const SizedBox(height: 6),
+        tabBar,
         Expanded(
           child: tabBarView(
             controller: _homeController.tabController,
@@ -85,26 +93,43 @@ class _HomePageState extends State<HomePage>
       ],
     );
     if (_homeController.hideTopBar) {
-      return Obx(
-        () {
-          final barOffset = _mainController.barOffset!.value;
-          return CustomHeightWidget(
-            offset: Offset(0, -barOffset),
-            height: StyleString.topBarHeight - barOffset,
-            child: Padding(
+      if (_mainController.barOffset case final barOffset?) {
+        return Obx(
+          () {
+            final offset = barOffset.value;
+            return CustomHeightWidget(
+              offset: Offset(0, -offset),
+              height: StyleString.topBarHeight - offset,
+              child: Padding(
+                padding: padding,
+                child: child,
+              ),
+            );
+          },
+        );
+      }
+      if (_homeController.showTopBar case final showTopBar?) {
+        return Obx(() {
+          final showSearchBar = showTopBar.value;
+          return AnimatedOpacity(
+            opacity: showSearchBar ? 1 : 0,
+            duration: const Duration(milliseconds: 300),
+            child: AnimatedContainer(
+              curve: Curves.easeInOutCubicEmphasized,
+              duration: const Duration(milliseconds: 500),
+              height: showSearchBar ? StyleString.topBarHeight : 0,
               padding: padding,
               child: child,
             ),
           );
-        },
-      );
-    } else {
-      return Container(
-        height: StyleString.topBarHeight,
-        padding: padding,
-        child: child,
-      );
+        });
+      }
     }
+    return Container(
+      height: StyleString.topBarHeight,
+      padding: padding,
+      child: child,
+    );
   }
 
   Widget searchBar(ThemeData theme) {

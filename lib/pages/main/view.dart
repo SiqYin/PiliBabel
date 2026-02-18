@@ -57,7 +57,9 @@ class _MainAppState extends PopScopeState<MainApp>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _padding = MediaQuery.viewPaddingOf(context);
-    _mainController.navHeight = 80.0 + _padding.bottom;
+    if (_mainController.hideBottomBar && _mainController.barHideType == .sync) {
+      _mainController.navHeight = 80.0 + _padding.bottom;
+    }
     final brightness = Theme.brightnessOf(context);
     NetworkImgLayer.reduce =
         NetworkImgLayer.reduceLuxColor != null && brightness.isDark;
@@ -253,7 +255,9 @@ class _MainAppState extends PopScopeState<MainApp>
       if (_mainController.selectedIndex.value != 0) {
         _mainController
           ..setIndex(0)
-          ..barOffset?.value = 0.0;
+          ..barOffset?.value = 0.0
+          ..showBottomBar?.value = true
+          ..setSearchBar();
       } else {
         _onBack();
       }
@@ -300,14 +304,26 @@ class _MainAppState extends PopScopeState<MainApp>
                 )
         : null;
     if (bottomNav != null && _mainController.hideBottomBar) {
-      return Obx(
-        () => CustomHeightWidget(
-          height:
-              _mainController.navHeight *
-              (1 - _mainController.barOffset!.value / StyleString.topBarHeight),
-          child: bottomNav,
-        ),
-      );
+      if (_mainController.barOffset case final barOffset?) {
+        return Obx(
+          () => CustomHeightWidget(
+            height:
+                _mainController.navHeight *
+                (1 - barOffset.value / StyleString.topBarHeight),
+            child: bottomNav,
+          ),
+        );
+      }
+      if (_mainController.showBottomBar case final showBottomBar?) {
+        return Obx(
+          () => AnimatedSlide(
+            curve: Curves.easeInOutCubicEmphasized,
+            duration: const Duration(milliseconds: 500),
+            offset: Offset(0, showBottomBar.value ? 0 : 1),
+            child: bottomNav,
+          ),
+        );
+      }
     }
     return bottomNav;
   }
