@@ -1653,7 +1653,7 @@ class _VerticalTabBarState extends State<VerticalTabBar> {
       tabCenter +
           paddingTop -
           viewportWidth / 2.0 +
-          (_mainCtr.useBottomNav && (_mainCtr.showBottomBar?.value ?? true)
+          (_mainCtr.useBottomNav && (_mainCtr.barOffset?.value ?? 0) == 0
               ? 80.0
               : 0.0),
       minExtent,

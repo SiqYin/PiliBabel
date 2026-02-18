@@ -30,7 +30,9 @@ class MainController extends GetxController
 
   List<NavigationBarType> navigationBars = <NavigationBarType>[];
 
-  RxBool? showBottomBar;
+  RxDouble? barOffset;
+  late final bool hideBottomBar;
+  late double navHeight = 80.0;
   bool useBottomNav = false;
   late dynamic controller;
   final RxInt selectedIndex = 0.obs;
@@ -82,9 +84,12 @@ class MainController extends GetxController
           )
         : PageController(initialPage: selectedIndex.value);
 
-    if (!useSideBar && navigationBars.length > 1 && Pref.hideBottomBar) {
-      showBottomBar = true.obs;
+    hideBottomBar =
+        !useSideBar && navigationBars.length > 1 && Pref.hideBottomBar;
+    if (hideBottomBar || homeController.hideTopBar) {
+      barOffset = RxDouble(0.0);
     }
+
     dynamicBadgeMode = Pref.dynamicBadgeMode;
 
     hasDyn = navigationBars.contains(NavigationBarType.dynamics);
@@ -313,15 +318,9 @@ class MainController extends GetxController
     }
   }
 
-  void setSearchBar() {
-    if (hasHome) {
-      homeController.showSearchBar?.value = true;
-    }
-  }
-
   @override
   void onClose() {
-    showBottomBar?.close();
+    barOffset?.close();
     controller.dispose();
     super.onClose();
   }

@@ -672,12 +672,6 @@ abstract final class Pref {
     defaultValue: PlatformUtils.isMobile,
   );
 
-  static bool get enableScrollThreshold =>
-      _setting.get(SettingBoxKey.enableScrollThreshold, defaultValue: false);
-
-  static double get scrollThreshold =>
-      _setting.get(SettingBoxKey.scrollThreshold, defaultValue: 50.0);
-
   static bool get enableSearchWord =>
       _setting.get(SettingBoxKey.enableSearchWord, defaultValue: false);
 

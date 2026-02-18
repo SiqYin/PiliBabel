@@ -194,15 +194,6 @@ List<SettingsModel> get styleSettings => [
     defaultVal: PlatformUtils.isMobile,
     needReboot: true,
   ),
-  const SwitchModel(
-    title: '顶/底栏滚动阈值',
-    subtitle: '滚动多少像素后收起/展开顶底栏，默认50像素',
-    leading: Icon(Icons.swipe_vertical),
-    defaultVal: false,
-    setKey: SettingBoxKey.enableScrollThreshold,
-    needReboot: true,
-    onTap: _showScrollDialog,
-  ),
   NormalModel(
     onTap: (context, setState) => _showQualityDialog(
       context: context,
@@ -779,48 +770,6 @@ Future<void> _showMsgUnReadDialog(
     SmartDialog.showToast('设置成功');
     setState();
   }
-}
-
-void _showScrollDialog(BuildContext context) {
-  String scrollThreshold = Pref.scrollThreshold.toString();
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('滚动阈值'),
-      content: TextFormField(
-        autofocus: true,
-        initialValue: scrollThreshold,
-        keyboardType: const .numberWithOptions(decimal: true),
-        onChanged: (value) => scrollThreshold = value,
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[\d\.]+')),
-        ],
-        decoration: const InputDecoration(suffixText: 'px'),
-      ),
-      actions: [
-        TextButton(
-          onPressed: Get.back,
-          child: Text(
-            '取消',
-            style: TextStyle(color: ColorScheme.of(context).outline),
-          ),
-        ),
-        TextButton(
-          onPressed: () {
-            try {
-              final val = double.parse(scrollThreshold);
-              Get.back();
-              GStorage.setting.put(SettingBoxKey.scrollThreshold, val);
-              SmartDialog.showToast('重启生效');
-            } catch (e) {
-              SmartDialog.showToast(e.toString());
-            }
-          },
-          child: const Text('确定'),
-        ),
-      ],
-    ),
-  );
 }
 
 void _showReduceColorDialog(

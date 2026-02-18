@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/common/widgets/custom_height_widget.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/flutter/tabs.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -35,6 +36,7 @@ class _MainAppState extends PopScopeState<MainApp>
     with RouteAware, WidgetsBindingObserver, WindowListener, TrayListener {
   final _mainController = Get.put(MainController());
   late final _setting = GStorage.setting;
+  late EdgeInsets _padding;
 
   @override
   void initState() {
@@ -54,6 +56,8 @@ class _MainAppState extends PopScopeState<MainApp>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _padding = MediaQuery.viewPaddingOf(context);
+    _mainController.navHeight = 80.0 + _padding.bottom;
     final brightness = Theme.brightnessOf(context);
     NetworkImgLayer.reduce =
         NetworkImgLayer.reduceLuxColor != null && brightness.isDark;
@@ -249,8 +253,7 @@ class _MainAppState extends PopScopeState<MainApp>
       if (_mainController.selectedIndex.value != 0) {
         _mainController
           ..setIndex(0)
-          ..showBottomBar?.value = true
-          ..setSearchBar();
+          ..barOffset?.value = 0.0;
       } else {
         _onBack();
       }
@@ -297,12 +300,12 @@ class _MainAppState extends PopScopeState<MainApp>
                 )
         : null;
     if (bottomNav != null) {
-      if (_mainController.showBottomBar case final bottomBar?) {
+      if (_mainController.barOffset case final bottomBarOffset?) {
         return Obx(
-          () => AnimatedSlide(
-            curve: Curves.easeInOutCubicEmphasized,
-            duration: const Duration(milliseconds: 500),
-            offset: Offset(0, bottomBar.value ? 0 : 1),
+          () => CustomHeightWidget(
+            height:
+                _mainController.navHeight *
+                (1 - bottomBarOffset.value / StyleString.topBarHeight),
             child: bottomNav,
           ),
         );
@@ -381,8 +384,6 @@ class _MainAppState extends PopScopeState<MainApp>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final padding = MediaQuery.viewPaddingOf(context);
-
     Widget child;
     if (_mainController.mainTabBarView) {
       child = CustomTabBarView(
@@ -409,7 +410,7 @@ class _MainAppState extends PopScopeState<MainApp>
           _sideBar(theme),
           VerticalDivider(
             width: 1,
-            endIndent: padding.bottom,
+            endIndent: _padding.bottom,
             color: theme.colorScheme.outline.withValues(alpha: 0.06),
           ),
           Expanded(child: child),
@@ -423,8 +424,8 @@ class _MainAppState extends PopScopeState<MainApp>
       appBar: AppBar(toolbarHeight: 0),
       body: Padding(
         padding: EdgeInsets.only(
-          left: _mainController.useBottomNav ? padding.left : 0.0,
-          right: padding.right,
+          left: _mainController.useBottomNav ? _padding.left : 0.0,
+          right: _padding.right,
         ),
         child: child,
       ),

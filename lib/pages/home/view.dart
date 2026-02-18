@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/common/widgets/custom_height_widget.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart';
 import 'package:PiliPlus/pages/home/controller.dart';
@@ -36,30 +37,27 @@ class _HomePageState extends State<HomePage>
             MediaQuery.sizeOf(context).isPortrait)
           customAppBar(theme),
         if (_homeController.tabs.length > 1)
-          Material(
-            color: theme.colorScheme.surface,
-            child: Padding(
-              padding: const EdgeInsets.only(top: 4),
-              child: SizedBox(
-                height: 42,
-                width: double.infinity,
-                child: TabBar(
-                  controller: _homeController.tabController,
-                  tabs: _homeController.tabs
-                      .map((e) => Tab(text: e.label))
-                      .toList(),
-                  isScrollable: true,
-                  dividerColor: Colors.transparent,
-                  dividerHeight: 0,
-                  splashBorderRadius: StyleString.mdRadius,
-                  tabAlignment: TabAlignment.center,
-                  onTap: (_) {
-                    feedBack();
-                    if (!_homeController.tabController.indexIsChanging) {
-                      _homeController.animateToTop();
-                    }
-                  },
-                ),
+          Padding(
+            padding: const EdgeInsets.only(top: 4),
+            child: SizedBox(
+              height: 42,
+              width: double.infinity,
+              child: TabBar(
+                controller: _homeController.tabController,
+                tabs: _homeController.tabs
+                    .map((e) => Tab(text: e.label))
+                    .toList(),
+                isScrollable: true,
+                dividerColor: Colors.transparent,
+                dividerHeight: 0,
+                splashBorderRadius: StyleString.mdRadius,
+                tabAlignment: TabAlignment.center,
+                onTap: (_) {
+                  feedBack();
+                  if (!_homeController.tabController.indexIsChanging) {
+                    _homeController.animateToTop();
+                  }
+                },
               ),
             ),
           )
@@ -76,7 +74,6 @@ class _HomePageState extends State<HomePage>
   }
 
   Widget customAppBar(ThemeData theme) {
-    const height = 52.0;
     const padding = EdgeInsets.fromLTRB(14, 6, 14, 0);
     final child = Row(
       children: [
@@ -87,24 +84,23 @@ class _HomePageState extends State<HomePage>
         userAvatar(theme: theme, mainController: _mainController),
       ],
     );
-    if (_homeController.showSearchBar case final searchBar?) {
-      return Obx(() {
-        final showSearchBar = searchBar.value;
-        return AnimatedOpacity(
-          opacity: showSearchBar ? 1 : 0,
-          duration: const Duration(milliseconds: 300),
-          child: AnimatedContainer(
-            curve: Curves.easeInOutCubicEmphasized,
-            duration: const Duration(milliseconds: 500),
-            height: showSearchBar ? height : 0,
-            padding: padding,
-            child: child,
-          ),
-        );
-      });
+    if (_homeController.hideTopBar) {
+      return Obx(
+        () {
+          final barOffset = _mainController.barOffset!.value;
+          return CustomHeightWidget(
+            offset: Offset(0, -barOffset),
+            height: StyleString.topBarHeight - barOffset,
+            child: Padding(
+              padding: padding,
+              child: child,
+            ),
+          );
+        },
+      );
     } else {
       return Container(
-        height: height,
+        height: StyleString.topBarHeight,
         padding: padding,
         child: child,
       );
