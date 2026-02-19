@@ -56,9 +56,6 @@ class _MainAppState extends PopScopeState<MainApp>
   void didChangeDependencies() {
     super.didChangeDependencies();
     _padding = MediaQuery.viewPaddingOf(context);
-    if (_mainController.hideBottomBar && _mainController.barHideType == .sync) {
-      _mainController.navHeight = 80.0 + _padding.bottom;
-    }
     final brightness = Theme.brightnessOf(context);
     NetworkImgLayer.reduce =
         NetworkImgLayer.reduceLuxColor != null && brightness.isDark;
