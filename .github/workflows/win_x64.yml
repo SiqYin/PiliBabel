@@ -34,7 +34,8 @@ jobs:
 
       - name: apply mouse cursor patch
         working-directory: ${{ env.FLUTTER_ROOT }}
-        run: git apply $GITHUB_WORKSPACE/lib/scripts/mouse_cursor_patch.diff || true
+        run: git apply $env:GITHUB_WORKSPACE\lib\scripts\mouse_cursor_patch.diff || true
+        shell: pwsh
         continue-on-error: true
 
       - name: Add fastforge and Inno Setup
