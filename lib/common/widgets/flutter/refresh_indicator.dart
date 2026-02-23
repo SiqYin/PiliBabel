@@ -301,10 +301,12 @@ class RefreshIndicatorState extends State<RefreshIndicator>
     // If the notification.dragDetails is null, this scroll is not triggered by
     // user dragging. It may be a result of ScrollController.jumpTo or ballistic scroll.
     // In this case, we don't want to trigger the refresh indicator.
-    return (notification is ScrollStartNotification &&
-            notification.dragDetails != null) &&
+    return _status == null &&
+        ((notification is ScrollStartNotification &&
+                notification.dragDetails != null) ||
+            (notification is ScrollUpdateNotification &&
+                notification.dragDetails != null)) &&
         notification.metrics.extentBefore == 0.0 &&
-        _status == null &&
         _start();
   }
 
@@ -322,14 +324,14 @@ class RefreshIndicatorState extends State<RefreshIndicator>
       if (_status == RefreshIndicatorStatus.drag) {
         _dragOffset = _dragOffset! - notification.scrollDelta!;
         _checkDragOffset(notification.metrics.viewportDimension);
-      }
-      if (_status == RefreshIndicatorStatus.drag &&
-          notification.dragDetails == null &&
-          _valueColor.value!.a == _effectiveValueColor.a) {
-        // On iOS start the refresh when the Scrollable bounces back from the
-        // overscroll (ScrollNotification indicating this don't have dragDetails
-        // because the scroll activity is not directly triggered by a drag).
-        _show();
+
+        if (notification.dragDetails == null &&
+            _valueColor.value!.a == _effectiveValueColor.a) {
+          // On iOS start the refresh when the Scrollable bounces back from the
+          // overscroll (ScrollNotification indicating this don't have dragDetails
+          // because the scroll activity is not directly triggered by a drag).
+          _show();
+        }
       }
     } else if (notification is OverscrollNotification) {
       if (_status == RefreshIndicatorStatus.drag) {

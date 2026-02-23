@@ -497,7 +497,7 @@ packages:
     description:
       path: "."
       ref: mod
-      resolved-ref: e05573ab132777bb7dc3a7a54af533c1ed4350b2
+      resolved-ref: e55d90cf2a1666e6ccf63e3f5779c8c4b12c5204
       url: "https://github.com/bggRGjQaUbCoE/extended_nested_scroll_view.git"
     source: git
     version: "6.2.1"
