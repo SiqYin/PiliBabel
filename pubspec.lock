@@ -497,7 +497,7 @@ packages:
     description:
       path: "."
       ref: mod
-      resolved-ref: "00a86d9aeb05a797e6b24c9b6a71524b6e8ea2c8"
+      resolved-ref: e05573ab132777bb7dc3a7a54af533c1ed4350b2
       url: "https://github.com/bggRGjQaUbCoE/extended_nested_scroll_view.git"
     source: git
     version: "6.2.1"
@@ -1416,10 +1416,10 @@ packages:
     dependency: transitive
     description:
       name: posix
-      sha256: "6323a5b0fa688b6a010df4905a56b00181479e6d10534cecfecede2aa55add61"
+      sha256: "185ef7606574f789b40f289c233efa52e96dead518aed988e040a10737febb07"
       url: "https://pub.dev"
     source: hosted
-    version: "6.0.3"
+    version: "6.5.0"
   pretty_qr_code:
     dependency: "direct main"
     description:
