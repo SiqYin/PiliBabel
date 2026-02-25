@@ -419,9 +419,9 @@ class PlPlayerController with BlockConfigMixin {
         : Colors.black.withValues(alpha: subtitleBgOpacity),
   );
 
-  late final Rx<SubtitleViewConfiguration> subtitleConfig = _getSubConfig.obs;
+  late final Rx<SubtitleViewConfiguration> subtitleConfig = getSubConfig.obs;
 
-  SubtitleViewConfiguration get _getSubConfig {
+  SubtitleViewConfiguration get getSubConfig {
     final subTitleStyle = this.subTitleStyle;
     return SubtitleViewConfiguration(
       style: subTitleStyle,
@@ -446,7 +446,7 @@ class PlPlayerController with BlockConfigMixin {
   }
 
   void updateSubtitleStyle() {
-    subtitleConfig.value = _getSubConfig;
+    subtitleConfig.value = getSubConfig;
   }
 
   void onUpdatePadding(EdgeInsets padding) {

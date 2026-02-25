@@ -863,7 +863,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                 children: [
                   buildTabBar(onTap: videoDetailController.animToTop),
                   Expanded(
-                    child: videoTabBarView(
+                    child: tabBarView(
                       controller: videoDetailController.tabCtr,
                       children: [
                         videoIntro(
@@ -932,7 +932,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                 children: [
                   buildTabBar(),
                   Expanded(
-                    child: videoTabBarView(
+                    child: tabBarView(
                       controller: videoDetailController.tabCtr,
                       children: [
                         videoIntro(
@@ -1000,7 +1000,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                   children: [
                     buildTabBar(showIntro: false),
                     Expanded(
-                      child: videoTabBarView(
+                      child: tabBarView(
                         controller: videoDetailController.tabCtr,
                         children: [
                           if (videoDetailController.showReply)
@@ -1080,7 +1080,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                         : showIntro,
                   ),
                   Expanded(
-                    child: videoTabBarView(
+                    child: tabBarView(
                       controller: videoDetailController.tabCtr,
                       children: [
                         if (videoDetailController.isFileSource)

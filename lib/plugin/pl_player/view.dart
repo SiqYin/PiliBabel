@@ -152,40 +152,66 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   // Timer? _accessibilityDebounce;
   // double _lastAnnouncedValue = -1;
 
-  StreamSubscription? _listener;
-  StreamSubscription? _controlsListener;
-
   bool _pauseDueToPauseUponEnteringBackgroundMode = false;
+
+  StreamSubscription? _brightnessListener;
+
+  int? tmpSubtitlePaddingB;
+  StreamSubscription? _controlsListener;
+  void _controlListener(bool val) {
+    final visible = val && !plPlayerController.controlsLock.value;
+
+    if ((widget.headerControl.key as GlobalKey<TimeBatteryMixin>).currentState
+        case final state?) {
+      if (state.mounted) {
+        state.getBatteryLevelIfNeeded();
+        state.provider
+          ?..startIfNeeded()
+          ..muted = !visible;
+        if (visible) {
+          state.startClock();
+        } else {
+          state.stopClock();
+        }
+      }
+    }
+
+    if (visible) {
+      animationController.forward();
+    } else {
+      animationController.reverse();
+    }
+
+    if (widget.videoDetailController case final controller?) {
+      if (controller.vttSubtitlesIndex.value != 0) {
+        if (visible) {
+          const int minPadding = 70;
+          if (plPlayerController.subtitlePaddingB < minPadding) {
+            tmpSubtitlePaddingB = plPlayerController.subtitlePaddingB;
+            plPlayerController
+              ..subtitlePaddingB = minPadding
+              ..subtitleConfig.value = plPlayerController.getSubConfig;
+          }
+        } else {
+          if (tmpSubtitlePaddingB != null) {
+            plPlayerController
+              ..subtitlePaddingB = tmpSubtitlePaddingB!
+              ..subtitleConfig.value = plPlayerController.getSubConfig;
+            tmpSubtitlePaddingB = null;
+          }
+        }
+      }
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
-    _controlsListener = plPlayerController.showControls.listen((bool val) {
-      final visible = val && !plPlayerController.controlsLock.value;
-
-      if ((widget.headerControl.key as GlobalKey<TimeBatteryMixin>).currentState
-          case final state?) {
-        if (state.mounted) {
-          state.getBatteryLevelIfNeeded();
-          state.provider
-            ?..startIfNeeded()
-            ..muted = !visible;
-          if (visible) {
-            state.startClock();
-          } else {
-            state.stopClock();
-          }
-        }
-      }
-
-      if (visible) {
-        animationController.forward();
-      } else {
-        animationController.reverse();
-      }
-    });
+    _controlsListener = plPlayerController.showControls.listen(
+      _controlListener,
+    );
     transformationController = TransformationController();
     animationController = AnimationController(
       vsync: this,
@@ -229,7 +255,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             }
           }
 
-          _listener = Platform.isIOS || plPlayerController.setSystemBrightness
+          _brightnessListener =
+              Platform.isIOS || plPlayerController.setSystemBrightness
               ? ScreenBrightnessPlatform
                     .instance
                     .onSystemScreenBrightnessChanged
@@ -313,7 +340,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     _tapGestureRecognizer.dispose();
     _longPressRecognizer?.dispose();
     _doubleTapGestureRecognizer.dispose();
-    _listener?.cancel();
+    _brightnessListener?.cancel();
     _controlsListener?.cancel();
     animationController.dispose();
     if (PlatformUtils.isMobile) {

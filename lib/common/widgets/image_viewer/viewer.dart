@@ -431,7 +431,7 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
     if (initialPosition == null) {
       return true;
     }
-    if (_scale <= 1.0) {
+    if (_scale <= widget.minScale) {
       return true;
     }
     final containerWidth = widget.containerSize.width;
@@ -442,9 +442,9 @@ class _ViewerState extends State<Viewer> with SingleTickerProviderStateMixin {
     final dx = (1 - _scale) * containerWidth / 2;
     final dxOffset = (imageWidth - containerWidth) / 2;
     if (initialPosition.dx < lastPosition.global.dx) {
-      return _position.dx.equals(dx + dxOffset);
+      return _position.dx.equals(dx + dxOffset, 1e-6);
     } else {
-      return _position.dx.equals(dx - dxOffset);
+      return _position.dx.equals(dx - dxOffset, 1e-6);
     }
   }
 

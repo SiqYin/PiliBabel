@@ -727,9 +727,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
           ? PageView<CustomHorizontalDragGestureRecognizer>(
               key: pageKey,
               controller: _liveRoomController.pageController,
-              physics: const CustomTabBarViewScrollPhysics(
-                parent: ClampingScrollPhysics(),
-              ),
+              physics: clampingScrollPhysics,
               onPageChanged: (value) =>
                   _liveRoomController.pageIndex.value = value,
               horizontalDragGestureRecognizer:
