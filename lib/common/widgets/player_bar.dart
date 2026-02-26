@@ -89,16 +89,17 @@ class RenderBottomBar extends RenderBox
     }
   }
 
-  void _paintChild(PaintingContext context, Offset offset) {
-    defaultPaint(context, offset);
-  }
-
   @override
   void paint(PaintingContext context, Offset offset) {
     if (_transform != null) {
-      context.pushTransform(needsCompositing, offset, _transform!, _paintChild);
+      context.pushTransform(
+        needsCompositing,
+        offset,
+        _transform!,
+        defaultPaint,
+      );
     } else {
-      _paintChild(context, offset);
+      defaultPaint(context, offset);
     }
   }
 
