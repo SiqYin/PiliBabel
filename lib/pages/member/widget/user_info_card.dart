@@ -12,6 +12,7 @@ import 'package:PiliPlus/models_new/space/space/pr_info.dart';
 import 'package:PiliPlus/pages/fan/view.dart';
 import 'package:PiliPlus/pages/follow/view.dart';
 import 'package:PiliPlus/pages/follow_type/followed/view.dart';
+import 'package:PiliPlus/pages/member/widget/header_layout_widget.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
@@ -128,7 +129,7 @@ class UserInfoCard extends StatelessWidget {
         tag: imgUrl,
         child: CachedNetworkImage(
           fit: .cover,
-          height: 135,
+          height: kHeaderHeight,
           width: width,
           memCacheWidth: width.cacheSize(context),
           imageUrl: ImageUtils.thumbnailUrl(imgUrl),
@@ -457,7 +458,7 @@ class UserInfoCard extends StatelessWidget {
     tag: card.face ?? '',
     child: PendantAvatar(
       avatar: card.face,
-      size: 80,
+      size: kAvatarSize,
       badgeSize: 20,
       officialType: card.officialVerify?.type,
       isVip: (card.vip?.status ?? -1) > 0,
@@ -478,29 +479,18 @@ class UserInfoCard extends StatelessWidget {
     mainAxisSize: MainAxisSize.min,
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Stack(
-        clipBehavior: Clip.none,
+      HeaderLayoutWidget(
         children: [
-          Column(
-            crossAxisAlignment: .stretch,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildHeader(context, colorScheme, isLight, width),
-              SizedBox(
-                height: MediaQuery.textScalerOf(context).scale(30) + 60,
-              ),
-            ],
+          LayoutId(
+            id: HeaderType.header,
+            child: _buildHeader(context, colorScheme, isLight, width),
           ),
-          Positioned(
-            top: 110,
-            left: 20,
+          LayoutId(
+            id: HeaderType.avatar,
             child: _buildAvatar,
           ),
-          Positioned(
-            left: 160,
-            top: 140,
-            right: 15,
-            bottom: 0,
+          LayoutId(
+            id: HeaderType.actions,
             child: _buildRight(colorScheme),
           ),
         ],
