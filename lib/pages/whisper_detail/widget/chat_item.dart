@@ -1,10 +1,11 @@
 import 'dart:convert';
-import 'dart:math';
+import 'dart:math' as math;
 
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
+import 'package:PiliPlus/common/widgets/image_viewer/hero.dart';
 import 'package:PiliPlus/grpc/bilibili/im/interfaces/v1.pb.dart'
     show EmotionInfo;
 import 'package:PiliPlus/grpc/bilibili/im/type.pb.dart' show Msg, MsgType;
@@ -590,16 +591,24 @@ class ChatItem extends StatelessWidget {
 
   Widget msgTypePic_2(Map content) {
     final url = content['url'];
+    final imgWidth = (content['width'] as num).toDouble();
+    final imgHeight = (content['height'] as num).toDouble();
+    final width = math.min(220.0, imgWidth);
+    final ratio = imgHeight / imgWidth;
+    Widget child = NetworkImgLayer(
+      width: width,
+      height: width * ratio,
+      src: url,
+    );
+    if (ratio <= StyleString.imgMaxRatio) {
+      child = fromHero(
+        tag: url,
+        child: child,
+      );
+    }
     return GestureDetector(
       onTap: () => PageUtils.imageView(imgList: [SourceModel(url: url)]),
-      child: Hero(
-        tag: url,
-        child: NetworkImgLayer(
-          width: 220,
-          height: 220 * content['height'] / content['width'],
-          src: url,
-        ),
-      ),
+      child: child,
     );
   }
 
@@ -750,7 +759,7 @@ class ChatItem extends StatelessWidget {
     final String? url = content['jump_url'];
     return LayoutBuilder(
       builder: (context, constraints) {
-        final maxWidth = max(400.0, constraints.maxWidth);
+        final maxWidth = math.max(400.0, constraints.maxWidth);
         Widget child = ClipRRect(
           borderRadius: StyleString.mdRadius,
           child: CachedNetworkImage(

@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/widgets/avatars.dart';
+import 'package:PiliPlus/common/widgets/image_viewer/hero.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/models/common/image_preview_type.dart';
@@ -125,7 +126,7 @@ class UserInfoCard extends StatelessWidget {
             .http2https;
     return GestureDetector(
       onTap: () => PageUtils.imageView(imgList: [SourceModel(url: imgUrl)]),
-      child: Hero(
+      child: fromHero(
         tag: imgUrl,
         child: CachedNetworkImage(
           fit: .cover,
@@ -454,7 +455,7 @@ class UserInfoCard extends StatelessWidget {
     ],
   );
 
-  Widget get _buildAvatar => Hero(
+  Widget get _buildAvatar => fromHero(
     tag: card.face ?? '',
     child: PendantAvatar(
       avatar: card.face,
