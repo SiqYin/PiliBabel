@@ -90,12 +90,7 @@ class RenderBottomBar extends RenderBox
   }
 
   void _paintChild(PaintingContext context, Offset offset) {
-    RenderBox? child = firstChild;
-    while (child != null) {
-      final childParentData = child.parentData as MultiChildLayoutParentData;
-      context.paintChild(child, childParentData.offset + offset);
-      child = childParentData.nextSibling;
-    }
+    defaultPaint(context, offset);
   }
 
   @override
