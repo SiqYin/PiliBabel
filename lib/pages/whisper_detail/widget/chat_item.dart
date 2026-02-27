@@ -397,6 +397,11 @@ class ChatItem extends StatelessWidget {
   }
 
   Widget msgTypeVideoCard_11(ThemeData theme, content, Color textColor) {
+    String? attachMsg;
+    try {
+      attachMsg = content['attach_msg']?['content'];
+    } catch (_) {}
+
     return Center(
       child: Container(
         clipBehavior: Clip.hardEdge,
@@ -428,7 +433,7 @@ class ChatItem extends StatelessWidget {
                 }
               },
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Stack(
                     clipBehavior: Clip.none,
@@ -465,6 +470,20 @@ class ChatItem extends StatelessWidget {
                       ),
                     ),
                   ),
+                  if (attachMsg?.isNotEmpty ?? false)
+                    Container(
+                      margin: const .fromLTRB(12, 0, 12, 8),
+                      padding: const .symmetric(horizontal: 11, vertical: 3.5),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.surface,
+                        borderRadius: const .all(.circular(6)),
+                      ),
+                      child: msgTypeText_1(
+                        theme,
+                        content: content['attach_msg'],
+                        textColor: textColor,
+                      ),
+                    ),
                 ],
               ),
             );
