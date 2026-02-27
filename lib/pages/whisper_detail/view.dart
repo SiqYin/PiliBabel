@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io' show File;
 
+import 'package:PiliPlus/common/widgets/chat_list_view.dart';
 import 'package:PiliPlus/common/widgets/dialog/report.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/text_field.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -153,9 +154,7 @@ class _WhisperDetailPageState
       Loading() => loadingWidget,
       Success(:final response) =>
         response != null && response.isNotEmpty
-            ? ListView.separated(
-                shrinkWrap: true,
-                reverse: true,
+            ? ChatListView.separated(
                 itemCount: response.length,
                 padding: const EdgeInsets.all(14),
                 physics: const AlwaysScrollableScrollPhysics(

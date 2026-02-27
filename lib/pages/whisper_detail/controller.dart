@@ -73,6 +73,30 @@ class WhisperDetailController extends CommonListController<RspSessionMsg, Msg> {
     int? msgType,
     int? index,
   }) async {
+    // debug
+    // if (loadingState.value case Success(:final response)) {
+    //   final list = List.of(response ?? <Msg>[])
+    //     ..insert(
+    //       0,
+    //       Msg.create()..mergeFromProto3Json({
+    //         "senderUid": "${account.mid}",
+    //         "receiverType": 1,
+    //         "receiverId": "$mid",
+    //         "msgType": msgType,
+    //         "content": jsonEncode({"content": message}),
+    //         "msgSeqno": "1",
+    //         "timestamp": "${DateTime.now().millisecondsSinceEpoch ~/ 1000}",
+    //         "atUids": ["0"],
+    //         "msgKey": "2",
+    //         "msgSource": msgType,
+    //       }),
+    //     );
+    //   loadingState.value = Success(list);
+    // }
+    // onClearText();
+    // scrollController.jumpToTop();
+    // SmartDialog.showToast('发送成功');
+    // return;
     assert((message != null) ^ (picMsg != null));
     if (_isSending) return;
     _isSending = true;
