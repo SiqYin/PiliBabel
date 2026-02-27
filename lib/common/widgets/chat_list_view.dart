@@ -359,6 +359,8 @@ class RenderSliverChatList extends RenderSliverMultiBoxAdaptor
   }
 }
 
+const double kChatListPadding = 14.0;
+
 /// from https://github.com/fluttercandies/extended_list
 mixin ExtendedRenderObjectMixin on RenderSliverMultiBoxAdaptor {
   void handleCloseToTrailingBegin() {
@@ -366,11 +368,10 @@ mixin ExtendedRenderObjectMixin on RenderSliverMultiBoxAdaptor {
   }
 
   double handleCloseToTrailingEnd(double endScrollOffset) {
-    if (endScrollOffset < constraints.remainingPaintExtent) {
-      final double distance =
-          constraints.remainingPaintExtent - endScrollOffset;
-      _closeToTrailingDistance = distance;
-      return constraints.remainingPaintExtent;
+    final extent = constraints.remainingPaintExtent - kChatListPadding;
+    if (endScrollOffset < extent) {
+      _closeToTrailingDistance = extent - endScrollOffset;
+      return extent;
     }
     return endScrollOffset;
   }

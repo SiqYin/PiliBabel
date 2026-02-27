@@ -156,7 +156,7 @@ class _WhisperDetailPageState
         response != null && response.isNotEmpty
             ? ChatListView.separated(
                 itemCount: response.length,
-                padding: const EdgeInsets.all(14),
+                padding: const .all(kChatListPadding),
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: ClampingScrollPhysics(),
                 ),

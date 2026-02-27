@@ -55,10 +55,10 @@ class ChatItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final msgType = item.msgType;
-    final isRevoke = msgType == MsgType.EN_MSG_TYPE_DRAW_BACK.value; // 撤回消息
-    if (isRevoke) {
-      return const SizedBox.shrink();
-    }
+    // final isRevoke = msgType == MsgType.EN_MSG_TYPE_DRAW_BACK.value; // 撤回消息
+    // if (isRevoke) {
+    //   return const SizedBox.shrink();
+    // }
 
     late final ThemeData theme = Theme.of(context);
     late final Color textColor = isOwner

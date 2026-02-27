@@ -311,15 +311,15 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     }
     plPlayerController = videoDetailController.plPlayerController;
     videoDetailController.autoPlay = true;
+    plPlayerController!
+      ..addStatusLister(playerListener)
+      ..addPositionListener(positionListener);
     if (videoDetailController.plPlayerController.preInitPlayer) {
       await plPlayerController!.play();
     } else {
       await videoDetailController.playerInit(autoplay: true);
     }
     if (!mounted || !isShowing) return;
-    plPlayerController!
-      ..addStatusLister(playerListener)
-      ..addPositionListener(positionListener);
     await plPlayerController!.autoEnterFullscreen();
   }
 

@@ -48,6 +48,7 @@ class WhisperDetailController extends CommonListController<RspSessionMsg, Msg> {
       } else {
         ackSessionMsg(msgs.last.msgSeqno.toInt());
       }
+      msgs.removeWhere((e) => e.msgType == MsgType.EN_MSG_TYPE_DRAW_BACK.value);
       eInfos ??= <EmotionInfo>[];
       eInfos!.addAll(response.response.eInfos);
     }
