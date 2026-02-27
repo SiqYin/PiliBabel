@@ -123,9 +123,7 @@ class _WhisperDetailPageState
           children: [
             Expanded(
               child: Listener(
-                onPointerDown: (event) {
-                  hidePanel();
-                },
+                onPointerDown: hidePanel,
                 behavior: HitTestBehavior.opaque,
                 child: Align(
                   alignment: Alignment.topCenter,
