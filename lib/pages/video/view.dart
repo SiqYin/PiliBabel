@@ -446,21 +446,18 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       }
     }
 
-    () async {
-      if (videoDetailController.autoPlay) {
-        await videoDetailController.playerInit(
-          autoplay: videoDetailController.playerStatus?.isPlaying ?? false,
-        );
-      } else if (videoDetailController.plPlayerController.preInitPlayer &&
-          !videoDetailController.isQuerying &&
-          videoDetailController.videoState.value is! Error) {
-        await videoDetailController.playerInit();
-      }
-      if (!mounted || !isShowing) return;
-      plPlayerController
-        ?..addStatusLister(playerListener)
-        ..addPositionListener(positionListener);
-    }();
+    plPlayerController
+      ?..addStatusLister(playerListener)
+      ..addPositionListener(positionListener);
+    if (videoDetailController.autoPlay) {
+      videoDetailController.playerInit(
+        autoplay: videoDetailController.playerStatus?.isPlaying ?? false,
+      );
+    } else if (videoDetailController.plPlayerController.preInitPlayer &&
+        !videoDetailController.isQuerying &&
+        videoDetailController.videoState.value is! Error) {
+      videoDetailController.playerInit();
+    }
 
     super.didPopNext();
   }
