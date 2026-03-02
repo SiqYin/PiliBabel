@@ -209,7 +209,8 @@ abstract final class PageUtils {
     feedBack();
 
     void push() {
-      if (item.basic?.commentType == 12) {
+      if (item.basic?.commentType == 12 ||
+          item.modules.moduleDynamic?.major?.type == 'MAJOR_TYPE_OPUS') {
         toDupNamed(
           '/articlePage',
           parameters: {
