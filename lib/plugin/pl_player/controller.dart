@@ -1404,6 +1404,7 @@ class PlPlayerController with BlockConfigMixin {
       return;
     }
     fsProcessing = true;
+    toggleFullScreen(status);
     try {
       mode ??= this.mode;
       this.isManualFS = isManualFS;
@@ -1446,7 +1447,6 @@ class PlPlayerController with BlockConfigMixin {
         }
       }
     } finally {
-      toggleFullScreen(status);
       fsProcessing = false;
     }
   }
