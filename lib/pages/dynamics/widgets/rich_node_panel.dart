@@ -1,8 +1,8 @@
 import 'dart:io' show Platform;
 
 import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
-import 'package:PiliPlus/common/widgets/image/custom_grid_view.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
+import 'package:PiliPlus/common/widgets/image_grid/image_grid_view.dart';
 import 'package:PiliPlus/http/dynamics.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/search.dart';
@@ -252,9 +252,8 @@ TextSpan? richNode(
                 ..add(const TextSpan(text: '\n'))
                 ..add(
                   WidgetSpan(
-                    child: CustomGridView(
+                    child: ImageGridView(
                       fullScreen: true,
-                      maxWidth: maxWidth,
                       picArr: i.pics!
                           .map(
                             (item) => ImageModel(

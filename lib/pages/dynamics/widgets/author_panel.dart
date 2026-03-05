@@ -293,9 +293,7 @@ class AuthorPanel extends StatelessWidget {
                       height: 3,
                       decoration: BoxDecoration(
                         color: theme.colorScheme.outline,
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(3),
-                        ),
+                        borderRadius: const .all(.circular(1.5)),
                       ),
                     ),
                   ),

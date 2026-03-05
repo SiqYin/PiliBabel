@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/image/cached_network_svg_image.dart';
-import 'package:PiliPlus/common/widgets/image/custom_grid_view.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
+import 'package:PiliPlus/common/widgets/image_grid/image_grid_view.dart';
 import 'package:PiliPlus/common/widgets/image_viewer/hero.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/models/common/image_preview_type.dart';
@@ -247,8 +247,7 @@ class OpusContent extends StatelessWidget {
                   child: child,
                 );
               } else {
-                return CustomGridView(
-                  maxWidth: maxWidth,
+                return ImageGridView(
                   picArr: element.pic!.pics!
                       .map(
                         (e) => ImageModel(
