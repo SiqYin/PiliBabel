@@ -112,6 +112,8 @@ abstract final class SettingBoxKey {
       coinWithLike = 'coinWithLike',
       isPureBlackTheme = 'isPureBlackTheme',
       antiGoodsDyn = 'antiGoodsDyn',
+      removeBlockedDyn = 'removeBlockedDyn',
+      removeCommercialDyn = 'removeCommercialDyn',
       antiGoodsReply = 'antiGoodsReply',
       expandDynLivePanel = 'expandDynLivePanel',
       springDescription = 'springDescription',
