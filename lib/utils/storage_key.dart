@@ -214,6 +214,9 @@ abstract final class SettingBoxKey {
 
   static const String themeMode = 'themeMode',
       defaultTextScale = 'textScale',
+      customFontPath = 'customFontPath',
+      customFontFamily = 'customFontFamily',
+      customFontName = 'customFontName',
       dynamicColor = 'dynamicColor',
       customColor = 'customColor',
       displayMode = 'displayMode',
