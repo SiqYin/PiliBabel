@@ -15,16 +15,11 @@ Widget content(
   required DynamicItemModel item,
   required bool isSave,
   required bool isDetail,
-  required double maxWidth,
 }) {
-  if (floor == 1) {
-    maxWidth -= 24;
-  }
   TextSpan? richNodes = richNode(
     context,
     theme: theme,
     item: item,
-    maxWidth: maxWidth,
   );
   final moduleDynamic = item.modules.moduleDynamic;
   final pics = moduleDynamic?.major?.opus?.pics;

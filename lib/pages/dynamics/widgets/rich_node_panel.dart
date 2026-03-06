@@ -22,7 +22,6 @@ TextSpan? richNode(
   BuildContext context, {
   required ThemeData theme,
   required DynamicItemModel item,
-  required double maxWidth,
 }) {
   try {
     late final style = TextStyle(color: theme.colorScheme.primary);

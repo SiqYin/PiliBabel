@@ -38,7 +38,6 @@ import 'package:flutter/rendering.dart'
         ContainerParentDataMixin,
         InformationCollector,
         DiagnosticsDebugCreator;
-import 'package:flutter/scheduler.dart';
 
 /// ref [LayoutBuilder]
 
@@ -274,42 +273,42 @@ class ImageGridRenderObjectElement extends RenderObjectElement {
   // repeatedly to remove children.
   final Set<Element> _forgottenChildren = HashSet<Element>();
 
-  @override
-  BuildScope get buildScope => _buildScope;
+  // @override
+  // BuildScope get buildScope => _buildScope;
 
-  late final BuildScope _buildScope = BuildScope(
-    scheduleRebuild: _scheduleRebuild,
-  );
+  // late final BuildScope _buildScope = BuildScope(
+  //   scheduleRebuild: _scheduleRebuild,
+  // );
 
-  bool _deferredCallbackScheduled = false;
-  void _scheduleRebuild() {
-    if (_deferredCallbackScheduled) {
-      return;
-    }
+  // bool _deferredCallbackScheduled = false;
+  // void _scheduleRebuild() {
+  //   if (_deferredCallbackScheduled) {
+  //     return;
+  //   }
 
-    final bool deferMarkNeedsLayout =
-        switch (SchedulerBinding.instance.schedulerPhase) {
-          SchedulerPhase.idle || SchedulerPhase.postFrameCallbacks => true,
-          SchedulerPhase.transientCallbacks ||
-          SchedulerPhase.midFrameMicrotasks ||
-          SchedulerPhase.persistentCallbacks => false,
-        };
-    if (!deferMarkNeedsLayout) {
-      renderObject.scheduleLayoutCallback();
-      return;
-    }
-    _deferredCallbackScheduled = true;
-    SchedulerBinding.instance.scheduleFrameCallback(_frameCallback);
-  }
+  //   final bool deferMarkNeedsLayout =
+  //       switch (SchedulerBinding.instance.schedulerPhase) {
+  //         SchedulerPhase.idle || SchedulerPhase.postFrameCallbacks => true,
+  //         SchedulerPhase.transientCallbacks ||
+  //         SchedulerPhase.midFrameMicrotasks ||
+  //         SchedulerPhase.persistentCallbacks => false,
+  //       };
+  //   if (!deferMarkNeedsLayout) {
+  //     renderObject.scheduleLayoutCallback();
+  //     return;
+  //   }
+  //   _deferredCallbackScheduled = true;
+  //   SchedulerBinding.instance.scheduleFrameCallback(_frameCallback);
+  // }
 
-  void _frameCallback(Duration timestamp) {
-    _deferredCallbackScheduled = false;
-    // This method is only called when the render tree is stable, if the Element
-    // is deactivated it will never be reincorporated back to the tree.
-    if (mounted) {
-      renderObject.scheduleLayoutCallback();
-    }
-  }
+  // void _frameCallback(Duration timestamp) {
+  //   _deferredCallbackScheduled = false;
+  //   // This method is only called when the render tree is stable, if the Element
+  //   // is deactivated it will never be reincorporated back to the tree.
+  //   if (mounted) {
+  //     renderObject.scheduleLayoutCallback();
+  //   }
+  // }
 
   @override
   void insertRenderObjectChild(RenderObject child, IndexedSlot<Element?> slot) {
