@@ -52,7 +52,6 @@ import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
 import 'package:PiliPlus/plugin/pl_player/models/heart_beat_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
-import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/pip_overlay_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
@@ -676,13 +675,13 @@ class VideoDetailController extends GetxController
     playerInit();
   }
 
-  Future<void>? _initPlayerIfNeeded() {
+  Future<void>? _initPlayerIfNeeded(bool autoFullScreenFlag) {
     if (_autoPlay.value ||
         (plPlayerController.preInitPlayer && !plPlayerController.processing) &&
             (isFileSource
                 ? true
                 : videoPlayerKey.currentState?.mounted == true)) {
-      return playerInit();
+      return playerInit(autoFullScreenFlag: autoFullScreenFlag);
     }
     return null;
   }
@@ -694,6 +693,7 @@ class VideoDetailController extends GetxController
     Duration? duration,
     bool? autoplay,
     Volume? volume,
+    bool autoFullScreenFlag = false,
   }) async {
     Duration? seek = seekToTime ?? defaultST ?? playedTime;
     if (seek == null || seek == Duration.zero) {
@@ -734,6 +734,7 @@ class VideoDetailController extends GetxController
       width: firstVideo.width,
       height: firstVideo.height,
       volume: volume ?? this.volume,
+      autoFullScreenFlag: autoFullScreenFlag,
     );
 
     if (isClosed) return;
@@ -776,9 +777,10 @@ class VideoDetailController extends GetxController
     Duration? defaultST,
     bool fromReset = false,
     bool reinitializePlayer = true,
+    bool autoFullScreenFlag = false,
   }) async {
     if (isFileSource) {
-      return _initPlayerIfNeeded();
+      return _initPlayerIfNeeded(autoFullScreenFlag);
     }
     if (isQuerying) {
       return;
@@ -853,7 +855,7 @@ class VideoDetailController extends GetxController
         currentDecodeFormats = VideoDecodeFormatType.fromString('avc1');
         currentVideoQa.value = videoQuality;
         if (reinitializePlayer) {
-          await _initPlayerIfNeeded();
+          await _initPlayerIfNeeded(autoFullScreenFlag);
         } else {
           // 从 PiP 返回时，重新初始化 SponsorBlock
           if (plPlayerController.enableSponsorBlock && segmentList.isNotEmpty) {
@@ -961,7 +963,7 @@ class VideoDetailController extends GetxController
         audioUrl = '';
       }
       if (reinitializePlayer) {
-        await _initPlayerIfNeeded();
+        await _initPlayerIfNeeded(autoFullScreenFlag);
       } else {
         // 从 PiP 返回时，播放器已在运行，但需要重新初始化 SponsorBlock 的跳过监听器
         if (plPlayerController.enableSponsorBlock && segmentList.isNotEmpty) {

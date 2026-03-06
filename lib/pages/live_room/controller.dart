@@ -203,15 +203,12 @@ class LiveRoomController extends GetxController {
     // 直接透传构造函数传入的 fromPip 标志，因为它在 view.dart 中已经经过了校验
     isReturningFromPip = fromPip;
 
-    if (!isReturningFromPip) {
-      // 正常流程：查询直播流地址
-      queryLiveUrl();
-    } else {
-      // 从 PiP 返回：播放器已在运行，只需恢复状态
+    if (isReturningFromPip) {
       isPortrait.value = plPlayerController.isVertical;
       isLoaded.value = true;
+    } else {
+      queryLiveUrl(autoFullScreenFlag: true);
     }
-    
     queryLiveInfoH5();
     if (Accounts.heartbeat.isLogin && !Pref.historyPause) {
       VideoHttp.roomEntryAction(roomId: roomId);
@@ -221,7 +218,10 @@ class LiveRoomController extends GetxController {
     }
   }
 
-  Future<void>? playerInit({bool autoplay = true}) {
+  Future<void>? playerInit({
+    bool autoplay = true,
+    bool autoFullScreenFlag = false,
+  }) {
     if (videoUrl == null) {
       return null;
     }
@@ -238,6 +238,7 @@ class LiveRoomController extends GetxController {
       isLive: true,
       autoplay: autoplay,
       isVertical: isPortrait.value,
+      autoFullScreenFlag: autoFullScreenFlag,
     )
         .then((_) async {
       if (!autoplay) {
@@ -251,7 +252,7 @@ class LiveRoomController extends GetxController {
     });
   }
 
-  Future<void> queryLiveUrl({bool reinitializePlayer = true}) async {
+  Future<void> queryLiveUrl({bool autoFullScreenFlag = false}) async {
     currentQn ??= await Utils.isWiFi
         ? Pref.liveQuality
         : Pref.liveQualityCellular;
@@ -290,9 +291,7 @@ class LiveRoomController extends GetxController {
       currentQnDesc.value =
           LiveQuality.fromCode(currentQn)?.desc ?? currentQn.toString();
       videoUrl = VideoUtils.getLiveCdnUrl(item);
-      if (reinitializePlayer) {
-        await playerInit();
-      }
+      await playerInit(autoFullScreenFlag: autoFullScreenFlag);
       isLoaded.value = true;
     } else {
       _showDialog(res.toString());

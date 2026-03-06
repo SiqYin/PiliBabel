@@ -143,19 +143,6 @@ class PlPlayerController with BlockConfigMixin {
   /// 视频比例
   final Rx<VideoFitType> videoFit = Rx(VideoFitType.contain);
 
-  StreamSubscription<DataStatus>? _dataListenerForVideoFit;
-  StreamSubscription<DataStatus>? _dataListenerForEnterFullScreen;
-
-  void _stopListenerForVideoFit() {
-    _dataListenerForVideoFit?.cancel();
-    _dataListenerForVideoFit = null;
-  }
-
-  void _stopListenerForEnterFullScreen() {
-    _dataListenerForEnterFullScreen?.cancel();
-    _dataListenerForEnterFullScreen = null;
-  }
-
   /// 后台播放
   late final RxBool continuePlayInBackground =
       Pref.continuePlayInBackground.obs;
@@ -404,6 +391,7 @@ class PlPlayerController with BlockConfigMixin {
   late final showFsLockBtn = Pref.showFsLockBtn;
   late final keyboardControl = Pref.keyboardControl;
 
+  late final bool _autoEnterFullScreen = Pref.autoEnterFullScreen;
   late final bool autoExitFullscreen = Pref.autoExitFullscreen;
   late final bool autoPlayEnable = Pref.autoPlayEnable;
   late final bool enableVerticalExpand = Pref.enableVerticalExpand;
@@ -627,6 +615,7 @@ class PlPlayerController with BlockConfigMixin {
     VideoType? videoType,
     VoidCallback? onInit,
     Volume? volume,
+    bool autoFullScreenFlag = false,
   }) async {
     try {
       _processing = true;
@@ -680,6 +669,10 @@ class PlPlayerController with BlockConfigMixin {
       updateBufferedSecond();
       // 数据加载完成
       dataStatus.value = DataStatus.loaded;
+
+      if (autoFullScreenFlag && _autoEnterFullScreen) {
+        triggerFullScreen(status: true);
+      }
 
       await _initializePlayer();
       onInit?.call();
@@ -920,7 +913,7 @@ class PlPlayerController with BlockConfigMixin {
         await setPlaybackSpeed(_playbackSpeed.value);
       }
     }
-    getVideoFit();
+    _initVideoFit();
     // if (_looping) {
     //   await setLooping(_looping);
     // }
@@ -935,26 +928,6 @@ class PlPlayerController with BlockConfigMixin {
       playIfExists();
       // await play(duration: duration);
     }
-  }
-
-  late final bool enableAutoEnter = Pref.enableAutoEnter;
-  Future<void>? autoEnterFullscreen() {
-    if (enableAutoEnter) {
-      return Future.delayed(const Duration(milliseconds: 500), () {
-        if (!dataStatus.loaded) {
-          _stopListenerForEnterFullScreen();
-          _dataListenerForEnterFullScreen = dataStatus.listen((status) {
-            if (status == DataStatus.loaded) {
-              _stopListenerForEnterFullScreen();
-              triggerFullScreen(status: true);
-            }
-          });
-        } else {
-          return triggerFullScreen(status: true);
-        }
-      });
-    }
-    return null;
   }
 
   List<StreamSubscription>? _subscriptions;
@@ -1314,34 +1287,18 @@ class PlPlayerController with BlockConfigMixin {
 
   /// Toggle Change the videofit accordingly
   void toggleVideoFit(VideoFitType value) {
-    videoFit.value = value;
+    _prefFit = videoFit.value = value;
     video.put(VideoBoxKey.cacheVideoFit, value.index);
   }
 
   /// 读取fit
-  int fitValue = Pref.cacheVideoFit;
-  void getVideoFit() {
-    var attr = VideoFitType.values[fitValue];
-    // 由于none与scaleDown涉及视频原始尺寸，需要等待视频加载后再设置，否则尺寸会变为0，出现错误;
-    if (attr == VideoFitType.none || attr == VideoFitType.scaleDown) {
-      if (buffered.value == Duration.zero) {
-        attr = VideoFitType.contain;
-        _stopListenerForVideoFit();
-        _dataListenerForVideoFit = dataStatus.listen((status) {
-          if (status == DataStatus.loaded) {
-            _stopListenerForVideoFit();
-            final attr = VideoFitType.values[fitValue];
-            if (attr == VideoFitType.none || attr == VideoFitType.scaleDown) {
-              videoFit.value = attr;
-            }
-          }
-        });
-      }
-      // fill不应该在竖屏视频生效
-    } else if (attr == VideoFitType.fill && isVertical) {
-      attr = VideoFitType.contain;
+  var _prefFit = VideoFitType.values[Pref.cacheVideoFit];
+  void _initVideoFit() {
+    if (_prefFit == .fill && _isVertical) {
+      videoFit.value = .contain;
+    } else {
+      videoFit.value = _prefFit;
     }
-    videoFit.value = attr;
   }
 
   /// 设置后台播放
@@ -1486,6 +1443,7 @@ class PlPlayerController with BlockConfigMixin {
       return;
     }
     fsProcessing = true;
+    toggleFullScreen(status);
     try {
       mode ??= this.mode;
       this.isManualFS = isManualFS;
@@ -1528,7 +1486,6 @@ class PlPlayerController with BlockConfigMixin {
         }
       }
     } finally {
-      toggleFullScreen(status);
       fsProcessing = false;
     }
   }
@@ -1643,8 +1600,6 @@ class PlPlayerController with BlockConfigMixin {
 
     _playerCount = 0;
     danmakuController = null;
-    _stopListenerForVideoFit();
-    _stopListenerForEnterFullScreen();
     _disableAutoEnterPip();
     setPlayCallBack(null);
     dmState.clear();

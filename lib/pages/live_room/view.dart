@@ -43,7 +43,6 @@ import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:canvas_danmaku/canvas_danmaku.dart';
-import 'package:floating/floating.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart' hide PageView;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -109,7 +108,8 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       LiveRoomController(heroTag, fromPip: isReturningFromPip),
       tag: heroTag,
     );
-    plPlayerController = _liveRoomController.plPlayerController;
+    plPlayerController = _liveRoomController.plPlayerController
+      ..addStatusLister(playerListener);
     PlPlayerController.setPlayCallBack(plPlayerController.play);
 
     if (isReturningFromPip) {
@@ -121,13 +121,8 @@ class _LiveRoomPageState extends State<LiveRoomPage>
         ..danmakuController?.resume()
         ..startLiveTimer()
         ..startLiveMsg();
-      plPlayerController.addStatusLister(playerListener);
     } else {
-      // 非 PiP 进入，确保播放器处于干净状态
-      plPlayerController
-        ..isLive = true
-        ..autoEnterFullscreen()
-        ..addStatusLister(playerListener);
+      plPlayerController.isLive = true;
     }
   }
 
@@ -228,8 +223,9 @@ class _LiveRoomPageState extends State<LiveRoomPage>
 
   @override
   void dispose() {
-    final isInLivePip =
-        LivePipOverlayService.isCurrentLiveRoom(_liveRoomController.roomId);
+    final isInLivePip = LivePipOverlayService.isCurrentLiveRoom(
+      _liveRoomController.roomId,
+    );
     if (!isInLivePip && !_isEnteringPipMode) {
       videoPlayerServiceHandler?.onVideoDetailDispose(heroTag);
     }
@@ -257,7 +253,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // 添加空检查，防止在控制器未初始化时访问
     if (!mounted) return;
-    
+
     try {
       if (state == AppLifecycleState.resumed) {
         if (!plPlayerController.showDanmaku) {
@@ -533,8 +529,9 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
     }
     PlPlayerController.setPlayCallBack(null);
-    plPlayerController.removeStatusLister(playerListener);
-    plPlayerController.dispose();
+    plPlayerController
+      ..removeStatusLister(playerListener)
+      ..dispose();
 
     // 彻底清理永久控制器
     Get.delete<LiveRoomController>(tag: heroTag, force: true);

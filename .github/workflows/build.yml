@@ -19,7 +19,7 @@ on:
       build_ios:
         description: "Build iOS"
         required: false
-        default: false # 默认改回 false，手动才勾选
+        default: false
         type: boolean
       build_mac:
         description: "Build Mac"
@@ -44,19 +44,17 @@ on:
 
 jobs:
   android:
-    # PR 时总是构建 Android，或者手动触发且勾选了 Android
     if: ${{ github.event_name == 'pull_request' || github.event.inputs.build_android == 'true' }}
     name: Release Android
     runs-on: ubuntu-latest
     permissions: write-all
-
     steps:
-      - name: 代码迁出
+      - name: Checkout code
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: 构建Java环境
+      - name: Setup Java
         uses: actions/setup-java@v5
         with:
           distribution: "zulu"
@@ -66,7 +64,7 @@ jobs:
             android/*.gradle*
             android/**/gradle-wrapper.properties
 
-      - name: 安装Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         id: flutter-action
         with:
@@ -74,31 +72,9 @@ jobs:
           flutter-version-file: pubspec.yaml
           cache: true
 
-      - name: revert new overscrollindicator
-        working-directory: ${{ env.FLUTTER_ROOT }}
-        # https://github.com/flutter/flutter/issues/182281
-        run: |
-          git config --global user.name "ci"
-          git config --global user.email "example@example.com"
-          git stash || true
-          git revert 362b1de29974ffc1ed6faa826e1df870d7bec75f --no-edit
-          git reset --soft HEAD~1
-          git stash pop || true
-        continue-on-error: true
-
-      - name: apply bottom sheet patch
-        working-directory: ${{ env.FLUTTER_ROOT }}
-        run: git apply $GITHUB_WORKSPACE/lib/scripts/bottom_sheet_patch.diff || true
-        continue-on-error: true
-
-      - name: apply modal barrier patch
-        working-directory: ${{ env.FLUTTER_ROOT }}
-        run: git apply $GITHUB_WORKSPACE/lib/scripts/modal_barrier_patch.diff || true
-        continue-on-error: true
-
-      - name: apply mouse cursor patch
-        working-directory: ${{ env.FLUTTER_ROOT }}
-        run: git apply $GITHUB_WORKSPACE/lib/scripts/mouse_cursor_patch.diff || true
+      - name: Apply Patch
+        shell: pwsh
+        run: lib/scripts/patch.ps1 android
         continue-on-error: true
 
       - name: Write key
@@ -112,20 +88,20 @@ jobs:
             echo keyPassword='${{ secrets.KEY_PASSWORD }}' >> android/key.properties
           fi
 
-      - name: Set and Extract version
+      - name: Set and extract version
         shell: pwsh
         run: lib/scripts/build.ps1 android
 
-      - name: flutter build apk
+      - name: Build APK
         run: flutter build apk --release --split-per-abi --dart-define-from-file=pili_release.json --pub
 
-      - name: rename
+      - name: Rename APKs
+        shell: bash
         run: |
           for file in build/app/outputs/flutter-apk/app-*-release.apk; do
             abi=$(echo "$file" | sed -E 's|.*app-(.*)-release\.apk|\1|')
             mv "$file" "PiliNara_android_${{ env.version }}_${abi}.apk"
           done
-        shell: bash
 
       - name: Release
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '' }}
@@ -135,21 +111,21 @@ jobs:
           name: ${{ github.event.inputs.tag }}
           files: PiliNara_android_*.apk
 
-      - name: 上传
+      - name: Upload arm64-v8a
         uses: actions/upload-artifact@v7
         with:
           archive: false
           name: Android_arm64-v8a
           path: PiliNara_android_*_arm64-v8a.apk
 
-      - name: 上传
+      - name: Upload armeabi-v7a
         uses: actions/upload-artifact@v7
         with:
           archive: false
           name: Android_armeabi-v7a
           path: PiliNara_android_*_armeabi-v7a.apk
 
-      - name: 上传
+      - name: Upload x86_64
         uses: actions/upload-artifact@v7
         with:
           archive: false
@@ -157,7 +133,7 @@ jobs:
           path: PiliNara_android_*_x86_64.apk
 
   ios:
-    if: ${{ github.event.inputs.build_ios == 'true' }}
+    if: ${{ github.event_name == 'pull_request' || github.event.inputs.build_ios == 'true' }}
     uses: ./.github/workflows/ios.yml
     permissions: write-all
     with:
@@ -171,7 +147,7 @@ jobs:
       tag: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || '' }}
 
   win_x64:
-    if: ${{ github.event.inputs.build_win_x64 == 'true' }}
+    if: ${{ github.event_name == 'pull_request' || github.event.inputs.build_win_x64 == 'true' }}
     uses: ./.github/workflows/win_x64.yml
     permissions: write-all
     with:
