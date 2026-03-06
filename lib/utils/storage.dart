@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:PiliPlus/models/model_owner.dart';
+import 'package:PiliPlus/models/user/danmaku_rule.dart';
 import 'package:PiliPlus/models/user/danmaku_rule_adapter.dart';
 import 'package:PiliPlus/models/user/info.dart';
 import 'package:PiliPlus/utils/accounts.dart';
@@ -20,6 +21,13 @@ abstract final class GStorage {
   static late final Box<dynamic> setting;
   static late final Box<dynamic> video;
   static late final Box<int> watchProgress;
+  static const exportableLocalCacheKeys = [
+    'historyPause',
+    'blackMids',
+    'dynamicsBlockedMids',
+    'recommendBlockedMids',
+    'danmakuFilterRules',
+  ];
 
   static Future<void> init() async {
     await Hive.initFlutter(path.join(appSupportDirPath, 'hive'));
@@ -64,18 +72,10 @@ abstract final class GStorage {
   static String exportAllSettings() {
     // 导出需要保存的 localCache 数据，排除临时数据
     final localCacheData = <String, dynamic>{};
-    const exportableKeys = [
-      'historyPause',
-      'blackMids',
-      'dynamicsBlockedMids',
-      'recommendBlockedMids',
-      'danmakuFilterRules',
-    ];
-    
-    for (final key in exportableKeys) {
+    for (final key in exportableLocalCacheKeys) {
       final value = localCache.get(key);
       if (value != null) {
-        localCacheData[key] = value;
+        localCacheData[key] = _encodeLocalCacheValue(key, value);
       }
     }
     
@@ -99,7 +99,12 @@ abstract final class GStorage {
     if (map.containsKey(localCache.name)) {
       final localCacheMap = map[localCache.name] as Map<String, dynamic>;
       for (final entry in localCacheMap.entries) {
-        futures.add(localCache.put(entry.key, entry.value));
+        futures.add(
+          localCache.put(
+            entry.key,
+            _decodeLocalCacheValue(entry.key, entry.value),
+          ),
+        );
       }
     }
     
@@ -117,6 +122,53 @@ abstract final class GStorage {
       ..registerAdapter(AccountTypeAdapter())
       ..registerAdapter(SetIntAdapter())
       ..registerAdapter(RuleFilterAdapter());
+  }
+
+  static dynamic _encodeLocalCacheValue(String key, dynamic value) {
+    return switch (key) {
+      'blackMids' || 'dynamicsBlockedMids' => value is Set
+          ? value.toList()
+          : value,
+      'recommendBlockedMids' => value is Map
+          ? value.map((k, v) => MapEntry(k.toString(), v))
+          : value,
+      'danmakuFilterRules' => value is RuleFilter
+          ? {
+              'dmFilterString': value.dmFilterString,
+              'dmRegExp': value.dmRegExp.map((e) => e.pattern).toList(),
+              'dmUid': value.dmUid.toList(),
+            }
+          : value,
+      _ => value,
+    };
+  }
+
+  static dynamic _decodeLocalCacheValue(String key, dynamic value) {
+    return switch (key) {
+      'blackMids' || 'dynamicsBlockedMids' => value is List
+          ? value.whereType<int>().toSet()
+          : value,
+      'recommendBlockedMids' => value is Map
+          ? value.map(
+              (k, v) => MapEntry(k.toString(), v is String ? v : v.toString()),
+            )
+          : value,
+      'danmakuFilterRules' => value is Map
+          ? RuleFilter(
+              (value['dmFilterString'] as List? ?? const [])
+                  .whereType<String>()
+                  .toList(),
+              (value['dmRegExp'] as List? ?? const [])
+                  .whereType<String>()
+                  .map((e) => RegExp(e, caseSensitive: false))
+                  .toList(),
+              (value['dmUid'] as List? ?? const [])
+                  .whereType<String>()
+                  .toSet(),
+            )
+          : value,
+      _ => value,
+    };
   }
 
   static Future<void> compact() async {
