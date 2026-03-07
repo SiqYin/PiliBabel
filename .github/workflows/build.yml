@@ -106,11 +106,6 @@ jobs:
             - name: Flutter Build Dev Apk
               if: ${{ github.event_name == 'pull_request' }}
               run: |
-                echo "${{ secrets.SIGN_KEYSTORE_BASE64_DEV }}" | base64 --decode > android/app/dev.jks
-                echo storeFile='dev.jks' >> android/key.properties
-                echo storePassword='${{ secrets.KEYSTORE_PASSWORD_DEV }}' >> android/key.properties
-                echo keyAlias='${{ secrets.KEY_ALIAS_DEV }}' >> android/key.properties
-                echo keyPassword='${{ secrets.KEY_PASSWORD_DEV }}' >> android/key.properties
                 flutter build apk --release --split-per-abi --android-project-arg dev=1 --pub
 
             - name: Rename
