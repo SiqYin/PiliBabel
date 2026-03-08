@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:PiliPlus/grpc/bilibili/app/card/v1.pb.dart' show AdInfo;
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/models/common/dynamic/dynamics_type.dart';
 import 'package:PiliPlus/models/dynamics/article_content_model.dart';
@@ -44,6 +45,8 @@ class DynamicsDataModel {
   static bool enableFilter = banWordForDyn.pattern.isNotEmpty;
 
   static bool antiGoodsDyn = Pref.antiGoodsDyn;
+  static bool removeBlockedDyn = Pref.removeBlockedDyn;
+  static bool removeCommercialDyn = Pref.removeCommercialDyn;
   static Set<int> dynamicsBlockedMids = Pref.dynamicsBlockedMids;
 
   DynamicsDataModel.fromJson(
@@ -61,6 +64,16 @@ class DynamicsDataModel {
       late final filterBlockedUsers = type != DynamicsTabType.up && dynamicsBlockedMids.isNotEmpty;
       for (final e in list) {
         DynamicItemModel item = DynamicItemModel.fromJson(e);
+        if (removeBlockedDyn &&
+            (item.hasNoPrivilegeDynamic ||
+                (item.orig?.hasNoPrivilegeDynamic ?? false))) {
+          continue;
+        }
+        if (removeCommercialDyn &&
+            (item.isCommercialDynamic ||
+                (item.orig?.isCommercialDynamic ?? false))) {
+          continue;
+        }
         if (antiGoodsDyn &&
             (item.orig?.modules.moduleDynamic?.additional?.type ==
                     'ADDITIONAL_TYPE_GOODS' ||
@@ -108,6 +121,7 @@ class DynamicItemModel {
   DynamicItemModel? orig;
   String? type;
   bool? visible;
+  DynamicExtendModel? extend;
 
   // opus
   Fallback? fallback;
@@ -123,6 +137,9 @@ class DynamicItemModel {
     }
     type = json['type'];
     visible = json['visible'];
+    extend = json['extend'] == null
+        ? null
+        : DynamicExtendModel.fromJson(json['extend']);
   }
 
   DynamicItemModel.fromOpusJson(Map<String, dynamic> json) {
@@ -140,6 +157,12 @@ class DynamicItemModel {
       fallback = Fallback.fromJson(json['fallback']);
     }
   }
+
+  bool get hasNoPrivilegeDynamic =>
+      extend?.onlyFansProperty?.isOnlyFans == true &&
+      extend?.onlyFansProperty?.hasPrivilege == false;
+
+  bool get isCommercialDynamic => extend?.sourceContent?.isAdLoc == true;
 }
 
 class Fallback {
@@ -340,6 +363,110 @@ class ModuleTopAlbum {
 
   ModuleTopAlbum.fromJson(Map<String, dynamic> json) {
     pics = (json['pics'] as List?)?.map((e) => Pic.fromJson(e)).toList();
+  }
+}
+
+class DynamicExtendModel {
+  DynamicExtendModel({
+    this.sourceContent,
+    this.onlyFansProperty,
+  });
+
+  DynamicSourceContentModel? sourceContent;
+  OnlyFansPropertyModel? onlyFansProperty;
+
+  factory DynamicExtendModel.fromJson(Map<String, dynamic> json) {
+    return DynamicExtendModel(
+      sourceContent: (json['source_content'] ?? json['sourceContent']) == null
+          ? null
+          : DynamicSourceContentModel.fromJson(
+              json['source_content'] ?? json['sourceContent'],
+            ),
+      onlyFansProperty:
+          (json['only_fans_property'] ?? json['onlyFansProperty']) == null
+          ? null
+          : OnlyFansPropertyModel.fromJson(
+              json['only_fans_property'] ?? json['onlyFansProperty'],
+            ),
+    );
+  }
+}
+
+class DynamicSourceContentModel {
+  DynamicSourceContentModel({
+    this.typeUrl,
+    this.isAdLoc,
+  });
+
+  static const Set<String> _adTypeUrls = {
+    'type.googleapis.com/bilibili.ad.v1.SourceContentDto',
+    'type.googleapis.com/bilibili.app.card.v1.AdInfo',
+  };
+
+  String? typeUrl;
+  bool? isAdLoc;
+
+  factory DynamicSourceContentModel.fromJson(Map<String, dynamic> json) {
+    final typeUrl =
+        _parseString(json['type_url']) ?? _parseString(json['typeUrl']);
+    final explicitIsAdLoc = json['is_ad_loc'] ?? json['isAdLoc'];
+    return DynamicSourceContentModel(
+      typeUrl: typeUrl,
+      isAdLoc: explicitIsAdLoc is bool
+          ? explicitIsAdLoc
+          : _parseIsAdLoc(typeUrl, json['value']),
+    );
+  }
+
+  static bool? _parseIsAdLoc(String? typeUrl, dynamic value) {
+    if (typeUrl == null || !_adTypeUrls.contains(typeUrl)) {
+      return null;
+    }
+    final bytes = _decodeBytes(value);
+    if (bytes == null || bytes.isEmpty) {
+      return null;
+    }
+    try {
+      return AdInfo.fromBuffer(bytes).isAdLoc;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static List<int>? _decodeBytes(dynamic value) {
+    if (value is List<int>) {
+      return value;
+    }
+    if (value is String && value.isNotEmpty) {
+      try {
+        return base64Decode(_normalizeBase64(value));
+      } catch (_) {
+        return null;
+      }
+    }
+    return null;
+  }
+
+  static String _normalizeBase64(String value) {
+    final padding = -value.length & 3;
+    return padding == 0 ? value : '$value${'=' * padding}';
+  }
+}
+
+class OnlyFansPropertyModel {
+  OnlyFansPropertyModel({
+    this.hasPrivilege,
+    this.isOnlyFans,
+  });
+
+  bool? hasPrivilege;
+  bool? isOnlyFans;
+
+  factory OnlyFansPropertyModel.fromJson(Map<String, dynamic> json) {
+    return OnlyFansPropertyModel(
+      hasPrivilege: (json['has_privilege'] ?? json['hasPrivilege']) as bool?,
+      isOnlyFans: (json['is_only_fans'] ?? json['isOnlyFans']) as bool?,
+    );
   }
 }
 

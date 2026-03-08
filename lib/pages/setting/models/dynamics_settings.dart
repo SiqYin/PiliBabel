@@ -38,4 +38,24 @@ List<SettingsModel> get dynamicsSettings => [
       DynamicsDataModel.antiGoodsDyn = value;
     },
   ),
+  SwitchModel(
+    title: '屏蔽无权查看的动态',
+    subtitle: '过滤当前账号无权查看的受限动态,比如充电专属',
+    leading: const Icon(Icons.visibility_off_outlined),
+    setKey: SettingBoxKey.removeBlockedDyn,
+    defaultVal: false,
+    onChanged: (value) {
+      DynamicsDataModel.removeBlockedDyn = value;
+    },
+  ),
+  SwitchModel(
+    title: '屏蔽推广/商业动态',
+    subtitle: '根据动态扩展信息识别广告位和商业推广动态,推广动态会打乱时间轴',
+    leading: const Icon(Icons.campaign_outlined),
+    setKey: SettingBoxKey.removeCommercialDyn,
+    defaultVal: false,
+    onChanged: (value) {
+      DynamicsDataModel.removeCommercialDyn = value;
+    },
+  ),
 ];
