@@ -10,6 +10,7 @@ import 'package:PiliPlus/models_new/live/live_feed_index/watched_show.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode;
 
 class DynamicsDataModel {
   bool? hasMore;
@@ -49,6 +50,15 @@ class DynamicsDataModel {
   static bool removeCommercialDyn = Pref.removeCommercialDyn;
   static Set<int> dynamicsBlockedMids = Pref.dynamicsBlockedMids;
 
+  static bool get _debugDynFilter =>
+      kDebugMode && (removeBlockedDyn || removeCommercialDyn);
+
+  static void _debugLog(String message) {
+    if (_debugDynFilter) {
+      debugPrint('[dyn-filter] $message');
+    }
+  }
+
   DynamicsDataModel.fromJson(
     Map<String, dynamic> json, {
     DynamicsTabType type = DynamicsTabType.all,
@@ -64,14 +74,27 @@ class DynamicsDataModel {
       late final filterBlockedUsers = type != DynamicsTabType.up && dynamicsBlockedMids.isNotEmpty;
       for (final e in list) {
         DynamicItemModel item = DynamicItemModel.fromJson(e);
+        if (_debugDynFilter) {
+          _debugLog(
+            'item id=${item.idStr} type=${item.type} '
+            'extend=${item.extend != null} '
+            'onlyFans=${item.extend?.onlyFansProperty?.isOnlyFans} '
+            'hasPrivilege=${item.extend?.onlyFansProperty?.hasPrivilege} '
+            'sourceType=${item.extend?.sourceContent?.typeUrl} '
+            'isAdLoc=${item.extend?.sourceContent?.isAdLoc} '
+            'origExtend=${item.orig?.extend != null}',
+          );
+        }
         if (removeBlockedDyn &&
             (item.hasNoPrivilegeDynamic ||
                 (item.orig?.hasNoPrivilegeDynamic ?? false))) {
+          _debugLog('remove blocked item id=${item.idStr}');
           continue;
         }
         if (removeCommercialDyn &&
             (item.isCommercialDynamic ||
                 (item.orig?.isCommercialDynamic ?? false))) {
+          _debugLog('remove commercial item id=${item.idStr}');
           continue;
         }
         if (antiGoodsDyn &&
@@ -98,6 +121,12 @@ class DynamicsDataModel {
         if (filterBlockedUsers &&
             dynamicsBlockedMids.contains(item.modules.moduleAuthor?.mid)) {
           continue;
+        }
+        if (_debugDynFilter &&
+            (removeBlockedDyn || removeCommercialDyn) &&
+            item.extend == null &&
+            item.orig?.extend == null) {
+          _debugLog('keep item id=${item.idStr}: missing extend/orig.extend');
         }
         items!.add(item);
       }
@@ -420,15 +449,36 @@ class DynamicSourceContentModel {
 
   static bool? _parseIsAdLoc(String? typeUrl, dynamic value) {
     if (typeUrl == null || !_adTypeUrls.contains(typeUrl)) {
+      if (DynamicsDataModel._debugDynFilter) {
+        DynamicsDataModel._debugLog(
+          'skip sourceContent parse: unsupported typeUrl=$typeUrl',
+        );
+      }
       return null;
     }
     final bytes = _decodeBytes(value);
     if (bytes == null || bytes.isEmpty) {
+      if (DynamicsDataModel._debugDynFilter) {
+        DynamicsDataModel._debugLog(
+          'skip sourceContent parse: empty value for typeUrl=$typeUrl',
+        );
+      }
       return null;
     }
     try {
-      return AdInfo.fromBuffer(bytes).isAdLoc;
+      final isAdLoc = AdInfo.fromBuffer(bytes).isAdLoc;
+      if (DynamicsDataModel._debugDynFilter) {
+        DynamicsDataModel._debugLog(
+          'parsed sourceContent typeUrl=$typeUrl bytes=${bytes.length} isAdLoc=$isAdLoc',
+        );
+      }
+      return isAdLoc;
     } catch (_) {
+      if (DynamicsDataModel._debugDynFilter) {
+        DynamicsDataModel._debugLog(
+          'parse sourceContent failed for typeUrl=$typeUrl',
+        );
+      }
       return null;
     }
   }

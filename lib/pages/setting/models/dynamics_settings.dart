@@ -4,8 +4,6 @@ import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:get/get.dart';
 
 List<SettingsModel> get dynamicsSettings => [
   getListBanWordModel(
