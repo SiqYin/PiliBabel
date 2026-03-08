@@ -741,10 +741,10 @@ packages:
     dependency: "direct main"
     description:
       name: flutter_smart_dialog
-      sha256: "0852df132cb03fd8fc5144eb404c31eb7eb50c22aecb1cc2504f2f598090d756"
+      sha256: "6c6b2e27b0c13aa0d8af0314016b42d5feaf4c9aba45047f271aa6d9f9176e15"
       url: "https://pub.dev"
     source: hosted
-    version: "4.9.8+9"
+    version: "5.0.0"
   flutter_sortable_wrap:
     dependency: "direct main"
     description:
@@ -1685,10 +1685,10 @@ packages:
     dependency: transitive
     description:
       name: sqflite_android
-      sha256: ecd684501ebc2ae9a83536e8b15731642b9570dc8623e0073d227d0ee2bfea88
+      sha256: "881e28efdcc9950fd8e9bb42713dcf1103e62a2e7168f23c9338d82db13dec40"
       url: "https://pub.dev"
     source: hosted
-    version: "2.4.2+2"
+    version: "2.4.2+3"
   sqflite_common:
     dependency: transitive
     description:
