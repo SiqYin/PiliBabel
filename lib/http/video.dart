@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
+    show ReplyInfo;
 import 'package:PiliPlus/http/api.dart';
 import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/http/init.dart';
@@ -32,7 +34,10 @@ import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/recommend_filter.dart';
+import 'package:PiliPlus/utils/request_utils.dart';
+import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:PiliPlus/utils/utils.dart';
 import 'package:PiliPlus/utils/wbi_sign.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show compute;
@@ -524,7 +529,7 @@ abstract final class VideoHttp {
   // parent	num	父评论rpid	非必要	二级评论同根评论id 大于二级评论为要回复的评论id
   // message	str	发送评论内容	必要	最大1000字符
   // plat	num	发送平台标识	非必要	1：web端 2：安卓客户端  3：ios客户端  4：wp客户端
-  static Future<LoadingState<Map>> replyAdd({
+  static Future<LoadingState<ReplyInfo?>> replyAdd({
     required int type,
     required int oid,
     required String message,
@@ -552,7 +557,19 @@ abstract final class VideoHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
-      return Success(res.data['data']);
+      try {
+        final replyInfo = RequestUtils.replyCast(res.data['data']['reply']);
+        GStorage.reply.put(
+          replyInfo.id.toString(),
+          (replyInfo.toProto3Json() as Map)
+            ..remove('memberV2')
+            ..remove('trackInfo'),
+        );
+        return Success(replyInfo);
+      } catch (e, s) {
+        Utils.reportError(e, s);
+        return const Success(null);
+      }
     } else {
       return Error(res.data['message']);
     }
@@ -574,6 +591,7 @@ abstract final class VideoHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['code'] == 0) {
+      GStorage.reply.delete(rpid.toString());
       return const Success(null);
     } else {
       return const Error('请退出账号后重新登录');

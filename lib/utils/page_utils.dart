@@ -110,6 +110,7 @@ abstract final class PageUtils {
     String? id,
     Object? rid,
     bool off = false,
+    Object? type,
   }) async {
     assert(id != null || rid != null);
     SmartDialog.showLoading();
@@ -139,7 +140,7 @@ abstract final class PageUtils {
         );
       }
     } else {
-      res.toast();
+      SmartDialog.showToast('${type != null ? 'type: $type ' : ''}$res');
     }
   }
 

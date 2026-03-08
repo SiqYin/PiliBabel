@@ -29,6 +29,7 @@ import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/url_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -865,6 +866,35 @@ class ReplyItemGrpc extends StatelessWidget {
               ),
             ),
           ),
+          if (kDebugMode) ...[
+            ListTile(
+              onTap: () {
+                Get.back();
+                GStorage.reply.put(
+                  item.id.toString(),
+                  (item.toProto3Json() as Map)
+                    ..remove('replies')
+                    ..remove('memberV2')
+                    ..remove('trackInfo'),
+                );
+              },
+              title: Text(
+                'save to local',
+                style: style!.copyWith(color: theme.colorScheme.primary),
+              ),
+            ),
+            ListTile(
+              onTap: () {
+                Get.back();
+                onDelete();
+                GStorage.reply.delete(item.id.toString());
+              },
+              title: Text(
+                'remove from local',
+                style: style.copyWith(color: theme.colorScheme.primary),
+              ),
+            ),
+          ],
           if (ownerMid == upMid || ownerMid == item.member.mid)
             ListTile(
               onTap: () async {

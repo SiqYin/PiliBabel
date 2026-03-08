@@ -160,6 +160,14 @@ class _MediaPageState extends CommonPageState<MinePage>
           ),
           msgBadge(_mainController),
         ],
+        IconButton(
+          iconSize: iconSize,
+          padding: padding,
+          style: style,
+          tooltip: '评论记录',
+          onPressed: () => Get.toNamed('/myReply'),
+          icon: const Icon(Icons.message_outlined),
+        ),
         Obx(
           () {
             final anonymity = MineController.anonymity.value;
