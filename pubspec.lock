@@ -529,11 +529,11 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "v10.3.10"
-      resolved-ref: fd8afd89260436b63b9d41e150b4eb3c806cc8fd
+      ref: mod
+      resolved-ref: "11ef8f872482b31d570787e60c813e565dcfd011"
       url: "https://github.com/bggRGjQaUbCoE/flutter_file_picker.git"
     source: git
-    version: "10.3.10"
+    version: "11.0.0"
   file_selector_linux:
     dependency: transitive
     description:

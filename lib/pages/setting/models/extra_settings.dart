@@ -770,7 +770,7 @@ void _showDownPathDialog(BuildContext context, VoidCallback setState) {
           ListTile(
             onTap: () async {
               Get.back();
-              final path = await FilePicker.platform.getDirectoryPath();
+              final path = await FilePicker.getDirectoryPath();
               if (path == null || path == downloadPath) return;
               downloadPath = path;
               setState();
