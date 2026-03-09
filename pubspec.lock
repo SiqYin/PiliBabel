@@ -740,10 +740,11 @@ packages:
   flutter_smart_dialog:
     dependency: "direct main"
     description:
-      name: flutter_smart_dialog
-      sha256: "6c6b2e27b0c13aa0d8af0314016b42d5feaf4c9aba45047f271aa6d9f9176e15"
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: main
+      resolved-ref: "0d839994ecbf0e33ecd12a116a37b715b68a27ac"
+      url: "https://github.com/bggRGjQaUbCoE/flutter_smart_dialog.git"
+    source: git
     version: "5.0.0"
   flutter_sortable_wrap:
     dependency: "direct main"
