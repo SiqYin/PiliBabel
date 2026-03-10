@@ -39,6 +39,8 @@ class _MemberPageState extends State<MemberPage> {
   late final int _mid;
   late final String _heroTag;
   late final MemberController _userController;
+  PageController? _headerController;
+  PageController get headerController => _headerController ??= PageController();
 
   @override
   void initState() {
@@ -49,6 +51,13 @@ class _MemberPageState extends State<MemberPage> {
       MemberController(mid: _mid),
       tag: _heroTag,
     );
+  }
+
+  @override
+  void dispose() {
+    _headerController?.dispose();
+    _headerController = null;
+    super.dispose();
   }
 
   @override
@@ -358,6 +367,7 @@ class _MemberPageState extends State<MemberPage> {
                 onFollow: () => _userController.onFollow(context),
                 live: _userController.live,
                 silence: _userController.silence,
+                headerControllerBuilder: () => headerController,
               ),
             ),
           );
