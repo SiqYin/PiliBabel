@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:PiliPlus/models/model_owner.dart';
 import 'package:PiliPlus/models/user/danmaku_rule.dart';
@@ -10,6 +11,7 @@ import 'package:PiliPlus/utils/accounts/account_type_adapter.dart';
 import 'package:PiliPlus/utils/accounts/cookie_jar_adapter.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/set_int_adapter.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:path/path.dart' as path;
@@ -28,6 +30,7 @@ abstract final class GStorage {
     'recommendBlockedMids',
     'danmakuFilterRules',
   ];
+  static late final Box<Uint8List>? reply;
 
   static Future<void> init() async {
     await Hive.initFlutter(path.join(appSupportDirPath, 'hive'));
@@ -62,11 +65,24 @@ abstract final class GStorage {
       Accounts.init(),
       Hive.openBox<int>(
         'watchProgress',
+        keyComparator: _intStrKeyComparator,
         compactionStrategy: (entries, deletedEntries) {
           return deletedEntries > 4;
         },
       ).then((res) => watchProgress = res),
     ]);
+
+    if (Pref.saveReply) {
+      reply = await Hive.openBox<Uint8List>(
+        'reply',
+        keyComparator: _intStrKeyComparator,
+        compactionStrategy: (entries, deletedEntries) {
+          return deletedEntries > 10;
+        },
+      );
+    } else {
+      reply = null;
+    }
   }
 
   static String exportAllSettings() {
@@ -78,7 +94,7 @@ abstract final class GStorage {
         localCacheData[key] = _encodeLocalCacheValue(key, value);
       }
     }
-    
+
     return Utils.jsonEncoder.convert({
       setting.name: setting.toMap(),
       video.name: video.toMap(),
@@ -94,7 +110,7 @@ abstract final class GStorage {
       setting.clear().then((_) => setting.putAll(map[setting.name])),
       video.clear().then((_) => video.putAll(map[video.name])),
     ];
-    
+
     // 导入 localCache 数据（如果存在）
     if (map.containsKey(localCache.name)) {
       final localCacheMap = map[localCache.name] as Map<String, dynamic>;
@@ -107,7 +123,7 @@ abstract final class GStorage {
         );
       }
     }
-    
+
     await Future.wait(futures);
     return true;
   }
@@ -126,47 +142,48 @@ abstract final class GStorage {
 
   static dynamic _encodeLocalCacheValue(String key, dynamic value) {
     return switch (key) {
-      'blackMids' || 'dynamicsBlockedMids' => value is Set
-          ? value.toList()
-          : value,
-      'recommendBlockedMids' => value is Map
-          ? value.map((k, v) => MapEntry(k.toString(), v))
-          : value,
-      'danmakuFilterRules' => value is RuleFilter
-          ? {
-              'dmFilterString': value.dmFilterString,
-              'dmRegExp': value.dmRegExp.map((e) => e.pattern).toList(),
-              'dmUid': value.dmUid.toList(),
-            }
-          : value,
+      'blackMids' ||
+      'dynamicsBlockedMids' => value is Set ? value.toList() : value,
+      'recommendBlockedMids' =>
+        value is Map ? value.map((k, v) => MapEntry(k.toString(), v)) : value,
+      'danmakuFilterRules' =>
+        value is RuleFilter
+            ? {
+                'dmFilterString': value.dmFilterString,
+                'dmRegExp': value.dmRegExp.map((e) => e.pattern).toList(),
+                'dmUid': value.dmUid.toList(),
+              }
+            : value,
       _ => value,
     };
   }
 
   static dynamic _decodeLocalCacheValue(String key, dynamic value) {
     return switch (key) {
-      'blackMids' || 'dynamicsBlockedMids' => value is List
-          ? value.whereType<int>().toSet()
-          : value,
-      'recommendBlockedMids' => value is Map
-          ? value.map(
-              (k, v) => MapEntry(k.toString(), v is String ? v : v.toString()),
-            )
-          : value,
-      'danmakuFilterRules' => value is Map
-          ? RuleFilter(
-              (value['dmFilterString'] as List? ?? const [])
-                  .whereType<String>()
-                  .toList(),
-              (value['dmRegExp'] as List? ?? const [])
-                  .whereType<String>()
-                  .map((e) => RegExp(e, caseSensitive: false))
-                  .toList(),
-              (value['dmUid'] as List? ?? const [])
-                  .whereType<String>()
-                  .toSet(),
-            )
-          : value,
+      'blackMids' || 'dynamicsBlockedMids' =>
+        value is List ? value.whereType<int>().toSet() : value,
+      'recommendBlockedMids' =>
+        value is Map
+            ? value.map(
+                (k, v) =>
+                    MapEntry(k.toString(), v is String ? v : v.toString()),
+              )
+            : value,
+      'danmakuFilterRules' =>
+        value is Map
+            ? RuleFilter(
+                (value['dmFilterString'] as List? ?? const [])
+                    .whereType<String>()
+                    .toList(),
+                (value['dmRegExp'] as List? ?? const [])
+                    .whereType<String>()
+                    .map((e) => RegExp(e, caseSensitive: false))
+                    .toList(),
+                (value['dmUid'] as List? ?? const [])
+                    .whereType<String>()
+                    .toSet(),
+              )
+            : value,
       _ => value,
     };
   }
@@ -180,6 +197,7 @@ abstract final class GStorage {
       video.compact(),
       Accounts.account.compact(),
       watchProgress.compact(),
+      ?reply?.compact(),
     ]);
   }
 
@@ -192,6 +210,26 @@ abstract final class GStorage {
       video.close(),
       Accounts.account.close(),
       watchProgress.close(),
+      ?reply?.close(),
     ]);
+  }
+
+  static int _intStrKeyComparator(dynamic k1, dynamic k2) {
+    if (k1 is int) {
+      if (k2 is int) {
+        return k2.compareTo(k1);
+      } else {
+        return -1;
+      }
+    } else if (k2 is String) {
+      final lenCompare = k2.length.compareTo((k1 as String).length);
+      if (lenCompare == 0) {
+        return k2.compareTo(k1);
+      } else {
+        return lenCompare;
+      }
+    } else {
+      return 1;
+    }
   }
 }

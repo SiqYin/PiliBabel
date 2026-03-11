@@ -238,7 +238,8 @@ abstract final class SettingBoxKey {
       navBarSort = 'navBarSort',
       tempPlayerConf = 'tempPlayerConf',
       reduceLuxColor = 'reduceLuxColor',
-      liveCdnUrl = 'liveCdnUrl';
+      liveCdnUrl = 'liveCdnUrl',
+      saveReply = 'saveReply';
 }
 
 abstract final class LocalCacheKey {
