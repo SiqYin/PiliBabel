@@ -13,6 +13,7 @@ import 'package:PiliPlus/utils/danmaku_merge/worker_client.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as path;
 
@@ -172,6 +173,14 @@ class PlDanmakuController {
         const <DanmakuElem>[];
 
     try {
+      if (kDebugMode) {
+        debugPrint(
+          '[DanmakuMerge] start segment=$segmentIndex '
+          'current=${sortedCurrent.length} nextPrefix=${nextSegmentPrefix.length} '
+          'window=$_mergeWindowMs maxDistance=${_mergeConfig.maxDistance} '
+          'maxCosine=${_mergeConfig.maxCosine} usePinyin=${_mergeConfig.usePinyin}',
+        );
+      }
       final merged = await _mergeWorker.mergeSegment(
         segmentIndex: segmentIndex,
         config: _mergeConfig,
@@ -181,10 +190,22 @@ class PlDanmakuController {
       if (_disposed) {
         return;
       }
+      if (kDebugMode) {
+        debugPrint(
+          '[DanmakuMerge] merged segment=$segmentIndex '
+          'input=${sortedCurrent.length} output=${merged.length}',
+        );
+      }
       _mergedSeg.add(segmentIndex);
       _storeDanmaku(merged);
     } catch (e, s) {
       Utils.reportError(e, s);
+      if (kDebugMode) {
+        debugPrint(
+          '[DanmakuMerge] fallback segment=$segmentIndex error=$e',
+        );
+        debugPrintStack(stackTrace: s);
+      }
       if (_disposed) {
         return;
       }
