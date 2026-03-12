@@ -382,6 +382,8 @@ class DynamicFlexibleSpaceBar extends StatelessWidget {
       opacity = 1.0;
       topPadding = 0.0;
     } else {
+      height = settings.maxExtent;
+
       final double deltaExtent = settings.maxExtent - settings.minExtent;
 
       // 0.0 -> Expanded
