@@ -767,8 +767,7 @@ class _HeaderIndicatorState extends State<HeaderIndicator> {
   }
 
   void _updateProgress() {
-    _progress = (widget.pageController.page ?? 0) / (widget.length - 1);
-    assert(_progress.isFinite && 0 <= _progress && _progress <= 1);
+    _progress = ((widget.pageController.page ?? 0) + 1) / widget.length;
   }
 
   @override
