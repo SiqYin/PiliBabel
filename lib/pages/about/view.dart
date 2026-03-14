@@ -80,7 +80,7 @@ class _AboutPageState extends State<AboutPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    const style = TextStyle(fontSize: 14);
+    const style = TextStyle(fontSize: 15);
     final outline = theme.colorScheme.outline;
     final subTitleStyle = TextStyle(fontSize: 13, color: outline);
     final showAppBar = widget.showAppBar;
@@ -266,8 +266,7 @@ Commit Hash: ${BuildConfig.commitHash}''',
             onTap: () => showImportExportDialog<Map<String, dynamic>>(
               context,
               title: '设置',
-              localFileName: () =>
-                  'setting_${context.isTablet ? 'pad' : 'phone'}',
+              localFileName: () => 'setting_${context.platformName}',
               label: GStorage.setting.name,
               onExport: GStorage.exportAllSettings,
               onImport: GStorage.importAllJsonSettings,

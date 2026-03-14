@@ -218,7 +218,7 @@ Future<void> showImportExportDialog<T>(
 }) => showDialog(
   context: context,
   builder: (context) {
-    const style = TextStyle(fontSize: 14);
+    const style = TextStyle(fontSize: 15);
     return SimpleDialog(
       clipBehavior: Clip.hardEdge,
       title: Text('导入/导出$title'),
