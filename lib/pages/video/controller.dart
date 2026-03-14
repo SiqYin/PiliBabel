@@ -663,7 +663,9 @@ class VideoDetailController extends GetxController
             (isFileSource
                 ? true
                 : videoPlayerKey.currentState?.mounted == true)) {
-      return playerInit(autoFullScreenFlag: autoFullScreenFlag);
+      return playerInit(
+        autoFullScreenFlag: autoFullScreenFlag && _autoPlay.value,
+      );
     }
     return null;
   }
