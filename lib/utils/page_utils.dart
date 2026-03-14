@@ -48,6 +48,7 @@ abstract final class PageUtils {
     int initialPage = 0,
     required List<SourceModel> imgList,
     int? quality,
+    ValueChanged<int>? onPageChanged,
   }) {
     return Get.key.currentState!.push<void>(
       HeroDialogRoute(
@@ -55,6 +56,7 @@ abstract final class PageUtils {
           sources: imgList,
           initIndex: initialPage,
           quality: quality ?? GlobalData().imgQuality,
+          onPageChanged: onPageChanged,
         ),
       ),
     );
@@ -219,6 +221,10 @@ abstract final class PageUtils {
           },
         );
       } else {
+        if (item.linkFolded) {
+          pushDynFromId(id: item.idStr);
+          return;
+        }
         toDupNamed(
           '/dynamicDetail',
           arguments: {
