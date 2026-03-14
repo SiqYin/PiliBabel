@@ -8,6 +8,8 @@ import 'package:PiliPlus/grpc/dm.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
+import 'package:PiliPlus/plugin/pl_player/utils/danmaku_options.dart'
+    show DanmakuOptions;
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/danmaku_merge/models.dart';
 import 'package:PiliPlus/utils/danmaku_merge/worker_client.dart';
@@ -208,8 +210,7 @@ class PlDanmakuController {
       if (isPrefetch) {
         final failures = (_prefetchFailureCount[segmentIndex] ?? 0) + 1;
         _prefetchFailureCount[segmentIndex] = failures;
-        _prefetchRetryAtMs[segmentIndex] =
-            nowMs + _prefetchRetryCooldownMs;
+        _prefetchRetryAtMs[segmentIndex] = nowMs + _prefetchRetryCooldownMs;
         if (failures >= _maxPrefetchFailures) {
           _missingSeg.add(segmentIndex);
           if (kDebugMode) {
@@ -254,7 +255,8 @@ class PlDanmakuController {
     if (segmentIndex > 0) {
       await _mergeSegment(segmentIndex - 1);
     }
-    if (_rawDmSegMap.containsKey(segmentIndex + 1) || _isLastSegment(segmentIndex)) {
+    if (_rawDmSegMap.containsKey(segmentIndex + 1) ||
+        _isLastSegment(segmentIndex)) {
       await _mergeSegment(segmentIndex);
     }
   }
@@ -425,7 +427,8 @@ class PlDanmakuController {
     if (_missingSeg.contains(segmentIndex)) {
       return;
     }
-    if (_requestedSeg.contains(segmentIndex) || _queuedSeg.contains(segmentIndex)) {
+    if (_requestedSeg.contains(segmentIndex) ||
+        _queuedSeg.contains(segmentIndex)) {
       return;
     }
 
