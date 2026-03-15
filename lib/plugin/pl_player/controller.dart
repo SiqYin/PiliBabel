@@ -34,7 +34,6 @@ import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/asset_utils.dart';
 import 'package:PiliPlus/utils/extension/box_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
-import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
@@ -774,9 +773,10 @@ class PlPlayerController with BlockConfigMixin {
         return;
       }
       _videoPlayerController = player;
+      if (isAnim && superResolutionType.value != .disable) {
+        await setShader();
+      }
     }
-
-    if (isAnim) await setShader();
 
     final Map<String, String> extras = {};
 
@@ -827,38 +827,17 @@ class PlPlayerController with BlockConfigMixin {
     );
   }
 
-  Future<bool> refreshPlayer() async {
+  Future<void>? refreshPlayer() {
     if (dataSource is FileSource) {
-      return true;
+      return null;
     }
-    if (_videoPlayerController == null) {
-      // SmartDialog.showToast('视频播放器为空，请重新进入本页面');
-      return false;
+    if (_videoPlayerController?.current.isNotEmpty ?? false) {
+      return _videoPlayerController!.open(
+        _videoPlayerController!.current.last.copyWith(start: position),
+        play: true,
+      );
     }
-    if (dataSource.videoSource.isNullOrEmpty) {
-      SmartDialog.showToast('视频源为空，请重新进入本页面');
-      return false;
-    }
-    final Map<String, String> extras = {};
-    String video = dataSource.videoSource;
-    if (dataSource.audioSource case final audio? when (audio.isNotEmpty)) {
-      if (onlyPlayAudio.value) {
-        video = audio;
-      } else {
-        extras['audio-files'] =
-            '"${Platform.isWindows ? audio.replaceAll(';', r'\;') : audio.replaceAll(':', r'\:')}"';
-      }
-    }
-    await _videoPlayerController!.open(
-      Media(
-        video,
-        start: position,
-        extras: extras.isEmpty ? null : extras,
-      ),
-      play: true,
-    );
-    return true;
-    // seekTo(currentPos);
+    return null;
   }
 
   // 开始播放
@@ -999,7 +978,7 @@ class PlPlayerController with BlockConfigMixin {
             'controllerStream.error.listen',
             const Duration(milliseconds: 10000),
             () {
-              Future.delayed(const Duration(milliseconds: 3000), () async {
+              Future.delayed(const Duration(milliseconds: 3000), () {
                 // if (kDebugMode) {
                 //   debugPrint("isBuffering.value: ${isBuffering.value}");
                 // }
@@ -1011,9 +990,7 @@ class PlPlayerController with BlockConfigMixin {
                     '视频链接打开失败，重试中',
                     displayTime: const Duration(milliseconds: 500),
                   );
-                  if (!await refreshPlayer()) {
-                    if (kDebugMode) debugPrint("failed");
-                  }
+                  refreshPlayer();
                 }
               });
             },
