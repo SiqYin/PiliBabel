@@ -570,14 +570,10 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
 
   @override
   void onClose() {
-    if (Pref.enableLog || kDebugMode) {
-      try {
-        throw Exception(
-          '[UgcIntroController] onClose() called, isEnteringPip: $isEnteringPip',
-        );
-      } catch (e, s) {
-        logger.e('[PiP Debug]', error: e, stackTrace: s);
-      }
+    if (kDebugMode) {
+      logger.i(
+        '[UgcIntroController] onClose() called, isEnteringPip: $isEnteringPip',
+      );
     }
     if (isEnteringPip) return;
     expandableCtr.dispose();

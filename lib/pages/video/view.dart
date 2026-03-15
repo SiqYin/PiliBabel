@@ -107,13 +107,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   late final LocalIntroController localIntroController;
 
   void _logSponsorBlock(String message) {
-    if (!Pref.enableLog && !kDebugMode) return;
-    try {
-      final logMsg = '[${videoDetailController.hashCode}] [SponsorBlock] $message';
-      throw Exception(logMsg);
-    } catch (e, s) {
-      logger.e('[SponsorBlock] $message', error: e, stackTrace: s);
-    }
+    if (!kDebugMode) return;
+    logger.i('[${videoDetailController.hashCode}] [SponsorBlock] $message');
   }
 
   bool get autoExitFullscreen =>

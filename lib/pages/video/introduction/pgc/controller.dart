@@ -27,7 +27,6 @@ import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
-import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -82,14 +81,10 @@ class PgcIntroController extends CommonIntroController {
 
   @override
   void onClose() {
-    if (Pref.enableLog || kDebugMode) {
-      try {
-        throw Exception(
-          '[PgcIntroController] onClose() called, isEnteringPip: $isEnteringPip',
-        );
-      } catch (e, s) {
-        logger.e('[PiP Debug]', error: e, stackTrace: s);
-      }
+    if (kDebugMode) {
+      logger.i(
+        '[PgcIntroController] onClose() called, isEnteringPip: $isEnteringPip',
+      );
     }
     if (isEnteringPip) return;
     super.onClose();
