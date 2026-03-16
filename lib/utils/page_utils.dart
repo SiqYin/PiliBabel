@@ -49,6 +49,7 @@ abstract final class PageUtils {
     required List<SourceModel> imgList,
     int? quality,
     ValueChanged<int>? onPageChanged,
+    String tag = '',
   }) {
     return Get.key.currentState!.push<void>(
       HeroDialogRoute(
@@ -57,6 +58,7 @@ abstract final class PageUtils {
           initIndex: initialPage,
           quality: quality ?? GlobalData().imgQuality,
           onPageChanged: onPageChanged,
+          tag: tag,
         ),
       ),
     );
