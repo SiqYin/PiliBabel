@@ -2,6 +2,7 @@ import 'package:PiliPlus/utils/extension/box_ext.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:PiliPlus/models/common/danmaku/danmaku_font_sync_mode.dart';
 import 'package:canvas_danmaku/canvas_danmaku.dart';
 
 abstract final class DanmakuOptions {
@@ -27,6 +28,16 @@ abstract final class DanmakuOptions {
     required bool notFullscreen,
     double speed = 1.0,
   }) {
+    String? fontFamily;
+    switch (Pref.danmakuFontSyncMode) {
+      case DanmakuFontSyncMode.global:
+        fontFamily = Pref.customFontFamily;
+      case DanmakuFontSyncMode.system:
+        fontFamily = null;
+      case DanmakuFontSyncMode.custom:
+        fontFamily = Pref.customDanmakuFontFamily;
+    }
+
     return DanmakuOption(
       fontSize: 15 * (notFullscreen ? danmakuFontScale : danmakuFontScaleFS),
       fontWeight: danmakuFontWeight,
@@ -38,6 +49,7 @@ abstract final class DanmakuOptions {
       hideTop: blockTypes.contains(5),
       hideSpecial: blockTypes.contains(7),
       strokeWidth: danmakuStrokeWidth,
+      fontFamily: fontFamily,
       scrollFixedVelocity: danmakuFixedV,
       massiveMode: danmakuMassiveMode,
       static2Scroll: danmakuStatic2Scroll,

@@ -12,9 +12,10 @@ import 'package:PiliPlus/router/app_pages.dart';
 import 'package:PiliPlus/services/account_service.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
 import 'package:PiliPlus/services/service_locator.dart';
+import 'package:PiliPlus/utils/app_font.dart';
 import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:PiliPlus/utils/calc_window_position.dart';
-import 'package:PiliPlus/utils/app_font.dart';
+import 'package:PiliPlus/utils/danmaku_font.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
@@ -95,6 +96,7 @@ void main() async {
     exit(0);
   }
   await AppFont.init();
+  await DanmakuFont.init();
   ScaledWidgetsFlutterBinding.instance.scaleFactor = Pref.uiScale;
   await Future.wait([_initDownPath(), _initTmpPath()]);
   Get
