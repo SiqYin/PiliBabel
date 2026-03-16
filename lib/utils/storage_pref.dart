@@ -713,6 +713,9 @@ abstract final class Pref {
         defaultValue: DanmakuFontSyncMode.global.index,
       )];
 
+  static bool get enableCustomDanmakuFont =>
+      _setting.get(SettingBoxKey.enableCustomDanmakuFont, defaultValue: false);
+
   static String? get customDanmakuFontPath =>
       _setting.get(SettingBoxKey.customDanmakuFontPath);
 

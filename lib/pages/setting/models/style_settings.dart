@@ -101,25 +101,36 @@ List<SettingsModel> get styleSettings => [
     getSubtitle: () => AppFont.currentFontName ?? '系统字体',
     onTap: _showCustomFontDialog,
   ),
-  NormalModel(
-    title: '弹幕字体策略',
+  SwitchModel(
+    title: '自定义弹幕字体',
+    subtitle: '开启后点击可跟随全局或设置独立字体，关闭即恢复系统字体',
+    setKey: SettingBoxKey.enableCustomDanmakuFont,
+    defaultVal: false,
     leading: const Icon(Icons.subtitles_outlined),
-    getSubtitle: () {
-      return switch (Pref.danmakuFontSyncMode) {
-        DanmakuFontSyncMode.global => '跟随全局应用字体',
-        DanmakuFontSyncMode.system => '系统默认字体',
-        DanmakuFontSyncMode.custom => '独立自定义字体',
-      };
+    onChanged: (val) {
+      if (!val) {
+        GStorage.setting.put(
+          SettingBoxKey.danmakuFontSyncMode,
+          DanmakuFontSyncMode.system.index,
+        );
+        DanmakuFont.clear();
+      } else {
+        GStorage.setting.put(
+          SettingBoxKey.danmakuFontSyncMode,
+          DanmakuFontSyncMode.global.index,
+        );
+      }
     },
-    onTap: _showDanmakuFontSyncModeDialog,
+    onTap: (context) {
+      if (!Pref.enableCustomDanmakuFont) {
+        SmartDialog.showToast('请先开启自定义弹幕字体开关');
+        return;
+      }
+      _showDanmakuFontDialog(context, () {
+        // UI will rebuild naturally
+      });
+    },
   ),
-  if (Pref.danmakuFontSyncMode == DanmakuFontSyncMode.custom)
-    NormalModel(
-      title: '弹幕自定义字体',
-      leading: const Icon(Icons.font_download_outlined),
-      getSubtitle: () => DanmakuFont.currentFontName ?? '系统字体 (尚未选择)',
-      onTap: _showDanmakuCustomFontDialog,
-    ),
   NormalModel(
     title: '界面缩放',
     getSubtitle: () => '当前缩放比例：${Pref.uiScale.toStringAsFixed(2)}',
@@ -481,30 +492,7 @@ Future<void> _showCustomFontDialog(
   );
 }
 
-Future<void> _showDanmakuFontSyncModeDialog(
-  BuildContext context,
-  VoidCallback setState,
-) async {
-  final res = await showDialog<DanmakuFontSyncMode>(
-    context: context,
-    builder: (context) => SelectDialog<DanmakuFontSyncMode>(
-      title: '弹幕字体策略',
-      value: Pref.danmakuFontSyncMode,
-      values: const [
-        (DanmakuFontSyncMode.global, '跟随全局应用字体'),
-        (DanmakuFontSyncMode.system, '系统默认字体'),
-        (DanmakuFontSyncMode.custom, '独立自定义字体'),
-      ],
-    ),
-  );
-  if (res != null) {
-    await GStorage.setting.put(SettingBoxKey.danmakuFontSyncMode, res.index);
-    SmartDialog.showToast('设置成功');
-    setState();
-  }
-}
-
-Future<void> _showDanmakuCustomFontDialog(
+Future<void> _showDanmakuFontDialog(
   BuildContext context,
   VoidCallback setState,
 ) async {
@@ -512,10 +500,12 @@ Future<void> _showDanmakuCustomFontDialog(
   await showDialog<void>(
     context: pageContext,
     builder: (dialogContext) => AlertDialog(
-      title: const Text('弹幕独立自定义字体'),
+      title: const Text('选择弹幕字体模式'),
       content: Text(
-        DanmakuFont.currentFontName == null
-            ? '当前尚未选择独立弹幕字体，相当于系统字体。'
+        Pref.danmakuFontSyncMode == DanmakuFontSyncMode.global
+            ? '当前：跟随应用界面字体'
+            : DanmakuFont.currentFontName == null
+            ? '当前：系统自带弹幕字体 (尚未选择独立字体)'
             : '当前独立字体：${DanmakuFont.currentFontName}',
       ),
       actions: [
@@ -526,18 +516,22 @@ Future<void> _showDanmakuCustomFontDialog(
         TextButton(
           onPressed: () async {
             Navigator.of(dialogContext).pop();
+            await GStorage.setting.put(
+              SettingBoxKey.danmakuFontSyncMode,
+              DanmakuFontSyncMode.global.index,
+            );
             final cleared = await DanmakuFont.clear();
             if (!pageContext.mounted) {
               return;
             }
+            setState();
             if (cleared) {
-              setState();
-              SmartDialog.showToast('已清除独立字体');
+              SmartDialog.showToast('已清除独立字体并跟随应用界面');
             } else {
-              SmartDialog.showToast('默认已是系统自带弹幕字体');
+              SmartDialog.showToast('已跟随应用界面字体');
             }
           },
-          child: const Text('清除选中'),
+          child: const Text('跟随应用界面'),
         ),
         FilledButton(
           onPressed: () async {
@@ -548,6 +542,10 @@ Future<void> _showDanmakuCustomFontDialog(
                 return;
               }
               if (changed) {
+                await GStorage.setting.put(
+                  SettingBoxKey.danmakuFontSyncMode,
+                  DanmakuFontSyncMode.custom.index,
+                );
                 setState();
                 SmartDialog.showToast('弹幕自定义字体已应用');
               }
@@ -555,7 +553,7 @@ Future<void> _showDanmakuCustomFontDialog(
               SmartDialog.showToast('字体加载失败: $e');
             }
           },
-          child: const Text('选择字体'),
+          child: const Text('选择单独字体'),
         ),
       ],
     ),

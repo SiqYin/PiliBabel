@@ -229,6 +229,7 @@ abstract final class SettingBoxKey {
       customFontFamily = 'customFontFamily',
       customFontName = 'customFontName',
       danmakuFontSyncMode = 'danmakuFontSyncMode',
+      enableCustomDanmakuFont = 'enableCustomDanmakuFont',
       customDanmakuFontPath = 'customDanmakuFontPath',
       customDanmakuFontFamily = 'customDanmakuFontFamily',
       customDanmakuFontName = 'customDanmakuFontName',

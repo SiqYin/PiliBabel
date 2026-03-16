@@ -29,13 +29,12 @@ abstract final class DanmakuOptions {
     double speed = 1.0,
   }) {
     String? fontFamily;
-    switch (Pref.danmakuFontSyncMode) {
-      case DanmakuFontSyncMode.global:
-        fontFamily = Pref.customFontFamily;
-      case DanmakuFontSyncMode.system:
-        fontFamily = null;
-      case DanmakuFontSyncMode.custom:
-        fontFamily = Pref.customDanmakuFontFamily;
+    if (!Pref.enableCustomDanmakuFont || Pref.danmakuFontSyncMode == DanmakuFontSyncMode.system) {
+      fontFamily = null;
+    } else if (Pref.danmakuFontSyncMode == DanmakuFontSyncMode.global) {
+      fontFamily = Pref.customFontFamily;
+    } else {
+      fontFamily = Pref.customDanmakuFontFamily;
     }
 
     return DanmakuOption(
