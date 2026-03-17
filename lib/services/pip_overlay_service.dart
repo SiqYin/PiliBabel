@@ -286,6 +286,18 @@ class PipOverlayService {
     final keepAutoPip = _isVideoLikeRoute(currentRoute);
     _setSystemAutoPipEnabled(playerController, keepAutoPip);
 
+    // 如果需要清理，先停止播放器
+    if (callOnClose && playerController != null) {
+      try {
+        // 停止播放但不 dispose，因为其他地方可能还在使用
+        playerController.pause();
+      } catch (e) {
+        if (kDebugMode) {
+          debugPrint('Error pausing player: $e');
+        }
+      }
+    }
+
     void removeAndCallback() {
       try {
         overlayToRemove?.remove();

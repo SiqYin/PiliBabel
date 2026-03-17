@@ -784,18 +784,18 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         autoplay: videoDetailController.playerStatus?.isPlaying ?? false,
       );
       plPlayerController = videoDetailController.plPlayerController;
+    } else {
+      // 场景 3：直接恢复关联的小窗/后台播放器，确保界面正常显示
+      videoDetailController.videoState.value = true;
+      _logSponsorBlock('Restoring current player');
     }
 
     plPlayerController
       ?..addStatusLister(playerListener)
       ..addPositionListener(positionListener);
     
-    if (videoDetailController.autoPlay) {
-      // 这里的 playerInit 会检测到已初始化并只设置 DataSource
-      videoDetailController.playerInit(
-        autoplay: videoDetailController.playerStatus?.isPlaying ?? false,
-      );
-    } else if (videoDetailController.plPlayerController.preInitPlayer &&
+    if (!videoDetailController.autoPlay && 
+        videoDetailController.plPlayerController.preInitPlayer &&
         !videoDetailController.isQuerying &&
         videoDetailController.videoUrl != null) {
       videoDetailController.playerInit();
