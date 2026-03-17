@@ -68,7 +68,7 @@ class _GroupPanelState extends State<GroupPanel> {
 
   Widget get _buildBody {
     return switch (loadingState) {
-      Loading() => circularLoading,
+      Loading() => m3eLoading,
       Success(:final response) => ListView.builder(
         controller: widget.scrollController,
         itemCount: response.length,

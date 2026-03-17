@@ -37,7 +37,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
     LoadingState<List<KeywordBlockingItem>?> loadingState,
   ) {
     return switch (loadingState) {
-      Loading() => circularLoading,
+      Loading() => m3eLoading,
       Success(:final response) =>
         response != null && response.isNotEmpty
             ? Column(

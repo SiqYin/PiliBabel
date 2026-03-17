@@ -68,7 +68,7 @@ class _MemberPageState extends State<MemberPage> {
       color: theme.surface,
       child: Obx(
         () => switch (_userController.loadingState.value) {
-          Loading() => circularLoading,
+          Loading() => m3eLoading,
           Success(:final response) => ExtendedNestedScrollView(
             key: _userController.key,
             onlyOneScrollInBody: true,

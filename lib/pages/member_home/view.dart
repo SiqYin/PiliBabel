@@ -73,7 +73,7 @@ class _MemberHomeState extends State<MemberHome>
     final isOwner = setting != null;
     final color = Theme.of(context).colorScheme.outline;
     return switch (loadingState) {
-      Loading() => circularLoading,
+      Loading() => m3eLoading,
       Success(response: final res) =>
         res != null
             ? CustomScrollView(

@@ -151,7 +151,7 @@ class _WhisperDetailPageState
 
   Widget _buildBody(LoadingState<List<Msg>?> loadingState) {
     return switch (loadingState) {
-      Loading() => circularLoading,
+      Loading() => m3eLoading,
       Success(:final response) =>
         response != null && response.isNotEmpty
             ? ChatListView.separated(
