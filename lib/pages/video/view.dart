@@ -2489,7 +2489,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       // 参考上游逻辑：返回时立即强制清空 Auto-PiP 状态，切断系统自动进入的时机，防止误触
       plPlayerController?.disableAutoEnterPip();
     }
-    if (plPlayerController?.onPopInvokedWithResult(didPop, result) ?? false) {
+    final handled = plPlayerController?.onPopInvokedWithResult(didPop, result) ?? false;
+    if (handled && !didPop) {
       return;
     }
     if (didPop) {
