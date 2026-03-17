@@ -1683,8 +1683,11 @@ class PlPlayerController with BlockConfigMixin {
   }
 
   bool onPopInvokedWithResult(bool didPop, Object? result) {
-    if (Platform.isAndroid && didPop) {
-      _disableAutoEnterPipIfNeeded();
+    if (didPop) {
+      if (Platform.isAndroid) {
+        _disableAutoEnterPipIfNeeded();
+      }
+      return true;
     }
     if (controlsLock.value) {
       onLockControl(false);
