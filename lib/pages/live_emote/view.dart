@@ -57,7 +57,7 @@ class _LiveEmotePanelState extends State<LiveEmotePanel>
       2,
     );
     return switch (loadingState) {
-      Loading() => loadingWidget,
+      Loading() => circularLoading,
       Success(:final response) =>
         response != null && response.isNotEmpty
             ? Column(

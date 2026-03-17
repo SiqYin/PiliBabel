@@ -1,16 +1,13 @@
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:flutter/material.dart';
 
-Widget get loadingWidget => const Center(child: CircularProgressIndicator());
+const Widget circularLoading = Center(child: CircularProgressIndicator());
 
-Widget get linearLoading =>
-    const SliverToBoxAdapter(child: LinearProgressIndicator());
-
-Widget errorWidget({String? errMsg, VoidCallback? onReload}) => HttpError(
-  isSliver: false,
-  errMsg: errMsg,
-  onReload: onReload,
+const Widget linearLoading = SliverToBoxAdapter(
+  child: LinearProgressIndicator(),
 );
+
+const Widget scrollableError = CustomScrollView(slivers: [HttpError()]);
 
 Widget scrollErrorWidget({
   String? errMsg,

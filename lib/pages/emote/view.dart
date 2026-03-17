@@ -50,7 +50,7 @@ class _EmotePanelState extends State<EmotePanel>
       Get.currentRoute.startsWith('/whisperDetail') ? 8 : 2,
     );
     return switch (loadingState) {
-      Loading() => loadingWidget,
+      Loading() => circularLoading,
       Success(:final response) =>
         response != null && response.isNotEmpty
             ? Column(
