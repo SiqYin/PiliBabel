@@ -153,6 +153,7 @@ class PlPlayerController with BlockConfigMixin {
   int? _aid;
   String? _bvid;
   int? cid;
+  int? roomId;
   int? _epid;
   int? _seasonId;
   int? _pgcType;
@@ -606,6 +607,7 @@ class PlPlayerController with BlockConfigMixin {
     int? aid,
     String? bvid,
     int? cid,
+    int? roomId,
     int? epid,
     int? seasonId,
     int? pgcType,
@@ -631,6 +633,7 @@ class PlPlayerController with BlockConfigMixin {
       _aid = aid;
       _bvid = bvid;
       this.cid = cid;
+      this.roomId = roomId;
       _epid = epid;
       _seasonId = seasonId;
       _pgcType = pgcType;

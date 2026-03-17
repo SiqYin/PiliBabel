@@ -149,6 +149,11 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       }
     }
 
+    // 如果 local 的 plPlayerController 实例指向了已被销毁的单例，刷新它
+    if (plPlayerController != _liveRoomController.plPlayerController) {
+      plPlayerController = _liveRoomController.plPlayerController;
+    }
+
     plPlayerController
       ..isLive = true
       ..danmakuController = _liveRoomController.danmakuController;
@@ -164,6 +169,26 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       super.didPopNext();
       return;
     }
+
+    // 非小窗返回情况下的恢复：如果播放器未初始化（例如小窗在其它页面被手动关闭），或者被其它直播/视频抢占
+    final bool shouldPlay =
+        _liveRoomController.isPlaying ?? plPlayerController.playerStatus.isPlaying;
+    
+    bool needsRecovery = false;
+    if (plPlayerController.videoPlayerController == null) {
+      needsRecovery = true;
+    } else if (!plPlayerController.isLive ||
+        plPlayerController.roomId != _liveRoomController.roomId) {
+      needsRecovery = true;
+    }
+
+    if (needsRecovery) {
+      await _liveRoomController.playerInit(autoplay: shouldPlay);
+      // 重新获取刷新后的实例
+      plPlayerController = _liveRoomController.plPlayerController;
+    }
+    
+    plPlayerController.addStatusLister(playerListener);
 
     if (plPlayerController.playerStatus.isPlaying &&
         plPlayerController.cid == null) {
@@ -244,6 +269,11 @@ class _LiveRoomPageState extends State<LiveRoomPage>
         tag: '${_liveRoomController.roomId}${e.name}',
       );
     }
+    
+    if (!isInLivePip && !_isEnteringPipMode) {
+      Get.delete<LiveRoomController>(tag: heroTag, force: true);
+    }
+
     super.dispose();
   }
 
@@ -451,7 +481,8 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       // 只要返回了，先强制切断 Auto-PiP 权限，防止手势误触
       plPlayerController.disableAutoEnterPip();
     }
-    if (plPlayerController.onPopInvokedWithResult(didPop, result)) {
+    final handled = plPlayerController.onPopInvokedWithResult(didPop, result);
+    if (handled && !didPop) {
       return;
     }
     if (didPop) {

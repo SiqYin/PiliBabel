@@ -228,6 +228,11 @@ class LiveRoomController extends GetxController {
     if (isReturningFromPip) {
       return null;
     }
+
+    // 如果播放器已被彻底销毁（例如在其他页面关闭了小窗），重新获取单例实例
+    if (plPlayerController.videoPlayerController == null) {
+      plPlayerController = PlPlayerController.getInstance(isLive: true);
+    }
     
     // 确保播放器处于直播模式
     plPlayerController.isLive = true;
@@ -238,6 +243,7 @@ class LiveRoomController extends GetxController {
       autoplay: autoplay,
       isVertical: isPortrait.value,
       autoFullScreenFlag: autoFullScreenFlag,
+      roomId: roomId,
     )
         .then((_) async {
       if (!autoplay) {

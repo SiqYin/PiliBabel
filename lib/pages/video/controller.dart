@@ -125,7 +125,7 @@ class VideoDetailController extends GetxController
   final videoPlayerKey = GlobalKey();
   final childKey = GlobalKey<ScaffoldState>();
 
-  final plPlayerController = PlPlayerController.getInstance()
+  PlPlayerController plPlayerController = PlPlayerController.getInstance()
     ..brightness.value = -1;
   bool get setSystemBrightness => plPlayerController.setSystemBrightness;
 
@@ -695,6 +695,10 @@ class VideoDetailController extends GetxController
     Volume? volume,
     bool autoFullScreenFlag = false,
   }) async {
+    // 如果播放器单例已被外部销毁（例如在二级页面关闭了小窗），重新获取一个新实例
+    if (plPlayerController.videoPlayerController == null) {
+      plPlayerController = PlPlayerController.getInstance();
+    }
     Duration? seek = seekToTime ?? defaultST ?? playedTime;
     if (seek == null || seek == Duration.zero) {
       seek = getFirstSegment();

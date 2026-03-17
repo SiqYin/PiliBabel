@@ -632,7 +632,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
     }
 
-    // 2. 计算小窗触发状态（PiliNara 核心逻辑）
+    // 2. 计算小窗触发状态
     final bool willStartPip =
         plPlayerController != null &&
         plPlayerController!.playerStatus.isPlaying &&
@@ -645,17 +645,20 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
     introController.cancelTimer();
 
-    // 3. 合并上游级联赋值，同时条件拦截 cancelBlockListener
     videoDetailController
-      ..videoState.value =
-          false // 上游新增：标记视频状态
       ..playerStatus = plPlayerController?.playerStatus.value
       ..brightness = plPlayerController?.brightness.value;
 
-    // PiliNara 逻辑：非小窗状态才取消拦截器
     if (!shouldKeepAlive) {
       _logSponsorBlock('didPushNext() cancelling blockListener');
-      videoDetailController.cancelBlockListener();
+      videoDetailController
+        ..videoState.value =
+            false // 仅在不进入小窗时标记隐藏
+        ..cancelBlockListener();
+    } else {
+      _logSponsorBlock(
+        'didPushNext() preserving blockListener (entering PiP or in PiP mode)',
+      );
     }
 
     // 4. 处理播放器实例
@@ -676,11 +679,16 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
   @override
   // 返回当前页面时
-  void didPopNext() {
+  void didPopNext() async {
     super.didPopNext();
 
     if (plPlayerController?.isCloseAll ?? false) {
       return;
+    }
+
+    // 如果 local 的 plPlayerController 实例指向了已被销毁的单例，刷新它
+    if (plPlayerController != videoDetailController.plPlayerController) {
+      plPlayerController = videoDetailController.plPlayerController;
     }
 
     isShowing = true;
@@ -760,10 +768,30 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       }
     }
 
+    // 检查并恢复播放器实例
+    // 场景：1. 播放器被销毁（小窗关闭） 2. 播放器被抢占（在其它页面播放了新的视频/直播）
+    bool needsRecovery = false;
+    if (plPlayerController?.videoPlayerController == null) {
+      needsRecovery = true;
+    } else if (plPlayerController!.isLive ||
+        plPlayerController!.cid != videoDetailController.cid.value) {
+      needsRecovery = true;
+    }
+
+    if (needsRecovery) {
+      _logSponsorBlock('Player needs recovery (disposed or content mismatch)');
+      await videoDetailController.playerInit(
+        autoplay: videoDetailController.playerStatus?.isPlaying ?? false,
+      );
+      plPlayerController = videoDetailController.plPlayerController;
+    }
+
     plPlayerController
       ?..addStatusLister(playerListener)
       ..addPositionListener(positionListener);
+    
     if (videoDetailController.autoPlay) {
+      // 这里的 playerInit 会检测到已初始化并只设置 DataSource
       videoDetailController.playerInit(
         autoplay: videoDetailController.playerStatus?.isPlaying ?? false,
       );
@@ -2489,7 +2517,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       // 参考上游逻辑：返回时立即强制清空 Auto-PiP 状态，切断系统自动进入的时机，防止误触
       plPlayerController?.disableAutoEnterPip();
     }
-    final handled = plPlayerController?.onPopInvokedWithResult(didPop, result) ?? false;
+    final handled =
+        plPlayerController?.onPopInvokedWithResult(didPop, result) ?? false;
     if (handled && !didPop) {
       return;
     }
