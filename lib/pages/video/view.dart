@@ -789,10 +789,16 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       plPlayerController = videoDetailController.plPlayerController;
     } else {
       // 场景 3：直接恢复关联的小窗/后台播放器，确保界面正常显示
-      // 使用 refresh() 确保即使值没变也能触发 Obx 重绘（从而重新夺回 GlobalKey）
-      videoDetailController.videoState.value = true;
-      videoDetailController.videoState.refresh();
-      _logSponsorBlock('Restoring current player');
+      // 由于小窗可能刚刚被关闭（OverlayEntry 移除），我们需要延迟一个帧再显示主页播放器
+      // 以确保 GlobalKey (videoPlayerKey) 已经从小窗中彻底释放，避免冲突
+      _logSponsorBlock('Restoring current player (delayed refresh)');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        videoDetailController.videoState.value = true;
+        videoDetailController.videoState.refresh();
+        // 强制触发一次同步 UI 刷新，确保 sliver 和 layout 正确响应
+        setState(() {});
+      });
     }
 
     plPlayerController
@@ -805,6 +811,9 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         videoDetailController.videoUrl != null) {
       videoDetailController.playerInit();
     }
+
+    // 无论进入哪个分支，最后都刷新一下 UI
+    if (mounted) setState(() {});
   }
 
   @override
