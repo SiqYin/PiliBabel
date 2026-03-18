@@ -649,17 +649,20 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       ..playerStatus = plPlayerController?.playerStatus.value
       ..brightness = plPlayerController?.brightness.value;
 
-    if (!shouldKeepAlive) {
-      _logSponsorBlock('didPushNext() cancelling blockListener');
-      videoDetailController
-        ..videoState.value =
-            false // 仅在不进入小窗时标记隐藏
-        ..cancelBlockListener();
-    } else {
+    if (shouldKeepAlive) {
       _logSponsorBlock(
         'didPushNext() preserving blockListener (entering PiP or in PiP mode)',
       );
+    } else {
+      _logSponsorBlock('didPushNext() cancelling blockListener');
+      videoDetailController.cancelBlockListener();
     }
+
+    // 无论是否进入小窗，离开当前页面时都标记隐藏播放器 UI
+    // 这样做有两个目的：
+    // 1. 释放 GlobalKey (videoPlayerKey)，确保小窗能够接管它而不会冲突
+    // 2. 确保下次 didPopNext 时 videoState.value = true 能触发 Obx 刷新
+    videoDetailController.videoState.value = false;
 
     // 4. 处理播放器实例
     if (plPlayerController != null) {
@@ -786,7 +789,9 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       plPlayerController = videoDetailController.plPlayerController;
     } else {
       // 场景 3：直接恢复关联的小窗/后台播放器，确保界面正常显示
+      // 使用 refresh() 确保即使值没变也能触发 Obx 重绘（从而重新夺回 GlobalKey）
       videoDetailController.videoState.value = true;
+      videoDetailController.videoState.refresh();
       _logSponsorBlock('Restoring current player');
     }
 
@@ -1679,7 +1684,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     onPopInvokedWithResult: _onPopInvokedWithResult,
     child: Obx(
       () =>
-          !videoDetailController.videoState.value ||
+          (!isPipMode && !videoDetailController.videoState.value) ||
               !videoDetailController.autoPlay ||
               plPlayerController?.videoController == null
           ? const SizedBox.shrink()
