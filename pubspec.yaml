@@ -229,6 +229,7 @@ dependencies:
       ref: mod
   dlna_dart: ^0.1.0
   battery_plus: ^7.0.0
+  material_new_shapes: ^1.0.0
 
   vector_math: any
   fixnum: any
