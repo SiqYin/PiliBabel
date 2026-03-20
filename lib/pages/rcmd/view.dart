@@ -27,6 +27,7 @@ class _RcmdPageState extends State<RcmdPage>
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    final colorScheme = ColorScheme.of(context);
     return Container(
       clipBehavior: .hardEdge,
       margin: const .symmetric(horizontal: StyleString.safeSpace),
@@ -39,7 +40,9 @@ class _RcmdPageState extends State<RcmdPage>
           slivers: [
             SliverPadding(
               padding: const .only(top: StyleString.cardSpace, bottom: 100),
-              sliver: Obx(() => _buildBody(controller.loadingState.value)),
+              sliver: Obx(
+                () => _buildBody(colorScheme, controller.loadingState.value),
+              ),
             ),
           ],
         ),
@@ -55,7 +58,10 @@ class _RcmdPageState extends State<RcmdPage>
     mainAxisExtent: MediaQuery.textScalerOf(context).scale(90),
   );
 
-  Widget _buildBody(LoadingState<List<dynamic>?> loadingState) {
+  Widget _buildBody(
+    ColorScheme colorScheme,
+    LoadingState<List<dynamic>?> loadingState,
+  ) {
     return switch (loadingState) {
       Loading() => _buildSkeleton,
       Success(:final response) =>
@@ -80,9 +86,7 @@ class _RcmdPageState extends State<RcmdPage>
                               '上次看到这里\n点击刷新',
                               textAlign: .center,
                               style: TextStyle(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurfaceVariant,
+                                color: colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ),

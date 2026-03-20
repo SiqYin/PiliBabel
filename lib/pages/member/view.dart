@@ -4,13 +4,17 @@ import 'package:PiliPlus/common/widgets/dialog/report_member.dart';
 import 'package:PiliPlus/common/widgets/dynamic_sliver_app_bar/dynamic_sliver_app_bar.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart';
+import 'package:PiliPlus/http/live.dart';
 import 'package:PiliPlus/http/loading_state.dart';
+import 'package:PiliPlus/http/user.dart';
+import 'package:PiliPlus/models_new/live/live_medal_wall/data.dart';
 import 'package:PiliPlus/pages/coin_log/controller.dart';
 import 'package:PiliPlus/pages/exp_log/controller.dart';
 import 'package:PiliPlus/pages/log_table/view.dart';
 import 'package:PiliPlus/pages/login_devices/view.dart';
 import 'package:PiliPlus/pages/login_log/controller.dart';
 import 'package:PiliPlus/pages/member/controller.dart';
+import 'package:PiliPlus/pages/member/widget/medal_wall.dart';
 import 'package:PiliPlus/pages/member/widget/user_info_card.dart';
 import 'package:PiliPlus/pages/member_cheese/view.dart';
 import 'package:PiliPlus/pages/member_contribute/view.dart';
@@ -19,11 +23,13 @@ import 'package:PiliPlus/pages/member_favorite/view.dart';
 import 'package:PiliPlus/pages/member_home/view.dart';
 import 'package:PiliPlus/pages/member_pgc/view.dart';
 import 'package:PiliPlus/pages/member_shop/view.dart';
+import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 
@@ -57,6 +63,8 @@ class _MemberPageState extends State<MemberPage> {
   void dispose() {
     _headerController?.dispose();
     _headerController = null;
+    _cacheFollowTime = null;
+    _cacheMedalData = null;
     super.dispose();
   }
 
@@ -91,6 +99,7 @@ class _MemberPageState extends State<MemberPage> {
                         live: _userController.live,
                         silence: _userController.silence,
                         headerControllerBuilder: getHeaderController,
+                        showLiveMedalWall: _showLiveMedalWall,
                       ),
                     ),
                   ),
@@ -309,6 +318,18 @@ class _MemberPageState extends State<MemberPage> {
               ),
             ),
           ] else ...[
+            if (_userController.isFollow)
+              PopupMenuItem(
+                onTap: _showFollowTime,
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.more_time_outlined, size: 19),
+                    SizedBox(width: 10),
+                    Text('关注时间'),
+                  ],
+                ),
+              ),
             const PopupMenuDivider(),
             PopupMenuItem(
               onTap: () => showMemberReportDialog(
@@ -371,4 +392,68 @@ class _MemberPageState extends State<MemberPage> {
       };
     }).toList(),
   );
+
+  String? _cacheFollowTime;
+  Future<void> _showFollowTime() async {
+    void onShow() {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(_userController.username ?? ''),
+          content: Text(_cacheFollowTime!),
+          actions: [
+            TextButton(
+              onPressed: Get.back,
+              child: Text(
+                '关闭',
+                style: TextStyle(color: ColorScheme.of(context).outline),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_cacheFollowTime != null) {
+      onShow();
+      return;
+    }
+    final res = await UserHttp.userRelation(_mid);
+    if (res case Success(:final response)) {
+      if (response.mtime == null) return;
+      _cacheFollowTime =
+          '关注时间: ${DateFormatUtils.longFormatDs.format(
+            DateTime.fromMillisecondsSinceEpoch(response.mtime! * 1000),
+          )}';
+      onShow();
+    } else {
+      res.toast();
+    }
+  }
+
+  MedalWallData? _cacheMedalData;
+  Future<void> _showLiveMedalWall() async {
+    void onShow() {
+      if (!mounted) return;
+      showDialog(
+        context: context,
+        builder: (context) => MedalWall(response: _cacheMedalData!),
+      );
+    }
+
+    if (_cacheMedalData != null) {
+      onShow();
+      return;
+    }
+    SmartDialog.showLoading();
+    final res = await LiveHttp.liveMedalWall(mid: _mid);
+    SmartDialog.dismiss();
+    if (res case Success(:final response)) {
+      _cacheMedalData = response;
+      onShow();
+    } else {
+      res.toast();
+    }
+  }
 }
