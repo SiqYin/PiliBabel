@@ -8,6 +8,7 @@ abstract final class RecommendFilter {
   static bool exemptFilterForFollowed = Pref.exemptFilterForFollowed;
   static bool applyFilterToRelatedVideos = Pref.applyFilterToRelatedVideos;
   static bool applyFilterToHotVideos = Pref.applyFilterToHotVideos;
+  static bool applyFilterToRankVideos = Pref.applyFilterToRankVideos;
 
   static RegExp rcmdRegExp = RegExp(
     Pref.parseBanWordToRegex(Pref.banWordForRecommend),

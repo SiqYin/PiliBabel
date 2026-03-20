@@ -884,20 +884,22 @@ abstract final class VideoHttp {
   }
 
   static bool _canAddRank(Map i) {
-    if (!GlobalData().blackMids.contains(i['owner']['mid']) &&
-        !RecommendFilter.filterTitle(i['title']) &&
+    // 分区关键词过滤（始终生效）
+    if (enableFilter &&
+        i['tname'] != null &&
+        zoneRegExp.hasMatch(i['tname'])) {
+      return false;
+    }
+    // 全局黑名单（始终生效）
+    if (GlobalData().blackMids.contains(i['owner']['mid'])) {
+      return false;
+    }
+    // 原有过滤：仅标题关键词 + 点赞率
+    return !RecommendFilter.filterTitle(i['title']) &&
         !RecommendFilter.filterLikeRatio(
           i['stat']['like'],
           i['stat']['view'],
-        )) {
-      if (enableFilter &&
-          i['tname'] != null &&
-          zoneRegExp.hasMatch(i['tname'])) {
-        return false;
-      }
-      return true;
-    }
-    return false;
+        );
   }
 
   // 视频排行
@@ -910,8 +912,14 @@ abstract final class VideoHttp {
     );
     if (res.data['code'] == 0) {
       List<HotVideoItemModel> list = <HotVideoItemModel>[];
+      final applyFullFilter = RecommendFilter.applyFilterToRankVideos;
       for (final i in res.data['data']['list']) {
-        if (_canAddRank(i)) {
+        if (!_canAddRank(i)) continue;
+        if (applyFullFilter) {
+          // 完整过滤：时长、播放量、点赞率、标题关键词、推荐屏蔽用户
+          final item = HotVideoItemModel.fromJson(i);
+          if (!RecommendFilter.filterAll(item)) list.add(item);
+        } else {
           list.add(HotVideoItemModel.fromJson(i));
           // final List? others = i['others'];
           // if (others != null && others.isNotEmpty) {
@@ -942,9 +950,13 @@ abstract final class VideoHttp {
       }),
     );
     if (res.data['code'] == 0) {
+      final items = res.data['result']?['list'] as List?;
+      if (items == null) return const Success(null);
+      final applyFilter = RecommendFilter.applyFilterToRankVideos;
       return Success(
-        (res.data['result']?['list'] as List?)
-            ?.map((e) => PgcRankItemModel.fromJson(e))
+        items
+            .where((e) => !applyFilter || !RecommendFilter.filterTitle(e['title'] ?? ''))
+            .map((e) => PgcRankItemModel.fromJson(e))
             .toList(),
       );
     } else {
@@ -965,9 +977,13 @@ abstract final class VideoHttp {
       }),
     );
     if (res.data['code'] == 0) {
+      final items = res.data['data']?['list'] as List?;
+      if (items == null) return const Success(null);
+      final applyFilter = RecommendFilter.applyFilterToRankVideos;
       return Success(
-        (res.data['data']?['list'] as List?)
-            ?.map((e) => PgcRankItemModel.fromJson(e))
+        items
+            .where((e) => !applyFilter || !RecommendFilter.filterTitle(e['title'] ?? ''))
+            .map((e) => PgcRankItemModel.fromJson(e))
             .toList(),
       );
     } else {

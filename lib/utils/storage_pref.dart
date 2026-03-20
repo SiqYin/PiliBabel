@@ -874,6 +874,11 @@ abstract final class Pref {
     defaultValue: false,
   );
 
+  static bool get applyFilterToRankVideos => _setting.get(
+    SettingBoxKey.applyFilterToRankVideos,
+    defaultValue: false,
+  );
+
   static bool get enableBackgroundPlay =>
       _setting.get(SettingBoxKey.enableBackgroundPlay, defaultValue: true);
 

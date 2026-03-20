@@ -156,4 +156,12 @@ List<SettingsModel> get recommendSettings => [
     defaultVal: false,
     onChanged: (value) => RecommendFilter.applyFilterToHotVideos = value,
   ),
+  SwitchModel(
+    title: '过滤器也应用于分区视频',
+    subtitle: '分区视频进行完整过滤（时长、播放量、点赞率、标题关键词、屏蔽用户）',
+    leading: const Icon(Icons.leaderboard_outlined),
+    setKey: SettingBoxKey.applyFilterToRankVideos,
+    defaultVal: false,
+    onChanged: (value) => RecommendFilter.applyFilterToRankVideos = value,
+  ),
 ];
