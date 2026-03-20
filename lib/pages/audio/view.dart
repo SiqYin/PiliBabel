@@ -41,7 +41,7 @@ class AudioPage extends StatefulWidget {
   @override
   State<AudioPage> createState() => _AudioPageState();
 
-  static void toAudioPage({
+  static Future<void>? toAudioPage({
     int? id,
     required int oid,
     List<int>? subId,
@@ -51,20 +51,23 @@ class AudioPage extends StatefulWidget {
     Duration? start,
     String? audioUrl,
     int? extraId,
-  }) => Get.toNamed(
-    '/audio',
-    arguments: {
-      'id': ?id,
-      'oid': oid,
-      'subId': ?subId,
-      'from': from,
-      'itemType': itemType,
-      'heroTag': ?heroTag,
-      'start': ?start,
-      'audioUrl': ?audioUrl,
-      'extraId': ?extraId,
-    },
-  );
+  }) {
+    heroTag ??= Utils.makeHeroTag(oid);
+    return Get.toNamed(
+      '/audio',
+      arguments: {
+        'id': ?id,
+        'oid': oid,
+        'subId': ?subId,
+        'from': from,
+        'itemType': itemType,
+        'heroTag': heroTag,
+        'start': ?start,
+        'audioUrl': ?audioUrl,
+        'extraId': ?extraId,
+      },
+    );
+  }
 }
 
 extension _ListOrderExt on ListOrder {
@@ -72,9 +75,9 @@ extension _ListOrderExt on ListOrder {
 }
 
 class _AudioPageState extends State<AudioPage> {
-  final _controller = Get.put(
+  late final _controller = Get.put(
     AudioController(),
-    tag: Utils.generateRandomString(8),
+    tag: Get.arguments['heroTag'] ?? Utils.generateRandomString(8),
   );
 
   @override

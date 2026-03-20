@@ -16,6 +16,7 @@ import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
 import 'package:PiliPlus/pages/dynamics/widgets/vote.dart';
 import 'package:PiliPlus/pages/save_panel/view.dart';
+import 'package:PiliPlus/pages/audio/controller.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/pages/video/reply/widgets/zan_grpc.dart';
 import 'package:PiliPlus/utils/accounts.dart';
@@ -707,15 +708,26 @@ class ReplyItemGrpc extends StatelessWidget {
         } else if (_timeRegExp.hasMatch(matchStr)) {
           matchStr = matchStr.replaceAll('：', ':');
           bool isValid = false;
+          final heroTag = getTag?.call() ?? Get.arguments?['heroTag'];
+          if (kDebugMode) {
+            debugPrint('Validating timestamp: $matchStr with tag: $heroTag');
+          }
           try {
-            final ctr = Get.find<VideoDetailController>(
-              tag: getTag?.call() ?? Get.arguments['heroTag'],
-            );
+            final ctr = Get.find<AudioController>(tag: heroTag);
             isValid =
                 DurationUtils.parseDuration(matchStr) * 1000 <=
-                ctr.data.timeLength!;
-          } catch (e) {
-            if (kDebugMode) debugPrint('failed to validate: $e');
+                ctr.duration.value.inMilliseconds;
+            if (kDebugMode) debugPrint('Found AudioController, isValid: $isValid');
+          } catch (_) {
+            try {
+              final ctr = Get.find<VideoDetailController>(tag: heroTag);
+              isValid =
+                  DurationUtils.parseDuration(matchStr) * 1000 <=
+                  ctr.data.timeLength!;
+              if (kDebugMode) debugPrint('Found VideoDetailController, isValid: $isValid');
+            } catch (e) {
+              if (kDebugMode) debugPrint('No controller found for tag: $heroTag, error: $e');
+            }
           }
           spanChildren.add(
             TextSpan(
@@ -728,17 +740,33 @@ class ReplyItemGrpc extends StatelessWidget {
                       ..onTap = () {
                         // 跳转到指定位置
                         try {
-                          SmartDialog.showToast('跳转至：$matchStr');
-                          Get.find<VideoDetailController>(
-                            tag: Get.arguments['heroTag'],
-                          ).plPlayerController.seekTo(
-                            Duration(
-                              seconds: DurationUtils.parseDuration(matchStr),
-                            ),
-                            isSeek: false,
+                          final heroTag =
+                              getTag?.call() ?? Get.arguments?['heroTag'];
+                          final duration = Duration(
+                            seconds: DurationUtils.parseDuration(matchStr),
                           );
+                          SmartDialog.showToast('跳转至：$matchStr');
+                          if (kDebugMode) {
+                            debugPrint('Seeking to $duration with tag: $heroTag');
+                          }
+                          try {
+                            final ctr = Get.find<AudioController>(tag: heroTag);
+                            if (kDebugMode) debugPrint('Seeking AudioController');
+                            ctr.seekTo(
+                              duration,
+                              isSeek: false,
+                            );
+                          } catch (_) {
+                            final ctr = Get.find<VideoDetailController>(tag: heroTag);
+                            if (kDebugMode) debugPrint('Seeking VideoDetailController');
+                            ctr.plPlayerController.seekTo(
+                              duration,
+                              isSeek: false,
+                            );
+                          }
                         } catch (e) {
                           SmartDialog.showToast('跳转失败: $e');
+                          if (kDebugMode) debugPrint('Seek error: $e');
                         }
                       })
                   : null,
