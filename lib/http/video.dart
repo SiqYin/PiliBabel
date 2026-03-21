@@ -185,31 +185,19 @@ abstract final class VideoHttp {
       List<HotVideoItemModel> list = <HotVideoItemModel>[];
       final applyFullFilter = RecommendFilter.applyFilterToHotVideos;
       for (final i in res.data['data']['list']) {
-        // 分区关键词过滤（始终生效）
+        // 分区关键词过滤（始终生效，上游原始行为）
         if (enableFilter &&
             i['tname'] != null &&
             zoneRegExp.hasMatch(i['tname'])) {
           continue;
         }
-        // 全局黑名单（始终生效）
-        if (GlobalData().blackMids.contains(i['owner']['mid'])) {
-          continue;
-        }
         if (applyFullFilter) {
-          // 完整过滤：时长、播放量、点赞率、标题关键词、推荐屏蔽用户
+          // 开关开启：全局黑名单 + 完整过滤（时长、播放量、点赞率、标题关键词、推荐屏蔽用户）
+          if (GlobalData().blackMids.contains(i['owner']['mid'])) continue;
           final item = HotVideoItemModel.fromJson(i);
-          if (!RecommendFilter.filterAll(item)) {
-            list.add(item);
-          }
+          if (!RecommendFilter.filterAll(item)) list.add(item);
         } else {
-          // 原有过滤：仅标题关键词 + 点赞率
-          if (!RecommendFilter.filterTitle(i['title']) &&
-              !RecommendFilter.filterLikeRatio(
-                i['stat']['like'],
-                i['stat']['view'],
-              )) {
-            list.add(HotVideoItemModel.fromJson(i));
-          }
+          list.add(HotVideoItemModel.fromJson(i));
         }
       }
       return Success(list);
@@ -884,22 +872,10 @@ abstract final class VideoHttp {
   }
 
   static bool _canAddRank(Map i) {
-    // 分区关键词过滤（始终生效）
-    if (enableFilter &&
+    // 分区关键词过滤（始终生效，上游原始行为）
+    return !(enableFilter &&
         i['tname'] != null &&
-        zoneRegExp.hasMatch(i['tname'])) {
-      return false;
-    }
-    // 全局黑名单（始终生效）
-    if (GlobalData().blackMids.contains(i['owner']['mid'])) {
-      return false;
-    }
-    // 原有过滤：仅标题关键词 + 点赞率
-    return !RecommendFilter.filterTitle(i['title']) &&
-        !RecommendFilter.filterLikeRatio(
-          i['stat']['like'],
-          i['stat']['view'],
-        );
+        zoneRegExp.hasMatch(i['tname']));
   }
 
   // 视频排行
@@ -916,7 +892,8 @@ abstract final class VideoHttp {
       for (final i in res.data['data']['list']) {
         if (!_canAddRank(i)) continue;
         if (applyFullFilter) {
-          // 完整过滤：时长、播放量、点赞率、标题关键词、推荐屏蔽用户
+          // 开关开启：全局黑名单 + 完整过滤（时长、播放量、点赞率、标题关键词、推荐屏蔽用户）
+          if (GlobalData().blackMids.contains(i['owner']['mid'])) continue;
           final item = HotVideoItemModel.fromJson(i);
           if (!RecommendFilter.filterAll(item)) list.add(item);
         } else {
