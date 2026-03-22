@@ -55,6 +55,7 @@ import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
+import 'package:PiliPlus/utils/mobile_observer.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -209,7 +210,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    addObserverMobile(this);
 
     _controlsListener = plPlayerController.showControls.listen(
       _onControlChanged,
@@ -338,7 +339,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
+    removeObserverMobile(this);
     _danmakuListener?.cancel();
     _tapGestureRecognizer.dispose();
     _longPressRecognizer?.dispose();

@@ -54,6 +54,7 @@ import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
+import 'package:PiliPlus/utils/mobile_observer.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
@@ -162,7 +163,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     videoSourceInit();
     autoScreen();
 
-    WidgetsBinding.instance.addObserver(this);
+    addObserverMobile(this);
   }
 
   // 获取视频资源，初始化播放器
@@ -372,7 +373,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         PlPlayerController.updatePlayCount();
       }
     }
-    WidgetsBinding.instance.removeObserver(this);
+    removeObserverMobile(this);
     if (PlatformUtils.isMobile) {
       showStatusBar();
     }
@@ -385,7 +386,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     super.didPushNext();
     isShowing = false;
 
-    WidgetsBinding.instance.removeObserver(this);
+    removeObserverMobile(this);
 
     if (Platform.isAndroid && !videoDetailController.setSystemBrightness) {
       ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
@@ -418,7 +419,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
     isShowing = true;
 
-    WidgetsBinding.instance.addObserver(this);
+    addObserverMobile(this);
 
     plPlayerController?.isLive = false;
     if (videoDetailController.plPlayerController.playerStatus.isPlaying &&

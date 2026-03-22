@@ -14,6 +14,7 @@ import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
+import 'package:PiliPlus/utils/mobile_observer.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
@@ -48,7 +49,7 @@ class _MainAppState extends PopScopeState<MainApp>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    addObserverMobile(this);
     if (PlatformUtils.isDesktop) {
       windowManager
         ..addListener(this)
@@ -80,7 +81,7 @@ class _MainAppState extends PopScopeState<MainApp>
 
   @override
   void didPopNext() {
-    WidgetsBinding.instance.addObserver(this);
+    addObserverMobile(this);
     _mainController
       ..checkUnreadDynamic()
       ..checkDefaultSearch(true)
@@ -90,7 +91,7 @@ class _MainAppState extends PopScopeState<MainApp>
 
   @override
   void didPushNext() {
-    WidgetsBinding.instance.removeObserver(this);
+    removeObserverMobile(this);
     super.didPushNext();
   }
 
@@ -110,7 +111,7 @@ class _MainAppState extends PopScopeState<MainApp>
       trayManager.removeListener(this);
       windowManager.removeListener(this);
     }
-    WidgetsBinding.instance.removeObserver(this);
+    removeObserverMobile(this);
     PiliScheme.listener?.cancel();
     GStorage.close();
     super.dispose();

@@ -36,6 +36,7 @@ import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
+import 'package:PiliPlus/utils/mobile_observer.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -72,7 +73,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    addObserverMobile(this);
     _liveRoomController = Get.put(
       LiveRoomController(heroTag),
       tag: heroTag,
@@ -94,7 +95,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
 
   @override
   Future<void> didPopNext() async {
-    WidgetsBinding.instance.addObserver(this);
+    addObserverMobile(this);
     plPlayerController
       ..isLive = true
       ..danmakuController = _liveRoomController.danmakuController;
@@ -121,7 +122,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
 
   @override
   void didPushNext() {
-    WidgetsBinding.instance.removeObserver(this);
+    removeObserverMobile(this);
     plPlayerController.removeStatusLister(playerListener);
     _liveRoomController
       ..danmakuController?.clear()
@@ -148,8 +149,8 @@ class _LiveRoomPageState extends State<LiveRoomPage>
 
   @override
   void dispose() {
+    removeObserverMobile(this);
     videoPlayerServiceHandler?.onVideoDetailDispose(heroTag);
-    WidgetsBinding.instance.removeObserver(this);
     if (Platform.isAndroid && !plPlayerController.setSystemBrightness) {
       ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
     }
