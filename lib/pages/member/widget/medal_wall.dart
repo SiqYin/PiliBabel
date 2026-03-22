@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/models_new/live/live_medal_wall/data.dart';
@@ -6,8 +7,6 @@ import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
-import 'package:PiliPlus/utils/utils.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 
 class MedalWall extends StatelessWidget {
@@ -71,42 +70,6 @@ class MedalWall extends StatelessWidget {
               final item = response.list![index];
               final uinfoMedal = item.uinfoMedal!;
               final isLiving = item.liveStatus == 1;
-              Color? nameColor;
-              Color? backgroundColor;
-              try {
-                nameColor = Utils.parseColor(uinfoMedal.v2MedalColorText!);
-                backgroundColor = Utils.parseMedalColor(
-                  uinfoMedal.v2MedalColorStart!,
-                );
-              } catch (e, s) {
-                if (kDebugMode) {
-                  Utils.reportError(e, s);
-                }
-              }
-              final medal = MedalWidget(
-                medalName: uinfoMedal.name!,
-                level: uinfoMedal.level!,
-                backgroundColor:
-                    backgroundColor ?? colorScheme.secondaryContainer,
-                nameColor: nameColor ?? colorScheme.onSecondaryContainer,
-                levelColor: nameColor ?? colorScheme.onSecondaryContainer,
-              );
-              Widget avatar = PendantAvatar(
-                avatar: item.targetIcon,
-                size: 38,
-                officialType: switch (item.official) {
-                  1 => 0,
-                  2 => 1,
-                  _ => null,
-                },
-              );
-              if (isLiving) {
-                avatar = GestureDetector(
-                  onTap: () =>
-                      PageUtils.toDupNamed('/member?mid=${uinfoMedal.ruid}'),
-                  child: avatar,
-                );
-              }
               return ListTile(
                 onTap: () {
                   if (isLiving) {
@@ -115,8 +78,21 @@ class MedalWall extends StatelessWidget {
                     PageUtils.toDupNamed('/member?mid=${uinfoMedal.ruid}');
                   }
                 },
-                visualDensity: VisualDensity.comfortable,
-                leading: avatar,
+                visualDensity: .comfortable,
+                leading: PendantAvatar(
+                  item.targetIcon,
+                  size: 38,
+                  officialType: switch (item.official) {
+                    1 => 0,
+                    2 => 1,
+                    _ => null,
+                  },
+                  onTap: isLiving
+                      ? () => PageUtils.toDupNamed(
+                          '/member?mid=${uinfoMedal.ruid}',
+                        )
+                      : null,
+                ),
                 title: Row(
                   children: [
                     Flexible(
@@ -131,7 +107,7 @@ class MedalWall extends StatelessWidget {
                       Padding(
                         padding: const .only(left: 4),
                         child: Image.asset(
-                          'assets/images/live.gif',
+                          Assets.livingChart,
                           height: 16,
                           cacheHeight: 16.cacheSize(context),
                           color: colorScheme.primary,
@@ -139,7 +115,7 @@ class MedalWall extends StatelessWidget {
                       ),
                     Padding(
                       padding: const .only(left: 8),
-                      child: medal,
+                      child: MedalWidget.fromMedalInfo(medal: uinfoMedal),
                     ),
                   ],
                 ),

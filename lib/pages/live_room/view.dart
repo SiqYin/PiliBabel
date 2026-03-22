@@ -2,7 +2,8 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/page/page_view.dart';
@@ -384,7 +385,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                   );
                 } else {
                   child = Image.asset(
-                    'assets/images/live/default_bg.webp',
+                    Assets.livingBackground,
                     fit: BoxFit.cover,
                     width: maxWidth,
                     height: maxHeight,
@@ -417,7 +418,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
   }
 
   Widget _buildPH(bool isFullScreen) {
-    final height = maxWidth / StyleString.aspectRatio16x9;
+    final height = maxWidth / Style.aspectRatio16x9;
     final videoHeight = isFullScreen ? maxHeight - padding.top : height;
     final bottomHeight = maxHeight - padding.top - height - kToolbarHeight;
     return Column(

@@ -1,6 +1,8 @@
 import 'dart:io';
 
+import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/flutter/tabs.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -226,9 +228,9 @@ class _MainAppState extends PopScopeState<MainApp>
 
   Future<void> _handleTray() async {
     if (Platform.isWindows) {
-      await trayManager.setIcon('assets/images/logo/ico/app_icon.ico');
+      await trayManager.setIcon(Assets.logoIco);
     } else {
-      await trayManager.setIcon('assets/images/logo/desktop/logo_large.png');
+      await trayManager.setIcon(Assets.logoLarge);
     }
     if (!Platform.isLinux) {
       await trayManager.setToolTip(Constants.appName);
@@ -312,7 +314,7 @@ class _MainAppState extends PopScopeState<MainApp>
           () => FractionalTranslation(
             translation: Offset(
               0.0,
-              barOffset.value / StyleString.topBarHeight,
+              barOffset.value / Style.topBarHeight,
             ),
             child: bottomNav,
           ),

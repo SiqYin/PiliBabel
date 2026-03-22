@@ -29,9 +29,8 @@ class SearchUserItem extends StatelessWidget {
           children: [
             const SizedBox(width: 15),
             PendantAvatar(
-              avatar: item.upic,
+              item.upic,
               size: 42,
-              isVip: false,
               officialType: item.officialVerify?.type,
               roomId: item.isLive == 1 ? item.roomId : null,
             ),

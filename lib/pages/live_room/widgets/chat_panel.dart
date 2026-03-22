@@ -7,6 +7,7 @@ import 'package:PiliPlus/models_new/live/live_danmaku/danmaku_msg.dart';
 import 'package:PiliPlus/models_new/live/live_superchat/item.dart';
 import 'package:PiliPlus/pages/live_room/controller.dart';
 import 'package:PiliPlus/pages/live_room/superchat/superchat_card.dart';
+import 'package:PiliPlus/pages/member/widget/medal_widget.dart';
 import 'package:PiliPlus/pages/video/widgets/header_control.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -57,6 +58,21 @@ class LiveRoomChatPanel extends StatelessWidget {
             itemBuilder: (_, index) {
               final item = liveRoomController.messages[index];
               if (item is DanmakuMsg) {
+                WidgetSpan? medal;
+                if (item.medalInfo case final medalInfo?) {
+                  try {
+                    medal = WidgetSpan(
+                      child: Padding(
+                        padding: const .symmetric(horizontal: 3),
+                        child: MedalWidget.fromMedalInfo(medal: medalInfo),
+                      ),
+                    );
+                  } catch (e, s) {
+                    if (kDebugMode) {
+                      Utils.reportError(e, s);
+                    }
+                  }
+                }
                 return Align(
                   alignment: Alignment.centerLeft,
                   child: Builder(
@@ -76,7 +92,7 @@ class LiveRoomChatPanel extends StatelessWidget {
                           TextSpan(
                             children: [
                               TextSpan(
-                                text: '${item.name}: ',
+                                text: item.name,
                                 style: TextStyle(
                                   color: nameColor,
                                   fontSize: 14,
@@ -90,6 +106,14 @@ class LiveRoomChatPanel extends StatelessWidget {
                                           e,
                                           item,
                                         )),
+                              ),
+                              ?medal,
+                              TextSpan(
+                                text: ': ',
+                                style: TextStyle(
+                                  color: nameColor,
+                                  fontSize: 14,
+                                ),
                               ),
                               if (item.reply case final reply?)
                                 TextSpan(

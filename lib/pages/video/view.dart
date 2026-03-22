@@ -3,7 +3,8 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -473,7 +474,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     maxHeight = size.height;
 
     final shortestSide = size.shortestSide;
-    final minVideoHeight = shortestSide / StyleString.aspectRatio16x9;
+    final minVideoHeight = shortestSide / Style.aspectRatio16x9;
     final maxVideoHeight = max(size.longestSide * 0.65, shortestSide);
     videoDetailController
       ..isPortrait = isPortrait = maxHeight >= maxWidth
@@ -948,7 +949,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         enableVerticalExpand &&
         !isPortrait) {
       final double videoHeight = maxHeight - padding.vertical;
-      final double width = videoHeight / StyleString.aspectRatio16x9;
+      final double width = videoHeight / Style.aspectRatio16x9;
       final videoWidth = isFullScreen ? maxWidth : width;
       final introWidth = (maxWidth - padding.horizontal - width) / 2;
       final introHeight = maxHeight - padding.top;
@@ -1010,10 +1011,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       width = maxWidth - clampDouble(maxWidth - width, 280, 425);
     }
     final videoWidth = isFullScreen ? maxWidth : width;
-    final double height = width / StyleString.aspectRatio16x9;
+    final double height = width / Style.aspectRatio16x9;
     final videoHeight = isFullScreen ? maxHeight - padding.top : height;
     if (height > maxHeight) {
-      return childSplit(StyleString.aspectRatio16x9);
+      return childSplit(Style.aspectRatio16x9);
     }
     final introHeight = maxHeight - height - padding.top;
     final showIntro =
@@ -1268,7 +1269,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
               tooltip: '播放',
               onPressed: handlePlay,
               icon: Image.asset(
-                'assets/images/play.png',
+                Assets.play,
                 width: 60,
                 height: 60,
                 cacheHeight: 60.cacheSize(context),
@@ -1391,7 +1392,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       child = childWhenDisabled;
     } else if (maxWidth / maxHeight >= kScreenRatio) {
       child = childWhenDisabledLandscape;
-    } else if (maxWidth / StyleString.aspectRatio16x9 < 0.4 * maxHeight) {
+    } else if (maxWidth / Style.aspectRatio16x9 < 0.4 * maxHeight) {
       child = childWhenDisabled;
     } else {
       child = childWhenDisabledAlmostSquare;
@@ -1595,7 +1596,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                     height: height,
                     cacheWidth: true,
                     getPlaceHolder: () => Center(
-                      child: Image.asset('assets/images/loading.png'),
+                      child: Image.asset(Assets.loading),
                     ),
                   ),
                 ),
@@ -1788,7 +1789,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.only(
-                    top: StyleString.safeSpace,
+                    top: Style.safeSpace,
                   ),
                   child: Divider(
                     height: 1,
@@ -1817,7 +1818,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
               height:
                   (videoDetailController.isPlayAll && !isPortrait
                       ? 80
-                      : StyleString.safeSpace) +
+                      : Style.safeSpace) +
                   padding.bottom,
             ),
           ),

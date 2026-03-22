@@ -1,77 +1,87 @@
+import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/common/avatar_badge_type.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
-import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/material.dart';
 
 class PendantAvatar extends StatelessWidget {
-  final BadgeType _badgeType;
-  final String? avatar;
-  final double size;
-  final double badgeSize;
-  final String? garbPendantImage;
-  final int? roomId;
-  final VoidCallback? onTap;
-  final bool isMemberAvatar;
-
-  const PendantAvatar({
+  const PendantAvatar(
+    this.url, {
     super.key,
-    required this.avatar,
-    required this.size,
-    this.isMemberAvatar = false,
+    required double size,
     double? badgeSize,
-    bool isVip = false,
+    int? vipStatus,
     int? officialType,
-    this.garbPendantImage,
+    this.pendantImage,
+    this.pendentOffset = 6,
     this.roomId,
     this.onTap,
-  }) : _badgeType = officialType == null || officialType < 0
-           ? isVip
-                 ? BadgeType.vip
-                 : BadgeType.none
+  }) : preferredSize = size,
+       badgeSize = badgeSize ?? size / 3,
+       badgeType = officialType == null || officialType < 0
+           ? vipStatus != null && vipStatus > 0
+                 ? .vip
+                 : .none
            : officialType == 0
-           ? BadgeType.person
+           ? .person
            : officialType == 1
-           ? BadgeType.institution
-           : BadgeType.none,
-       badgeSize = badgeSize ?? size / 3;
+           ? .institution
+           : .none;
 
   static bool showDynDecorate = Pref.showDynDecorate;
+
+  final BadgeType badgeType;
+  final String? url;
+  final double preferredSize;
+  final double badgeSize;
+  final String? pendantImage;
+  final double pendentOffset;
+  final int? roomId;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final showPendant = showDynDecorate && pendantImage?.isNotEmpty == true;
+    final size = showPendant ? preferredSize - pendentOffset : preferredSize;
     Widget? pendant;
-    if (showDynDecorate && !garbPendantImage.isNullOrEmpty) {
+    if (showPendant) {
       final pendantSize = size * 1.75;
       pendant = Positioned(
         // -(size * 1.75 - size) / 2
-        top: -0.375 * size + (isMemberAvatar ? 2 : 0),
+        top: -0.375 * size + pendentOffset,
         child: IgnorePointer(
           child: NetworkImgLayer(
             type: .emote,
             width: pendantSize,
             height: pendantSize,
-            src: garbPendantImage,
+            src: pendantImage,
             getPlaceHolder: () => const SizedBox.shrink(),
           ),
         ),
       );
     }
-    return Stack(
-      alignment: Alignment.bottomCenter,
-      clipBehavior: Clip.none,
+    Widget avatar = NetworkImgLayer(
+      src: url,
+      width: size,
+      height: size,
+      type: ImageType.avatar,
+    );
+    if (onTap != null) {
+      avatar = GestureDetector(
+        behavior: .opaque,
+        onTap: onTap,
+        child: avatar,
+      );
+    }
+    Widget child = Stack(
+      clipBehavior: .none,
+      alignment: .center,
       children: [
-        onTap == null
-            ? _buildAvatar(colorScheme, isMemberAvatar)
-            : GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: onTap,
-                child: _buildAvatar(colorScheme, isMemberAvatar),
-              ),
+        avatar,
         ?pendant,
         if (roomId != null)
           Positioned(
@@ -106,63 +116,38 @@ class PendantAvatar extends StatelessWidget {
               ),
             ),
           )
-        else if (_badgeType != BadgeType.none)
-          _buildBadge(context, colorScheme, isMemberAvatar),
+        else if (badgeType != BadgeType.none)
+          _buildBadge(context, colorScheme),
       ],
     );
+    if (showPendant) {
+      return SizedBox.square(
+        dimension: preferredSize,
+        child: child,
+      );
+    }
+    return child;
   }
 
-  Widget _buildAvatar(ColorScheme colorScheme, bool isMemberAvatar) =>
-      isMemberAvatar
-      ? DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border.all(
-              width: 2,
-              color: colorScheme.surface,
-            ),
-            shape: BoxShape.circle,
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(2),
-            child: NetworkImgLayer(
-              src: avatar,
-              width: size,
-              height: size,
-              type: ImageType.avatar,
-            ),
-          ),
-        )
-      : NetworkImgLayer(
-          src: avatar,
-          width: size,
-          height: size,
-          type: ImageType.avatar,
-        );
-
-  Widget _buildBadge(
-    BuildContext context,
-    ColorScheme colorScheme,
-    bool isMemberAvatar,
-  ) {
-    final child = switch (_badgeType) {
+  Widget _buildBadge(BuildContext context, ColorScheme colorScheme) {
+    final child = switch (badgeType) {
       BadgeType.vip => Image.asset(
-        'assets/images/big-vip.png',
+        Assets.vipIcon,
         width: badgeSize,
         height: badgeSize,
         cacheWidth: badgeSize.cacheSize(context),
-        semanticLabel: _badgeType.desc,
+        semanticLabel: badgeType.desc,
       ),
       _ => Icon(
         Icons.offline_bolt,
-        color: _badgeType.color,
+        color: badgeType.color,
         size: badgeSize,
-        semanticLabel: _badgeType.desc,
+        semanticLabel: badgeType.desc,
       ),
     };
-    final offset = isMemberAvatar ? 2.0 : 0.0;
     return Positioned(
-      right: offset,
-      bottom: offset,
+      right: 0.0,
+      bottom: 0.0,
       child: IgnorePointer(
         child: DecoratedBox(
           decoration: BoxDecoration(

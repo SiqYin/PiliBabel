@@ -1,4 +1,5 @@
-import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/avatars.dart';
 import 'package:PiliPlus/common/widgets/image_viewer/hero.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
@@ -135,11 +136,9 @@ class UserInfoCard extends StatelessWidget {
     Widget? liveMedal;
     if (card.liveFansWearing?.detailV2 case final detailV2?) {
       Color? nameColor;
-      Color? levelColor;
       Color? backgroundColor;
       try {
         nameColor = Utils.parseColor(detailV2.medalColorName!);
-        levelColor = Utils.parseColor(detailV2.medalColorLevel!);
         backgroundColor = Utils.parseColor(detailV2.medalColor!);
       } catch (e, s) {
         if (kDebugMode) {
@@ -154,7 +153,6 @@ class UserInfoCard extends StatelessWidget {
             level: detailV2.level!,
             backgroundColor: backgroundColor ?? colorScheme.secondaryContainer,
             nameColor: nameColor ?? colorScheme.onSecondaryContainer,
-            levelColor: levelColor ?? colorScheme.onSecondaryContainer,
           ),
         );
       } catch (e, s) {
@@ -204,7 +202,7 @@ class UserInfoCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  borderRadius: StyleString.mdRadius,
+                  borderRadius: Style.mdRadius,
                   color: colorScheme.vipColor,
                 ),
                 child: Text(
@@ -475,23 +473,36 @@ class UserInfoCard extends StatelessWidget {
     ],
   );
 
-  Widget _buildAvatar(bool hasPendant) => fromHero(
-    tag: '${card.face}$hashCode',
-    child: PendantAvatar(
-      avatar: card.face,
-      size: hasPendant ? kPendantAvatarSize : kAvatarSize,
-      isMemberAvatar: true,
+  Widget _buildAvatar(ColorScheme scheme) {
+    final pendant = card.pendant?.image;
+    Widget child = PendantAvatar(
+      card.face,
+      size: kAvatarSize,
+      pendentOffset: 12,
       badgeSize: 20,
       officialType: card.officialVerify?.type,
-      isVip: (card.vip?.status ?? -1) > 0,
-      garbPendantImage: card.pendant?.image,
+      vipStatus: card.vip?.status,
+      pendantImage: pendant,
       roomId: live?.liveStatus == 1 ? live!.roomid : null,
       onTap: () => PageUtils.imageView(
         tag: hashCode.toString(),
         imgList: [SourceModel(url: card.face.http2https)],
       ),
-    ),
-  );
+    );
+    if (pendant == null || pendant.isEmpty) {
+      child = DecoratedBox(
+        decoration: BoxDecoration(
+          border: .all(width: 2, color: scheme.surface),
+          shape: .circle,
+        ),
+        child: Padding(padding: const .all(2), child: child),
+      );
+    }
+    return fromHero(
+      tag: '${card.face}$hashCode',
+      child: child,
+    );
+  }
 
   Column _buildV(
     BuildContext context,
@@ -499,7 +510,6 @@ class UserInfoCard extends StatelessWidget {
     bool isLight,
     double width,
   ) {
-    final hasPendant = card.pendant?.image?.isNotEmpty ?? false;
     final imgUrls = images.collectionTopSimple?.top?.imgUrls;
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -519,7 +529,7 @@ class UserInfoCard extends StatelessWidget {
                           : images.nightImgurl)
                       .http2https,
                 ),
-          avatar: _buildAvatar(hasPendant),
+          avatar: _buildAvatar(scheme),
           actions: _buildRight(scheme),
         ),
         const SizedBox(height: 5),
@@ -591,26 +601,28 @@ class UserInfoCard extends StatelessWidget {
           Positioned(
             right: 0,
             bottom: 3.5,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 125),
-              child: DecoratedBox(
-                decoration: const BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: .centerLeft,
-                    end: .centerRight,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black12,
-                      Colors.black38,
-                      Colors.black45,
-                    ],
+            child: IgnorePointer(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 125),
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: .centerLeft,
+                      end: .centerRight,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black12,
+                        Colors.black38,
+                        Colors.black45,
+                      ],
+                    ),
                   ),
-                ),
-                child: Padding(
-                  padding: const .only(left: 15, right: 5, bottom: 2),
-                  child: HeaderTitle(
-                    images: imgUrls,
-                    pageController: controller,
+                  child: Padding(
+                    padding: const .only(left: 15, right: 5, bottom: 2),
+                    child: HeaderTitle(
+                      images: imgUrls,
+                      pageController: controller,
+                    ),
                   ),
                 ),
               ),
@@ -728,7 +740,7 @@ class UserInfoCard extends StatelessWidget {
     return child;
   }
 
-  Column _buildH(BuildContext context, ColorScheme colorScheme, bool isLight) =>
+  Column _buildH(BuildContext context, ColorScheme scheme, bool isLight) =>
       Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -743,7 +755,7 @@ class UserInfoCard extends StatelessWidget {
                   top: 10,
                   bottom: card.prInfo?.content?.isNotEmpty == true ? 0 : 10,
                 ),
-                child: _buildAvatar(card.pendant?.image?.isNotEmpty ?? false),
+                child: _buildAvatar(scheme),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -753,20 +765,20 @@ class UserInfoCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 10),
-                    ..._buildLeft(context, colorScheme, isLight),
+                    ..._buildLeft(context, scheme, isLight),
                     const SizedBox(height: 5),
                   ],
                 ),
               ),
               Expanded(
                 flex: 3,
-                child: _buildRight(colorScheme),
+                child: _buildRight(scheme),
               ),
               const SizedBox(width: 20),
             ],
           ),
           if (card.prInfo?.content?.isNotEmpty == true)
-            buildPrInfo(context, colorScheme, isLight, card.prInfo!),
+            buildPrInfo(context, scheme, isLight, card.prInfo!),
         ],
       );
 
@@ -921,7 +933,7 @@ class _HeaderTitleState extends State<HeaderTitle> {
             title.subTitle!,
             style: TextStyle(
               fontSize: 12,
-              fontFamily: 'digital_id_num',
+              fontFamily: Assets.digitalNum,
               color: title.subTitleColorFormat?.colors?.isNotEmpty == true
                   ? Utils.parseMedalColor(
                       title.subTitleColorFormat!.colors!.last,
