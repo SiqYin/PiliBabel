@@ -128,36 +128,41 @@ class _HorizontalMemberPageState extends State<HorizontalMemberPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Obx(
-            () {
-              final count = _controller.count.value;
-              return Text(
-                count != -1 ? '共$count视频' : '',
-                style: const TextStyle(fontSize: 13),
-              );
-            },
-          ),
-          TextButton.icon(
-            style: Style.buttonStyle,
-            onPressed: () => _controller
-              ..lastAid = widget.videoDetailController.aid.toString()
-              ..queryBySort(),
-            icon: Icon(
-              Icons.sort,
-              size: 16,
-              color: theme.colorScheme.secondary,
-            ),
-            label: Obx(
-              () => Text(
-                _controller.order.value == 'pubdate' ? '最新发布' : '最多播放',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: theme.colorScheme.secondary,
-                ),
-              ),
-            ),
-          ),
+          ?_buildCount(),
+          _buildSortBtn(theme),
         ],
+      ),
+    );
+  }
+
+  Widget? _buildCount() {
+    final count = _controller.count;
+    if (count != null) {
+      return Text(
+        '共$count视频',
+        style: const TextStyle(fontSize: 13),
+      );
+    }
+    return null;
+  }
+
+  Widget _buildSortBtn(ThemeData theme) {
+    return TextButton.icon(
+      style: Style.buttonStyle,
+      onPressed: () => _controller
+        ..lastAid = widget.videoDetailController.aid.toString()
+        ..queryBySort(),
+      icon: Icon(
+        Icons.sort,
+        size: 16,
+        color: theme.colorScheme.secondary,
+      ),
+      label: Text(
+        _controller.order.label,
+        style: TextStyle(
+          fontSize: 13,
+          color: theme.colorScheme.secondary,
+        ),
       ),
     );
   }
