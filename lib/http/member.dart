@@ -143,14 +143,7 @@ abstract final class MemberHttp {
       'vmid': mid,
     };
     final res = await Request().get(
-      switch (type) {
-        ContributeType.video => Api.spaceArchive,
-        ContributeType.charging => Api.spaceChargingArchive,
-        ContributeType.season => Api.spaceSeason,
-        ContributeType.series => Api.spaceSeries,
-        ContributeType.bangumi => Api.spaceBangumi,
-        ContributeType.comic => Api.spaceComic,
-      },
+      type.api,
       queryParameters: params,
       options: Options(
         headers: {
