@@ -154,7 +154,10 @@ class _SuperChatCardState extends State<SuperChatCard> {
           spacing: 5,
           children: [
             Flexible(child: name),
-            MedalWidget.fromMedalInfo(medal: medal),
+            MedalWidget.fromMedalInfo(
+              medal: medal,
+              padding: MedalWidget.mediumPadding,
+            ),
           ],
         );
       } catch (e, s) {

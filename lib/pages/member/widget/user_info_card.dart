@@ -200,7 +200,7 @@ class UserInfoCard extends StatelessWidget {
             ),
             if (card.vip?.status == 1)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const .symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   borderRadius: Style.mdRadius,
                   color: colorScheme.vipColor,

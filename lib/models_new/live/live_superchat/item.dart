@@ -1,5 +1,6 @@
 import 'package:PiliPlus/models_new/live/live_medal_wall/uinfo_medal.dart';
 import 'package:PiliPlus/models_new/live/live_superchat/user_info.dart';
+import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/parse_string.dart';
 import 'package:PiliPlus/utils/utils.dart';
 
@@ -50,6 +51,16 @@ class SuperChatItem {
     },
     'token': '',
     'ts': 0,
+    'uinfo': {
+      'medal': {
+        "name": "MedalName",
+        "level": Utils.random.nextInt(40),
+        "id": 123,
+        "ruid": 456,
+        "v2_medal_color_start": "#4C7DFF99",
+        "v2_medal_color_text": "#FFFFFF",
+      },
+    },
   });
 
   factory SuperChatItem.fromJson(Map<String, dynamic> json) => SuperChatItem(
@@ -66,7 +77,7 @@ class SuperChatItem {
     token: json['token'],
     ts: Utils.safeToInt(json['ts'])!,
     userInfo: UserInfo.fromJson(json['user_info'] as Map<String, dynamic>),
-    medalInfo: json['uinfo']?['medal'] == null
+    medalInfo: !GlobalData().showMedal || json['uinfo']?['medal'] == null
         ? null
         : UinfoMedal.fromJson(json['uinfo']['medal']),
   );
@@ -119,5 +130,6 @@ class SuperChatItem {
     'token': token,
     'ts': ts,
     'user_info': userInfo.toJson(),
+    'medal': ?medalInfo?.toJson(),
   };
 }

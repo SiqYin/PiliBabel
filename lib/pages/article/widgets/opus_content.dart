@@ -758,9 +758,7 @@ Widget moduleBlockedItem(
         padding: padding,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         visualDensity: visualDensity,
-        backgroundColor: isDarkMode
-            ? const Color(0xFF8F0030)
-            : const Color(0xFFFF6699),
+        backgroundColor: theme.colorScheme.btnColor,
         foregroundColor: Colors.white,
         shape: shape,
       ),

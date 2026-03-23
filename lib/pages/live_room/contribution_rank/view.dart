@@ -200,7 +200,10 @@ class _Item extends StatelessWidget {
           crossAxisAlignment: .start,
           children: [
             child,
-            MedalWidget.fromMedalInfo(medal: uinfoMedal),
+            MedalWidget.fromMedalInfo(
+              medal: uinfoMedal,
+              padding: MedalWidget.mediumPadding,
+            ),
           ],
         );
       } catch (e, s) {

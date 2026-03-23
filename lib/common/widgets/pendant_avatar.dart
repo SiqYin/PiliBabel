@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/common/avatar_badge_type.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
@@ -18,6 +19,8 @@ class PendantAvatar extends StatelessWidget {
     this.pendantImage,
     this.pendentOffset = 6,
     this.roomId,
+    this.liveBottom,
+    this.liveFontSize,
     this.onTap,
   }) : preferredSize = size,
        badgeSize = badgeSize ?? size / 3,
@@ -31,7 +34,7 @@ class PendantAvatar extends StatelessWidget {
            ? .institution
            : .none;
 
-  static bool showDynDecorate = Pref.showDynDecorate;
+  static bool showDecorate = Pref.showDecorate;
 
   final BadgeType badgeType;
   final String? url;
@@ -40,12 +43,14 @@ class PendantAvatar extends StatelessWidget {
   final String? pendantImage;
   final double pendentOffset;
   final int? roomId;
+  final double? liveBottom;
+  final double? liveFontSize;
   final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final showPendant = showDynDecorate && pendantImage?.isNotEmpty == true;
+    final showPendant = showDecorate && pendantImage?.isNotEmpty == true;
     final size = showPendant ? preferredSize - pendentOffset : preferredSize;
     Widget? pendant;
     if (showPendant) {
@@ -84,39 +89,8 @@ class PendantAvatar extends StatelessWidget {
         avatar,
         ?pendant,
         if (roomId != null)
-          Positioned(
-            bottom: 0,
-            child: InkWell(
-              onTap: () => PageUtils.toLiveRoom(roomId),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                decoration: BoxDecoration(
-                  color: colorScheme.secondaryContainer,
-                  borderRadius: const BorderRadius.all(Radius.circular(36)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      size: 16,
-                      applyTextScaling: true,
-                      Icons.equalizer_rounded,
-                      color: colorScheme.onSecondaryContainer,
-                    ),
-                    Text(
-                      '直播中',
-                      style: TextStyle(
-                        height: 1,
-                        fontSize: 13,
-                        color: colorScheme.onSecondaryContainer,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
-        else if (badgeType != BadgeType.none)
+          _buildLive(colorScheme)
+        else if (badgeType != .none)
           _buildBadge(context, colorScheme),
       ],
     );
@@ -129,9 +103,45 @@ class PendantAvatar extends StatelessWidget {
     return child;
   }
 
+  Widget _buildLive(ColorScheme colorScheme) {
+    final fontSize = liveFontSize ?? 13.0;
+    return Positioned(
+      bottom: liveBottom ?? 0.0,
+      child: GestureDetector(
+        onTap: () => PageUtils.toLiveRoom(roomId),
+        child: Container(
+          padding: const .symmetric(horizontal: 5, vertical: 1),
+          decoration: BoxDecoration(
+            color: colorScheme.secondaryContainer,
+            borderRadius: Style.mdRadius,
+          ),
+          child: Row(
+            mainAxisSize: .min,
+            children: [
+              Icon(
+                size: fontSize + 3,
+                applyTextScaling: true,
+                Icons.equalizer_rounded,
+                color: colorScheme.onSecondaryContainer,
+              ),
+              Text(
+                '直播中',
+                style: TextStyle(
+                  height: 1,
+                  fontSize: fontSize,
+                  color: colorScheme.onSecondaryContainer,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildBadge(BuildContext context, ColorScheme colorScheme) {
     final child = switch (badgeType) {
-      BadgeType.vip => Image.asset(
+      .vip => Image.asset(
         Assets.vipIcon,
         width: badgeSize,
         height: badgeSize,

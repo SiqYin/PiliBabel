@@ -63,8 +63,11 @@ class LiveRoomChatPanel extends StatelessWidget {
                   try {
                     medal = WidgetSpan(
                       child: Padding(
-                        padding: const .symmetric(horizontal: 3),
-                        child: MedalWidget.fromMedalInfo(medal: medalInfo),
+                        padding: const .only(right: 4),
+                        child: MedalWidget.fromMedalInfo(
+                          medal: medalInfo,
+                          padding: MedalWidget.mediumPadding,
+                        ),
                       ),
                     );
                   } catch (e, s) {
@@ -78,21 +81,17 @@ class LiveRoomChatPanel extends StatelessWidget {
                   child: Builder(
                     builder: (itemContext) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
+                        padding: const .symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: bg,
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(14),
-                          ),
+                          borderRadius: const .all(.circular(14)),
                         ),
                         child: Text.rich(
                           TextSpan(
                             children: [
+                              ?medal,
                               TextSpan(
-                                text: item.name,
+                                text: '${item.name}: ',
                                 style: TextStyle(
                                   color: nameColor,
                                   fontSize: 14,
@@ -106,14 +105,6 @@ class LiveRoomChatPanel extends StatelessWidget {
                                           e,
                                           item,
                                         )),
-                              ),
-                              ?medal,
-                              TextSpan(
-                                text: ': ',
-                                style: TextStyle(
-                                  color: nameColor,
-                                  fontSize: 14,
-                                ),
                               ),
                               if (item.reply case final reply?)
                                 TextSpan(

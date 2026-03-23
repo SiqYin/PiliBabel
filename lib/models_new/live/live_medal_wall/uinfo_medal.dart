@@ -23,4 +23,13 @@ class UinfoMedal {
     v2MedalColorStart: json['v2_medal_color_start'] as String?,
     v2MedalColorText: json['v2_medal_color_text'] as String?,
   );
+
+  Map<String, dynamic> toJson() => {
+    'name': name,
+    'level': level,
+    'id': id,
+    'ruid': ruid,
+    'v2_medal_color_start': v2MedalColorStart,
+    'v2_medal_color_text': v2MedalColorText,
+  };
 }

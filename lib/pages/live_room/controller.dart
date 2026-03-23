@@ -31,6 +31,7 @@ import 'package:PiliPlus/utils/danmaku_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
+import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -486,7 +487,6 @@ class LiveRoomController extends GetxController {
               name: extra['reply_uname'],
             );
           }
-          final medal = user['medal'];
           addDm(
             DanmakuMsg(
               name: name,
@@ -497,7 +497,9 @@ class LiveRoomController extends GetxController {
               uemote: uemote,
               extra: liveExtra,
               reply: reply,
-              medalInfo: medal == null ? null : UinfoMedal.fromJson(medal),
+              medalInfo: !GlobalData().showMedal || user['medal'] == null
+                  ? null
+                  : UinfoMedal.fromJson(user['medal']),
             ),
             DanmakuContentItem(
               msg,

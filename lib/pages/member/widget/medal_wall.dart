@@ -124,9 +124,7 @@ class MedalWall extends StatelessWidget {
                         padding: const .symmetric(horizontal: 8, vertical: 3),
                         decoration: BoxDecoration(
                           borderRadius: const .all(.circular(3)),
-                          color: colorScheme.isDark
-                              ? const Color(0xFF8F0030)
-                              : const Color(0xFFFF6699),
+                          color: colorScheme.btnColor,
                         ),
                         child: const Text(
                           '佩戴中',

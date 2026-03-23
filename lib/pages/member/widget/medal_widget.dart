@@ -38,6 +38,8 @@ class MedalWidget extends StatelessWidget {
   final StrutStyle strutStyle;
   final EdgeInsets padding;
 
+  static const mediumPadding = EdgeInsets.symmetric(horizontal: 6, vertical: 3);
+
   @override
   Widget build(BuildContext context) {
     return Container(

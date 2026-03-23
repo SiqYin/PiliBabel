@@ -30,6 +30,7 @@ import 'package:PiliPlus/utils/extension/context_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
+import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
@@ -188,7 +189,8 @@ class ReplyItemGrpc extends StatelessWidget {
                         isStack: false,
                         fontSize: 9,
                       )
-                    else if (member.hasFansMedalLevel())
+                    else if (GlobalData().showMedal &&
+                        member.hasFansMedalLevel())
                       MedalWidget(
                         medalName: member.fansMedalName,
                         level: member.fansMedalLevel.toInt(),
@@ -233,7 +235,7 @@ class ReplyItemGrpc extends StatelessWidget {
         ],
       ),
     );
-    if (PendantAvatar.showDynDecorate) {
+    if (PendantAvatar.showDecorate) {
       final garb = replyItem.memberV2.garb;
       if (garb.hasCardImage()) {
         const double height = 38.0;
