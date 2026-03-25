@@ -1004,7 +1004,8 @@ class PlPlayerController with BlockConfigMixin {
               event.startsWith("Can not open")) {
             return;
           }
-          SmartDialog.showToast('视频加载错误, $event');
+          Utils.reportError(event);
+          // SmartDialog.showToast('视频加载错误, $event');
         }
       }),
       // controllerStream.volume.listen((event) {
