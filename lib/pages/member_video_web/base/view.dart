@@ -188,7 +188,9 @@ abstract class BaseVideoWebState<
 
     void onSubmit([_]) {
       try {
-        controller.jumpToPage(int.parse(pageStr));
+        controller.jumpToPage(
+          int.parse(pageStr).clamp(1, controller.totalPage!),
+        );
       } catch (e) {
         SmartDialog.showToast(e.toString());
       }

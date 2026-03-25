@@ -4,7 +4,6 @@ import 'package:PiliPlus/models_new/member/season_web/archive.dart';
 import 'package:PiliPlus/models_new/member/season_web/data.dart';
 import 'package:PiliPlus/pages/member_video_web/base/view.dart';
 import 'package:PiliPlus/pages/member_video_web/season_series/controller.dart';
-import 'package:PiliPlus/utils/grid.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -39,8 +38,7 @@ class _MemberSSWebState
           SeasonWebData,
           SeasonArchive,
           ArchiveSortTypeApp
-        >
-    with GridMixin {
+        > {
   @override
   late final MemberSSWebCtr controller;
 
