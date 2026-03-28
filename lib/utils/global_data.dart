@@ -19,6 +19,8 @@ class GlobalData {
 
   bool dynamicsWaterfallFlow = Pref.dynamicsWaterfallFlow;
 
+  bool showMedal = Pref.showMedal;
+
   // 私有构造函数
   GlobalData._();
 

@@ -2,7 +2,8 @@ import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
 
-import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/page/page_view.dart';
@@ -39,6 +40,7 @@ import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
+import 'package:PiliPlus/utils/mobile_observer.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -77,7 +79,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    addObserverMobile(this);
     final args = Get.arguments;
 
     // 解析当前请求进入的房间号
@@ -140,7 +142,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
 
   @override
   Future<void> didPopNext() async {
-    WidgetsBinding.instance.addObserver(this);
+    addObserverMobile(this);
 
     // 如果返回当前页面时应用内小窗正在运行，且房间号匹配，说明是从正在小窗播放的页面返回
     if (LivePipOverlayService.isInPipMode) {
@@ -172,8 +174,9 @@ class _LiveRoomPageState extends State<LiveRoomPage>
 
     // 非小窗返回情况下的恢复：如果播放器未初始化（例如小窗在其它页面被手动关闭），或者被其它直播/视频抢占
     final bool shouldPlay =
-        _liveRoomController.isPlaying ?? plPlayerController.playerStatus.isPlaying;
-    
+        _liveRoomController.isPlaying ??
+        plPlayerController.playerStatus.isPlaying;
+
     bool needsRecovery = false;
     if (plPlayerController.videoPlayerController == null) {
       needsRecovery = true;
@@ -187,7 +190,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       // 重新获取刷新后的实例
       plPlayerController = _liveRoomController.plPlayerController;
     }
-    
+
     plPlayerController.addStatusLister(playerListener);
 
     if (plPlayerController.playerStatus.isPlaying &&
@@ -211,7 +214,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
 
   @override
   void didPushNext() {
-    WidgetsBinding.instance.removeObserver(this);
+    removeObserverMobile(this);
     plPlayerController.removeStatusLister(playerListener);
 
     // 如果正在播放且不是全屏状态，启动小窗
@@ -252,7 +255,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     if (!isInLivePip && !_isEnteringPipMode) {
       videoPlayerServiceHandler?.onVideoDetailDispose(heroTag);
     }
-    WidgetsBinding.instance.removeObserver(this);
+    removeObserverMobile(this);
     if (Platform.isAndroid && !plPlayerController.setSystemBrightness) {
       ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
     }
@@ -269,7 +272,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
         tag: '${_liveRoomController.roomId}${e.name}',
       );
     }
-    
+
     if (!isInLivePip && !_isEnteringPipMode) {
       Get.delete<LiveRoomController>(tag: heroTag, force: true);
     }
@@ -593,7 +596,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                   );
                 } else {
                   child = Image.asset(
-                    'assets/images/live/default_bg.webp',
+                    Assets.livingBackground,
                     fit: BoxFit.cover,
                     width: maxWidth,
                     height: maxHeight,
@@ -626,7 +629,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
   }
 
   Widget _buildPH(bool isFullScreen) {
-    final height = maxWidth / StyleString.aspectRatio16x9;
+    final height = maxWidth / Style.aspectRatio16x9;
     final videoHeight = isFullScreen ? maxHeight - padding.top : height;
     final bottomHeight = maxHeight - padding.top - height - kToolbarHeight;
     return Column(

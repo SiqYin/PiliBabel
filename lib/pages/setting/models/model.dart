@@ -1,4 +1,4 @@
-import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/models/common/enum_with_label.dart';
 import 'package:PiliPlus/pages/setting/widgets/normal_item.dart';
 import 'package:PiliPlus/pages/setting/widgets/popup_item.dart';
@@ -153,7 +153,7 @@ class SwitchModel extends SettingsModel {
 /// Creates a list-based keyword filter model using ListEditorDialog
 /// Items are stored as newline-separated strings (instead of pipe-separated)
 /// to support regex patterns containing '|' character
-/// 
+///
 /// 使用 getListBanWordModel 替代了上游的 getBanWordModel
 SettingsModel getListBanWordModel({
   required String title,
@@ -161,43 +161,56 @@ SettingsModel getListBanWordModel({
   required ValueChanged<RegExp> onChanged,
 }) {
   String banWord = GStorage.setting.get(key, defaultValue: '');
-  
+
   // Helper function to parse stored data with backward compatibility
   List<String> parseItems(String data) {
     if (data.isEmpty) return [];
-    
+
     // Check if it's the old pipe-separated format (no newlines)
     // If it contains no newlines but has pipes, it's likely old format
     if (!data.contains('\n') && data.contains('|')) {
       // Old format: pipe-separated
-      final parts = data.split('|').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
-      
+      final parts = data
+          .split('|')
+          .map((e) => e.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
+
       // Heuristic: check for complex regex
       if (parts.length > 1) {
-        final hasComplexRegex = parts.any((p) => 
-          p.contains('(') || p.contains('[') || p.contains('{') || 
-          p.contains('\\') || p.contains('^') || p.contains('\$')
+        final hasComplexRegex = parts.any(
+          (p) =>
+              p.contains('(') ||
+              p.contains('[') ||
+              p.contains('{') ||
+              p.contains('\\') ||
+              p.contains('^') ||
+              p.contains('\$'),
         );
-        
+
         if (!hasComplexRegex) {
           // Old format with simple keywords - migrate
           return parts;
         }
       }
-      
+
       // Might be a single complex regex pattern - keep as single item
       return [data];
     }
-    
+
     // New format: newline-separated
-    return data.split('\n').map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+    return data
+        .split('\n')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
   }
-  
+
   // Helper function to join items using newline
   String joinItems(List<String> items) {
     return items.join('\n');
   }
-  
+
   return NormalModel(
     leading: const Icon(Icons.filter_alt_outlined),
     title: title,
@@ -208,7 +221,7 @@ SettingsModel getListBanWordModel({
     },
     onTap: (context, setState) async {
       final items = parseItems(banWord);
-      
+
       final result = await showDialog<List<String>>(
         context: context,
         builder: (context) {
@@ -225,13 +238,17 @@ SettingsModel getListBanWordModel({
         banWord = joinItems(result);
         setState();
         // Build regex by joining all patterns with alternation
-        final regexPattern = result.isEmpty ? '' : result.map((item) {
-          // If the item is already a complex pattern, wrap in non-capturing group
-          if (item.contains('|') && !item.startsWith('(')) {
-            return '($item)';
-          }
-          return item;
-        }).join('|');
+        final regexPattern = result.isEmpty
+            ? ''
+            : result
+                  .map((item) {
+                    // If the item is already a complex pattern, wrap in non-capturing group
+                    if (item.contains('|') && !item.startsWith('(')) {
+                      return '($item)';
+                    }
+                    return item;
+                  })
+                  .join('|');
         onChanged(RegExp(regexPattern, caseSensitive: false));
         SmartDialog.showToast('已保存');
         GStorage.setting.put(key, banWord);
@@ -241,7 +258,7 @@ SettingsModel getListBanWordModel({
 }
 
 /// Creates a list-based UID filter model with user names using ListEditorDialog
-/// 
+///
 /// 支持显示用户名的 UID 过滤模型
 SettingsModel getListUidWithNameModel({
   required String title,
@@ -287,7 +304,7 @@ SettingsModel getListUidWithNameModel({
 
       if (result != null) {
         final newMap = <int, String>{};
-        
+
         for (final item in result) {
           // 解析格式 "用户名 (UID)" 或纯数字 "UID"
           final match = RegExp(r'(.+?)\s*\((\d+)\)$').firstMatch(item);
@@ -306,7 +323,7 @@ SettingsModel getListUidWithNameModel({
             }
           }
         }
-        
+
         setUidsMap(newMap);
         onUpdate();
         setState();
@@ -317,7 +334,7 @@ SettingsModel getListUidWithNameModel({
 }
 
 /// Creates a list-based UID filter model using ListEditorDialog
-/// 
+///
 /// 使用 getListUidModel 替代了上游的 getUidModel
 SettingsModel getListUidModel({
   required String title,
