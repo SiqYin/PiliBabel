@@ -939,6 +939,11 @@ abstract final class Pref {
     defaultValue: false,
   );
 
+  static bool get dynamicsShowSelfUp => _setting.get(
+    SettingBoxKey.dynamicsShowSelfUp,
+    defaultValue: true,
+  );
+
   static bool get enableShowDanmaku =>
       _setting.get(SettingBoxKey.enableShowDanmaku, defaultValue: true);
 

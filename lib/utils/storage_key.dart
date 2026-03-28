@@ -119,6 +119,7 @@ abstract final class SettingBoxKey {
       removeOnlyFansVideoDyn = 'removeOnlyFansVideoDyn',
       antiGoodsReply = 'antiGoodsReply',
       expandDynLivePanel = 'expandDynLivePanel',
+      dynamicsShowSelfUp = 'dynamicsShowSelfUp',
       springDescription = 'springDescription',
       enableHttp2 = 'enableHttp2',
       slideDismissReplyPage = 'slideDismissReplyPage',
