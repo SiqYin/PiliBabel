@@ -1,4 +1,4 @@
-import 'package:flutter/rendering.dart';
+import 'package:flutter/rendering.dart' show RenderProxyBox, BoxHitTestResult;
 import 'package:flutter/widgets.dart';
 
 class ExtraHitTestWidget extends SingleChildRenderObjectWidget {
