@@ -18,24 +18,18 @@ class AudioSessionHandler {
   }
 
   Future<void> _configureSession() async {
-    if (Pref.mixWithOthers) {
-      if (Platform.isIOS) {
-        await session.configure(
-          const AudioSessionConfiguration(
-            avAudioSessionCategory: AVAudioSessionCategory.playback,
-            avAudioSessionCategoryOptions:
-                AVAudioSessionCategoryOptions.mixWithOthers,
-            avAudioSessionMode: AVAudioSessionMode.defaultMode,
-            avAudioSessionRouteSharingPolicy:
-                AVAudioSessionRouteSharingPolicy.defaultPolicy,
-            avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
-          ),
-        );
-      } else if (Platform.isAndroid) {
-        // Android 端：既然要“同时播放”，我们直接不给 session 配置任何 Android 属性
-        // 这样插件就不会去触发 requestAudioFocus 逻辑
-        // 保持现状即可，甚至不需要调用任何 configure
-      }
+    if (Pref.mixWithOthers && Platform.isIOS) {
+      await session.configure(
+        const AudioSessionConfiguration(
+          avAudioSessionCategory: AVAudioSessionCategory.playback,
+          avAudioSessionCategoryOptions:
+              AVAudioSessionCategoryOptions.mixWithOthers,
+          avAudioSessionMode: AVAudioSessionMode.defaultMode,
+          avAudioSessionRouteSharingPolicy:
+              AVAudioSessionRouteSharingPolicy.defaultPolicy,
+          avAudioSessionSetActiveOptions: AVAudioSessionSetActiveOptions.none,
+        ),
+      );
     } else {
       await session.configure(const AudioSessionConfiguration.music());
     }
@@ -64,6 +58,8 @@ class AudioSessionHandler {
             // player.setVolume(player.volume.value * 0.5);
             break;
           case AudioInterruptionType.pause:
+            // 接收到其他 App 播放音频的通知，如果允许了同时播放，就无视
+            if (Pref.mixWithOthers) return;
             PlPlayerController.pauseIfExists(isInterrupt: true);
             // player.pause(isInterrupt: true);
             _playInterrupted = true;
