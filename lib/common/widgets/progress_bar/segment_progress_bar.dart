@@ -379,3 +379,79 @@ class BaseRenderProgressBar<T extends BaseSegment> extends RenderBox {
     size = constraints.constrainDimensions(constraints.maxWidth, height);
   }
 }
+
+class ViewPointDividerBar extends LeafRenderObjectWidget {
+  const ViewPointDividerBar({
+    super.key,
+    required this.segments,
+    this.dotRadius = 2.5,
+  });
+
+  final List<ViewPointSegment> segments;
+  final double dotRadius;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return _RenderViewPointDividerBar(
+      segments: segments,
+      dotRadius: dotRadius,
+    );
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderViewPointDividerBar renderObject,
+  ) {
+    renderObject
+      ..segments = segments
+      ..dotRadius = dotRadius;
+  }
+}
+
+class _RenderViewPointDividerBar extends RenderBox {
+  _RenderViewPointDividerBar({
+    required List<ViewPointSegment> segments,
+    required double dotRadius,
+  }) : _segments = segments,
+       _dotRadius = dotRadius;
+
+  List<ViewPointSegment> _segments;
+  set segments(List<ViewPointSegment> value) {
+    if (listEquals(_segments, value)) return;
+    _segments = value;
+    markNeedsPaint();
+  }
+
+  double _dotRadius;
+  set dotRadius(double value) {
+    if (_dotRadius == value) return;
+    _dotRadius = value;
+    markNeedsPaint();
+  }
+
+  @override
+  void performLayout() {
+    size = constraints.constrainDimensions(
+      constraints.maxWidth,
+      _dotRadius * 2,
+    );
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    final canvas = context.canvas;
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    final centerY = offset.dy + size.height / 2;
+    // Skip the last segment (its end = 1.0, which is the end of the bar)
+    final count = _segments.length;
+    for (int i = 0; i < count - 1; i++) {
+      final segment = _segments[i];
+      final x = offset.dx + segment.end * size.width;
+      canvas.drawCircle(Offset(x, centerY), _dotRadius, paint);
+    }
+  }
+}

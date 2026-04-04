@@ -491,7 +491,11 @@ class _MediaPageState extends CommonPageState<MinePage>
             icon: const Icon(Icons.refresh, size: 20),
           ),
         ),
-        _buildHistoryBody(theme, secondary, controller.historyLoadingState.value),
+        _buildHistoryBody(
+          theme,
+          secondary,
+          controller.historyLoadingState.value,
+        ),
       ],
     );
   }
@@ -510,7 +514,7 @@ class _MediaPageState extends CommonPageState<MinePage>
             return const SizedBox.shrink();
           }
           return SizedBox(
-            height: 165,
+            height: 170,
             child: ListView.separated(
               padding: const EdgeInsets.only(left: 20, top: 10, right: 20),
               itemCount: list.length + 1,
@@ -523,7 +527,9 @@ class _MediaPageState extends CommonPageState<MinePage>
                       child: IconButton(
                         tooltip: '查看更多',
                         style: ButtonStyle(
-                          padding: const WidgetStatePropertyAll(EdgeInsets.zero),
+                          padding: const WidgetStatePropertyAll(
+                            EdgeInsets.zero,
+                          ),
                           backgroundColor: WidgetStatePropertyAll(
                             theme.colorScheme.secondaryContainer.withValues(
                               alpha: 0.5,

@@ -495,37 +495,78 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       BottomControlType.viewPoints => Obx(
         () {
           if (videoDetailController.viewPointList.isNotEmpty) {
-            final show = videoDetailController.showVP.value;
+            final viewPoints = videoDetailController.viewPointList;
+            final positionSec =
+                plPlayerController.positionSeconds.value;
+            // Find current segment
+            String? currentTitle;
+            for (final seg in viewPoints) {
+              if (seg.from != null &&
+                  seg.to != null &&
+                  positionSec >= seg.from! &&
+                  positionSec < seg.to!) {
+                currentTitle = seg.title;
+                break;
+              }
+            }
+            if (currentTitle != null && currentTitle.isNotEmpty) {
+              final maxW =
+                  isLandscape && isFullScreen ? 160.0 : 120.0;
+              return GestureDetector(
+                onTap: widget.showViewPoints,
+                behavior: HitTestBehavior.opaque,
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: maxW),
+                  child: Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            currentTitle,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                        const Text(
+                          ' >',
+                          style: TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+            // Fallback: show icon if no segment matched
             return ComBtn(
               width: widgetWidth,
               height: 30,
               tooltip: '分段信息',
-              icon: DisabledIcon(
-                iconSize: 22,
-                color: Colors.white,
-                disable: !show,
-                child: Transform.rotate(
-                  angle: math.pi / 2,
-                  child: const Icon(
-                    Icons.reorder,
-                    size: 22,
-                    color: Colors.white,
-                  ),
+              icon: Transform.rotate(
+                angle: math.pi / 2,
+                child: const Icon(
+                  Icons.reorder,
+                  size: 22,
+                  color: Colors.white,
                 ),
               ),
               onTap: widget.showViewPoints,
-              onLongPress: () {
-                Feedback.forLongPress(context);
-                videoDetailController.showVP.value = !show;
-              },
-              onSecondaryTap: PlatformUtils.isMobile
-                  ? null
-                  : () => videoDetailController.showVP.value = !show,
             );
           }
           return const SizedBox.shrink();
         },
       ),
+
 
       /// 选集
       BottomControlType.episode => ComBtn(
@@ -1788,6 +1829,17 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         ),
                       if (!widget.isPipMode &&
                           plPlayerController.showViewPoints &&
+                          videoDetailController.viewPointList.isNotEmpty)
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: ViewPointDividerBar(
+                            segments: videoDetailController.viewPointList,
+                          ),
+                        ),
+                      if (!widget.isPipMode &&
+                          plPlayerController.showViewPoints &&
                           videoDetailController.viewPointList.isNotEmpty &&
                           videoDetailController.showVP.value)
                         Padding(
@@ -1802,6 +1854,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                                 : null,
                           ),
                         ),
+
                       if (!widget.isPipMode &&
                           plPlayerController.showDmChart &&
                           videoDetailController.showDmTrendChart.value)

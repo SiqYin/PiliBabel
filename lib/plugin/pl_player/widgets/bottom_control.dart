@@ -106,6 +106,17 @@ class BottomControl extends StatelessWidget {
                       ),
                     if (!isPipMode &&
                         controller.showViewPoints &&
+                        videoDetailController.viewPointList.isNotEmpty)
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 4.5,
+                        child: ViewPointDividerBar(
+                          segments: videoDetailController.viewPointList,
+                        ),
+                      ),
+                    if (!isPipMode &&
+                        controller.showViewPoints &&
                         videoDetailController.viewPointList.isNotEmpty &&
                         videoDetailController.showVP.value)
                       Padding(
@@ -118,6 +129,7 @@ class BottomControl extends StatelessWidget {
                               : null,
                         ),
                       ),
+
                     if (!isPipMode && videoDetailController.showDmTrendChart.value)
                       if (videoDetailController.dmTrend.value?.dataOrNull
                           case final list?)
