@@ -1,13 +1,17 @@
 import 'dart:io' show Platform;
+import 'dart:math' as math;
 
+import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/dialog/report_member.dart';
 import 'package:PiliPlus/common/widgets/dynamic_sliver_app_bar/dynamic_sliver_app_bar.dart';
+import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart';
 import 'package:PiliPlus/http/live.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/user.dart';
 import 'package:PiliPlus/models_new/live/live_medal_wall/data.dart';
+import 'package:PiliPlus/models_new/space/space/reservation_card_list.dart';
 import 'package:PiliPlus/pages/coin_log/controller.dart';
 import 'package:PiliPlus/pages/exp_log/controller.dart';
 import 'package:PiliPlus/pages/log_table/view.dart';
@@ -15,6 +19,7 @@ import 'package:PiliPlus/pages/login_devices/view.dart';
 import 'package:PiliPlus/pages/login_log/controller.dart';
 import 'package:PiliPlus/pages/member/controller.dart';
 import 'package:PiliPlus/pages/member/widget/medal_wall.dart';
+import 'package:PiliPlus/pages/member/widget/reserve_button.dart';
 import 'package:PiliPlus/pages/member/widget/user_info_card.dart';
 import 'package:PiliPlus/pages/member_cheese/view.dart';
 import 'package:PiliPlus/pages/member_contribute/controller.dart';
@@ -27,6 +32,7 @@ import 'package:PiliPlus/pages/member_shop/view.dart';
 import 'package:PiliPlus/pages/member_video_web/archive/view.dart';
 import 'package:PiliPlus/pages/member_video_web/season_series/view.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
+import 'package:PiliPlus/utils/extension/context_ext.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
@@ -156,7 +162,150 @@ class _MemberPageState extends State<MemberPage> {
     );
   }
 
+  Widget _reserveBtn(List<ReservationCardItem> list, ColorScheme theme) {
+    return IconButton(
+      tooltip: '预约',
+      onPressed: () => _showReserveList(list),
+      icon: ReserveButton(
+        count: list.length,
+        color: theme.onSurfaceVariant,
+        child: const Icon(Icons.notifications_none),
+      ),
+    );
+  }
+
+  void _showReserveList(List<ReservationCardItem> list) {
+    showModalBottomSheet(
+      context: context,
+      useSafeArea: true,
+      isScrollControlled: true,
+      constraints: BoxConstraints(
+        maxWidth: math.min(640, context.mediaQueryShortestSide),
+      ),
+      builder: (context) {
+        final scheme = ColorScheme.of(context);
+        return Padding(
+          padding: .only(bottom: MediaQuery.viewPaddingOf(context).bottom + 30),
+          child: Column(
+            mainAxisSize: .min,
+            children: [
+              InkWell(
+                onTap: Get.back,
+                borderRadius: Style.bottomSheetRadius,
+                child: SizedBox(
+                  height: 35,
+                  child: Center(
+                    child: Container(
+                      width: 32,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: scheme.outline,
+                        borderRadius: const .all(.circular(1.5)),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              ...list.map((e) {
+                return Builder(
+                  builder: (context) {
+                    return ListTile(
+                      dense: true,
+                      title: Text(
+                        e.name!,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                      subtitle: Padding(
+                        padding: const .only(top: 2.0),
+                        child: Text.rich(
+                          style: TextStyle(fontSize: 12, color: scheme.outline),
+                          TextSpan(
+                            children: [
+                              TextSpan(text: '${e.descText1}  ${e.total}人预约'),
+                              if (e.lotteryPrizeInfo case final lottery?) ...[
+                                const TextSpan(text: '\n'),
+                                WidgetSpan(
+                                  alignment: .middle,
+                                  child: Icon(
+                                    size: 15,
+                                    Icons.card_giftcard,
+                                    color: scheme.primary,
+                                  ),
+                                ),
+                                TextSpan(
+                                  text: ' ${lottery.text}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: scheme.primary,
+                                  ),
+                                  recognizer:
+                                      lottery.jumpUrl?.isNotEmpty == true
+                                      ? (NoDeadlineTapGestureRecognizer()
+                                          ..onTap = () => Get.toNamed(
+                                            '/webview',
+                                            parameters: {
+                                              'url': lottery.jumpUrl!,
+                                            },
+                                          ))
+                                      : null,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ),
+                      trailing: FilledButton.tonal(
+                        onPressed: () async {
+                          final isFollow = e.isFollow;
+                          final res = await UserHttp.spaceReserve(
+                            sid: e.sid!,
+                            isFollow: isFollow,
+                          );
+                          if (res.isSuccess) {
+                            if (!context.mounted) return;
+                            e
+                              ..total += isFollow ? -1 : 1
+                              ..isFollow = !isFollow;
+                            (context as Element).markNeedsBuild();
+                          } else {
+                            res.toast();
+                          }
+                        },
+                        style: FilledButton.styleFrom(
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: .all(.circular(6)),
+                          ),
+                          backgroundColor: e.isFollow
+                              ? scheme.onInverseSurface
+                              : null,
+                          foregroundColor: e.isFollow ? scheme.outline : null,
+                          visualDensity: const VisualDensity(
+                            horizontal: -2,
+                            vertical: -3,
+                          ),
+                          tapTargetSize: .shrinkWrap,
+                          padding: const .symmetric(horizontal: 10),
+                          minimumSize: const Size(68, 40),
+                        ),
+                        child: Text(
+                          '${e.isFollow ? '已' : ''}预约',
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   List<Widget> _actions(ColorScheme theme) => [
+    if (_userController.reserves?.isNotEmpty ?? false)
+      _reserveBtn(_userController.reserves!, theme),
     IconButton(
       tooltip: '搜索',
       onPressed: () => Get.toNamed(

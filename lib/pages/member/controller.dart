@@ -9,6 +9,7 @@ import 'package:PiliPlus/models/model_owner.dart';
 import 'package:PiliPlus/models_new/space/space/data.dart';
 import 'package:PiliPlus/models_new/space/space/elec.dart';
 import 'package:PiliPlus/models_new/space/space/live.dart';
+import 'package:PiliPlus/models_new/space/space/reservation_card_list.dart';
 import 'package:PiliPlus/models_new/space/space/setting.dart';
 import 'package:PiliPlus/models_new/space/space/tab2.dart';
 import 'package:PiliPlus/pages/common/common_data_controller.dart';
@@ -53,6 +54,8 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
   Object? guardCount;
   bool get hasGuard => guards?.isNotEmpty ?? false;
 
+  List<ReservationCardItem>? reserves;
+
   final fromViewAid = Get.parameters['from_view_aid'];
 
   final key = GlobalKey<ExtendedNestedScrollViewState>();
@@ -77,6 +80,8 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
     final guard = data.guard;
     guards = guard?.item;
     guardCount = guard?.count;
+
+    reserves = data.reservationCardList;
 
     if (data.relation == -1) {
       relation.value = 128;
