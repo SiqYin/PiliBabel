@@ -1,3 +1,5 @@
+import 'package:PiliPlus/models/model_owner.dart';
+
 class Elec {
   int? total;
   List<ElecItem>? list;
@@ -15,9 +17,11 @@ class Elec {
   );
 }
 
-class ElecItem {
+class ElecItem extends Owner {
   String? uname;
   String? avatar;
+  @override
+  String? get face => avatar;
 
   ElecItem({
     this.uname,

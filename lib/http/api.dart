@@ -997,4 +997,7 @@ abstract final class Api {
 
   static const String liveMedalWall =
       '${HttpString.liveBaseUrl}/xlive/web-ucenter/user/MedalWall';
+
+  static const String memberGuard =
+      '${HttpString.liveBaseUrl}/xlive/app-ucenter/v1/guard/MainGuardCardAll';
 }
