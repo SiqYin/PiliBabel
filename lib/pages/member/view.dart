@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 import 'dart:math' as math;
 
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/dialog/report_member.dart';
 import 'package:PiliPlus/common/widgets/dynamic_sliver_app_bar/dynamic_sliver_app_bar.dart';
 import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
@@ -33,6 +34,7 @@ import 'package:PiliPlus/pages/member_video_web/archive/view.dart';
 import 'package:PiliPlus/pages/member_video_web/season_series/view.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
+import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
@@ -209,6 +211,60 @@ class _MemberPageState extends State<MemberPage> {
               ...list.map((e) {
                 return Builder(
                   builder: (context) {
+                    Widget trailing = FilledButton.tonal(
+                      onPressed: () async {
+                        final isFollow = e.isFollow;
+                        final res = await UserHttp.spaceReserve(
+                          sid: e.sid!,
+                          isFollow: isFollow,
+                        );
+                        if (res.isSuccess) {
+                          if (!context.mounted) return;
+                          e
+                            ..total += isFollow ? -1 : 1
+                            ..isFollow = !isFollow;
+                          (context as Element).markNeedsBuild();
+                        } else {
+                          res.toast();
+                        }
+                      },
+                      style: FilledButton.styleFrom(
+                        backgroundColor: e.isFollow
+                            ? scheme.onInverseSurface
+                            : null,
+                        foregroundColor: e.isFollow ? scheme.outline : null,
+                        tapTargetSize: .shrinkWrap,
+                        minimumSize: const Size(68, 40),
+                        padding: const .symmetric(horizontal: 10),
+                        visualDensity: const .new(horizontal: -2, vertical: -3),
+                        shape: const RoundedRectangleBorder(
+                          borderRadius: .all(.circular(6)),
+                        ),
+                      ),
+                      child: Text(
+                        '${e.isFollow ? '已' : ''}预约',
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    );
+                    if (e.dynamicId?.isNotEmpty ?? false) {
+                      trailing = Row(
+                        spacing: 8,
+                        mainAxisSize: .min,
+                        children: [
+                          iconButton(
+                            tooltip: '预约动态',
+                            size: 32,
+                            iconSize: 20,
+                            iconColor: scheme.outline,
+                            icon: const Icon(Icons.open_in_browser),
+                            onPressed: () => PageUtils.pushDynFromId(
+                              id: e.dynamicId,
+                            ),
+                          ),
+                          trailing,
+                        ],
+                      );
+                    }
                     return ListTile(
                       dense: true,
                       title: Text(
@@ -221,7 +277,11 @@ class _MemberPageState extends State<MemberPage> {
                           style: TextStyle(fontSize: 12, color: scheme.outline),
                           TextSpan(
                             children: [
-                              TextSpan(text: '${e.descText1}  ${e.total}人预约'),
+                              TextSpan(
+                                text:
+                                    '${e.descText1 == null ? '' : '${e.descText1}  '}'
+                                    '${NumUtils.numFormat(e.total)}人预约',
+                              ),
                               if (e.lotteryPrizeInfo case final lottery?) ...[
                                 const TextSpan(text: '\n'),
                                 WidgetSpan(
@@ -254,44 +314,7 @@ class _MemberPageState extends State<MemberPage> {
                           ),
                         ),
                       ),
-                      trailing: FilledButton.tonal(
-                        onPressed: () async {
-                          final isFollow = e.isFollow;
-                          final res = await UserHttp.spaceReserve(
-                            sid: e.sid!,
-                            isFollow: isFollow,
-                          );
-                          if (res.isSuccess) {
-                            if (!context.mounted) return;
-                            e
-                              ..total += isFollow ? -1 : 1
-                              ..isFollow = !isFollow;
-                            (context as Element).markNeedsBuild();
-                          } else {
-                            res.toast();
-                          }
-                        },
-                        style: FilledButton.styleFrom(
-                          shape: const RoundedRectangleBorder(
-                            borderRadius: .all(.circular(6)),
-                          ),
-                          backgroundColor: e.isFollow
-                              ? scheme.onInverseSurface
-                              : null,
-                          foregroundColor: e.isFollow ? scheme.outline : null,
-                          visualDensity: const VisualDensity(
-                            horizontal: -2,
-                            vertical: -3,
-                          ),
-                          tapTargetSize: .shrinkWrap,
-                          padding: const .symmetric(horizontal: 10),
-                          minimumSize: const Size(68, 40),
-                        ),
-                        child: Text(
-                          '${e.isFollow ? '已' : ''}预约',
-                          style: const TextStyle(fontSize: 13),
-                        ),
-                      ),
+                      trailing: trailing,
                     );
                   },
                 );

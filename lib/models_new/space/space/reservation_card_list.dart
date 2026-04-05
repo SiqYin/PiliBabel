@@ -1,3 +1,5 @@
+import 'package:PiliPlus/utils/parse_string.dart';
+
 class ReservationCardItem {
   int? sid;
   String? name;
@@ -26,7 +28,7 @@ class ReservationCardItem {
         total: json['total'] ?? 0,
         isFollow: json['is_follow'] == 1,
         livePlanStartTime: json['live_plan_start_time'] as int?,
-        descText1: json['desc_text_1']?['text'],
+        descText1: noneNullOrEmptyString(json['desc_text_1']?['text']),
         dynamicId: json['dynamic_id'] as String?,
         lotteryPrizeInfo: json['lottery_prize_info'] == null
             ? null
