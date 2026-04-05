@@ -431,7 +431,9 @@ abstract final class UserHttp {
     }
   }
 
-  static Future<LoadingState<void>> spaceSettingMod(Map data) async {
+  static Future<LoadingState<void>> spaceSettingMod(
+    Map<String, dynamic> data,
+  ) async {
     final res = await Request().post(
       Api.spaceSettingMod,
       queryParameters: {

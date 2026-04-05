@@ -244,7 +244,7 @@ class UserInfoCard extends StatelessWidget {
           child: Text.rich(
             TextSpan(
               children: [
-                if (card.officialVerify?.icon?.isNotEmpty == true) ...[
+                if (card.officialVerify?.spliceTitle?.isNotEmpty == true) ...[
                   WidgetSpan(
                     alignment: PlaceholderAlignment.middle,
                     child: DecoratedBox(
