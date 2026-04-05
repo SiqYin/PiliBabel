@@ -28,6 +28,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
   MemberController({required this.mid});
   int mid;
   String? username;
+  String? userAvatar;
 
   late final account = Accounts.main;
 
@@ -71,7 +72,10 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
     final data = response.response;
     final card = data.card;
     username = card?.name ?? '';
+    userAvatar = card?.face;
+
     isFollowed = card?.relation?.isFollowed;
+
     // charge
     final elec = data.elec;
     charges = elec?.list;
