@@ -330,6 +330,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
         _logSponsorBlock('First postFrameCallback executing');
 
+        videoDetailController.videoState.value = true;
         videoDetailController.videoState.refresh();
         videoDetailController.cid.refresh();
         videoDetailController.cover.refresh();
@@ -342,6 +343,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           );
           savedIntroController.videoDetail.refresh();
           savedIntroController.status.refresh();
+          savedIntroController.update();
+        } else if (videoDetailController.isFileSource &&
+            savedIntroController is LocalIntroController) {
+          savedIntroController.videoDetail.refresh();
           savedIntroController.update();
         } else if (!videoDetailController.isUgc &&
             !videoDetailController.isFileSource &&
