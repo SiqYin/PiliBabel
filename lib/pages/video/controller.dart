@@ -1129,6 +1129,18 @@ class VideoDetailController extends GetxController
       epId: epId,
     );
     if (res case Success(:final response)) {
+      if (response.lastPlayTime != null && response.lastPlayTime! > 0) {
+        if (Accounts.get(AccountType.video).mid !=
+            Accounts.get(AccountType.heartbeat).mid) {
+          if (plPlayerController.position.inSeconds <= 3) {
+            plPlayerController.seekTo(
+              Duration(milliseconds: response.lastPlayTime!),
+            );
+            SmartDialog.showToast('已跳转至上次观看位置');
+          }
+        }
+      }
+
       // interactive video
       if (isUgc && graphVersion == null) {
         try {
