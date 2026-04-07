@@ -270,6 +270,7 @@ abstract final class LocalCacheKey {
       dynamicsBlockedMids = 'dynamicsBlockedMids',
       recommendBlockedMids = 'recommendBlockedMids',
       danmakuFilterRules = 'danmakuFilterRules',
+      downloadCollections = 'downloadCollections',
       mixinKey = 'mixinKey',
       timeStamp = 'timeStamp',
       buvid = 'buvid';

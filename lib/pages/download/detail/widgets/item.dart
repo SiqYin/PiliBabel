@@ -11,6 +11,7 @@ import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/models/common/video/source_type.dart';
 import 'package:PiliPlus/models/common/video/video_quality.dart';
 import 'package:PiliPlus/models_new/download/bili_download_entry_info.dart';
+import 'package:PiliPlus/models_new/download/download_collection.dart';
 import 'package:PiliPlus/pages/common/multi_select/base.dart';
 import 'package:PiliPlus/pages/download/downloading/view.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
@@ -35,6 +36,9 @@ class DetailItem extends StatelessWidget {
     this.onDelete,
     required this.showTitle,
     this.isCurr = false,
+    this.playContext,
+    this.deleteLabel = '删除',
+    this.deleteConfirmText,
     //
     required this.controller,
     this.checked,
@@ -47,6 +51,9 @@ class DetailItem extends StatelessWidget {
   final VoidCallback? onDelete;
   final bool showTitle;
   final bool isCurr;
+  final DownloadVideoPlayContext? playContext;
+  final String deleteLabel;
+  final String? deleteConfirmText;
   //
   final MultiSelectBase controller;
   final bool? checked;
@@ -73,14 +80,14 @@ class DetailItem extends StatelessWidget {
                       Get.back();
                       showConfirmDialog(
                         context: context,
-                        title: const Text('确定删除该视频？'),
+                        title: Text(deleteConfirmText ?? '确定删除该视频？'),
                         onConfirm: onDelete,
                       );
                     },
                     dense: true,
-                    title: const Text(
-                      '删除',
-                      style: TextStyle(fontSize: 14),
+                    title: Text(
+                      deleteLabel,
+                      style: const TextStyle(fontSize: 14),
                     ),
                   ),
                   ListTile(
@@ -130,6 +137,7 @@ class DetailItem extends StatelessWidget {
                 'sourceType': SourceType.file,
                 'entry': entry,
                 'dirPath': entry.entryDirPath,
+                ...?playContext?.toArguments(),
               },
             );
             if (context.mounted) {
