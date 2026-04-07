@@ -292,7 +292,10 @@ class DownloadCollectionService extends GetxService {
   }
 
   Future<bool> _syncWithDownloads({bool notify = true}) async {
-    final validCids = _downloadService.downloadList.map((item) => item.cid).toSet();
+    final validCids = _downloadService.downloadList
+        .followedBy(_downloadService.waitDownloadQueue)
+        .map((item) => item.cid)
+        .toSet();
     var changed = false;
 
     final beforeOrderLength = _allVideoOrder.length;

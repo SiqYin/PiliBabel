@@ -42,6 +42,8 @@ class DetailItem extends StatelessWidget {
     this.deleteConfirmText,
     this.customOnLongPress,
     this.extraMoreItemsBuilder,
+    this.enableTap = true,
+    this.showMoreButton = true,
     //
     required this.controller,
     this.checked,
@@ -60,6 +62,8 @@ class DetailItem extends StatelessWidget {
   final VoidCallback? customOnLongPress;
   final List<PopupMenuEntry<void>> Function(BuildContext context)?
   extraMoreItemsBuilder;
+  final bool enableTap;
+  final bool showMoreButton;
   //
   final MultiSelectBase controller;
   final bool? checked;
@@ -82,53 +86,59 @@ class DetailItem extends StatelessWidget {
     return Material(
       type: MaterialType.transparency,
       child: InkWell(
-        onTap: () async {
-          if (!canDel) {
-            Get.to(const DownloadingPage());
-            return;
-          }
-          if (enableMultiSelect) {
-            (onSelect ?? controller.onSelect).call(entry);
-            return;
-          }
-          if (entry.isCompleted) {
-            await PageUtils.toVideoPage(
-              aid: entry.avid,
-              cid: cid!,
-              cover: entry.cover,
-              title: entry.showTitle,
-              extraArguments: {
-                'sourceType': SourceType.file,
-                'entry': entry,
-                'dirPath': entry.entryDirPath,
-                ...?playContext?.toArguments(),
-              },
-            );
-            if (context.mounted) {
-              Future.delayed(const Duration(milliseconds: 400), () {
-                if (context.mounted) {
-                  // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
-                  progress?.notifyListeners();
+        onTap: enableTap
+            ? () async {
+                if (!canDel) {
+                  Get.to(const DownloadingPage());
+                  return;
                 }
-              });
-            }
-          } else {
-            final curDownload = downloadService.curDownload.value;
-            if (curDownload != null &&
-                curDownload.cid == cid &&
-                curDownload.status.isDownloading) {
-              downloadService.cancelDownload(
-                isDelete: false,
-                downloadNext: false,
-              );
-            } else {
-              downloadService.startDownload(entry);
-            }
-          }
-        },
-        onLongPress: customOnLongPress != null ? onLongPress : null,
-        onSecondaryTap:
-            PlatformUtils.isMobile || customOnLongPress == null ? null : onLongPress,
+                if (enableMultiSelect) {
+                  (onSelect ?? controller.onSelect).call(entry);
+                  return;
+                }
+                if (entry.isCompleted) {
+                  await PageUtils.toVideoPage(
+                    aid: entry.avid,
+                    cid: cid!,
+                    cover: entry.cover,
+                    title: entry.showTitle,
+                    extraArguments: {
+                      'sourceType': SourceType.file,
+                      'entry': entry,
+                      'dirPath': entry.entryDirPath,
+                      ...?playContext?.toArguments(),
+                    },
+                  );
+                  if (context.mounted) {
+                    Future.delayed(const Duration(milliseconds: 400), () {
+                      if (context.mounted) {
+                        // ignore: invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+                        progress?.notifyListeners();
+                      }
+                    });
+                  }
+                } else {
+                  final curDownload = downloadService.curDownload.value;
+                  if (curDownload != null &&
+                      curDownload.cid == cid &&
+                      curDownload.status.isDownloading) {
+                    downloadService.cancelDownload(
+                      isDelete: false,
+                      downloadNext: false,
+                    );
+                  } else {
+                    downloadService.startDownload(entry);
+                  }
+                }
+              }
+            : null,
+        onLongPress:
+            enableTap && customOnLongPress != null ? onLongPress : null,
+        onSecondaryTap: !enableTap ||
+                PlatformUtils.isMobile ||
+                customOnLongPress == null
+            ? null
+            : onLongPress,
         child: Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: Style.safeSpace,
@@ -312,11 +322,12 @@ class DetailItem extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Positioned(
-                        right: 0,
-                        bottom: 0,
-                        child: _buildMoreBtn(context, theme),
-                      ),
+                      if (showMoreButton)
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: _buildMoreBtn(context, theme),
+                        ),
                     ] else
                       Positioned(
                         left: 0,
