@@ -100,6 +100,52 @@ abstract final class Pref {
     _localCache.put(LocalCacheKey.dynamicsBlockedMids, blockedMidsSet);
   }
 
+  static Map<int, String> get whitelistMids {
+    final data = _localCache.get(LocalCacheKey.whitelistMids);
+
+    if (data is Set) {
+      final map = <int, String>{};
+      for (final mid in data) {
+        if (mid is int) {
+          map[mid] = 'UID:$mid';
+        }
+      }
+      _localCache.put(LocalCacheKey.whitelistMids, map);
+      return map;
+    }
+
+    if (data is Map) {
+      final map = <int, String>{};
+      for (final entry in data.entries) {
+        final key = entry.key;
+        final value = entry.value;
+
+        int? uid;
+        if (key is int) {
+          uid = key;
+        } else if (key is String) {
+          uid = int.tryParse(key);
+        }
+
+        if (uid != null && value is String) {
+          map[uid] = value;
+        }
+      }
+
+      if (map.isNotEmpty && data.keys.first is! int) {
+        _localCache.put(LocalCacheKey.whitelistMids, map);
+      }
+
+      return map;
+    }
+
+    return <int, String>{};
+  }
+
+  static set whitelistMids(Map<int, String> whitelistMidsMap) {
+    _localCache.put(LocalCacheKey.whitelistMids, whitelistMidsMap);
+  }
+
   static Map<int, String> get recommendBlockedMids {
     final data = _localCache.get(LocalCacheKey.recommendBlockedMids);
 

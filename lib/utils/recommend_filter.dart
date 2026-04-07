@@ -1,4 +1,5 @@
 import 'package:PiliPlus/models/model_video.dart';
+import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 
 abstract final class RecommendFilter {
@@ -17,7 +18,14 @@ abstract final class RecommendFilter {
   static bool enableFilter = rcmdRegExp.pattern.isNotEmpty;
   static Map<int, String> recommendBlockedMids = Pref.recommendBlockedMids;
 
+  static bool isWhitelisted(int? mid) {
+    return mid != null && GlobalData().whitelistMids.containsKey(mid);
+  }
+
   static bool filter(BaseVideoItemModel videoItem) {
+    if (isWhitelisted(videoItem.owner.mid)) {
+      return false;
+    }
     //由于相关视频中没有已关注标签，只能视为非关注视频
     if (videoItem.isFollowed && exemptFilterForFollowed) {
       return false;
@@ -40,12 +48,16 @@ abstract final class RecommendFilter {
   }
 
   static bool filterUser(int? mid) {
-    return recommendBlockedMids.isNotEmpty && 
-           mid != null && 
-           recommendBlockedMids.containsKey(mid);
+    return !isWhitelisted(mid) &&
+        recommendBlockedMids.isNotEmpty &&
+        mid != null &&
+        recommendBlockedMids.containsKey(mid);
   }
 
   static bool filterAll(BaseVideoItemModel videoItem) {
+    if (isWhitelisted(videoItem.owner.mid)) {
+      return false;
+    }
     return (videoItem.duration > 0 &&
             videoItem.duration < minDurationForRcmd) ||
         filterLikeRatio(videoItem.stat.like, videoItem.stat.view) ||

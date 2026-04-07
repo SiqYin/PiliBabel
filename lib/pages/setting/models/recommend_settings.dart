@@ -6,6 +6,7 @@ import 'package:PiliPlus/utils/recommend_filter.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:PiliPlus/utils/user_whitelist.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
@@ -83,6 +84,17 @@ List<SettingsModel> get recommendSettings => [
       GlobalData().recommendBlockedMids = uidsMap;
       RecommendFilter.recommendBlockedMids = uidsMap;
     },
+    onUpdate: () {
+      // Changes are immediately reflected
+    },
+  ),
+  getListUidWithNameModel(
+    title: '白名单用户',
+    leading: const Icon(Icons.person_add_alt_1_outlined),
+    emptySubtitle: '点击添加白名单用户',
+    countSubtitleBuilder: (count) => '已加入白名单 $count 个用户',
+    getUidsMap: () => Pref.whitelistMids,
+    setUidsMap: UserWhitelist.save,
     onUpdate: () {
       // Changes are immediately reflected
     },

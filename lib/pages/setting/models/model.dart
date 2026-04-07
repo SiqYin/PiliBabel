@@ -265,14 +265,18 @@ SettingsModel getListUidWithNameModel({
   required Map<int, String> Function() getUidsMap,
   required void Function(Map<int, String>) setUidsMap,
   required void Function() onUpdate,
+  Widget? leading,
+  String emptySubtitle = '点击添加',
+  String Function(int count)? countSubtitleBuilder,
 }) {
   return NormalModel(
-    leading: const Icon(Icons.person_off_outlined),
+    leading: leading ?? const Icon(Icons.person_off_outlined),
     title: title,
     getSubtitle: () {
       final uidsMap = getUidsMap();
-      if (uidsMap.isEmpty) return '点击添加';
-      return '已屏蔽 ${uidsMap.length} 个用户';
+      if (uidsMap.isEmpty) return emptySubtitle;
+      return countSubtitleBuilder?.call(uidsMap.length) ??
+          '已屏蔽 ${uidsMap.length} 个用户';
     },
     onTap: (context, setState) async {
       final uidsMap = getUidsMap();

@@ -24,6 +24,7 @@ import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:PiliPlus/utils/user_whitelist.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -381,6 +382,27 @@ class AuthorPanel extends StatelessWidget {
                     );
                     SmartDialog.showToast(
                       '已临时屏蔽${moduleAuthor.name}(${moduleAuthor.mid!})，重启恢复',
+                    );
+                  } catch (_) {}
+                },
+                minLeadingWidth: 0,
+              ),
+              ListTile(
+                title: Text(
+                  '加入白名单：${moduleAuthor.name}',
+                  style: theme.textTheme.titleSmall,
+                ),
+                leading: const Icon(Icons.person_add_alt_1_outlined, size: 19),
+                onTap: () {
+                  Get.back();
+                  try {
+                    final mid = moduleAuthor.mid!;
+                    UserWhitelist.add(mid: mid, name: moduleAuthor.name ?? '');
+                    try {
+                      Get.find<DynamicsController>().tempBannedList.remove(mid);
+                    } catch (_) {}
+                    SmartDialog.showToast(
+                      '已将${moduleAuthor.name}(${mid})加入白名单',
                     );
                   } catch (_) {}
                 },

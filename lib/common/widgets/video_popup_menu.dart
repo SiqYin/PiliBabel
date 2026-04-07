@@ -14,6 +14,7 @@ import 'package:PiliPlus/utils/recommend_filter.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:PiliPlus/utils/user_whitelist.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -67,6 +68,17 @@ class VideoPopupMenu extends StatelessWidget {
     RecommendFilter.recommendBlockedMids = blockedMids;
     SmartDialog.showToast('已屏蔽$name($mid)，可在推荐流设置中管理');
     onRemove?.call();
+  }
+
+  void _addWhitelistedUser() {
+    final mid = videoItem.owner.mid;
+    if (mid == null) {
+      SmartDialog.showToast('无法获取用户ID');
+      return;
+    }
+    final name = videoItem.owner.name ?? 'UID:$mid';
+    UserWhitelist.add(mid: mid, name: name);
+    SmartDialog.showToast('已将$name($mid)加入白名单');
   }
 
   void _appendKeyword({
@@ -339,6 +351,11 @@ class VideoPopupMenu extends StatelessWidget {
                     '本地屏蔽',
                     const Icon(MdiIcons.accountOff, size: 16),
                     () => _showLocalBlockDialog(context),
+                  ),
+                  _VideoCustomAction(
+                    '加白：${videoItem.owner.name}',
+                    const Icon(Icons.person_add_alt_1_outlined, size: 16),
+                    _addWhitelistedUser,
                   ),
                   _VideoCustomAction(
                     '不感兴趣',

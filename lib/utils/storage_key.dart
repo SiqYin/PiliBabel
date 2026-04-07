@@ -268,6 +268,7 @@ abstract final class LocalCacheKey {
   static const String historyPause = 'historyPause',
       blackMids = 'blackMids',
       dynamicsBlockedMids = 'dynamicsBlockedMids',
+      whitelistMids = 'whitelistMids',
       recommendBlockedMids = 'recommendBlockedMids',
       danmakuFilterRules = 'danmakuFilterRules',
       downloadCollections = 'downloadCollections',

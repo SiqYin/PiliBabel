@@ -27,6 +27,7 @@ abstract final class GStorage {
     'historyPause',
     'blackMids',
     'dynamicsBlockedMids',
+    'whitelistMids',
     'recommendBlockedMids',
     'danmakuFilterRules',
   ];
@@ -145,6 +146,7 @@ abstract final class GStorage {
     return switch (key) {
       'blackMids' ||
       'dynamicsBlockedMids' => value is Set ? value.toList() : value,
+      'whitelistMids' ||
       'recommendBlockedMids' =>
         value is Map ? value.map((k, v) => MapEntry(k.toString(), v)) : value,
       'danmakuFilterRules' =>
@@ -163,6 +165,7 @@ abstract final class GStorage {
     return switch (key) {
       'blackMids' || 'dynamicsBlockedMids' =>
         value is List ? value.whereType<int>().toSet() : value,
+      'whitelistMids' ||
       'recommendBlockedMids' =>
         value is Map
             ? value.map(

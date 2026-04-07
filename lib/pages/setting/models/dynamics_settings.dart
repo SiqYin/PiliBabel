@@ -3,6 +3,7 @@ import 'package:PiliPlus/pages/setting/models/model.dart';
 import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:PiliPlus/utils/user_whitelist.dart';
 import 'package:flutter/material.dart';
 
 List<SettingsModel> get dynamicsSettings => [
@@ -22,6 +23,17 @@ List<SettingsModel> get dynamicsSettings => [
       GlobalData().dynamicsBlockedMids = uids;
       DynamicsDataModel.dynamicsBlockedMids = uids;
     },
+    onUpdate: () {
+      // Changes are immediately reflected
+    },
+  ),
+  getListUidWithNameModel(
+    title: '白名单用户',
+    leading: const Icon(Icons.person_add_alt_1_outlined),
+    emptySubtitle: '点击添加白名单用户',
+    countSubtitleBuilder: (count) => '已加入白名单 $count 个用户',
+    getUidsMap: () => Pref.whitelistMids,
+    setUidsMap: UserWhitelist.save,
     onUpdate: () {
       // Changes are immediately reflected
     },

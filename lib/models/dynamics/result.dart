@@ -7,6 +7,7 @@ import 'package:PiliPlus/models/model_avatar.dart';
 import 'package:PiliPlus/models/model_owner.dart';
 import 'package:PiliPlus/models_new/live/live_feed_index/watched_show.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
+import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/parse_string.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -61,9 +62,15 @@ class DynamicsDataModel {
       items = <DynamicItemModel>[];
       late final filterBan =
           type != DynamicsTabType.up && tempBannedList?.isNotEmpty == true;
-      late final filterBlockedUsers = type != DynamicsTabType.up && dynamicsBlockedMids.isNotEmpty;
+      late final filterBlockedUsers =
+          type != DynamicsTabType.up && dynamicsBlockedMids.isNotEmpty;
+      final whitelistMids = GlobalData().whitelistMids;
       for (final e in list) {
         DynamicItemModel item = DynamicItemModel.fromJson(e);
+        if (whitelistMids.containsKey(item.modules.moduleAuthor?.mid)) {
+          items!.add(item);
+          continue;
+        }
         if (removeBlockedDyn &&
             (item.hasNoPrivilegeDynamic ||
                 (item.orig?.hasNoPrivilegeDynamic ?? false))) {
