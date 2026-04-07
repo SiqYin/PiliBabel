@@ -353,11 +353,6 @@ class VideoPopupMenu extends StatelessWidget {
                     () => _showLocalBlockDialog(context),
                   ),
                   _VideoCustomAction(
-                    '加白：${videoItem.owner.name}',
-                    const Icon(Icons.person_add_alt_1_outlined, size: 16),
-                    _addWhitelistedUser,
-                  ),
-                  _VideoCustomAction(
                     '不感兴趣',
                     const Icon(MdiIcons.thumbDownOutline, size: 16),
                     () {
@@ -519,6 +514,11 @@ class VideoPopupMenu extends StatelessWidget {
                     },
                   ),
 
+                  _VideoCustomAction(
+                    '加白：${videoItem.owner.name}',
+                    const Icon(Icons.person_add_alt_1_outlined, size: 16),
+                    _addWhitelistedUser,
+                  ),
                   _VideoCustomAction(
                     '拉黑：${videoItem.owner.name}',
                     const Icon(MdiIcons.cancel, size: 16),

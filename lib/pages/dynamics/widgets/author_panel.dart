@@ -389,27 +389,6 @@ class AuthorPanel extends StatelessWidget {
               ),
               ListTile(
                 title: Text(
-                  '加入白名单：${moduleAuthor.name}',
-                  style: theme.textTheme.titleSmall,
-                ),
-                leading: const Icon(Icons.person_add_alt_1_outlined, size: 19),
-                onTap: () {
-                  Get.back();
-                  try {
-                    final mid = moduleAuthor.mid!;
-                    UserWhitelist.add(mid: mid, name: moduleAuthor.name ?? '');
-                    try {
-                      Get.find<DynamicsController>().tempBannedList.remove(mid);
-                    } catch (_) {}
-                    SmartDialog.showToast(
-                      '已将${moduleAuthor.name}(${mid})加入白名单',
-                    );
-                  } catch (_) {}
-                },
-                minLeadingWidth: 0,
-              ),
-              ListTile(
-                title: Text(
                   '永久屏蔽：${moduleAuthor.name}',
                   style: theme.textTheme.titleSmall,
                 ),
@@ -431,6 +410,28 @@ class AuthorPanel extends StatelessWidget {
                 },
                 minLeadingWidth: 0,
               ),
+              ListTile(
+                title: Text(
+                  '加入白名单：${moduleAuthor.name}',
+                  style: theme.textTheme.titleSmall,
+                ),
+                leading: const Icon(Icons.person_add_alt_1_outlined, size: 19),
+                onTap: () {
+                  Get.back();
+                  try {
+                    final mid = moduleAuthor.mid!;
+                    UserWhitelist.add(mid: mid, name: moduleAuthor.name ?? '');
+                    try {
+                      Get.find<DynamicsController>().tempBannedList.remove(mid);
+                    } catch (_) {}
+                    SmartDialog.showToast(
+                      '已将${moduleAuthor.name}(${mid})加入白名单',
+                    );
+                  } catch (_) {}
+                },
+                minLeadingWidth: 0,
+              ),
+
               if (kDebugMode || moduleAuthor.mid == Accounts.main.mid) ...[
                 ListTile(
                   onTap: () {

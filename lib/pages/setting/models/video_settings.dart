@@ -147,7 +147,8 @@ List<SettingsModel> get videoSettings => [
     ),
   SwitchModel(
     title: '允许与其他应用同时播放',
-    subtitle: '开启后本应用将不请求音频焦点，与其他应用的音频混合播放。'
+    subtitle:
+        '开启后支持与其他应用的音频同时播放。'
         '${Platform.isIOS ? '\n开启后锁屏/通知栏/控制中心/车载不会显示正在播放的歌曲且不支持线控和Siri切歌（测试功能）' : ''}',
     leading: const Icon(Icons.compare_arrows_outlined),
     setKey: SettingBoxKey.mixWithOthers,
