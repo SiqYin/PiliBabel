@@ -145,8 +145,8 @@ List<SettingsModel> get styleSettings => [
   ),
   if (Platform.isAndroid)
     const SwitchModel(
-      title: '安卓预测性返回 (Predictive Back)',
-      subtitle: '开启后侧滑返回可原生预览上一页及桌面，需要重启应用生效',
+      title: '预测性返回动画',
+      subtitle: '开启后侧滑返回可原生预览上一页及桌面，需将页面过渡动画设为Native',
       leading: Icon(Icons.swipe_left_outlined),
       setKey: SettingBoxKey.enablePredictiveBack,
       defaultVal: true,

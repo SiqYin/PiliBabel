@@ -1009,6 +1009,16 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
+                      // 溢出垫层，解决预测性返回缩放动画时的亚像素白缝
+                      Positioned(
+                        top: -1,
+                        left: 0,
+                        right: 0,
+                        height: 2,
+                        child: const DecoratedBox(
+                          decoration: BoxDecoration(color: Colors.black),
+                        ),
+                      ),
                       SizedBox(
                         width: maxWidth,
                         height: height,
