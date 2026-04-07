@@ -442,7 +442,7 @@ class _RenderViewPointDividerBar extends RenderBox {
   void paint(PaintingContext context, Offset offset) {
     final canvas = context.canvas;
     final paint = Paint()
-      ..color = Colors.white
+      ..color = Colors.white70
       ..style = PaintingStyle.fill;
 
     final centerY = offset.dy + size.height / 2;

@@ -1849,7 +1849,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         ),
                       if (!widget.isPipMode &&
                           plPlayerController.showViewPoints &&
-                          videoDetailController.viewPointList.isNotEmpty)
+                          videoDetailController.viewPointList.isNotEmpty &&
+                          !videoDetailController.showVP.value)
                         Positioned(
                           left: 0,
                           right: 0,
