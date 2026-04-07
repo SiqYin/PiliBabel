@@ -1,13 +1,18 @@
 package com.example.pilinara
 
+import android.app.PendingIntent
 import android.app.PictureInPictureParams
 import android.app.PictureInPictureUiState
 import android.app.SearchManager
 import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.content.pm.ShortcutInfo
+import android.content.pm.ShortcutManager
 import android.content.res.Configuration
 import android.graphics.Rect
+import android.graphics.BitmapFactory
+import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
@@ -19,6 +24,7 @@ import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import kotlin.system.exitProcess
+import java.io.File
 
 class MainActivity : AudioServiceActivity() {
     private lateinit var methodChannel: MethodChannel
@@ -141,6 +147,38 @@ class MainActivity : AudioServiceActivity() {
                         }
                     } else {
                         result.success(false)
+                    }
+                }
+
+                "createShortcut" -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                        try {
+                            val shortcutManager =
+                                context.getSystemService(ShortcutManager::class.java)
+                            if (shortcutManager.isRequestPinShortcutSupported) {
+                                val id = call.argument<String>("id")!!
+                                val uri = call.argument<String>("uri")!!
+                                val label = call.argument<String>("label")!!
+                                val icon = call.argument<String>("icon")!!
+                                val bitmap = BitmapFactory.decodeFile(icon)
+                                val shortcut =
+                                    ShortcutInfo.Builder(context, id)
+                                        .setShortLabel(label)
+                                        .setIcon(Icon.createWithAdaptiveBitmap(bitmap))
+                                        .setIntent(Intent(Intent.ACTION_VIEW, uri.toUri()))
+                                        .build()
+                                val pinIntent =
+                                    shortcutManager.createShortcutResultIntent(shortcut)
+                                val pendingIntent = PendingIntent.getBroadcast(
+                                    context, 0, pinIntent, PendingIntent.FLAG_IMMUTABLE
+                                )
+                                shortcutManager.requestPinShortcut(
+                                    shortcut,
+                                    pendingIntent.intentSender
+                                )
+                            }
+                        } catch (e: Exception) {
+                        }
                     }
                 }
 
