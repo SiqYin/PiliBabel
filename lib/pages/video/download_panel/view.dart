@@ -25,6 +25,8 @@ import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/models/common/account_type.dart';
+import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -282,7 +284,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
     }
 
     if (kReleaseMode && episode.badge == '会员') {
-      if (vipStatus != 1) {
+      if (vipStatus != 1 && !Accounts.get(AccountType.video).isLogin) {
         if (!isDownloadAll) {
           SmartDialog.showToast('需要大会员');
         }

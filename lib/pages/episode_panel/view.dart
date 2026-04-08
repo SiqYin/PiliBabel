@@ -23,6 +23,7 @@ import 'package:PiliPlus/pages/common/slide/common_slide_page.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/widgets/page.dart';
+import 'package:PiliPlus/models/common/account_type.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
@@ -433,7 +434,7 @@ class _EpisodePanelState extends State<EpisodePanel>
           type: MaterialType.transparency,
           child: InkWell(
             onTap: () {
-              if (episode.badge == "会员" && vipStatus != 1) {
+              if (episode.badge == "会员" && vipStatus != 1 && !Accounts.get(AccountType.video).isLogin) {
                 SmartDialog.showToast('需要大会员');
                 // return;
               }
