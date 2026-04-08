@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:math' show max;
 
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
@@ -9,7 +10,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
-import 'dart:io' show Platform;
 
 class LivePipOverlayService {
   static OverlayEntry? _overlayEntry;
@@ -46,19 +46,20 @@ class LivePipOverlayService {
     PlPlayerController? plPlayerController,
     bool enabled,
   ) {
+    // 1. 基础条件判断
     if (!Platform.isAndroid ||
         plPlayerController == null ||
         !plPlayerController.autoPiP ||
         !Pref.enableInAppPipToSystemPip) {
       return;
     }
-    Utils.sdkInt.then((sdkInt) {
-      if (sdkInt >= 31) {
-        Utils.channel.invokeMethod('setPipAutoEnterEnabled', {
-          'autoEnable': enabled,
-        });
-      }
-    });
+
+    // 2. 直接同步获取 sdkInt 并执行逻辑，不再使用 .then
+    if (Utils.sdkInt >= 31) {
+      Utils.channel.invokeMethod('setPipAutoEnterEnabled', {
+        'autoEnable': enabled,
+      });
+    }
   }
 
   static bool get isInPipMode => _isInPipMode;

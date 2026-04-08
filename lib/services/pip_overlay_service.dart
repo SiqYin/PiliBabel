@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:math' show max;
 
 import 'package:PiliPlus/pages/video/controller.dart';
@@ -9,7 +10,6 @@ import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'dart:io' show Platform;
 import 'package:get/get.dart';
 
 class VideoStackManager {
@@ -63,7 +63,7 @@ class PipOverlayService {
     _onTapToReturnCallback = null;
     callback?.call();
   }
-  
+
   // 保存控制器引用，防止被 GC
   static dynamic _savedController;
   static PlPlayerController? _savedPlayerController;
@@ -78,19 +78,20 @@ class PipOverlayService {
     PlPlayerController? plPlayerController,
     bool enabled,
   ) {
+    // 1. 基础条件判断
     if (!Platform.isAndroid ||
         plPlayerController == null ||
         !plPlayerController.autoPiP ||
         !Pref.enableInAppPipToSystemPip) {
       return;
     }
-    Utils.sdkInt.then((sdkInt) {
-      if (sdkInt >= 31) {
-        Utils.channel.invokeMethod('setPipAutoEnterEnabled', {
-          'autoEnable': enabled,
-        });
-      }
-    });
+
+    // 2. 直接同步获取 sdkInt 并执行逻辑，不再使用 .then
+    if (Utils.sdkInt >= 31) {
+      Utils.channel.invokeMethod('setPipAutoEnterEnabled', {
+        'autoEnable': enabled,
+      });
+    }
   }
 
   static String _keyPart(Object? value) => value?.toString() ?? '';
@@ -192,7 +193,7 @@ class PipOverlayService {
       try {
         final overlayContext = Get.overlayContext ?? context;
         Overlay.of(overlayContext).insert(_overlayEntry!);
-        
+
         // 允许应用内小窗继续使用 Auto-PiP 手势
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!isInPipMode) return;
@@ -214,8 +215,9 @@ class PipOverlayService {
   }
 
   static T? getSavedController<T>() => _savedController as T?;
-  
-  static T? getAdditionalController<T>(String key) => _savedControllers[key] as T?;
+
+  static T? getAdditionalController<T>(String key) =>
+      _savedControllers[key] as T?;
 
   static void stopPip({
     bool callOnClose = true,
@@ -259,12 +261,14 @@ class PipOverlayService {
         if (_savedController is VideoDetailController) {
           if (kDebugMode) {
             debugPrint(
-                '[PiP] Explicitly resetting SponsorBlock state for cached VideoDetailController');
+              '[PiP] Explicitly resetting SponsorBlock state for cached VideoDetailController',
+            );
           }
           (_savedController as VideoDetailController).resetBlock();
         } else if (kDebugMode) {
           debugPrint(
-              '[PiP] Cached controller is not a VideoDetailController, skipping resetBlock');
+            '[PiP] Cached controller is not a VideoDetailController, skipping resetBlock',
+          );
         }
       } catch (e) {
         if (kDebugMode) {
@@ -445,7 +449,7 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
 
     return Obx(() {
       final bool isNative = PipOverlayService.isNativePip;
-      
+
       // 系统 PiP 模式下，直接铺满窗口，不执行任何自定义尺寸或位置计算
       if (isNative) {
         return Positioned.fill(
@@ -552,8 +556,8 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
                             Icons.close,
                             color: Colors.white,
                             size: 21,
-                            ),
-                      ),
+                          ),
+                        ),
                       ),
                     ),
                     // 右上角还原
@@ -592,9 +596,12 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
                           GestureDetector(
                             onTap: () {
                               _resetHideTimer();
-                              final controller = PipOverlayService
-                                  .getSavedController<VideoDetailController>();
-                              final plController = controller?.plPlayerController;
+                              final controller =
+                                  PipOverlayService.getSavedController<
+                                    VideoDetailController
+                                  >();
+                              final plController =
+                                  controller?.plPlayerController;
                               if (plController != null) {
                                 final current = plController.position;
                                 plController.seekTo(
@@ -610,11 +617,13 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
                           ),
                           // 播放/暂停
                           Obx(() {
-                            final controller = PipOverlayService
-                                .getSavedController<VideoDetailController>();
+                            final controller =
+                                PipOverlayService.getSavedController<
+                                  VideoDetailController
+                                >();
                             final plController = controller?.plPlayerController;
-                            final isPlaying = plController
-                                    ?.playerStatus.value ==
+                            final isPlaying =
+                                plController?.playerStatus.value ==
                                 PlayerStatus.playing;
                             return GestureDetector(
                               onTap: () {
@@ -636,9 +645,12 @@ class _PipWidgetState extends State<PipWidget> with WidgetsBindingObserver {
                           GestureDetector(
                             onTap: () {
                               _resetHideTimer();
-                              final controller = PipOverlayService
-                                  .getSavedController<VideoDetailController>();
-                              final plController = controller?.plPlayerController;
+                              final controller =
+                                  PipOverlayService.getSavedController<
+                                    VideoDetailController
+                                  >();
+                              final plController =
+                                  controller?.plPlayerController;
                               if (plController != null) {
                                 final current = plController.position;
                                 plController.seekTo(
