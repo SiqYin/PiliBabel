@@ -1,4 +1,4 @@
-import 'dart:async' show StreamSubscription, Timer;
+import 'dart:async' show StreamSubscription, Timer, unawaited;
 import 'dart:convert' show ascii;
 import 'dart:io' show Platform;
 import 'dart:math' show max, min;
@@ -432,6 +432,7 @@ class PlPlayerController with BlockConfigMixin {
   );
 
   late final Rx<SubtitleViewConfiguration> subtitleConfig = getSubConfig.obs;
+  String? _activeVideoContextKey;
 
   SubtitleViewConfiguration get getSubConfig {
     final subTitleStyle = this.subTitleStyle;
@@ -629,6 +630,38 @@ class PlPlayerController with BlockConfigMixin {
       .._playerCount += 1;
   }
 
+  static bool _isAnimPgcType(int? pgcType) => pgcType == 1 || pgcType == 4;
+
+  void resetTempPlayerSettingsToDefault({int? nextPgcType}) {
+    if (!tempPlayerConf) {
+      return;
+    }
+
+    if (kDebugMode) {
+      debugPrint(
+        '[PlPlayer] Resetting temp player settings to defaults (currentContext: $_activeVideoContextKey, nextPgcType: $nextPgcType)',
+      );
+    }
+
+    _enableShowDanmaku.value = Pref.enableShowDanmaku;
+    _enableShowLiveDanmaku.value = Pref.enableShowLiveDanmaku;
+    videoPlayerServiceHandler?.enableBackgroundPlay = Pref.enableBackgroundPlay;
+    continuePlayInBackground.value = Pref.continuePlayInBackground;
+    playRepeat = Pref.playRepeat;
+    cacheVideoQa = PlatformUtils.isMobile ? null : Pref.defaultVideoQa;
+    cacheAudioQa = Pref.defaultAudioQa;
+
+    final defaultSuperResolutionType = _isAnimPgcType(nextPgcType)
+        ? Pref.superResolutionType
+        : SuperResolutionType.disable;
+    superResolutionType.value = defaultSuperResolutionType;
+    if (_videoPlayerController != null) {
+      unawaited(
+        setShader(defaultSuperResolutionType, _videoPlayerController!),
+      );
+    }
+  }
+
   bool _processing = false;
   bool get processing => _processing;
 
@@ -664,6 +697,22 @@ class PlPlayerController with BlockConfigMixin {
   }) async {
     try {
       _processing = true;
+      final nextVideoContextKey = PipOverlayService.buildVideoContextKey(
+        videoType: videoType ?? VideoType.ugc,
+        bvid: bvid,
+        cid: cid,
+        epId: epid,
+        seasonId: seasonId,
+      );
+      final shouldResetTempSettings =
+          tempPlayerConf &&
+          _activeVideoContextKey != null &&
+          nextVideoContextKey != null &&
+          nextVideoContextKey != _activeVideoContextKey;
+      if (shouldResetTempSettings) {
+        resetTempPlayerSettingsToDefault(nextPgcType: pgcType);
+      }
+      _activeVideoContextKey = nextVideoContextKey;
       this.isLive = isLive;
       _videoType = videoType ?? VideoType.ugc;
       this.width = width;
@@ -1681,6 +1730,7 @@ class PlPlayerController with BlockConfigMixin {
     _videoPlayerController?.dispose();
     _videoPlayerController = null;
     _videoController = null;
+    _activeVideoContextKey = null;
     _instance = null;
     videoPlayerServiceHandler?.clear();
   }

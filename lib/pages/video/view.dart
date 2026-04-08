@@ -211,7 +211,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         });
       } else {
         // 没有保存的控制器，创建新的
-        PipOverlayService.stopPip(callOnClose: false, immediate: true);
+        PipOverlayService.stopPip(
+          callOnClose: false,
+          immediate: true,
+          targetContextKey: targetContextKey,
+        );
         videoDetailController = Get.put(VideoDetailController(), tag: heroTag);
       }
     } else {

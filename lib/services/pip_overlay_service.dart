@@ -96,7 +96,7 @@ class PipOverlayService {
 
   static String _keyPart(Object? value) => value?.toString() ?? '';
 
-  static String? _buildVideoContextKey({
+  static String? buildVideoContextKey({
     Object? videoType,
     Object? bvid,
     Object? cid,
@@ -123,7 +123,7 @@ class PipOverlayService {
     if (args == null) {
       return null;
     }
-    return _buildVideoContextKey(
+    return buildVideoContextKey(
       videoType: args['videoType'],
       bvid: args['bvid'],
       cid: args['cid'],
@@ -136,7 +136,7 @@ class PipOverlayService {
     if (controller is! VideoDetailController) {
       return null;
     }
-    return _buildVideoContextKey(
+    return buildVideoContextKey(
       videoType: controller.videoType,
       bvid: controller.bvid,
       cid: controller.cid.value,
@@ -256,8 +256,9 @@ class PipOverlayService {
     }
 
     // 强制调用控制器的清理逻辑，特别是 SponsorBlock 相关的监听器
-    if (_savedController != null && shouldResetState) {
+    if (shouldResetState) {
       try {
+        _savedPlayerController?.resetTempPlayerSettingsToDefault();
         if (_savedController is VideoDetailController) {
           if (kDebugMode) {
             debugPrint(
