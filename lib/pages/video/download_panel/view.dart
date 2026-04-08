@@ -6,6 +6,7 @@ import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/stat/stat.dart';
+import 'package:PiliPlus/models/common/account_type.dart';
 import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/models/common/stat_type.dart';
 import 'package:PiliPlus/models/common/video/video_quality.dart';
@@ -20,13 +21,12 @@ import 'package:PiliPlus/pages/video/introduction/ugc/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/widgets/page.dart';
 import 'package:PiliPlus/services/download/download_collection_service.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
+import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
-import 'package:PiliPlus/models/common/account_type.dart';
-import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -139,7 +139,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
         spacing: 16,
         children: [
           Text(
-            '最高画质',
+            '目标画质',
             style: textStyle,
           ),
           Builder(
