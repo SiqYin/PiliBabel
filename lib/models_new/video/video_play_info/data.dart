@@ -19,7 +19,9 @@ class PlayInfoData {
 
   factory PlayInfoData.fromJson(Map<String, dynamic> json) => PlayInfoData(
     lastPlayCid: json['last_play_cid'] as int?,
-    lastPlayTime: json['last_play_time'] as int?,
+    lastPlayTime: (json['last_play_time'] as int?) ??
+        json['play_view_business_info']?['user_status']?['watch_progress']
+            ?['current_watch_progress'] as int?,
     subtitle: json['subtitle'] == null
         ? null
         : SubtitleInfo.fromJson(json['subtitle'] as Map<String, dynamic>),
