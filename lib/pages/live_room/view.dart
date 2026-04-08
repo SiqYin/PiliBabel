@@ -465,20 +465,15 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     );
   }
 
-  void _onPopInvokedWithResult(bool didPop, result, isPortrait) {
-    if (didPop && Platform.isAndroid) {
-      // 只要返回了，先强制切断 Auto-PiP 权限，防止手势误触
-      plPlayerController.disableAutoEnterPip();
-    }
-    final handled = plPlayerController.onPopInvokedWithResult(
-      didPop,
-      result,
-      isPortrait,
-    );
-    if (didPop) {
-      _startLivePipIfNeeded();
-    }
-  }
+  // void _onPopInvokedWithResult(bool didPop, result, isPortrait) {
+  //   if (didPop && Platform.isAndroid) {
+  //     // 只要返回了，先强制切断 Auto-PiP 权限，防止手势误触
+  //     plPlayerController.disableAutoEnterPip();
+  //   }
+  //   if (didPop) {
+  //     _startLivePipIfNeeded();
+  //   }
+  // }
 
   bool _shouldStartLivePip() {
     if (LivePipOverlayService.isInPipMode) {
