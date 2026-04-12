@@ -538,19 +538,21 @@ class PlPlayerController with BlockConfigMixin {
       case .portraitUp:
         if (!_isVertical && controlsLock.value) return;
         if (!horizontalScreen && !_isVertical && isFullScreen) {
-          triggerFullScreen(status: false, orientation: orientation);
+          if (!isManualFS) {
+            triggerFullScreen(status: false, orientation: orientation);
+          }
         } else {
           portraitUpMode();
         }
       case .landscapeLeft:
         if (!horizontalScreen && !isFullScreen) {
-          triggerFullScreen(orientation: orientation);
+          triggerFullScreen(orientation: orientation, isManualFS: false);
         } else {
           landscapeLeftMode();
         }
       case .landscapeRight:
         if (!horizontalScreen && !isFullScreen) {
-          triggerFullScreen(orientation: orientation);
+          triggerFullScreen(orientation: orientation, isManualFS: false);
         } else {
           landscapeRightMode();
         }
@@ -1413,6 +1415,7 @@ class PlPlayerController with BlockConfigMixin {
   }
 
   double screenRatio = 0.0;
+  bool isManualFS = true;
   late final FullScreenMode mode = Pref.fullScreenMode;
   late final horizontalScreen = Pref.horizontalScreen;
 
@@ -1422,6 +1425,7 @@ class PlPlayerController with BlockConfigMixin {
     bool status = true,
     bool inAppFullScreen = false,
     DeviceOrientation? orientation,
+    bool isManualFS = true,
   }) async {
     if (isDesktopPip) return;
     if (isFullScreen.value == status) return;
@@ -1429,6 +1433,7 @@ class PlPlayerController with BlockConfigMixin {
     if (_fsProcessing) return;
     _fsProcessing = true;
     toggleFullScreen(status);
+    this.isManualFS = isManualFS;
     try {
       if (status) {
         if (PlatformUtils.isMobile) {
