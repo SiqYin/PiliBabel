@@ -7,6 +7,7 @@ import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
+import 'package:PiliPlus/common/widgets/flutter/scroll_view/scroll_view.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
 import 'package:PiliPlus/common/widgets/route_aware_mixin.dart';
@@ -1017,7 +1018,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                           localIntroPanel()
                         else if (showIntro)
                           KeepAliveWrapper(
-                            child: CustomScrollView(
+                            child: customScrollView(
                               key: const PageStorageKey(CommonIntroController),
                               controller:
                                   videoDetailController.effectiveIntroScrollCtr,
@@ -1676,7 +1677,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   Widget localIntroPanel({
     bool needCtr = true,
   }) {
-    return CustomScrollView(
+    return customScrollView(
       controller: needCtr
           ? videoDetailController.effectiveIntroScrollCtr
           : null,
@@ -1708,7 +1709,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       return localIntroPanel(needCtr: needCtr);
     }
     Widget introPanel() {
-      Widget child = CustomScrollView(
+      Widget child = customScrollView(
         key: const PageStorageKey(CommonIntroController),
         controller: needCtr
             ? videoDetailController.effectiveIntroScrollCtr
