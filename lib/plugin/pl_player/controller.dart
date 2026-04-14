@@ -531,7 +531,10 @@ class PlPlayerController with BlockConfigMixin {
     final isFullScreen = this.isFullScreen.value;
     if (checkIsAutoRotate &&
         param.isAutoRotate != true &&
-        (!isFullScreen || _isVertical || orientation == .portraitUp)) {
+        (!isFullScreen ||
+            _isVertical ||
+            orientation == .portraitUp ||
+            orientation == .portraitDown)) {
       return;
     }
     switch (orientation) {
@@ -544,6 +547,10 @@ class PlPlayerController with BlockConfigMixin {
         } else {
           portraitUpMode();
         }
+      case .portraitDown:
+        if (!horizontalScreen) return;
+        if (!_isVertical && controlsLock.value) return;
+        portraitDownMode();
       case .landscapeLeft:
         if (!horizontalScreen && !isFullScreen) {
           triggerFullScreen(orientation: orientation, isManualFS: false);
@@ -556,13 +563,12 @@ class PlPlayerController with BlockConfigMixin {
         } else {
           landscapeRightMode();
         }
-      case _:
     }
   }
 
   // 添加一个私有构造函数
   PlPlayerController._() {
-    if (PlatformUtils.isMobile && !horizontalScreen) {
+    if (PlatformUtils.isMobile) {
       _orientationListener = NativeDeviceOrientationPlatform.instance
           .onOrientationChanged(
             useSensor: Platform.isAndroid,
@@ -1438,7 +1444,6 @@ class PlPlayerController with BlockConfigMixin {
       if (status) {
         if (PlatformUtils.isMobile) {
           hideStatusBar();
-          if (horizontalScreen) return;
           if (orientation == null && mode == .none) {
             return;
           }
@@ -1584,7 +1589,9 @@ class PlPlayerController with BlockConfigMixin {
   bool get isCloseAll => _isCloseAll;
 
   void resetScreenRotation() {
-    if (!horizontalScreen) {
+    if (horizontalScreen) {
+      fullMode();
+    } else {
       portraitUpMode();
     }
   }
