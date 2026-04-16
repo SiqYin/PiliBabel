@@ -404,7 +404,7 @@ class ReplyItemGrpc extends StatelessWidget {
               rpid: replyItem.id,
             );
             if (res case Success(:final response)) {
-              final item = response.translatedReply[replyItem.id];
+              final item = response.translatedReplies[replyItem.id];
               if (item != null && item.hasTranslatedContent()) {
                 replyControl.showTranslation = true;
                 replyItem.translatedContent = item.translatedContent;
@@ -477,7 +477,8 @@ class ReplyItemGrpc extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 2),
-        if (replyControl.translationSwitch == 2) ...[
+        if (replyControl.translationSwitch ==
+            .TRANSLATION_SWITCH_SHOW_TRANSLATION) ...[
           _buildTranslateBtn(
             context,
             theme,

@@ -159,7 +159,7 @@ abstract final class ReplyGrpc {
       TranslateReplyReq(
         type: type,
         oid: oid,
-        rpid: [rpid],
+        rpids: [rpid],
       ),
       TranslateReplyResp.fromBuffer,
     );

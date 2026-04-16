@@ -8159,7 +8159,7 @@ class ReplyControl extends $pb.GeneratedMessage {
     ReplyControl_EasterEggLabel? easterEggLabel,
     $core.String? contextFeature,
     ReplyControl_InsertEffect? insertEffect,
-    $core.int? translationSwitch,
+    TranslationSwitch? translationSwitch,
     $core.bool? showTranslation,
   }) {
     final result = create();
@@ -8261,7 +8261,8 @@ class ReplyControl extends $pb.GeneratedMessage {
     ..aOS(35, _omitFieldNames ? '' : 'contextFeature')
     ..aOM<ReplyControl_InsertEffect>(36, _omitFieldNames ? '' : 'insertEffect',
         subBuilder: ReplyControl_InsertEffect.create)
-    ..aI(37, _omitFieldNames ? '' : 'translationSwitch')
+    ..aE<TranslationSwitch>(37, _omitFieldNames ? '' : 'translationSwitch',
+        enumValues: TranslationSwitch.values)
     ..aOB(100, _omitFieldNames ? '' : 'showTranslation')
     ..hasRequiredFields = false;
 
@@ -8612,9 +8613,9 @@ class ReplyControl extends $pb.GeneratedMessage {
   ReplyControl_InsertEffect ensureInsertEffect() => $_ensure(35);
 
   @$pb.TagNumber(37)
-  $core.int get translationSwitch => $_getIZ(36);
+  TranslationSwitch get translationSwitch => $_getN(36);
   @$pb.TagNumber(37)
-  set translationSwitch($core.int value) => $_setSignedInt32(36, value);
+  set translationSwitch(TranslationSwitch value) => $_setField(37, value);
   @$pb.TagNumber(37)
   $core.bool hasTranslationSwitch() => $_has(36);
   @$pb.TagNumber(37)
@@ -14020,12 +14021,12 @@ class TranslateReplyReq extends $pb.GeneratedMessage {
   factory TranslateReplyReq({
     $fixnum.Int64? type,
     $fixnum.Int64? oid,
-    $core.Iterable<$fixnum.Int64>? rpid,
+    $core.Iterable<$fixnum.Int64>? rpids,
   }) {
     final result = create();
     if (type != null) result.type = type;
     if (oid != null) result.oid = oid;
-    if (rpid != null) result.rpid.addAll(rpid);
+    if (rpids != null) result.rpids.addAll(rpids);
     return result;
   }
 
@@ -14045,7 +14046,7 @@ class TranslateReplyReq extends $pb.GeneratedMessage {
       createEmptyInstance: create)
     ..aInt64(1, _omitFieldNames ? '' : 'type')
     ..aInt64(2, _omitFieldNames ? '' : 'oid')
-    ..p<$fixnum.Int64>(3, _omitFieldNames ? '' : 'rpid', $pb.PbFieldType.K6)
+    ..p<$fixnum.Int64>(3, _omitFieldNames ? '' : 'rpids', $pb.PbFieldType.K6)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -14086,16 +14087,16 @@ class TranslateReplyReq extends $pb.GeneratedMessage {
   void clearOid() => $_clearField(2);
 
   @$pb.TagNumber(3)
-  $pb.PbList<$fixnum.Int64> get rpid => $_getList(2);
+  $pb.PbList<$fixnum.Int64> get rpids => $_getList(2);
 }
 
 class TranslateReplyResp extends $pb.GeneratedMessage {
   factory TranslateReplyResp({
-    $core.Iterable<$core.MapEntry<$fixnum.Int64, ReplyInfo>>? translatedReply,
+    $core.Iterable<$core.MapEntry<$fixnum.Int64, ReplyInfo>>? translatedReplies,
   }) {
     final result = create();
-    if (translatedReply != null)
-      result.translatedReply.addEntries(translatedReply);
+    if (translatedReplies != null)
+      result.translatedReplies.addEntries(translatedReplies);
     return result;
   }
 
@@ -14113,8 +14114,8 @@ class TranslateReplyResp extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'bilibili.main.community.reply.v1'),
       createEmptyInstance: create)
-    ..m<$fixnum.Int64, ReplyInfo>(1, _omitFieldNames ? '' : 'translatedReply',
-        entryClassName: 'TranslateReplyResp.TranslatedReplyEntry',
+    ..m<$fixnum.Int64, ReplyInfo>(1, _omitFieldNames ? '' : 'translatedReplies',
+        entryClassName: 'TranslateReplyResp.TranslatedRepliesEntry',
         keyFieldType: $pb.PbFieldType.O6,
         valueFieldType: $pb.PbFieldType.OM,
         valueCreator: ReplyInfo.create,
@@ -14142,7 +14143,7 @@ class TranslateReplyResp extends $pb.GeneratedMessage {
   static TranslateReplyResp? _defaultInstance;
 
   @$pb.TagNumber(1)
-  $pb.PbMap<$fixnum.Int64, ReplyInfo> get translatedReply => $_getMap(0);
+  $pb.PbMap<$fixnum.Int64, ReplyInfo> get translatedReplies => $_getMap(0);
 }
 
 const $core.bool _omitFieldNames =
