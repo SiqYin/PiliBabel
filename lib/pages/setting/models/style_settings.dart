@@ -82,14 +82,18 @@ List<SettingsModel> get styleSettings => [
     defaultVal: false,
     needReboot: true,
   ),
-  SwitchModel(
-    title: 'App字体字重',
-    subtitle: '点击设置',
-    setKey: SettingBoxKey.appFontWeight,
-    defaultVal: false,
-    leading: const Icon(Icons.text_fields),
-    onChanged: (_) => Get.updateMyAppTheme(),
-    onTap: _showFontWeightDialog,
+  SplitModel(
+    normalModel: const NormalModel.split(
+      title: 'App字体字重',
+      subtitle: '点击设置',
+      leading: Icon(Icons.text_fields),
+    ),
+    switchModel: SwitchModel.split(
+      defaultVal: false,
+      setKey: SettingBoxKey.appFontWeight,
+      onChanged: (_) => Get.updateMyAppTheme(),
+      onTap: _showFontWeightDialog,
+    ),
   ),
   NormalModel(
     title: '界面缩放',
