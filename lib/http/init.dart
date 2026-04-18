@@ -20,7 +20,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:dio/io.dart';
 import 'package:dio_http2_adapter/dio_http2_adapter.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter/foundation.dart' show kDebugMode, listEquals;
 
 class Request {
   static const _gzipDecoder = GZipDecoder();
@@ -117,14 +117,20 @@ class Request {
   }
 
   static Timer? _networkChangeDebounce;
+
+  static void _onConnectivityChanged(List<ConnectivityResult> result) {
+    if (listEquals(result, const [ConnectivityResult.none])) {
+      return;
+    }
+    _networkChangeDebounce?.cancel();
+    _networkChangeDebounce = Timer(
+      const Duration(milliseconds: 500),
+      _resetAdaptersForNetworkChange,
+    );
+  }
+
   static void _watchConnectivity() {
-    Connectivity().onConnectivityChanged.skip(1).listen((result) {
-      _networkChangeDebounce?.cancel();
-      _networkChangeDebounce = Timer(
-        const Duration(milliseconds: 500),
-        _resetAdaptersForNetworkChange,
-      );
-    });
+    Connectivity().onConnectivityChanged.skip(1).listen(_onConnectivityChanged);
   }
 
   static (IOHttpClientAdapter, ConnectionManager?) _createPool() {
