@@ -30,6 +30,7 @@ import 'package:PiliPlus/pages/video/widgets/player_focus.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/danmaku_options.dart';
+import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
 import 'package:PiliPlus/plugin/pl_player/view/view.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
@@ -81,12 +82,19 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     plPlayerController = _liveRoomController.plPlayerController
       ..addStatusLister(playerListener);
     PlPlayerController.setPlayCallBack(plPlayerController.play);
+    if (plPlayerController.removeSafeArea) {
+      hideStatusBar();
+    }
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    padding = MediaQuery.viewPaddingOf(context);
+    if (plPlayerController.removeSafeArea) {
+      padding = .zero;
+    } else {
+      padding = MediaQuery.viewPaddingOf(context);
+    }
     final size = MediaQuery.sizeOf(context);
     maxWidth = size.width;
     maxHeight = size.height;
@@ -391,6 +399,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
               },
             ),
           Scaffold(
+            primary: !plPlayerController.removeSafeArea,
             resizeToAvoidBottomInset: false,
             backgroundColor: Colors.transparent,
             appBar: isFullScreen && !isPortrait
@@ -486,6 +495,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
   PreferredSizeWidget _buildAppBar(bool isFullScreen) {
     final color = Theme.of(context).colorScheme.onSurfaceVariant;
     return AppBar(
+      primary: !plPlayerController.removeSafeArea,
       toolbarHeight: isFullScreen ? 0 : null,
       backgroundColor: Colors.transparent,
       foregroundColor: Colors.white,

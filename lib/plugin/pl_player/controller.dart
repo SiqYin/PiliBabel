@@ -1424,6 +1424,7 @@ class PlPlayerController with BlockConfigMixin {
   bool isManualFS = true;
   late final FullScreenMode mode = Pref.fullScreenMode;
   late final horizontalScreen = Pref.horizontalScreen;
+  late final removeSafeArea = Pref.removeSafeArea;
 
   // 全屏
   bool _fsProcessing = false;
@@ -1475,12 +1476,26 @@ class PlPlayerController with BlockConfigMixin {
         }
       } else {
         if (PlatformUtils.isMobile) {
-          showStatusBar();
+          if (!removeSafeArea) {
+            showStatusBar();
+          }
           if (orientation == null && mode == .none) {
             return;
           }
           if (!horizontalScreen) {
             await portraitUpMode();
+          } else {
+            switch (_orientation) {
+              case .portraitUp:
+                await portraitUpMode();
+              case .landscapeLeft:
+                await landscapeLeftMode();
+              case .portraitDown:
+                await portraitDownMode();
+              case .landscapeRight:
+                await landscapeRightMode();
+              case _:
+            }
           }
         } else {
           await exitDesktopFullScreen();
@@ -1617,6 +1632,9 @@ class PlPlayerController with BlockConfigMixin {
     }
 
     _playerCount = 0;
+    if (removeSafeArea) {
+      showStatusBar();
+    }
     danmakuController = null;
     _stopOrientationListener();
     _disableAutoEnterPip();

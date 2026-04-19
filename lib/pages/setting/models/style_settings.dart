@@ -136,6 +136,12 @@ List<SettingsModel> get styleSettings => [
         '当前: 主页${Pref.recommendCardWidth.toInt()}dp 其他${Pref.smallCardWidth.toInt()}dp，屏幕宽度:${MediaQuery.widthOf(Get.context!).toPrecision(2)}dp。宽度越小列数越多。',
     onTap: _showCardWidthDialog,
   ),
+  const SwitchModel(
+    title: '播放页移除安全边距',
+    leading: Icon(Icons.fit_screen_outlined),
+    setKey: SettingBoxKey.removeSafeArea,
+    defaultVal: false,
+  ),
   SwitchModel(
     title: '视频播放页使用深色主题',
     leading: const Icon(Icons.dark_mode_outlined),

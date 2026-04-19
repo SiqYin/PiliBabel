@@ -59,7 +59,6 @@ import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/mobile_observer.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
-import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
@@ -141,6 +140,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
     PlPlayerController.setPlayCallBack(playCallBack);
     videoDetailController = Get.put(VideoDetailController(), tag: heroTag);
+
+    if (videoDetailController.removeSafeArea) {
+      hideStatusBar();
+    }
 
     if (videoDetailController.showReply) {
       _videoReplyController = Get.put(
@@ -347,6 +350,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       }
     }
 
+    if (!videoDetailController.removeSafeArea) {
+      showStatusBar();
+    }
+
     if (!videoDetailController.plPlayerController.isCloseAll) {
       videoPlayerServiceHandler?.onVideoDetailDispose(heroTag);
       if (plPlayerController != null) {
@@ -357,9 +364,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       }
     }
     removeObserverMobile(this);
-    if (PlatformUtils.isMobile) {
-      showStatusBar();
-    }
+
     super.dispose();
   }
 
@@ -449,7 +454,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    padding = MediaQuery.viewPaddingOf(context);
+    if (videoDetailController.removeSafeArea) {
+      padding = .zero;
+    } else {
+      padding = MediaQuery.viewPaddingOf(context);
+    }
 
     final size = MediaQuery.sizeOf(context);
     maxWidth = size.width;
@@ -507,6 +516,9 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     }
   }
 
+  bool get removeAppBar =>
+      videoDetailController.removeSafeArea || (isFullScreen && !isPortrait);
+
   Widget get childWhenDisabled {
     videoDetailController.animationController
       ..removeListener(animListener)
@@ -516,7 +528,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         final isFullScreen = this.isFullScreen;
         return Scaffold(
           resizeToAvoidBottomInset: false,
-          appBar: isFullScreen && !isPortrait
+          appBar: removeAppBar
               ? null
               : PreferredSize(
                   preferredSize: const Size.fromHeight(0),
@@ -818,7 +830,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       final isFullScreen = this.isFullScreen;
       return Scaffold(
         resizeToAvoidBottomInset: false,
-        appBar: isFullScreen && !isPortrait
+        appBar: removeAppBar
             ? null
             : AppBar(backgroundColor: Colors.black, toolbarHeight: 0),
         body: Padding(
@@ -1048,7 +1060,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     final isFullScreen = this.isFullScreen;
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: isFullScreen && !isPortrait
+      appBar: removeAppBar
           ? null
           : AppBar(backgroundColor: Colors.black, toolbarHeight: 0),
       body: Padding(
