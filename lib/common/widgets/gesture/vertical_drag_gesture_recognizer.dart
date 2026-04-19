@@ -13,7 +13,7 @@ class CustomVerticalDragGestureRecognizer
 
   IsDyAllowed? isDyAllowed;
 
-  bool _isDyAllowed = false;
+  bool _isDyAllowed = true;
 
   @override
   bool isPointerAllowed(PointerEvent event) {
