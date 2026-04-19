@@ -1260,7 +1260,7 @@ packages:
     description:
       path: "."
       ref: master
-      resolved-ref: "240534adb4b4b5c2c7e6c4578b1fc052ce98d7fd"
+      resolved-ref: "487209167d7174785a469b929e19a7c587671117"
       url: "https://github.com/bggRGjQaUbCoE/flutter_native_device_orientation.git"
     source: git
     version: "2.0.5"
@@ -1596,10 +1596,10 @@ packages:
     dependency: transitive
     description:
       name: sentry
-      sha256: "9f9a35c2e74ed79e16373268e0c79bc00988412d4b30b63eb369d2fa32e6814e"
+      sha256: "8c07a413ce5691db5b299024498f1ad6376e015f61b6d8fc8819b042f65df6c7"
       url: "https://pub.dev"
     source: hosted
-    version: "9.17.0"
+    version: "9.18.0"
   share_plus:
     dependency: "direct main"
     description:
