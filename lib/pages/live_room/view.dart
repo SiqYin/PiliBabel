@@ -20,6 +20,7 @@ import 'package:PiliPlus/models_new/live/live_room_info_h5/data.dart';
 import 'package:PiliPlus/models_new/live/live_superchat/item.dart';
 import 'package:PiliPlus/pages/danmaku/danmaku_model.dart';
 import 'package:PiliPlus/pages/live_room/contribution_rank/controller.dart';
+import 'package:PiliPlus/pages/live_room/contribution_rank/view.dart';
 import 'package:PiliPlus/pages/live_room/controller.dart';
 import 'package:PiliPlus/pages/live_room/superchat/superchat_card.dart';
 import 'package:PiliPlus/pages/live_room/superchat/superchat_panel.dart';
@@ -256,6 +257,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
               onPlayAudio: _liveRoomController.queryLiveUrl,
               isPortrait: isPortrait,
               liveController: _liveRoomController,
+              onlineWidget: onlineWidget,
             ),
             bottomControl: BottomControl(
               plPlayerController: plPlayerController,
@@ -492,6 +494,43 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     );
   }
 
+  Widget get onlineWidget => GestureDetector(
+    onTap: _showRank,
+    child: Obx(() {
+      if (_liveRoomController.onlineCount.value case final onlineCount?) {
+        return Text(
+          '高能观众($onlineCount)',
+          style: const TextStyle(
+            fontSize: 12,
+            color: Colors.white,
+          ),
+        );
+      }
+      return const SizedBox.shrink();
+    }),
+  );
+
+  void _showRank() {
+    if (_liveRoomController.ruid case final ruid?) {
+      final heightFactor = PlatformUtils.isMobile && !isPortrait ? 1.0 : 0.7;
+      showModalBottomSheet(
+        context: context,
+        useSafeArea: true,
+        clipBehavior: .hardEdge,
+        isScrollControlled: true,
+        constraints: const BoxConstraints(maxWidth: 450),
+        builder: (context) => FractionallySizedBox(
+          widthFactor: 1.0,
+          heightFactor: heightFactor,
+          child: ContributionRankPanel(
+            ruid: ruid,
+            roomId: _liveRoomController.roomId,
+          ),
+        ),
+      );
+    }
+  }
+
   PreferredSizeWidget _buildAppBar(bool isFullScreen) {
     final color = Theme.of(context).colorScheme.onSurfaceVariant;
     return AppBar(
@@ -542,7 +581,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                                     ),
                                   ),
                                 ),
-                                _liveRoomController.onlineWidget,
+                                onlineWidget,
                               ],
                             ),
                             Row(
