@@ -154,13 +154,13 @@ List<SettingsModel> get extraSettings => [
     title: '横屏分P/合集列表显示在Tab栏',
     leading: const Icon(Icons.format_list_numbered_rtl_sharp),
     setKey: SettingBoxKey.horizontalSeasonPanel,
-    defaultVal: PlatformUtils.isDesktop,
+    defaultVal: Pref.horizontalScreen,
   ),
   SwitchModel(
     title: '横屏播放页在侧栏打开UP主页',
     leading: const Icon(Icons.account_circle_outlined),
     setKey: SettingBoxKey.horizontalMemberPage,
-    defaultVal: PlatformUtils.isDesktop,
+    defaultVal: Pref.horizontalScreen,
   ),
   SwitchModel(
     title: '横屏在侧栏打开图片预览',

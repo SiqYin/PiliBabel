@@ -384,12 +384,12 @@ abstract final class Pref {
 
   static bool get horizontalSeasonPanel => _setting.get(
     SettingBoxKey.horizontalSeasonPanel,
-    defaultValue: PlatformUtils.isDesktop,
+    defaultValue: horizontalScreen,
   );
 
   static bool get horizontalMemberPage => _setting.get(
     SettingBoxKey.horizontalMemberPage,
-    defaultValue: PlatformUtils.isDesktop,
+    defaultValue: horizontalScreen,
   );
 
   static int? get replyLengthLimit {
@@ -664,8 +664,10 @@ abstract final class Pref {
   static double get uiScale =>
       _setting.get(SettingBoxKey.uiScale, defaultValue: 1.0);
 
-  static bool get dynamicsWaterfallFlow =>
-      _setting.get(SettingBoxKey.dynamicsWaterfallFlow, defaultValue: true);
+  static bool get dynamicsWaterfallFlow => _setting.get(
+    SettingBoxKey.dynamicsWaterfallFlow,
+    defaultValue: horizontalScreen,
+  );
 
   static bool get hideTopBar => _setting.get(
     SettingBoxKey.hideTopBar,

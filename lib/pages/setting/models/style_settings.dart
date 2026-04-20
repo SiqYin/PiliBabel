@@ -153,12 +153,12 @@ List<SettingsModel> get styleSettings => [
       }
     },
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '动态页启用瀑布流',
     subtitle: '关闭会显示为单列',
-    leading: Icon(Icons.view_array_outlined),
+    leading: const Icon(Icons.view_array_outlined),
     setKey: SettingBoxKey.dynamicsWaterfallFlow,
-    defaultVal: true,
+    defaultVal: Pref.horizontalScreen,
     needReboot: true,
   ),
   NormalModel(
