@@ -84,7 +84,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       ..addStatusLister(playerListener);
     PlPlayerController.setPlayCallBack(plPlayerController.play);
     if (plPlayerController.removeSafeArea) {
-      hideStatusBar();
+      hideSystemBar();
     }
   }
 

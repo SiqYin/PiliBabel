@@ -142,7 +142,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     videoDetailController = Get.put(VideoDetailController(), tag: heroTag);
 
     if (videoDetailController.removeSafeArea) {
-      hideStatusBar();
+      hideSystemBar();
     }
 
     if (videoDetailController.showReply) {
@@ -351,7 +351,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     }
 
     if (!videoDetailController.removeSafeArea) {
-      showStatusBar();
+      showSystemBar();
     }
 
     if (!videoDetailController.plPlayerController.isCloseAll) {
