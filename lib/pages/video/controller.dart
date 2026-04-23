@@ -166,7 +166,7 @@ class VideoDetailController extends GetxController
   PlayerStatus? playerStatus;
 
   late final scrollKey = GlobalKey<ExtendedNestedScrollViewState>();
-  late final RxBool isVertical = false.obs;
+  late final RxBool isVertical;
   late final RxDouble scrollRatio = 0.0.obs;
   ScrollController? _scrollCtr;
   ScrollController get scrollCtr =>
@@ -326,6 +326,7 @@ class VideoDetailController extends GetxController
     pgcType = args['pgcType'];
     heroTag = args['heroTag'];
     cover = RxString(args['cover'] ?? '');
+    isVertical = RxBool(args['isVertical'] ?? false);
 
     sourceType = args['sourceType'] ?? SourceType.normal;
     isFileSource = sourceType == SourceType.file;

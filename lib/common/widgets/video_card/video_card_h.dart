@@ -12,6 +12,7 @@ import 'package:PiliPlus/models/common/stat_type.dart';
 import 'package:PiliPlus/models/model_hot_video_item.dart';
 import 'package:PiliPlus/models/model_video.dart';
 import 'package:PiliPlus/models/search/result.dart';
+import 'package:PiliPlus/models_new/video/video_detail/dimension.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
@@ -92,30 +93,35 @@ class VideoCardH extends StatelessWidget {
                     }
                     return;
                   }
+
+                  Dimension? dimension;
                   if (videoItem case final HotVideoItemModel item) {
                     if (item.redirectUrl?.isNotEmpty == true &&
                         PageUtils.viewPgcFromUri(item.redirectUrl!)) {
                       return;
                     }
+                    dimension = item.dimension;
                   }
 
-                  try {
-                    final int? cid =
-                        videoItem.cid ??
-                        await SearchHttp.ab2c(
+                  int? cid = videoItem.cid;
+                  if (cid == null) {
+                    if (await SearchHttp.ab2cWithDimension(
                           aid: videoItem.aid,
                           bvid: videoItem.bvid,
-                        );
-                    if (cid != null) {
-                      PageUtils.toVideoPage(
-                        bvid: videoItem.bvid,
-                        cid: cid,
-                        cover: videoItem.cover,
-                        title: videoItem.title,
-                      );
+                        )
+                        case final res?) {
+                      cid = res.cid;
+                      dimension = res.dimension;
                     }
-                  } catch (err) {
-                    SmartDialog.showToast(err.toString());
+                  }
+                  if (cid != null) {
+                    PageUtils.toVideoPage(
+                      bvid: videoItem.bvid,
+                      cid: cid,
+                      cover: videoItem.cover,
+                      title: videoItem.title,
+                      dimension: dimension,
+                    );
                   }
                 },
             child: Padding(

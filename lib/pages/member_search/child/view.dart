@@ -78,6 +78,7 @@ class _MemberSearchChildPageState extends State<MemberSearchChildPage>
                     if (index == response.length - 1) {
                       _controller.onLoadMore();
                     }
+                    // TODO: dimension
                     return VideoCardH(
                       videoItem: response[index],
                     );
