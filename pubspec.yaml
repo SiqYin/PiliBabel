@@ -294,11 +294,6 @@ dependency_overrides:
       url: https://github.com/bggRGjQaUbCoE/media-kit.git
       path: libs/ios/media_kit_libs_ios_video
       ref: dev
-  media_kit_libs_macos_video:
-    git:
-      url: https://github.com/bggRGjQaUbCoE/media-kit.git
-      path: libs/macos/media_kit_libs_macos_video
-      ref: dev
   font_awesome_flutter: 10.9.0
 
 dev_dependencies:
