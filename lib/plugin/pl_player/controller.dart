@@ -1415,7 +1415,7 @@ class PlPlayerController with BlockConfigMixin {
     controls = !val;
   }
 
-  void toggleFullScreen(bool val) {
+  void _setFullScreen(bool val) {
     isFullScreen.value = val;
     updateSubtitleStyle();
   }
@@ -1425,6 +1425,37 @@ class PlPlayerController with BlockConfigMixin {
   late final FullScreenMode mode = Pref.fullScreenMode;
   late final horizontalScreen = Pref.horizontalScreen;
   late final removeSafeArea = Pref.removeSafeArea;
+
+  Future<void>? changeOrientation({
+    required bool isVertical,
+    DeviceOrientation? orientation,
+  }) {
+    if (orientation == null && (mode == .none || mode == .gravity)) {
+      return null;
+    }
+    if (orientation == null &&
+        (mode == .vertical ||
+            (mode == .auto && isVertical) ||
+            (mode == .ratio && (isVertical || screenRatio < kScreenRatio)))) {
+      return portraitUpMode();
+    } else {
+      // https://github.com/flutter/flutter/issues/73651
+      // https://github.com/flutter/flutter/issues/183708
+      if (Platform.isAndroid) {
+        if ((orientation ?? _orientation) == .landscapeRight) {
+          return landscapeRightMode();
+        } else {
+          return landscapeLeftMode();
+        }
+      } else {
+        if (orientation == .landscapeLeft) {
+          return landscapeLeftMode();
+        } else {
+          return landscapeRightMode();
+        }
+      }
+    }
+  }
 
   // 全屏
   bool _fsProcessing = false;
@@ -1439,38 +1470,15 @@ class PlPlayerController with BlockConfigMixin {
 
     if (_fsProcessing) return;
     _fsProcessing = true;
-    toggleFullScreen(status);
     this.isManualFS = isManualFS;
     try {
       if (status) {
         if (PlatformUtils.isMobile) {
           hideStatusBar();
-          if (orientation == null && mode == .none) {
-            return;
-          }
-          if (orientation == null &&
-              (mode == .vertical ||
-                  (mode == .auto && isVertical) ||
-                  (mode == .ratio &&
-                      (isVertical || screenRatio < kScreenRatio)))) {
-            await portraitUpMode();
-          } else {
-            // https://github.com/flutter/flutter/issues/73651
-            // https://github.com/flutter/flutter/issues/183708
-            if (Platform.isAndroid) {
-              if ((orientation ?? _orientation) == .landscapeRight) {
-                await landscapeRightMode();
-              } else {
-                await landscapeLeftMode();
-              }
-            } else {
-              if (orientation == .landscapeLeft) {
-                await landscapeLeftMode();
-              } else {
-                await landscapeRightMode();
-              }
-            }
-          }
+          await changeOrientation(
+            isVertical: isVertical,
+            orientation: orientation,
+          );
         } else {
           await enterDesktopFullScreen(inAppFullScreen: inAppFullScreen);
         }
@@ -1502,6 +1510,7 @@ class PlPlayerController with BlockConfigMixin {
         }
       }
     } finally {
+      _setFullScreen(status);
       _fsProcessing = false;
     }
   }
