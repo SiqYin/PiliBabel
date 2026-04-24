@@ -198,10 +198,25 @@ class VideoDetailController extends GetxController
   @pragma('vm:notify-debugger-on-exception')
   void setVideoHeight() {
     try {
-      final isVertical = firstVideo.width != null && firstVideo.height != null
-          ? firstVideo.width! < firstVideo.height!
-          : false;
-      if (!scrollCtr.hasClients) {
+      var width = firstVideo.width;
+      var height = firstVideo.height;
+      if (width == null || height == null) {
+        if (isUgc && !isFileSource) {
+          final ugcIntroCtr = Get.find<UgcIntroController>(tag: heroTag);
+          final data = ugcIntroCtr.videoDetail.value;
+          if (data.cid == cid.value) {
+            width = data.dimension!.width!;
+            height = data.dimension!.height!;
+          } else {
+            ugcIntroCtr.queryVideoIntro().whenComplete(setVideoHeight);
+            return;
+          }
+        } else {
+          return;
+        }
+      }
+      final isVertical = height > width;
+      if (_scrollCtr?.hasClients != true) {
         videoHeight = isVertical ? maxVideoHeight : minVideoHeight;
         this.isVertical.value = isVertical;
         return;
@@ -298,11 +313,7 @@ class VideoDetailController extends GetxController
       defaultST = Duration.zero;
     }
     data = PlayUrlModel(timeLength: entry.totalTimeMilli);
-    if (isInit) {
-      Future.delayed(const Duration(milliseconds: 120), setVideoHeight);
-    } else {
-      setVideoHeight();
-    }
+    setVideoHeight();
   }
 
   @override

@@ -65,7 +65,7 @@ class VideoCardH extends StatelessWidget {
       title: videoItem.title,
       cover: videoItem.cover,
     );
-    final colorScheme = ColorScheme.of(context);
+    final theme = Theme.of(context);
     return Material(
       type: MaterialType.transparency,
       child: Stack(
@@ -175,9 +175,9 @@ class VideoCardH extends StatelessWidget {
                                 bottom: 0,
                                 right: 0,
                                 child: VideoProgressIndicator(
-                                  color: colorScheme.primary,
+                                  color: theme.colorScheme.primary,
                                   backgroundColor:
-                                      colorScheme.secondaryContainer,
+                                      theme.colorScheme.secondaryContainer,
                                   progress: progress == -1
                                       ? 1
                                       : progress / videoItem.duration,
@@ -198,7 +198,7 @@ class VideoCardH extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  content(context),
+                  content(theme),
                 ],
               ),
             ),
@@ -219,8 +219,7 @@ class VideoCardH extends StatelessWidget {
     );
   }
 
-  Widget content(BuildContext context) {
-    final theme = Theme.of(context);
+  Widget content(ThemeData theme) {
     String pubdate = DateFormatUtils.dateFormat(videoItem.pubdate!);
     if (pubdate != '') pubdate += '  ';
     return Expanded(
