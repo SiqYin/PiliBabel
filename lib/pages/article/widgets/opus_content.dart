@@ -101,7 +101,7 @@ class OpusContent extends StatelessWidget {
             ),
             alignment: Alignment.centerLeft,
             placeholderBuilder: (_) => Text(latex),
-            errorWidget: Text(latex),
+            errorBuilder: (_) => Text(latex),
           ),
         );
       default:
