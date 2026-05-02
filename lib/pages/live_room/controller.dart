@@ -593,7 +593,7 @@ class LiveRoomController extends GetxController {
   }
 
   void onSendDanmaku([bool fromEmote = false]) {
-    if (kReleaseMode&& !isLogin) {
+    if (kReleaseMode && !isLogin) {
       SmartDialog.showToast('账号未登录');
       return;
     }
