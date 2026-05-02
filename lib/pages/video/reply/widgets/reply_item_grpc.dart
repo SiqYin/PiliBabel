@@ -455,6 +455,27 @@ class ReplyItemGrpc extends StatelessWidget {
       tapTargetSize: .shrinkWrap,
       padding: WidgetStatePropertyAll(.zero),
     );
+
+    Widget? dialogBtn;
+    if (replyLevel == 2 && needDivider && replyItem.id != replyItem.dialog) {
+      dialogBtn = SizedBox(
+        height: 32,
+        child: TextButton(
+          onPressed: showDialogue,
+          style: buttonStyle,
+          child: Text('查看对话', style: textStyle),
+        ),
+      );
+    } else if (replyLevel == 3 && replyItem.parent != replyItem.root) {
+      dialogBtn = SizedBox(
+        height: 32,
+        child: TextButton(
+          onPressed: jumpToDialogue,
+          style: buttonStyle,
+          child: Text('跳转回复', style: textStyle),
+        ),
+      );
+    }
     return Row(
       children: [
         const SizedBox(width: 36),
@@ -491,35 +512,16 @@ class ReplyItemGrpc extends StatelessWidget {
             buttonStyle,
           ),
           const SizedBox(width: 2),
-        ] else if (replyItem.replyControl.cardLabels.isNotEmpty) ...[
+        ] else if (replyControl.cardLabels.isNotEmpty) ...[
           Text(
-            replyItem.replyControl.cardLabels
-                .map((e) => e.textContent)
-                .join('  '),
+            dialogBtn != null
+                ? replyControl.cardLabels.first.textContent
+                : replyControl.cardLabels.map((e) => e.textContent).join('  '),
             style: textStyle.copyWith(color: theme.colorScheme.secondary),
           ),
           const SizedBox(width: 2),
         ],
-        if (replyLevel == 2 && needDivider && replyItem.id != replyItem.dialog)
-          SizedBox(
-            height: 32,
-            child: TextButton(
-              onPressed: showDialogue,
-              style: buttonStyle,
-              child: Text('查看对话', style: textStyle),
-            ),
-          )
-        else if (replyLevel == 3 &&
-            needDivider &&
-            replyItem.parent != replyItem.root)
-          SizedBox(
-            height: 32,
-            child: TextButton(
-              onPressed: jumpToDialogue,
-              style: buttonStyle,
-              child: Text('跳转回复', style: textStyle),
-            ),
-          ),
+        ?dialogBtn,
         const Spacer(),
         ZanButtonGrpc(replyItem: replyItem),
         const SizedBox(width: 5),
