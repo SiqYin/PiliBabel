@@ -258,11 +258,14 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                   plPlayerController
                     ..volumeIndicator.value = true
                     ..volumeTimer?.cancel()
-                    ..volumeTimer = Timer(const Duration(milliseconds: 800), () {
-                      if (mounted) {
-                        plPlayerController.volumeIndicator.value = false;
-                      }
-                    });
+                    ..volumeTimer = Timer(
+                      const Duration(milliseconds: 800),
+                      () {
+                        if (mounted) {
+                          plPlayerController.volumeIndicator.value = false;
+                        }
+                      },
+                    );
                 }
               }
             }, emitOnStart: false);
@@ -590,13 +593,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               width: widgetWidth,
               height: 30,
               tooltip: '分段信息',
-              icon: Transform.rotate(
-                angle: math.pi / 2,
-                child: const Icon(
-                  Icons.reorder,
-                  size: 22,
-                  color: Colors.white,
-                ),
+              icon: const Icon(
+                CustomIcons.view_headline_rotate_90,
+                size: 22,
+                color: Colors.white,
               ),
               onTap: widget.showViewPoints,
             );
@@ -976,8 +976,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     final flag =
         isFullScreen || plPlayerController.isDesktopPip || maxWidth >= 500;
     List<BottomControlType> userSpecifyItemRight = [
-      if (plPlayerController.showViewPoints)
-        BottomControlType.viewPoints,
+      if (plPlayerController.showViewPoints) BottomControlType.viewPoints,
       if (isNotFileSource && plPlayerController.showDmChart)
         BottomControlType.dmChart,
       if (plPlayerController.isAnim) BottomControlType.superResolution,
@@ -1904,12 +1903,15 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                           bottom: 0.75,
                           child: ViewPointDividerBar(
                             segments: videoDetailController.viewPointList,
-                            progress: plPlayerController
-                                        .duration.value.inSeconds >
-                                    0
+                            progress:
+                                plPlayerController.duration.value.inSeconds > 0
                                 ? plPlayerController
-                                        .sliderPositionSeconds.value /
-                                    plPlayerController.duration.value.inSeconds
+                                          .sliderPositionSeconds
+                                          .value /
+                                      plPlayerController
+                                          .duration
+                                          .value
+                                          .inSeconds
                                 : 0.0,
                           ),
                         ),
