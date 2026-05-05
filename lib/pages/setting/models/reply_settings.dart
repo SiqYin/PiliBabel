@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/grpc/reply.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
@@ -35,7 +36,7 @@ List<SettingsModel> get replySettings => [
   SwitchModel(
     title: '屏蔽带货评论',
     subtitle: '过滤包含商品推广的评论',
-    leading: const Icon(Icons.shopping_bag_outlined),
+    leading: const Icon(CustomIcons.shopping_bag_not_interested),
     setKey: SettingBoxKey.antiGoodsReply,
     defaultVal: false,
     onChanged: (value) => ReplyGrpc.antiGoodsReply = value,
