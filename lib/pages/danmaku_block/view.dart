@@ -49,7 +49,7 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
       appBar: AppBar(
         title: const Text('弹幕屏蔽'),
         actions: [
-          iconButton(
+          IconButton(
             tooltip: '导入/导出',
             icon: const Icon(Icons.import_export),
             onPressed: () => showImportExportDialog<List<dynamic>>(
