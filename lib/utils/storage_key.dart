@@ -123,6 +123,8 @@ abstract final class SettingBoxKey {
       removeOnlyFansVideoDyn = 'removeOnlyFansVideoDyn',
       antiGoodsReply = 'antiGoodsReply',
       replyMinLevel = 'replyMinLevel',
+      keepUpLikeReply = 'keepUpLikeReply',
+      keepUpReplyReply = 'keepUpReplyReply',
       expandDynLivePanel = 'expandDynLivePanel',
       dynamicsShowSelfUp = 'dynamicsShowSelfUp',
       springDescription = 'springDescription',

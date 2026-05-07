@@ -792,6 +792,12 @@ abstract final class Pref {
   static set replyMinLevel(int v) =>
       _setting.put(SettingBoxKey.replyMinLevel, v);
 
+  static bool get keepUpLikeReply =>
+      _setting.get(SettingBoxKey.keepUpLikeReply, defaultValue: false);
+
+  static bool get keepUpReplyReply =>
+      _setting.get(SettingBoxKey.keepUpReplyReply, defaultValue: false);
+
   static bool get expandDynLivePanel =>
       _setting.get(SettingBoxKey.expandDynLivePanel, defaultValue: false);
 

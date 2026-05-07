@@ -41,4 +41,20 @@ List<SettingsModel> get replySettings => [
     defaultVal: false,
     onChanged: (value) => ReplyGrpc.antiGoodsReply = value,
   ),
+  SwitchModel(
+    title: '保留 UP 主觉得很赞的评论',
+    subtitle: '豁免 UP 主点赞的评论，不受其他过滤规则影响',
+    leading: const Icon(Icons.thumb_up_outlined),
+    setKey: SettingBoxKey.keepUpLikeReply,
+    defaultVal: false,
+    onChanged: (value) => ReplyGrpc.keepUpLikeReply = value,
+  ),
+  SwitchModel(
+    title: '保留 UP 主参与回复的评论',
+    subtitle: '豁免 UP 主回复过的评论，不受其他过滤规则影响',
+    leading: const Icon(Icons.mark_chat_read_outlined),
+    setKey: SettingBoxKey.keepUpReplyReply,
+    defaultVal: false,
+    onChanged: (value) => ReplyGrpc.keepUpReplyReply = value,
+  ),
 ];

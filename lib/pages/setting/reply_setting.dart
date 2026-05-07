@@ -86,7 +86,7 @@ class _ReplySettingState extends State<ReplySetting> {
           leading: const Icon(Icons.shield_outlined),
           title: const Text('屏蔽低等级用户评论'),
           subtitle: Text(
-            _level == 0 ? '已关闭' : '屏蔽 Lv$_level 以下的评论',
+            _level == 0 ? '已关闭' : '屏蔽 Lv${_level - 1} 及以下的评论',
           ),
         ),
         Padding(

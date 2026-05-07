@@ -17,6 +17,8 @@ abstract final class ReplyGrpc {
   static bool enableFilter = replyRegExp.pattern.isNotEmpty;
   static Map<int, String> replyBlockedMids = Pref.replyBlockedMids;
   static int replyMinLevel = Pref.replyMinLevel;
+  static bool keepUpLikeReply = Pref.keepUpLikeReply;
+  static bool keepUpReplyReply = Pref.keepUpReplyReply;
 
   // static Future replyInfo({required int rpid}) {
   //   return _request(
@@ -42,10 +44,13 @@ abstract final class ReplyGrpc {
   static bool needRemoveGrpc(ReplyInfo reply) {
     final mid = reply.mid.toInt();
     if (UserWhitelist.contains(mid)) return false;
-    return (enableFilter && replyRegExp.hasMatch(reply.content.message)) ||
-        (antiGoodsReply && needRemoveGoodGrpc(reply)) ||
+    final replyControl = reply.replyControl;
+    if (keepUpLikeReply && replyControl.upLike) return false;
+    if (keepUpReplyReply && replyControl.upReply) return false;
+    return (replyMinLevel > 0 && reply.member.level.toInt() < replyMinLevel) ||
         (replyBlockedMids.isNotEmpty && replyBlockedMids.containsKey(mid)) ||
-        (replyMinLevel > 0 && reply.member.level.toInt() < replyMinLevel);
+        (enableFilter && replyRegExp.hasMatch(reply.content.message)) ||
+        (antiGoodsReply && needRemoveGoodGrpc(reply));
   }
 
   static Future<LoadingState<MainListReply>> mainList({
