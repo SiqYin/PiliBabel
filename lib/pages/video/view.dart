@@ -723,7 +723,17 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         videoDetailController.isEnteringPip = false;
         // 小窗模式下控制栏可能被隐藏了，恢复它
         plPlayerController?.controls = true;
+      } else {
+        // 小窗里播放的是其他视频，返回到新的视频页面时必须关闭小窗，否则会同时播放两个视频
+        _logSponsorBlock(
+          'Returning to video page but PiP has different controller, closing PiP',
+        );
+        PipOverlayService.stopPip(callOnClose: true, immediate: true);
       }
+    }
+    // 视频页返回时，若直播小窗仍在运行，也需关闭
+    if (LivePipOverlayService.isInPipMode) {
+      LivePipOverlayService.stopLivePip(callOnClose: true, immediate: true);
     }
 
     // 如果是从开启新页面方式（Get.toNamed）从小窗手动返回，播放器应已在运行，跳过部分重置逻辑

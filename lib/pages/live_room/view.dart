@@ -166,7 +166,14 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     if (LivePipOverlayService.isInPipMode) {
       if (LivePipOverlayService.currentRoomId == _liveRoomController.roomId) {
         LivePipOverlayService.stopLivePip(callOnClose: false, immediate: true);
+      } else {
+        // 小窗里是其他房间，返回直播间时必须关闭，否则会同时播放两个视频
+        LivePipOverlayService.stopLivePip(callOnClose: true, immediate: true);
       }
+    }
+    // 直播页返回时，若视频小窗仍在运行，也需关闭
+    if (PipOverlayService.isInPipMode) {
+      PipOverlayService.stopPip(callOnClose: true, immediate: true);
     }
 
     // 如果 local 的 plPlayerController 实例指向了已被销毁的单例，刷新它
