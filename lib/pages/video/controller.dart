@@ -288,11 +288,11 @@ class VideoDetailController extends GetxController
                 .toPrecision(2);
             double minVideoHeightPrecise = minVideoHeight.toPrecision(2);
             if (currentHeight == minVideoHeightPrecise) {
+              this.videoHeight = minVideoHeight;
               if (_needAnimOnDimensionChanged(isVertical)) {
                 isExpanding = true;
-                this.videoHeight = minVideoHeight;
+                animationController.forward(from: 1);
               }
-              animationController.forward(from: 1);
             } else if (currentHeight < minVideoHeightPrecise) {
               // expand
               if (_needAnimOnDimensionChanged(isVertical)) {

@@ -670,7 +670,7 @@ class HeaderControlState extends State<HeaderControl>
                     try {
                       final result = await FilePicker.pickFiles(
                         type: .custom,
-                        allowedExtensions: const ['json', 'vtt', 'srt'],
+                        allowedExtensions: const ['json', 'vtt', 'srt', 'ass'],
                       );
                       if (result != null) {
                         final file = result.files.single;
