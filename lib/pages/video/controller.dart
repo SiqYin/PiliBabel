@@ -126,6 +126,7 @@ class VideoDetailController extends GetxController
     ..brightness.value = -1;
   bool get setSystemBrightness => plPlayerController.setSystemBrightness;
   bool get removeSafeArea => plPlayerController.removeSafeArea;
+  double get uiScale => plPlayerController.uiScale;
 
   late VideoItem firstVideo;
   String? videoUrl;

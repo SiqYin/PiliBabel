@@ -105,8 +105,8 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     maxWidth = size.width;
     maxHeight = size.height;
     isWindowMode = MaxScreenSize.isWindowMode(
-      width: maxWidth,
-      height: maxHeight,
+      width: maxWidth * plPlayerController.uiScale,
+      height: maxHeight * plPlayerController.uiScale,
     );
     isPortrait = size.isPortrait;
     plPlayerController.screenRatio = maxHeight / maxWidth;
