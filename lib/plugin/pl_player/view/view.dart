@@ -1211,7 +1211,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
   StreamSubscription<bool>? _danmakuListener;
 
-  static const _kOffsetThreshold = 40.0;
+  static const _kOffsetThreshold = 30.0;
   bool _isPositionAllowed(Offset offset) {
     if (offset.dx < _kOffsetThreshold ||
         offset.dy < _kOffsetThreshold ||
@@ -1241,29 +1241,30 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       }
     }
 
-    if (_isPositionAllowed(event.localPosition)) {
-      final controlsUnlock = !plPlayerController.controlsLock.value;
-      if (PlatformUtils.isMobile) {
-        _tapGestureRecognizer.addPointer(event);
-        if (controlsUnlock) {
-          if (!plPlayerController.isLive) {
-            _doubleTapGestureRecognizer.addPointer(event);
-            longPressRecognizer.addPointer(event);
-          }
-          _scaleGestureRecognizer.addPointer(event);
-        }
-      } else {
-        if (controlsUnlock) {
-          if (!plPlayerController.isLive) {
-            _tapGestureRecognizer.addPointer(event);
-          }
+    final controlsUnlock = !plPlayerController.controlsLock.value;
+    if (PlatformUtils.isMobile) {
+      _tapGestureRecognizer.addPointer(event);
+      if (controlsUnlock) {
+        final flag = _isPositionAllowed(event.localPosition);
+        if (!plPlayerController.isLive) {
           _doubleTapGestureRecognizer.addPointer(event);
-          if (!plPlayerController.isLive) {
+          if (flag) {
             longPressRecognizer.addPointer(event);
           }
+        }
+        if (flag) {
           _scaleGestureRecognizer.addPointer(event);
         }
       }
+    } else if (controlsUnlock) {
+      if (plPlayerController.isLive) {
+        _doubleTapGestureRecognizer.addPointer(event);
+      } else {
+        _tapGestureRecognizer.addPointer(event);
+        _doubleTapGestureRecognizer.addPointer(event);
+        longPressRecognizer.addPointer(event);
+      }
+      _scaleGestureRecognizer.addPointer(event);
     }
   }
 

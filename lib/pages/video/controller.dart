@@ -267,7 +267,10 @@ class VideoDetailController extends GetxController
       final isVertical = height > width;
       if (_scrollCtr?.hasClients != true) {
         videoHeight = isVertical ? maxVideoHeight : minVideoHeight;
-        this.isVertical.value = isVertical;
+        if (this.isVertical.value != isVertical) {
+          this.isVertical.value = isVertical;
+          _needAnimOnDimensionChanged(isVertical);
+        }
         return;
       }
       if (this.isVertical.value != isVertical) {

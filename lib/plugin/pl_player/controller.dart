@@ -362,7 +362,6 @@ class PlPlayerController with BlockConfigMixin {
   late final keyboardControl = Pref.keyboardControl;
   late final uiScale = Pref.uiScale;
 
-
   late final bool autoEnterFullScreen = Pref.autoEnterFullScreen;
   late final bool autoExitFullscreen = Pref.autoExitFullscreen;
   late final bool autoPlayEnable = Pref.autoPlayEnable;
