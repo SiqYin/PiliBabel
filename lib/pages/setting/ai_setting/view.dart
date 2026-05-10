@@ -16,21 +16,31 @@ class AiSettingPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         children: [
-          // API 地址
-          TextField(
-            controller: controller.apiUrlCtl,
-            decoration: const InputDecoration(
-              labelText: 'API 地址',
-              hintText: 'https://api.example.com',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.link),
+          // API 配置
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('API 配置', style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller.apiUrlCtl,
+                    decoration: const InputDecoration(
+                      labelText: '接口地址',
+                      hintText: 'https://api.example.com',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.link),
+                    ),
+                    onChanged: controller.saveApiUrl,
+                  ),
+                  const SizedBox(height: 12),
+                  _ApiKeyField(controller: controller),
+                ],
+              ),
             ),
-            onChanged: controller.saveApiUrl,
           ),
-          const SizedBox(height: 16),
-
-          // API Key
-          _ApiKeyField(controller: controller),
           const SizedBox(height: 16),
 
           // 模型选择

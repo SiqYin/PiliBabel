@@ -22,6 +22,7 @@ import 'package:PiliPlus/pages/common/common_intro_controller.dart';
 import 'package:PiliPlus/pages/danmaku/view.dart';
 import 'package:PiliPlus/pages/episode_panel/view.dart';
 import 'package:PiliPlus/pages/video/ai_conclusion/view.dart';
+import 'package:PiliPlus/pages/ai_chat/controller.dart';
 import 'package:PiliPlus/pages/ai_chat/view.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/local/controller.dart';
@@ -300,6 +301,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       } else {
         pgcIntroController = Get.put(PgcIntroController(), tag: heroTag);
       }
+    }
+
+    // AI chat controller - create if not already registered (PiP reuse)
+    if (!Get.isRegistered<AiChatController>(tag: heroTag)) {
+      Get.put(AiChatController(heroTag: heroTag), tag: heroTag);
     }
 
     if (fromPip) {
@@ -2339,10 +2345,13 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
   // ai字幕分析
   void showAiChatBottomSheet() {
-    videoDetailController.childKey.currentState?.showBottomSheet(
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
       backgroundColor: Colors.transparent,
       constraints: const BoxConstraints(),
-      (context) => const AiChatPage(),
+      builder: (context) => AiChatPage(heroTag: heroTag),
     );
   }
 

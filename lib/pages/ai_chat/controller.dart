@@ -13,8 +13,10 @@ class AiChatController extends GetxController {
   final isAnalyzing = false.obs;
   final subtitleWarning = false.obs;
 
-  late final String heroTag;
+  final String heroTag;
   late final VideoDetailController _videoCtl;
+
+  AiChatController({required this.heroTag});
 
   static const _systemPrompt =
       '你是一个视频内容分析助手。用户会提供视频的标题、简介和字幕内容，请根据用户的要求进行分析。'
@@ -26,7 +28,6 @@ class AiChatController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    heroTag = Get.arguments?['heroTag'] ?? '';
     _videoCtl = Get.find<VideoDetailController>(tag: heroTag);
   }
 

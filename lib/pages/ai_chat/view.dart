@@ -12,7 +12,9 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
 class AiChatPage extends CommonSlidePage {
-  const AiChatPage({super.key});
+  const AiChatPage({super.key, required this.heroTag});
+
+  final String heroTag;
 
   @override
   State<AiChatPage> createState() => _AiChatPageState();
@@ -30,7 +32,7 @@ class _AiChatPageState extends State<AiChatPage>
   @override
   void initState() {
     super.initState();
-    chatCtl = Get.put(AiChatController(), tag: 'aiChat');
+    chatCtl = Get.find<AiChatController>(tag: widget.heroTag);
     _templates = AiChatService.getTemplates();
     _scrollCtl.addListener(_onScroll);
   }
@@ -41,7 +43,6 @@ class _AiChatPageState extends State<AiChatPage>
     _scrollCtl
       ..removeListener(_onScroll)
       ..dispose();
-    Get.delete<AiChatController>(tag: 'aiChat');
     super.dispose();
   }
 
@@ -339,138 +340,138 @@ class _AiChatPageState extends State<AiChatPage>
     final colorScheme = theme.colorScheme;
     return Align(
       alignment: Alignment.centerLeft,
-      child: Container(
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.sizeOf(context).width * 0.85,
-        ),
-        margin: const EdgeInsets.symmetric(vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-            bottomLeft: Radius.circular(4),
-            bottomRight: Radius.circular(16),
-          ),
-        ),
-        child: msg.content.isEmpty && msg.isStreaming
-            ? Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'AI 正在思考...',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colorScheme.outline,
-                    ),
-                  ),
-                ],
-              )
-            : Stack(
-                clipBehavior: Clip.none,
-                children: [
-                  _StreamingContent(
-                    isStreaming: msg.isStreaming,
-                    updateCount: msg.updateCount,
-                    child: MarkdownBody(
-                    data: _preprocessTimestamps(msg.content),
-                    selectable: !msg.isStreaming,
-                    blockSyntaxes: [LatexBlockSyntax()],
-                    inlineSyntaxes: [LatexInlineSyntax()],
-                    builders: {
-                      'latex': LatexElementBuilder(),
-                    },
-                    onTapLink: (text, href, title) {
-                      if (href != null &&
-                          href.startsWith('timestamp://')) {
-                        _seekToTimestamp(href);
-                      }
-                    },
-                    styleSheet: MarkdownStyleSheet(
-                      p: TextStyle(
-                        fontSize: 15,
-                        height: 1.6,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      h1: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                        height: 1.5,
-                      ),
-                      h2: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                        height: 1.5,
-                      ),
-                      h3: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface,
-                        height: 1.4,
-                      ),
-                      blockquoteDecoration: BoxDecoration(
-                        border: Border(
-                          left: BorderSide(
-                            color: colorScheme.primary,
-                            width: 3,
-                          ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.sizeOf(context).width * 0.85,
+            ),
+            margin: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+                bottomLeft: Radius.circular(4),
+                bottomRight: Radius.circular(16),
+              ),
+            ),
+            child: msg.content.isEmpty && msg.isStreaming
+                ? Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: colorScheme.primary,
                         ),
                       ),
-                      blockquotePadding: const EdgeInsets.only(left: 12),
-                      code: TextStyle(
-                        fontSize: 13,
-                        color: colorScheme.primary,
-                        backgroundColor: colorScheme.surfaceContainerHigh,
+                      const SizedBox(width: 8),
+                      Text(
+                        'AI 正在思考...',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colorScheme.outline,
+                        ),
                       ),
-                      codeblockDecoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      codeblockPadding: const EdgeInsets.all(12),
-                      listBullet: TextStyle(
-                        fontSize: 14,
-                        color: colorScheme.primary,
-                      ),
-                    ),
-                  ),
-                  ),
-                  // Copy button
-                  if (!msg.isStreaming && msg.content.isNotEmpty)
-                    Positioned(
-                      right: -4,
-                      bottom: -4,
-                      child: Material(
-                        color: colorScheme.primaryContainer,
-                        borderRadius: BorderRadius.circular(16),
-                        elevation: 2,
-                        child: InkWell(
-                          onTap: _copyToClipboard,
-                          borderRadius: BorderRadius.circular(16),
-                          child: Padding(
-                            padding: const EdgeInsets.all(6),
-                            child: Icon(
-                              Icons.copy,
-                              size: 16,
-                              color: colorScheme.onPrimaryContainer,
+                    ],
+                  )
+                : SelectionArea(
+                    child: MarkdownBody(
+                      data: _preprocessTimestamps(msg.content),
+                      blockSyntaxes: [LatexBlockSyntax()],
+                      inlineSyntaxes: [LatexInlineSyntax()],
+                      builders: {
+                        'latex': LatexElementBuilder(),
+                      },
+                      onTapLink: (text, href, title) {
+                        if (href != null &&
+                            href.startsWith('timestamp://')) {
+                          _seekToTimestamp(href);
+                        }
+                      },
+                      styleSheet: MarkdownStyleSheet(
+                        a: TextStyle(
+                          color: colorScheme.primary,
+                          decoration: TextDecoration.none,
+                        ),
+                        p: TextStyle(
+                          fontSize: 15,
+                          height: 1.6,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        h1: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                          height: 1.5,
+                        ),
+                        h2: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                          height: 1.5,
+                        ),
+                        h3: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                          height: 1.4,
+                        ),
+                        blockquoteDecoration: BoxDecoration(
+                          border: Border(
+                            left: BorderSide(
+                              color: colorScheme.primary,
+                              width: 3,
                             ),
                           ),
                         ),
+                        blockquotePadding: const EdgeInsets.only(left: 12),
+                        code: TextStyle(
+                          fontSize: 13,
+                          color: colorScheme.primary,
+                          backgroundColor: colorScheme.surfaceContainerHigh,
+                        ),
+                        codeblockDecoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        codeblockPadding: const EdgeInsets.all(12),
+                        listBullet: TextStyle(
+                          fontSize: 14,
+                          color: colorScheme.primary,
+                        ),
                       ),
                     ),
-                ],
+                  ),
+          ),
+          // Copy button at bottom-right of bubble, after streaming ends
+          if (!msg.isStreaming && msg.content.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.only(left: 4, bottom: 4),
+              child: Material(
+                color: colorScheme.primaryContainer,
+                borderRadius: BorderRadius.circular(16),
+                elevation: 2,
+                child: InkWell(
+                  onTap: _copyToClipboard,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(
+                      Icons.copy,
+                      size: 16,
+                      color: colorScheme.onPrimaryContainer,
+                    ),
+                  ),
+                ),
               ),
+            ),
+        ],
       ),
     );
   }
@@ -490,8 +491,7 @@ class _AiChatPageState extends State<AiChatPage>
     final seconds = int.tryParse(href.replaceFirst('timestamp://', ''));
     if (seconds == null) return;
     try {
-      final heroTag = Get.arguments?['heroTag'] ?? '';
-      final videoCtl = Get.find<VideoDetailController>(tag: heroTag);
+      final videoCtl = Get.find<VideoDetailController>(tag: widget.heroTag);
       final duration = videoCtl.plPlayerController.duration.value;
       if (duration.inSeconds > 0 && seconds > duration.inSeconds) return;
       videoCtl.plPlayerController.seekTo(
@@ -552,65 +552,5 @@ class _AiChatPageState extends State<AiChatPage>
   @override
   Widget buildList(ThemeData theme) {
     return _buildContent(theme);
-  }
-}
-
-/// Wraps content with a subtle fade-in animation during streaming updates,
-/// masking the visual jumps when Markdown nodes reflow.
-class _StreamingContent extends StatefulWidget {
-  const _StreamingContent({
-    required this.isStreaming,
-    required this.updateCount,
-    required this.child,
-  });
-
-  final bool isStreaming;
-  final int updateCount;
-  final Widget child;
-
-  @override
-  State<_StreamingContent> createState() => _StreamingContentState();
-}
-
-class _StreamingContentState extends State<_StreamingContent>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 150),
-      vsync: this,
-      value: 1.0,
-    );
-  }
-
-  @override
-  void didUpdateWidget(_StreamingContent oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.isStreaming && widget.updateCount != oldWidget.updateCount) {
-      _controller
-        ..value = 0.7
-        ..animateTo(1.0, duration: const Duration(milliseconds: 150));
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder<double>(
-      valueListenable: _controller,
-      builder: (context, value, child) => Opacity(
-        opacity: value,
-        child: child,
-      ),
-      child: widget.child,
-    );
   }
 }
