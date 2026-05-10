@@ -882,6 +882,45 @@ abstract final class VideoHttp {
     return null;
   }
 
+  static final _fillerWords = RegExp(
+    r'(嗯+|啊+|额+|呃+|那个|就是说|然后呢|对吧|是吧|对不对|你知道吗|反正就是|基本上|说实话)',
+  );
+
+  /// Fetch raw subtitle body JSON list from URL.
+  static Future<List?> fetchSubtitleBody(String subtitleUrl) async {
+    final res = await Request().get("https:$subtitleUrl");
+    return res.data?['body'] as List?;
+  }
+
+  /// Preprocess subtitle body JSON for AI analysis.
+  /// Returns (compressed text, isTooLong).
+  static ({String text, bool isTooLong}) preprocessSubtitlesForAi(
+    List body,
+  ) {
+    final sb = StringBuffer();
+    // Check if any subtitle exceeds 1 hour to determine format
+    final hasHour = body.isNotEmpty && (body.last['from'] as num) >= 3600;
+    for (final item in body) {
+      final from = item['from'] as num;
+      final content = (item['content'] as String?)?.trim() ?? '';
+      if (content.isEmpty) continue;
+      final h = from ~/ 3600;
+      final m = (from % 3600) ~/ 60;
+      final s = (from % 60).toInt();
+      final ts = hasHour
+          ? '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}'
+          : '${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')}';
+      sb.writeln('[$ts] $content');
+    }
+
+    // Second level: remove filler words
+    var text = sb.toString().replaceAll(_fillerWords, '');
+    // Collapse multiple blank lines
+    text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n').trim();
+
+    return (text: text, isTooLong: text.length > 100000);
+  }
+
   static bool _canAddRank(Map i) {
     final isWhitelisted = RecommendFilter.isWhitelisted(
       safeToInt(i['owner']?['mid']),

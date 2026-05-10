@@ -50,6 +50,7 @@ class UgcIntroPanel extends StatefulWidget {
     super.key,
     required this.heroTag,
     required this.showAiBottomSheet,
+    required this.showAiChatBottomSheet,
     required this.showEpisodes,
     required this.onShowMemberPage,
     required this.isPortrait,
@@ -57,6 +58,7 @@ class UgcIntroPanel extends StatefulWidget {
   });
   final String heroTag;
   final Function showAiBottomSheet;
+  final VoidCallback showAiChatBottomSheet;
   final Function showEpisodes;
   final ValueChanged<int?> onShowMemberPage;
   final bool isPortrait;
@@ -605,6 +607,13 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
             text: !isLoading
                 ? NumUtils.numFormat(videoDetail.stat!.share!)
                 : null,
+          ),
+          ActionItem(
+            icon: const Icon(Icons.auto_awesome),
+            onTap: widget.showAiChatBottomSheet,
+            selectStatus: false,
+            semanticsLabel: 'AI分析',
+            text: 'AI',
           ),
         ],
       ),

@@ -172,6 +172,13 @@ abstract final class SettingBoxKey {
       mixWithOthers = 'mixWithOthers',
       removeSafeArea = 'removeSafeArea';
 
+  static const String aiApiUrl = 'aiApiUrl',
+      aiApiKey = 'aiApiKey',
+      aiModel = 'aiModel',
+      aiModelListCache = 'aiModelListCache',
+      aiModelListCacheTime = 'aiModelListCacheTime',
+      aiPromptTemplates = 'aiPromptTemplates';
+
   static const String minimizeOnExit = 'minimizeOnExit',
       windowSize = 'windowSize',
       windowPosition = 'windowPosition',
