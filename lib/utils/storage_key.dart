@@ -172,7 +172,8 @@ abstract final class SettingBoxKey {
       mixWithOthers = 'mixWithOthers',
       removeSafeArea = 'removeSafeArea';
 
-  static const String aiApiUrl = 'aiApiUrl',
+  static const String enableAiChat = 'enableAiChat',
+      aiApiUrl = 'aiApiUrl',
       aiApiKey = 'aiApiKey',
       aiModel = 'aiModel',
       aiModelListCache = 'aiModelListCache',

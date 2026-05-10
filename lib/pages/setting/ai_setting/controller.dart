@@ -5,6 +5,7 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
 class AiSettingController extends GetxController {
+  final enableAiChat = true.obs;
   final apiUrl = ''.obs;
   final apiKey = ''.obs;
   final model = ''.obs;
@@ -19,6 +20,7 @@ class AiSettingController extends GetxController {
   @override
   void onInit() {
     super.onInit();
+    enableAiChat.value = Pref.enableAiChat;
     apiUrl.value = Pref.aiApiUrl;
     apiKey.value = Pref.aiApiKey;
     model.value = Pref.aiModel;

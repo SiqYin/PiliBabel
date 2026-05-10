@@ -37,6 +37,7 @@ import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:expandable/expandable.dart';
 import 'package:flutter/material.dart';
@@ -608,13 +609,14 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                 ? NumUtils.numFormat(videoDetail.stat!.share!)
                 : null,
           ),
-          ActionItem(
-            icon: const Icon(Icons.auto_awesome),
-            onTap: widget.showAiChatBottomSheet,
-            selectStatus: false,
-            semanticsLabel: 'AI分析',
-            text: 'AI',
-          ),
+          if (Pref.enableAiChat)
+            ActionItem(
+              icon: const Icon(Icons.auto_awesome),
+              onTap: widget.showAiChatBottomSheet,
+              selectStatus: false,
+              semanticsLabel: 'AI分析',
+              text: 'AI',
+            ),
         ],
       ),
     );

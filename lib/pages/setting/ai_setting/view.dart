@@ -1,4 +1,5 @@
 import 'package:PiliPlus/pages/setting/ai_setting/controller.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -16,6 +17,18 @@ class AiSettingPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         children: [
+          // 总开关
+          Obx(() => SwitchListTile(
+                title: const Text('启用 AI 视频助手'),
+                subtitle: const Text('关闭后视频详情页不再显示 AI 按钮'),
+                value: controller.enableAiChat.value,
+                onChanged: (value) {
+                  controller.enableAiChat.value = value;
+                  Pref.enableAiChat = value;
+                },
+              )),
+          const SizedBox(height: 8),
+
           // API 配置
           Card(
             child: Padding(

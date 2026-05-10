@@ -1409,6 +1409,11 @@ abstract final class Pref {
       _setting.get(SettingBoxKey.removeSafeArea, defaultValue: false);
 
   // AI 字幕分析设置
+  static bool get enableAiChat =>
+      _setting.get(SettingBoxKey.enableAiChat, defaultValue: true);
+
+  static set enableAiChat(bool value) =>
+      _setting.put(SettingBoxKey.enableAiChat, value);
   static String get aiApiUrl =>
       _setting.get(SettingBoxKey.aiApiUrl, defaultValue: '');
 
