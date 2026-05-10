@@ -17,19 +17,15 @@ class AiSettingPage extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         children: [
           // API 地址
-          Obx(
-            () => TextField(
-              controller: TextEditingController(text: controller.apiUrl.value)
-                ..selection = TextSelection.fromPosition(
-                  TextPosition(offset: controller.apiUrl.value.length),
-                ),
-              decoration: const InputDecoration(
-                labelText: 'API 地址',
-                hintText: 'https://api.example.com',
-                border: OutlineInputBorder(),
-              ),
-              onSubmitted: controller.saveApiUrl,
+          TextField(
+            controller: controller.apiUrlCtl,
+            decoration: const InputDecoration(
+              labelText: 'API 地址',
+              hintText: 'https://api.example.com',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.link),
             ),
+            onChanged: controller.saveApiUrl,
           ),
           const SizedBox(height: 16),
 
@@ -57,7 +53,7 @@ class AiSettingPage extends StatelessWidget {
                                   strokeWidth: 2,
                                 ),
                               )
-                            : IconButton(
+                            : IconButton.filled(
                                 icon: const Icon(Icons.refresh),
                                 tooltip: '拉取模型列表',
                                 onPressed: controller.fetchModels,
@@ -69,10 +65,8 @@ class AiSettingPage extends StatelessWidget {
                   Obx(() {
                     if (controller.modelList.isNotEmpty) {
                       return DropdownButtonFormField<String>(
-                        initialValue:
-                            controller.modelList.contains(
-                              controller.model.value,
-                            )
+                        initialValue: controller.modelList
+                                .contains(controller.model.value)
                             ? controller.model.value
                             : null,
                         items: controller.modelList
@@ -86,6 +80,7 @@ class AiSettingPage extends StatelessWidget {
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(),
                           isDense: true,
+                          prefixIcon: Icon(Icons.smart_toy),
                         ),
                         onChanged: (value) {
                           if (value != null) controller.saveModel(value);
@@ -93,15 +88,14 @@ class AiSettingPage extends StatelessWidget {
                       );
                     }
                     return TextField(
-                      controller: TextEditingController(
-                        text: controller.model.value,
-                      ),
+                      controller: controller.modelCtl,
                       decoration: const InputDecoration(
                         labelText: '模型名称',
-                        hintText: 'gpt-4o-mini',
+                        hintText: 'gpt-5.4',
                         border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.smart_toy),
                       ),
-                      onSubmitted: controller.saveModel,
+                      onChanged: controller.saveModel,
                     );
                   }),
                 ],
@@ -173,6 +167,43 @@ class AiSettingPage extends StatelessWidget {
               }),
             );
           }),
+          const SizedBox(height: 24),
+          // Info card
+          Card(
+            color: colorScheme.surfaceContainerHighest,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline,
+                          color: colorScheme.primary, size: 20),
+                      const SizedBox(width: 8),
+                      Text(
+                        '使用说明',
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '• 支持 OpenAI 兼容的 API 接口\n'
+                    '• 在视频详情页点击 AI 按钮使用\n'
+                    '• 会自动提取视频字幕作为上下文\n'
+                    '• 无字幕时仍可自由提问\n'
+                    '• 支持 Markdown 格式和 LaTeX 公式\n'
+                    '• 回复中的时间戳可点击跳转',
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 100),
         ],
       ),
@@ -256,21 +287,20 @@ class _ApiKeyFieldState extends State<_ApiKeyField> {
 
   @override
   Widget build(BuildContext context) {
-    return Obx(
-      () => TextField(
-        controller: TextEditingController(text: widget.controller.apiKey.value),
-        decoration: InputDecoration(
-          labelText: 'API Key',
-          hintText: 'sk-...',
-          border: const OutlineInputBorder(),
-          suffixIcon: IconButton(
-            icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
-            onPressed: () => setState(() => _obscure = !_obscure),
-          ),
+    return TextField(
+      controller: widget.controller.apiKeyCtl,
+      decoration: InputDecoration(
+        labelText: 'API Key',
+        hintText: 'sk-...',
+        border: const OutlineInputBorder(),
+        prefixIcon: const Icon(Icons.key),
+        suffixIcon: IconButton(
+          icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+          onPressed: () => setState(() => _obscure = !_obscure),
         ),
-        obscureText: _obscure,
-        onSubmitted: widget.controller.saveApiKey,
       ),
+      obscureText: _obscure,
+      onChanged: widget.controller.saveApiKey,
     );
   }
 }

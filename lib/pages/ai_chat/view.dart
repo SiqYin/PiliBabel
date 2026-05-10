@@ -1,11 +1,14 @@
 import 'package:PiliPlus/pages/ai_chat/controller.dart';
+import 'package:PiliPlus/pages/ai_chat/models.dart';
 import 'package:PiliPlus/pages/common/slide/common_slide_page.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_markdown_plus_latex/flutter_markdown_plus_latex.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
 class AiChatPage extends CommonSlidePage {
@@ -21,82 +24,165 @@ class _AiChatPageState extends State<AiChatPage>
   final _inputCtl = TextEditingController();
   final _scrollCtl = ScrollController();
   late List<AiPromptTemplate> _templates;
+  int _selectedPromptIndex = 0;
+  bool _isAtBottom = true;
 
   @override
   void initState() {
     super.initState();
     chatCtl = Get.put(AiChatController(), tag: 'aiChat');
     _templates = AiChatService.getTemplates();
+    _scrollCtl.addListener(_onScroll);
   }
 
   @override
   void dispose() {
     _inputCtl.dispose();
-    _scrollCtl.dispose();
+    _scrollCtl
+      ..removeListener(_onScroll)
+      ..dispose();
     Get.delete<AiChatController>(tag: 'aiChat');
     super.dispose();
   }
 
-  void _scrollToBottom() {
-    if (_scrollCtl.hasClients) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollCtl.hasClients) {
-          _scrollCtl.animateTo(
-            _scrollCtl.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-          );
-        }
-      });
+  double _lastScrollOffset = 0;
+
+  void _onScroll() {
+    if (!_scrollCtl.hasClients) return;
+    final pos = _scrollCtl.position;
+    final offset = pos.pixels;
+    if (offset < _lastScrollOffset) {
+      // Scrolled up → stop auto-scroll
+      if (_isAtBottom) setState(() => _isAtBottom = false);
+    } else if (offset > _lastScrollOffset) {
+      // Scrolled down → re-enable if near bottom
+      if (!_isAtBottom && pos.maxScrollExtent - offset <= 100) {
+        setState(() => _isAtBottom = true);
+      }
     }
+    _lastScrollOffset = offset;
+  }
+
+  void _scrollToBottom() {
+    if (!_isAtBottom || !_scrollCtl.hasClients) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollCtl.hasClients && _isAtBottom) {
+        _scrollCtl.animateTo(
+          _scrollCtl.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+        );
+      }
+    });
+  }
+
+  void _sendSelectedPrompt() {
+    if (_templates.isEmpty) return;
+    if (_selectedPromptIndex >= 0 && _selectedPromptIndex < _templates.length) {
+      final t = _templates[_selectedPromptIndex];
+      chatCtl.startAnalysis(t.prompt, templateName: t.name);
+    }
+  }
+
+  void _sendCustomPrompt() {
+    final text = _inputCtl.text.trim();
+    if (text.isEmpty) return;
+    _inputCtl.clear();
+    chatCtl.sendFollowUp(text);
+  }
+
+  void _copyToClipboard() {
+    final msgs = chatCtl.messages;
+    if (msgs.isEmpty) return;
+    ChatMessage? lastAssistant;
+    for (final m in msgs.reversed) {
+      if (m.role == 'assistant' && m.content.isNotEmpty) {
+        lastAssistant = m;
+        break;
+      }
+    }
+    if (lastAssistant == null) return;
+    Clipboard.setData(ClipboardData(text: lastAssistant.content));
+    SmartDialog.showToast('已复制到剪贴板');
   }
 
   @override
   Widget buildPage(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
     return Material(
-      color: theme.colorScheme.surface,
+      color: colorScheme.surface,
       child: Column(
         children: [
           // Drag handle
-          GestureDetector(
-            onTap: Get.back,
-            child: SizedBox(
-              height: 35,
-              child: Center(
-                child: Container(
-                  width: 32,
-                  height: 3,
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primary,
-                    borderRadius: const BorderRadius.all(Radius.circular(3)),
-                  ),
-                ),
+          Center(
+            child: Container(
+              margin: const EdgeInsets.symmetric(vertical: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: colorScheme.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
-          // Template selection + analyze button
-          _buildTemplateBar(theme),
-          Divider(height: 1, color: theme.dividerColor.withValues(alpha: 0.1)),
+
+          // Title bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Icon(Icons.auto_awesome, color: colorScheme.primary, size: 22),
+                const SizedBox(width: 8),
+                Text(
+                  'AI 视频助手',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                Obx(() {
+                  if (chatCtl.messages.isNotEmpty) {
+                    return TextButton.icon(
+                      onPressed: chatCtl.clearMessages,
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: const Text('重置'),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                }),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Prompt selector + analyze button
+          _buildPromptBar(theme),
+          Divider(height: 1, color: colorScheme.outlineVariant),
+
           // Warning banner
           Obx(() {
-            if (!chatCtl.subtitleWarning.value) return const SizedBox.shrink();
+            if (!chatCtl.subtitleWarning.value) {
+              return const SizedBox.shrink();
+            }
             return Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-              color: theme.colorScheme.errorContainer,
+              color: colorScheme.errorContainer,
               child: Text(
                 '字幕文本较长，分析结果可能不够完整',
                 style: TextStyle(
                   fontSize: 12,
-                  color: theme.colorScheme.onErrorContainer,
+                  color: colorScheme.onErrorContainer,
                 ),
               ),
             );
           }),
-          // Chat messages
+
+          // Content area
           Expanded(
-            child: enableSlide ? slideList(theme) : _buildMessageList(theme),
+            child: enableSlide ? slideList(theme) : _buildContent(theme),
           ),
+
           // Input bar
           _buildInputBar(theme),
         ],
@@ -104,70 +190,102 @@ class _AiChatPageState extends State<AiChatPage>
     );
   }
 
-  Widget _buildTemplateBar(ThemeData theme) {
-    return SizedBox(
-      height: 48,
+  Widget _buildPromptBar(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
           Expanded(
             child: _templates.isEmpty
-                ? Center(
-                    child: Text(
-                      '暂无模板，请在设置中添加',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: theme.colorScheme.outline,
-                      ),
+                ? Text(
+                    '暂无模板，请在设置中添加',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colorScheme.outline,
                     ),
                   )
-                : ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    itemCount: _templates.length,
-                    separatorBuilder: (_, _) => const SizedBox(width: 8),
-                    itemBuilder: (context, index) {
-                      final t = _templates[index];
-                      return Center(
-                        child: Obx(() {
-                          final analyzing = chatCtl.isAnalyzing.value;
-                          final noSubtitle = !chatCtl.hasSubtitles;
-                          return ActionChip(
-                            label: Text(
-                              t.name,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: noSubtitle
-                                    ? theme.colorScheme.outline
-                                    : null,
-                              ),
-                            ),
-                            onPressed: (analyzing || noSubtitle)
-                                ? null
-                                : () => chatCtl.startAnalysis(t.prompt),
-                          );
-                        }),
+                : DropdownButtonFormField<int>(
+                    initialValue: _selectedPromptIndex < _templates.length
+                        ? _selectedPromptIndex
+                        : 0,
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      isDense: true,
+                    ),
+                    items: _templates.asMap().entries.map((entry) {
+                      return DropdownMenuItem(
+                        value: entry.key,
+                        child: Text(
+                          entry.value.name,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       );
+                    }).toList(),
+                    onChanged: (value) {
+                      if (value != null) {
+                        setState(() => _selectedPromptIndex = value);
+                      }
                     },
                   ),
           ),
+          const SizedBox(width: 12),
+          Obx(() {
+            final analyzing = chatCtl.isAnalyzing.value;
+            final noSubtitle = !chatCtl.hasSubtitles;
+            return FilledButton.icon(
+              onPressed: (analyzing || noSubtitle) ? null : _sendSelectedPrompt,
+              icon: analyzing
+                  ? const SizedBox.square(
+                      dimension: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.play_arrow, size: 20),
+              label: const Text('分析'),
+            );
+          }),
         ],
       ),
     );
   }
 
-  Widget _buildMessageList(ThemeData theme) {
+  Widget _buildContent(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
     return Obx(() {
       final msgs = chatCtl.messages;
+
+      // Empty state
       if (msgs.isEmpty) {
         return Center(
-          child: Text(
-            chatCtl.hasSubtitles ? '选择模板开始分析' : '输入问题开始对话',
-            style: TextStyle(color: theme.colorScheme.outline),
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.auto_awesome,
+                  size: 48,
+                  color: colorScheme.outline,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  chatCtl.hasSubtitles
+                      ? '选择提示词后点击「分析」开始'
+                      : '输入问题开始对话',
+                  style: TextStyle(color: colorScheme.outline),
+                ),
+              ],
+            ),
           ),
         );
       }
-      // Auto-scroll on new messages
-      chatCtl.messages.length; // trigger observation
+
       _scrollToBottom();
 
       return ListView.builder(
@@ -177,7 +295,10 @@ class _AiChatPageState extends State<AiChatPage>
         itemBuilder: (context, index) {
           final msg = msgs[index];
           if (msg.role == 'user') {
-            return _buildUserMessage(msg.content, theme);
+            final displayText = msg.templateName != null
+                ? '/${msg.templateName}'
+                : msg.content;
+            return _buildUserMessage(displayText, theme);
           }
           return _buildAssistantMessage(msg, theme);
         },
@@ -215,6 +336,7 @@ class _AiChatPageState extends State<AiChatPage>
   }
 
   Widget _buildAssistantMessage(dynamic msg, ThemeData theme) {
+    final colorScheme = theme.colorScheme;
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
@@ -224,7 +346,7 @@ class _AiChatPageState extends State<AiChatPage>
         margin: const EdgeInsets.symmetric(vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: theme.colorScheme.surfaceContainerHighest,
+          color: colorScheme.surfaceContainerHighest,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(16),
             topRight: Radius.circular(16),
@@ -233,43 +355,121 @@ class _AiChatPageState extends State<AiChatPage>
           ),
         ),
         child: msg.content.isEmpty && msg.isStreaming
-            ? SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: theme.colorScheme.primary,
-                ),
+            ? Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'AI 正在思考...',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colorScheme.outline,
+                    ),
+                  ),
+                ],
               )
-            : MarkdownBody(
-                data: _preprocessTimestamps(msg.content),
-                selectable: true,
-                blockSyntaxes: [LatexBlockSyntax()],
-                inlineSyntaxes: [LatexInlineSyntax()],
-                builders: {
-                  'latex': LatexElementBuilder(),
-                },
-                onTapLink: (text, href, title) {
-                  if (href != null && href.startsWith('timestamp://')) {
-                    _seekToTimestamp(href);
-                  }
-                },
-                styleSheet: MarkdownStyleSheet(
-                  p: TextStyle(
-                    fontSize: 14,
-                    height: 1.6,
-                    color: theme.colorScheme.onSurfaceVariant,
+            : Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  _StreamingContent(
+                    isStreaming: msg.isStreaming,
+                    updateCount: msg.updateCount,
+                    child: MarkdownBody(
+                    data: _preprocessTimestamps(msg.content),
+                    selectable: !msg.isStreaming,
+                    blockSyntaxes: [LatexBlockSyntax()],
+                    inlineSyntaxes: [LatexInlineSyntax()],
+                    builders: {
+                      'latex': LatexElementBuilder(),
+                    },
+                    onTapLink: (text, href, title) {
+                      if (href != null &&
+                          href.startsWith('timestamp://')) {
+                        _seekToTimestamp(href);
+                      }
+                    },
+                    styleSheet: MarkdownStyleSheet(
+                      p: TextStyle(
+                        fontSize: 15,
+                        height: 1.6,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      h1: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                        height: 1.5,
+                      ),
+                      h2: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                        height: 1.5,
+                      ),
+                      h3: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                        height: 1.4,
+                      ),
+                      blockquoteDecoration: BoxDecoration(
+                        border: Border(
+                          left: BorderSide(
+                            color: colorScheme.primary,
+                            width: 3,
+                          ),
+                        ),
+                      ),
+                      blockquotePadding: const EdgeInsets.only(left: 12),
+                      code: TextStyle(
+                        fontSize: 13,
+                        color: colorScheme.primary,
+                        backgroundColor: colorScheme.surfaceContainerHigh,
+                      ),
+                      codeblockDecoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      codeblockPadding: const EdgeInsets.all(12),
+                      listBullet: TextStyle(
+                        fontSize: 14,
+                        color: colorScheme.primary,
+                      ),
+                    ),
                   ),
-                  code: TextStyle(
-                    fontSize: 13,
-                    color: theme.colorScheme.onSurfaceVariant,
-                    backgroundColor: theme.colorScheme.surfaceContainerHigh,
                   ),
-                  codeblockDecoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceContainerHigh,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
+                  // Copy button
+                  if (!msg.isStreaming && msg.content.isNotEmpty)
+                    Positioned(
+                      right: -4,
+                      bottom: -4,
+                      child: Material(
+                        color: colorScheme.primaryContainer,
+                        borderRadius: BorderRadius.circular(16),
+                        elevation: 2,
+                        child: InkWell(
+                          onTap: _copyToClipboard,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(6),
+                            child: Icon(
+                              Icons.copy,
+                              size: 16,
+                              color: colorScheme.onPrimaryContainer,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
               ),
       ),
     );
@@ -302,19 +502,18 @@ class _AiChatPageState extends State<AiChatPage>
   }
 
   Widget _buildInputBar(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
     return Container(
-      padding: EdgeInsets.only(
-        left: 12,
-        right: 8,
-        top: 8,
-        bottom: MediaQuery.viewPaddingOf(context).bottom + 8,
+      padding: EdgeInsets.fromLTRB(
+        16,
+        8,
+        8,
+        MediaQuery.viewPaddingOf(context).bottom + 8,
       ),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surface,
+        color: colorScheme.surface,
         border: Border(
-          top: BorderSide(
-            color: theme.dividerColor.withValues(alpha: 0.1),
-          ),
+          top: BorderSide(color: colorScheme.outlineVariant),
         ),
       ),
       child: Row(
@@ -326,10 +525,10 @@ class _AiChatPageState extends State<AiChatPage>
               minLines: 1,
               textInputAction: TextInputAction.send,
               decoration: InputDecoration(
-                hintText: '输入追问内容...',
-                hintStyle: TextStyle(color: theme.colorScheme.outline),
-                border: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(20)),
+                hintText: '输入问题继续对话...',
+                hintStyle: TextStyle(color: colorScheme.outline),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(24),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -337,25 +536,12 @@ class _AiChatPageState extends State<AiChatPage>
                 ),
                 isDense: true,
               ),
-              onSubmitted: (value) {
-                if (value.trim().isNotEmpty) {
-                  chatCtl.sendFollowUp(value);
-                  _inputCtl.clear();
-                }
-              },
+              onSubmitted: (_) => _sendCustomPrompt(),
             ),
           ),
-          const SizedBox(width: 4),
-          Obx(() => IconButton(
-                onPressed: chatCtl.isAnalyzing.value
-                    ? null
-                    : () {
-                        final text = _inputCtl.text;
-                        if (text.trim().isNotEmpty) {
-                          chatCtl.sendFollowUp(text);
-                          _inputCtl.clear();
-                        }
-                      },
+          const SizedBox(width: 8),
+          Obx(() => IconButton.filled(
+                onPressed: chatCtl.isAnalyzing.value ? null : _sendCustomPrompt,
                 icon: const Icon(Icons.send),
               )),
         ],
@@ -365,6 +551,66 @@ class _AiChatPageState extends State<AiChatPage>
 
   @override
   Widget buildList(ThemeData theme) {
-    return _buildMessageList(theme);
+    return _buildContent(theme);
+  }
+}
+
+/// Wraps content with a subtle fade-in animation during streaming updates,
+/// masking the visual jumps when Markdown nodes reflow.
+class _StreamingContent extends StatefulWidget {
+  const _StreamingContent({
+    required this.isStreaming,
+    required this.updateCount,
+    required this.child,
+  });
+
+  final bool isStreaming;
+  final int updateCount;
+  final Widget child;
+
+  @override
+  State<_StreamingContent> createState() => _StreamingContentState();
+}
+
+class _StreamingContentState extends State<_StreamingContent>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 150),
+      vsync: this,
+      value: 1.0,
+    );
+  }
+
+  @override
+  void didUpdateWidget(_StreamingContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isStreaming && widget.updateCount != oldWidget.updateCount) {
+      _controller
+        ..value = 0.7
+        ..animateTo(1.0, duration: const Duration(milliseconds: 150));
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<double>(
+      valueListenable: _controller,
+      builder: (context, value, child) => Opacity(
+        opacity: value,
+        child: child,
+      ),
+      child: widget.child,
+    );
   }
 }

@@ -17,28 +17,17 @@ class AiPromptTemplate {
 }
 
 class AiChatService {
-  static Dio? _dio;
+  static void resetClient() {}
 
-  static Dio get _client {
-    if (_dio != null) return _dio!;
-    _dio = Dio(BaseOptions(
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(minutes: 10),
-    ));
-    return _dio!;
-  }
-
-  static void resetClient() {
-    _dio?.close();
-    _dio = null;
-  }
-
-  static Map<String, String> _headers() {
+  static Options _options({Duration? receiveTimeout}) {
     final apiKey = Pref.aiApiKey;
-    return {
-      'Content-Type': 'application/json',
-      if (apiKey.isNotEmpty) 'Authorization': 'Bearer $apiKey',
-    };
+    return Options(
+      headers: {
+        'Content-Type': 'application/json',
+        if (apiKey.isNotEmpty) 'Authorization': 'Bearer $apiKey',
+      },
+      receiveTimeout: receiveTimeout ?? const Duration(seconds: 60),
+    );
   }
 
   static String _baseUrl() {
@@ -52,9 +41,9 @@ class AiChatService {
   static Future<List<String>> fetchModels() async {
     final baseUrl = _baseUrl();
     if (baseUrl.isEmpty) throw Exception('请先配置 API 地址');
-    final res = await _client.get(
+    final res = await Dio().get(
       '$baseUrl/v1/models',
-      options: Options(headers: _headers()),
+      options: _options(receiveTimeout: const Duration(seconds: 30)),
     );
     final data = res.data;
     if (data is Map && data['data'] is List) {
@@ -77,17 +66,16 @@ class AiChatService {
     final useModel = model ?? Pref.aiModel;
     if (useModel.isEmpty) throw Exception('请先选择模型');
 
-    final response = await _client.post<ResponseBody>(
+    final opts = _options(receiveTimeout: const Duration(minutes: 10))
+      ..responseType = ResponseType.stream;
+    final response = await Dio().post<ResponseBody>(
       '$baseUrl/v1/chat/completions',
       data: jsonEncode({
         'model': useModel,
         'messages': messages,
         'stream': true,
       }),
-      options: Options(
-        headers: _headers(),
-        responseType: ResponseType.stream,
-      ),
+      options: opts,
     );
 
     final stream = response.data!.stream;
@@ -124,16 +112,35 @@ class AiChatService {
 
   // --- Template CRUD ---
 
+  static final List<AiPromptTemplate> defaultTemplates = [
+    AiPromptTemplate(
+      name: '概貌总结',
+      prompt: '请对这个视频内容进行概貌总结，要求：\n'
+          '1. 用1-2句话概括视频主题\n'
+          '2. 列出3-5个核心要点，每条用时间戳标注对应位置\n'
+          '3. 结构简洁，便于快速浏览',
+    ),
+    AiPromptTemplate(
+      name: '详细分析',
+      prompt: '请对这个视频内容进行详细分析，要求：\n'
+          '1. 梳理视频的结构脉络和章节划分\n'
+          '2. 提取关键观点及支撑论据\n'
+          '3. 分析各部分内容之间的逻辑关系\n'
+          '4. 总结结论或启示\n'
+          '5. 在各部分标注对应时间戳',
+    ),
+  ];
+
   static List<AiPromptTemplate> getTemplates() {
     final raw = Pref.aiPromptTemplates;
-    if (raw.isEmpty) return [];
+    if (raw.isEmpty) return defaultTemplates;
     try {
       final list = jsonDecode(raw) as List;
       return list
           .map((e) => AiPromptTemplate.fromJson(e as Map<String, dynamic>))
           .toList();
     } catch (_) {
-      return [];
+      return defaultTemplates;
     }
   }
 

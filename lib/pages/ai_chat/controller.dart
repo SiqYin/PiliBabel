@@ -17,12 +17,11 @@ class AiChatController extends GetxController {
   late final VideoDetailController _videoCtl;
 
   static const _systemPrompt =
-      '你是一个视频内容分析助手。用户会提供视频的字幕文本，你需要根据用户的要求对字幕内容进行分析。'
-      '不可随意翻译内容，返回内容为中文，不可包含任何广告、推广、侮辱、诽谤等内容。'
-      '如果字幕信息不足，可以参考视频简介，如果内容无效，你需要提醒我无法总结内容，让我自行观看视频。'
-      '请务必保证内容的准确性，否则将会影响你的积分和信誉。'
-      '回复中请尽可能在对应内容的开头给出引用具体时间点，请使用 [MM:SS] 或 [HH:MM:SS] 格式的时间戳。'
-      '请使用 Markdown 格式回复。';
+      '你是一个视频内容分析助手。用户会提供视频的标题、简介和字幕内容，请根据用户的要求进行分析。'
+      '要求：'
+      '1. 回复语言为中文，使用 Markdown 格式。'
+      '2. 在关键内容处标注时间戳，格式为 [MM:SS] 或 [HH:MM:SS]，便于用户跳转回看。'
+      '3. 如果字幕信息不足，可参考视频简介补充分析；如果内容确实无法分析，提醒用户自行观看。';
 
   @override
   void onInit() {
@@ -41,10 +40,10 @@ class AiChatController extends GetxController {
       final title = videoDetail.title;
       final desc = videoDetail.desc;
       if (title != null && title.isNotEmpty) {
-        info = '# $title\n';
+        info = '视频标题：$title\n';
       }
       if (desc != null && desc.isNotEmpty) {
-        info += '> $desc\n';
+        info += '视频简介：$desc\n';
       }
       if (info.isNotEmpty) info += '\n';
     } catch (_) {}
@@ -52,7 +51,7 @@ class AiChatController extends GetxController {
   }
 
   /// Start analysis with a template prompt.
-  Future<void> startAnalysis(String templatePrompt) async {
+  Future<void> startAnalysis(String templatePrompt, {String? templateName}) async {
     if (isAnalyzing.value) return;
 
     isAnalyzing.value = true;
@@ -79,12 +78,13 @@ class AiChatController extends GetxController {
         contextContent = '$videoInfo---\n$templatePrompt';
       }
 
-      messages.add(ChatMessage(role: 'user', content: contextContent));
-
-      // Add placeholder for streaming response
-      messages.add(
-        ChatMessage(role: 'assistant', content: '', isStreaming: true),
-      );
+      messages
+        ..add(ChatMessage(
+          role: 'user',
+          content: contextContent,
+          templateName: templateName,
+        ))
+        ..add(ChatMessage(role: 'assistant', content: '', isStreaming: true));
 
       await _streamResponse();
     } catch (e) {
@@ -108,10 +108,9 @@ class AiChatController extends GetxController {
         content = '$videoInfo$content';
       }
     }
-    messages.add(ChatMessage(role: 'user', content: content));
-    messages.add(
-      ChatMessage(role: 'assistant', content: '', isStreaming: true),
-    );
+    messages
+      ..add(ChatMessage(role: 'user', content: content))
+      ..add(ChatMessage(role: 'assistant', content: '', isStreaming: true));
     isAnalyzing.value = true;
 
     try {
@@ -137,7 +136,7 @@ class AiChatController extends GetxController {
       await for (final token in AiChatService.streamChat(
         messages: chatMessages,
       )) {
-        lastMsg.content += token;
+        lastMsg.appendContent(token);
         messages.refresh();
       }
     } finally {

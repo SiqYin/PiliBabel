@@ -1,5 +1,6 @@
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
@@ -11,14 +12,29 @@ class AiSettingController extends GetxController {
   final isLoadingModels = false.obs;
   final templates = <AiPromptTemplate>[].obs;
 
+  late final TextEditingController apiUrlCtl;
+  late final TextEditingController apiKeyCtl;
+  late final TextEditingController modelCtl;
+
   @override
   void onInit() {
     super.onInit();
     apiUrl.value = Pref.aiApiUrl;
     apiKey.value = Pref.aiApiKey;
     model.value = Pref.aiModel;
+    apiUrlCtl = TextEditingController(text: apiUrl.value);
+    apiKeyCtl = TextEditingController(text: apiKey.value);
+    modelCtl = TextEditingController(text: model.value);
     templates.value = AiChatService.getTemplates();
     _loadCachedModels();
+  }
+
+  @override
+  void onClose() {
+    apiUrlCtl.dispose();
+    apiKeyCtl.dispose();
+    modelCtl.dispose();
+    super.onClose();
   }
 
   void _loadCachedModels() {
