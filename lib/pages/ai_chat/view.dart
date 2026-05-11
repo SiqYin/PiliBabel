@@ -3,13 +3,13 @@ import 'package:PiliPlus/pages/ai_chat/models.dart';
 import 'package:PiliPlus/pages/common/slide/common_slide_page.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
-import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_markdown_plus_latex/flutter_markdown_plus_latex.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
+import 'package:markdown/markdown.dart' as md;
 
 class AiChatPage extends CommonSlidePage {
   const AiChatPage({super.key, required this.heroTag});
@@ -408,23 +408,16 @@ class _AiChatPageState extends State<AiChatPage>
                   )
                 : SelectionArea(
                     child: MarkdownBody(
-                      data: _preprocessTimestamps(msg.content),
+                      data: msg.content,
                       blockSyntaxes: [LatexBlockSyntax()],
-                      inlineSyntaxes: [LatexInlineSyntax()],
+                      inlineSyntaxes: [LatexInlineSyntax(), TimestampSyntax()],
                       builders: {
                         'latex': LatexElementBuilder(),
-                      },
-                      onTapLink: (text, href, title) {
-                        if (href != null &&
-                            href.startsWith('timestamp://')) {
-                          _seekToTimestamp(href);
-                        }
+                        'timestamp': TimestampBuilder(
+                          onTap: _seekToTimestamp,
+                        ),
                       },
                       styleSheet: MarkdownStyleSheet(
-                        a: TextStyle(
-                          color: colorScheme.primary,
-                          decoration: TextDecoration.none,
-                        ),
                         p: TextStyle(
                           fontSize: 15,
                           height: 1.6,
@@ -502,31 +495,7 @@ class _AiChatPageState extends State<AiChatPage>
     );
   }
 
-  static final _singleTsReg = RegExp(r'\[(\d{1,2}:\d{2}(?::\d{2})?)\]');
-  static final _rangeTsReg =
-      RegExp(r'\[(\d{1,2}:\d{2}(?::\d{2})?)\s*-\s*(\d{1,2}:\d{2}(?::\d{2})?)\]');
-
-  String _preprocessTimestamps(String text) {
-    // First handle ranges: [00:04 - 00:42] → [00:04](ts://4) - [00:42](ts://42)
-    text = text.replaceAllMapped(_rangeTsReg, (match) {
-      final ts1 = match.group(1)!;
-      final ts2 = match.group(2)!;
-      final s1 = DurationUtils.parseDuration(ts1);
-      final s2 = DurationUtils.parseDuration(ts2);
-      return '[$ts1](timestamp://$s1) - [$ts2](timestamp://$s2)';
-    });
-    // Then handle single: [05:30] → [05:30](ts://330)
-    text = text.replaceAllMapped(_singleTsReg, (match) {
-      final ts = match.group(1)!;
-      final seconds = DurationUtils.parseDuration(ts);
-      return '[$ts](timestamp://$seconds)';
-    });
-    return text;
-  }
-
-  void _seekToTimestamp(String href) {
-    final seconds = int.tryParse(href.replaceFirst('timestamp://', ''));
-    if (seconds == null) return;
+  void _seekToTimestamp(int seconds) {
     try {
       final videoCtl = Get.find<VideoDetailController>(tag: widget.heroTag);
       final duration = videoCtl.plPlayerController.duration.value;
@@ -581,6 +550,58 @@ class _AiChatPageState extends State<AiChatPage>
               )),
         ],
       ),
+    );
+  }
+}
+
+/// Matches timestamps like 00:12, 01:23:45 in any context.
+/// Avoids matching IP addresses (192.168.x.x:80) and URLs.
+class TimestampSyntax extends md.InlineSyntax {
+  TimestampSyntax()
+      : super(r'(?<![\d.])(\d{1,2})[：:](\d{2})(?:[：:](\d{2}))?(?!\d)');
+
+  @override
+  bool onMatch(md.InlineParser parser, Match match) {
+    int seconds;
+    if (match.group(3) != null) {
+      // HH:MM:SS
+      seconds = int.parse(match.group(1)!) * 3600 +
+          int.parse(match.group(2)!) * 60 +
+          int.parse(match.group(3)!);
+    } else {
+      // MM:SS
+      seconds = int.parse(match.group(1)!) * 60 + int.parse(match.group(2)!);
+    }
+
+    final element = md.Element.text('timestamp', match.group(0)!);
+    element.attributes['seconds'] = '$seconds';
+    parser.addNode(element);
+    return true;
+  }
+}
+
+/// Renders timestamps as tappable colored text.
+class TimestampBuilder extends MarkdownElementBuilder {
+  TimestampBuilder({required this.onTap});
+
+  final void Function(int seconds) onTap;
+
+  @override
+  Widget visitElementAfterWithContext(
+    BuildContext context,
+    md.Element element,
+    TextStyle? preferredStyle,
+    TextStyle? parentStyle,
+  ) {
+    final seconds = int.tryParse(element.attributes['seconds'] ?? '') ?? 0;
+    final text = element.textContent;
+    final style = (parentStyle ?? const TextStyle()).copyWith(
+      color: Theme.of(context).colorScheme.primary,
+    );
+
+    return GestureDetector(
+      onTap: () => onTap(seconds),
+      child: Text(text, style: style),
     );
   }
 }

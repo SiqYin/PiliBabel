@@ -213,8 +213,9 @@ dependencies:
       url: https://github.com/wgh136/webdav_client.git
       ref: main
   re_highlight: ^0.0.3
-  flutter_markdown_plus: any
-  flutter_markdown_plus_latex: any
+  markdown: ^7.3.1
+  flutter_markdown_plus: ^1.0.7
+  flutter_markdown_plus_latex: ^1.0.5
   flutter_sortable_wrap:
     git:
       url: https://github.com/bggRGjQaUbCoE/flutter_sortable_wrap.git
