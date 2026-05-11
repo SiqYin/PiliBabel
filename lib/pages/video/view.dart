@@ -741,6 +741,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           'Returning to video page but PiP has different controller, closing PiP',
         );
         PipOverlayService.stopPip(callOnClose: true, immediate: true);
+        // 当前页面之前可能曾尝试进入小窗（didPushNext 设置了 _isEnteringPipMode = true），
+        // 但被其他视频抢占。需要重置该标志，否则 dispose 会跳过播放器清理，
+        // 且 PopScope 不在 widget tree 中导致后续返回无法触发新的小窗
+        _isEnteringPipMode = false;
       }
     }
     // 视频页返回时，若直播小窗仍在运行，也需关闭

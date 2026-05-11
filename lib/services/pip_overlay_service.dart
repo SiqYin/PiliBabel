@@ -241,7 +241,12 @@ class PipOverlayService {
     }
 
     isInPipMode = false;
-    isNativePip = false;
+    // isNativePip 是 Rx 变量，不能在 build 阶段（如 initState）同步修改，
+    // 否则会触发 Obx rebuild 导致 "setState during build" 错误。
+    // 延迟到当前帧结束后再更新。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      isNativePip = false;
+    });
 
     final closeCallback = callOnClose ? _onCloseCallback : null;
     final playerController = _savedPlayerController;
