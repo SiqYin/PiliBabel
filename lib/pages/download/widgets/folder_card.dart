@@ -54,7 +54,7 @@ class DownloadFolderCard extends StatelessWidget {
                           boxConstraints.maxWidth,
                           boxConstraints.maxHeight,
                         ),
-                        selectMask(Theme.of(context), checked),
+                        selectMask(ColorScheme.of(context), checked),
                       ],
                     ),
                   ),

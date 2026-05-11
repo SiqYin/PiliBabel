@@ -60,13 +60,14 @@ class LiveRoomController extends GetxController {
     isLive: true,
   );
 
-  RxBool isLoaded = false.obs;
-  Rx<RoomInfoH5Data?> roomInfoH5 = Rx<RoomInfoH5Data?>(null);
-  
+  final isLoaded = false.obs;
+  final roomInfoH5 = Rxn<RoomInfoH5Data>();
+
+  final liveTime = Rxn<int>();
+
   // PiP 模式标志
   RxBool isInPipMode = false.obs;
 
-  Rx<int?> liveTime = Rx<int?>(null);
   Timer? liveTimeTimer;
 
   void startLiveTimer() {
@@ -109,11 +110,11 @@ class LiveRoomController extends GetxController {
   LiveDmInfoData? dmInfo;
   List<RichTextItem>? savedDanmaku;
   int builtLength = 0;
-  RxList<dynamic> messages = <dynamic>[].obs;
+  final messages = <dynamic>[].obs;
   bool get shouldRefresh => builtLength != messages.length;
-  late final Rx<SuperChatItem?> fsSC = Rx<SuperChatItem?>(null);
+  late final fsSC = Rxn<SuperChatItem>();
   late final RxList<SuperChatItem> superChatMsg = <SuperChatItem>[].obs;
-  RxBool disableAutoScroll = false.obs;
+  final disableAutoScroll = false.obs;
   bool autoScroll = true;
   LiveMessageStream? _msgStream;
   late final ScrollController scrollController;
@@ -121,7 +122,7 @@ class LiveRoomController extends GetxController {
   PageController? pageController;
 
   int? currentQn = PlatformUtils.isMobile ? null : Pref.liveQuality;
-  RxString currentQnDesc = ''.obs;
+  final currentQnDesc = ''.obs;
   final RxBool isPortrait = false.obs;
   late List<({int code, String desc})> acceptQnList = [];
 
@@ -159,7 +160,7 @@ class LiveRoomController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    
+
     // 从参数中提取 roomId（支持 int 或 Map 格式）
     final args = Get.arguments;
     if (args is Map) {
@@ -167,7 +168,7 @@ class LiveRoomController extends GetxController {
     } else {
       roomId = args as int;
     }
-    
+
     scrollController = ScrollController()..addListener(listener);
     final account = Accounts.main;
     isLogin = account.isLogin;
@@ -207,28 +208,29 @@ class LiveRoomController extends GetxController {
     if (plPlayerController.videoPlayerController == null) {
       plPlayerController = PlPlayerController.getInstance(isLive: true);
     }
-    
+
     // 确保播放器处于直播模式
     plPlayerController.isLive = true;
-    
-    return plPlayerController.setDataSource(
-      NetworkSource(videoSource: videoUrl!, audioSource: null),
-      isLive: true,
-      autoplay: autoplay,
-      isVertical: isPortrait.value,
-      autoFullScreenFlag: autoFullScreenFlag,
-      roomId: roomId,
-    )
+
+    return plPlayerController
+        .setDataSource(
+          NetworkSource(videoSource: videoUrl!, audioSource: null),
+          isLive: true,
+          autoplay: autoplay,
+          isVertical: isPortrait.value,
+          autoFullScreenFlag: autoFullScreenFlag,
+          roomId: roomId,
+        )
         .then((_) async {
-      if (!autoplay) {
-        return;
-      }
-      final isActuallyPlaying =
-          plPlayerController.videoPlayerController?.state.playing == true;
-      if (!isActuallyPlaying) {
-        await plPlayerController.play();
-      }
-    });
+          if (!autoplay) {
+            return;
+          }
+          final isActuallyPlaying =
+              plPlayerController.videoPlayerController?.state.playing == true;
+          if (!isActuallyPlaying) {
+            await plPlayerController.play();
+          }
+        });
   }
 
   Future<void> queryLiveUrl({bool autoFullScreenFlag = false}) async {

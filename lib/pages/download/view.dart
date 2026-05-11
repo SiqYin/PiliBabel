@@ -15,6 +15,7 @@ import 'package:PiliPlus/pages/download/widgets/folder_card.dart';
 import 'package:PiliPlus/pages/download/widgets/folder_dialog.dart';
 import 'package:PiliPlus/services/download/download_collection_service.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
+import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart' show IterableExt;
 import 'package:PiliPlus/utils/grid.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -25,7 +26,8 @@ import 'package:get/get.dart';
 
 enum _DownloadTab {
   videos('全部视频'),
-  folders('文件夹');
+  folders('文件夹')
+  ;
 
   final String label;
   const _DownloadTab(this.label);
@@ -59,8 +61,10 @@ class _DownloadPageState extends State<DownloadPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: _DownloadTab.values.length, vsync: this)
-      ..addListener(_handleTabChanged);
+    _tabController = TabController(
+      length: _DownloadTab.values.length,
+      vsync: this,
+    )..addListener(_handleTabChanged);
   }
 
   void _handleTabChanged() {
@@ -372,16 +376,16 @@ class _DownloadPageState extends State<DownloadPage>
                         visualDensity: VisualDensity.compact,
                       ),
                       onPressed: () async {
-                        final allChecked = _controller.allChecked.toSet();
+                        final futures = _controller.allChecked
+                            .map(
+                              (e) => _downloadService.downloadDanmaku(
+                                entry: e,
+                                isUpdate: true,
+                              ),
+                            )
+                            .toList();
                         _controller.handleSelect();
-                        final res = await Future.wait(
-                          allChecked.map(
-                            (entry) => _downloadService.downloadDanmaku(
-                              entry: entry,
-                              isUpdate: true,
-                            ),
-                          ),
-                        );
+                        final res = await Future.wait(futures);
                         SmartDialog.showToast(
                           res.every((item) => item) ? '更新成功' : '更新失败',
                         );

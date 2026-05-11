@@ -151,8 +151,8 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     maxWidth = size.width;
     maxHeight = size.height;
     isWindowMode = MaxScreenSize.isWindowMode(
-      width: maxWidth,
-      height: maxHeight,
+      width: maxWidth * plPlayerController.uiScale,
+      height: maxHeight * plPlayerController.uiScale,
     );
     isPortrait = size.isPortrait;
     plPlayerController.screenRatio = maxHeight / maxWidth;
@@ -181,9 +181,12 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       plPlayerController = _liveRoomController.plPlayerController;
     }
 
-    plPlayerController
-      ..isLive = true
-      ..danmakuController = _liveRoomController.danmakuController;
+    if (!plPlayerController.isLive) {
+      plPlayerController.isLive = true;
+      _liveRoomController.isLoaded.refresh();
+    }
+    plPlayerController.danmakuController =
+        _liveRoomController.danmakuController;
     PlPlayerController.setPlayCallBack(plPlayerController.play);
     _liveRoomController.startLiveTimer();
 
@@ -362,9 +365,6 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     Alignment alignment = Alignment.center,
     bool needDm = true,
   }) {
-    if (!plPlayerController.isLive) {
-      return const SizedBox.shrink();
-    }
     if (!isFullScreen && !plPlayerController.isDesktopPip) {
       _liveRoomController.fsSC.value = null;
     }
@@ -372,7 +372,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     Widget player = Obx(
       key: playerKey,
       () {
-        if (_liveRoomController.isLoaded.value) {
+        if (_liveRoomController.isLoaded.value && plPlayerController.isLive) {
           final roomInfoH5 = _liveRoomController.roomInfoH5.value;
           return PLVideoPlayer(
             maxWidth: width,
