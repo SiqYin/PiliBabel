@@ -750,6 +750,9 @@ abstract final class Pref {
   static bool get showMedal =>
       _setting.get(SettingBoxKey.showMedal, defaultValue: true);
 
+  static bool get showRcmdReason =>
+      _setting.get(SettingBoxKey.showRcmdReason, defaultValue: true);
+
   static bool get enableLivePhoto =>
       _setting.get(SettingBoxKey.enableLivePhoto, defaultValue: true);
 

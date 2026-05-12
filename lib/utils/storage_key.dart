@@ -110,6 +110,7 @@ abstract final class SettingBoxKey {
       searchSuggestion = 'searchSuggestion',
       showDecorate = 'showDynDecorate',
       showMedal = 'showMedal',
+      showRcmdReason = 'showRcmdReason',
       enableLivePhoto = 'enableLivePhoto',
       showSeekPreview = 'showSeekPreview',
       showDmChart = 'showDmChart',
