@@ -99,6 +99,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   // 标志位：是否正在进入 PiP 模式（用于防止 dispose/didPushNext 时清理播放器状态）
   bool _isEnteringPipMode = false;
 
+  // 标志位：_onPopInvokedWithResult 触发了 didPop=true 但 PiP 被其他视频/直播抢占，
+  // 需要在 didPopNext 关闭其他 PiP 后重试启动
+  bool _pipRetryPending = false;
+
   // 标志位：是否刚从 PiP 返回（用于触发 UI 重建）
   bool _justReturnedFromPip = false;
 
@@ -854,6 +858,19 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
     // 无论进入哪个分支，最后都刷新一下 UI
     if (mounted) setState(() {});
+
+    // 重试 PiP：_onPopInvokedWithResult 触发了 didPop=true 但被其他视频/直播的 PiP 抢先占用，
+    // 现在其他 PiP 已关闭、播放器已恢复，重新尝试启动 PiP
+    if (_pipRetryPending) {
+      _pipRetryPending = false;
+      _logSponsorBlock('Retrying PiP after closing other PiP');
+      _startInAppPipIfNeeded();
+      if (_isEnteringPipMode) {
+        _logSponsorBlock('PiP retry succeeded');
+      } else {
+        _logSponsorBlock('PiP retry failed');
+      }
+    }
   }
 
   @override
@@ -2545,6 +2562,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     }
     if (didPop) {
       _startInAppPipIfNeeded();
+      // 如果 PiP 启动失败（被其他视频/直播抢占），标记待重试
+      if (!_isEnteringPipMode) {
+        _pipRetryPending = true;
+      }
     }
     videoDetailController.plPlayerController.onPopInvokedWithResult(
       didPop,
