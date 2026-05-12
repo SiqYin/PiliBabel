@@ -2562,8 +2562,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     }
     if (didPop) {
       _startInAppPipIfNeeded();
-      // 如果 PiP 启动失败（被其他视频/直播抢占），标记待重试
-      if (!_isEnteringPipMode) {
+      // 如果 PiP 启动失败（被其他视频/直播抢占），标记待重试。
+      // 注意：_isEnteringPipMode 可能在 didPushNext 中已被设为 true，
+      // 所以不能用 !_isEnteringPipMode 判断，需要用 isInPipMode 检查 startPip 是否真正成功。
+      if (!PipOverlayService.isInPipMode) {
         _pipRetryPending = true;
       }
     }
