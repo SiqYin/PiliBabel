@@ -764,9 +764,7 @@ abstract final class LiveHttp {
     }
   }
 
-  // 直播心跳 - 粉版 appKey/appSec
-  static const _hbAppKey = '1d8b6e7d45233436';
-  static const _hbAppSec = '560c52ccd288fed045859ed18bffd973';
+  // 直播心跳 - 使用 Constants 中的 appKey/appSec
 
   // 会话级标识，每次进入直播间生成
   static String? _hbUuid;
@@ -849,7 +847,7 @@ abstract final class LiveHttp {
       'data_source_id': '',
       'up_session': 'l:one:live:record:$roomId:${now - 88888}',
       'visit_id': _randomString(32).toLowerCase(),
-      'watch_status': '%7B%22pk_id%22%3A0%2C%22screen_status%22%3A1%7D',
+      'watch_status': '',
       'click_id': clickId,
       'session_id': '',
       'player_type': '0',
@@ -860,13 +858,13 @@ abstract final class LiveHttp {
     final cs = _clientSign(Map<String, dynamic>.from(data));
     data['client_sign'] = cs;
 
-    // AppSign: 粉版 appKey/appSec
+    // AppSign
     final accessKey = Accounts.heartbeat.accessKey;
     if (accessKey != null) {
       data['access_key'] = accessKey;
     }
     data['actionKey'] = 'appkey';
-    AppSign.appSign(data, appkey: _hbAppKey, appsec: _hbAppSec);
+    AppSign.appSign(data);
 
     try {
       final res = await Request().post(
@@ -875,6 +873,7 @@ abstract final class LiveHttp {
         options: Options(
           contentType: Headers.formUrlEncodedContentType,
           extra: {'account': Accounts.heartbeat},
+          headers: {'user-agent': Constants.userAgentApp},
         ),
       );
       if (res.data?['code'] == 0) {

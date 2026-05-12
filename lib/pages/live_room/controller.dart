@@ -86,9 +86,10 @@ class LiveRoomController extends GetxController {
   }
 
   void startLiveHeartbeat() {
+    if (liveHeartbeatTimer != null) return;
     LiveHttp.initLiveHeartbeat();
     _sendLiveHeartbeat();
-    liveHeartbeatTimer ??= Timer.periodic(
+    liveHeartbeatTimer = Timer.periodic(
       const Duration(seconds: 60),
       (_) => _sendLiveHeartbeat(),
     );
