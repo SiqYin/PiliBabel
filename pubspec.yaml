@@ -111,6 +111,7 @@ dependencies:
   # 加密
   crypto: ^3.0.6
   encrypt: ^5.0.3
+  hashlib: ^1.12.0
 
   # 视频播放器
   media_kit: 1.1.11 # Primary package.

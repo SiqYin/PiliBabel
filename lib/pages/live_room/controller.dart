@@ -69,6 +69,7 @@ class LiveRoomController extends GetxController {
   RxBool isInPipMode = false.obs;
 
   Timer? liveTimeTimer;
+  Timer? liveHeartbeatTimer;
 
   void startLiveTimer() {
     if (liveTime.value != null) {
@@ -82,6 +83,25 @@ class LiveRoomController extends GetxController {
   void cancelLiveTimer() {
     liveTimeTimer?.cancel();
     liveTimeTimer = null;
+  }
+
+  void startLiveHeartbeat() {
+    LiveHttp.initLiveHeartbeat();
+    _sendLiveHeartbeat();
+    liveHeartbeatTimer ??= Timer.periodic(
+      const Duration(seconds: 60),
+      (_) => _sendLiveHeartbeat(),
+    );
+  }
+
+  void _sendLiveHeartbeat() {
+    LiveHttp.mobileHeartBeat(roomId: roomId, upId: ruid!);
+  }
+
+  void cancelLiveHeartbeat() {
+    liveHeartbeatTimer?.cancel();
+    liveHeartbeatTimer = null;
+    LiveHttp.resetLiveHeartbeat();
   }
 
   Widget get timeWidget => Obx(() {
@@ -257,6 +277,9 @@ class LiveRoomController extends GetxController {
       }
       liveTime.value = response.liveTime;
       startLiveTimer();
+      if (Accounts.heartbeat.isLogin) {
+        startLiveHeartbeat();
+      }
       isPortrait.value = response.isPortrait ?? false;
       List<CodecItem> codec =
           response.playurlInfo!.playurl!.stream!.first.format!.first.codec!;
@@ -440,6 +463,7 @@ class LiveRoomController extends GetxController {
       closeLiveMsg();
       cancelLikeTimer();
       cancelLiveTimer();
+      cancelLiveHeartbeat();
       savedDanmaku?.clear();
       savedDanmaku = null;
       messages.clear();
