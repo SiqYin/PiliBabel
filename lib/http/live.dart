@@ -873,7 +873,7 @@ abstract final class LiveHttp {
         options: Options(
           contentType: Headers.formUrlEncodedContentType,
           extra: {'account': Accounts.heartbeat},
-          headers: {'user-agent': Constants.userAgentApp},
+          headers: {'user-agent': Constants.userAgent},
         ),
       );
       if (res.data?['code'] == 0) {
