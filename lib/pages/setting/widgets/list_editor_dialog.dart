@@ -12,7 +12,7 @@ class ListEditorDialog extends StatefulWidget {
   final TextInputType? keyboardType;
   final List<TextInputFormatter>? inputFormatters;
   final String? Function(String)? validator;
-  // When false, items are read-only (no add/edit/delete), but text is selectable
+  // When false, existing items use SelectableText instead of editable TextField
   final bool allowEdit;
 
   const ListEditorDialog({
@@ -139,33 +139,31 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (widget.allowEdit) ...[
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _addController,
-                      focusNode: _addFocusNode,
-                      keyboardType: widget.keyboardType,
-                      inputFormatters: widget.inputFormatters,
-                      decoration: InputDecoration(
-                        hintText: widget.hintText,
-                        isDense: true,
-                      ),
-                      onSubmitted: (_) => _addItem(),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _addController,
+                    focusNode: _addFocusNode,
+                    keyboardType: widget.keyboardType,
+                    inputFormatters: widget.inputFormatters,
+                    decoration: InputDecoration(
+                      hintText: widget.hintText,
+                      isDense: true,
                     ),
+                    onSubmitted: (_) => _addItem(),
                   ),
-                  const SizedBox(width: 8),
-                  IconButton(
-                    icon: const Icon(Icons.add_circle_outline),
-                    onPressed: _addItem,
-                    tooltip: '添加',
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-            ],
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.add_circle_outline),
+                  onPressed: _addItem,
+                  tooltip: '添加',
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
             if (_items.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
