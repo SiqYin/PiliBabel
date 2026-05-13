@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -770,14 +771,23 @@ abstract final class LiveHttp {
   static String? _hbUuid;
   static String? _hbClickId;
   static int _hbSeqId = 0;
+  static Timer? _heartbeatTimer;
 
-  static void initLiveHeartbeat() {
+  static void startLiveHeartbeat(int roomId, int upId) {
+    cancelLiveHeartbeat();
     _hbUuid = _generateUuidV4();
     _hbClickId = _generateUuidV4();
     _hbSeqId = 0;
+    _mobileHeartBeat(roomId: roomId, upId: upId);
+    _heartbeatTimer = Timer.periodic(
+      const Duration(seconds: 60),
+      (_) => _mobileHeartBeat(roomId: roomId, upId: upId),
+    );
   }
 
-  static void resetLiveHeartbeat() {
+  static void cancelLiveHeartbeat() {
+    _heartbeatTimer?.cancel();
+    _heartbeatTimer = null;
     _hbUuid = null;
     _hbClickId = null;
     _hbSeqId = 0;
@@ -814,7 +824,7 @@ abstract final class LiveHttp {
     return d;
   }
 
-  static Future<LoadingState<void>> mobileHeartBeat({
+  static Future<LoadingState<void>> _mobileHeartBeat({
     required int roomId,
     required int upId,
   }) async {

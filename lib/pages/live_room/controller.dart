@@ -69,7 +69,6 @@ class LiveRoomController extends GetxController {
   RxBool isInPipMode = false.obs;
 
   Timer? liveTimeTimer;
-  Timer? liveHeartbeatTimer;
 
   void startLiveTimer() {
     if (liveTime.value != null) {
@@ -83,26 +82,6 @@ class LiveRoomController extends GetxController {
   void cancelLiveTimer() {
     liveTimeTimer?.cancel();
     liveTimeTimer = null;
-  }
-
-  void startLiveHeartbeat() {
-    if (liveHeartbeatTimer != null) return;
-    LiveHttp.initLiveHeartbeat();
-    _sendLiveHeartbeat();
-    liveHeartbeatTimer = Timer.periodic(
-      const Duration(seconds: 60),
-      (_) => _sendLiveHeartbeat(),
-    );
-  }
-
-  void _sendLiveHeartbeat() {
-    LiveHttp.mobileHeartBeat(roomId: roomId, upId: ruid!);
-  }
-
-  void cancelLiveHeartbeat() {
-    liveHeartbeatTimer?.cancel();
-    liveHeartbeatTimer = null;
-    LiveHttp.resetLiveHeartbeat();
   }
 
   Widget get timeWidget => Obx(() {
@@ -279,7 +258,7 @@ class LiveRoomController extends GetxController {
       liveTime.value = response.liveTime;
       startLiveTimer();
       if (Accounts.heartbeat.isLogin) {
-        startLiveHeartbeat();
+        LiveHttp.startLiveHeartbeat(roomId, ruid!);
       }
       isPortrait.value = response.isPortrait ?? false;
       List<CodecItem> codec =
@@ -459,12 +438,13 @@ class LiveRoomController extends GetxController {
 
   @override
   void onClose() {
+    // 心跳定时器是静态的，无论是否小窗都要取消
+    LiveHttp.cancelLiveHeartbeat();
     // 如果在小窗模式，不清理资源
     if (!isInPipMode.value) {
       closeLiveMsg();
       cancelLikeTimer();
       cancelLiveTimer();
-      cancelLiveHeartbeat();
       savedDanmaku?.clear();
       savedDanmaku = null;
       messages.clear();
