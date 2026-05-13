@@ -65,10 +65,18 @@ abstract class CommonSearchPanelState<
   Widget _buildBody(ThemeData theme, LoadingState<List<T>?> loadingState) {
     return switch (loadingState) {
       Loading() => buildLoading,
-      Success(:final response) =>
-        response != null && response.isNotEmpty
-            ? buildList(theme, response)
-            : HttpError(onReload: controller.onReload),
+      Success(:final response) when response != null && response.isNotEmpty =>
+        () {
+          final filtered = controller.filterKeywords(response, getTitle);
+          if (filtered.isEmpty) {
+            return HttpError(
+              errMsg: '所有结果已被关键词过滤',
+              onReload: controller.onReload,
+            );
+          }
+          return buildList(theme, filtered);
+        }(),
+      Success() => HttpError(onReload: controller.onReload),
       Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: controller.onReload,
@@ -77,6 +85,8 @@ abstract class CommonSearchPanelState<
   }
 
   Widget? buildHeader(ThemeData theme) => null;
+
+  String? getTitle(T item) => null;
 
   Widget buildList(ThemeData theme, List<T> list);
 }

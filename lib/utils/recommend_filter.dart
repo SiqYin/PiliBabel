@@ -10,6 +10,7 @@ abstract final class RecommendFilter {
   static bool applyFilterToRelatedVideos = Pref.applyFilterToRelatedVideos;
   static bool applyFilterToHotVideos = Pref.applyFilterToHotVideos;
   static bool applyFilterToRankVideos = Pref.applyFilterToRankVideos;
+  static bool applyFilterToSearch = Pref.applyFilterToSearch;
 
   static RegExp rcmdRegExp = RegExp(
     Pref.parseBanWordToRegex(Pref.banWordForRecommend),
@@ -63,5 +64,11 @@ abstract final class RecommendFilter {
         filterLikeRatio(videoItem.stat.like, videoItem.stat.view) ||
         filterTitle(videoItem.title) ||
         filterUser(videoItem.owner.mid);
+  }
+
+  static bool searchShouldRemove(int? mid, String title) {
+    if (!applyFilterToSearch) return false;
+    if (isWhitelisted(mid)) return false;
+    return filterTitle(title) || filterUser(mid);
   }
 }

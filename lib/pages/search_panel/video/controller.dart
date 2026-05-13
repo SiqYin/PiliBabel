@@ -7,6 +7,7 @@ import 'package:PiliPlus/models/search/result.dart';
 import 'package:PiliPlus/pages/search/widgets/search_text.dart';
 import 'package:PiliPlus/pages/search_panel/controller.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
+import 'package:PiliPlus/utils/recommend_filter.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
@@ -45,9 +46,15 @@ class SearchVideoController
   bool customHandleResponse(bool isRefresh, Success<SearchVideoData> response) {
     searchResultController?.count[searchType.index] =
         response.response.numResults ?? 0;
+    final list = response.response.list;
+    if (list != null) {
+      list.removeWhere(
+        (item) => RecommendFilter.searchShouldRemove(item.owner.mid, item.title),
+      );
+    }
     if (searchType == SearchType.video && !hasJump2Video && isRefresh) {
       hasJump2Video = true;
-      onPushDetail(response.response.list);
+      onPushDetail(list);
     }
     return false;
   }
@@ -279,6 +286,7 @@ class SearchVideoController
                     },
                   ).toList(),
                 ),
+                buildKeywordFilterSection(context, theme, setState),
               ],
             ),
           );

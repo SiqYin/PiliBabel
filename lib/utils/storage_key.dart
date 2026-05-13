@@ -59,6 +59,7 @@ abstract final class SettingBoxKey {
       applyFilterToRelatedVideos = 'applyFilterToRelatedVideos',
       applyFilterToHotVideos = 'applyFilterToHotVideos',
       applyFilterToRankVideos = 'applyFilterToRankVideos',
+      applyFilterToSearch = 'applyFilterToSearch',
       autoUpdate = 'autoUpdate',
       preReleaseUpdate = 'preReleaseUpdate',
       skipVersion = 'skipVersion',

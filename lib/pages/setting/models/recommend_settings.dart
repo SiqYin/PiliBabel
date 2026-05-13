@@ -176,4 +176,12 @@ List<SettingsModel> get recommendSettings => [
     defaultVal: false,
     onChanged: (value) => RecommendFilter.applyFilterToRankVideos = value,
   ),
+  SwitchModel(
+    title: '过滤器也应用于搜索结果',
+    subtitle: '对视频、专栏、用户搜索生效，仅过滤标题关键词和屏蔽用户',
+    leading: const Icon(Icons.search_off_outlined),
+    setKey: SettingBoxKey.applyFilterToSearch,
+    defaultVal: false,
+    onChanged: (value) => RecommendFilter.applyFilterToSearch = value,
+  ),
 ];

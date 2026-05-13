@@ -1039,6 +1039,11 @@ abstract final class Pref {
     defaultValue: false,
   );
 
+  static bool get applyFilterToSearch => _setting.get(
+    SettingBoxKey.applyFilterToSearch,
+    defaultValue: false,
+  );
+
   static bool get enableBackgroundPlay =>
       _setting.get(SettingBoxKey.enableBackgroundPlay, defaultValue: true);
 
