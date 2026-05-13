@@ -69,10 +69,7 @@ abstract class CommonSearchPanelState<
         () {
           final filtered = controller.filterKeywords(response, getTitle);
           if (filtered.isEmpty) {
-            return HttpError(
-              errMsg: '所有结果已被关键词过滤',
-              onReload: controller.onReload,
-            );
+            return _buildFilteredOut(theme);
           }
           return buildList(theme, filtered);
         }(),
@@ -82,6 +79,51 @@ abstract class CommonSearchPanelState<
         onReload: controller.onReload,
       ),
     };
+  }
+
+  Widget _buildFilteredOut(ThemeData theme) {
+    return SliverFillRemaining(
+      hasScrollBody: false,
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.filter_list_off,
+                size: 48,
+                color: theme.colorScheme.outline,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                '当前页结果已被关键词过滤',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: theme.colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                '可以继续加载更多结果，直到找到符合条件的内容',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: theme.colorScheme.outline,
+                ),
+              ),
+              const SizedBox(height: 16),
+              FilledButton.tonalIcon(
+                onPressed: controller.onLoadMore,
+                icon: const Icon(Icons.keyboard_double_arrow_down, size: 18),
+                label: const Text('继续加载'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget? buildHeader(ThemeData theme) => null;
