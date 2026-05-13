@@ -456,9 +456,18 @@ class VideoDetailController extends GetxController
         if (halfScreenQa == null) return;
         final isWiFi = await ConnectivityUtils.isWiFi;
         final fsQa = isWiFi ? Pref.defaultVideoQa : Pref.defaultVideoQaCellular;
-        if (plPlayerController.cacheVideoQa != fsQa) {
-          plPlayerController.cacheVideoQa = fsQa;
-          currentVideoQa.value = VideoQuality.fromCode(fsQa);
+        final curHighestVideoQa = data.dash!.video!.first.quality.code;
+        int targetQa = curHighestVideoQa;
+        if (data.acceptQuality?.isNotEmpty == true &&
+            fsQa <= curHighestVideoQa) {
+          targetQa = data.acceptQuality!.findClosestTarget(
+            (e) => e <= fsQa,
+            (a, b) => a > b ? a : b,
+          );
+        }
+        if (plPlayerController.cacheVideoQa != targetQa) {
+          plPlayerController.cacheVideoQa = targetQa;
+          currentVideoQa.value = VideoQuality.fromCode(targetQa);
           updatePlayer();
         }
       });
@@ -719,7 +728,12 @@ class VideoDetailController extends GetxController
 
   VideoItem findVideoByQa(int qa) {
     /// 根据currentVideoQa和currentDecodeFormats 重新设置videoUrl
-    final videoList = data.dash!.video!.where((i) => i.id == qa).toList();
+    final allVideos = data.dash!.video!;
+    final videoList = allVideos.where((i) => i.id == qa).toList();
+
+    if (videoList.isEmpty) {
+      return allVideos.first;
+    }
 
     final currentDecodeFormats = this.currentDecodeFormats.codes;
     final defaultDecodeFormats = VideoDecodeFormatType.fromString(
