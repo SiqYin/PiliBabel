@@ -261,27 +261,32 @@ class PipOverlayService {
       );
     }
 
-    // 强制调用控制器的清理逻辑，特别是 SponsorBlock 相关的监听器
+    // 强制调用控制器的清理逻辑，特别是 SponsorBlock 相关的监听器。
+    // 延迟到下一帧执行，避免从 initState 调用时在 build 阶段触发 Rx rebuild。
+    final controllerToReset = _savedController;
+    final playerToReset = _savedPlayerController;
     if (shouldResetState) {
-      try {
-        _savedPlayerController?.resetTempPlayerSettingsToDefault();
-        if (_savedController is VideoDetailController) {
-          if (kDebugMode) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        try {
+          playerToReset?.resetTempPlayerSettingsToDefault();
+          if (controllerToReset is VideoDetailController) {
+            if (kDebugMode) {
+              debugPrint(
+                '[PiP] Explicitly resetting SponsorBlock state for cached VideoDetailController',
+              );
+            }
+            controllerToReset.resetBlock();
+          } else if (kDebugMode) {
             debugPrint(
-              '[PiP] Explicitly resetting SponsorBlock state for cached VideoDetailController',
+              '[PiP] Cached controller is not a VideoDetailController, skipping resetBlock',
             );
           }
-          (_savedController as VideoDetailController).resetBlock();
-        } else if (kDebugMode) {
-          debugPrint(
-            '[PiP] Cached controller is not a VideoDetailController, skipping resetBlock',
-          );
+        } catch (e) {
+          if (kDebugMode) {
+            debugPrint('[PiP] Error while resetting cached controller: $e');
+          }
         }
-      } catch (e) {
-        if (kDebugMode) {
-          debugPrint('[PiP] Error while resetting cached controller: $e');
-        }
-      }
+      });
     }
 
     _savedController = null;
