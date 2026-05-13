@@ -912,6 +912,7 @@ class VideoDetailController extends GetxController
       return;
     }
     isQuerying = true;
+    try {
     if (plPlayerController.enableSponsorBlock && isBlock && !fromReset) {
       querySponsorBlock(bvid: bvid, cid: cid.value);
     }
@@ -929,6 +930,12 @@ class VideoDetailController extends GetxController
             ? Pref.defaultAudioQa
             : Pref.defaultAudioQaCellular;
     }
+
+    // 将 cacheVideoQa 捕获到局部变量中，防止在后续 await 期间
+    // 被并发操作（如 PiP 清理的 resetTempPlayerSettingsToDefault 或
+    // 并发的 setDataSource）重置为 null 导致空指针异常
+    final int cacheVideoQa = plPlayerController.cacheVideoQa ??
+        Pref.defaultVideoQa;
 
     final result = await VideoHttp.videoUrl(
       cid: cid.value,
@@ -1015,10 +1022,10 @@ class VideoDetailController extends GetxController
       // 预设的画质为null，则当前可用的最高质量
       int targetVideoQa = curHighestVideoQa;
       if (data.acceptQuality?.isNotEmpty == true &&
-          plPlayerController.cacheVideoQa! <= curHighestVideoQa) {
+          cacheVideoQa <= curHighestVideoQa) {
         // 如果预设的画质低于当前最高
         targetVideoQa = data.acceptQuality!.findClosestTarget(
-          (e) => e <= plPlayerController.cacheVideoQa!,
+          (e) => e <= cacheVideoQa,
           (a, b) => a > b ? a : b,
         );
       }
@@ -1112,7 +1119,9 @@ class VideoDetailController extends GetxController
       }
       result.toast();
     }
-    isQuerying = false;
+    } finally {
+      isQuerying = false;
+    }
   }
 
   late final List<PostSegmentModel> postList = <PostSegmentModel>[];
