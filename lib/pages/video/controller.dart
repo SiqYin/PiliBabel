@@ -732,7 +732,9 @@ class VideoDetailController extends GetxController
     final videoList = allVideos.where((i) => i.id == qa).toList();
 
     if (videoList.isEmpty) {
-      return allVideos.first;
+      final fallback = allVideos.first;
+      currentVideoQa.value = VideoQuality.fromCode(fallback.id!);
+      return fallback;
     }
 
     final currentDecodeFormats = this.currentDecodeFormats.codes;
