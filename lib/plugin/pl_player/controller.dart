@@ -140,6 +140,7 @@ class PlPlayerController with BlockConfigMixin {
 
   /// 全屏状态
   final RxBool isFullScreen = false.obs;
+  void Function(bool isFullScreen)? onFullScreenChanged;
   // 系统原生 PiP 状态
   final RxBool isNativePip = false.obs;
   // 默认投稿视频格式
@@ -1635,6 +1636,7 @@ class PlPlayerController with BlockConfigMixin {
   void _setFullScreen(bool val) {
     isFullScreen.value = val;
     updateSubtitleStyle();
+    onFullScreenChanged?.call(val);
   }
 
   double screenRatio = 0.0;
