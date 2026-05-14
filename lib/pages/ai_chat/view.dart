@@ -36,8 +36,8 @@ class _AiChatPageState extends State<AiChatPage>
   static KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
     if (event is KeyDownEvent &&
         event.logicalKey == LogicalKeyboardKey.enter &&
-        (event.physicalKey == PhysicalKeyboardKey.enter ||
-         event.physicalKey == PhysicalKeyboardKey.numpadEnter) &&
+        HardwareKeyboard.instance.physicalKeysPressed
+            .contains(PhysicalKeyboardKey.enter) &&
         !HardwareKeyboard.instance.isShiftPressed) {
       final state = node.context?.findAncestorStateOfType<_AiChatPageState>();
       if (state != null && !state.chatCtl.isAnalyzing.value) {
@@ -558,7 +558,9 @@ class _AiChatPageState extends State<AiChatPage>
 /// Avoids matching IP addresses (192.168.x.x:80) and URLs.
 class TimestampSyntax extends md.InlineSyntax {
   TimestampSyntax()
-      : super(r'(?<![\d.])(\d{1,2})[：:](\d{2})(?:[：:](\d{2}))?(?!\d)');
+      : super(
+          r'(?<![.\d])(?:\[|［|[\(])?(\d{1,2})[：:](\d{2})(?:[：:](\d{2}))?(?:\]|［|[\)])?(?![.\d])',
+        );
 
   @override
   bool onMatch(md.InlineParser parser, Match match) {

@@ -129,6 +129,10 @@ class AiChatService {
           '4. 总结结论或启示\n'
           '5. 在各部分标注对应时间戳',
     ),
+    AiPromptTemplate(
+      name: '准备问答',
+      prompt: '以上是视频的内容信息，请理解并记住。接下来我会向你提问关于这个视频的问题，请做好准备。',
+    ),
   ];
 
   static List<AiPromptTemplate> getTemplates() {
