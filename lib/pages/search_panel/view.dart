@@ -73,7 +73,15 @@ abstract class CommonSearchPanelState<
           if (filtered.isEmpty) {
             return _buildFilteredOut(theme);
           }
-          return buildList(theme, filtered);
+          final showLoadMore = controller.hasKeywordFilter &&
+              filtered.length <= 5;
+          if (!showLoadMore) return buildList(theme, filtered);
+          return SliverMainAxisGroup(
+            slivers: [
+              buildList(theme, filtered),
+              _buildInlineLoadMore(theme),
+            ],
+          );
         }(),
       Success() => HttpError(onReload: controller.onReload),
       Error(:final errMsg) => HttpError(
@@ -156,6 +164,28 @@ abstract class CommonSearchPanelState<
   }
 
   Widget? buildHeader(ThemeData theme) => null;
+
+  Widget _buildInlineLoadMore(ThemeData theme) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Center(
+          child: FilledButton.tonalIcon(
+            onPressed:
+                _isLoadingMore ? null : _onLoadMoreWithCooldown,
+            icon: _isLoadingMore
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.keyboard_double_arrow_down, size: 18),
+            label: Text(_isLoadingMore ? '加载中...' : '继续加载'),
+          ),
+        ),
+      ),
+    );
+  }
 
   String? getTitle(T item) => null;
 

@@ -305,11 +305,18 @@ class SearchPanelController<R extends SearchNumData<T>, T>
 
   int _lastLoadMoreTime = 0;
 
+  bool get hasKeywordFilter =>
+      includeKeywords.isNotEmpty || excludeKeywords.isNotEmpty;
+
   @override
   Future<void> onLoadMore() async {
-    final now = DateTime.now().millisecondsSinceEpoch;
-    if (now - _lastLoadMoreTime < 1200) return;
-    await super.onLoadMore();
-    _lastLoadMoreTime = DateTime.now().millisecondsSinceEpoch;
+    if (hasKeywordFilter) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (now - _lastLoadMoreTime < 1200) return;
+      await super.onLoadMore();
+      _lastLoadMoreTime = DateTime.now().millisecondsSinceEpoch;
+    } else {
+      return super.onLoadMore();
+    }
   }
 }
