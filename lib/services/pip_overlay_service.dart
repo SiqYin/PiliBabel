@@ -69,6 +69,7 @@ class PipOverlayService {
   static dynamic _savedController;
   static PlPlayerController? _savedPlayerController;
   static String? _savedVideoContextKey;
+  static String? get savedVideoContextKey => _savedVideoContextKey;
   static final Map<String, dynamic> _savedControllers = {};
 
   static bool _isVideoLikeRoute(String route) {

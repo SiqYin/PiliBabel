@@ -723,9 +723,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
     // 如果是从应用内小窗返回（例如从子页面 Pop 回来，或者手动点击展开）
     if (PipOverlayService.isInPipMode) {
-      final savedController =
-          PipOverlayService.getSavedController<VideoDetailController>();
-      if (savedController == videoDetailController) {
+      // 用视频上下文 key 比较（而非 controller 实例），因为 controller 可能已被
+      // dispose 再重建，实例比较会失败
+      final isSameVideo = PipOverlayService.savedVideoContextKey ==
+          PipOverlayService.contextKeyFromArgs(videoDetailController.args);
+      if (isSameVideo) {
         _logSponsorBlock(
           'Returning to video page with matching active PiP, closing PiP overlay',
         );
