@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -29,11 +31,15 @@ abstract class CommonSearchPanelState<
     with AutomaticKeepAliveClientMixin {
   SearchPanelController<R, T> get controller;
 
+  bool _isLoadingMore = false;
+  VoidCallback? _cancelLoadMoreListener;
+
   @override
   bool get wantKeepAlive => true;
 
   @override
   void dispose() {
+    _cancelLoadMoreListener?.call();
     controller.cancelListener();
     super.dispose();
   }
@@ -81,6 +87,21 @@ abstract class CommonSearchPanelState<
     };
   }
 
+  void _onLoadMoreWithCooldown() {
+    if (_isLoadingMore) return;
+    setState(() => _isLoadingMore = true);
+    _cancelLoadMoreListener?.call();
+    final sub = controller.loadingState.listen((_) {
+      if (controller.isLoading) return;
+      _cancelLoadMoreListener = null;
+      Future.delayed(const Duration(milliseconds: 600), () {
+        if (mounted) setState(() => _isLoadingMore = false);
+      });
+    });
+    _cancelLoadMoreListener = sub.cancel;
+    controller.onLoadMore();
+  }
+
   Widget _buildFilteredOut(ThemeData theme) {
     return SliverFillRemaining(
       hasScrollBody: false,
@@ -115,9 +136,25 @@ abstract class CommonSearchPanelState<
               ),
               const SizedBox(height: 16),
               FilledButton.tonalIcon(
-                onPressed: controller.onLoadMore,
-                icon: const Icon(Icons.keyboard_double_arrow_down, size: 18),
-                label: const Text('继续加载'),
+                onPressed:
+                    _isLoadingMore ? null : _onLoadMoreWithCooldown,
+                icon: _isLoadingMore
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.keyboard_double_arrow_down, size: 18),
+                label: Text(_isLoadingMore ? '加载中...' : '继续加载'),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                '加载完成后方可进行下次加载，避免触发频率限制',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: theme.colorScheme.outline,
+                ),
               ),
             ],
           ),
