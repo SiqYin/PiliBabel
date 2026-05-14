@@ -261,9 +261,13 @@ class PipOverlayService {
       );
     }
 
-    // resetTempSettings 已在 PlPlayerController.setDataSource() 中同步执行，
-    // resetBlock 已在 VideoDetailController.onInit() 中同步执行，
-    // 此处不再需要异步重置，避免与新视频初始化产生竞态。
+    // resetTempSettings 已在 PlPlayerController.setDataSource() 中同步执行。
+    // resetBlock 在新 VideoDetailController.onInit() 中同步调用。
+    // 旧 controller 进 PiP 时 onClose 跳过了清理，需要在此同步清除
+    // 其 SponsorBlock 监听器，防止旧片段数据污染新视频。
+    if (shouldResetState && _savedController is VideoDetailController) {
+      (_savedController as VideoDetailController).resetBlock();
+    }
 
     _savedController = null;
     _savedPlayerController = null;
