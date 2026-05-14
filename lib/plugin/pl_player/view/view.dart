@@ -11,6 +11,7 @@ import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/disabled_icon.dart';
 import 'package:PiliPlus/common/widgets/gesture/immediate_tap_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/gesture/mouse_interactive_viewer.dart';
+import 'package:PiliPlus/common/widgets/gesture/player_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/pair.dart';
 import 'package:PiliPlus/common/widgets/player_bar.dart';
@@ -289,7 +290,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     _doubleTapGestureRecognizer = DoubleTapGestureRecognizer()
       ..onDoubleTapDown = _onDoubleTapDown;
 
-    _scaleGestureRecognizer = ScaleGestureRecognizer(
+    _scaleGestureRecognizer = PlayerScaleGestureRecognizer(
       debugOwner: this,
       dragStartBehavior: .start,
       allowedButtonsFilter: (buttons) => buttons == kPrimaryButton,
@@ -1207,11 +1208,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             plPlayerController.setLongPressStatus(false));
   late final ImmediateTapGestureRecognizer _tapGestureRecognizer;
   late final DoubleTapGestureRecognizer _doubleTapGestureRecognizer;
-  late final ScaleGestureRecognizer _scaleGestureRecognizer;
+  late final PlayerScaleGestureRecognizer _scaleGestureRecognizer;
 
   StreamSubscription<bool>? _danmakuListener;
 
-  static const _kOffsetThreshold = 30.0;
+  static const _kOffsetThreshold = 25.0;
   bool _isPositionAllowed(Offset offset) {
     if (offset.dx < _kOffsetThreshold ||
         offset.dy < _kOffsetThreshold ||
@@ -1249,9 +1250,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           _doubleTapGestureRecognizer.addPointer(event);
           longPressRecognizer.addPointer(event);
         }
-        if (_isPositionAllowed(event.localPosition)) {
-          _scaleGestureRecognizer.addPointer(event);
-        }
+        _scaleGestureRecognizer
+          ..isPosAllowed = _isPositionAllowed(event.localPosition)
+          ..addPointer(event);
       }
     } else if (controlsUnlock) {
       if (plPlayerController.isLive) {
