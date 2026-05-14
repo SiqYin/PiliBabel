@@ -863,18 +863,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     // 无论进入哪个分支，最后都刷新一下 UI
     if (mounted) setState(() {});
 
-    // 重试 PiP：_onPopInvokedWithResult 触发了 didPop=true 但被其他视频/直播的 PiP 抢先占用，
-    // 现在其他 PiP 已关闭、播放器已恢复，重新尝试启动 PiP
-    if (_pipRetryPending) {
-      _pipRetryPending = false;
-      _logSponsorBlock('Retrying PiP after closing other PiP');
-      _startInAppPipIfNeeded();
-      if (_isEnteringPipMode) {
-        _logSponsorBlock('PiP retry succeeded');
-      } else {
-        _logSponsorBlock('PiP retry failed');
-      }
-    }
+    // 不在此处重试 _startInAppPipIfNeeded。
+    // didPopNext 是"返回到本页面"的回调，无法预知用户接下来是停留还是继续返回。
+    // 若立即重试，会在用户停在本页时把视频错误地送入 PiP。
+    // _pipRetryPending 留待 _onPopInvokedWithResult 消费——只有用户真正继续 pop 时才重试。
   }
 
   @override
@@ -2566,6 +2558,19 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     }
     if (didPop) {
       _startInAppPipIfNeeded();
+      // 消费 didPopNext else 分支设的重试标志（用户真的继续 pop 了）。
+      // 立即调用通常足够（didPopNext 已同步关闭其他 PiP，playerInit 多半已完成）；
+      // 若立即失败（rapid back press 时 playerInit 还在 await，playerStatus 不是 playing），
+      // 延迟到下一帧再试一次，那时 playerInit 已完成、playerStatus=playing。
+      if (_pipRetryPending) {
+        final needDeferredRetry = !_isEnteringPipMode;
+        _pipRetryPending = false;
+        if (needDeferredRetry) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _startInAppPipIfNeeded();
+          });
+        }
+      }
     }
     videoDetailController.plPlayerController.onPopInvokedWithResult(
       didPop,
