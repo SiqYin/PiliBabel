@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
 
 class AiPromptTemplate {
   String name;
@@ -17,8 +18,6 @@ class AiPromptTemplate {
 }
 
 class AiChatService {
-  static void resetClient() {}
-
   static Options _options({Duration? receiveTimeout}) {
     final apiKey = Pref.aiApiKey;
     return Options(
@@ -79,33 +78,28 @@ class AiChatService {
     );
 
     final stream = response.data!.stream;
-    final buffer = StringBuffer();
 
-    await for (final chunk in stream) {
-      buffer.write(utf8.decode(chunk));
-      final lines = buffer.toString().split('\n');
-      // Keep the last incomplete line in the buffer
-      buffer
-        ..clear()
-        ..write(lines.removeLast());
-      for (final line in lines) {
-        final trimmed = line.trim();
-        if (trimmed.isEmpty || !trimmed.startsWith('data:')) continue;
-        final data = trimmed.substring(5).trim();
-        if (data == '[DONE]') return;
-        try {
-          final json = jsonDecode(data) as Map<String, dynamic>;
-          final choices = json['choices'] as List?;
-          if (choices != null && choices.isNotEmpty) {
-            final delta = choices[0]['delta'] as Map<String, dynamic>?;
-            final content = delta?['content'] as String?;
-            if (content != null) {
-              yield content;
-            }
+    await for (final line in stream
+        .cast<List<int>>()
+        .transform(utf8.decoder)
+        .transform(const LineSplitter())) {
+      final trimmed = line.trim();
+      if (trimmed.isEmpty || !trimmed.startsWith('data:')) continue;
+      final data = trimmed.replaceFirst('data:', '').trim();
+      if (data == '[DONE]') return;
+      if (data.isEmpty) continue;
+      try {
+        final json = jsonDecode(data) as Map<String, dynamic>;
+        final choices = json['choices'] as List?;
+        if (choices != null && choices.isNotEmpty) {
+          final delta = choices[0]['delta'] as Map<String, dynamic>?;
+          final content = delta?['content'] as String?;
+          if (content != null) {
+            yield content;
           }
-        } catch (_) {
-          // skip malformed chunks
         }
+      } catch (e) {
+        if (kDebugMode) debugPrint('SSE parse error: $e');
       }
     }
   }
@@ -131,7 +125,7 @@ class AiChatService {
     ),
     AiPromptTemplate(
       name: '准备问答',
-      prompt: '以上是视频的内容信息，请理解并记住。接下来我会向你提问关于这个视频的问题，请做好准备。',
+      prompt: '请不要进行任何分析或总结。你只需要确认已收到以上视频内容，然后简短回复「已准备好，请提问」即可。等待我的具体问题。',
     ),
   ];
 
@@ -149,7 +143,7 @@ class AiChatService {
           .where((t) => !existingNames.contains(t.name))
           .toList();
       if (missing.isNotEmpty) {
-        templates.insertAll(0, missing);
+        templates.addAll(missing);
         saveTemplates(templates);
       }
       return templates;

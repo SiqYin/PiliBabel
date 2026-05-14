@@ -22,7 +22,7 @@ class AiChatController extends GetxController {
       '你是一个视频内容分析助手。用户会提供视频的标题、简介和字幕内容，请根据用户的要求进行分析。'
       '要求：'
       '1. 回复语言为中文，使用 Markdown 格式。'
-      '2. 在输出总结时，请严格遵循以下时间戳规则：'
+      '2. 在输出涉及到时间点的内容时，请严格遵循以下时间戳规则：'
       '所有涉及到的视频时间点，必须统一使用 [mm:ss] 或 [hh:mm:ss] 格式。'
       '每个时间戳前后请保留一个空格，例如：在此处 [01:24] 提到...。'
       '如果是一个时间段，请使用 [开始时间] - [结束时间] 的形式。'
@@ -143,9 +143,12 @@ class AiChatController extends GetxController {
         lastMsg.appendContent(token);
         messages.refresh();
       }
-    } finally {
       lastMsg.isStreaming = false;
       messages.refresh();
+    } catch (e) {
+      lastMsg.isStreaming = false;
+      messages.refresh();
+      rethrow;
     }
   }
 

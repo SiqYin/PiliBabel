@@ -88,7 +88,8 @@ class AiSettingPage extends StatelessWidget {
                   Obx(() {
                     if (controller.modelList.isNotEmpty) {
                       return DropdownButtonFormField<String>(
-                        initialValue: controller.modelList
+                        // ignore: deprecated_member_use
+                        value: controller.modelList
                                 .contains(controller.model.value)
                             ? controller.model.value
                             : null,
@@ -154,10 +155,15 @@ class AiSettingPage extends StatelessWidget {
                 ),
               );
             }
-            return Column(
-              children: List.generate(controller.templates.length, (index) {
+            return ReorderableListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: controller.templates.length,
+              onReorder: controller.reorderTemplate,
+              itemBuilder: (context, index) {
                 final t = controller.templates[index];
                 return Card(
+                  key: ValueKey('${t.name}_$index'),
                   child: ListTile(
                     title: Text(t.name),
                     subtitle: Text(
@@ -170,6 +176,7 @@ class AiSettingPage extends StatelessWidget {
                       children: [
                         IconButton(
                           icon: const Icon(Icons.edit_outlined),
+                          iconSize: 20,
                           onPressed: () => _showTemplateDialog(
                             context,
                             controller,
@@ -181,13 +188,18 @@ class AiSettingPage extends StatelessWidget {
                             Icons.delete_outline,
                             color: colorScheme.error,
                           ),
+                          iconSize: 20,
                           onPressed: () => controller.deleteTemplate(index),
+                        ),
+                        ReorderableDragStartListener(
+                          index: index,
+                          child: const Icon(Icons.drag_handle, size: 20),
                         ),
                       ],
                     ),
                   ),
                 );
-              }),
+              },
             );
           }),
           const SizedBox(height: 24),
@@ -323,6 +335,8 @@ class _ApiKeyFieldState extends State<_ApiKeyField> {
         ),
       ),
       obscureText: _obscure,
+      autocorrect: false,
+      enableSuggestions: false,
       onChanged: widget.controller.saveApiKey,
     );
   }

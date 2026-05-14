@@ -68,13 +68,11 @@ class AiSettingController extends GetxController {
   void saveApiUrl(String value) {
     apiUrl.value = value;
     Pref.aiApiUrl = value;
-    AiChatService.resetClient();
   }
 
   void saveApiKey(String value) {
     apiKey.value = value;
     Pref.aiApiKey = value;
-    AiChatService.resetClient();
   }
 
   void saveModel(String value) {
@@ -95,6 +93,13 @@ class AiSettingController extends GetxController {
 
   void deleteTemplate(int index) {
     templates.removeAt(index);
+    _saveTemplates();
+  }
+
+  void reorderTemplate(int oldIndex, int newIndex) {
+    if (newIndex > oldIndex) newIndex--;
+    final item = templates.removeAt(oldIndex);
+    templates.insert(newIndex, item);
     _saveTemplates();
   }
 

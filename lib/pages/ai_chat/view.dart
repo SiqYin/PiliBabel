@@ -30,6 +30,7 @@ class _AiChatPageState extends State<AiChatPage>
   int _selectedPromptIndex = 0;
   bool _isAtBottom = true;
   double _lastScrollOffset = 0;
+  bool _scrollScheduled = false;
 
   /// Physical keyboard only: Enter sends, Shift+Enter inserts newline.
   /// Soft keyboard "换行" is handled by TextInputAction.newline and won't trigger this.
@@ -81,8 +82,10 @@ class _AiChatPageState extends State<AiChatPage>
   }
 
   void _scrollToBottom() {
-    if (!_isAtBottom || !_scrollCtl.hasClients) return;
+    if (!_isAtBottom || !_scrollCtl.hasClients || _scrollScheduled) return;
+    _scrollScheduled = true;
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scrollScheduled = false;
       if (_scrollCtl.hasClients && _isAtBottom) {
         _scrollCtl.animateTo(
           _scrollCtl.position.maxScrollExtent,
@@ -108,23 +111,15 @@ class _AiChatPageState extends State<AiChatPage>
     chatCtl.sendFollowUp(text);
   }
 
-  void _copyToClipboard() {
-    final msgs = chatCtl.messages;
-    if (msgs.isEmpty) return;
-    ChatMessage? lastAssistant;
-    for (final m in msgs.reversed) {
-      if (m.role == 'assistant' && m.content.isNotEmpty) {
-        lastAssistant = m;
-        break;
-      }
-    }
-    if (lastAssistant == null) return;
-    Clipboard.setData(ClipboardData(text: lastAssistant.content));
+  void _copyMessage(ChatMessage msg) {
+    if (msg.content.isEmpty) return;
+    Clipboard.setData(ClipboardData(text: msg.content));
     SmartDialog.showToast('已复制到剪贴板');
   }
 
   @override
   Widget buildPage(ThemeData theme) {
+    _templates = AiChatService.getTemplates();
     final colorScheme = theme.colorScheme;
     return Material(
       color: colorScheme.surface,
@@ -233,7 +228,8 @@ class _AiChatPageState extends State<AiChatPage>
                     ),
                   )
                 : DropdownButtonFormField<int>(
-                    initialValue: _selectedPromptIndex < _templates.length
+                    // ignore: deprecated_member_use
+                    value: _selectedPromptIndex < _templates.length
                         ? _selectedPromptIndex
                         : 0,
                     decoration: InputDecoration(
@@ -477,7 +473,7 @@ class _AiChatPageState extends State<AiChatPage>
                 borderRadius: BorderRadius.circular(16),
                 elevation: 2,
                 child: InkWell(
-                  onTap: _copyToClipboard,
+                  onTap: () => _copyMessage(msg),
                   borderRadius: BorderRadius.circular(16),
                   child: Padding(
                     padding: const EdgeInsets.all(6),
@@ -499,12 +495,17 @@ class _AiChatPageState extends State<AiChatPage>
     try {
       final videoCtl = Get.find<VideoDetailController>(tag: widget.heroTag);
       final duration = videoCtl.plPlayerController.duration.value;
-      if (duration.inSeconds > 0 && seconds > duration.inSeconds) return;
+      if (duration.inSeconds > 0 && seconds > duration.inSeconds) {
+        SmartDialog.showToast('时间戳超出视频时长');
+        return;
+      }
       videoCtl.plPlayerController.seekTo(
         Duration(seconds: seconds),
         isSeek: false,
       );
-    } catch (_) {}
+    } catch (_) {
+      SmartDialog.showToast('跳转失败');
+    }
   }
 
   Widget _buildInputBar(ThemeData theme) {
@@ -564,15 +565,20 @@ class TimestampSyntax extends md.InlineSyntax {
 
   @override
   bool onMatch(md.InlineParser parser, Match match) {
+    final g1 = int.parse(match.group(1)!);
+    final g2 = int.parse(match.group(2)!);
+    final g3 = match.group(3) != null ? int.parse(match.group(3)!) : null;
+
+    // Validate: minutes/seconds must be 0-59
+    if (g2 > 59 || (g3 != null && g3 > 59)) return false;
+
     int seconds;
-    if (match.group(3) != null) {
+    if (g3 != null) {
       // HH:MM:SS
-      seconds = int.parse(match.group(1)!) * 3600 +
-          int.parse(match.group(2)!) * 60 +
-          int.parse(match.group(3)!);
+      seconds = g1 * 3600 + g2 * 60 + g3;
     } else {
       // MM:SS
-      seconds = int.parse(match.group(1)!) * 60 + int.parse(match.group(2)!);
+      seconds = g1 * 60 + g2;
     }
 
     final element = md.Element.text('timestamp', match.group(0)!);
