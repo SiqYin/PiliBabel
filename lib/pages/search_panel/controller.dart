@@ -302,4 +302,14 @@ class SearchPanelController<R extends SearchNumData<T>, T>
     scrollController.jumpToTop();
     return super.onReload();
   }
+
+  int _lastLoadMoreTime = 0;
+
+  @override
+  Future<void> onLoadMore() async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - _lastLoadMoreTime < 1200) return;
+    await super.onLoadMore();
+    _lastLoadMoreTime = DateTime.now().millisecondsSinceEpoch;
+  }
 }

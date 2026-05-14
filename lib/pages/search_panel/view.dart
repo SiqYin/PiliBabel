@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -32,14 +30,12 @@ abstract class CommonSearchPanelState<
   SearchPanelController<R, T> get controller;
 
   bool _isLoadingMore = false;
-  VoidCallback? _cancelLoadMoreListener;
 
   @override
   bool get wantKeepAlive => true;
 
   @override
   void dispose() {
-    _cancelLoadMoreListener?.call();
     controller.cancelListener();
     super.dispose();
   }
@@ -87,19 +83,15 @@ abstract class CommonSearchPanelState<
     };
   }
 
-  void _onLoadMoreWithCooldown() {
+  Future<void> _onLoadMoreWithCooldown() async {
     if (_isLoadingMore) return;
     setState(() => _isLoadingMore = true);
-    _cancelLoadMoreListener?.call();
-    final sub = controller.loadingState.listen((_) {
-      if (controller.isLoading) return;
-      _cancelLoadMoreListener = null;
-      Future.delayed(const Duration(milliseconds: 600), () {
-        if (mounted) setState(() => _isLoadingMore = false);
-      });
-    });
-    _cancelLoadMoreListener = sub.cancel;
-    controller.onLoadMore();
+    try {
+      await controller.onLoadMore();
+      await Future.delayed(const Duration(milliseconds: 600));
+    } finally {
+      if (mounted) setState(() => _isLoadingMore = false);
+    }
   }
 
   Widget _buildFilteredOut(ThemeData theme) {
