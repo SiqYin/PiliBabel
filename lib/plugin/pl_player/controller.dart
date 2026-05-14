@@ -667,7 +667,7 @@ class PlPlayerController with BlockConfigMixin {
 
     if (kDebugMode) {
       debugPrint(
-        '[PlPlayer] Resetting temp player settings to defaults (currentContext: $_activeVideoContextKey, nextPgcType: $nextPgcType)',
+        '[PlPlayer] resetTempSettings (currentContext: $_activeVideoContextKey, nextPgcType: $nextPgcType)',
       );
     }
 
