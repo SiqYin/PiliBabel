@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:PiliPlus/pages/ai_chat/controller.dart';
 import 'package:PiliPlus/pages/ai_chat/models.dart';
 import 'package:PiliPlus/pages/common/slide/common_slide_page.dart';
@@ -32,13 +34,12 @@ class _AiChatPageState extends State<AiChatPage>
   double _lastScrollOffset = 0;
   bool _scrollScheduled = false;
 
-  /// Physical keyboard only: Enter sends, Shift+Enter inserts newline.
-  /// Soft keyboard "换行" is handled by TextInputAction.newline and won't trigger this.
+  /// Desktop only: Enter sends, Shift+Enter inserts newline.
+  /// On mobile, returns ignored to let the system handle soft keyboard normally.
   static KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+    if (Platform.isAndroid || Platform.isIOS) return KeyEventResult.ignored;
     if (event is KeyDownEvent &&
         event.logicalKey == LogicalKeyboardKey.enter &&
-        HardwareKeyboard.instance.physicalKeysPressed
-            .contains(PhysicalKeyboardKey.enter) &&
         !HardwareKeyboard.instance.isShiftPressed) {
       final state = node.context?.findAncestorStateOfType<_AiChatPageState>();
       if (state != null && !state.chatCtl.isAnalyzing.value) {
