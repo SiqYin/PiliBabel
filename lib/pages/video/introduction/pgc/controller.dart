@@ -21,7 +21,6 @@ import 'package:PiliPlus/pages/video/reply/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_repeat.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/service_locator.dart';
-import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
@@ -30,6 +29,7 @@ import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/share_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/foundation.dart';
+import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -197,8 +197,14 @@ class PgcIntroController extends CommonIntroController {
                   style: TextStyle(fontSize: 14),
                 ),
                 onTap: () {
+                  final item = pgcItem.episodes?.firstWhereOrNull(
+                    (item) => item.epId == epId,
+                  );
                   Get.back();
-                  ShareUtils.shareText(videoUrl);
+                  ShareUtils.shareText(
+                    '${pgcItem.title}${item != null ? ' ${item.showTitle}' : ''}'
+                    ' - $videoUrl',
+                  );
                 },
               ),
             ListTile(
@@ -209,7 +215,7 @@ class PgcIntroController extends CommonIntroController {
               ),
               onTap: () {
                 Get.back();
-                EpisodeItem? item = pgcItem.episodes?.firstWhereOrNull(
+                final item = pgcItem.episodes?.firstWhereOrNull(
                   (item) => item.epId == epId,
                 );
                 showModalBottomSheet(
