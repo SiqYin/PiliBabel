@@ -539,7 +539,7 @@ class _DownloadPageState extends State<DownloadPage>
               }
               return const SliverFillRemaining(
                 hasScrollBody: false,
-                child: HttpError(),
+                child: HttpError(isSliver: false),
               );
             }
             return SliverPadding(
