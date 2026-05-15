@@ -887,6 +887,9 @@ class VideoDetailController extends GetxController
 
   bool isQuerying = false;
 
+  String? _lastQueryBvid;
+  int? _lastQueryCid;
+
   final languages = Rxn<List<LanguageItem>>();
   final currLang = Rxn<String>();
   void setLanguage(String language) {
@@ -916,6 +919,16 @@ class VideoDetailController extends GetxController
     }
     isQuerying = true;
     try {
+    if (_lastQueryBvid != bvid || _lastQueryCid != cid.value) {
+      // 跨视频/分P时重置画质缓存，确保根据半屏/全屏设置重新选择默认画质。
+      // resetTempSettings 在 setDataSource 中执行（HTTP 请求之后），
+      // 此处提前重置使得 cacheVideoQa == null 分支能正确初始化。
+      if (PlatformUtils.isMobile) {
+        plPlayerController.cacheVideoQa = null;
+      }
+      _lastQueryBvid = bvid;
+      _lastQueryCid = cid.value;
+    }
     if (plPlayerController.enableSponsorBlock && isBlock && !fromReset) {
       querySponsorBlock(bvid: bvid, cid: cid.value);
     }
