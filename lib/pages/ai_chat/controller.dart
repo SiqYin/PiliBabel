@@ -115,7 +115,12 @@ class AiChatController extends GetxController {
   /// Auto-load video context if not already loaded.
   Future<void> _ensureVideoContext() async {
     if (!hasVideoContext.value) {
-      await loadVideoContext();
+      SmartDialog.showLoading(msg: '正在载入视频上下文...');
+      try {
+        await loadVideoContext();
+      } finally {
+        SmartDialog.dismiss(status: SmartStatus.loading);
+      }
     }
   }
 
@@ -123,14 +128,14 @@ class AiChatController extends GetxController {
   Future<void> startAnalysis(String templatePrompt, {String? templateName}) async {
     if (isAnalyzing.value) return;
 
-    isAnalyzing.value = true;
-
     try {
       await _ensureVideoContext();
       if (!hasVideoContext.value) {
         // Subtitle fetch failed in loadVideoContext
         return;
       }
+
+      isAnalyzing.value = true;
 
       messages.addAll([
         ChatMessage(

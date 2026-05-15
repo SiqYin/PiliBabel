@@ -604,7 +604,7 @@ class _AiChatPageState extends State<AiChatPage>
 class TimestampSyntax extends md.InlineSyntax {
   TimestampSyntax()
       : super(
-          r'(?<![.\d])(?:\[|［|[\(])?(\d{1,2})[：:](\d{2})(?:[：:](\d{2}))?(?:\]|［|[\)])?(?![.\d])',
+        r'(?<![.\d])(?:\[| ［|【|[\(])?(\d{1,2})[：:](\d{2})(?:[：:](\d{2}))?(?:\]| ［|】|[\)])?(?![.\d])',
         );
 
   @override
