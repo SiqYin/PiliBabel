@@ -3,6 +3,7 @@ class ChatMessage {
   String content;
   bool isStreaming;
   String? templateName;
+  final bool isDivider;
   int _updateCount = 0;
 
   ChatMessage({
@@ -10,6 +11,7 @@ class ChatMessage {
     required this.content,
     this.isStreaming = false,
     this.templateName,
+    this.isDivider = false,
   });
 
   /// Incremented on each content update during streaming, used as animation trigger

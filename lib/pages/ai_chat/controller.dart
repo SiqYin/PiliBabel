@@ -12,21 +12,33 @@ class AiChatController extends GetxController {
   final messages = <ChatMessage>[].obs;
   final isAnalyzing = false.obs;
   final subtitleWarning = false.obs;
+  final hasVideoContext = false.obs;
 
   final String heroTag;
   late final VideoDetailController _videoCtl;
 
   AiChatController({required this.heroTag});
 
-  static const _systemPrompt =
-      '你是一个视频内容分析助手。用户会提供视频的标题、简介和字幕内容，请根据用户的要求进行分析。'
-      '要求：'
-      '1. 回复语言为中文，使用 Markdown 格式。'
-      '2. 在输出涉及到时间点的内容时，请严格遵循以下时间戳规则：'
-      '所有涉及到的视频时间点，必须统一使用 [mm:ss] 或 [hh:mm:ss] 格式。'
-      '每个时间戳前后请保留一个空格，例如：在此处 [01:24] 提到...。'
-      '如果是一个时间段，请使用 [开始时间] - [结束时间] 的形式。'
-      '3. 如果字幕信息不足，可参考视频简介补充分析；如果内容确实无法分析，提醒用户自行观看。';
+  // --- Dynamic system prompts ---
+  static const _systemPromptA =
+      '你是一个智能问答助手。当前对话尚未关联任何视频内容。请使用你的通用知识库回答用户的问题。'
+      '如果用户的提问明确指向某个特定视频的内容（如"视频里说了什么"），'
+      '请委婉地提示用户：『抱歉，您还没有载入视频信息，请先点击【载入上下文】按钮补充上下文。』';
+
+  static const _systemPromptB =
+      '你是一个视频内容分析与互动学习助手。当前对话已成功关联视频上下文。请严格基于注入的视频内容解答用户的疑问。\n'
+      '要求：\n'
+      '1. 回复语言为中文，使用 Markdown 格式。\n'
+      '2. 只要输出内容涉及到具体的视频时间点，必须统一使用 [mm:ss] 或 [hh:mm:ss] 格式。'
+      '时间戳前后必须保留一个空格。时间段请使用 [开始] - [结束] 格式。\n'
+      '3. 如果用户询问的概念超出了视频本身的信息范围，请勿提示无法分析，'
+      '而是主动调用通用知识补充解答，并在该段落前明确声明：'
+      '『*视频中未提及此概念，为您补充相关背景知识：*』';
+
+  // --- Cached video context for system message injection ---
+  String? _cachedVideoContext;
+  int _contextLoadIndex = -1;
+  bool _isLoadingContext = false;
 
   @override
   void onInit() {
@@ -54,19 +66,16 @@ class AiChatController extends GetxController {
     return info;
   }
 
-  /// Start analysis with a template prompt.
-  Future<void> startAnalysis(String templatePrompt, {String? templateName}) async {
-    if (isAnalyzing.value) return;
-
-    isAnalyzing.value = true;
-    subtitleWarning.value = false;
+  /// Load video context locally (no API call). Injects divider and local bubble.
+  Future<void> loadVideoContext() async {
+    if (hasVideoContext.value || isAnalyzing.value || _isLoadingContext) return;
+    _isLoadingContext = true;
 
     try {
       final videoInfo = _buildVideoInfo();
-      String contextContent;
+      String? subtitleText;
 
       if (hasSubtitles) {
-        // Fetch subtitle body
         final subtitle = _videoCtl.subtitles.first;
         final body = await VideoHttp.fetchSubtitleBody(subtitle.subtitleUrl!);
         if (body == null || body.isEmpty) {
@@ -74,21 +83,63 @@ class AiChatController extends GetxController {
           return;
         }
         final processed = VideoHttp.preprocessSubtitlesForAi(body);
+        subtitleText = processed.text;
         subtitleWarning.value = processed.isTooLong;
-        contextContent =
-            '$videoInfo## 字幕内容\n${processed.text}\n\n---\n$templatePrompt';
-      } else {
-        // No subtitles, only provide video info
-        contextContent = '$videoInfo---\n$templatePrompt';
       }
 
-      messages
-        ..add(ChatMessage(
+      _cachedVideoContext = _assembleVideoContext(videoInfo, subtitleText);
+      hasVideoContext.value = true;
+
+      _contextLoadIndex = messages.length;
+      messages.addAll([
+        ChatMessage(role: 'system', content: '', isDivider: true),
+        ChatMessage(role: 'assistant', content: '✅ 视频上下文已成功载入，请随时提问！'),
+      ]);
+    } finally {
+      _isLoadingContext = false;
+    }
+  }
+
+  /// Assemble the video context string for system message injection.
+  String _assembleVideoContext(String videoInfo, String? subtitleText) {
+    final sb = StringBuffer();
+    if (videoInfo.isNotEmpty) sb.write(videoInfo);
+    if (subtitleText != null && subtitleText.isNotEmpty) {
+      sb
+        ..writeln('## 字幕内容')
+        ..writeln(subtitleText);
+    }
+    return sb.toString();
+  }
+
+  /// Auto-load video context if not already loaded.
+  Future<void> _ensureVideoContext() async {
+    if (!hasVideoContext.value) {
+      await loadVideoContext();
+    }
+  }
+
+  /// Start analysis with a template prompt.
+  Future<void> startAnalysis(String templatePrompt, {String? templateName}) async {
+    if (isAnalyzing.value) return;
+
+    isAnalyzing.value = true;
+
+    try {
+      await _ensureVideoContext();
+      if (!hasVideoContext.value) {
+        // Subtitle fetch failed in loadVideoContext
+        return;
+      }
+
+      messages.addAll([
+        ChatMessage(
           role: 'user',
-          content: contextContent,
+          content: templatePrompt,
           templateName: templateName,
-        ))
-        ..add(ChatMessage(role: 'assistant', content: '', isStreaming: true));
+        ),
+        ChatMessage(role: 'assistant', content: '', isStreaming: true),
+      ]);
 
       await _streamResponse();
     } catch (e) {
@@ -103,17 +154,8 @@ class AiChatController extends GetxController {
   Future<void> sendFollowUp(String text) async {
     if (isAnalyzing.value || text.trim().isEmpty) return;
 
-    // First message without subtitles: prepend video info as context
-    final isFirst = messages.isEmpty;
-    String content = text.trim();
-    if (isFirst && !hasSubtitles) {
-      final videoInfo = _buildVideoInfo();
-      if (videoInfo.isNotEmpty) {
-        content = '$videoInfo$content';
-      }
-    }
     messages
-      ..add(ChatMessage(role: 'user', content: content))
+      ..add(ChatMessage(role: 'user', content: text.trim()))
       ..add(ChatMessage(role: 'assistant', content: '', isStreaming: true));
     isAnalyzing.value = true;
 
@@ -128,12 +170,33 @@ class AiChatController extends GetxController {
   }
 
   Future<void> _streamResponse() async {
-    final chatMessages = [
-      {'role': 'system', 'content': _systemPrompt},
-      ...messages
-          .where((m) => !m.isStreaming || m.content.isNotEmpty)
-          .map((m) => {'role': m.role, 'content': m.content}),
+    subtitleWarning.value = false;
+
+    final chatMessages = <Map<String, String>>[
+      {
+        'role': 'system',
+        'content': hasVideoContext.value
+            ? _systemPromptB
+            : _systemPromptA,
+      },
     ];
+
+    // Inject cached video context as system message (for prefix caching)
+    if (hasVideoContext.value && _cachedVideoContext != null) {
+      chatMessages.add({
+        'role': 'system',
+        'content': _cachedVideoContext!,
+      });
+    }
+
+    // Add conversation history, truncating at context load boundary
+    final startIdx = _contextLoadIndex >= 0 ? _contextLoadIndex : 0;
+    for (final m in messages.skip(startIdx)) {
+      if (m.isDivider) continue;
+      if (!m.isStreaming || m.content.isNotEmpty) {
+        chatMessages.add({'role': m.role, 'content': m.content});
+      }
+    }
 
     final lastMsg = messages.last;
     try {
@@ -161,5 +224,9 @@ class AiChatController extends GetxController {
   void clearMessages() {
     messages.clear();
     subtitleWarning.value = false;
+    hasVideoContext.value = false;
+    _cachedVideoContext = null;
+    _contextLoadIndex = -1;
+    _isLoadingContext = false;
   }
 }

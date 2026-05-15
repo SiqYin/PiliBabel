@@ -924,7 +924,7 @@ abstract final class VideoHttp {
     // Collapse multiple blank lines
     text = text.replaceAll(RegExp(r'\n{3,}'), '\n\n').trim();
 
-    return (text: text, isTooLong: text.length > 100000);
+    return (text: text, isTooLong: text.length > 20000);
   }
 
   static bool _canAddRank(Map i) {

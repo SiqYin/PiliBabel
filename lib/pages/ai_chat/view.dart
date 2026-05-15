@@ -187,7 +187,7 @@ class _AiChatPageState extends State<AiChatPage>
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               color: colorScheme.errorContainer,
               child: Text(
-                '字幕文本较长，分析结果可能不够完整',
+                '提示：当前视频文本较长，AI 首次阅读需要几秒钟，请耐心等待',
                 style: TextStyle(
                   fontSize: 12,
                   color: colorScheme.onErrorContainer,
@@ -262,16 +262,31 @@ class _AiChatPageState extends State<AiChatPage>
           const SizedBox(width: 12),
           Obx(() {
             final analyzing = chatCtl.isAnalyzing.value;
-            final noSubtitle = !chatCtl.hasSubtitles;
-            return FilledButton.icon(
-              onPressed: (analyzing || noSubtitle) ? null : _sendSelectedPrompt,
-              icon: analyzing
-                  ? const SizedBox.square(
-                      dimension: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.play_arrow, size: 20),
-              label: const Text('分析'),
+            final hasContext = chatCtl.hasVideoContext.value;
+            final hasSubs = chatCtl.hasSubtitles;
+            return Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!hasContext && hasSubs)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: IconButton(
+                      onPressed: analyzing ? null : () => chatCtl.loadVideoContext(),
+                      icon: const Icon(Icons.post_add, size: 22),
+                      tooltip: '载入上下文',
+                    ),
+                  ),
+                FilledButton.icon(
+                  onPressed: analyzing ? null : _sendSelectedPrompt,
+                  icon: analyzing
+                      ? const SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.play_arrow, size: 20),
+                  label: const Text('分析'),
+                ),
+              ],
             );
           }),
         ],
@@ -299,9 +314,11 @@ class _AiChatPageState extends State<AiChatPage>
                 ),
                 const SizedBox(height: 16),
                 Text(
-                  chatCtl.hasSubtitles
-                      ? '选择提示词后点击「分析」开始'
-                      : '输入问题开始对话',
+                  chatCtl.hasVideoContext.value
+                      ? '视频上下文已载入，请输入你的问题'
+                      : chatCtl.hasSubtitles
+                          ? '选择提示词后点击「分析」或「载入上下文」'
+                          : '输入问题开始对话',
                   style: TextStyle(color: colorScheme.outline),
                 ),
               ],
@@ -318,6 +335,7 @@ class _AiChatPageState extends State<AiChatPage>
         itemCount: msgs.length,
         itemBuilder: (context, index) {
           final msg = msgs[index];
+          if (msg.isDivider) return _buildDivider(theme);
           if (msg.role == 'user') {
             final displayText = msg.templateName != null
                 ? '/${msg.templateName}'
@@ -328,6 +346,29 @@ class _AiChatPageState extends State<AiChatPage>
         },
       );
     });
+  }
+
+  Widget _buildDivider(ThemeData theme) {
+    final colorScheme = theme.colorScheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Row(
+        children: [
+          Expanded(child: Divider(color: colorScheme.outlineVariant)),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Text(
+              '已载入视频上下文',
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.outline,
+              ),
+            ),
+          ),
+          Expanded(child: Divider(color: colorScheme.outlineVariant)),
+        ],
+      ),
+    );
   }
 
   Widget _buildUserMessage(String content, ThemeData theme) {
