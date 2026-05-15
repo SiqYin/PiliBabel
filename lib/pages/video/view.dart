@@ -600,6 +600,13 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   void dispose() {
     VideoStackManager.decrement(); // 减少视频页面层级追踪
     final isInAppPip = PipOverlayService.isInPipMode;
+    // 如果 _pipRetryPending=true 但用户没有继续 pop（_onPopInvokedWithResult 未触发），
+    // 说明用户通过其他方式离开（点导航栏、Get.offAll 等），需要主动暂停播放器。
+    if (_pipRetryPending && !isInAppPip && !_isEnteringPipMode) {
+      plPlayerController?.pause();
+      _pipRetryPending = false;
+    }
+
     plPlayerController
       ?..removeStatusLister(playerListener)
       ..removePositionListener(positionListener);
@@ -726,7 +733,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     if (PipOverlayService.isInPipMode) {
       // 用视频上下文 key 比较（而非 controller 实例），因为 controller 可能已被
       // dispose 再重建，实例比较会失败
-      final isSameVideo = PipOverlayService.savedVideoContextKey ==
+      final isSameVideo =
+          PipOverlayService.savedVideoContextKey ==
           PipOverlayService.contextKeyFromArgs(videoDetailController.args);
       if (isSameVideo) {
         _logSponsorBlock(
