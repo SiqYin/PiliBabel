@@ -5,7 +5,9 @@ import 'package:PiliPlus/pages/ai_chat/models.dart';
 import 'package:PiliPlus/pages/common/slide/common_slide_page.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
-import 'package:flutter/material.dart';
+import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
+import 'package:PiliPlus/common/widgets/flutter/text_field/text_field.dart';
+import 'package:flutter/material.dart' hide TextField;
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_markdown_plus_latex/flutter_markdown_plus_latex.dart';
@@ -25,7 +27,7 @@ class AiChatPage extends CommonSlidePage {
 class _AiChatPageState extends State<AiChatPage>
     with SingleTickerProviderStateMixin, CommonSlideMixin {
   late final AiChatController chatCtl;
-  final _inputCtl = TextEditingController();
+  final _inputCtl = RichTextEditingController();
   final _focusNode = FocusNode(onKeyEvent: _handleKeyEvent);
   final _scrollCtl = ScrollController();
   late List<AiPromptTemplate> _templates;
@@ -566,12 +568,11 @@ class _AiChatPageState extends State<AiChatPage>
       child: Row(
         children: [
           Expanded(
-            child: TextField(
+            child: RichTextField(
               controller: _inputCtl,
               focusNode: _focusNode,
               maxLines: 3,
               minLines: 1,
-              textInputAction: TextInputAction.newline,
               onSubmitted: (_) {},
               onEditingComplete: () {},
               decoration: InputDecoration(
