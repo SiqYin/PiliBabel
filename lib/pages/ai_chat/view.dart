@@ -124,10 +124,11 @@ class _AiChatPageState extends State<AiChatPage>
   Widget buildPage(ThemeData theme) {
     _templates = AiChatService.getTemplates();
     final colorScheme = theme.colorScheme;
-    return Material(
-      color: colorScheme.surface,
-      child: Column(
-        children: [
+    return FocusScope(
+      child: Material(
+        color: colorScheme.surface,
+        child: Column(
+          children: [
           // Drag handle
           GestureDetector(
             onTap: Get.back,
@@ -206,6 +207,7 @@ class _AiChatPageState extends State<AiChatPage>
           // Input bar
           _buildInputBar(theme),
         ],
+      ),
       ),
     );
   }
@@ -573,6 +575,8 @@ class _AiChatPageState extends State<AiChatPage>
               focusNode: _focusNode,
               maxLines: 3,
               minLines: 1,
+              keyboardType: TextInputType.multiline,
+              textInputAction: TextInputAction.newline,
               decoration: InputDecoration(
                 hintText: '输入问题继续对话...',
                 hintStyle: TextStyle(color: colorScheme.outline),
