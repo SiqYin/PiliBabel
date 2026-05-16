@@ -36,18 +36,26 @@ class _AiChatPageState extends State<AiChatPage>
   double _lastScrollOffset = 0;
   bool _scrollScheduled = false;
 
-  /// Desktop only: Enter sends, Shift+Enter inserts newline.
-  /// On mobile, returns ignored to let the system handle soft keyboard normally.
+  /// Desktop: Enter sends, Shift+Enter inserts newline.
+  /// Mobile: consume Enter to prevent it from bubbling up to PlayerFocus
+  /// (which would open the danmaku input panel).
   static KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
-    if (Platform.isAndroid || Platform.isIOS) return KeyEventResult.ignored;
     if (event is KeyDownEvent &&
-        event.logicalKey == LogicalKeyboardKey.enter &&
-        !HardwareKeyboard.instance.isShiftPressed) {
-      final state = node.context?.findAncestorStateOfType<_AiChatPageState>();
-      if (state != null && !state.chatCtl.isAnalyzing.value) {
-        state._sendCustomPrompt();
+        event.logicalKey == LogicalKeyboardKey.enter) {
+      if (Platform.isAndroid || Platform.isIOS) {
+        // On mobile, the newline is already inserted by the input system.
+        // We only need to consume the KeyEvent to prevent it from propagating
+        // to ancestor focus handlers (e.g. PlayerFocus → send danmaku).
+        return KeyEventResult.handled;
       }
-      return KeyEventResult.handled;
+      if (!HardwareKeyboard.instance.isShiftPressed) {
+        final state =
+            node.context?.findAncestorStateOfType<_AiChatPageState>();
+        if (state != null && !state.chatCtl.isAnalyzing.value) {
+          state._sendCustomPrompt();
+        }
+        return KeyEventResult.handled;
+      }
     }
     return KeyEventResult.ignored;
   }
