@@ -91,10 +91,7 @@ class AiChatController extends GetxController {
       hasVideoContext.value = true;
 
       _contextLoadIndex = messages.length;
-      messages.addAll([
-        ChatMessage(role: 'system', content: '', isDivider: true),
-        ChatMessage(role: 'assistant', content: '✅ 视频上下文已成功载入，请随时提问！'),
-      ]);
+      messages.add(ChatMessage(role: 'system', content: '', isDivider: true));
     } finally {
       _isLoadingContext = false;
     }
