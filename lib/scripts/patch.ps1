@@ -16,10 +16,13 @@ $BottomSheetAndroidPatch = "lib/scripts/bottom_sheet_android.patch"
 $BottomSheetIOSFlutterPatch = "lib/scripts/bottom_sheet_ios_flutter.patch"
 $BottomSheetIOSPiliPlusPatch = "lib/scripts/bottom_sheet_ios_piliplus.patch"
 
+# https://github.com/bggRGjQaUbCoE/PiliPlus/issues/1662
 $ScrollViewPatch = "lib/scripts/scroll_view.patch"
 
+# https://github.com/bggRGjQaUbCoE/PiliPlus/issues/2106
 $TextSelectionPatch = "lib/scripts/text_selection.patch"
 
+# https://github.com/bggRGjQaUbCoE/PiliPlus/issues/1947
 $NavigatorPatch = "lib/scripts/navigator.patch"
 
 # https://github.com/bggRGjQaUbCoE/PiliPlus/issues/2107
