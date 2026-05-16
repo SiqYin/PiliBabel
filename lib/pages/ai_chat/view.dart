@@ -43,10 +43,10 @@ class _AiChatPageState extends State<AiChatPage>
     if (event is KeyDownEvent &&
         event.logicalKey == LogicalKeyboardKey.enter) {
       if (Platform.isAndroid || Platform.isIOS) {
-        // On mobile, the newline is already inserted by the input system.
-        // We only need to consume the KeyEvent to prevent it from propagating
-        // to ancestor focus handlers (e.g. PlayerFocus → send danmaku).
-        return KeyEventResult.handled;
+        // On mobile, stop the KeyEvent from propagating to ancestor focus
+        // handlers (e.g. PlayerFocus → send danmaku), but let the platform
+        // IME process it as text input so the newline gets inserted.
+        return KeyEventResult.skipRemainingHandlers;
       }
       if (!HardwareKeyboard.instance.isShiftPressed) {
         final state =
