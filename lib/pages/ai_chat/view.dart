@@ -573,8 +573,6 @@ class _AiChatPageState extends State<AiChatPage>
               focusNode: _focusNode,
               maxLines: 3,
               minLines: 1,
-              onSubmitted: (_) {},
-              onEditingComplete: () {},
               decoration: InputDecoration(
                 hintText: '输入问题继续对话...',
                 hintStyle: TextStyle(color: colorScheme.outline),
