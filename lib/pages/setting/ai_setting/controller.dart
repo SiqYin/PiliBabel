@@ -103,6 +103,11 @@ class AiSettingController extends GetxController {
     _saveTemplates();
   }
 
+  void restoreDefaults() {
+    templates.value = List.from(AiChatService.defaultTemplates);
+    _saveTemplates();
+  }
+
   void _saveTemplates() {
     AiChatService.saveTemplates(templates);
   }

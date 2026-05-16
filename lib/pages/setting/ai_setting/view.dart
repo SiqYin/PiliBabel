@@ -129,79 +129,126 @@ class AiSettingPage extends StatelessWidget {
           const SizedBox(height: 24),
 
           // 模板管理
-          Row(
-            children: [
-              Text('提示词模板', style: theme.textTheme.titleMedium),
-              const Spacer(),
-              FilledButton.tonalIcon(
-                icon: const Icon(Icons.add),
-                label: const Text('添加'),
-                onPressed: () => _showTemplateDialog(context, controller),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text('提示词模板', style: theme.textTheme.titleMedium),
+                      const Spacer(),
+                      TextButton.icon(
+                        icon: const Icon(Icons.restore, size: 18),
+                        label: const Text('恢复默认'),
+                        onPressed: () => _confirmRestoreDefaults(
+                          context,
+                          controller,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      FilledButton.tonalIcon(
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('添加'),
+                        onPressed: () =>
+                            _showTemplateDialog(context, controller),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Obx(() {
+                    if (controller.templates.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Center(
+                          child: Text(
+                            '暂无模板，点击上方添加',
+                            style: TextStyle(color: colorScheme.outline),
+                          ),
+                        ),
+                      );
+                    }
+                    return ReorderableListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: controller.templates.length,
+                      onReorder: controller.reorderTemplate,
+                      itemBuilder: (context, index) {
+                        final t = controller.templates[index];
+                        return Card(
+                          key: ValueKey('${t.name}_$index'),
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        t.name,
+                                        style: theme.textTheme.titleSmall,
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        t.prompt,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: theme.textTheme.bodySmall
+                                            ?.copyWith(
+                                          color: colorScheme.outline,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.edit_outlined),
+                                  iconSize: 20,
+                                  visualDensity: VisualDensity.compact,
+                                  onPressed: () => _showTemplateDialog(
+                                    context,
+                                    controller,
+                                    index: index,
+                                  ),
+                                ),
+                                IconButton(
+                                  icon: Icon(
+                                    Icons.delete_outline,
+                                    color: colorScheme.error,
+                                  ),
+                                  iconSize: 20,
+                                  visualDensity: VisualDensity.compact,
+                                  onPressed: () =>
+                                      controller.deleteTemplate(index),
+                                ),
+                                ReorderableDragStartListener(
+                                  index: index,
+                                  child: const Padding(
+                                    padding: EdgeInsets.only(left: 4),
+                                    child: Icon(
+                                      Icons.drag_handle,
+                                      size: 20,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  }),
+                ],
               ),
-            ],
+            ),
           ),
-          const SizedBox(height: 8),
-          Obx(() {
-            if (controller.templates.isEmpty) {
-              return Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Center(
-                    child: Text(
-                      '暂无模板，点击右上角添加',
-                      style: TextStyle(color: colorScheme.outline),
-                    ),
-                  ),
-                ),
-              );
-            }
-            return ReorderableListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: controller.templates.length,
-              onReorder: controller.reorderTemplate,
-              itemBuilder: (context, index) {
-                final t = controller.templates[index];
-                return Card(
-                  key: ValueKey('${t.name}_$index'),
-                  child: ListTile(
-                    title: Text(t.name),
-                    subtitle: Text(
-                      t.prompt,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined),
-                          iconSize: 20,
-                          onPressed: () => _showTemplateDialog(
-                            context,
-                            controller,
-                            index: index,
-                          ),
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            Icons.delete_outline,
-                            color: colorScheme.error,
-                          ),
-                          iconSize: 20,
-                          onPressed: () => controller.deleteTemplate(index),
-                        ),
-                        ReorderableDragStartListener(
-                          index: index,
-                          child: const Icon(Icons.drag_handle, size: 20),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            );
-          }),
           const SizedBox(height: 24),
           // Info card
           Card(
@@ -229,10 +276,11 @@ class AiSettingPage extends StatelessWidget {
                   Text(
                     '• 支持 OpenAI 兼容的 API 接口\n'
                     '• 在视频详情页点击 AI 按钮使用\n'
-                    '• 会自动提取视频字幕作为上下文\n'
-                    '• 无字幕时仍可自由提问\n'
-                    '• 支持 Markdown 格式和 LaTeX 公式\n'
-                    '• 回复中的时间戳可点击跳转',
+                    '• 点击「分析」自动载入视频上下文，也可手动载入后自由提问\n'
+                    '• 无字幕时仍可使用通用问答\n'
+                    '• 支持 Markdown 和 LaTeX，时间戳可点击跳转\n'
+                    '• 内置模板名称（概貌总结、详细分析）的内容会被版本更新覆盖\n'
+                    '• 自定义模板请使用不同名称，避免与内置模板重名',
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -240,6 +288,35 @@ class AiSettingPage extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 100),
+        ],
+      ),
+    );
+  }
+
+  void _confirmRestoreDefaults(
+    BuildContext context,
+    AiSettingController controller,
+  ) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('恢复默认模板'),
+        content: const Text('将清除所有自定义模板，恢复为内置默认模板。确定继续？'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              '取消',
+              style: TextStyle(color: ColorScheme.of(context).outline),
+            ),
+          ),
+          TextButton(
+            onPressed: () {
+              controller.restoreDefaults();
+              Navigator.pop(context);
+            },
+            child: const Text('确定'),
+          ),
         ],
       ),
     );

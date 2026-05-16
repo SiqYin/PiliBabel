@@ -136,19 +136,28 @@ class AiChatService {
       var templates = list
           .map((e) => AiPromptTemplate.fromJson(e as Map<String, dynamic>))
           .toList();
-      // Remove deprecated "准备问答" template
-      final removed = templates.length;
+      var changed = false;
+      // Remove deprecated templates
+      final beforeRemove = templates.length;
       templates.removeWhere((t) => t.name == '准备问答');
-      if (templates.length != removed) saveTemplates(templates);
-      // Merge in missing default templates
-      final existingNames = templates.map((e) => e.name).toSet();
-      final missing = defaultTemplates
-          .where((t) => !existingNames.contains(t.name))
-          .toList();
-      if (missing.isNotEmpty) {
-        templates.addAll(missing);
-        saveTemplates(templates);
+      if (templates.length != beforeRemove) changed = true;
+      // Sync default templates: add missing, update changed content
+      final defaultMap = {for (final t in defaultTemplates) t.name: t};
+      for (var i = 0; i < templates.length; i++) {
+        final defaultT = defaultMap[templates[i].name];
+        if (defaultT != null && templates[i].prompt != defaultT.prompt) {
+          templates[i] = defaultT;
+          changed = true;
+        }
       }
+      final existingNames = templates.map((e) => e.name).toSet();
+      for (final t in defaultTemplates) {
+        if (!existingNames.contains(t.name)) {
+          templates.add(t);
+          changed = true;
+        }
+      }
+      if (changed) saveTemplates(templates);
       return templates;
     } catch (_) {
       return defaultTemplates;
