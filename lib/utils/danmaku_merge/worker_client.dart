@@ -49,12 +49,10 @@ class DanmakuMergeWorkerClient {
         taskId: taskId,
         segmentIndex: segmentIndex,
         config: config,
-        currentSegment: currentSegment
-            .map(serializeDanmakuElem)
-            .toList(growable: false),
-        nextSegmentPrefix: nextSegmentPrefix
-            .map(serializeDanmakuElem)
-            .toList(growable: false),
+        currentSegment:
+            (DmSegMobileReply()..elems.addAll(currentSegment)).writeToBuffer(),
+        nextSegmentPrefix:
+            (DmSegMobileReply()..elems.addAll(nextSegmentPrefix)).writeToBuffer(),
       ).toMessage(),
     );
     return completer.future;
@@ -132,9 +130,7 @@ class DanmakuMergeWorkerClient {
       final completer = _pending.remove(result.taskId);
       if (completer != null && !completer.isCompleted) {
         completer.complete(
-          result.mergedSegment
-              .map(deserializeDanmakuElem)
-              .toList(growable: false),
+          DmSegMobileReply.fromBuffer(result.mergedSegment).elems,
         );
       }
       return;

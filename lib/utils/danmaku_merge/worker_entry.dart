@@ -3,6 +3,7 @@
 
 import 'dart:isolate';
 
+import 'package:PiliPlus/grpc/bilibili/community/service/dm/v1.pb.dart';
 import 'package:PiliPlus/utils/danmaku_merge/clusterer.dart';
 import 'package:PiliPlus/utils/danmaku_merge/models.dart';
 import 'package:PiliPlus/utils/danmaku_merge/normalizer.dart';
@@ -63,12 +64,10 @@ void danmakuMergeWorkerMain(List<Object?> args) {
         );
         final merged = await clusterer.mergeSegment(
           segmentIndex: task.segmentIndex,
-          currentSegment: task.currentSegment
-              .map(deserializeDanmakuElem)
-              .toList(growable: false),
-          nextSegmentPrefix: task.nextSegmentPrefix
-              .map(deserializeDanmakuElem)
-              .toList(growable: false),
+          currentSegment:
+              DmSegMobileReply.fromBuffer(task.currentSegment).elems,
+          nextSegmentPrefix:
+              DmSegMobileReply.fromBuffer(task.nextSegmentPrefix).elems,
         );
         if (kDebugMode) {
           debugPrint(
@@ -81,9 +80,8 @@ void danmakuMergeWorkerMain(List<Object?> args) {
           DanmakuMergeResultPayload(
             taskId: task.taskId,
             segmentIndex: task.segmentIndex,
-            mergedSegment: merged
-                .map(serializeDanmakuElem)
-                .toList(growable: false),
+            mergedSegment:
+                (DmSegMobileReply()..elems.addAll(merged)).writeToBuffer(),
           ).toMessage(),
         );
       } catch (error, stackTrace) {
