@@ -454,6 +454,9 @@ class VideoDetailController extends GetxController
     if (PlatformUtils.isMobile) {
       plPlayerController.onFullScreenChanged = (bool fs) async {
         if (!fs || plPlayerController.isLive) return;
+        // queryVideoUrl 正在请求中，this.data 可能仍属于上一个视频/分P，
+        // 跳过即可——queryVideoUrl 完成时会根据当前全屏状态自动选择正确画质。
+        if (isQuerying) return;
         PlayUrlModel data;
         try {
           data = this.data;
