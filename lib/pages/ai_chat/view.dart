@@ -109,6 +109,10 @@ class _AiChatPageState extends State<AiChatPage>
 
   void _sendSelectedPrompt() {
     if (_templates.isEmpty) return;
+    if (!chatCtl.hasSubtitles) {
+      SmartDialog.showToast('当前视频无字幕，请「载入上下文」后直接提问');
+      return;
+    }
     if (_selectedPromptIndex >= 0 && _selectedPromptIndex < _templates.length) {
       final t = _templates[_selectedPromptIndex];
       chatCtl.startAnalysis(t.prompt, templateName: t.name);
@@ -279,11 +283,11 @@ class _AiChatPageState extends State<AiChatPage>
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (!hasContext && hasSubs)
+                if (!hasContext || !hasSubs)
                   Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: IconButton(
-                      onPressed: analyzing ? null : () => chatCtl.loadVideoContext(),
+                      onPressed: (analyzing || hasContext) ? null : () => chatCtl.loadVideoContext(),
                       icon: const Icon(Icons.post_add, size: 22),
                       tooltip: '载入上下文',
                     ),

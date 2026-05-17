@@ -30,10 +30,15 @@ class AiChatController extends GetxController {
       '要求：\n'
       '1. 回复语言为中文，使用 Markdown 格式。\n'
       '2. 只要输出内容涉及到具体的视频时间点，必须统一使用 [mm:ss] 或 [hh:mm:ss] 格式。'
-      '时间戳前后必须保留一个空格。时间段请使用 [开始] - [结束] 格式。\n'
+      '时间戳前后必须保留一个空格。时间段请使用 [开始] - [结束] 格式。'
+      '严禁用代码块或反引号包裹时间戳（如 `[03:12]` 是错误的）。\n'
       '3. 如果用户询问的概念超出了视频本身的信息范围，请勿提示无法分析，'
       '而是主动调用通用知识补充解答，并在该段落前明确声明：'
-      '『*视频中未提及此概念，为您补充相关背景知识：*』';
+      '『*视频中未提及此概念，为您补充相关背景知识：*』\n'
+      '4. 【无字幕兜底策略】：如果你发现系统注入的"字幕"数据缺失（标记为"【警告：当前视频未提供字幕数据】"），'
+      '请仅基于"标题"和"简介"进行分析，并在回复开头醒目地提示用户：'
+      '『⚠️ 当前视频未提取到字幕，以下分析仅基于视频标题与简介：』。'
+      '切勿捏造或猜测视频内部的画面与台词。';
 
   // --- Cached video context for system message injection ---
   String? _cachedVideoContext;
@@ -92,6 +97,12 @@ class AiChatController extends GetxController {
 
       _contextLoadIndex = messages.length;
       messages.add(ChatMessage(role: 'system', content: '', isDivider: true));
+      if (!hasSubtitles) {
+        messages.add(ChatMessage(
+          role: 'assistant',
+          content: '⚠️ 已载入视频标题与简介。由于未获取到字幕，AI 分析深度可能受限，请提问。',
+        ));
+      }
     } finally {
       _isLoadingContext = false;
     }
@@ -105,6 +116,8 @@ class AiChatController extends GetxController {
       sb
         ..writeln('## 字幕内容')
         ..writeln(subtitleText);
+    } else {
+      sb.writeln('## 字幕内容\n【警告：当前视频未提供字幕数据】');
     }
     return sb.toString();
   }
