@@ -791,6 +791,100 @@ class DownloadService extends GetxService {
       nextDownload();
     }
   }
+
+  static String get _exportBasePath =>
+      path.join('/storage/emulated/0/Download', 'PiliNara');
+
+  static Future<String> exportEntry(
+    BiliDownloadEntryInfo entry,
+    ValueChanged<double>? onProgress,
+  ) async {
+    final srcDir = Directory(entry.entryDirPath);
+    if (!srcDir.existsSync()) throw '缓存目录不存在';
+
+    final baseDir = Directory(_exportBasePath);
+    if (!baseDir.existsSync()) await baseDir.create(recursive: true);
+
+    final nomedia = File(path.join(_exportBasePath, '.nomedia'));
+    if (!nomedia.existsSync()) await nomedia.create();
+
+    final dirName = _sanitizeDirName(entry.title, entry.avid);
+    final destPath = path.join(_exportBasePath, dirName);
+    final destDir = Directory(destPath);
+
+    if (destDir.existsSync() && !await _dirHasDifference(srcDir, destDir)) {
+      return destPath;
+    }
+
+    final totalSize = await _dirSize(srcDir);
+    int copiedSize = 0;
+
+    await _copyDir(srcDir, destDir, (fileCopied) {
+      copiedSize += fileCopied;
+      if (totalSize > 0) onProgress?.call(copiedSize / totalSize);
+    });
+
+    return destPath;
+  }
+
+  static Future<void> _copyDir(
+    Directory src,
+    Directory dest,
+    void Function(int bytesCopied) onProgress,
+  ) async {
+    if (!dest.existsSync()) await dest.create(recursive: true);
+    await for (final entity in src.list()) {
+      if (entity is File) {
+        final target = File(path.join(dest.path, path.basename(entity.path)));
+        if (!target.existsSync() ||
+            target.lengthSync() != entity.lengthSync()) {
+          await entity.copy(target.path);
+        }
+        onProgress(entity.lengthSync());
+      } else if (entity is Directory) {
+        await _copyDir(
+          entity,
+          Directory(path.join(dest.path, path.basename(entity.path))),
+          onProgress,
+        );
+      }
+    }
+  }
+
+  static Future<int> _dirSize(Directory dir) async {
+    int size = 0;
+    await for (final entity in dir.list(recursive: true)) {
+      if (entity is File) size += await entity.length();
+    }
+    return size;
+  }
+
+  static Future<bool> _dirHasDifference(
+    Directory src,
+    Directory dest,
+  ) async {
+    await for (final entity in src.list(recursive: true)) {
+      if (entity is! File) continue;
+      final relPath = path.relative(entity.path, from: src.path);
+      final target = File(path.join(dest.path, relPath));
+      if (!target.existsSync()) return true;
+      final diff = (await entity.length()) - (await target.length());
+      if (diff.abs() > 1024) return true;
+      if (diff == 0) continue;
+      if (target.lastModifiedSync().isBefore(entity.lastModifiedSync())) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  static String _sanitizeDirName(String title, int avid) {
+    final clean = title
+        .replaceAll(RegExp(r'[\\/:*?"<>|]'), '_')
+        .replaceAll(RegExp(r'_+'), '_')
+        .trim();
+    return '${clean.isEmpty ? 'video' : clean}_$avid';
+  }
 }
 
 typedef SetNotifier = Set<VoidCallback>;
