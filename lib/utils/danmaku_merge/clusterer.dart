@@ -45,6 +45,18 @@ class DanmakuClusterer {
     final Map<int, List<DanmakuMergeCluster>>? activeClustersByMode =
         config.crossMode ? null : <int, List<DanmakuMergeCluster>>{};
 
+    final exactMatchMap = <String, DanmakuMergeCluster>{};
+
+    String _getExactKey(DanmakuMergeCandidate c) =>
+        config.crossMode ? c.normalizedText : '${c.mode}:${c.normalizedText}';
+
+    void removeCluster(DanmakuMergeCluster cluster) {
+      output.add(_buildRepresentative(cluster));
+      for (final peer in cluster.peers) {
+        exactMatchMap.remove(_getExactKey(peer));
+      }
+    }
+
     // Inspired by pakku's active-cluster queue: clusters are emitted once they
     // are outside the configured merge window.
     Future<void> flushExpired(int currentProgress) async {
@@ -52,13 +64,13 @@ class DanmakuClusterer {
         while (activeClustersFlat!.isNotEmpty &&
             currentProgress - activeClustersFlat.first.progress >
                 config.windowMs) {
-          output.add(_buildRepresentative(activeClustersFlat.removeAt(0)));
+          removeCluster(activeClustersFlat.removeAt(0));
         }
       } else {
         for (final clusters in activeClustersByMode!.values) {
           while (clusters.isNotEmpty &&
               currentProgress - clusters.first.progress > config.windowMs) {
-            output.add(_buildRepresentative(clusters.removeAt(0)));
+            removeCluster(clusters.removeAt(0));
           }
         }
       }
@@ -73,6 +85,13 @@ class DanmakuClusterer {
 
       final candidate = _toCandidate(element, segmentIndex);
       var matched = false;
+
+      final exactKey = _getExactKey(candidate);
+      final exactCluster = exactMatchMap[exactKey];
+      if (exactCluster != null) {
+        exactCluster.add(candidate);
+        continue;
+      }
       
       final Iterable<DanmakuMergeCluster> searchSpace = config.crossMode
           ? activeClustersFlat!
@@ -83,6 +102,7 @@ class DanmakuClusterer {
         final result = await _matcher.match(candidate, cluster.root);
         if (result != null) {
           cluster.add(candidate);
+          exactMatchMap[exactKey] = cluster;
           matched = true;
           break;
         }
@@ -90,6 +110,7 @@ class DanmakuClusterer {
 
       if (!matched) {
         final newCluster = DanmakuMergeCluster(candidate);
+        exactMatchMap[exactKey] = newCluster;
         if (config.crossMode) {
           activeClustersFlat!.add(newCluster);
         } else {
@@ -106,6 +127,14 @@ class DanmakuClusterer {
         continue;
       }
       final candidate = _toCandidate(element, segmentIndex + 1);
+
+      final exactKey = _getExactKey(candidate);
+      final exactCluster = exactMatchMap[exactKey];
+      if (exactCluster != null) {
+        exactCluster.add(candidate);
+        continue;
+      }
+
       final Iterable<DanmakuMergeCluster> searchSpace = config.crossMode
           ? activeClustersFlat!
           : (activeClustersByMode![candidate.mode] ?? const []);
@@ -114,16 +143,21 @@ class DanmakuClusterer {
         final result = await _matcher.match(candidate, cluster.root);
         if (result != null) {
           cluster.add(candidate);
+          exactMatchMap[exactKey] = cluster;
           break;
         }
       }
     }
 
     if (config.crossMode) {
-      output.addAll(activeClustersFlat!.map(_buildRepresentative));
+      while (activeClustersFlat!.isNotEmpty) {
+        removeCluster(activeClustersFlat.removeAt(0));
+      }
     } else {
       for (final clusters in activeClustersByMode!.values) {
-        output.addAll(clusters.map(_buildRepresentative));
+        while (clusters.isNotEmpty) {
+          removeCluster(clusters.removeAt(0));
+        }
       }
     }
     output.sort((a, b) => a.progress.compareTo(b.progress));
