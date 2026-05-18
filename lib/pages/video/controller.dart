@@ -392,6 +392,41 @@ class VideoDetailController extends GetxController
     _setVideoHeight();
   }
 
+  /// 注册全屏画质切换回调。
+  /// 必须在 onInit 和 didPopNext 中调用，因为 PlPlayerController 是单例，
+  /// 新视频页面的 onInit 会覆盖回调为新 controller 的闭包，返回后需重新注册。
+  void setupFullScreenQualitySwitch() {
+    plPlayerController.onFullScreenChanged = (bool fs) async {
+      if (!fs || plPlayerController.isLive) return;
+      if (isQuerying) return;
+      PlayUrlModel data;
+      try {
+        data = this.data;
+      } catch (_) {
+        return;
+      }
+      if (data.dash == null) return;
+      final halfScreenQa = Pref.defaultVideoQaHalfScreen;
+      if (halfScreenQa == null) return;
+      final isWiFi = await ConnectivityUtils.isWiFi;
+      final fsQa = isWiFi ? Pref.defaultVideoQa : Pref.defaultVideoQaCellular;
+      final curHighestVideoQa = data.dash!.video!.first.quality.code;
+      int targetQa = curHighestVideoQa;
+      if (data.acceptQuality?.isNotEmpty == true &&
+          fsQa <= curHighestVideoQa) {
+        targetQa = data.acceptQuality!.findClosestTarget(
+          (e) => e <= fsQa,
+          (a, b) => a > b ? a : b,
+        );
+      }
+      if (plPlayerController.cacheVideoQa != targetQa) {
+        plPlayerController.cacheVideoQa = targetQa;
+        currentVideoQa.value = VideoQuality.fromCode(targetQa);
+        updatePlayer();
+      }
+    };
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -452,37 +487,7 @@ class VideoDetailController extends GetxController
 
     // 进入全屏时切换到全屏默认画质
     if (PlatformUtils.isMobile) {
-      plPlayerController.onFullScreenChanged = (bool fs) async {
-        if (!fs || plPlayerController.isLive) return;
-        // queryVideoUrl 正在请求中，this.data 可能仍属于上一个视频/分P，
-        // 跳过即可——queryVideoUrl 完成时会根据当前全屏状态自动选择正确画质。
-        if (isQuerying) return;
-        PlayUrlModel data;
-        try {
-          data = this.data;
-        } catch (_) {
-          return;
-        }
-        if (data.dash == null) return;
-        final halfScreenQa = Pref.defaultVideoQaHalfScreen;
-        if (halfScreenQa == null) return;
-        final isWiFi = await ConnectivityUtils.isWiFi;
-        final fsQa = isWiFi ? Pref.defaultVideoQa : Pref.defaultVideoQaCellular;
-        final curHighestVideoQa = data.dash!.video!.first.quality.code;
-        int targetQa = curHighestVideoQa;
-        if (data.acceptQuality?.isNotEmpty == true &&
-            fsQa <= curHighestVideoQa) {
-          targetQa = data.acceptQuality!.findClosestTarget(
-            (e) => e <= fsQa,
-            (a, b) => a > b ? a : b,
-          );
-        }
-        if (plPlayerController.cacheVideoQa != targetQa) {
-          plPlayerController.cacheVideoQa = targetQa;
-          currentVideoQa.value = VideoQuality.fromCode(targetQa);
-          updatePlayer();
-        }
-      };
+      setupFullScreenQualitySwitch();
     }
   }
 
