@@ -1786,10 +1786,16 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                           child: ViewPointSegmentProgressBar(
                             segments: videoDetailController.viewPointList,
                             onSeek: PlatformUtils.isMobile
-                                ? (position) => plPlayerController.seekTo(
-                                    position,
-                                    isSeek: false,
-                                  )
+                                ? (position) {
+                                    if (!plPlayerController
+                                        .controlsLock
+                                        .value) {
+                                      plPlayerController.seekTo(
+                                        position,
+                                        isSeek: false,
+                                      );
+                                    }
+                                  }
                                 : null,
                           ),
                         ),
