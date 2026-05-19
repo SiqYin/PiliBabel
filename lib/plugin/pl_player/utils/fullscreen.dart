@@ -94,15 +94,18 @@ Future<void>? showSystemBar() {
 Future<void> setEnabledSystemUIMode(
   SystemUiMode mode, {
   List<SystemUiOverlay>? overlays,
-}) async {
+}) {
+  if (!Platform.isAndroid) {
+    return SystemChrome.setEnabledSystemUIMode(mode, overlays: overlays);
+  }
   if (mode != SystemUiMode.manual) {
-    await const MethodChannel('PiliPlus').invokeMethod(
+    return const MethodChannel('PiliPlus').invokeMethod(
       'SystemChrome.setEnabledSystemUIMode',
       {'arguments': mode.toString()},
     );
   } else {
     assert(mode == SystemUiMode.manual && overlays != null);
-    await const MethodChannel('PiliPlus').invokeMethod(
+    return const MethodChannel('PiliPlus').invokeMethod(
       'SystemChrome.setEnabledSystemUIOverlays',
       {'arguments': _stringify(overlays!)},
     );
