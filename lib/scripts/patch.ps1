@@ -24,6 +24,8 @@ $NavigatorPatch = "lib/scripts/navigator.patch"
 # https://github.com/bggRGjQaUbCoE/PiliPlus/issues/2107
 $ImageAnimPatch = "lib/scripts/image_anim.patch"
 
+$LayoutBuilderPatch = "lib/scripts/layout_builder.patch"
+
 # TODO: remove
 # https://github.com/flutter/flutter/issues/90223
 $ModalBarrierPatch = "lib/scripts/modal_barrier.patch"
@@ -44,7 +46,7 @@ Set-Location $env:FLUTTER_ROOT
 $picks   = @()
 $reverts = @()
 $patches = @($ModalBarrierPatch, $TextSelectionPatch, $MouseCursorPatch,
-            $ImageAnimPatch)
+            $ImageAnimPatch, $LayoutBuilderPatch)
 
 switch ($platform.ToLower()) {
     "android" {
