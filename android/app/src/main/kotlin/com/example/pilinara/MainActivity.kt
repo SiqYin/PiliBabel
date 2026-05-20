@@ -24,6 +24,7 @@ import androidx.core.net.toUri
 import com.ryanheise.audioservice.AudioServiceActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.SystemChrome
 import kotlin.math.roundToInt
 
 class MainActivity : AudioServiceActivity() {
@@ -192,6 +193,22 @@ class MainActivity : AudioServiceActivity() {
 
                 "isFoldable" -> {
                     result.success(isFoldable)
+                }
+
+                "SystemChrome.setEnabledSystemUIMode" -> {
+                    SystemChrome.onMethodCall(
+                        this,
+                        "SystemChrome.setEnabledSystemUIMode",
+                        call.argument("arguments")
+                    )
+                }
+
+                "SystemChrome.setEnabledSystemUIOverlays" -> {
+                    SystemChrome.onMethodCall(
+                        this,
+                        "SystemChrome.setEnabledSystemUIOverlays",
+                        call.argument("arguments")
+                    )
                 }
 
                 else -> result.notImplemented()

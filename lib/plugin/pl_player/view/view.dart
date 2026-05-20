@@ -155,6 +155,54 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   bool _pauseDueToPauseUponEnteringBackgroundMode = false;
 
   StreamSubscription? _brightnessListener;
+  void _onBrightnessChanged(double value) {
+    if (mounted && _gestureType != .left) {
+      _brightnessValue.value = value;
+    }
+  }
+
+  void _getSystemBrightness() {
+    ScreenBrightnessPlatform.instance.system.then((res) {
+      if (mounted) {
+        _brightnessValue.value = res;
+      }
+    });
+  }
+
+  void _getAppBrightness() {
+    ScreenBrightnessPlatform.instance.application.then((res) {
+      if (mounted) {
+        _brightnessValue.value = res;
+      }
+    });
+  }
+
+  void _onVolumeChanged(double value) {
+    if (mounted && !plPlayerController.volumeInterceptEventStream) {
+      plPlayerController.volume.value = value;
+      if (Platform.isIOS && !FlutterVolumeController.showSystemUI) {
+        plPlayerController
+          ..volumeIndicator.value = true
+          ..volumeTimer?.cancel()
+          ..volumeTimer = Timer(
+            const Duration(milliseconds: 800),
+            () {
+              if (mounted) {
+                plPlayerController.volumeIndicator.value = false;
+              }
+            },
+          );
+      }
+    }
+  }
+
+  void _getCurrVolume() {
+    FlutterVolumeController.getVolume().then((res) {
+      if (mounted) {
+        plPlayerController.volume.value = res!;
+      }
+    });
+  }
 
   int? tmpSubtitlePaddingB;
   StreamSubscription? _controlsListener;
@@ -234,59 +282,31 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               if (mounted && !plPlayerController.volumeInterceptEventStream) {
                 // 只更新系统音量记录，不影响播放器音量和指示器显示
                 plPlayerController.systemVolume.value = value;
-                // 注意：这里不更新 volume.value 和 volumeIndicator
               }
             }, emitOnStart: false);
           } else {
-            // 同步模式：隐藏系统原生 HUD，显示应用内指示器
-            FlutterVolumeController.updateShowSystemUI(false);
-            // 同步系统音量
-            plPlayerController.volume.value =
-                (await FlutterVolumeController.getVolume())!;
-            FlutterVolumeController.addListener((double value) {
-              if (mounted && !plPlayerController.volumeInterceptEventStream) {
-                plPlayerController.volume.value = value;
-                if (Platform.isIOS && !FlutterVolumeController.showSystemUI) {
-                  plPlayerController
-                    ..volumeIndicator.value = true
-                    ..volumeTimer?.cancel()
-                    ..volumeTimer = Timer(
-                      const Duration(milliseconds: 800),
-                      () {
-                        if (mounted) {
-                          plPlayerController.volumeIndicator.value = false;
-                        }
-                      },
-                    );
-                }
-              }
-            }, emitOnStart: false);
+            FlutterVolumeController.updateShowSystemUI(true);
+            _getCurrVolume();
+            FlutterVolumeController.addListener(
+              _onVolumeChanged,
+              emitOnStart: false,
+            );
           }
         } catch (_) {}
-      });
 
-      Future.microtask(() async {
         try {
-          void listener(double value) {
-            if (mounted) {
-              _brightnessValue.value = value;
-            }
-          }
-
           if (Platform.isIOS || plPlayerController.setSystemBrightness) {
-            _brightnessValue.value =
-                await ScreenBrightnessPlatform.instance.system;
+            _getSystemBrightness();
             _brightnessListener = ScreenBrightnessPlatform
                 .instance
                 .onSystemScreenBrightnessChanged
-                .listen(listener);
+                .listen(_onBrightnessChanged);
           } else {
-            _brightnessValue.value =
-                await ScreenBrightnessPlatform.instance.application;
+            _getAppBrightness();
             _brightnessListener = ScreenBrightnessPlatform
                 .instance
                 .onApplicationScreenBrightnessChanged
-                .listen(listener);
+                .listen(_onBrightnessChanged);
           }
         } catch (_) {}
       });
@@ -343,6 +363,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   }
 
   Future<void> setBrightness(double value) async {
+    _brightnessValue.value = value;
     try {
       if (Platform.isIOS || plPlayerController.setSystemBrightness) {
         await ScreenBrightnessPlatform.instance.setSystemScreenBrightness(
@@ -1192,11 +1213,6 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   }
 
   void _onPanEnd(ScaleEndDetails details) {
-    if (Platform.isAndroid &&
-        _gestureType == .left &&
-        plPlayerController.setSystemBrightness) {
-      ScreenBrightnessPlatform.instance.restoreBrightnessMode();
-    }
     if (plPlayerController.showSeekPreview) {
       plPlayerController.showPreview.value = false;
     }
@@ -1916,10 +1932,16 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                           child: ViewPointSegmentProgressBar(
                             segments: videoDetailController.viewPointList,
                             onSeek: PlatformUtils.isMobile
-                                ? (position) => plPlayerController.seekTo(
-                                    position,
-                                    isSeek: false,
-                                  )
+                                ? (position) {
+                                    if (!plPlayerController
+                                        .controlsLock
+                                        .value) {
+                                      plPlayerController.seekTo(
+                                        position,
+                                        isSeek: false,
+                                      );
+                                    }
+                                  }
                                 : null,
                           ),
                         ),

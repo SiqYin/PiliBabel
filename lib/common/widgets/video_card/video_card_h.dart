@@ -1,6 +1,5 @@
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
-import 'package:PiliPlus/common/widgets/flutter/layout_builder.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/progress_bar/video_progress_indicator.dart';
@@ -13,7 +12,7 @@ import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
-import 'package:flutter/material.dart' hide LayoutBuilder;
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 // 视频卡片 - 水平布局
@@ -88,7 +87,8 @@ class VideoCardH extends StatelessWidget {
                       title: videoItem.title,
                       dimension: dimension,
                     );
-                    final String? key = videoItem.bvid ?? videoItem.aid?.toString();
+                    final String? key =
+                        videoItem.bvid ?? videoItem.aid?.toString();
                     if (key != null && key.isNotEmpty) {
                       VideoCardH.clickedBvids.add(key);
                     }
@@ -198,7 +198,8 @@ class VideoCardH extends StatelessWidget {
             Expanded(
               child: Obx(() {
                 final key = videoItem.bvid ?? videoItem.aid?.toString();
-                final isClicked = key != null && VideoCardH.clickedBvids.contains(key);
+                final isClicked =
+                    key != null && VideoCardH.clickedBvids.contains(key);
                 return Text.rich(
                   overflow: .ellipsis,
                   maxLines: 2,
@@ -214,8 +215,8 @@ class VideoCardH extends StatelessWidget {
                               color: isClicked
                                   ? theme.colorScheme.outline
                                   : e.isEm
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.onSurface,
+                                  ? theme.colorScheme.primary
+                                  : theme.colorScheme.onSurface,
                             ),
                           ),
                         )
@@ -228,7 +229,8 @@ class VideoCardH extends StatelessWidget {
             Expanded(
               child: Obx(() {
                 final key = videoItem.bvid ?? videoItem.aid?.toString();
-                final isClicked = key != null && VideoCardH.clickedBvids.contains(key);
+                final isClicked =
+                    key != null && VideoCardH.clickedBvids.contains(key);
                 return Text(
                   videoItem.title,
                   textAlign: .start,
