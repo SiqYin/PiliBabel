@@ -57,6 +57,10 @@ class DynamicDetailController extends CommonDynController {
 
   bool _shouldFetchFullDetail() {
     final moduleDynamic = dynItem.modules.moduleDynamic;
+    // 列表API中首行为换行的文本会返回"undefined"
+    if (moduleDynamic?.desc?.text == 'undefined') {
+      return true;
+    }
     final nodes =
         moduleDynamic?.desc?.richTextNodes ??
         moduleDynamic?.major?.opus?.summary?.richTextNodes;
