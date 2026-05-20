@@ -1944,7 +1944,7 @@ class VideoDetailController extends GetxController
     );
   }
 
-  ThemeData get theme => Get.theme;
+  ThemeData get theme => ThemeUtils.theme;
 
   @pragma('vm:notify-debugger-on-exception')
   Future<void> onCast() async {
