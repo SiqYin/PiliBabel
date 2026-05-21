@@ -208,6 +208,7 @@ abstract final class PageUtils {
   static Future<void> pushDynDetail(
     DynamicItemModel item, {
     bool isPush = false,
+    ValueChanged<DynamicItemModel>? onUpdate,
   }) async {
     feedBack();
 
@@ -225,6 +226,7 @@ abstract final class PageUtils {
           '/dynamicDetail',
           arguments: {
             'item': item,
+            if (onUpdate != null) 'onUpdate': onUpdate,
           },
         );
       }

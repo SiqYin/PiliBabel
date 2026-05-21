@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show ValueChanged;
 import 'package:PiliPlus/http/dynamics.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/reply.dart';
@@ -16,6 +17,7 @@ class DynamicDetailController extends CommonDynController {
   late int replyType;
   late DynamicItemModel dynItem;
   final RxInt detailVersion = 0.obs;
+  ValueChanged<DynamicItemModel>? _onUpdate;
 
   @override
   dynamic get sourceId => replyType == 1 ? IdUtils.av2bv(oid) : oid;
@@ -24,6 +26,7 @@ class DynamicDetailController extends CommonDynController {
   void onInit() {
     super.onInit();
     dynItem = Get.arguments['item'];
+    _onUpdate = Get.arguments['onUpdate'];
     final commentType = dynItem.basic?.commentType;
     final commentIdStr = dynItem.basic?.commentIdStr;
     if (commentType != null &&
@@ -53,11 +56,12 @@ class DynamicDetailController extends CommonDynController {
   void _replaceDynItem(DynamicItemModel item) {
     dynItem = item;
     detailVersion.value++;
+    _onUpdate?.call(item);
   }
 
   bool _shouldFetchFullDetail() {
     final moduleDynamic = dynItem.modules.moduleDynamic;
-    // 列表API中首行为换行的文本会返回"undefined"
+    // TODO: B站API修复后移除 — 列表API中首行为换行的文本会返回"undefined"
     if (moduleDynamic?.desc?.text == 'undefined') {
       return true;
     }
