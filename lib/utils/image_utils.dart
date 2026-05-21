@@ -316,7 +316,7 @@ abstract final class ImageUtils {
       final savePath = await FilePicker.saveFile(
         type: FileType.image,
         fileName: fileName,
-        bytes: bytes,
+        bytes: Uint8List(0),
       );
       if (savePath == null) {
         SmartDialog.showToast("取消保存");
@@ -354,7 +354,7 @@ abstract final class ImageUtils {
       final savePath = await FilePicker.saveFile(
         type: type,
         fileName: fileName,
-        bytes: await file.readAsBytes(),
+        bytes: Uint8List(0),
       );
       if (savePath == null) {
         SmartDialog.showToast("取消保存");
