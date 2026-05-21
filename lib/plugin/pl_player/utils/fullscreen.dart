@@ -99,13 +99,13 @@ Future<void> setEnabledSystemUIMode(
     return SystemChrome.setEnabledSystemUIMode(mode, overlays: overlays);
   }
   if (mode != SystemUiMode.manual) {
-    return const MethodChannel('PiliPlus').invokeMethod(
+    return const MethodChannel('PiliNara').invokeMethod(
       'SystemChrome.setEnabledSystemUIMode',
       {'arguments': mode.toString()},
     );
   } else {
     assert(mode == SystemUiMode.manual && overlays != null);
-    return const MethodChannel('PiliPlus').invokeMethod(
+    return const MethodChannel('PiliNara').invokeMethod(
       'SystemChrome.setEnabledSystemUIOverlays',
       {'arguments': _stringify(overlays!)},
     );
