@@ -1,14 +1,7 @@
 import 'dart:async';
-import 'dart:io' show Platform;
 
-import 'package:PiliPlus/utils/device_utils.dart';
 import 'package:flutter/services.dart'
-    show
-        SystemChrome,
-        MethodChannel,
-        SystemUiOverlay,
-        DeviceOrientation,
-        SystemUiMode;
+    show SystemChrome, MethodChannel, SystemUiOverlay, DeviceOrientation, SystemUiMode;
 
 bool _isDesktopFullScreen = false;
 
@@ -74,44 +67,19 @@ Future<void>? hideSystemBar() {
     return null;
   }
   _showSystemBar = false;
-  return setEnabledSystemUIMode(.immersiveSticky);
+  return SystemChrome.setEnabledSystemUIMode(.immersiveSticky);
 }
 
 //退出全屏显示
+// TODO: https://github.com/flutter/flutter/issues/186723
+// immersiveSticky → edgeToEdge 有 bug，用 manual + all overlays 代替
 Future<void>? showSystemBar() {
   if (_showSystemBar) {
     return null;
   }
   _showSystemBar = true;
-  return setEnabledSystemUIMode(
-    Platform.isAndroid && DeviceUtils.sdkInt < 29 ? .manual : .edgeToEdge,
+  return SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.manual,
     overlays: SystemUiOverlay.values,
   );
 }
-
-// TODO: remove
-// https://github.com/flutter/flutter/issues/186723
-Future<void> setEnabledSystemUIMode(
-  SystemUiMode mode, {
-  List<SystemUiOverlay>? overlays,
-}) {
-  if (!Platform.isAndroid) {
-    return SystemChrome.setEnabledSystemUIMode(mode, overlays: overlays);
-  }
-  if (mode != SystemUiMode.manual) {
-    return const MethodChannel('PiliNara').invokeMethod(
-      'SystemChrome.setEnabledSystemUIMode',
-      {'arguments': mode.toString()},
-    );
-  } else {
-    assert(mode == SystemUiMode.manual && overlays != null);
-    return const MethodChannel('PiliNara').invokeMethod(
-      'SystemChrome.setEnabledSystemUIOverlays',
-      {'arguments': _stringify(overlays!)},
-    );
-  }
-}
-
-List<String> _stringify(List<dynamic> list) => <String>[
-  for (final dynamic item in list) item.toString(),
-];
