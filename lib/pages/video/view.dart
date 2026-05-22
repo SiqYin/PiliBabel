@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
-import 'package:flutter/services.dart' show SystemChrome, SystemUiMode, SystemUiOverlay;
+import 'package:flutter/services.dart' show SystemChrome;
 
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -462,13 +462,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     if (isResume) {
       // TODO: remove
       // workaround for https://github.com/flutter/flutter/issues/186723
-      // immersiveSticky → edgeToEdge 时 Flutter 有 bug，
-      // 用 manual + all overlays 代替 edgeToEdge 恢复系统栏
       if (Platform.isAndroid && !showSystemBar_) {
-        SystemChrome.setEnabledSystemUIMode(
-          SystemUiMode.manual,
-          overlays: SystemUiOverlay.values,
-        );
+        SystemChrome.setEnabledSystemUIMode(.immersiveSticky);
       }
       if (!ctr.showDanmaku) {
         introController.startTimer();
