@@ -21,6 +21,7 @@ import 'package:PiliPlus/utils/mobile_observer.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -84,7 +85,12 @@ class _MainAppState extends PopScopeState<MainApp>
       windowManager.setBrightness(brightness);
     }
     if (!_mainController.useSideBar) {
-      _mainController.useBottomNav = MediaQuery.sizeOf(context).isPortrait;
+      final size = MediaQuery.sizeOf(context);
+      if (Pref.autoSideBar) {
+        _mainController.useBottomNav = size.width < Pref.sideBarThreshold;
+      } else {
+        _mainController.useBottomNav = size.isPortrait;
+      }
     }
   }
 

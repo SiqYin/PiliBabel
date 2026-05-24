@@ -86,6 +86,14 @@ List<SettingsModel> get styleSettings => [
     defaultVal: false,
     needReboot: true,
   ),
+  SwitchModel(
+    title: '自动侧边栏切换',
+    subtitle: '屏幕较宽时（如折叠屏展开）自动改用侧边栏。点击自定义触发宽度。',
+    leading: const Icon(Icons.vertical_split_outlined),
+    setKey: SettingBoxKey.autoSideBar,
+    defaultVal: false,
+    onTap: _showSideBarThresholdDialog,
+  ),
   SplitModel(
     normalModel: const NormalModel.split(
       title: 'App字体字重',
@@ -892,6 +900,53 @@ Future<void> _showCardWidthDialog(
     SmartDialog.showToast('重启生效');
     setState();
   }
+}
+
+void _showSideBarThresholdDialog(BuildContext context) {
+  double threshold = Pref.sideBarThreshold;
+  showDialog(
+    context: context,
+    builder: (context) => StatefulBuilder(
+      builder: (context, setState) => AlertDialog(
+        title: const Text('自定义侧边栏触发宽度'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '当前屏幕宽度: ${MediaQuery.sizeOf(context).width.toStringAsFixed(1)}dp',
+            ),
+            const SizedBox(height: 8),
+            const Text('当屏幕宽度大于该阈值时，会自动切换为侧边栏。'),
+            Slider(
+              value: threshold,
+              min: 400,
+              max: 1000,
+              divisions: 60,
+              label: '${threshold.toStringAsFixed(1)}dp',
+              onChanged: (value) => setState(() => threshold = value),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => setState(() => threshold = 600),
+            child: const Text('恢复默认'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await GStorage.setting.put(
+                SettingBoxKey.sideBarThreshold,
+                threshold,
+              );
+              Get.back();
+            },
+            child: const Text('确定'),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 Future<void> _showUpPosDialog(

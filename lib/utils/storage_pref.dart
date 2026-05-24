@@ -1100,6 +1100,13 @@ abstract final class Pref {
   static bool get useSideBar =>
       _setting.get(SettingBoxKey.useSideBar, defaultValue: false);
 
+  static bool get autoSideBar =>
+      _setting.get(SettingBoxKey.autoSideBar, defaultValue: false);
+
+  static double get sideBarThreshold =>
+      (_setting.get(SettingBoxKey.sideBarThreshold, defaultValue: 600.0) as num)
+          .toDouble();
+
   static bool get dynamicsShowAllFollowedUp => _setting.get(
     SettingBoxKey.dynamicsShowAllFollowedUp,
     defaultValue: false,
