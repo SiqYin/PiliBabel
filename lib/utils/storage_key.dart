@@ -83,6 +83,7 @@ abstract final class SettingBoxKey {
       dynamicPeriod = 'dynamicPeriod',
       schemeVariant = 'schemeVariant',
       showViewPoints = 'showViewPoints',
+      showViewPointsOverlay = 'showViewPointsOverlay',
       showRelatedVideo = 'showRelatedVideo',
       showVideoReply = 'showVideoReply',
       showBangumiReply = 'showBangumiReply',

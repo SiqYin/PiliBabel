@@ -589,6 +589,9 @@ abstract final class Pref {
   static bool get showViewPoints =>
       _setting.get(SettingBoxKey.showViewPoints, defaultValue: true);
 
+  static bool get showViewPointsOverlay =>
+      _setting.get(SettingBoxKey.showViewPointsOverlay, defaultValue: true);
+
   static bool get showRelatedVideo =>
       _setting.get(SettingBoxKey.showRelatedVideo, defaultValue: true);
 
