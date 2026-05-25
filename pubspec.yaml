@@ -51,6 +51,7 @@ dependencies:
       url: https://github.com/bggRGjQaUbCoE/catcher_2.git
       ref: dev
   characters: ^1.4.1
+  clipboard: ^3.0.14
   chat_bottom_container:
     git:
       url: https://github.com/bggRGjQaUbCoE/flutter_chat_packages.git
