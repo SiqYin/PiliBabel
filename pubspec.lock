@@ -237,10 +237,11 @@ packages:
   catcher_2:
     dependency: "direct main"
     description:
-      name: catcher_2
-      sha256: ac9dd03230fa4058d14d46450335ca3c40564f734d793e52f81053f3cbf95009
-      url: "https://pub.dev"
-    source: hosted
+      path: "."
+      ref: dev
+      resolved-ref: a20878e9fe5375252c9ea22697d4dc4823544b1a
+      url: "https://github.com/bggRGjQaUbCoE/catcher_2.git"
+    source: git
     version: "2.1.9"
   characters:
     dependency: "direct main"
@@ -522,10 +523,10 @@ packages:
     description:
       path: "."
       ref: dev
-      resolved-ref: c4672374956fa28d117ef7a55a6e708daddbf462
+      resolved-ref: f6c2ab82ce7539dc26e6c16e1455b435fd2ded09
       url: "https://github.com/bggRGjQaUbCoE/flutter_file_picker.git"
     source: git
-    version: "12.0.0-beta.4"
+    version: "12.0.0-beta.5"
   file_selector_linux:
     dependency: transitive
     description:
@@ -798,14 +799,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  fluttertoast:
-    dependency: transitive
-    description:
-      name: fluttertoast
-      sha256: "144ddd74d49c865eba47abe31cbc746c7b311c82d6c32e571fd73c4264b740e2"
-      url: "https://pub.dev"
-    source: hosted
-    version: "9.0.0"
   font_awesome_flutter:
     dependency: "direct main"
     description:
@@ -2116,10 +2109,10 @@ packages:
     dependency: transitive
     description:
       name: win32
-      sha256: a1fc9eb9248baa05dfc12ed5b66e377b3e23f095eec078e0371622b9033810d9
+      sha256: ba6f4bba816c8d7e3c1580e170f3786d216951cc6b94babc3b814c08d2cb2738
       url: "https://pub.dev"
     source: hosted
-    version: "6.2.0"
+    version: "6.3.0"
   win32_registry:
     dependency: transitive
     description:

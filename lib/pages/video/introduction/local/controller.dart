@@ -17,7 +17,7 @@ class LocalIntroController extends CommonIntroController {
   void queryVideoIntro() {}
 
   @override
-  void actionCoinVideo() {}
+  int get copyright => throw UnimplementedError();
 
   @override
   void actionLikeVideo() {}
