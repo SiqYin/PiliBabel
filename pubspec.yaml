@@ -179,6 +179,10 @@ dependencies:
       ref: main
 
 dependency_overrides:
+  clipboard:
+    git:
+      url: https://github.com/dongfengweixiao/flutter_clipboard.git
+      ref: patch-1
   flutter_inappwebview_android:
     git:
       url: https://github.com/bggRGjQaUbCoE/flutter_inappwebview.git
