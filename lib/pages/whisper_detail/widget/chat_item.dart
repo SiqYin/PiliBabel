@@ -177,7 +177,7 @@ class ChatItem extends StatelessWidget {
           return msgTypeTipMessage_18(theme, content);
         case MsgType.EN_MSG_TYPE_TEXT:
           return msgTypeText_1(theme, content: content, textColor: textColor);
-        case MsgType.EN_MSG_TYPE_PIC:
+        case MsgType.EN_MSG_TYPE_PIC || MsgType.EN_MSG_TYPE_CUSTOM_FACE:
           return msgTypePic_2(content);
         case MsgType.EN_MSG_TYPE_SHARE_V2:
           return msgTypeShareV2_7(content, textColor);
