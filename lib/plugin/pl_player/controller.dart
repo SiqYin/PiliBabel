@@ -523,7 +523,7 @@ class PlPlayerController with BlockConfigMixin {
 
   void _onOrientationChanged(OrientationParams param) {
     _orientation = param.orientation;
-    if (!visible) return;
+    if (Platform.isIOS && !visible) return;
     final orientation = param.orientation;
     final isFullScreen = this.isFullScreen.value;
     if (checkIsAutoRotate &&
