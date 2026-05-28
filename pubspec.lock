@@ -255,11 +255,11 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/chat_bottom_container"
-      ref: main
-      resolved-ref: dba2bf10db4a6f89564d9be63ce17b18f0f7e3e5
+      ref: dev
+      resolved-ref: "88d5d2c3c76855258ead306d8921ef706033beef"
       url: "https://github.com/bggRGjQaUbCoE/flutter_chat_packages.git"
     source: git
-    version: "0.3.2"
+    version: "0.5.0"
   checked_yaml:
     dependency: transitive
     description:

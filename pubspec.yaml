@@ -54,7 +54,7 @@ dependencies:
   chat_bottom_container:
     git:
       url: https://github.com/bggRGjQaUbCoE/flutter_chat_packages.git
-      ref: main
+      ref: dev
       path: packages/chat_bottom_container
   collection: ^1.19.1
   connectivity_plus: ^7.1.1
