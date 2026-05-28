@@ -809,8 +809,9 @@ class DownloadService extends GetxService {
     if (!nomedia.existsSync()) await nomedia.create();
 
     final dirName = _sanitizeDirName(entry.title, entry.avid);
-    final destPath = path.join(_exportBasePath, dirName);
-    final destDir = Directory(destPath);
+    final subDirName = path.basename(entry.entryDirPath);
+    final destDir = Directory(path.join(_exportBasePath, dirName, subDirName));
+    final destPath = destDir.path;
 
     if (destDir.existsSync() && !await _dirHasDifference(srcDir, destDir)) {
       return destPath;
