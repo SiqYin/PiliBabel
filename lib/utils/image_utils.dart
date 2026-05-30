@@ -28,7 +28,9 @@ abstract final class ImageUtils {
   static String get time =>
       DateFormat('yyyy-MM-dd_HH-mm-ss').format(DateTime.now());
   static bool silentDownImg = Pref.silentDownImg;
-  static const _androidRelativePath = 'Pictures/${Constants.appName}';
+  static final _albumPath = Platform.isAndroid
+      ? 'Pictures/${Constants.appName}'
+      : Constants.appName;
 
   // 图片分享
   static Future<void> onShareImg(String url) async {
@@ -210,7 +212,7 @@ abstract final class ImageUtils {
               SaveFileData(
                 filePath: i.filePath,
                 fileName: i.name,
-                androidRelativePath: _androidRelativePath,
+                albumPath: _albumPath,
               ),
             );
           } else {
@@ -302,7 +304,7 @@ abstract final class ImageUtils {
       res = await SaverGallery.saveImage(
         bytes,
         fileName: fileName,
-        androidRelativePath: _androidRelativePath,
+        albumPath: _albumPath,
         skipIfExists: false,
       );
       SmartDialog.dismiss();
@@ -346,7 +348,7 @@ abstract final class ImageUtils {
       res = await SaverGallery.saveFile(
         filePath: filePath,
         fileName: fileName,
-        androidRelativePath: _androidRelativePath,
+        albumPath: _albumPath,
         skipIfExists: false,
       );
       if (del) file.tryDel();
