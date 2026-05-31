@@ -453,18 +453,20 @@ extension type AndroidHelper._(jni$_.JObject _$this) implements jni$_.JObject {
     ).boolean;
   }
 
-  static final _id_setPipAutoEnterEnabled = _class.staticMethodId(
-    r'setPipAutoEnterEnabled',
-    r'(ZJ)V',
+  static final _id_enterPip = _class.staticMethodId(
+    r'enterPip',
+    r'(IIZJ)V',
   );
 
-  static final _setPipAutoEnterEnabled =
+  static final _enterPip =
       jni$_.ProtectedJniExtensions.lookup<
             jni$_.NativeFunction<
               jni$_.JThrowablePtr Function(
                 jni$_.Pointer<jni$_.Void>,
                 jni$_.JMethodIDPtr,
-                jni$_.VarArgs<(jni$_.Int32, jni$_.Int64)>,
+                jni$_.VarArgs<
+                  (jni$_.Int32, jni$_.Int32, jni$_.Int32, jni$_.Int64)
+                >,
               )
             >
           >('globalEnv_CallStaticVoidMethod')
@@ -474,19 +476,60 @@ extension type AndroidHelper._(jni$_.JObject _$this) implements jni$_.JObject {
               jni$_.JMethodIDPtr,
               core$_.int,
               core$_.int,
+              core$_.int,
+              core$_.int,
             )
           >();
 
-  /// from: `static public void setPipAutoEnterEnabled(boolean autoEnable, long engineId)`
-  static void setPipAutoEnterEnabled(
-    core$_.bool autoEnable,
+  /// from: `static public void enterPip(int width, int height, boolean autoEnter, long engineId)`
+  static void enterPip(
+    core$_.int width,
+    core$_.int height,
+    core$_.bool autoEnter,
     core$_.int engineId,
   ) {
     final _$$classRef = _class.reference;
-    _setPipAutoEnterEnabled(
+    _enterPip(
       _$$classRef.pointer,
-      _id_setPipAutoEnterEnabled.pointer,
-      autoEnable ? 1 : 0,
+      _id_enterPip.pointer,
+      width,
+      height,
+      autoEnter ? 1 : 0,
+      engineId,
+    ).check();
+  }
+
+  static final _id_disableAutoEnterPip = _class.staticMethodId(
+    r'disableAutoEnterPip',
+    r'(J)V',
+  );
+
+  static final _disableAutoEnterPip =
+      jni$_.ProtectedJniExtensions.lookup<
+            jni$_.NativeFunction<
+              jni$_.JThrowablePtr Function(
+                jni$_.Pointer<jni$_.Void>,
+                jni$_.JMethodIDPtr,
+                jni$_.VarArgs<(jni$_.Int64,)>,
+              )
+            >
+          >('globalEnv_CallStaticVoidMethod')
+          .asFunction<
+            jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>,
+              jni$_.JMethodIDPtr,
+              core$_.int,
+            )
+          >();
+
+  /// from: `static public void disableAutoEnterPip(long engineId)`
+  static void disableAutoEnterPip(
+    core$_.int engineId,
+  ) {
+    final _$$classRef = _class.reference;
+    _disableAutoEnterPip(
+      _$$classRef.pointer,
+      _id_disableAutoEnterPip.pointer,
       engineId,
     ).check();
   }

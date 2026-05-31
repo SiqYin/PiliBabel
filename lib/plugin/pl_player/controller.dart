@@ -275,7 +275,7 @@ class PlPlayerController with BlockConfigMixin {
     }
   }
 
-  late bool _shouldSetPip = false;
+  late bool _isAutoEnterPip = false;
 
   static bool get _isCurrVideoPage {
     final routing = Get.routing;
@@ -289,12 +289,11 @@ class PlPlayerController with BlockConfigMixin {
     return routeName == '/videoV' || routeName == '/liveRoom';
   }
 
-  void enterPip({bool isAuto = false}) {
+  void enterPip({bool autoEnter = false}) {
     if (videoPlayerController != null) {
-      controls = false;
       final state = videoPlayerController!.state;
       PageUtils.enterPip(
-        isAuto: isAuto,
+        autoEnter: autoEnter,
         width: state.width == 0 ? width : state.width,
         height: state.height == 0 ? height : state.height,
       );
@@ -302,8 +301,8 @@ class PlPlayerController with BlockConfigMixin {
   }
 
   void _disableAutoEnterPip() {
-    if (_shouldSetPip) {
-      PiliAndroidHelper.setPipAutoEnterEnabled(false);
+    if (_isAutoEnterPip) {
+      PiliAndroidHelper.disableAutoEnterPip();
     }
   }
 
@@ -578,12 +577,12 @@ class PlPlayerController with BlockConfigMixin {
     }
 
     if (Platform.isAndroid && autoPiP) {
-      if (DeviceUtils.sdkInt < 36) {
+      if (DeviceUtils.sdkInt < 31) {
         AndroidHelper$ToDart.onUserLeaveHint = Runnable.implement(
           $Runnable(run: _onUserLeaveHint),
         );
       } else {
-        _shouldSetPip = true;
+        _isAutoEnterPip = true;
       }
     }
   }
@@ -942,9 +941,9 @@ class PlPlayerController with BlockConfigMixin {
       stream.playing.listen((event) {
         WakelockPlus.toggle(enable: event);
         if (event) {
-          if (_shouldSetPip) {
+          if (_isAutoEnterPip) {
             if (_isCurrVideoPage) {
-              enterPip(isAuto: true);
+              enterPip(autoEnter: true);
             } else {
               _disableAutoEnterPip();
             }

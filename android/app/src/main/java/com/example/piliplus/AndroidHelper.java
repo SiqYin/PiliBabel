@@ -1,5 +1,6 @@
 package com.example.piliplus;
 
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.app.PictureInPictureParams;
 import android.app.SearchManager;
@@ -18,6 +19,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.util.Rational;
 import android.view.WindowManager;
 
 import androidx.annotation.Keep;
@@ -142,12 +144,30 @@ public final class AndroidHelper {
         return false;
     }
 
-    public static void setPipAutoEnterEnabled(boolean autoEnable, long engineId) {
+    public static void enterPip(int width, int height, boolean autoEnter, long engineId) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder()
+                    .setAspectRatio(new Rational(width, height));
+            Activity activity = JniFlutterPlugin.getActivity(engineId);
+            assert activity != null;
+            if (autoEnter) {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    builder.setAutoEnterEnabled(true);
+                    activity.setPictureInPictureParams(builder.build());
+                }
+            } else {
+                activity.enterPictureInPictureMode(builder.build());
+            }
+        }
+    }
+
+    public static void disableAutoEnterPip(long engineId) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            PictureInPictureParams params = new PictureInPictureParams.Builder().setAutoEnterEnabled(autoEnable).build();
-            android.app.Activity activity = JniFlutterPlugin.getActivity(engineId);
+            PictureInPictureParams.Builder builder = new PictureInPictureParams.Builder()
+                    .setAutoEnterEnabled(false);
+            Activity activity = JniFlutterPlugin.getActivity(engineId);
             if (activity != null) {
-                activity.setPictureInPictureParams(params);
+                activity.setPictureInPictureParams(builder.build());
             }
         }
     }
