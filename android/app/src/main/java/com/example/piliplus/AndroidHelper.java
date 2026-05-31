@@ -19,8 +19,11 @@ import android.os.Build;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.view.WindowManager;
+
 import androidx.annotation.Keep;
+
 import com.github.dart_lang.jni_flutter.JniFlutterPlugin;
+
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -29,11 +32,19 @@ import java.util.ArrayList;
 public final class AndroidHelper {
     public static volatile boolean isFoldable = false;
 
+    public static volatile boolean isPipMode = false;
+
+    public static volatile boolean isPipAvailable = false;
+
     private AndroidHelper() {
     }
 
     private static Context getContext() {
         return JniFlutterPlugin.getApplicationContext();
+    }
+
+    public static int sdkInt() {
+        return Build.VERSION.SDK_INT;
     }
 
     public static void back() {

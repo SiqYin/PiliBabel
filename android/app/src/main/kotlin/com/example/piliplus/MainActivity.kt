@@ -48,12 +48,17 @@ class MainActivity : AudioServiceActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            window.attributes.layoutInDisplayCutoutMode = LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+            window.attributes.layoutInDisplayCutoutMode =
+                LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
+
+        AndroidHelper.isPipAvailable =
+            packageManager.hasSystemFeature(PackageManager.FEATURE_PICTURE_IN_PICTURE)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             try {
-                AndroidHelper.isFoldable = packageManager.hasSystemFeature(PackageManager.FEATURE_SENSOR_HINGE_ANGLE)
+                AndroidHelper.isFoldable =
+                    packageManager.hasSystemFeature(PackageManager.FEATURE_SENSOR_HINGE_ANGLE)
             } catch (_: Exception) {
             }
         }
@@ -73,8 +78,6 @@ class MainActivity : AudioServiceActivity() {
         isInPictureInPictureMode: Boolean, newConfig: Configuration?
     ) {
         super.onPictureInPictureModeChanged(isInPictureInPictureMode, newConfig)
-        MethodChannel(flutterEngine!!.dartExecutor.binaryMessenger, "floating").invokeMethod(
-            "onPipChanged", isInPictureInPictureMode
-        )
+        AndroidHelper.isPipMode = isInPictureInPictureMode
     }
 }
