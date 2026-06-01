@@ -73,13 +73,20 @@ abstract final class PiliAndroidHelper {
   }
 
   @pragma('vm:prefer-inline')
-  static void enterPip(int width, int height, bool autoEnter) =>
-      AndroidHelper.enterPip(
-        width,
-        height,
-        autoEnter,
-        PlatformDispatcher.instance.engineId!,
-      );
+  static void enterPip(
+    int width,
+    int height, {
+    required bool autoEnter,
+    required bool isLive,
+    required bool isPlaying,
+  }) => AndroidHelper.enterPip(
+    PlatformDispatcher.instance.engineId!,
+    width,
+    height,
+    autoEnter,
+    isLive,
+    isPlaying,
+  );
 
   @pragma('vm:prefer-inline')
   static void disableAutoEnterPip() =>

@@ -447,7 +447,7 @@ extension type AndroidHelper._(jni$_.JObject _$this) implements jni$_.JObject {
 
   static final _id_enterPip = _class.staticMethodId(
     r'enterPip',
-    r'(IIZJ)V',
+    r'(JIIZZZ)V',
   );
 
   static final _enterPip =
@@ -457,7 +457,14 @@ extension type AndroidHelper._(jni$_.JObject _$this) implements jni$_.JObject {
                 jni$_.Pointer<jni$_.Void>,
                 jni$_.JMethodIDPtr,
                 jni$_.VarArgs<
-                  (jni$_.Int32, jni$_.Int32, jni$_.Int32, jni$_.Int64)
+                  (
+                    jni$_.Int64,
+                    jni$_.Int32,
+                    jni$_.Int32,
+                    jni$_.Int32,
+                    jni$_.Int32,
+                    jni$_.Int32,
+                  )
                 >,
               )
             >
@@ -470,24 +477,71 @@ extension type AndroidHelper._(jni$_.JObject _$this) implements jni$_.JObject {
               core$_.int,
               core$_.int,
               core$_.int,
+              core$_.int,
+              core$_.int,
             )
           >();
 
-  /// from: `static public void enterPip(int width, int height, boolean autoEnter, long engineId)`
+  /// from: `static public void enterPip(long engineId, int width, int height, boolean autoEnter, boolean isLive, boolean isPlaying)`
   static void enterPip(
+    core$_.int engineId,
     core$_.int width,
     core$_.int height,
     core$_.bool autoEnter,
-    core$_.int engineId,
+    core$_.bool isLive,
+    core$_.bool isPlaying,
   ) {
     final _$$classRef = _class.reference;
     _enterPip(
       _$$classRef.pointer,
       _id_enterPip.pointer,
+      engineId,
       width,
       height,
       autoEnter ? 1 : 0,
+      isLive ? 1 : 0,
+      isPlaying ? 1 : 0,
+    ).check();
+  }
+
+  static final _id_updatePipActions = _class.staticMethodId(
+    r'updatePipActions',
+    r'(JZZ)V',
+  );
+
+  static final _updatePipActions =
+      jni$_.ProtectedJniExtensions.lookup<
+            jni$_.NativeFunction<
+              jni$_.JThrowablePtr Function(
+                jni$_.Pointer<jni$_.Void>,
+                jni$_.JMethodIDPtr,
+                jni$_.VarArgs<(jni$_.Int64, jni$_.Int32, jni$_.Int32)>,
+              )
+            >
+          >('globalEnv_CallStaticVoidMethod')
+          .asFunction<
+            jni$_.JThrowablePtr Function(
+              jni$_.Pointer<jni$_.Void>,
+              jni$_.JMethodIDPtr,
+              core$_.int,
+              core$_.int,
+              core$_.int,
+            )
+          >();
+
+  /// from: `static public void updatePipActions(long engineId, boolean isLive, boolean isPlaying)`
+  static void updatePipActions(
+    core$_.int engineId,
+    core$_.bool isLive,
+    core$_.bool isPlaying,
+  ) {
+    final _$$classRef = _class.reference;
+    _updatePipActions(
+      _$$classRef.pointer,
+      _id_updatePipActions.pointer,
       engineId,
+      isLive ? 1 : 0,
+      isPlaying ? 1 : 0,
     ).check();
   }
 

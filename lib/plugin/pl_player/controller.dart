@@ -276,6 +276,7 @@ class PlPlayerController with BlockConfigMixin {
   }
 
   late bool _isAutoEnterPip = false;
+  bool get isAutoEnterPip => _isAutoEnterPip;
 
   static bool get _isCurrVideoPage {
     final routing = Get.routing;
@@ -296,6 +297,8 @@ class PlPlayerController with BlockConfigMixin {
         autoEnter: autoEnter,
         width: state.width == 0 ? width : state.width,
         height: state.height == 0 ? height : state.height,
+        isLive: isLive,
+        isPlaying: playerStatus.isPlaying,
       );
     }
   }
@@ -1075,18 +1078,10 @@ class PlPlayerController with BlockConfigMixin {
       //   }
       // }),
       // 媒体通知监听
-      if (videoPlayerServiceHandler != null) ...[
-        playerStatus.listen((PlayerStatus event) {
-          videoPlayerServiceHandler!.onStatusChange(
-            event,
-            isBuffering.value,
-            isLive,
-          );
-        }),
+      if (videoPlayerServiceHandler != null)
         positionSeconds.listen((int event) {
           videoPlayerServiceHandler!.onPositionChange(Duration(seconds: event));
         }),
-      ],
     ];
   }
 

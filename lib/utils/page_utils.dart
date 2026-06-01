@@ -193,7 +193,13 @@ abstract final class PageUtils {
     return (min <= aspectRatio) && (aspectRatio <= max);
   }
 
-  static void enterPip({int? width, int? height, bool autoEnter = false}) {
+  static void enterPip({
+    int? width,
+    int? height,
+    bool autoEnter = false,
+    required bool isLive,
+    required bool isPlaying,
+  }) {
     if (width != null &&
         height != null &&
         !_fitsInAndroidRequirements(width, height)) {
@@ -205,7 +211,13 @@ abstract final class PageUtils {
         height = 9;
       }
     }
-    PiliAndroidHelper.enterPip(width ?? 16, height ?? 9, autoEnter);
+    PiliAndroidHelper.enterPip(
+      width ?? 16,
+      height ?? 9,
+      autoEnter: autoEnter,
+      isLive: isLive,
+      isPlaying: isPlaying,
+    );
   }
 
   static Future<void> pushDynDetail(
