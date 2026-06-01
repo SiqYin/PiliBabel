@@ -1626,8 +1626,10 @@ class PlPlayerController with BlockConfigMixin {
     if (showSeekPreview) {
       _clearPreview();
     }
-    AndroidHelper$ToDart.onUserLeaveHint?.release();
-    AndroidHelper$ToDart.onUserLeaveHint = null;
+    if (Platform.isAndroid) {
+      AndroidHelper$ToDart.onUserLeaveHint?.release();
+      AndroidHelper$ToDart.onUserLeaveHint = null;
+    }
     _timer?.cancel();
     // _position.close();
     // _playerEventSubs?.cancel();
