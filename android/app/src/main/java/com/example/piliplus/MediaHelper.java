@@ -32,16 +32,6 @@ import java.util.List;
 public class MediaHelper {
     private static final String TAG = "MediaButtonReceiver";
 
-    public static PendingIntent buildMediaButtonPendingIntent(Context context, long action) {
-        ComponentName mbrComponent = getMediaButtonReceiverComponent(context);
-        if (mbrComponent == null) {
-            Log.w(TAG, "A unique media button receiver could not be found in the given context, so "
-                    + "couldn't build a pending intent.");
-            return null;
-        }
-        return buildMediaButtonPendingIntent(context, mbrComponent, action);
-    }
-
     public static PendingIntent buildMediaButtonPendingIntent(Context context, ComponentName mbrComponent, long action) {
         if (mbrComponent == null) {
             Log.w(TAG, "The component name of media button receiver should be provided.");
