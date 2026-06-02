@@ -107,13 +107,28 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
             : processingState,
         controls: [
           if (!isLive)
-            MediaControl.rewind.copyWith(
-              androidIcon: 'drawable/ic_baseline_replay_10_24',
+            const MediaControl(
+              androidIcon: 'drawable/ic_player_rewind_10s',
+              label: 'Rewind',
+              action: MediaAction.rewind,
             ),
-          if (playing) MediaControl.pause else MediaControl.play,
+          if (playing)
+            const MediaControl(
+              androidIcon: 'drawable/ic_player_pause',
+              label: 'Pause',
+              action: MediaAction.pause,
+            )
+          else
+            const MediaControl(
+              androidIcon: 'drawable/ic_player_play',
+              label: 'Play',
+              action: MediaAction.play,
+            ),
           if (!isLive)
-            MediaControl.fastForward.copyWith(
-              androidIcon: 'drawable/ic_baseline_forward_10_24',
+            const MediaControl(
+              androidIcon: 'drawable/ic_player_fast_forward_10s',
+              label: 'Fast Forward',
+              action: MediaAction.fastForward,
             ),
         ],
         playing: playing,
