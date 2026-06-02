@@ -35,6 +35,7 @@ class DetailItem extends StatelessWidget {
     this.progress,
     required this.downloadService,
     this.onDelete,
+    this.onDeleteRequested,
     required this.showTitle,
     this.isCurr = false,
     this.playContext,
@@ -54,6 +55,7 @@ class DetailItem extends StatelessWidget {
   final ChangeNotifier? progress;
   final DownloadService downloadService;
   final VoidCallback? onDelete;
+  final Future<void> Function(BuildContext context)? onDeleteRequested;
   final bool showTitle;
   final bool isCurr;
   final DownloadVideoPlayContext? playContext;
@@ -74,7 +76,7 @@ class DetailItem extends StatelessWidget {
     final theme = Theme.of(context);
     final outline = theme.colorScheme.outline;
     final cid = entry.source?.cid ?? entry.pageData?.cid;
-    final canDel = onDelete != null;
+    final canDel = onDelete != null || onDeleteRequested != null;
     final enableMultiSelect = controller.enableMultiSelect.value;
     void onLongPress() {
       if (enableMultiSelect) {
@@ -551,6 +553,10 @@ class DetailItem extends StatelessWidget {
                   style: const TextStyle(fontSize: 13),
                 ),
                 onTap: () {
+                  if (onDeleteRequested != null) {
+                    onDeleteRequested!(menuContext);
+                    return;
+                  }
                   showConfirmDialog(
                     context: menuContext,
                     title: Text(deleteConfirmText ?? '确定删除该视频？'),

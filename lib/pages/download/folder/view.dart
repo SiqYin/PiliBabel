@@ -6,6 +6,7 @@ import 'package:PiliPlus/models_new/download/download_collection.dart';
 import 'package:PiliPlus/pages/download/detail/widgets/item.dart';
 import 'package:PiliPlus/pages/download/folder/controller.dart';
 import 'package:PiliPlus/pages/download/sort/view.dart';
+import 'package:PiliPlus/pages/download/utils/cache_delete_confirm.dart';
 import 'package:PiliPlus/pages/download/widgets/folder_dialog.dart';
 import 'package:PiliPlus/services/download/download_collection_service.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
@@ -309,9 +310,13 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
                         progress: _progress,
                         downloadService: _downloadService,
                         showTitle: true,
-                        onDelete: () => _collectionService.removeVideosFromFolder(
-                          widget.folderId,
-                          [entry.cid],
+                        onDeleteRequested: (menuContext) =>
+                            confirmRemoveEntriesFromFolder(
+                          context: menuContext,
+                          collectionService: _collectionService,
+                          downloadService: _downloadService,
+                          folderId: widget.folderId,
+                          entries: [entry],
                         ),
                         deleteLabel: '移出文件夹',
                         deleteConfirmText: '确定从当前文件夹移除？',

@@ -41,6 +41,7 @@ class DownloadService extends GetxService {
   final _lock = Lock();
 
   final flagNotifier = SetNotifier();
+  final completedEntryNotifier = Set<ValueChanged<BiliDownloadEntryInfo>>();
   final waitDownloadQueue = RxList<BiliDownloadEntryInfo>();
   final downloadList = <BiliDownloadEntryInfo>[];
 
@@ -117,8 +118,10 @@ class DownloadService extends GetxService {
     Part page,
     VideoDetailData? videoDetail,
     ugc.EpisodeItem? videoArc,
-    VideoQuality videoQuality,
-  ) {
+    VideoQuality videoQuality, {
+    String? autoFolderTitle,
+    String? autoFolderSourceKey,
+  }) {
     final cid = page.cid!;
     if (downloadList.indexWhere((e) => e.cid == cid) != -1) {
       return;
@@ -169,6 +172,8 @@ class DownloadService extends GetxService {
       ownerId: videoDetail?.owner?.mid ?? videoArc?.arc?.author?.mid,
       ownerName: videoDetail?.owner?.name ?? videoArc?.arc?.author?.name,
       pageData: pageData,
+      autoFolderTitle: autoFolderTitle,
+      autoFolderSourceKey: autoFolderSourceKey,
     );
     _createDownload(entry);
   }
@@ -707,6 +712,7 @@ class DownloadService extends GetxService {
     await _updateBiliDownloadEntryJson(entry);
     waitDownloadQueue.remove(entry);
     downloadList.insert(0, entry);
+    completedEntryNotifier.notify(entry);
     flagNotifier.refresh();
     _curCid = null;
     curDownload.value = null;
@@ -894,6 +900,14 @@ extension SetNotifierExt on SetNotifier {
   void refresh() {
     for (final i in this) {
       i();
+    }
+  }
+}
+
+extension EntryNotifierExt on Set<ValueChanged<BiliDownloadEntryInfo>> {
+  void notify(BiliDownloadEntryInfo entry) {
+    for (final i in this) {
+      i(entry);
     }
   }
 }

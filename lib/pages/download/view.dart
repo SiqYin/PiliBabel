@@ -13,6 +13,7 @@ import 'package:PiliPlus/pages/download/folder/view.dart';
 import 'package:PiliPlus/pages/download/folder_manage/view.dart';
 import 'package:PiliPlus/pages/download/search/view.dart';
 import 'package:PiliPlus/pages/download/sort/view.dart';
+import 'package:PiliPlus/pages/download/utils/cache_delete_confirm.dart';
 import 'package:PiliPlus/pages/download/widgets/folder_card.dart';
 import 'package:PiliPlus/pages/download/widgets/folder_dialog.dart';
 import 'package:PiliPlus/services/download/download_collection_service.dart';
@@ -123,13 +124,11 @@ class _DownloadPageState extends State<DownloadPage>
   }
 
   Future<void> _deleteFolder(DownloadFolder folder) async {
-    showConfirmDialog(
+    await confirmDeleteFolders(
       context: context,
-      title: const Text('确定删除该文件夹？'),
-      content: const Text('只会删除文件夹关联，不会删除本地缓存文件。'),
-      onConfirm: () async {
-        await _collectionService.deleteFolder(folder.id);
-      },
+      collectionService: _collectionService,
+      downloadService: _downloadService,
+      folders: [folder],
     );
   }
 

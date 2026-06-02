@@ -1,11 +1,9 @@
-import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/models_new/download/bili_download_entry_info.dart';
 import 'package:PiliPlus/pages/common/multi_select/base.dart'
     show BaseMultiSelectMixin;
+import 'package:PiliPlus/pages/download/utils/cache_delete_confirm.dart';
 import 'package:PiliPlus/services/download/download_collection_service.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
-import 'package:flutter/widgets.dart' show Text;
-import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
 class DownloadFolderDetailController extends GetxController
@@ -58,18 +56,16 @@ class DownloadFolderDetailController extends GetxController
 
   @override
   void onRemove() {
-    showConfirmDialog(
+    confirmRemoveEntriesFromFolder(
       context: Get.context!,
-      title: const Text('确定移出当前文件夹？'),
-      onConfirm: () async {
-        SmartDialog.showLoading();
-        await collectionService.removeVideosFromFolder(
-          folderId,
-          allChecked.map((item) => item.cid),
-        );
+      collectionService: collectionService,
+      downloadService: downloadService,
+      folderId: folderId,
+      entries: allChecked,
+    ).then((changed) {
+      if (changed) {
         handleSelect();
-        SmartDialog.dismiss();
-      },
-    );
+      }
+    });
   }
 }

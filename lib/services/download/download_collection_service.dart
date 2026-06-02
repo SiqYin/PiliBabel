@@ -32,11 +32,13 @@ class DownloadCollectionService extends GetxService {
     await _downloadService.waitForInitialization;
     await _syncWithDownloads(notify: false);
     _downloadService.flagNotifier.add(_handleDownloadRefresh);
+    _downloadService.completedEntryNotifier.add(_handleDownloadCompleted);
   }
 
   @override
   void onClose() {
     _downloadService.flagNotifier.remove(_handleDownloadRefresh);
+    _downloadService.completedEntryNotifier.remove(_handleDownloadCompleted);
     super.onClose();
   }
 
@@ -47,6 +49,26 @@ class DownloadCollectionService extends GetxService {
       flagNotifier.refresh();
     }
   }
+
+  Future<void> _handleDownloadCompleted(BiliDownloadEntryInfo entry) async {
+    await waitForInitialization;
+    final title = entry.autoFolderTitle?.trim();
+    final sourceKey = entry.autoFolderSourceKey;
+    if (title == null ||
+        title.isEmpty ||
+        sourceKey == null ||
+        sourceKey.isEmpty) {
+      return;
+    }
+    final folder = await ensureAutoFolder(
+      title: title,
+      sourceKey: sourceKey,
+    );
+    await addVideosToFolders([entry.cid], [folder.id]);
+  }
+
+  Future<void> syncWithDownloads({bool notify = true}) =>
+      _syncWithDownloads(notify: notify);
 
   void _readFromStorage() {
     final raw = GStorage.localCache.get(LocalCacheKey.downloadCollections);

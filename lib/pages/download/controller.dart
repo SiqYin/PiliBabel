@@ -3,6 +3,7 @@ import 'package:PiliPlus/models_new/download/bili_download_entry_info.dart';
 import 'package:PiliPlus/models_new/download/download_collection.dart';
 import 'package:PiliPlus/pages/common/multi_select/base.dart'
     show BaseMultiSelectMixin;
+import 'package:PiliPlus/pages/download/utils/cache_delete_confirm.dart';
 import 'package:PiliPlus/services/download/download_collection_service.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -95,19 +96,15 @@ class DownloadFolderSelectController extends GetxController
 
   @override
   void onRemove() {
-    showConfirmDialog(
+    confirmDeleteFolders(
       context: Get.context!,
-      title: const Text('确定删除选中文件夹？'),
-      content: const Text('只会删除文件夹关联，不会删除本地缓存文件。'),
-      onConfirm: () async {
-        SmartDialog.showLoading();
-        final selected = allChecked.toSet();
-        for (final folder in selected) {
-          await pageController.collectionService.deleteFolder(folder.id);
-        }
+      collectionService: pageController.collectionService,
+      downloadService: pageController.downloadService,
+      folders: allChecked,
+    ).then((changed) {
+      if (changed) {
         handleSelect();
-        SmartDialog.dismiss();
-      },
-    );
+      }
+    });
   }
 }
