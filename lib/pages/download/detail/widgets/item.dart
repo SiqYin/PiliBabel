@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
+import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/progress_bar/video_progress_indicator.dart';
 import 'package:PiliPlus/common/widgets/select_mask.dart';
@@ -447,138 +448,147 @@ class DetailItem extends StatelessWidget {
     return SizedBox(
       width: 29,
       height: 29,
-      child: PopupMenuButton<void>(
-        padding: EdgeInsets.zero,
-        position: PopupMenuPosition.under,
-        icon: Icon(
-          Icons.more_vert_outlined,
-          color: theme.colorScheme.outline,
-          size: 18,
-        ),
-        itemBuilder: (menuContext) {
-          final items = <PopupMenuEntry<void>>[
-            PopupMenuItem(
-              height: 38,
-              child: const Text('查看详情页', style: TextStyle(fontSize: 13)),
-              onTap: () {
-                if (entry.ep case final ep?) {
-                  if (ep.from == VideoType.pugv.name) {
-                    PageUtils.viewPugv(
-                      seasonId: entry.seasonId,
-                      epId: ep.episodeId,
-                    );
-                  } else {
-                    PageUtils.viewPgc(
-                      seasonId: entry.seasonId,
-                      epId: ep.episodeId,
-                    );
-                  }
-                  return;
-                }
-                PageUtils.toVideoPage(
-                  aid: entry.avid,
-                  bvid: entry.bvid,
-                  cid: entry.cid,
-                  epId: entry.ep?.episodeId,
-                  title: entry.title,
-                  cover: entry.cover,
-                );
-              },
-            ),
-            if (PlatformUtils.isDesktop)
-              PopupMenuItem(
-                height: 38,
-                child: const Text('打开本地文件夹', style: TextStyle(fontSize: 13)),
-                onTap: () async {
-                  try {
-                    final String executable;
-                    if (Platform.isWindows) {
-                      executable = 'explorer';
-                    } else if (Platform.isMacOS) {
-                      executable = 'open';
-                    } else if (Platform.isLinux) {
-                      executable = 'xdg-open';
-                    } else {
-                      throw UnimplementedError();
+      child: Builder(
+        builder: (menuContext) => IconButton(
+          constraints: const BoxConstraints.tightFor(width: 29, height: 29),
+          padding: EdgeInsets.zero,
+          icon: Icon(
+            Icons.more_vert_outlined,
+            color: theme.colorScheme.outline,
+            size: 18,
+          ),
+          onPressed: () {
+            showStaticPositionMenu<void>(
+              context: menuContext,
+              items: [
+                PopupMenuItem(
+                  height: 38,
+                  child: const Text('查看详情页', style: TextStyle(fontSize: 13)),
+                  onTap: () {
+                    if (entry.ep case final ep?) {
+                      if (ep.from == VideoType.pugv.name) {
+                        PageUtils.viewPugv(
+                          seasonId: entry.seasonId,
+                          epId: ep.episodeId,
+                        );
+                      } else {
+                        PageUtils.viewPgc(
+                          seasonId: entry.seasonId,
+                          epId: ep.episodeId,
+                        );
+                      }
+                      return;
                     }
-                    await Process.run(executable, [entry.entryDirPath]);
-                  } catch (e) {
-                    SmartDialog.showToast(e.toString());
-                  }
-                },
-              ),
-            if (entry.ownerId case final mid?)
-              PopupMenuItem(
-                height: 38,
-                child: Text(
-                  '访问${entry.ownerName != null ? '：${entry.ownerName}' : '用户主页'}',
-                  style: const TextStyle(fontSize: 13),
+                    PageUtils.toVideoPage(
+                      aid: entry.avid,
+                      bvid: entry.bvid,
+                      cid: entry.cid,
+                      epId: entry.ep?.episodeId,
+                      title: entry.title,
+                      cover: entry.cover,
+                    );
+                  },
                 ),
-                onTap: () => Get.toNamed('/member?mid=$mid'),
-              ),
-            if (canDel && Platform.isAndroid)
-              PopupMenuItem(
-                height: 38,
-                child: const Text('导出', style: TextStyle(fontSize: 13)),
-                onTap: () async {
-                  if (!await ImageUtils.checkPermissionDependOnSdkInt()) return;
-                  final title = entry.showTitle;
-                  SmartDialog.show(
-                    tag: 'export',
-                    clickMaskDismiss: false,
-                    builder: (_) => _ExportDialog(title: title),
-                    maskColor: Colors.black.withValues(alpha: 0.35),
-                  );
-                  try {
-                    final dest = await DownloadService.exportEntry(entry, (
-                      progress,
-                    ) {
-                      _ExportDialog.progressNotifier.value = progress;
-                    });
-                    SmartDialog.showToast('已导出到 $dest');
-                  } catch (e) {
-                    SmartDialog.showToast('导出失败: $e');
-                  } finally {
-                    SmartDialog.dismiss(tag: 'export');
-                  }
-                },
-              ),
-            ...?extraMoreItemsBuilder?.call(menuContext),
-            if (canDel) const PopupMenuDivider(height: 8),
-            if (canDel)
-              PopupMenuItem(
-                height: 38,
-                child: Text(
-                  deleteLabel,
-                  style: const TextStyle(fontSize: 13),
-                ),
-                onTap: () {
-                  if (onDeleteRequested != null) {
-                    onDeleteRequested!(menuContext);
-                    return;
-                  }
-                  showConfirmDialog(
-                    context: menuContext,
-                    title: Text(deleteConfirmText ?? '确定删除该视频？'),
-                    onConfirm: onDelete,
-                  );
-                },
-              ),
-            if (canDel)
-              PopupMenuItem(
-                height: 38,
-                child: const Text('更新弹幕', style: TextStyle(fontSize: 13)),
-                onTap: () async {
-                  final res = await downloadService.downloadDanmaku(
-                    entry: entry,
-                    isUpdate: true,
-                  );
-                  SmartDialog.showToast(res ? '更新成功' : '更新失败');
-                },
-              ),
-          ];
-          return items;
-        },
+                if (PlatformUtils.isDesktop)
+                  PopupMenuItem(
+                    height: 38,
+                    child: const Text(
+                      '打开本地文件夹',
+                      style: TextStyle(fontSize: 13),
+                    ),
+                    onTap: () async {
+                      try {
+                        final String executable;
+                        if (Platform.isWindows) {
+                          executable = 'explorer';
+                        } else if (Platform.isMacOS) {
+                          executable = 'open';
+                        } else if (Platform.isLinux) {
+                          executable = 'xdg-open';
+                        } else {
+                          throw UnimplementedError();
+                        }
+                        await Process.run(executable, [entry.entryDirPath]);
+                      } catch (e) {
+                        SmartDialog.showToast(e.toString());
+                      }
+                    },
+                  ),
+                if (entry.ownerId case final mid?)
+                  PopupMenuItem(
+                    height: 38,
+                    child: Text(
+                      '访问${entry.ownerName != null ? '：${entry.ownerName}' : '用户主页'}',
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    onTap: () => Get.toNamed('/member?mid=$mid'),
+                  ),
+                if (canDel && Platform.isAndroid)
+                  PopupMenuItem(
+                    height: 38,
+                    child: const Text('导出', style: TextStyle(fontSize: 13)),
+                    onTap: () async {
+                      if (!await ImageUtils.checkPermissionDependOnSdkInt()) {
+                        return;
+                      }
+                      final title = entry.showTitle;
+                      SmartDialog.show(
+                        tag: 'export',
+                        clickMaskDismiss: false,
+                        builder: (_) => _ExportDialog(title: title),
+                        maskColor: Colors.black.withValues(alpha: 0.35),
+                      );
+                      try {
+                        final dest = await DownloadService.exportEntry(entry, (
+                          progress,
+                        ) {
+                          _ExportDialog.progressNotifier.value = progress;
+                        });
+                        SmartDialog.showToast('已导出到 $dest');
+                      } catch (e) {
+                        SmartDialog.showToast('导出失败: $e');
+                      } finally {
+                        SmartDialog.dismiss(tag: 'export');
+                      }
+                    },
+                  ),
+                ...?extraMoreItemsBuilder?.call(menuContext),
+                if (canDel) const PopupMenuDivider(height: 8),
+                if (canDel)
+                  PopupMenuItem(
+                    height: 38,
+                    child: Text(
+                      deleteLabel,
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    onTap: () {
+                      if (onDeleteRequested != null) {
+                        onDeleteRequested!(menuContext);
+                        return;
+                      }
+                      showConfirmDialog(
+                        context: menuContext,
+                        title: Text(deleteConfirmText ?? '确定删除该视频？'),
+                        onConfirm: onDelete,
+                      );
+                    },
+                  ),
+                if (canDel)
+                  PopupMenuItem(
+                    height: 38,
+                    child: const Text('更新弹幕', style: TextStyle(fontSize: 13)),
+                    onTap: () async {
+                      final res = await downloadService.downloadDanmaku(
+                        entry: entry,
+                        isUpdate: true,
+                      );
+                      SmartDialog.showToast(res ? '更新成功' : '更新失败');
+                    },
+                  ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

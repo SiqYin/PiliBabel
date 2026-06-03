@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
+import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/http/user.dart';
 import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/models/common/account_type.dart';
@@ -525,22 +526,8 @@ class VideoPopupMenu extends StatelessWidget {
 
   void _showPopupMenu(BuildContext context) {
     final actions = _buildActions(context);
-    final RenderBox button = context.findRenderObject()! as RenderBox;
-    final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject()! as RenderBox;
-    final position = RelativeRect.fromRect(
-      Rect.fromPoints(
-        button.localToGlobal(Offset.zero, ancestor: overlay),
-        button.localToGlobal(
-          button.size.bottomRight(Offset.zero),
-          ancestor: overlay,
-        ),
-      ),
-      Offset.zero & overlay.size,
-    );
-    showMenu<int>(
+    showStaticPositionMenu<int>(
       context: context,
-      position: position,
       items: [
         for (int i = 0; i < actions.length; i++)
           PopupMenuItem<int>(

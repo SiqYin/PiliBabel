@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -149,7 +150,7 @@ class _MusicRecommendPageState extends State<MusicRecommendPage>
               onPressed: () => _controller.isSearchMode.value = true,
               icon: const Icon(Icons.search_outlined),
             ),
-            PopupMenuButton<MusicRecommendOrderType>(
+            StaticPopupMenuButton<MusicRecommendOrderType>(
               icon: const Icon(Icons.sort),
               initialValue: _controller.order.value,
               tooltip: '排序方式',

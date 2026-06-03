@@ -2,6 +2,7 @@ import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
+import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/stat/stat.dart';
 import 'package:PiliPlus/models/common/badge_type.dart';
@@ -128,7 +129,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
             style: textStyle,
           ),
           Builder(
-            builder: (context) => PopupMenuButton<VideoQuality>(
+            builder: (context) => StaticPopupMenuButton<VideoQuality>(
               initialValue: _quality,
               onSelected: (value) {
                 _quality = value;

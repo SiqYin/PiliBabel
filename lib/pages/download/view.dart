@@ -1,7 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
-import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
+import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/models_new/download/bili_download_entry_info.dart';
@@ -291,22 +291,8 @@ class _DownloadPageState extends State<DownloadPage>
           size: 18,
         ),
         onPressed: () {
-          final RenderBox button = context.findRenderObject()! as RenderBox;
-          final RenderBox overlay =
-              Overlay.of(context).context.findRenderObject()! as RenderBox;
-          final position = RelativeRect.fromRect(
-            Rect.fromPoints(
-              button.localToGlobal(Offset.zero, ancestor: overlay),
-              button.localToGlobal(
-                button.size.bottomRight(Offset.zero),
-                ancestor: overlay,
-              ),
-            ),
-            Offset.zero & overlay.size,
-          );
-          showMenu<int>(
+          showStaticPositionMenu<int>(
             context: context,
-            position: position,
             items: [
               const PopupMenuItem(
                 value: 0,
@@ -340,22 +326,8 @@ class _DownloadPageState extends State<DownloadPage>
         tooltip: '排序',
         icon: const Icon(Icons.sort),
         onPressed: () {
-          final RenderBox button = context.findRenderObject()! as RenderBox;
-          final RenderBox overlay =
-              Overlay.of(context).context.findRenderObject()! as RenderBox;
-          final position = RelativeRect.fromRect(
-            Rect.fromPoints(
-              button.localToGlobal(Offset.zero, ancestor: overlay),
-              button.localToGlobal(
-                button.size.bottomRight(Offset.zero),
-                ancestor: overlay,
-              ),
-            ),
-            Offset.zero & overlay.size,
-          );
-          showMenu<_DownloadSortAction>(
+          showStaticPositionMenu<_DownloadSortAction>(
             context: context,
-            position: position,
             items: const [
               PopupMenuItem(
                 value: _DownloadSortAction.manual,
