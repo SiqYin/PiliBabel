@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:PiliPlus/utils/json_file_handler.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:catcher_2/catcher_2.dart';
+import 'package:catcher_2/utils/log_printer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:logger/logger.dart';
 import 'package:path/path.dart' as p;
@@ -13,8 +14,11 @@ final logger = PiliLogger();
 class PiliLogger extends Logger {
   PiliLogger()
       : super(
-          filter: ProductionFilter(), // 使用生产环境过滤器，默认不打印普通日志
-          printer: PrettyPrinter(methodCount: 0),
+          filter: ProductionFilter(),
+          printer: PrettyLogPrinter(
+            dateTimeFormat: PrettyLogPrinter.toEncodableFallback,
+          ),
+          level: .trace,
         );
 
   @override
@@ -32,7 +36,7 @@ class PiliLogger extends Logger {
 
     if (Pref.enableLog && (level == Level.error || level == Level.fatal)) {
       try {
-        Catcher2.reportCheckedError(error, stackTrace);
+        Catcher2.reportCheckedError(error ?? message ?? 'Unknown error', stackTrace);
       } catch (e) {
         // Fallback if Catcher2 is not initialized or fails
       }

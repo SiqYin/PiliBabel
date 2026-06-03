@@ -153,7 +153,7 @@ class VideoShotImage extends StatefulWidget {
 }
 
 Future<ui.Image?> _getImg(String url) async {
-  final cacheManager = DefaultCacheManager();
+  final cacheManager = DefaultCacheManager.instance!;
   final cacheKey = Utils.getFileName(url, fileExt: false);
   try {
     final fileInfo = await cacheManager.getSingleFile(
@@ -317,8 +317,8 @@ class _DanmakuTip extends SingleChildRenderObjectWidget {
 
 class _RenderDanmakuTip extends RenderProxyBox {
   _RenderDanmakuTip({
-    required double offset,
-  }) : _offset = offset;
+    required this._offset,
+  });
 
   double _offset;
   double get offset => _offset;

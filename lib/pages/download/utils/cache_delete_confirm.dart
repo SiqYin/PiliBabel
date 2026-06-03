@@ -52,6 +52,9 @@ Future<bool> confirmRemoveEntriesFromFolder({
     SmartDialog.dismiss();
     return true;
   }
+  if (!context.mounted) {
+    return false;
+  }
   final confirmed = await _showCacheConfirmDialog(
     context: context,
     title: '同时删除本地离线缓存？',
@@ -113,6 +116,9 @@ Future<bool> confirmDeleteFolders({
     }
     SmartDialog.dismiss();
     return true;
+  }
+  if (!context.mounted) {
+    return false;
   }
   final confirmed = await _showCacheConfirmDialog(
     context: context,
@@ -225,36 +231,35 @@ Future<bool> _showCacheConfirmDialog({
     '将删除 ${entries.length} 个本地离线缓存，释放约 ${_formatEntriesSize(entries)}。',
     '删除后会从离线缓存列表和所有文件夹中消失。',
     if (otherFolderCount > 0) '其中 $otherFolderCount 个也存在于其他文件夹。',
-    if (extraMessage != null) extraMessage,
+    ?extraMessage,
   ];
   return showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text(title),
-          content: Text(messages.join('\n')),
-          actions: [
-            TextButton(
-              onPressed: Get.back,
-              child: Text(
-                '取消',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
-              ),
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text(title),
+      content: Text(messages.join('\n')),
+      actions: [
+        TextButton(
+          onPressed: Get.back,
+          child: Text(
+            '取消',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.outline,
             ),
-            TextButton(
-              onPressed: () => Get.back(result: true),
-              child: Text(
-                confirmText,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-      ) ??
-      false;
+        TextButton(
+          onPressed: () => Get.back(result: true),
+          child: Text(
+            confirmText,
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.error,
+            ),
+          ),
+        ),
+      ],
+    ),
+  ).then((value) => value ?? false);
 }
 
 Future<_CacheDeleteResult> _deleteLocalCaches({

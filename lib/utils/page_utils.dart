@@ -17,9 +17,9 @@ import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/pages/contact/view.dart';
 import 'package:PiliPlus/pages/fav_panel/view.dart';
 import 'package:PiliPlus/pages/share/view.dart';
+import 'package:PiliPlus/utils/android/android_helper.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
-import 'package:PiliPlus/utils/extension/extension.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
 import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
@@ -30,7 +30,6 @@ import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/url_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:collection/collection.dart';
-import 'package:floating/floating.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -187,22 +186,38 @@ abstract final class PageUtils {
     );
   }
 
-  static void enterPip({int? width, int? height, bool isAuto = false}) {
-    if (width != null && height != null) {
-      Rational aspectRatio = Rational(width, height);
-      aspectRatio = aspectRatio.fitsInAndroidRequirements
-          ? aspectRatio
-          : height > width
-          ? const Rational.vertical()
-          : const Rational.landscape();
-      Floating().enable(
-        isAuto
-            ? AutoEnable(aspectRatio: aspectRatio)
-            : EnableManual(aspectRatio: aspectRatio),
-      );
-    } else {
-      Floating().enable(isAuto ? const AutoEnable() : const EnableManual());
+  static bool _fitsInAndroidRequirements(int width, int height) {
+    final aspectRatio = width / height;
+    const min = 1 / 2.39;
+    const max = 2.39;
+    return (min <= aspectRatio) && (aspectRatio <= max);
+  }
+
+  static void enterPip({
+    int? width,
+    int? height,
+    bool autoEnter = false,
+    required bool isLive,
+    required bool isPlaying,
+  }) {
+    if (width != null &&
+        height != null &&
+        !_fitsInAndroidRequirements(width, height)) {
+      if (height > width) {
+        width = 9;
+        height = 16;
+      } else {
+        width = 16;
+        height = 9;
+      }
     }
+    PiliAndroidHelper.enterPip(
+      width ?? 16,
+      height ?? 9,
+      autoEnter: autoEnter,
+      isLive: isLive,
+      isPlaying: isPlaying,
+    );
   }
 
   static Future<void> pushDynDetail(

@@ -2,17 +2,17 @@
 
 import 'dart:developer';
 
+import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class CachedNetworkSVGImage extends StatefulWidget {
   CachedNetworkSVGImage(
-    String url, {
+    this._url, {
     Key? key,
-    String? cacheKey,
+    this._cacheKey,
     this._placeholder,
     this._errorBuilder,
     this._width,
@@ -28,10 +28,8 @@ class CachedNetworkSVGImage extends StatefulWidget {
     this._colorFilter,
     this._placeholderBuilder,
     BaseCacheManager? cacheManager,
-  }) : _url = url,
-       _cacheKey = cacheKey,
-       _cacheManager = cacheManager ?? DefaultCacheManager(),
-       super(key: key ?? ValueKey(cacheKey ?? url));
+  }) : _cacheManager = cacheManager ?? DefaultCacheManager.instance!,
+       super(key: key ?? ValueKey(_cacheKey ?? _url));
 
   final String _url;
   final String? _cacheKey;
