@@ -130,9 +130,6 @@ Future<bool> confirmDeleteFolders({
       excludedFolderIds: folderIds,
     ),
     confirmText: '删除缓存并删除文件夹',
-    extraMessage: folderList.any((item) => item.sourceKey != null)
-        ? '正在缓存或排队的视频不会受影响，后续完成后仍可能自动归入同名文件夹。'
-        : null,
   );
   if (!confirmed) {
     return false;
@@ -187,11 +184,9 @@ Future<_CacheChoice?> _showPrimaryDialog({
                       deleteCache = value ?? false;
                     }),
               title: const Text('同时删除本地离线缓存'),
-              subtitle: Text(
-                cacheCount == 0
-                    ? '当前没有已完成的本地离线缓存'
-                    : '将进入二次确认',
-              ),
+              subtitle: cacheCount == 0
+                  ? const Text('当前没有已完成的本地离线缓存')
+                  : null,
             ),
           ],
         ),
@@ -225,19 +220,36 @@ Future<bool> _showCacheConfirmDialog({
   required List<BiliDownloadEntryInfo> entries,
   required int otherFolderCount,
   required String confirmText,
-  String? extraMessage,
 }) {
   final messages = <String>[
-    '将删除 ${entries.length} 个本地离线缓存，释放约 ${_formatEntriesSize(entries)}。',
-    '删除后会从离线缓存列表和所有文件夹中消失。',
+    '删除 ${entries.length} 个本地离线缓存，释放约 ${_formatEntriesSize(entries)}。',
     if (otherFolderCount > 0) '其中 $otherFolderCount 个也存在于其他文件夹。',
-    ?extraMessage,
+    '删除后会从离线缓存列表和所有文件夹中消失，无法恢复。',
   ];
   return showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
       title: Text(title),
-      content: Text(messages.join('\n')),
+      content: Builder(
+        builder: (context) {
+          final textStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
+            height: 1.3,
+          );
+          return Column(
+            spacing: 8,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: messages
+                .map(
+                  (message) => Text(
+                    message,
+                    style: textStyle,
+                  ),
+                )
+                .toList(),
+          );
+        },
+      ),
       actions: [
         TextButton(
           onPressed: Get.back,

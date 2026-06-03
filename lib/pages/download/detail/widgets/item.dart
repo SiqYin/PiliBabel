@@ -443,7 +443,7 @@ class DetailItem extends StatelessWidget {
   }
 
   Widget _buildMoreBtn(BuildContext context, ThemeData theme) {
-    final canDel = onDelete != null;
+    final canDel = onDelete != null || onDeleteRequested != null;
     return SizedBox(
       width: 29,
       height: 29,
