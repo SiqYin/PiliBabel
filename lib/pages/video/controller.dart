@@ -480,7 +480,6 @@ class VideoDetailController extends GetxController
     }
   }
 
-  // 稍后再看面板展开
   void showMediaListPanel(BuildContext context) {
     if (mediaList.isNotEmpty) {
       Widget panel() => MediaListPanel(
