@@ -6,6 +6,8 @@
 
 import 'package:flutter/material.dart' hide PopupMenuItem;
 
+const _kDefaultPopupMenuPadding = EdgeInsets.all(8);
+
 Future<T?> showStaticPositionMenu<T>({
   required BuildContext context,
   required List<PopupMenuEntry<T>> items,
@@ -74,7 +76,7 @@ class StaticPopupMenuButton<T> extends StatelessWidget {
     this.elevation,
     this.shadowColor,
     this.surfaceTintColor,
-    this.padding = const EdgeInsets.all(8),
+    this.padding = _kDefaultPopupMenuPadding,
     this.child,
     this.icon,
     this.iconSize,
@@ -146,10 +148,13 @@ class StaticPopupMenuButton<T> extends StatelessWidget {
       builder: (context) {
         final onPressed = enabled ? () => _showButtonMenu(context) : null;
         if (child case final child?) {
-          Widget result = Padding(
-            padding: padding,
-            child: child,
-          );
+          Widget result = child;
+          if (padding != _kDefaultPopupMenuPadding) {
+            result = Padding(
+              padding: padding,
+              child: result,
+            );
+          }
           if (enabled) {
             result = InkWell(
               onTap: onPressed,
