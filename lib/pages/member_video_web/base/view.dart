@@ -122,6 +122,7 @@ abstract class BaseVideoWebState<
       child: Padding(
         padding: const .fromLTRB(14, 0, 8, 4),
         child: Stack(
+          clipBehavior: .none,
           alignment: .centerLeft,
           children: [
             ?buildCount(),

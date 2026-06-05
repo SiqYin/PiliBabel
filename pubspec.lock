@@ -93,9 +93,9 @@ packages:
     dependency: "direct main"
     description:
       path: audio_service
-      ref: HEAD
-      resolved-ref: be57f49b20659528cb35448615a007d5bc67507e
-      url: "https://github.com/My-Responsitories/audio_service"
+      ref: main
+      resolved-ref: "81cf56d5a8b8e9c8aa5a4c9396aebe094e09622f"
+      url: "https://github.com/bggRGjQaUbCoE/audio_service.git"
     source: git
     version: "0.18.18"
   audio_service_platform_interface:
@@ -206,9 +206,9 @@ packages:
     dependency: "direct main"
     description:
       path: cached_network_image
-      ref: HEAD
-      resolved-ref: "26bc080bc4464483ddde4e850f8c53dc98b07ac0"
-      url: "https://github.com/My-Responsitories/flutter_cached_network_image_ce"
+      ref: develop
+      resolved-ref: "37404435c857ed20ab530a758fd7b1f182b20b0e"
+      url: "https://github.com/bggRGjQaUbCoE/flutter_cached_network_image_ce.git"
     source: git
     version: "4.6.4"
   cached_network_image_platform_interface_ce:
@@ -1058,7 +1058,7 @@ packages:
     description:
       path: "pkgs/jnigen"
       ref: HEAD
-      resolved-ref: "14f4ce655c0cebb203777b8200303a9bc1f0b04e"
+      resolved-ref: "5e2b3d1171cabe90bae969cd098c85182c1751b3"
       url: "https://github.com/dart-lang/native.git"
     source: git
     version: "0.17.0-wip"
@@ -1576,13 +1576,14 @@ packages:
     source: hosted
     version: "5.1.0"
   screen_brightness_android:
-    dependency: transitive
+    dependency: "direct overridden"
     description:
-      name: screen_brightness_android
-      sha256: "2df5e0488a22a73271a43d92dbcd80643df6910cf69690faacaf9929ae9ade3b"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.4"
+      path: screen_brightness_android
+      ref: main
+      resolved-ref: "239b9e4595f257184c8afcaf21167f8667ba367d"
+      url: "https://github.com/bggRGjQaUbCoE/screen_brightness.git"
+    source: git
+    version: "2.1.5"
   screen_brightness_ios:
     dependency: transitive
     description:

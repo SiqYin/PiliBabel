@@ -187,15 +187,15 @@ public final class AndroidHelper {
         if (mbrComponent == null) return;
         ArrayList<RemoteAction> actionList = new ArrayList<>(3);
         if (!isLive) {
-            actionList.add(getRemoteAction(mbrComponent, activity, R.drawable.ic_baseline_replay_10_24, "ACTION_REWIND", (int) PlaybackState.ACTION_REWIND));
+            actionList.add(getRemoteAction(mbrComponent, activity, R.drawable.ic_player_rewind_10s, "ACTION_REWIND", (int) PlaybackState.ACTION_REWIND));
         }
         if (isPlaying) {
-            actionList.add(getRemoteAction(mbrComponent, activity, android.R.drawable.ic_media_pause, "ACTION_PAUSE", (int) PlaybackState.ACTION_PAUSE));
+            actionList.add(getRemoteAction(mbrComponent, activity, R.drawable.ic_player_pause, "ACTION_PAUSE", (int) PlaybackState.ACTION_PAUSE));
         } else {
-            actionList.add(getRemoteAction(mbrComponent, activity, android.R.drawable.ic_media_play, "ACTION_PLAY", (int) PlaybackState.ACTION_PLAY));
+            actionList.add(getRemoteAction(mbrComponent, activity, R.drawable.ic_player_play, "ACTION_PLAY", (int) PlaybackState.ACTION_PLAY));
         }
         if (!isLive) {
-            actionList.add(getRemoteAction(mbrComponent, activity, R.drawable.ic_baseline_forward_10_24, "ACTION_FAST_FORWARD", (int) PlaybackState.ACTION_FAST_FORWARD));
+            actionList.add(getRemoteAction(mbrComponent, activity, R.drawable.ic_player_fast_forward_10s, "ACTION_FAST_FORWARD", (int) PlaybackState.ACTION_FAST_FORWARD));
         }
         builder.setActions(actionList);
     }

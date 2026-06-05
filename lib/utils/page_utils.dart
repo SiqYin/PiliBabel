@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:PiliPlus/common/widgets/fractionally_sized_box.dart';
 import 'package:PiliPlus/common/widgets/image_viewer/gallery_viewer.dart';
 import 'package:PiliPlus/common/widgets/image_viewer/hero_dialog_route.dart';
 import 'package:PiliPlus/grpc/im.dart';
@@ -492,8 +493,8 @@ abstract final class PageUtils {
   static Future<void>? showVideoBottomSheet(
     BuildContext context, {
     required Widget child,
-    required ValueGetter<bool> isFullScreen,
-    double? padding,
+    ValueGetter<EdgeInsets>? padding,
+    double maxWidth = 500,
   }) {
     if (!context.mounted) {
       return null;
@@ -501,27 +502,17 @@ abstract final class PageUtils {
     return Get.key.currentState!.push(
       PublishRoute(
         pageBuilder: (context, animation, secondaryAnimation) {
-          if (context.isPortrait) {
-            return SafeArea(
-              child: FractionallySizedBox(
-                heightFactor: 0.7,
-                widthFactor: 1.0,
-                alignment: Alignment.bottomCenter,
-                child: isFullScreen() && padding != null
-                    ? Padding(
-                        padding: EdgeInsets.only(bottom: padding),
-                        child: child,
-                      )
-                    : child,
-              ),
-            );
-          }
+          final isPortrait = context.isPortrait;
           return SafeArea(
-            child: FractionallySizedBox(
-              widthFactor: 0.5,
-              heightFactor: 1.0,
-              alignment: Alignment.centerRight,
-              child: child,
+            child: CustomFractionallySizedBox(
+              maxWidth: maxWidth,
+              widthFactor: isPortrait ? 1.0 : 0.5,
+              heightFactor: isPortrait ? 0.7 : 1.0,
+              alignment: isPortrait ? .bottomCenter : .centerRight,
+              child: Padding(
+                padding: isPortrait ? padding?.call() ?? .zero : .zero,
+                child: child,
+              ),
             ),
           );
         },

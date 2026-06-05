@@ -162,17 +162,24 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     }
 
     final playing = status.isPlaying;
-    
+
     final hasEpisodes = _hasEpisodes();
 
     final controls = <MediaControl>[
       if (!isLive && hasEpisodes) MediaControl.skipToPrevious,
       MediaControl.rewind.copyWith(
-        androidIcon: 'drawable/ic_baseline_replay_10_24',
+        androidIcon: 'drawable/ic_player_rewind_10s',
       ),
-      if (playing) MediaControl.pause else MediaControl.play,
+      if (playing)
+        MediaControl.pause.copyWith(
+          androidIcon: 'drawable/ic_player_pause',
+        )
+      else
+        MediaControl.play.copyWith(
+          androidIcon: 'drawable/ic_player_play',
+        ),
       MediaControl.fastForward.copyWith(
-        androidIcon: 'drawable/ic_baseline_forward_10_24',
+        androidIcon: 'drawable/ic_player_fast_forward_10s',
       ),
       if (!isLive && hasEpisodes) MediaControl.skipToNext,
     ];
@@ -183,7 +190,11 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     List<int> compactIndices;
     if (controls.length >= 3) {
       if (playPauseIndex > 0 && playPauseIndex < controls.length - 1) {
-        compactIndices = [playPauseIndex - 1, playPauseIndex, playPauseIndex + 1];
+        compactIndices = [
+          playPauseIndex - 1,
+          playPauseIndex,
+          playPauseIndex + 1,
+        ];
       } else {
         compactIndices = [0, 1, 2];
       }

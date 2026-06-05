@@ -2475,7 +2475,6 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     if (isFullScreen || videoDetailController.showVideoSheet) {
       PageUtils.showVideoBottomSheet(
         context,
-        isFullScreen: () => isFullScreen,
         child: videoDetailController.plPlayerController.darkVideoPage
             ? Theme(
                 data: themeData,
@@ -2595,7 +2594,6 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     if (isFullScreen || videoDetailController.showVideoSheet) {
       PageUtils.showVideoBottomSheet(
         context,
-        isFullScreen: () => isFullScreen,
         child: videoDetailController.plPlayerController.darkVideoPage
             ? Theme(
                 data: themeData,
