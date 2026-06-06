@@ -927,7 +927,11 @@ class PlPlayerController with BlockConfigMixin {
     isBuffering.value = false;
     buffered.value = Duration.zero;
     _heartDuration = 0;
-    position = Duration.zero;
+    final initialPosition = seekTo ?? Duration.zero;
+    position = sliderPosition = initialPosition;
+    updatePositionSecond();
+    updateSliderPositionSecond();
+    updateBufferedSecond();
     // 初始化时清空弹幕，防止上次重叠
     danmakuController?.clear();
 
@@ -1729,6 +1733,9 @@ class PlPlayerController with BlockConfigMixin {
     dynamic pgcType,
     VideoType? videoType,
   }) {
+    if (!isManual && dataStatus.value != DataStatus.loaded) {
+      return null;
+    }
     if (isLive ||
         !enableHeart ||
         progress == 0 ||
