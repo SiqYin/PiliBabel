@@ -236,6 +236,20 @@ class LoginPageController extends GetxController
     }
   }
 
+  static String validateCookie(String cookie) {
+    return cookie
+        .split(';')
+        .where((e) {
+          try {
+            Cookie.fromSetCookieValue(e.trim());
+          } catch (_) {
+            return false;
+          }
+          return true;
+        })
+        .join(';');
+  }
+
   // cookie登录
   Future<void> loginByCookie() async {
     if (cookieTextController.text.isEmpty) {
@@ -247,7 +261,7 @@ class LoginPageController extends GetxController
         "/x/member/web/account",
         options: Options(
           headers: {
-            "cookie": cookieTextController.text,
+            "cookie": validateCookie(cookieTextController.text),
           },
           extra: {'account': AnonymousAccount()},
         ),

@@ -461,8 +461,6 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     final isResume = state == .resumed;
     final ctr = videoDetailController.plPlayerController..visible = isResume;
     if (isResume) {
-      // TODO: remove
-      // workaround for https://github.com/flutter/flutter/issues/186723
       if (Platform.isAndroid && !showSystemBar_) {
         SystemChrome.setEnabledSystemUIMode(.immersiveSticky);
       }

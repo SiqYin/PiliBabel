@@ -13,7 +13,6 @@ import 'package:PiliPlus/pages/common/common_data_controller.dart';
 import 'package:PiliPlus/services/account_service.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
-import 'package:PiliPlus/utils/login_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -144,19 +143,21 @@ class MineController extends CommonDataController<FavFolderData, FavFolderData>
           ..face.value = response.face!
           ..isLogin.value = true;
       } else {
-        LoginUtils.onLogoutMain();
+        _onLogoutMain();
         return;
       }
     } else {
       final errMsg = res.toString();
       SmartDialog.showToast(errMsg);
       if (errMsg == '账号未登录') {
-        LoginUtils.onLogoutMain();
+        _onLogoutMain();
         return;
       }
     }
     queryUserStatOwner();
   }
+
+  void _onLogoutMain() => Accounts.deleteAll({Accounts.main});
 
   Future<void> queryUserStatOwner() async {
     final res = await UserHttp.userStatOwner();

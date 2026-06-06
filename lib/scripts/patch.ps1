@@ -26,6 +26,9 @@ $ImageAnimPatch = "lib/scripts/image_anim.patch"
 
 $LayoutBuilderPatch = "lib/scripts/layout_builder.patch"
 
+# https://github.com/bggRGjQaUbCoE/PiliPlus/issues/2308
+$NavigationDrawerPatch = "lib/scripts/navigation_drawer.patch"
+
 # TODO: remove
 # https://github.com/flutter/flutter/issues/90223
 $ModalBarrierPatch = "lib/scripts/modal_barrier.patch"
@@ -46,7 +49,7 @@ Set-Location $env:FLUTTER_ROOT
 $picks   = @()
 $reverts = @()
 $patches = @($ModalBarrierPatch, $TextSelectionPatch, $MouseCursorPatch,
-            $ImageAnimPatch, $LayoutBuilderPatch)
+            $ImageAnimPatch, $LayoutBuilderPatch, $NavigationDrawerPatch)
 
 switch ($platform.ToLower()) {
     "android" {
@@ -99,4 +102,11 @@ foreach ($patch in $patches) {
     if ($LASTEXITCODE -eq 0) {
         Write-Host "$patch applied"
     }
+}
+
+# TODO: remove
+if ($platform.ToLower() -eq "android") {
+    "df67bb3b55323961184ae7117cc91c054f36a42c" | Set-Content -Path .\bin\internal\engine.version
+    Remove-Item -Path ".\bin\cache" -Recurse -Force
+    flutter --version
 }

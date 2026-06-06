@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 
+import 'package:PiliPlus/utils/device_utils.dart';
 import 'package:flutter/services.dart'
-    show SystemChrome, MethodChannel, SystemUiOverlay, DeviceOrientation, SystemUiMode;
+    show SystemChrome, MethodChannel, SystemUiOverlay, DeviceOrientation;
 
 bool _isDesktopFullScreen = false;
 
@@ -71,15 +73,13 @@ Future<void>? hideSystemBar() {
 }
 
 //退出全屏显示
-// TODO: https://github.com/flutter/flutter/issues/186723
-// immersiveSticky → edgeToEdge 有 bug，用 manual + all overlays 代替
 Future<void>? showSystemBar() {
   if (_showSystemBar) {
     return null;
   }
   _showSystemBar = true;
   return SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.manual,
+    Platform.isAndroid && DeviceUtils.sdkInt < 29 ? .manual : .edgeToEdge,
     overlays: SystemUiOverlay.values,
   );
 }
