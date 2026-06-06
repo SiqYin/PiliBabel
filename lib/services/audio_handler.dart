@@ -4,6 +4,7 @@ import 'dart:ui' show PlatformDispatcher;
 import 'package:get/get.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/pgc/controller.dart';
+import 'package:PiliPlus/pages/video/introduction/local/controller.dart';
 import 'package:PiliPlus/pages/audio/controller.dart';
 
 import 'package:PiliPlus/common/constants.dart';
@@ -62,6 +63,10 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
           Get.find<UgcIntroController>(tag: currentHeroTag!).nextPlay();
         } else if (Get.isRegistered<PgcIntroController>(tag: currentHeroTag!)) {
           Get.find<PgcIntroController>(tag: currentHeroTag!).nextPlay();
+        } else if (Get.isRegistered<LocalIntroController>(
+          tag: currentHeroTag!,
+        )) {
+          Get.find<LocalIntroController>(tag: currentHeroTag!).nextPlay();
         }
       } catch (_) {}
     }
@@ -79,6 +84,10 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
           Get.find<UgcIntroController>(tag: currentHeroTag!).prevPlay();
         } else if (Get.isRegistered<PgcIntroController>(tag: currentHeroTag!)) {
           Get.find<PgcIntroController>(tag: currentHeroTag!).prevPlay();
+        } else if (Get.isRegistered<LocalIntroController>(
+          tag: currentHeroTag!,
+        )) {
+          Get.find<LocalIntroController>(tag: currentHeroTag!).prevPlay();
         }
       } catch (_) {}
     }
@@ -133,6 +142,11 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
         return isSeason || isPart || isPlayAll;
       } else if (Get.isRegistered<PgcIntroController>(tag: currentHeroTag!)) {
         return true;
+      } else if (Get.isRegistered<LocalIntroController>(
+        tag: currentHeroTag!,
+      )) {
+        final ctr = Get.find<LocalIntroController>(tag: currentHeroTag!);
+        return ctr.list.length > 1;
       } else if (Get.isRegistered<AudioController>(tag: currentHeroTag!)) {
         final ctr = Get.find<AudioController>(tag: currentHeroTag!);
         return ctr.playlist != null && ctr.playlist!.isNotEmpty;
