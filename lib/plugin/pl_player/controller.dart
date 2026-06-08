@@ -187,6 +187,14 @@ class PlPlayerController with BlockConfigMixin {
 
   String get bvid => _bvid!;
 
+  bool isCurrentVideoSource({
+    required String bvid,
+    required int cid,
+  }) =>
+      dataStatus.value == DataStatus.loaded &&
+      _bvid == bvid &&
+      this.cid == cid;
+
   /// 视频播放速度
   double get playbackSpeed => _playbackSpeed.value;
 

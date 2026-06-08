@@ -1058,12 +1058,16 @@ class VideoDetailController extends GetxController
       volume = data.volume;
 
       final progress = args.remove('progress');
+      final playUrlStartTime = defaultST == null
+          ? _resolvePlayUrlStartTime(
+              lastPlayTime: data.lastPlayTime,
+              lastPlayCid: data.lastPlayCid,
+            )
+          : null;
       if (progress != null) {
         this.defaultST = Duration(milliseconds: progress);
-      } else if (defaultST == null &&
-          data.lastPlayTime != null &&
-          _canUseLastPlayTime(data.lastPlayCid)) {
-        this.defaultST = Duration(milliseconds: data.lastPlayTime!);
+      } else if (playUrlStartTime != null) {
+        this.defaultST = playUrlStartTime;
       }
 
       if (!isUgc && !fromReset && plPlayerController.enablePgcSkip) {
@@ -1483,6 +1487,21 @@ class VideoDetailController extends GetxController
   }
 
   late bool continuePlayingPart = Pref.continuePlayingPart;
+
+  Duration? _resolvePlayUrlStartTime({
+    required int? lastPlayTime,
+    required int? lastPlayCid,
+  }) {
+    if (lastPlayTime == null) {
+      return null;
+    }
+    if (lastPlayTime <= 0) {
+      return Duration.zero;
+    }
+    return _canUseLastPlayTime(lastPlayCid)
+        ? Duration(milliseconds: lastPlayTime)
+        : Duration.zero;
+  }
 
   bool _canUseLastPlayTime(int? lastPlayCid) {
     if (lastPlayCid != null && lastPlayCid != 0) {

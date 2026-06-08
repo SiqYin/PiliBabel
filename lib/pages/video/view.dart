@@ -453,6 +453,13 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   }
 
   void positionListener(Duration position) {
+    final plPlayerController = videoDetailController.plPlayerController;
+    if (!plPlayerController.isCurrentVideoSource(
+      bvid: videoDetailController.bvid,
+      cid: videoDetailController.cid.value,
+    )) {
+      return;
+    }
     videoDetailController.playedTime = position;
   }
 
