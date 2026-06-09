@@ -232,14 +232,6 @@ List<SettingsModel> get extraSettings => [
     getSubtitle: () => '关键词、用户屏蔽、等级过滤、屏蔽带货评论',
     onTap: (context, _) => Get.to(() => const ReplySetting()),
   ),
-  getListBanWordModel(
-    title: '动态关键词过滤',
-    key: SettingBoxKey.banWordForDyn,
-    onChanged: (value) {
-      DynamicsDataModel.banWordForDyn = value;
-      DynamicsDataModel.enableFilter = value.pattern.isNotEmpty;
-    },
-  ),
   const SwitchModel(
     title: '使用外部浏览器打开链接',
     leading: Icon(Icons.open_in_browser),

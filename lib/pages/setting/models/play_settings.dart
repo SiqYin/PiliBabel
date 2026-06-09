@@ -102,31 +102,21 @@ List<SettingsModel> get playSettings => [
     SwitchModel(
       title: '应用内音量',
       subtitle: '开启后在应用内调节音量不会改变系统音量',
-      leading: Icon(Icons.volume_up_outlined),
+      leading: const Icon(Icons.volume_up_outlined),
       setKey: SettingBoxKey.enableAppVolume,
       defaultVal: false,
       onChanged: (value) async {
-        // 设置变更时通知播放器控制器
-        final controller = PlPlayerController.getInstance();
-        if (controller != null) {
-          await controller.onAppVolumeSettingChanged();
-        }
+        await PlPlayerController.instance?.onAppVolumeSettingChanged();
       },
     ),
   if (PlatformUtils.isMobile && Pref.enableAppVolume)
-    SwitchModel(
+    const SwitchModel(
       title: '音量增强',
       subtitle: '在应用内音量模式下允许放大至 200%',
       leading: Icon(Icons.volume_up_outlined),
       setKey: SettingBoxKey.enableVolumeBoost,
       defaultVal: false,
     ),
-  const SwitchModel(
-    title: '中间滑动进入/退出全屏',
-    leading: Icon(MdiIcons.panVertical),
-    setKey: SettingBoxKey.enableSlideFS,
-    defaultVal: true,
-  ),
   if (PlatformUtils.isMobile)
     NormalModel(
       title: '播放器音量',
@@ -143,6 +133,12 @@ List<SettingsModel> get playSettings => [
       getSubtitle: () => '当前:「${(Pref.maxVolume * 100).toStringAsFixed(0)}%」',
       onTap: _showMaxVolumeDialog,
     ),
+  const SwitchModel(
+    title: '中间滑动进入/退出全屏',
+    leading: Icon(MdiIcons.panVertical),
+    setKey: SettingBoxKey.enableSlideFS,
+    defaultVal: true,
+  ),
   getVideoFilterSelectModel(
     title: '双击快进/快退时长',
     suffix: 's',
