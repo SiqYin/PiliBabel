@@ -1204,13 +1204,15 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         'setVolume',
         const Duration(milliseconds: 20),
         () {
+          final double volumeRaw =
+              plPlayerController.volume.value - delta.dy / level;
           final double volume = clampDouble(
-            plPlayerController.volume.value - delta.dy / level,
+            volumeRaw,
             0.0,
             plPlayerController.gestureVolumeMax,
           );
           // 音量增强：触达 1.0 时提示再次滑动才能突破
-          if (volume >= 1.0 &&
+          if (volumeRaw > 1.0 &&
               !plPlayerController.volumeBoostUnlocked &&
               Pref.enableAppVolume &&
               Pref.enableVolumeBoost) {
@@ -1435,13 +1437,15 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         'setVolume',
         const Duration(milliseconds: 20),
         () {
+          final double volumeRaw =
+              plPlayerController.volume.value - event.localPanDelta.dy / level;
           final double volume = clampDouble(
-            plPlayerController.volume.value - event.localPanDelta.dy / level,
+            volumeRaw,
             0.0,
             plPlayerController.gestureVolumeMax,
           );
           // 音量增强：触达 1.0 时提示再次滑动才能突破
-          if (volume >= 1.0 &&
+          if (volumeRaw > 1.0 &&
               !plPlayerController.volumeBoostUnlocked &&
               Pref.enableAppVolume &&
               Pref.enableVolumeBoost) {
@@ -1475,7 +1479,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       final volume = clampDouble(
         plPlayerController.volume.value + offset,
         0.0,
-        PlPlayerController.maxVolume,
+        plPlayerController.maxVolume,
       );
       plPlayerController.setVolume(volume);
     }

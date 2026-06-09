@@ -93,11 +93,11 @@ jobs:
         shell: pwsh
         run: lib/scripts/build.ps1 android
 
-      - name: Flutter Build Release Apk (Manual)
+      - name: Flutter Build Release Apk
         if: ${{ github.event_name == 'workflow_dispatch' }}
         run: flutter build apk --release --split-per-abi --dart-define-from-file=pili_release.json --pub
 
-      - name: Flutter Build Dev Apk (PR)
+      - name: Flutter Build Dev Apk
         if: ${{ github.event_name == 'pull_request' }}
         run: flutter build apk --release --split-per-abi --android-project-arg dev=1 --pub
 
@@ -109,7 +109,7 @@ jobs:
             mv "$file" "PiliNara_android_${{ env.version }}_${abi}.apk"
           done
 
-      - name: Release to GitHub
+      - name: Release
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '' }}
         uses: softprops/action-gh-release@v2
         with:

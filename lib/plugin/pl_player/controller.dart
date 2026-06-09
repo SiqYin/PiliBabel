@@ -17,6 +17,8 @@ import 'package:PiliPlus/models/user/danmaku_rule.dart';
 import 'package:PiliPlus/models/video/play/url.dart';
 import 'package:PiliPlus/models_new/video/video_shot/data.dart';
 import 'package:PiliPlus/pages/danmaku/danmaku_model.dart';
+import 'package:PiliPlus/pages/setting/models/play_settings.dart'
+    show kMaxVolume;
 import 'package:PiliPlus/pages/sponsor_block/block_mixin.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_status.dart';
@@ -876,10 +878,7 @@ class PlPlayerController with BlockConfigMixin {
       'video-sync': Pref.videoSync,
     };
     if (Platform.isAndroid) {
-      opt['volume-max'] = '100';
       opt['ao'] = Pref.audioOutput;
-    } else if (PlatformUtils.isDesktop) {
-      opt['volume'] = (volume.value * 100).toString();
     }
     if (PlatformUtils.isMobile && Pref.enableAppVolume) {
       // 移动平台应用内音量模式：初始化系统音量
@@ -888,7 +887,12 @@ class PlPlayerController with BlockConfigMixin {
       volume.value = Pref.appVolume;
       // 使用 media_kit 设置初始音量（Android 上覆盖默认值）
       opt['volume'] = (volume.value * 100).toString();
+    } else if (PlatformUtils.isMobile) {
+      opt['volume'] = Pref.playerVolume.toString();
+    } else {
+      opt['volume'] = (volume.value * 100).toString();
     }
+    opt['volume-max'] = kMaxVolume.toString();
     final autosync = Pref.autosync;
     if (autosync != '0') {
       opt['autosync'] = autosync;
@@ -1366,8 +1370,8 @@ class PlPlayerController with BlockConfigMixin {
   Timer? volumeTimer;
   bool volumeInterceptEventStream = false;
 
-  static double get maxVolume => PlatformUtils.isDesktop
-      ? 2.0
+  double get maxVolume => PlatformUtils.isDesktop
+      ? Pref.maxVolume
       : (Pref.enableAppVolume && Pref.enableVolumeBoost ? 2.0 : 1.0);
 
   // 音量增强二次确认：是否已解锁突破 100%（松手后重置）
@@ -1393,7 +1397,7 @@ class PlPlayerController with BlockConfigMixin {
       this.volume.value = volume;
       try {
         if (PlatformUtils.isDesktop) {
-          _videoPlayerController!.setVolume(volume * 100);
+          await _videoPlayerController!.setVolume(volume * 100);
         } else {
           // 移动平台：根据设置选择音量控制方式
           if (Pref.enableAppVolume) {
@@ -1443,25 +1447,32 @@ class PlPlayerController with BlockConfigMixin {
           (await FlutterVolumeController.getVolume()) ?? 1.0;
       systemVolume.value = currentSystemVolume;
 
-      // 应用内音量初始化为 1.0，保持实际听感音量不变
-      volume.value = 1.0;
+      final appVolume = (Pref.playerVolume / 100)
+          .clamp(0.0, maxVolume)
+          .toDouble();
+      volume.value = appVolume;
+      Pref.appVolume = appVolume;
+      volumeBoostUnlocked = false;
 
-      // 设置 media_kit 音量为 1.0（实际听感 = 系统音量 × 1.0 = 系统音量）
-      _videoPlayerController?.setVolume(100);
+      // 关闭上游固定增益，避免和应用内音量叠加
+      _videoPlayerController?.setVolume(appVolume * 100);
 
       // 显示提示
       SmartDialog.showToast('已切换到应用内音量模式');
     } else {
       // 切换到同步系统音量模式
-      // 实际听感 = 系统音量 × 应用内音量
-      // 切换后应用内音量 = 1.0，要保持听感不变，需要：
-      // 新系统音量 = 旧系统音量 × 旧应用内音量
+      // 恢复上游播放器音量设置，并按增益折算系统音量
       final currentSystemVolume =
           (await FlutterVolumeController.getVolume()) ?? 1.0;
-      final newSystemVolume = currentSystemVolume * volume.value;
+      final playerGain = max(Pref.playerVolume / 100, 0.01);
+      final newSystemVolume = (currentSystemVolume * volume.value / playerGain)
+          .clamp(0.0, 1.0)
+          .toDouble();
 
       await FlutterVolumeController.updateShowSystemUI(false);
       await FlutterVolumeController.setVolume(newSystemVolume);
+      await _videoPlayerController?.setVolume(Pref.playerVolume);
+      volumeBoostUnlocked = false;
 
       // 更新状态
       systemVolume.value = newSystemVolume;
@@ -1941,50 +1952,49 @@ class PlPlayerController with BlockConfigMixin {
     videoShot = await VideoHttp.videoshot(bvid: bvid, cid: cid!);
   }
 
-  void takeScreenshot() {
+  Future<void> takeScreenshot() async {
     SmartDialog.showToast('截图中');
-    videoPlayerController?.screenshot(format: .png).then((value) {
-      if (value != null) {
-        SmartDialog.showToast('点击弹窗保存截图');
-        showDialog(
-          context: Get.context!,
-          builder: (context) => GestureDetector(
-            onTap: () {
-              Get.back();
-              ImageUtils.saveByteImg(
-                bytes: value,
-                fileName: 'screenshot_${ImageUtils.time}',
-              );
-            },
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 12),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    maxWidth: min(DeviceUtils.size.width / 3, 350),
+    final image = await videoPlayerController?.screenshot();
+    if (image != null) {
+      SmartDialog.showToast('点击弹窗保存截图');
+      showDialog(
+        context: Get.context!,
+        builder: (context) => GestureDetector(
+          onTap: () {
+            ImageUtils.saveByteImg(
+              bytes: image,
+              fileName: 'screenshot_${ImageUtils.time}',
+            );
+            Get.back();
+          },
+          child: Align(
+            alignment: Alignment.centerRight,
+            child: Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxWidth: min(MediaQuery.widthOf(context) / 3, 350),
+                ),
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      width: 5,
+                      color: ThemeUtils.theme.colorScheme.surface,
+                    ),
                   ),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      border: Border.all(
-                        width: 5,
-                        color: ThemeUtils.theme.colorScheme.surface,
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(5),
-                      child: Image.memory(value),
-                    ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(5),
+                    child: Image.memory(image),
                   ),
                 ),
               ),
             ),
           ),
-        );
-      } else {
-        SmartDialog.showToast('截图失败');
-      }
-    });
+        ),
+      );
+    } else {
+      SmartDialog.showToast('截图失败');
+    }
   }
 
   void onPopInvokedWithResult(
