@@ -8,6 +8,7 @@ import 'package:PiliPlus/common/widgets/pair.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/models/common/bar_hide_type.dart';
 import 'package:PiliPlus/models/common/danmaku/danmaku_font_sync_mode.dart';
+import 'package:PiliPlus/models/common/dm_chart_source.dart';
 import 'package:PiliPlus/models/common/dynamic/dynamic_badge_mode.dart';
 import 'package:PiliPlus/models/common/dynamic/dynamics_type.dart';
 import 'package:PiliPlus/models/common/dynamic/up_panel_position.dart';
@@ -770,6 +771,16 @@ abstract final class Pref {
 
   static bool get showSeekPreview =>
       _setting.get(SettingBoxKey.showSeekPreview, defaultValue: true);
+
+  static DmChartSource get dmChartSource {
+    final index = _setting.get(SettingBoxKey.dmChartSource);
+    if (index is int) {
+      return DmChartSource.values.elementAtOrNull(index) ??
+          DmChartSource.disabled;
+    }
+    // Backward compatibility with the old boolean switch.
+    return showDmChart ? DmChartSource.officialFirst : DmChartSource.disabled;
+  }
 
   static bool get showDmChart =>
       _setting.get(SettingBoxKey.showDmChart, defaultValue: false);

@@ -11,6 +11,7 @@ import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/http/fav.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/audio_normalization.dart';
+import 'package:PiliPlus/models/common/dm_chart_source.dart';
 import 'package:PiliPlus/models/common/dynamic/dynamics_type.dart';
 import 'package:PiliPlus/models/common/member/tab_type.dart';
 import 'package:PiliPlus/models/common/reply/reply_sort_type.dart';
@@ -379,12 +380,12 @@ List<SettingsModel> get extraSettings => [
     setKey: SettingBoxKey.showSeekPreview,
     defaultVal: true,
   ),
-  const SwitchModel(
-    title: '显示高能进度条',
-    subtitle: '高能进度条反应了在时域上，单位时间内弹幕发送量的变化趋势',
-    leading: Icon(Icons.show_chart),
-    setKey: SettingBoxKey.showDmChart,
-    defaultVal: false,
+  NormalModel(
+    title: '高能进度条',
+    leading: const Icon(Icons.show_chart),
+    getSubtitle: () =>
+        '当前:「${Pref.dmChartSource.label}」\n显示视频弹幕热度趋势；官方无数据时可使用弹幕密度生成',
+    onTap: _showDmChartSourceDialog,
   ),
   const SwitchModel(
     title: '记录评论',
@@ -1032,6 +1033,28 @@ Future<void> _showSuperResolutionDialog(
       SettingBoxKey.superResolutionType,
       res.index,
     );
+    setState();
+  }
+}
+
+Future<void> _showDmChartSourceDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<DmChartSource>(
+    context: context,
+    builder: (context) => SelectDialog<DmChartSource>(
+      title: '高能进度条',
+      value: Pref.dmChartSource,
+      values: DmChartSource.values.map((e) => (e, e.label)).toList(),
+      subtitleBuilder: (context, index) => Text(
+        DmChartSource.values[index].desc,
+        style: TextTheme.of(context).bodySmall,
+      ),
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(SettingBoxKey.dmChartSource, res.index);
     setState();
   }
 }

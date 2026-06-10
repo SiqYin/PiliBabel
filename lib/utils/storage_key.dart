@@ -118,6 +118,7 @@ abstract final class SettingBoxKey {
       showRcmdReason = 'showRcmdReason',
       enableLivePhoto = 'enableLivePhoto',
       showSeekPreview = 'showSeekPreview',
+      dmChartSource = 'dmChartSource',
       showDmChart = 'showDmChart',
       enableCommAntifraud = 'enableCommAntifraud',
       biliSendCommAntifraud = 'biliSendCommAntifraud',

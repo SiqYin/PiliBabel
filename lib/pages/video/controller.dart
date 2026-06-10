@@ -59,6 +59,7 @@ import 'package:PiliPlus/services/download/download_service.dart';
 import 'package:PiliPlus/services/pip_overlay_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/connectivity_utils.dart';
+import 'package:PiliPlus/utils/danmaku_density_trend.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
@@ -1638,6 +1639,7 @@ class VideoDetailController extends GetxController
       return;
     }
     cancelBlockListener();
+    _dmTrendTaskId++;
     cid.close();
     if (isFileSource) {
       cacheLocalProgress();
@@ -1663,6 +1665,7 @@ class VideoDetailController extends GetxController
     }
 
     playedTime = null;
+    _dmTrendTaskId++;
     defaultST = null;
     videoUrl = null;
     audioUrl = null;
@@ -1708,9 +1711,46 @@ class VideoDetailController extends GetxController
   late final Rx<LoadingState<List<double>>?> dmTrend =
       Rx<LoadingState<List<double>>?>(null);
   late final RxBool showDmTrendChart = true.obs;
+  int _dmTrendTaskId = 0;
 
   Future<void> _getDmTrend() async {
+    final source = plPlayerController.dmChartSource;
+    if (!source.isEnabled) {
+      dmTrend.value = null;
+      return;
+    }
+
+    final taskId = ++_dmTrendTaskId;
+    bool shouldCancel() => taskId != _dmTrendTaskId || isClosed;
+
     dmTrend.value = LoadingState<List<double>>.loading();
+
+    if (source.enableOfficial) {
+      final official = await _tryGetOfficialDmTrend();
+      if (shouldCancel()) return;
+      if (official?.isNotEmpty == true) {
+        dmTrend.value = Success(official!);
+        return;
+      }
+      if (!source.enableLocalDensity) {
+        dmTrend.value = const Error(null);
+        return;
+      }
+    }
+
+    if (source.enableLocalDensity) {
+      final local = await _tryBuildLocalDmTrend(shouldCancel);
+      if (shouldCancel()) return;
+      if (local?.isNotEmpty == true) {
+        dmTrend.value = Success(local!);
+        return;
+      }
+    }
+
+    dmTrend.value = const Error(null);
+  }
+
+  Future<List<double>?> _tryGetOfficialDmTrend() async {
     try {
       final res = await Request().get(
         'https://bvc.bilivideo.com/pbp/data',
@@ -1722,13 +1762,29 @@ class VideoDetailController extends GetxController
       PbpData data = PbpData.fromJson(res.data);
       int stepSec = data.stepSec ?? 0;
       if (stepSec != 0 && data.events?.eDefault?.isNotEmpty == true) {
-        dmTrend.value = Success(data.events!.eDefault!);
-        return;
+        return data.events!.eDefault!;
       }
-      dmTrend.value = const Error(null);
     } catch (e) {
-      dmTrend.value = const Error(null);
-      if (kDebugMode) debugPrint('_getDmTrend: $e');
+      if (kDebugMode) debugPrint('_tryGetOfficialDmTrend: $e');
+    }
+    return null;
+  }
+
+  Future<List<double>?> _tryBuildLocalDmTrend(
+    bool Function() shouldCancel,
+  ) async {
+    try {
+      final durationMs = data.timeLength ??
+          plPlayerController.duration.value.inMilliseconds;
+      return await DanmakuDensityTrend.build(
+        cid: cid.value,
+        durationMs: durationMs,
+        shouldCancel: shouldCancel,
+      );
+    } catch (e, s) {
+      if (kDebugMode) debugPrint('_tryBuildLocalDmTrend: $e');
+      Utils.reportError(e, s);
+      return null;
     }
   }
 
