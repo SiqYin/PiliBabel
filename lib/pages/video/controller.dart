@@ -1637,6 +1637,7 @@ class VideoDetailController extends GetxController
       // 正在进入小窗，保留资源
       return;
     }
+    plPlayerController.pause();
     cancelBlockListener();
     _dmTrendTaskId++;
     cid.close();
