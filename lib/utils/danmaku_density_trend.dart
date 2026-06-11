@@ -8,12 +8,17 @@ import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
 
 abstract final class DanmakuDensityTrend {
   static const int segmentLengthMs = 60 * 6 * 1000;
-  static const int densityWindowMs = 5000;
-  static const int _targetPointCount = 600;
+  static const int _targetPointCount = 400;
   static const int _minStepMs = 1000;
   static const int _defaultFontSize = 25;
   static const int _maxConcurrentRequests = 2;
   static const double _densityPower = 0.8;
+
+  // Dynamic window bounds based on danmaku density
+  static const double _minDensityPerMin = 1.0;
+  static const double _maxDensityPerMin = 15.0;
+  static const double _maxWindowMs = 20000.0;
+  static const double _minWindowMs = 5000.0;
 
   static Future<List<double>?> build({
     required int cid,
@@ -32,7 +37,7 @@ abstract final class DanmakuDensityTrend {
     final diff = List<double>.filled(pointCount + 1, 0);
     final segmentCount = (durationMs / segmentLengthMs).ceil();
     var successCount = 0;
-    var elemCount = 0;
+    final allElems = <DanmakuElem>[];
 
     Future<void> requestSegment(int segmentIndex) async {
       if (shouldCancel?.call() == true) return;
@@ -44,14 +49,7 @@ abstract final class DanmakuDensityTrend {
         if (shouldCancel?.call() == true) return;
         if (res case Success(:final response)) {
           successCount++;
-          elemCount += response.elems.length;
-          _applyElems(
-            response.elems,
-            diff: diff,
-            pointCount: pointCount,
-            stepMs: stepMs,
-            durationMs: durationMs,
-          );
+          allElems.addAll(response.elems);
         }
       } catch (e) {
         if (kDebugMode) {
@@ -74,7 +72,21 @@ abstract final class DanmakuDensityTrend {
     await Future.wait(List.generate(workerCount, (_) => worker()));
 
     if (shouldCancel?.call() == true) return null;
-    if (successCount == 0 || elemCount == 0) return null;
+    if (successCount == 0 || allElems.isEmpty) return null;
+
+    final densityWindowMs = _calculateDynamicWindow(
+      allElems.length,
+      durationMs,
+    );
+
+    _applyElems(
+      allElems,
+      diff: diff,
+      pointCount: pointCount,
+      stepMs: stepMs,
+      durationMs: durationMs,
+      densityWindowMs: densityWindowMs,
+    );
 
     final result = List<double>.filled(pointCount, 0);
     var current = 0.0;
@@ -88,7 +100,26 @@ abstract final class DanmakuDensityTrend {
     }
 
     if (maxVal <= 0) return null;
+
+    // Gaussian smoothing [0.25, 0.5, 0.25]
+    for (var i = 1; i < result.length - 1; i++) {
+      result[i] = result[i - 1] * 0.25 + result[i] * 0.5 + result[i + 1] * 0.25;
+    }
+
     return result;
+  }
+
+  static double _calculateDynamicWindow(int elemCount, int durationMs) {
+    if (durationMs <= 0 || elemCount <= 0) return _minWindowMs;
+
+    final durationMinutes = durationMs / 1000 / 60;
+    final density = elemCount / durationMinutes;
+
+    final clampedDensity = density.clamp(_minDensityPerMin, _maxDensityPerMin);
+    final t = (clampedDensity - _minDensityPerMin) /
+        (_maxDensityPerMin - _minDensityPerMin);
+
+    return _maxWindowMs + (_minWindowMs - _maxWindowMs) * t;
   }
 
   static void _applyElems(
@@ -97,20 +128,22 @@ abstract final class DanmakuDensityTrend {
     required int pointCount,
     required int stepMs,
     required int durationMs,
+    required double densityWindowMs,
   }) {
     for (final elem in elems) {
       if (!_isDensityElem(elem)) continue;
       final progress = elem.progress;
-      if (progress < 0 || progress > durationMs + densityWindowMs) continue;
+      if (progress < 0 || progress > durationMs + densityWindowMs.toInt()) continue;
 
       final density = _dispval(elem);
       if (density <= 0) continue;
 
-      final start = (progress / stepMs).floor().clamp(0, pointCount - 1).toInt();
-      final end = ((progress + densityWindowMs) / stepMs)
-          .floor()
-          .clamp(0, pointCount - 1)
-          .toInt();
+      final halfWindow = (densityWindowMs / 2).round();
+      final startTime = (progress - halfWindow).clamp(0, durationMs);
+      final endTime = (progress + halfWindow).clamp(0, durationMs);
+
+      final start = (startTime / stepMs).floor().clamp(0, pointCount - 1).toInt();
+      final end = (endTime / stepMs).floor().clamp(0, pointCount - 1).toInt();
 
       diff[start] += density;
       final endIndex = end + 1;
