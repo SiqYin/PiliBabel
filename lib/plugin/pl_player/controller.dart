@@ -513,7 +513,9 @@ class PlPlayerController with BlockConfigMixin {
   static PlayCallback? _playCallBack;
 
   static Future<void>? playIfExists() {
-    // await _instance?.play(repeat: repeat, hideControls: hideControls);
+    if (_instance != null && !(_instance!.playerStatus.isPlaying)) {
+      return _instance!.play();
+    }
     return _playCallBack?.call();
   }
 

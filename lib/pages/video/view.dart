@@ -768,6 +768,16 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           ),
         );
         videoDetailController.isEnteringPip = false;
+        // 重置 IntroController 的 isEnteringPip 标志
+        try {
+          if (videoDetailController.isFileSource) {
+            Get.find<LocalIntroController>(tag: heroTag).isEnteringPip = false;
+          } else if (videoDetailController.isUgc) {
+            Get.find<UgcIntroController>(tag: heroTag).isEnteringPip = false;
+          } else {
+            Get.find<PgcIntroController>(tag: heroTag).isEnteringPip = false;
+          }
+        } catch (_) {}
         // 小窗模式下控制栏可能被隐藏了，恢复它
         plPlayerController?.controls = true;
         // 如果播放器正在播放，临时启用 autoPlay 以确保 UI 正确显示
