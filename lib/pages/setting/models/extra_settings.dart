@@ -34,6 +34,7 @@ import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
+import 'package:PiliPlus/utils/filtering_text.dart';
 import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
@@ -885,9 +886,7 @@ void _showDmHeightDialog(BuildContext context, VoidCallback setState) {
         initialValue: danmakuLineHeight,
         keyboardType: const .numberWithOptions(decimal: true),
         onChanged: (value) => danmakuLineHeight = value,
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[\d\.]+')),
-        ],
+        inputFormatters: FilteringText.decimal,
       ),
       actions: [
         TextButton(
@@ -929,9 +928,7 @@ void _showTouchSlopDialog(BuildContext context, VoidCallback setState) {
         initialValue: initialValue,
         keyboardType: const .numberWithOptions(decimal: true),
         onChanged: (value) => initialValue = value,
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[\d\.]+')),
-        ],
+        inputFormatters: FilteringText.decimal,
       ),
       actions: [
         TextButton(
@@ -1237,9 +1234,7 @@ void _showProxyDialog(BuildContext context) {
             decoration: const InputDecoration(
               isDense: true,
               labelText: '请输入Port',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(6)),
-              ),
+              border: OutlineInputBorder(borderRadius: .all(.circular(6))),
             ),
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             onChanged: (e) => systemProxyPort = e,
@@ -1283,9 +1278,7 @@ void _showCacheDialog(BuildContext context, VoidCallback setState) {
         autofocus: true,
         onChanged: (value) => valueStr = value,
         keyboardType: TextInputType.number,
-        inputFormatters: [
-          FilteringTextInputFormatter.allow(RegExp(r'[\d\.]+')),
-        ],
+        inputFormatters: FilteringText.decimal,
         decoration: const InputDecoration(suffixText: 'MB'),
       ),
       actions: [
