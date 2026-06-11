@@ -195,6 +195,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         // 直接使用保存的控制器
         videoDetailController = savedController;
         videoDetailController.isEnteringPip = false; // 重置标志
+        videoDetailController.$reopenLifeCycle(); // 重置 isClosed
         Get.put(savedController, tag: heroTag);
 
         PipOverlayService.stopPip(

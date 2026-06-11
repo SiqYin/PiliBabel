@@ -953,19 +953,18 @@ class VideoDetailController extends GetxController
       autoFullScreenFlag: autoFullScreenFlag,
     );
 
-    if (isClosed) return;
-
+    // 需要活跃资源的操作
     if (!isFileSource) {
-      if (plPlayerController.enableBlock) {
-        initSkip();
-      }
-
       if (vttSubtitlesIndex.value == -1) {
         _queryPlayInfo();
       }
 
       if (plPlayerController.showDmChart && dmTrend.value == null) {
         _getDmTrend();
+      }
+
+      if (plPlayerController.enableBlock) {
+        initSkip();
       }
     } else {
       if (vttSubtitlesIndex.value == -1) {

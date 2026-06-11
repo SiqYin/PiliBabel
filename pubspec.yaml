@@ -115,7 +115,7 @@ dependencies:
   get:
     git:
       url: https://github.com/Starfallan/getx.git
-      ref: version_4.7.2
+      ref: version_4.7.2_patch
   gt3_flutter_plugin: ^0.1.0
   hashlib: ^1.12.0
   hive_ce: ^2.19.3

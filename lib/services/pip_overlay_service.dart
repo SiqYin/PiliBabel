@@ -262,20 +262,13 @@ class PipOverlayService {
       );
     }
 
-    // resetTempSettings 已在 PlPlayerController.setDataSource() 中同步执行。
-    // resetBlock 在新 VideoDetailController.onInit() 中同步调用。
-    // 旧 controller 进 PiP 时 onClose 跳过了清理，需要在此清除其 SponsorBlock 状态。
-    // - cancelBlockListener 同步执行：取消 StreamSubscription，防止旧 listener 在
-    //   新视频上继续触发广告跳过（不触碰 Rx，安全）。
-    // - resetBlock 剩余部分（清 RxList、videoLabel）延后到下一帧：这些是 Rx 操作，
-    //   stopPip 可能从 initState（build 阶段）调用，同步触发会引发
-    //   "setState during build" 红屏。
+    // 旧 controller 进 PiP 时 onClose 跳过了清理，需在丢弃时补调完整的 onClose。
+    // 将 isEnteringPip 重置为 false 后再调用 onClose，使其执行完整清理流程
+    // （包括 cancelBlockListener、dispose 各种资源等）。
     if (shouldResetState && _savedController is VideoDetailController) {
-      final ctrl = _savedController as VideoDetailController
-        ..cancelBlockListener();
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ctrl.resetBlock();
-      });
+      final ctrl = _savedController as VideoDetailController;
+      ctrl.isEnteringPip = false;
+      ctrl.onClose();
     }
 
     _savedController = null;

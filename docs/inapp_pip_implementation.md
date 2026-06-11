@@ -42,12 +42,92 @@
 
 ---
 
-## 3. 状态管理与控制器持久化
+## 3. 控制器生命周期管理
 
-### 3.1 防止 GC（垃圾回收）
+### 3.1 核心问题：isClosed 不可靠
+
+**根本原因**：GetX 在调用 `onClose()` **之前**就设置了 `isClosed = true`。
+
+当用户进入小窗时：
+1. 设置 `isEnteringPip = true`
+2. 页面 pop → GetX 调用 `_onDelete()`
+3. **`_onDelete()` 先设置 `_isClosed = true`，再调用 `onClose()`**
+4. `onClose()` 检测到 `isEnteringPip=true`，提前返回
+5. **结果**：资源未清理，但 `isClosed` 已永久为 `true`
+
+从小窗恢复时，复用的 controller `isClosed` 仍是 `true`，所有依赖此标志的逻辑（如 `playerInit()` 检查）全部失效。
+
+### 3.2 解决方案：两条路径分别处理
+
+#### 路径 1: 恢复 (Restore) - 用户点击小窗返回视频页
+
+```dart
+// view.dart initState
+final savedController = PipOverlayService.getSavedController<VideoDetailController>();
+if (savedController != null) {
+  videoDetailController = savedController;
+  videoDetailController.isEnteringPip = false;       // 解除 onClose 保护
+  videoDetailController.$reopenLifeCycle();          // 重置 _isClosed = false
+  Get.put(savedController, tag: heroTag);
+  
+  PipOverlayService.stopPip(
+    callOnClose: false,  // 不调用 onClose，保留所有资源
+    immediate: true,
+    targetContextKey: targetContextKey,
+  );
+}
+```
+
+**关键**：`$reopenLifeCycle()` 是在 GetX fork 中新增的方法，直接重置 `_isClosed = false`，使 controller 重新可用。
+
+#### 路径 2: 丢弃 (Discard) - 小窗存在时打开新视频
+
+```dart
+// pip_overlay_service.dart stopPip()
+if (shouldResetState && _savedController is VideoDetailController) {
+  final ctrl = _savedController as VideoDetailController;
+  ctrl.isEnteringPip = false;  // 解除 onClose 保护
+  ctrl.onClose();              // 执行完整清理
+}
+```
+
+**完整清理内容**：
+- `cancelBlockListener()` - 取消 SponsorBlock 监听器
+- `_dmTrendTaskId++` - 取消高能进度条加载
+- `cid.close()` - 关闭 cid 流
+- 保存本地播放进度
+- `dispose()` 所有 controller: `introScrollCtr`、`tabCtr`、`animController`
+- 清空字幕数据
+
+### 3.3 isEnteringPip 的语义
+
+`isEnteringPip` 不是"正在小窗"的状态标志，而是"延迟 onClose 直到 PiP 结局确定"的控制标志：
+
+- **设为 true**: 进入小窗前，告诉 `onClose()` 跳过清理
+- **清除时机**:
+  - 恢复路径: 恢复时设为 `false`，然后调用 `$reopenLifeCycle()`
+  - 丢弃路径: 设为 `false`，然后补调 `onClose()` 完成清理
+
+### 3.4 移除 playerInit() 中的 isClosed 检查
+
+**之前的代码**：
+```dart
+if (isClosed) return;  // ❌ 阻断从小窗恢复的 controller
+```
+
+**修改后**：直接移除此检查。理由：
+1. 从小窗恢复的 controller `isClosed=true` 但仍需正常工作
+2. 如果 controller 真的被销毁，GetX 会自动清理，不会执行到 `playerInit()`
+3. 这个检查阻断了所有后续操作（分段进度条、高能进度条、SponsorBlock 自动跳过）
+
+---
+
+## 4. 状态管理与控制器持久化
+
+### 4.1 防止 GC（垃圾回收）
 通过 Service 中的 `static dynamic _savedController` 保持**强引用**，直到小窗被正式关闭。
 
-### 3.2 控制器恢复与 UI 刷新
+### 4.2 控制器恢复与 UI 刷新
 从小窗返回全屏页时：
 1. **注入引用**: 重新 `Get.put` 暂存的控制器。
 2. **强制重绘**: 
@@ -57,12 +137,12 @@
 
 ---
 
-## 4. 源码级改动要点
+## 5. 源码级改动要点
 
-### 4.1 触发权收拢 (`lib/plugin/pl_player/controller.dart`)
+### 5.1 触发权收拢 (`lib/plugin/pl_player/controller.dart`)
 所有的 Native 切换逻辑现在统一在 `PlPlayerController` 的 MethodChannel 回调中处理，不再分散在各个 UI Service 中。
 
-### 4.2 比例校正与占位 (`lib/services/pip_overlay_service.dart`)
+### 5.2 比例校正与占位 (`lib/services/pip_overlay_service.dart`)
 小窗 Widget 使用响应式布局响应 `isNativePip`：
 ```dart
 return Obx(() {
@@ -79,7 +159,33 @@ return Obx(() {
 });
 ```
 
+### 5.3 GetX Fork 修改 (`D:\Code\SomeRepo\getx\lib\get_instance\src\lifecycle.dart`)
+新增 `$reopenLifeCycle()` 方法：
+```dart
+/// Marks a closed controller as active again, so it can be reused after
+/// being removed from the dependency store (e.g. restored from a
+/// picture-in-picture overlay). Only call this when [onClose] skipped
+/// resource disposal and the instance is re-registered via `Get.put`.
+void $reopenLifeCycle() {
+  _isClosed = false;
+}
+```
+
 ---
-**文档更新日期**: 2026-02-12  
-**版本**: 2.1 (Fix: HyperOS Multi-window Focus Focus Issue)  
+
+## 6. 已知边缘情况与防护
+
+1. **连续快速切换视频**: `stopPip` 可能在 `onClose` 执行期间被调用多次
+   - 当前防护: `if (!isInPipMode && _overlayEntry == null) return;`
+
+2. **播放器被外部销毁**: `playerInit()` 开头检查 `videoPlayerController == null`
+   - 处理: 重新获取单例 `PlPlayerController.getInstance()`
+
+3. **SponsorBlock 数据污染**: 旧 controller 的监听器在新视频中触发跳过
+   - 修复: 丢弃路径中通过完整 `onClose()` 清理 `_blockListener`
+
+---
+
+**文档更新日期**: 2026-06-12  
+**版本**: 2.2 (Fix: isClosed 不可靠导致的分段/高能进度条/SponsorBlock 失效)  
 **维护**: 核心开发组
