@@ -1697,6 +1697,7 @@ class VideoDetailController extends GetxController
       // dm trend
       if (plPlayerController.showDmChart) {
         dmTrend.value = null;
+        _getDmTrend();
       }
 
       // interactive video
