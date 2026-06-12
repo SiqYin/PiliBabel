@@ -75,10 +75,6 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
       final ctr = Get.find<AudioController>(tag: currentHeroTag!);
       if (ctr.playNext()) return;
     } catch (_) {}
-    // 如果带 tag 找不到，尝试找最近的 AudioController（听视频模式）
-    try {
-      Get.find<AudioController>().playNext();
-    } catch (_) {}
   }
 
   @override
@@ -104,10 +100,6 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     try {
       final ctr = Get.find<AudioController>(tag: currentHeroTag!);
       if (ctr.playPrev()) return;
-    } catch (_) {}
-    // 如果带 tag 找不到，尝试找最近的 AudioController（听视频模式）
-    try {
-      Get.find<AudioController>().playPrev();
     } catch (_) {}
   }
 
@@ -168,11 +160,6 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     } catch (_) {}
     try {
       final ctr = Get.find<AudioController>(tag: currentHeroTag!);
-      return ctr.playlist != null && ctr.playlist!.isNotEmpty;
-    } catch (_) {}
-    // 如果带 tag 找不到，尝试找最近的 AudioController（听视频模式）
-    try {
-      final ctr = Get.find<AudioController>();
       return ctr.playlist != null && ctr.playlist!.isNotEmpty;
     } catch (_) {}
     return false;

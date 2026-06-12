@@ -207,7 +207,7 @@ class AudioController extends GetxController
     videoPlayerServiceHandler?.onVideoDetailChange(
       item,
       (subId.firstOrNull ?? oid).toInt(),
-      hashCode.toString(),
+      heroTag,
     );
   }
 
@@ -797,7 +797,7 @@ class AudioController extends GetxController
       ?..onPlay = null
       ..onPause = null
       ..onSeek = null
-      ..onVideoDetailDispose(hashCode.toString());
+      ..onVideoDetailDispose(heroTag);
     _subscriptions?.forEach((e) => e.cancel());
     _subscriptions?.clear();
     _subscriptions = null;
