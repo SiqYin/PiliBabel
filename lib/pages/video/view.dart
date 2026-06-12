@@ -247,7 +247,18 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       // 非 PiP 返回，正常流程（包括原页面还留在栈中或由于某些原因被销毁重构）
       if (PipOverlayService.isInPipMode) {
         // 关闭小窗并停止播放器（从列表点击视频应该停止旧的播放）
-        final savedController = PipOverlayService.getSavedController<VideoDetailController>();
+        final savedController =
+            PipOverlayService.getSavedController<VideoDetailController>();
+        final fromVideoPage =
+            VideoStackManager.getCount() > 1 ||
+            PipOverlayService.isVideoLikeRoute(Get.previousRoute);
+        final savedWasPlaying =
+            fromVideoPage &&
+            (savedController?.plPlayerController.playerStatus.isPlaying ??
+                false);
+        if (savedWasPlaying) {
+          savedController!.playerStatus = PlayerStatus.playing;
+        }
         PipOverlayService.stopPip(
           callOnClose: false,
           immediate: true,
@@ -702,9 +713,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     }
 
     // 2. 计算小窗触发状态
+    final playerStatusBeforePush = plPlayerController?.playerStatus.value;
     final bool willStartPip =
         plPlayerController != null &&
-        plPlayerController!.playerStatus.isPlaying &&
+        playerStatusBeforePush?.isPlaying == true &&
         !plPlayerController!.isFullScreen.value &&
         _shouldStartInAppPip();
 
@@ -715,7 +727,9 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     introController.cancelTimer();
 
     videoDetailController
-      ..playerStatus = plPlayerController?.playerStatus.value
+      ..playerStatus = willStartPip
+          ? PlayerStatus.playing
+          : playerStatusBeforePush
       ..brightness = plPlayerController?.brightness.value;
 
     if (shouldKeepAlive) {
@@ -2725,13 +2739,6 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       _logSponsorBlock('Reject PiP: Navigating to audio page');
       return false;
     }
-    if (!fromPop && PipOverlayService.isVideoLikeRoute(Get.currentRoute)) {
-      _logSponsorBlock(
-        'Reject PiP: navigating to video/live route (${Get.currentRoute})',
-      );
-      return false;
-    }
-
     final prevRoute = Get.previousRoute;
     if (VideoStackManager.isReturningToVideo()) {
       // 如果返回的页面不是视频或直播详情页，允许开启小窗
