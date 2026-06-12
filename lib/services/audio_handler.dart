@@ -58,6 +58,11 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
       return;
     }
     if (currentHeroTag == null) return;
+    // 优先匹配 AudioController（听视频模式）
+    try {
+      final ctr = Get.find<AudioController>(tag: currentHeroTag!);
+      if (ctr.playNext()) return;
+    } catch (_) {}
     // 直接尝试 find，不检查 isRegistered
     try {
       final ctr = Get.find<UgcIntroController>(tag: currentHeroTag!);
@@ -70,10 +75,6 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     try {
       final ctr = Get.find<LocalIntroController>(tag: currentHeroTag!);
       if (ctr.nextPlay()) return;
-    } catch (_) {}
-    try {
-      final ctr = Get.find<AudioController>(tag: currentHeroTag!);
-      if (ctr.playNext()) return;
     } catch (_) {}
   }
 
@@ -84,6 +85,11 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
       return;
     }
     if (currentHeroTag == null) return;
+    // 优先匹配 AudioController（听视频模式）
+    try {
+      final ctr = Get.find<AudioController>(tag: currentHeroTag!);
+      if (ctr.playPrev()) return;
+    } catch (_) {}
     // 直接尝试 find，不检查 isRegistered
     try {
       final ctr = Get.find<UgcIntroController>(tag: currentHeroTag!);
@@ -96,10 +102,6 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     try {
       final ctr = Get.find<LocalIntroController>(tag: currentHeroTag!);
       if (ctr.prevPlay()) return;
-    } catch (_) {}
-    try {
-      final ctr = Get.find<AudioController>(tag: currentHeroTag!);
-      if (ctr.playPrev()) return;
     } catch (_) {}
   }
 
@@ -142,6 +144,11 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
 
   bool _hasEpisodes() {
     if (currentHeroTag == null) return false;
+    // 优先匹配 AudioController（听视频模式）
+    try {
+      final ctr = Get.find<AudioController>(tag: currentHeroTag!);
+      return ctr.playlist != null && ctr.playlist!.isNotEmpty;
+    } catch (_) {}
     try {
       final ctr = Get.find<UgcIntroController>(tag: currentHeroTag!);
       final videoDetail = ctr.videoDetail.value;
@@ -157,10 +164,6 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     try {
       final ctr = Get.find<LocalIntroController>(tag: currentHeroTag!);
       return ctr.list.length > 1;
-    } catch (_) {}
-    try {
-      final ctr = Get.find<AudioController>(tag: currentHeroTag!);
-      return ctr.playlist != null && ctr.playlist!.isNotEmpty;
     } catch (_) {}
     return false;
   }
