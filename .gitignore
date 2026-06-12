@@ -163,3 +163,4 @@ CLAUDE.md
 .claude
 test*
 /pubspec_overrides.yaml
+.mindfs

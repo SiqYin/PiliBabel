@@ -781,10 +781,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         } catch (_) {}
         // 小窗模式下控制栏可能被隐藏了，恢复它
         plPlayerController?.controls = true;
-        // 如果播放器正在播放，临时启用 autoPlay 以确保 UI 正确显示
-        if (plPlayerController?.playerStatus.isPlaying ?? false) {
-          videoDetailController.autoPlay = true;
-        }
+        // 停止播放器，准备重新初始化（从列表点击视频应该重新开始）
+        plPlayerController?.pause();
       } else {
         // 小窗里播放的是其他视频，返回到新的视频页面时必须关闭小窗，否则会同时播放两个视频
         _logSponsorBlock(
@@ -1856,7 +1854,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     if (videoDetailController.tabCtr.length != tabs.length) {
       videoDetailController.tabCtr.dispose();
       videoDetailController.tabCtr = TabController(
-        vsync: this,
+        vsync: videoDetailController,
         length: tabs.length,
         initialIndex: tabs.isEmpty
             ? 0
