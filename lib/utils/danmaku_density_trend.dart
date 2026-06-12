@@ -14,11 +14,10 @@ abstract final class DanmakuDensityTrend {
   static const int _maxConcurrentRequests = 2;
   static const double _densityPower = 0.8;
 
-  // Dynamic window bounds based on danmaku density
-  static const double _minDensityPerMin = 1.0;
-  static const double _maxDensityPerMin = 15.0;
+  static const double _baseWindowMs = 8000.0;
+  static const double _baseDensityPerMin = 10.0;
+  static const double _minWindowMs = 2000.0;
   static const double _maxWindowMs = 20000.0;
-  static const double _minWindowMs = 5000.0;
 
   static Future<List<double>?> build({
     required int cid,
@@ -34,7 +33,6 @@ abstract final class DanmakuDensityTrend {
     final pointCount = (durationMs / stepMs).ceil() + 1;
     if (pointCount <= 1) return null;
 
-    final diff = List<double>.filled(pointCount + 1, 0);
     final segmentCount = (durationMs / segmentLengthMs).ceil();
     var successCount = 0;
     final allElems = <DanmakuElem>[];
@@ -74,39 +72,33 @@ abstract final class DanmakuDensityTrend {
     if (shouldCancel?.call() == true) return null;
     if (successCount == 0 || allElems.isEmpty) return null;
 
+    final validElems = allElems.where(_isDensityElem).toList();
+    if (validElems.isEmpty) return null;
+
     final densityWindowMs = _calculateDynamicWindow(
-      allElems.length,
+      validElems.length,
       durationMs,
     );
 
-    _applyElems(
-      allElems,
-      diff: diff,
+    final result = _buildGaussian(
+      validElems,
       pointCount: pointCount,
       stepMs: stepMs,
       durationMs: durationMs,
       densityWindowMs: densityWindowMs,
     );
 
-    final result = List<double>.filled(pointCount, 0);
-    var current = 0.0;
-    var maxVal = 0.0;
-    for (var i = 0; i < pointCount; i++) {
-      current += diff[i];
-      if (current < 0) current = 0;
-      final value = current <= 0 ? 0.0 : math.pow(current, _densityPower).toDouble();
-      result[i] = value;
-      if (value > maxVal) maxVal = value;
+    if (result == null) return null;
+
+    final density = validElems.length / (durationMs / 60000);
+    final smoothCount = density > 50 ? 3 : (density > 20 ? 1 : 0);
+
+    var smoothed = result;
+    for (var pass = 0; pass < smoothCount; pass++) {
+      smoothed = _smoothGaussian(smoothed);
     }
 
-    if (maxVal <= 0) return null;
-
-    // Gaussian smoothing [0.25, 0.5, 0.25]
-    for (var i = 1; i < result.length - 1; i++) {
-      result[i] = result[i - 1] * 0.25 + result[i] * 0.5 + result[i + 1] * 0.25;
-    }
-
-    return result;
+    return smoothed;
   }
 
   static double _calculateDynamicWindow(int elemCount, int durationMs) {
@@ -115,42 +107,59 @@ abstract final class DanmakuDensityTrend {
     final durationMinutes = durationMs / 1000 / 60;
     final density = elemCount / durationMinutes;
 
-    final clampedDensity = density.clamp(_minDensityPerMin, _maxDensityPerMin);
-    final t = (clampedDensity - _minDensityPerMin) /
-        (_maxDensityPerMin - _minDensityPerMin);
+    final densityFactor = math.sqrt(math.max(1.0, density / _baseDensityPerMin));
+    final calculatedWindow = _baseWindowMs / densityFactor;
 
-    return _maxWindowMs + (_minWindowMs - _maxWindowMs) * t;
+    final maxAllowedWindow = durationMs * 0.12;
+    return calculatedWindow.clamp(_minWindowMs, _maxWindowMs).clamp(0, maxAllowedWindow);
   }
 
-  static void _applyElems(
-    Iterable<DanmakuElem> elems, {
-    required List<double> diff,
+  static List<double>? _buildGaussian(
+    List<DanmakuElem> elems, {
     required int pointCount,
     required int stepMs,
     required int durationMs,
     required double densityWindowMs,
   }) {
+    final result = List<double>.filled(pointCount, 0.0);
+    final sigma = densityWindowMs / 3.0;
+    final range = 3.0 * sigma;
+    final twoSigmaSq = 2.0 * sigma * sigma;
+
     for (final elem in elems) {
-      if (!_isDensityElem(elem)) continue;
       final progress = elem.progress;
-      if (progress < 0 || progress > durationMs + densityWindowMs.toInt()) continue;
+      if (progress < 0 || progress > durationMs) continue;
 
-      final density = _dispval(elem);
-      if (density <= 0) continue;
+      final weight = _dispval(elem);
+      if (weight <= 0) continue;
 
-      final halfWindow = (densityWindowMs / 2).round();
-      final startTime = (progress - halfWindow).clamp(0, durationMs);
-      final endTime = (progress + halfWindow).clamp(0, durationMs);
+      final startIdx = ((progress - range) / stepMs).floor().clamp(0, pointCount - 1);
+      final endIdx = ((progress + range) / stepMs).ceil().clamp(0, pointCount - 1);
 
-      final start = (startTime / stepMs).floor().clamp(0, pointCount - 1).toInt();
-      final end = (endTime / stepMs).floor().clamp(0, pointCount - 1).toInt();
-
-      diff[start] += density;
-      final endIndex = end + 1;
-      if (endIndex < diff.length) {
-        diff[endIndex] -= density;
+      for (var i = startIdx; i <= endIdx; i++) {
+        final ti = i * stepMs;
+        final dt = ti - progress;
+        final gauss = math.exp(-(dt * dt) / twoSigmaSq);
+        result[i] += weight * gauss;
       }
     }
+
+    for (var i = 0; i < result.length; i++) {
+      result[i] = math.pow(result[i], _densityPower).toDouble();
+    }
+
+    final maxVal = result.reduce(math.max);
+    return maxVal > 0 ? result : null;
+  }
+
+  static List<double> _smoothGaussian(List<double> data) {
+    final smoothed = List<double>.filled(data.length, 0.0);
+    smoothed[0] = data[0];
+    smoothed[data.length - 1] = data[data.length - 1];
+    for (var i = 1; i < data.length - 1; i++) {
+      smoothed[i] = data[i - 1] * 0.25 + data[i] * 0.5 + data[i + 1] * 0.25;
+    }
+    return smoothed;
   }
 
   static bool _isDensityElem(DanmakuElem elem) {
