@@ -231,11 +231,15 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     } else {
       // 非 PiP 返回，正常流程（包括原页面还留在栈中或由于某些原因被销毁重构）
       if (PipOverlayService.isInPipMode) {
+        // 关闭小窗并停止播放器（从列表点击视频应该停止旧的播放）
+        final savedController = PipOverlayService.getSavedController<VideoDetailController>();
         PipOverlayService.stopPip(
           callOnClose: false,
           immediate: true,
           targetContextKey: targetContextKey,
         );
+        // stopPip 不会调用 onClose，手动停止播放器
+        savedController?.plPlayerController.pause();
       }
       videoDetailController = Get.put(VideoDetailController(), tag: heroTag);
     }
