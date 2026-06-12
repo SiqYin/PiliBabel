@@ -953,6 +953,16 @@ class VideoDetailController extends GetxController
       autoFullScreenFlag: autoFullScreenFlag,
     );
 
+    // 检查 controller 是否已关闭，如果已关闭则跳过后续的资源加载操作
+    // （播放信息、弹幕趋势、SponsorBlock 等），避免已销毁的 controller
+    // 触发不必要的异步操作和 UI 更新
+    if (isClosed) {
+      if (kDebugMode) {
+        debugPrint('[VideoDetail] playerInit: controller is closed, skipping resource loading');
+      }
+      return;
+    }
+
     // 需要活跃资源的操作
     if (!isFileSource) {
       if (vttSubtitlesIndex.value == -1) {
