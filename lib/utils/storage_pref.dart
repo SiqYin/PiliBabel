@@ -16,6 +16,7 @@ import 'package:PiliPlus/models/common/follow_order_type.dart';
 import 'package:PiliPlus/models/common/member/tab_type.dart';
 import 'package:PiliPlus/models/common/msg/msg_unread_type.dart';
 import 'package:PiliPlus/models/common/nav_bar_config.dart';
+import 'package:PiliPlus/models/common/rcmd_mode.dart';
 import 'package:PiliPlus/models/common/reply/reply_sort_type.dart';
 import 'package:PiliPlus/models/common/sponsor_block/segment_type.dart';
 import 'package:PiliPlus/models/common/sponsor_block/skip_type.dart';
@@ -501,6 +502,12 @@ abstract final class Pref {
 
   static bool get appRcmd =>
       _setting.get(SettingBoxKey.appRcmd, defaultValue: true);
+
+  /// 推荐流模式
+  static RcmdMode get rcmdMode {
+    final index = _setting.get(SettingBoxKey.rcmdMode);
+    return RcmdMode.values.elementAtOrNull(index) ?? RcmdMode.app;
+  }
 
   static bool get removeBlockedRcmd =>
       _setting.get(SettingBoxKey.removeBlockedRcmd, defaultValue: false);

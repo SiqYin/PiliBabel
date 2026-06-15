@@ -1,6 +1,8 @@
 import 'package:PiliPlus/http/video.dart';
+import 'package:PiliPlus/models/common/rcmd_mode.dart';
 import 'package:PiliPlus/pages/rcmd/controller.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
+import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/recommend_filter.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -13,13 +15,11 @@ import 'package:get/get.dart';
 import 'package:hive_ce/hive.dart';
 
 List<SettingsModel> get recommendSettings => [
-  const SwitchModel(
-    title: '首页使用app端推荐',
-    subtitle: '若web端推荐不太符合预期，可尝试切换至app端推荐',
-    leading: Icon(Icons.model_training_outlined),
-    setKey: SettingBoxKey.appRcmd,
-    defaultVal: true,
-    needReboot: true,
+  NormalModel(
+    title: '首页推荐模式',
+    leading: const Icon(Icons.model_training_outlined),
+    getSubtitle: () => '当前:「${Pref.rcmdMode.label}」',
+    onTap: _showRcmdModeDialog,
   ),
   SwitchModel(
     title: '保留首页推荐刷新',
@@ -115,18 +115,18 @@ List<SettingsModel> get recommendSettings => [
   NormalModel(
     title: '屏蔽无权查看视频',
     leading: const Icon(Icons.block_outlined),
-    getSubtitle: () => Pref.appRcmd
+    getSubtitle: () => Pref.rcmdMode != RcmdMode.web
         ? '仅对首页 app 端推荐生效，屏蔽无权查看的视频(如充电专属视频)'
-        : '仅对首页 app 端推荐生效，请先开启“首页使用app端推荐”',
+        : '仅对首页 app 端推荐生效，请先切换为App端推荐或合并模式',
     getTrailing: (_) => StreamBuilder<BoxEvent>(
       stream: GStorage.setting.watch().where(
         (event) =>
-            event.key == SettingBoxKey.appRcmd ||
+            event.key == SettingBoxKey.rcmdMode ||
             event.key == SettingBoxKey.removeBlockedRcmd,
       ),
       builder: (_, __) => Switch(
         value: Pref.removeBlockedRcmd,
-        onChanged: Pref.appRcmd
+        onChanged: Pref.rcmdMode != RcmdMode.web
             ? (value) {
                 GStorage.setting.put(SettingBoxKey.removeBlockedRcmd, value);
               }
@@ -134,7 +134,7 @@ List<SettingsModel> get recommendSettings => [
       ),
     ),
     onTap: (context, setState) {
-      if (!Pref.appRcmd) {
+      if (Pref.rcmdMode == RcmdMode.web) {
         return;
       }
       GStorage.setting.put(
@@ -185,3 +185,21 @@ List<SettingsModel> get recommendSettings => [
     onChanged: (value) => RecommendFilter.applyFilterToSearch = value,
   ),
 ];
+
+Future<void> _showRcmdModeDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<RcmdMode>(
+    context: context,
+    builder: (context) => SelectDialog<RcmdMode>(
+      title: '首页推荐模式',
+      value: Pref.rcmdMode,
+      values: RcmdMode.values.map((e) => (e, e.label)).toList(),
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(SettingBoxKey.rcmdMode, res.index);
+    setState();
+  }
+}
