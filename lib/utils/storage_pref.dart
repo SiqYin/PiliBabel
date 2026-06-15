@@ -503,10 +503,14 @@ abstract final class Pref {
   static bool get appRcmd =>
       _setting.get(SettingBoxKey.appRcmd, defaultValue: true);
 
-  /// 推荐流模式
+  /// 推荐流模式，首次读取时从旧 key appRcmd 迁移
   static RcmdMode get rcmdMode {
     final index = _setting.get(SettingBoxKey.rcmdMode);
-    return RcmdMode.values.elementAtOrNull(index) ?? RcmdMode.app;
+    if (index != null) {
+      return RcmdMode.values.elementAtOrNull(index) ?? RcmdMode.app;
+    }
+    // 旧版迁移：appRcmd true→App, false→Web
+    return appRcmd ? RcmdMode.app : RcmdMode.web;
   }
 
   static bool get removeBlockedRcmd =>

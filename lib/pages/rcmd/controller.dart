@@ -35,6 +35,7 @@ class RcmdController extends CommonListController {
   Future<LoadingState> customGetData() async {
     if (rcmdMode != RcmdMode.merged) {
       // 单源模式
+      _isFirstPage = (page == 0);
       return appRcmd
           ? VideoHttp.rcmdVideoListApp(freshIdx: page)
           : VideoHttp.rcmdVideoList(freshIdx: page, ps: 20);
