@@ -39,6 +39,7 @@ import 'package:PiliPlus/utils/android/android_helper.dart';
 import 'package:PiliPlus/utils/android/bindings.g.dart';
 import 'package:PiliPlus/utils/asset_utils.dart';
 import 'package:PiliPlus/utils/device_utils.dart';
+import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/extension/box_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
@@ -49,7 +50,6 @@ import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
-import 'package:PiliPlus/utils/theme_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:archive/archive.dart' show getCrc32;
 import 'package:canvas_danmaku/canvas_danmaku.dart';
@@ -878,25 +878,21 @@ class PlPlayerController with BlockConfigMixin {
 
   Future<Player> _initPlayer() async {
     assert(_videoPlayerController == null);
-    final opt = {
-      'video-sync': Pref.videoSync,
-    };
-    if (Platform.isAndroid) {
-      opt['ao'] = Pref.audioOutput;
-    }
     if (PlatformUtils.isMobile && Pref.enableAppVolume) {
       // 移动平台应用内音量模式：初始化系统音量
       systemVolume.value = (await FlutterVolumeController.getVolume()) ?? 1.0;
       // 从持久化存储读取应用内音量
       volume.value = Pref.appVolume;
-      // 使用 media_kit 设置初始音量（Android 上覆盖默认值）
-      opt['volume'] = (volume.value * 100).toString();
-    } else if (PlatformUtils.isMobile) {
-      opt['volume'] = Pref.playerVolume.toString();
-    } else {
-      opt['volume'] = (volume.value * 100).toString();
     }
-    opt['volume-max'] = kMaxVolume.toString();
+    final opt = {
+      'video-sync': Pref.videoSync,
+      if (Platform.isAndroid) 'ao': Pref.audioOutput,
+      'volume': (PlatformUtils.isMobile
+              ? (Pref.enableAppVolume ? volume.value * 100 : Pref.playerVolume)
+              : volume.value * 100)
+          .toString(),
+      'volume-max': kMaxVolume.toString(),
+    };
     final autosync = Pref.autosync;
     if (autosync != '0') {
       opt['autosync'] = autosync;
@@ -1964,6 +1960,9 @@ class PlPlayerController with BlockConfigMixin {
 
   Future<void> takeScreenshot() async {
     SmartDialog.showToast('截图中');
+    final time = DurationUtils.formatDuration(
+      position.inMilliseconds / 1000,
+    ).replaceAll(':', '-');
     final image = await videoPlayerController?.screenshot();
     if (image != null) {
       SmartDialog.showToast('点击弹窗保存截图');
@@ -1975,7 +1974,7 @@ class PlPlayerController with BlockConfigMixin {
             if (bytes != null) {
               ImageUtils.saveByteImg(
                 bytes: bytes.buffer.asUint8List(),
-                fileName: 'screenshot_${ImageUtils.time}',
+                fileName: 'screenshot_${cid}_$time',
               );
             }
             Get.back();
@@ -1992,7 +1991,7 @@ class PlPlayerController with BlockConfigMixin {
                   decoration: BoxDecoration(
                     border: Border.all(
                       width: 5,
-                      color: ThemeUtils.theme.colorScheme.surface,
+                      color: ColorScheme.of(context).surface,
                     ),
                   ),
                   child: Padding(
