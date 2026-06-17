@@ -274,10 +274,8 @@ class PipOverlayService {
     if (shouldResetState && _savedController is VideoDetailController) {
       final ctrl = _savedController as VideoDetailController;
       ctrl.isEnteringPip = false;
+      ctrl.cancelBlockListener();
       if (ctrl.isClosed) {
-        ctrl.onClose();
-      } else {
-        ctrl.cancelBlockListener();
       }
       for (final controller in _savedControllers.values) {
         _setEnteringPipFlag(controller, false);
