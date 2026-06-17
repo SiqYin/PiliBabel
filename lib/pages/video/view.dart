@@ -2,13 +2,12 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
-import 'package:flutter/services.dart' show SystemChrome;
 
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
-import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
+import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
 import 'package:PiliPlus/common/widgets/route_aware_mixin.dart';
@@ -21,12 +20,12 @@ import 'package:PiliPlus/models_new/video/video_detail/episode.dart' as ugc;
 import 'package:PiliPlus/models_new/video/video_detail/page.dart';
 import 'package:PiliPlus/models_new/video/video_detail/ugc_season.dart';
 import 'package:PiliPlus/models_new/video/video_tag/data.dart';
+import 'package:PiliPlus/pages/ai_chat/controller.dart';
+import 'package:PiliPlus/pages/ai_chat/view.dart';
 import 'package:PiliPlus/pages/common/common_intro_controller.dart';
 import 'package:PiliPlus/pages/danmaku/view.dart';
 import 'package:PiliPlus/pages/episode_panel/view.dart';
 import 'package:PiliPlus/pages/video/ai_conclusion/view.dart';
-import 'package:PiliPlus/pages/ai_chat/controller.dart';
-import 'package:PiliPlus/pages/ai_chat/view.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/local/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/local/view.dart';
@@ -74,6 +73,7 @@ import 'package:PiliPlus/utils/theme_utils.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show SystemChrome;
 import 'package:flutter/services.dart' show SystemUiOverlayStyle;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -2660,6 +2660,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   }
 
   void _onPopInvokedWithResult(bool didPop, result) {
+    final returningToVideoPage = _isReturningToVideoPageInStack();
     if (didPop && Platform.isAndroid) {
       // 参考上游逻辑：返回时立即强制清空 Auto-PiP 状态，切断系统自动进入的时机，防止误触
       plPlayerController?.disableAutoEnterPip();
@@ -2683,8 +2684,16 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     videoDetailController.plPlayerController.onPopInvokedWithResult(
       didPop,
       result,
-      pauseOnPop: !_isEnteringPipMode,
+      // 当前页被 pop 掉，但下层仍是另一个视频页时，播放器单例的 owner
+      // 会在 didPopNext 中切回可见页面；这里不能再由旧页面去 pause 共享播放器。
+      pauseOnPop: !_isEnteringPipMode && !returningToVideoPage,
     );
+  }
+
+  bool _isReturningToVideoPageInStack() {
+    final previousRoute = Get.previousRoute;
+    return VideoStackManager.getCount() > 1 &&
+        previousRoute.startsWith('/video');
   }
 
   bool _shouldStartInAppPip({bool fromPop = false}) {
