@@ -916,6 +916,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       });
     }
 
+    _syncCurrentMediaSessionOnResume();
+
     // 重注册全屏画质切换回调。
     // PlPlayerController 是单例，新视频页面 push 时会覆盖回调为其 controller 的闭包，
     // 返回本页后必须重新注册，否则进入全屏时会使用错误 controller 的数据。
@@ -2848,6 +2850,28 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     } else {
       PlPlayerController.updatePlayCount();
     }
+  }
+
+  void _syncCurrentMediaSessionOnResume() {
+    if (videoPlayerServiceHandler == null) {
+      return;
+    }
+
+    if (videoDetailController.isFileSource) {
+      localIntroController.onVideoDetailChange(videoDetailController.entry);
+      return;
+    }
+
+    if (videoDetailController.isUgc) {
+      videoPlayerServiceHandler?.onVideoDetailChange(
+        ugcIntroController.videoDetail.value,
+        videoDetailController.cid.value,
+        heroTag,
+      );
+      return;
+    }
+
+    pgcIntroController.queryVideoIntro();
   }
 
   void onShowMemberPage(int? mid) {
