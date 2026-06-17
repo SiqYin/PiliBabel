@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+
 import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
@@ -8,6 +10,7 @@ import 'package:PiliPlus/pages/download/detail/widgets/item.dart';
 import 'package:PiliPlus/pages/download/folder/controller.dart';
 import 'package:PiliPlus/pages/download/sort/view.dart';
 import 'package:PiliPlus/pages/download/utils/cache_delete_confirm.dart';
+import 'package:PiliPlus/pages/download/utils/cache_export.dart';
 import 'package:PiliPlus/pages/download/widgets/folder_dialog.dart';
 import 'package:PiliPlus/services/download/download_collection_service.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
@@ -67,6 +70,12 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
     );
     _controller.handleSelect();
     SmartDialog.showToast('已更新文件夹');
+  }
+
+  Future<void> _exportSelected() async {
+    final entries = _controller.allChecked.toList();
+    _controller.handleSelect();
+    await exportDownloadEntries(entries);
   }
 
   Future<void> _openSortPage() async {
@@ -181,6 +190,15 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
                     _controller.checkedCount == 0 ? null : _addSelectedToFolder,
                 child: const Text('添加到'),
               ),
+              if (Platform.isAndroid)
+                TextButton(
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                  ),
+                  onPressed:
+                      _controller.checkedCount == 0 ? null : _exportSelected,
+                  child: const Text('导出'),
+                ),
             ],
             child: AppBar(
               title: Obx(() => Text(_controller.title.value)),

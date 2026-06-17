@@ -14,12 +14,12 @@ import 'package:PiliPlus/pages/download/folder_manage/view.dart';
 import 'package:PiliPlus/pages/download/search/view.dart';
 import 'package:PiliPlus/pages/download/sort/view.dart';
 import 'package:PiliPlus/pages/download/utils/cache_delete_confirm.dart';
+import 'package:PiliPlus/pages/download/utils/cache_export.dart';
 import 'package:PiliPlus/pages/download/widgets/folder_card.dart';
 import 'package:PiliPlus/pages/download/widgets/folder_dialog.dart';
 import 'package:PiliPlus/services/download/download_collection_service.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
 import 'package:PiliPlus/utils/grid.dart';
-import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/material.dart'
@@ -150,30 +150,24 @@ class _DownloadPageState extends State<DownloadPage>
   }
 
   Future<void> _exportSelected() async {
-    if (!await ImageUtils.checkPermissionDependOnSdkInt()) return;
     final entries = _controller.allChecked.toList();
     _controller.handleSelect();
-    final total = entries.length;
-    for (var i = 0; i < total; i++) {
-      final entry = entries[i];
-      final index = i;
-      final title = entry.showTitle;
-      SmartDialog.show(
-        tag: 'export',
-        clickMaskDismiss: false,
-        builder: (_) => _BatchExportDialog(
-          title: title,
-          current: index + 1,
-          total: total,
-        ),
-        maskColor: Colors.black.withValues(alpha: 0.35),
-      );
-      try {
-        await DownloadService.exportEntry(entry, null);
-      } catch (_) {}
-      SmartDialog.dismiss(tag: 'export');
+    await exportDownloadEntries(entries);
+  }
+
+  Future<void> _exportSelectedFolders() async {
+    final folders = _folderSelectController.allChecked.toList();
+    final seenCids = <int>{};
+    final entries = folders
+        .expand((folder) => _controller.resolveFolderEntries(folder.id))
+        .where((entry) => seenCids.add(entry.cid))
+        .toList();
+    _folderSelectController.handleSelect();
+    if (entries.isEmpty) {
+      SmartDialog.showToast('选中的文件夹里没有可导出的缓存');
+      return;
     }
-    SmartDialog.showToast('导出完成 ($total)');
+    await exportDownloadEntries(entries);
   }
 
   Future<void> _openAllSortPage() async {
@@ -417,6 +411,18 @@ class _DownloadPageState extends State<DownloadPage>
                         child: const Text('导出'),
                       ),
                   ]
+                : Platform.isAndroid
+                ? [
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      onPressed: _folderSelectController.checkedCount == 0
+                          ? null
+                          : _exportSelectedFolders,
+                      child: const Text('导出'),
+                    ),
+                  ]
                 : null,
             child: AppBar(
               title: const Text('离线缓存'),
@@ -657,64 +663,6 @@ class _DownloadPageState extends State<DownloadPage>
             );
           }),
         ],
-      ),
-    );
-  }
-}
-
-class _BatchExportDialog extends StatelessWidget {
-  const _BatchExportDialog({
-    required this.title,
-    required this.current,
-    required this.total,
-  });
-
-  final String title;
-  final int current;
-  final int total;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Material(
-        color: theme.colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(28),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                '正在导出 ($current/$total)',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  color: theme.colorScheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 16),
-              LinearProgressIndicator(
-                year2023: true,
-                value: current / total,
-                minHeight: 4,
-                borderRadius: BorderRadius.circular(2),
-                color: theme.colorScheme.primary,
-                backgroundColor: theme.colorScheme.surfaceContainerHighest,
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
