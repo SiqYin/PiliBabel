@@ -7,7 +7,6 @@ import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
 import 'package:PiliPlus/http/live.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/video.dart';
-import 'package:PiliPlus/models/common/super_chat_time_type.dart';
 import 'package:PiliPlus/models/common/super_chat_type.dart';
 import 'package:PiliPlus/models/common/video/live_quality.dart';
 import 'package:PiliPlus/models/model_owner.dart';
@@ -26,7 +25,6 @@ import 'package:PiliPlus/pages/video/widgets/header_control.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/danmaku_options.dart';
-import 'package:PiliPlus/services/live_pip_overlay_service.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/tcp/live.dart';
 import 'package:PiliPlus/utils/accounts.dart';
@@ -207,7 +205,7 @@ class LiveRoomController extends GetxController {
 
     // 如果播放器已被彻底销毁（例如在其他页面关闭了小窗），重新获取单例实例
     if (plPlayerController.videoPlayerController == null) {
-      plPlayerController = PlPlayerController.getInstance(isLive: true);
+      plPlayerController = PlPlayerController.ensureInstance(isLive: true);
     }
 
     // 确保播放器处于直播模式

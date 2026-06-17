@@ -905,7 +905,7 @@ class VideoDetailController extends GetxController
   }) async {
     // 如果播放器单例已被外部销毁（例如在二级页面关闭了小窗），重新获取一个新实例
     if (plPlayerController.videoPlayerController == null) {
-      plPlayerController = PlPlayerController.getInstance();
+      plPlayerController = PlPlayerController.ensureInstance();
     }
     if (isFileSource) {
       await _loadLocalPlaybackMeta();
@@ -1070,9 +1070,9 @@ class VideoDetailController extends GetxController
               )
             : null;
         if (progress != null) {
-          this.defaultST = Duration(milliseconds: progress);
+          defaultST = Duration(milliseconds: progress);
         } else if (playUrlStartTime != null) {
-          this.defaultST = playUrlStartTime;
+          defaultST = playUrlStartTime;
         }
       }
 

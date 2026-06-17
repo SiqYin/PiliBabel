@@ -661,6 +661,10 @@ class PlPlayerController with BlockConfigMixin {
       .._playerCount += 1;
   }
 
+  static PlPlayerController ensureInstance({bool isLive = false}) {
+    return (_instance ??= PlPlayerController._())..isLive = isLive;
+  }
+
   static bool _isAnimPgcType(int? pgcType) => pgcType == 1 || pgcType == 4;
 
   void resetTempSettings({int? nextPgcType}) {

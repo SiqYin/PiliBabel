@@ -51,6 +51,43 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
   Future<void>? Function()? onSkipToPrevious;
   String? currentHeroTag;
 
+  void _clearCallbacks() {
+    onPlay = null;
+    onPause = null;
+    onSeek = null;
+    onSkipToNext = null;
+    onSkipToPrevious = null;
+  }
+
+  void _emitIdleState() {
+    if (playbackState.value.processingState == AudioProcessingState.idle) {
+      playbackState.add(
+        PlaybackState(
+          processingState: AudioProcessingState.completed,
+          playing: false,
+        ),
+      );
+    }
+    playbackState.add(
+      PlaybackState(
+        processingState: AudioProcessingState.idle,
+        playing: false,
+      ),
+    );
+  }
+
+  void _clearCurrentSession({bool clearItems = true}) {
+    if (!mediaItem.isClosed) {
+      mediaItem.add(null);
+    }
+    if (clearItems) {
+      _item.clear();
+    }
+    currentHeroTag = null;
+    _clearCallbacks();
+    _emitIdleState();
+  }
+
   @override
   Future<void> skipToNext() async {
     if (onSkipToNext != null) {
@@ -357,52 +394,25 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     }
     // if (kDebugMode) debugPrint("exist: ${PlPlayerController.instanceExists()}");
     if (!PlPlayerController.instanceExists()) return;
-    _item.add(mediaItem);
+    _item
+      ..removeWhere((item) => item.id == id || item.id.endsWith(herotag))
+      ..add(mediaItem);
     setMediaItem(mediaItem);
   }
 
   void onVideoDetailDispose(String herotag) {
     if (!enableBackgroundPlay) return;
 
-    if (_item.isNotEmpty) {
-      _item.removeWhere((item) => item.id.endsWith(herotag));
+    _item.removeWhere((item) => item.id.endsWith(herotag));
+    if (currentHeroTag != herotag) {
+      return;
     }
-    if (_item.isNotEmpty) {
-      playbackState.add(
-        playbackState.value.copyWith(
-          processingState: AudioProcessingState.idle,
-          playing: false,
-        ),
-      );
-      setMediaItem(_item.last);
-      stop();
-    }
+    _clearCurrentSession(clearItems: false);
   }
 
   void clear() {
     if (!enableBackgroundPlay) return;
-    mediaItem.add(null);
-    _item.clear();
-    /**
-     * if (playbackState.processingState == AudioProcessingState.idle &&
-            previousState?.processingState != AudioProcessingState.idle) {
-          await AudioService._stop();
-        }
-     */
-    if (playbackState.value.processingState == AudioProcessingState.idle) {
-      playbackState.add(
-        PlaybackState(
-          processingState: AudioProcessingState.completed,
-          playing: false,
-        ),
-      );
-    }
-    playbackState.add(
-      PlaybackState(
-        processingState: AudioProcessingState.idle,
-        playing: false,
-      ),
-    );
+    _clearCurrentSession();
   }
 
   void onPositionChange(Duration position) {
