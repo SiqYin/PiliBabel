@@ -461,7 +461,7 @@ class DetailItem extends StatelessWidget {
             showStaticPositionMenu<void>(
               context: menuContext,
               items: [
-                PopupMenuItem(
+                CustomPopupMenuItem<void>(
                   height: 38,
                   child: const Text('查看详情页', style: TextStyle(fontSize: 13)),
                   onTap: () {
@@ -490,7 +490,7 @@ class DetailItem extends StatelessWidget {
                   },
                 ),
                 if (PlatformUtils.isDesktop)
-                  PopupMenuItem(
+                  CustomPopupMenuItem<void>(
                     height: 38,
                     child: const Text(
                       '打开本地文件夹',
@@ -515,7 +515,7 @@ class DetailItem extends StatelessWidget {
                     },
                   ),
                 if (entry.ownerId case final mid?)
-                  PopupMenuItem(
+                  CustomPopupMenuItem<void>(
                     height: 38,
                     child: Text(
                       '访问${entry.ownerName != null ? '：${entry.ownerName}' : '用户主页'}',
@@ -524,7 +524,7 @@ class DetailItem extends StatelessWidget {
                     onTap: () => Get.toNamed('/member?mid=$mid'),
                   ),
                 if (canDel && Platform.isAndroid)
-                  PopupMenuItem(
+                  CustomPopupMenuItem<void>(
                     height: 38,
                     child: const Text('导出', style: TextStyle(fontSize: 13)),
                     onTap: () async {
@@ -555,7 +555,7 @@ class DetailItem extends StatelessWidget {
                 ...?extraMoreItemsBuilder?.call(menuContext),
                 if (canDel) const PopupMenuDivider(height: 8),
                 if (canDel)
-                  PopupMenuItem(
+                  CustomPopupMenuItem<void>(
                     height: 38,
                     child: Text(
                       deleteLabel,
@@ -574,7 +574,7 @@ class DetailItem extends StatelessWidget {
                     },
                   ),
                 if (canDel)
-                  PopupMenuItem(
+                  CustomPopupMenuItem<void>(
                     height: 38,
                     child: const Text('更新弹幕', style: TextStyle(fontSize: 13)),
                     onTap: () async {

@@ -77,7 +77,7 @@ class BiliDownloadEntryInfo with MultiSelectData {
           showStaticPositionMenu<void>(
             context: context,
             items: [
-              PopupMenuItem(
+              CustomPopupMenuItem<void>(
                 height: 38,
                 child: const Text('查看详情页', style: TextStyle(fontSize: 13)),
                 onTap: () {
@@ -107,7 +107,7 @@ class BiliDownloadEntryInfo with MultiSelectData {
                 },
               ),
               if (PlatformUtils.isDesktop)
-                PopupMenuItem(
+                CustomPopupMenuItem<void>(
                   height: 38,
                   child: const Text(
                     '打开本地文件夹',
@@ -132,7 +132,7 @@ class BiliDownloadEntryInfo with MultiSelectData {
                   },
                 ),
               if (ownerId case final mid?)
-                PopupMenuItem(
+                CustomPopupMenuItem<void>(
                   height: 38,
                   child: Text(
                     '访问${ownerName != null ? '：$ownerName' : '用户主页'}',

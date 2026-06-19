@@ -4,6 +4,7 @@ import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
+import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/grpc/bilibili/app/im/v1.pb.dart'
     show Session, SessionId, SessionPageType, SessionType, UnreadStyle;
@@ -104,21 +105,22 @@ class WhisperSessionItem extends StatelessWidget {
           ? (details) => showMenu(
               context: context,
               position: PageUtils.menuPosition(details.globalPosition),
+              clipBehavior: Clip.antiAlias,
               items: [
-                PopupMenuItem(
+                CustomPopupMenuItem<void>(
                   height: 42,
                   onTap: () => onSetTop(item.isPinned, item.id),
                   child: Text(item.isPinned ? '移除置顶' : '置顶'),
                 ),
                 if (item.id.privateId.hasTalkerUid())
-                  PopupMenuItem(
+                  CustomPopupMenuItem<void>(
                     height: 42,
                     onTap: () =>
                         onSetMute(item.isMuted, item.id.privateId.talkerUid),
                     child: Text('${item.isMuted ? '关闭' : '开启'}免打扰'),
                   ),
                 if (item.id.privateId.hasTalkerUid())
-                  PopupMenuItem(
+                  CustomPopupMenuItem<void>(
                     height: 42,
                     onTap: () => showConfirmDialog(
                       context: context,

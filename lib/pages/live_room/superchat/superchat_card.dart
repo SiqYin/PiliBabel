@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
 import 'package:PiliPlus/models/common/super_chat_time_type.dart';
@@ -103,8 +104,9 @@ class _SuperChatCardState extends State<SuperChatCard> {
     showMenu(
       context: context,
       position: PageUtils.menuPosition(offset),
+      clipBehavior: Clip.antiAlias,
       items: [
-        PopupMenuItem(
+        CustomPopupMenuItem<void>(
           height: 38,
           onTap: () => Get.toNamed('/member?mid=${item.uid}'),
           child: Text(
@@ -112,7 +114,7 @@ class _SuperChatCardState extends State<SuperChatCard> {
             style: const TextStyle(fontSize: 13),
           ),
         ),
-        PopupMenuItem(
+        CustomPopupMenuItem<void>(
           height: 38,
           onTap: () => Utils.copyText(Utils.jsonEncoder.convert(item.toJson())),
           child: const Text(
@@ -120,7 +122,7 @@ class _SuperChatCardState extends State<SuperChatCard> {
             style: TextStyle(fontSize: 13),
           ),
         ),
-        PopupMenuItem(
+        CustomPopupMenuItem<void>(
           height: 38,
           onTap: widget.onReport,
           child: const Text(

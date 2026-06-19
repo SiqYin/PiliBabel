@@ -111,6 +111,11 @@ abstract final class ThemeUtils {
           ),
         ),
       ),
+      listTileTheme: const ListTileThemeData(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(12)),
+        ),
+      ),
       cardTheme: CardThemeData(
         elevation: 1,
         margin: EdgeInsets.zero,

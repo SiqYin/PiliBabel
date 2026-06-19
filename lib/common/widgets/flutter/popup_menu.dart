@@ -5,10 +5,11 @@
 // ignore_for_file: prefer_initializing_formals
 
 import 'package:flutter/material.dart' hide PopupMenuItem;
+import 'package:flutter/material.dart' as material show PopupMenuItem;
 
 const _kDefaultPopupMenuPadding = EdgeInsets.all(8);
 const _kMd3eMenuContainerRadius = BorderRadius.all(Radius.circular(16));
-const _kMd3eMenuItemRadius = BorderRadius.all(Radius.circular(4));
+const _kMd3eMenuItemRadius = BorderRadius.all(Radius.circular(12));
 const _kMd3eMenuItemSelectedRadius = BorderRadius.all(Radius.circular(12));
 
 Future<T?> showStaticPositionMenu<T>({
@@ -23,7 +24,7 @@ Future<T?> showStaticPositionMenu<T>({
   Color? color,
   bool useRootNavigator = false,
   BoxConstraints? constraints,
-  Clip clipBehavior = Clip.none,
+  Clip clipBehavior = Clip.antiAlias,
   RouteSettings? routeSettings,
   AnimationStyle? popUpAnimationStyle,
   bool? requestFocus,
@@ -51,7 +52,7 @@ Future<T?> showStaticPositionMenu<T>({
   return showMenu<T>(
     context: context,
     position: position,
-    items: items,
+    items: _wrapPopupMenuItems(items, initialValue),
     initialValue: initialValue,
     elevation: elevation ?? _PopupMenuDefaultsM3(context).elevation,
     shadowColor: shadowColor ?? _PopupMenuDefaultsM3(context).shadowColor,
@@ -67,6 +68,29 @@ Future<T?> showStaticPositionMenu<T>({
     popUpAnimationStyle: popUpAnimationStyle,
     requestFocus: requestFocus,
   );
+}
+
+List<PopupMenuEntry<T>> _wrapPopupMenuItems<T>(
+  List<PopupMenuEntry<T>> items,
+  T? initialValue,
+) {
+  return items.map((item) {
+    if (item is material.PopupMenuItem<T>) {
+      return CustomPopupMenuItem<T>(
+        value: item.value,
+        height: item.height,
+        selected: item.represents(initialValue),
+        enabled: item.enabled,
+        padding: item.padding,
+        labelTextStyle: item.labelTextStyle,
+        textStyle: item.textStyle,
+        mouseCursor: item.mouseCursor,
+        onTap: item.onTap,
+        child: item.child,
+      );
+    }
+    return item;
+  }).toList();
 }
 
 class StaticPopupMenuButton<T> extends StatelessWidget {
@@ -91,7 +115,7 @@ class StaticPopupMenuButton<T> extends StatelessWidget {
     this.color,
     this.useRootNavigator = false,
     this.constraints,
-    this.clipBehavior = Clip.none,
+    this.clipBehavior = Clip.antiAlias,
     this.routeSettings,
     this.popUpAnimationStyle,
     this.requestFocus,
@@ -189,6 +213,12 @@ class CustomPopupMenuItem<T> extends PopupMenuEntry<T> {
     this.value,
     this.height = kMinInteractiveDimension,
     this.selected = false,
+    this.enabled = true,
+    this.borderRadius,
+    this.padding,
+    this.labelTextStyle,
+    this.textStyle,
+    this.mouseCursor,
     this.onTap,
     required this.child,
   });
@@ -199,6 +229,18 @@ class CustomPopupMenuItem<T> extends PopupMenuEntry<T> {
   final double height;
 
   final bool selected;
+
+  final bool enabled;
+
+  final BorderRadius? borderRadius;
+
+  final EdgeInsetsGeometry? padding;
+
+  final WidgetStateProperty<TextStyle?>? labelTextStyle;
+
+  final TextStyle? textStyle;
+
+  final MouseCursor? mouseCursor;
 
   final VoidCallback? onTap;
 
@@ -220,9 +262,12 @@ class CustomPopupMenuItemState<T, W extends CustomPopupMenuItem<T>>
     final PopupMenuThemeData popupMenuTheme = PopupMenuTheme.of(context);
     final Set<WidgetState> states = <WidgetState>{
       if (widget.selected) WidgetState.selected,
+      if (!widget.enabled) WidgetState.disabled,
     };
 
     final style =
+        widget.labelTextStyle?.resolve(states) ??
+        widget.textStyle ??
         popupMenuTheme.labelTextStyle?.resolve(states)! ??
         _PopupMenuDefaultsM3(context).labelTextStyle!.resolve(states)!;
     final colors = ColorScheme.of(context);
@@ -231,12 +276,14 @@ class CustomPopupMenuItemState<T, W extends CustomPopupMenuItem<T>>
         ? colors.onSecondaryContainer
         : colors.onSurface;
 
-    final onTap = widget.value == null && widget.onTap == null
+    final onTap = !widget.enabled || widget.value == null && widget.onTap == null
         ? null
         : () {
             Navigator.pop<T>(context, widget.value);
             widget.onTap?.call();
           };
+    final borderRadius = widget.borderRadius ??
+        (widget.selected ? _kMd3eMenuItemSelectedRadius : _kMd3eMenuItemRadius);
 
     return ListTileTheme.merge(
       contentPadding: .zero,
@@ -246,14 +293,11 @@ class CustomPopupMenuItemState<T, W extends CustomPopupMenuItem<T>>
         padding: _PopupMenuDefaultsM3.menuItemOuterPadding,
         child: Material(
           color: widget.selected ? selectedColor : Colors.transparent,
-          borderRadius: widget.selected
-              ? _kMd3eMenuItemSelectedRadius
-              : _kMd3eMenuItemRadius,
+          borderRadius: borderRadius,
           child: InkWell(
             onTap: onTap,
-            borderRadius: widget.selected
-                ? _kMd3eMenuItemSelectedRadius
-                : _kMd3eMenuItemRadius,
+            borderRadius: borderRadius,
+            mouseCursor: widget.mouseCursor,
             overlayColor: WidgetStateProperty.resolveWith((states) {
               if (states.contains(WidgetState.pressed)) {
                 return stateLayerColor.withValues(alpha: 0.1);
@@ -279,7 +323,7 @@ class CustomPopupMenuItemState<T, W extends CustomPopupMenuItem<T>>
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minHeight: widget.height),
                   child: Padding(
-                    padding: _PopupMenuDefaultsM3.menuItemPadding,
+                    padding: widget.padding ?? _PopupMenuDefaultsM3.menuItemPadding,
                     child: Align(
                       alignment: AlignmentDirectional.centerStart,
                       child: widget.child,

@@ -536,7 +536,7 @@ class VideoPopupMenu extends StatelessWidget {
             child: Row(
               children: [
                 actions[i].icon,
-                const SizedBox(width: 12),
+                const SizedBox(width: 8),
                 Text(actions[i].title, style: const TextStyle(fontSize: 13)),
               ],
             ),

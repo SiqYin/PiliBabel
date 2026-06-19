@@ -139,6 +139,8 @@ class _AiChatPageState extends State<AiChatPage>
     return FocusScope(
       child: Material(
         color: colorScheme.surface,
+        clipBehavior: Clip.antiAlias,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         child: Column(
           children: [
           // Drag handle

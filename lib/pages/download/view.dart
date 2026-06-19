@@ -214,7 +214,7 @@ class _DownloadPageState extends State<DownloadPage>
     final folders = _controller.folders;
     if (folders.isEmpty) {
       return [
-        PopupMenuItem(
+        CustomPopupMenuItem<void>(
           height: 38,
           child: const Text('添加到文件夹', style: TextStyle(fontSize: 13)),
           onTap: () async {
@@ -238,7 +238,7 @@ class _DownloadPageState extends State<DownloadPage>
     return [
       const PopupMenuDivider(height: 8),
       ...folders.map(
-        (folder) => PopupMenuItem(
+        (folder) => CustomPopupMenuItem<void>(
           height: 38,
           child: Text(
             '添加到「${folder.title}」',
@@ -253,7 +253,7 @@ class _DownloadPageState extends State<DownloadPage>
           },
         ),
       ),
-      PopupMenuItem(
+      CustomPopupMenuItem<void>(
         height: 38,
         child: const Text('添加到其他文件夹', style: TextStyle(fontSize: 13)),
         onTap: () async {
@@ -288,12 +288,12 @@ class _DownloadPageState extends State<DownloadPage>
           showStaticPositionMenu<int>(
             context: context,
             items: [
-              const PopupMenuItem(
+              const CustomPopupMenuItem(
                 value: 0,
                 height: 38,
                 child: Text('重命名', style: TextStyle(fontSize: 13)),
               ),
-              PopupMenuItem(
+              CustomPopupMenuItem(
                 value: 1,
                 height: 38,
                 child: Text(
@@ -323,11 +323,11 @@ class _DownloadPageState extends State<DownloadPage>
           showStaticPositionMenu<_DownloadSortAction>(
             context: context,
             items: const [
-              PopupMenuItem(
+              CustomPopupMenuItem(
                 value: _DownloadSortAction.manual,
                 child: Text('手动排序'),
               ),
-              PopupMenuItem(
+              CustomPopupMenuItem(
                 value: _DownloadSortAction.reset,
                 child: Text('按缓存时间'),
               ),

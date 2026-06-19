@@ -222,11 +222,11 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
                       showStaticPositionMenu<_FolderSortAction>(
                         context: context,
                         items: const [
-                          PopupMenuItem(
+                          CustomPopupMenuItem(
                             value: _FolderSortAction.manual,
                             child: Text('手动排序'),
                           ),
-                          PopupMenuItem(
+                          CustomPopupMenuItem(
                             value: _FolderSortAction.reset,
                             child: Text('按缓存时间'),
                           ),
@@ -244,11 +244,11 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
                       showStaticPositionMenu<int>(
                         context: context,
                         items: [
-                          const PopupMenuItem(
+                          const CustomPopupMenuItem(
                             value: 0,
                             child: Text('重命名'),
                           ),
-                          PopupMenuItem(
+                          CustomPopupMenuItem(
                             value: 1,
                             child: Text(
                               '删除文件夹',

@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/flutter/draggable_scrollable_sheet.dart';
+import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/marquee.dart';
 import 'package:PiliPlus/models/common/video/live_quality.dart';
 import 'package:PiliPlus/pages/live_room/controller.dart';
@@ -245,28 +246,28 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
           if (plPlayerController.videoPlayerController case final player?)
             SizedBox.square(
               dimension: 30,
-              child: PopupMenuButton(
+              child: StaticPopupMenuButton(
                 iconSize: 18,
                 padding: .zero,
-                iconColor: Colors.white,
+                icon: const Icon(Icons.more_vert, color: Colors.white),
                 itemBuilder: (context) => [
                   PopupMenuItem(
-                    height: 35,
+                    height: 42,
                     onTap: _showLiveStreamDialog,
                     child: const Row(
                       spacing: 8,
                       children: [
-                        Icon(Icons.alt_route, size: 17),
+                        Icon(Icons.alt_route, size: 20),
                         Text('切换路线', style: TextStyle(fontSize: 14)),
                       ],
                     ),
                   ),
                   PopupMenuItem(
-                    height: 35,
+                    height: 42,
                     child: const Row(
                       spacing: 8,
                       children: [
-                        Icon(Icons.info_outline, size: 17),
+                        Icon(Icons.info_outline, size: 20),
                         Text('播放信息', style: TextStyle(fontSize: 14)),
                       ],
                     ),
@@ -277,11 +278,11 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
                   ),
                   if (PlatformUtils.isMobile)
                     PopupMenuItem(
-                      height: 35,
+                      height: 42,
                       child: Row(
                         spacing: 8,
                         children: [
-                          const Icon(Icons.volume_up, size: 17),
+                          const Icon(Icons.volume_up, size: 20),
                           Text(
                             '播放器音量: ${player.getProperty('volume').subLength(3)}%',
                             style: const TextStyle(fontSize: 14),

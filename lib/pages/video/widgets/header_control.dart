@@ -371,9 +371,9 @@ class HeaderControlState extends State<HeaderControl>
         return Padding(
           padding: const EdgeInsets.all(12),
           child: Material(
-            clipBehavior: Clip.hardEdge,
+            clipBehavior: Clip.antiAlias,
             color: theme.colorScheme.surface,
-            borderRadius: const BorderRadius.all(Radius.circular(12)),
+            borderRadius: const BorderRadius.all(Radius.circular(16)),
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 14),
               children: [

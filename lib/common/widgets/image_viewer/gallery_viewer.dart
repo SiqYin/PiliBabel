@@ -19,6 +19,7 @@ import 'dart:io' show File, Platform;
 
 import 'package:PiliPlus/common/widgets/colored_box_transition.dart';
 import 'package:PiliPlus/common/widgets/flutter/page/page_view.dart';
+import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/gesture/image_horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/image_viewer/image.dart';
 import 'package:PiliPlus/common/widgets/image_viewer/loading_indicator.dart';
@@ -622,29 +623,30 @@ class _GalleryViewerState extends State<GalleryViewer>
     showMenu(
       context: context,
       position: PageUtils.menuPosition(details.globalPosition),
+      clipBehavior: Clip.antiAlias,
       items: [
-        PopupMenuItem(
+        CustomPopupMenuItem<void>(
           height: 42,
           onTap: () => Utils.copyText(item.url),
           child: const Text('复制链接', style: TextStyle(fontSize: 14)),
         ),
-        PopupMenuItem(
+        CustomPopupMenuItem<void>(
           height: 42,
           onTap: () => ImageUtils.copyImg(item.url),
           child: const Text('复制图片', style: TextStyle(fontSize: 14)),
         ),
-        PopupMenuItem(
+        CustomPopupMenuItem<void>(
           height: 42,
           onTap: () => ImageUtils.downloadImg([item.url]),
           child: const Text('保存图片', style: TextStyle(fontSize: 14)),
         ),
-        PopupMenuItem(
+        CustomPopupMenuItem<void>(
           height: 42,
           onTap: () => PageUtils.launchURL(item.url),
           child: const Text('网页打开', style: TextStyle(fontSize: 14)),
         ),
         if (item.sourceType == SourceType.livePhoto)
-          PopupMenuItem(
+          CustomPopupMenuItem<void>(
             height: 42,
             onTap: () => ImageUtils.downloadLivePhoto(
               url: item.url,

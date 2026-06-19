@@ -756,6 +756,11 @@ class ListTile extends StatelessWidget {
     final ListTileThemeData defaults = theme.useMaterial3
         ? _LisTileDefaultsM3(context)
         : _LisTileDefaultsM2(context, listTileStyle);
+    final ShapeBorder? effectiveShape =
+        shape ??
+        tileTheme.shape ??
+        theme.listTileTheme.shape ??
+        defaults.shape;
 
     final Color backgroundColor =
         tileColor ??
@@ -996,7 +1001,7 @@ class ListTile extends StatelessWidget {
     }
 
     return InkWell(
-      customBorder: shape ?? tileTheme.shape,
+      customBorder: effectiveShape,
       onTap: enabled ? onTap : null,
       onTapUp: enabled ? onTapUp : null,
       onLongPress: enabled ? onLongPress : null,
@@ -1020,7 +1025,7 @@ class ListTile extends StatelessWidget {
         enabled: enabled,
         child: Ink(
           decoration: ShapeDecoration(
-            shape: shape ?? tileTheme.shape ?? const Border(),
+            shape: effectiveShape ?? const Border(),
             color: effectiveTileColor,
           ),
           child: child,
