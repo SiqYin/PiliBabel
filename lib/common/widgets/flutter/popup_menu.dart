@@ -189,37 +189,46 @@ class StaticPopupMenuButton<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Builder(
-      builder: (context) {
-        final onPressed = enabled ? () => _showButtonMenu(context) : null;
-        if (child case final child?) {
-          Widget result = child;
-          if (padding != _kDefaultPopupMenuPadding) {
-            result = Padding(
+    final buttonTheme = Theme.of(context);
+    final menuTheme = buttonTheme.copyWith(highlightColor: Colors.transparent);
+    return Theme(
+      data: menuTheme,
+      child: Builder(
+        builder: (menuContext) {
+          final onPressed = enabled ? () => _showButtonMenu(menuContext) : null;
+          if (child case final child?) {
+            Widget result = child;
+            if (padding != _kDefaultPopupMenuPadding) {
+              result = Padding(
+                padding: padding,
+                child: result,
+              );
+            }
+            if (enabled) {
+              result = InkWell(
+                onTap: onPressed,
+                borderRadius: borderRadius,
+                child: result,
+              );
+            }
+            if (tooltip case final tooltip?) {
+              result = Tooltip(message: tooltip, child: result);
+            }
+            return Theme(data: buttonTheme, child: result);
+          }
+          return Theme(
+            data: buttonTheme,
+            child: IconButton(
+              tooltip:
+                  tooltip ?? MaterialLocalizations.of(context).showMenuTooltip,
               padding: padding,
-              child: result,
-            );
-          }
-          if (enabled) {
-            result = InkWell(
-              onTap: onPressed,
-              borderRadius: borderRadius,
-              child: result,
-            );
-          }
-          if (tooltip case final tooltip?) {
-            result = Tooltip(message: tooltip, child: result);
-          }
-          return result;
-        }
-        return IconButton(
-          tooltip: tooltip ?? MaterialLocalizations.of(context).showMenuTooltip,
-          padding: padding,
-          iconSize: iconSize ?? 24,
-          onPressed: onPressed,
-          icon: icon ?? const Icon(Icons.more_vert),
-        );
-      },
+              iconSize: iconSize ?? 24,
+              onPressed: onPressed,
+              icon: icon ?? const Icon(Icons.more_vert),
+            ),
+          );
+        },
+      ),
     );
   }
 }
