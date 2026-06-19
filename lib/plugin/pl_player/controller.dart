@@ -592,12 +592,14 @@ class PlPlayerController with BlockConfigMixin {
         if (!_isVertical && controlsLock.value) return;
         portraitDownMode();
       case .landscapeLeft:
+        if (_isVertical && controlsLock.value) return;
         if (!horizontalScreen && !isFullScreen) {
           triggerFullScreen(orientation: orientation, isManualFS: false);
         } else {
           landscapeLeftMode();
         }
       case .landscapeRight:
+        if (_isVertical && controlsLock.value) return;
         if (!horizontalScreen && !isFullScreen) {
           triggerFullScreen(orientation: orientation, isManualFS: false);
         } else {
