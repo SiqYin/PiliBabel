@@ -506,6 +506,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             requestFocus: false,
             initialValue: type,
             color: Colors.black.withValues(alpha: 0.8),
+            menuPadding: EdgeInsets.zero,
+            menuItemOuterPadding: EdgeInsets.zero,
+            menuItemStateLayerColor: Colors.white,
             itemBuilder: (context) {
               return SuperResolutionType.values
                   .map(
@@ -694,6 +697,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             requestFocus: false,
             initialValue: fit,
             color: Colors.black.withValues(alpha: 0.8),
+            menuPadding: EdgeInsets.zero,
+            menuItemOuterPadding: EdgeInsets.zero,
+            menuItemStateLayerColor: Colors.white,
             itemBuilder: (context) {
               return VideoFitType.values
                   .map(
@@ -733,6 +739,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               requestFocus: false,
               initialValue: videoDetailController.currLang.value,
               color: Colors.black.withValues(alpha: 0.8),
+              menuPadding: EdgeInsets.zero,
+              menuItemOuterPadding: EdgeInsets.zero,
+              menuItemStateLayerColor: Colors.white,
               itemBuilder: (context) {
                 return [
                   PopupMenuItem<String>(
@@ -788,6 +797,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               requestFocus: false,
               initialValue: val,
               color: Colors.black.withValues(alpha: 0.8),
+              menuPadding: EdgeInsets.zero,
+              menuItemOuterPadding: EdgeInsets.zero,
+              menuItemStateLayerColor: Colors.white,
               itemBuilder: (context) {
                 return [
                   PopupMenuItem<int>(
@@ -848,6 +860,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           requestFocus: false,
           initialValue: plPlayerController.playbackSpeed,
           color: Colors.black.withValues(alpha: 0.8),
+          menuPadding: EdgeInsets.zero,
+          menuItemOuterPadding: EdgeInsets.zero,
+          menuItemStateLayerColor: Colors.white,
           itemBuilder: (context) {
             return plPlayerController.speedList
                 .map(
@@ -898,6 +913,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             requestFocus: false,
             initialValue: currentVideoQa.code,
             color: Colors.black.withValues(alpha: 0.8),
+            menuPadding: EdgeInsets.zero,
+            menuItemOuterPadding: EdgeInsets.zero,
+            menuItemStateLayerColor: Colors.white,
             itemBuilder: (context) {
               return List.generate(
                 totalQaSam,

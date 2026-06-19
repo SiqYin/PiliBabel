@@ -24,6 +24,8 @@ Future<T?> showStaticPositionMenu<T>({
   Color? color,
   bool useRootNavigator = false,
   BoxConstraints? constraints,
+  EdgeInsetsGeometry? menuItemOuterPadding,
+  Color? menuItemStateLayerColor,
   Clip clipBehavior = Clip.antiAlias,
   RouteSettings? routeSettings,
   AnimationStyle? popUpAnimationStyle,
@@ -52,7 +54,12 @@ Future<T?> showStaticPositionMenu<T>({
   return showMenu<T>(
     context: context,
     position: position,
-    items: _wrapPopupMenuItems(items, initialValue),
+    items: _wrapPopupMenuItems(
+      items,
+      initialValue,
+      menuItemOuterPadding,
+      menuItemStateLayerColor,
+    ),
     initialValue: initialValue,
     elevation: elevation ?? _PopupMenuDefaultsM3(context).elevation,
     shadowColor: shadowColor ?? _PopupMenuDefaultsM3(context).shadowColor,
@@ -73,19 +80,23 @@ Future<T?> showStaticPositionMenu<T>({
 List<PopupMenuEntry<T>> _wrapPopupMenuItems<T>(
   List<PopupMenuEntry<T>> items,
   T? initialValue,
+  EdgeInsetsGeometry? menuItemOuterPadding,
+  Color? menuItemStateLayerColor,
 ) {
   return items.map((item) {
     if (item is material.PopupMenuItem<T>) {
       return CustomPopupMenuItem<T>(
         value: item.value,
         height: item.height,
-        selected: item.represents(initialValue),
+        selected: initialValue != null && item.represents(initialValue),
         enabled: item.enabled,
         padding: item.padding,
         labelTextStyle: item.labelTextStyle,
         textStyle: item.textStyle,
         mouseCursor: item.mouseCursor,
         onTap: item.onTap,
+        outerPadding: menuItemOuterPadding,
+        stateLayerColor: menuItemStateLayerColor,
         child: item.child,
       );
     }
@@ -115,6 +126,8 @@ class StaticPopupMenuButton<T> extends StatelessWidget {
     this.color,
     this.useRootNavigator = false,
     this.constraints,
+    this.menuItemOuterPadding,
+    this.menuItemStateLayerColor,
     this.clipBehavior = Clip.antiAlias,
     this.routeSettings,
     this.popUpAnimationStyle,
@@ -140,6 +153,8 @@ class StaticPopupMenuButton<T> extends StatelessWidget {
   final Color? color;
   final bool useRootNavigator;
   final BoxConstraints? constraints;
+  final EdgeInsetsGeometry? menuItemOuterPadding;
+  final Color? menuItemStateLayerColor;
   final Clip clipBehavior;
   final RouteSettings? routeSettings;
   final AnimationStyle? popUpAnimationStyle;
@@ -158,6 +173,8 @@ class StaticPopupMenuButton<T> extends StatelessWidget {
       color: color,
       useRootNavigator: useRootNavigator,
       constraints: constraints,
+      menuItemOuterPadding: menuItemOuterPadding,
+      menuItemStateLayerColor: menuItemStateLayerColor,
       clipBehavior: clipBehavior,
       routeSettings: routeSettings,
       popUpAnimationStyle: popUpAnimationStyle,
@@ -220,6 +237,8 @@ class CustomPopupMenuItem<T> extends PopupMenuEntry<T> {
     this.textStyle,
     this.mouseCursor,
     this.onTap,
+    this.outerPadding,
+    this.stateLayerColor,
     required this.child,
   });
 
@@ -243,6 +262,10 @@ class CustomPopupMenuItem<T> extends PopupMenuEntry<T> {
   final MouseCursor? mouseCursor;
 
   final VoidCallback? onTap;
+
+  final EdgeInsetsGeometry? outerPadding;
+
+  final Color? stateLayerColor;
 
   final Widget? child;
 
@@ -274,7 +297,7 @@ class CustomPopupMenuItemState<T, W extends CustomPopupMenuItem<T>>
     final selectedColor = colors.secondaryContainer;
     final stateLayerColor = widget.selected
         ? colors.onSecondaryContainer
-        : colors.onSurface;
+        : widget.stateLayerColor ?? colors.onSurface;
 
     final onTap = !widget.enabled || widget.value == null && widget.onTap == null
         ? null
@@ -290,7 +313,7 @@ class CustomPopupMenuItemState<T, W extends CustomPopupMenuItem<T>>
       titleTextStyle: style,
       iconColor: widget.selected ? colors.onSecondaryContainer : colors.outline,
       child: Padding(
-        padding: _PopupMenuDefaultsM3.menuItemOuterPadding,
+        padding: widget.outerPadding ?? _PopupMenuDefaultsM3.menuItemOuterPadding,
         child: Material(
           color: widget.selected ? selectedColor : Colors.transparent,
           borderRadius: borderRadius,
@@ -298,18 +321,12 @@ class CustomPopupMenuItemState<T, W extends CustomPopupMenuItem<T>>
             onTap: onTap,
             borderRadius: borderRadius,
             mouseCursor: widget.mouseCursor,
-            overlayColor: WidgetStateProperty.resolveWith((states) {
-              if (states.contains(WidgetState.pressed)) {
-                return stateLayerColor.withValues(alpha: 0.1);
-              }
-              if (states.contains(WidgetState.hovered)) {
-                return stateLayerColor.withValues(alpha: 0.08);
-              }
-              if (states.contains(WidgetState.focused)) {
-                return stateLayerColor.withValues(alpha: 0.1);
-              }
-              return null;
-            }),
+            highlightColor: stateLayerColor.withValues(alpha: 0.1),
+            hoverColor: stateLayerColor.withValues(alpha: 0.08),
+            focusColor: widget.selected
+                ? Colors.transparent
+                : stateLayerColor.withValues(alpha: 0.1),
+            splashColor: stateLayerColor.withValues(alpha: 0.1),
             child: AnimatedDefaultTextStyle(
               style: style,
               duration: kThemeChangeDuration,

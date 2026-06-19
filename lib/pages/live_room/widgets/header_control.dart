@@ -249,6 +249,8 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
               child: StaticPopupMenuButton(
                 iconSize: 18,
                 padding: .zero,
+                menuPadding: EdgeInsets.zero,
+                menuItemOuterPadding: EdgeInsets.zero,
                 icon: const Icon(Icons.more_vert, color: Colors.white),
                 itemBuilder: (context) => [
                   PopupMenuItem(

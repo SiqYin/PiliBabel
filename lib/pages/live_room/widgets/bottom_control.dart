@@ -132,6 +132,9 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
               tooltip: '画面比例',
               initialValue: plPlayerController.videoFit.value,
               color: Colors.black.withValues(alpha: 0.8),
+              menuPadding: EdgeInsets.zero,
+              menuItemOuterPadding: EdgeInsets.zero,
+              menuItemStateLayerColor: Colors.white,
               itemBuilder: (context) {
                 return VideoFitType.values
                     .map(
@@ -166,6 +169,9 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
               padding: EdgeInsets.zero,
               initialValue: liveRoomCtr.currentQn,
               color: Colors.black.withValues(alpha: 0.8),
+              menuPadding: EdgeInsets.zero,
+              menuItemOuterPadding: EdgeInsets.zero,
+              menuItemStateLayerColor: Colors.white,
               itemBuilder: (context) {
                 return liveRoomCtr.acceptQnList
                     .map(
