@@ -530,13 +530,13 @@ class VideoPopupMenu extends StatelessWidget {
       context: context,
       items: [
         for (int i = 0; i < actions.length; i++)
-          PopupMenuItem<int>(
+          CustomPopupMenuItem<int>(
             value: i,
             height: menuItemHeight,
             child: Row(
               children: [
                 actions[i].icon,
-                const SizedBox(width: 6),
+                const SizedBox(width: 12),
                 Text(actions[i].title, style: const TextStyle(fontSize: 13)),
               ],
             ),

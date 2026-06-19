@@ -93,7 +93,23 @@ abstract final class ThemeUtils {
         elevation: 20,
       ),
       popupMenuTheme: PopupMenuThemeData(
-        surfaceTintColor: isDynamic ? colorScheme.onSurfaceVariant : null,
+        color: colorScheme.surfaceContainerLow,
+        elevation: 3,
+        shadowColor: colorScheme.shadow,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(16)),
+        ),
+        menuPadding: const EdgeInsets.symmetric(vertical: 4),
+        labelTextStyle: WidgetStatePropertyAll(
+          TextStyle(
+            color: colorScheme.onSurface,
+            fontSize: 14,
+            letterSpacing: 0.1,
+            fontWeight: FontWeight.w500,
+            fontFamily: customFontFamily,
+          ),
+        ),
       ),
       cardTheme: CardThemeData(
         elevation: 1,

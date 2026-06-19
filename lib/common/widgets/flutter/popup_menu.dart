@@ -7,6 +7,9 @@
 import 'package:flutter/material.dart' hide PopupMenuItem;
 
 const _kDefaultPopupMenuPadding = EdgeInsets.all(8);
+const _kMd3eMenuContainerRadius = BorderRadius.all(Radius.circular(16));
+const _kMd3eMenuItemRadius = BorderRadius.all(Radius.circular(4));
+const _kMd3eMenuItemSelectedRadius = BorderRadius.all(Radius.circular(12));
 
 Future<T?> showStaticPositionMenu<T>({
   required BuildContext context,
@@ -50,12 +53,13 @@ Future<T?> showStaticPositionMenu<T>({
     position: position,
     items: items,
     initialValue: initialValue,
-    elevation: elevation,
-    shadowColor: shadowColor,
-    surfaceTintColor: surfaceTintColor,
-    shape: shape,
-    menuPadding: menuPadding,
-    color: color,
+    elevation: elevation ?? _PopupMenuDefaultsM3(context).elevation,
+    shadowColor: shadowColor ?? _PopupMenuDefaultsM3(context).shadowColor,
+    surfaceTintColor:
+        surfaceTintColor ?? _PopupMenuDefaultsM3(context).surfaceTintColor,
+    shape: shape ?? _PopupMenuDefaultsM3(context).shape,
+    menuPadding: menuPadding ?? _PopupMenuDefaultsM3(context).menuPadding,
+    color: color ?? _PopupMenuDefaultsM3(context).color,
     useRootNavigator: useRootNavigator,
     constraints: constraints,
     clipBehavior: clipBehavior,
@@ -184,6 +188,8 @@ class CustomPopupMenuItem<T> extends PopupMenuEntry<T> {
     super.key,
     this.value,
     this.height = kMinInteractiveDimension,
+    this.selected = false,
+    this.onTap,
     required this.child,
   });
 
@@ -191,6 +197,10 @@ class CustomPopupMenuItem<T> extends PopupMenuEntry<T> {
 
   @override
   final double height;
+
+  final bool selected;
+
+  final VoidCallback? onTap;
 
   final Widget? child;
 
@@ -208,25 +218,75 @@ class CustomPopupMenuItemState<T, W extends CustomPopupMenuItem<T>>
   @override
   Widget build(BuildContext context) {
     final PopupMenuThemeData popupMenuTheme = PopupMenuTheme.of(context);
-    const Set<WidgetState> states = <WidgetState>{};
+    final Set<WidgetState> states = <WidgetState>{
+      if (widget.selected) WidgetState.selected,
+    };
 
     final style =
         popupMenuTheme.labelTextStyle?.resolve(states)! ??
         _PopupMenuDefaultsM3(context).labelTextStyle!.resolve(states)!;
+    final colors = ColorScheme.of(context);
+    final selectedColor = colors.secondaryContainer;
+    final stateLayerColor = widget.selected
+        ? colors.onSecondaryContainer
+        : colors.onSurface;
+
+    final onTap = widget.value == null && widget.onTap == null
+        ? null
+        : () {
+            Navigator.pop<T>(context, widget.value);
+            widget.onTap?.call();
+          };
 
     return ListTileTheme.merge(
       contentPadding: .zero,
       titleTextStyle: style,
-      child: AnimatedDefaultTextStyle(
-        style: style,
-        duration: kThemeChangeDuration,
-        child: ConstrainedBox(
-          constraints: BoxConstraints(minHeight: widget.height),
-          child: Padding(
-            padding: _PopupMenuDefaultsM3.menuItemPadding,
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: widget.child,
+      iconColor: widget.selected ? colors.onSecondaryContainer : colors.outline,
+      child: Padding(
+        padding: _PopupMenuDefaultsM3.menuItemOuterPadding,
+        child: Material(
+          color: widget.selected ? selectedColor : Colors.transparent,
+          borderRadius: widget.selected
+              ? _kMd3eMenuItemSelectedRadius
+              : _kMd3eMenuItemRadius,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: widget.selected
+                ? _kMd3eMenuItemSelectedRadius
+                : _kMd3eMenuItemRadius,
+            overlayColor: WidgetStateProperty.resolveWith((states) {
+              if (states.contains(WidgetState.pressed)) {
+                return stateLayerColor.withValues(alpha: 0.1);
+              }
+              if (states.contains(WidgetState.hovered)) {
+                return stateLayerColor.withValues(alpha: 0.08);
+              }
+              if (states.contains(WidgetState.focused)) {
+                return stateLayerColor.withValues(alpha: 0.1);
+              }
+              return null;
+            }),
+            child: AnimatedDefaultTextStyle(
+              style: style,
+              duration: kThemeChangeDuration,
+              child: IconTheme.merge(
+                data: IconThemeData(
+                  size: 20,
+                  color: widget.selected
+                      ? colors.onSecondaryContainer
+                      : colors.outline,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: widget.height),
+                  child: Padding(
+                    padding: _PopupMenuDefaultsM3.menuItemPadding,
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: widget.child,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -296,17 +356,22 @@ class _PopupMenuDefaultsM3 extends PopupMenuThemeData {
 
   @override WidgetStateProperty<TextStyle?>? get labelTextStyle {
     return WidgetStateProperty.resolveWith((Set<WidgetState> states) {
-    // TODO(quncheng): Update this hard-coded value to use the latest tokens.
-    final TextStyle style = _textTheme.labelLarge!;
+      final TextStyle style = _textTheme.labelLarge!.copyWith(
+        letterSpacing: 0.1,
+        fontWeight: FontWeight.w500,
+      );
       if (states.contains(WidgetState.disabled)) {
         return style.apply(color: _colors.onSurface.withValues(alpha: 0.38));
+      }
+      if (states.contains(WidgetState.selected)) {
+        return style.apply(color: _colors.onSecondaryContainer);
       }
       return style.apply(color: _colors.onSurface);
     });
   }
 
   @override
-  Color? get color => _colors.surfaceContainer;
+  Color? get color => _colors.surfaceContainerLow;
 
   @override
   Color? get shadowColor => _colors.shadow;
@@ -315,16 +380,21 @@ class _PopupMenuDefaultsM3 extends PopupMenuThemeData {
   Color? get surfaceTintColor => Colors.transparent;
 
   @override
-  ShapeBorder? get shape => const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(4.0)));
+  ShapeBorder? get shape => const RoundedRectangleBorder(borderRadius: _kMd3eMenuContainerRadius);
 
   // TODO(bleroux): This is taken from https://m3.material.io/components/menus/specs
   // Update this when the token is available.
   @override
-  EdgeInsets? get menuPadding => const EdgeInsets.symmetric(vertical: 8.0);
+  EdgeInsets? get menuPadding => const EdgeInsets.symmetric(vertical: 4.0);
 
   // TODO(tahatesser): This is taken from https://m3.material.io/components/menus/specs
   // Update this when the token is available.
-  static EdgeInsets menuItemPadding  = const EdgeInsets.symmetric(horizontal: 12.0);
+  static EdgeInsets menuItemPadding  = const EdgeInsets.symmetric(horizontal: 16.0);
+
+  static EdgeInsets menuItemOuterPadding = const EdgeInsets.symmetric(
+    horizontal: 4,
+    vertical: 2,
+  );
 }// dart format on
 
 // END GENERATED TOKEN PROPERTIES - PopupMenu
