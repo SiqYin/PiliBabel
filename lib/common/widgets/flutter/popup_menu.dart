@@ -297,16 +297,28 @@ class CustomPopupMenuItemState<T, W extends CustomPopupMenuItem<T>>
       if (!widget.enabled) WidgetState.disabled,
     };
 
-    final style =
+    final colors = ColorScheme.of(context);
+    final customStateLayerColor = widget.stateLayerColor;
+    final selectedForegroundColor =
+        customStateLayerColor ?? colors.onSecondaryContainer;
+
+    var style =
         widget.labelTextStyle?.resolve(states) ??
         widget.textStyle ??
         popupMenuTheme.labelTextStyle?.resolve(states)! ??
         _PopupMenuDefaultsM3(context).labelTextStyle!.resolve(states)!;
-    final colors = ColorScheme.of(context);
-    final selectedColor = colors.secondaryContainer;
+    if (widget.selected && customStateLayerColor != null) {
+      style = style.copyWith(color: selectedForegroundColor);
+    }
+    //使用Flutter原始的颜色方案，来计算选中状态的颜色
+    final selectedColor = customStateLayerColor == null
+        ? colors.secondaryContainer
+        : Theme.of(context).brightness == Brightness.dark
+        ? const Color(0x40CCCCCC)
+        : const Color(0x66BCBCBC);
     final stateLayerColor = widget.selected
-        ? colors.onSecondaryContainer
-        : widget.stateLayerColor ?? colors.onSurface;
+        ? selectedForegroundColor
+        : customStateLayerColor ?? colors.onSurface;
 
     final onTap = !widget.enabled || widget.value == null && widget.onTap == null
         ? null
@@ -320,7 +332,7 @@ class CustomPopupMenuItemState<T, W extends CustomPopupMenuItem<T>>
     return ListTileTheme.merge(
       contentPadding: .zero,
       titleTextStyle: style,
-      iconColor: widget.selected ? colors.onSecondaryContainer : colors.outline,
+      iconColor: widget.selected ? selectedForegroundColor : colors.outline,
       child: Padding(
         padding: widget.outerPadding ?? _PopupMenuDefaultsM3.menuItemOuterPadding,
         child: Material(
@@ -343,7 +355,7 @@ class CustomPopupMenuItemState<T, W extends CustomPopupMenuItem<T>>
                 data: IconThemeData(
                   size: 20,
                   color: widget.selected
-                      ? colors.onSecondaryContainer
+                      ? selectedForegroundColor
                       : colors.outline,
                 ),
                 child: ConstrainedBox(
