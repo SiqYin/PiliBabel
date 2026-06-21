@@ -30,7 +30,11 @@ class DownloadCollectionService extends GetxService {
   Future<void> _init() async {
     _readFromStorage();
     await _downloadService.waitForInitialization;
-    await _syncWithDownloads(notify: false);
+    final customTitleChanged = _markExistingCustomTitles();
+    final syncChanged = await _syncWithDownloads(notify: false);
+    if (customTitleChanged && !syncChanged) {
+      await _save();
+    }
     _downloadService.flagNotifier.add(_handleDownloadRefresh);
     _downloadService.completedEntryNotifier.add(_handleDownloadCompleted);
   }
@@ -69,6 +73,37 @@ class DownloadCollectionService extends GetxService {
 
   Future<void> syncWithDownloads({bool notify = true}) =>
       _syncWithDownloads(notify: notify);
+
+  bool _markExistingCustomTitles() {
+    final autoTitles = <String, Set<String>>{};
+    for (final entry in _downloadService.downloadList.followedBy(
+      _downloadService.waitDownloadQueue,
+    )) {
+      final title = entry.autoFolderTitle?.trim();
+      final sourceKey = entry.autoFolderSourceKey;
+      if (title == null ||
+          title.isEmpty ||
+          sourceKey == null ||
+          sourceKey.isEmpty) {
+        continue;
+      }
+      (autoTitles[sourceKey] ??= <String>{}).add(title);
+    }
+
+    var changed = false;
+    for (final folder in _folders) {
+      final sourceKey = folder.sourceKey;
+      if (folder.isCustomTitle || sourceKey == null || sourceKey.isEmpty) {
+        continue;
+      }
+      final titles = autoTitles[sourceKey];
+      if (titles != null && !titles.contains(folder.title.trim())) {
+        folder.isCustomTitle = true;
+        changed = true;
+      }
+    }
+    return changed;
+  }
 
   void _readFromStorage() {
     final raw = GStorage.localCache.get(LocalCacheKey.downloadCollections);
@@ -184,7 +219,7 @@ class DownloadCollectionService extends GetxService {
     await waitForInitialization;
     final existed = getFolderBySourceKey(sourceKey);
     if (existed != null) {
-      if (existed.title != title) {
+      if (!existed.isCustomTitle && existed.title != title) {
         existed.title = title;
         await _save();
         flagNotifier.refresh();
@@ -223,6 +258,9 @@ class DownloadCollectionService extends GetxService {
       return;
     }
     folder.title = title;
+    if (folder.sourceKey != null) {
+      folder.isCustomTitle = true;
+    }
     await _save();
     flagNotifier.refresh();
   }

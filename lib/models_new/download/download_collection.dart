@@ -7,6 +7,7 @@ class DownloadFolder with MultiSelectData {
   String title;
   final int createdAt;
   final String? sourceKey;
+  bool isCustomTitle;
   final List<int> videoCids;
 
   DownloadFolder({
@@ -14,6 +15,7 @@ class DownloadFolder with MultiSelectData {
     required this.title,
     required this.createdAt,
     this.sourceKey,
+    this.isCustomTitle = false,
     required this.videoCids,
   });
 
@@ -22,6 +24,7 @@ class DownloadFolder with MultiSelectData {
     title: json['title'] as String? ?? '',
     createdAt: json['createdAt'] as int? ?? 0,
     sourceKey: json['sourceKey'] as String?,
+    isCustomTitle: json['isCustomTitle'] as bool? ?? false,
     videoCids: (json['videoCids'] as List? ?? const <dynamic>[])
         .whereType<int>()
         .toList(),
@@ -32,6 +35,7 @@ class DownloadFolder with MultiSelectData {
     'title': title,
     'createdAt': createdAt,
     'sourceKey': sourceKey,
+    'isCustomTitle': isCustomTitle,
     'videoCids': videoCids,
   };
 }
