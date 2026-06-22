@@ -9,6 +9,7 @@ import 'package:PiliPlus/pages/mine/controller.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -53,7 +54,11 @@ class _HomePageState extends CommonPageState<HomePage>
             onTap: (_) {
               feedBack();
               if (!_homeController.tabController.indexIsChanging) {
-                _homeController.animateToTop();
+                if (Pref.enableCurrentPageRefresh) {
+                  _homeController.toTopAndRefresh();
+                } else {
+                  _homeController.animateToTop();
+                }
               }
             },
           ),

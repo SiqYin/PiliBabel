@@ -11,9 +11,29 @@ import 'package:get/get.dart';
 mixin ScrollOrRefreshMixin {
   ScrollController get scrollController;
 
-  void animateToTop() => scrollController.animToTop();
+  String get topOrRefreshThrottleKey =>
+      'topOrRefresh_${identityHashCode(this)}';
+
+  String get topAndRefreshThrottleKey =>
+      'topAndRefresh_${identityHashCode(this)}';
+
+  Future<void> animateToTop() => scrollController.animToTop();
 
   Future<void> onRefresh();
+
+  void toTopAndRefresh() {
+    EasyThrottle.throttle(
+      topAndRefreshThrottleKey,
+      const Duration(milliseconds: 500),
+      () async {
+        if (scrollController.hasClients &&
+            scrollController.position.pixels != 0) {
+          await animateToTop();
+        }
+        await showRefresh();
+      },
+    );
+  }
 
   Future<void> showRefresh() => onRefresh();
 
@@ -21,7 +41,7 @@ mixin ScrollOrRefreshMixin {
     if (scrollController.hasClients) {
       if (scrollController.position.pixels == 0) {
         EasyThrottle.throttle(
-          'topOrRefresh',
+          topOrRefreshThrottleKey,
           const Duration(milliseconds: 500),
           showRefresh,
         );

@@ -240,6 +240,13 @@ List<SettingsModel> get extraSettings => [
     setKey: SettingBoxKey.openInBrowser,
     defaultVal: false,
   ),
+  const SwitchModel(
+    title: '点击当前页时回顶并刷新',
+    subtitle: '关闭后保持原有回顶/重复点击刷新行为',
+    leading: Icon(Icons.vertical_align_top),
+    setKey: SettingBoxKey.enableCurrentPageRefresh,
+    defaultVal: false,
+  ),
   NormalModel(
     title: '横向滑动阈值',
     getSubtitle: () => '当前:「${Pref.touchSlopH}」，系统默认值: $deviceTouchSlop',
