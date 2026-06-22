@@ -2854,6 +2854,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     videoPlayerServiceHandler?.onVideoDetailDispose(heroTag);
     plPlayerController ??= videoDetailController.plPlayerController;
     if (plPlayerController != null) {
+      if (videoDetailController.isFileSource) {
+        videoDetailController.playedTime = plPlayerController!.position;
+        videoDetailController.cacheLocalProgress();
+      }
       videoDetailController.makeHeartBeat();
       plPlayerController!.dispose();
     } else {
