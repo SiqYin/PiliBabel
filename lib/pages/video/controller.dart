@@ -28,6 +28,7 @@ import 'package:PiliPlus/models/common/video/video_quality.dart';
 import 'package:PiliPlus/models/common/video/video_type.dart';
 import 'package:PiliPlus/models/video/play/url.dart';
 import 'package:PiliPlus/models_new/download/bili_download_entry_info.dart';
+import 'package:PiliPlus/models_new/download/download_collection.dart';
 import 'package:PiliPlus/models_new/download/playback_meta.dart';
 import 'package:PiliPlus/models_new/media_list/media_list.dart';
 import 'package:PiliPlus/models_new/pgc/pgc_info_model/result.dart';
@@ -55,6 +56,7 @@ import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
 import 'package:PiliPlus/plugin/pl_player/models/heart_beat_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
+import 'package:PiliPlus/services/download/download_collection_service.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
 import 'package:PiliPlus/services/pip_overlay_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
@@ -365,10 +367,22 @@ class VideoDetailController extends GetxController
 
   late final watchProgress = GStorage.watchProgress;
   void cacheLocalProgress() {
+    final collectionService = Get.find<DownloadCollectionService>();
     if (plPlayerController.playerStatus.isCompleted) {
-      watchProgress.put(cid.value.toString(), entry.totalTimeMilli);
+      unawaited(watchProgress.put(cid.value.toString(), entry.totalTimeMilli));
+      unawaited(collectionService.clearLastLocalPlayedIfCid(cid.value));
     } else if (playedTime case final playedTime?) {
-      watchProgress.put(cid.value.toString(), playedTime.inMilliseconds);
+      final progressMs = playedTime.inMilliseconds;
+      unawaited(watchProgress.put(cid.value.toString(), progressMs));
+      unawaited(
+        collectionService.updateLastLocalPlayed(
+          entry: entry,
+          progressMs: progressMs,
+          playContext:
+              DownloadVideoPlayContext.fromArguments(args) ??
+              const DownloadVideoPlayContext.all(),
+        ),
+      );
     }
   }
 

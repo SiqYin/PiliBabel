@@ -292,6 +292,7 @@ Future<_CacheDeleteResult> _deleteLocalCaches({
     } else {
       downloadService.downloadList.remove(entry);
       await GStorage.watchProgress.delete(entry.cid.toString());
+      await collectionService.clearLastLocalPlayedIfCid(entry.cid);
     }
   }
   downloadService.flagNotifier.refresh();
