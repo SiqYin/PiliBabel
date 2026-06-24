@@ -1635,7 +1635,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         plPlayerController,
                         maxHeight,
                       ),
-                      bottom: 38,
+                      bottom: desktopProgressTimeIndicatorBottom,
                       child: child,
                     );
                   }

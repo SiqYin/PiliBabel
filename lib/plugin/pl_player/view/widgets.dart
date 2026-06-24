@@ -1,5 +1,21 @@
 part of 'view.dart';
 
+const double desktopProgressHorizontalInset = 20.0;
+const double desktopProgressBarHeight = 3.5;
+const double desktopProgressInteractiveHeight = 40.0;
+const double desktopProgressBottomPadding = 12.0;
+const double desktopProgressControlHeight = 30.0;
+const double desktopProgressInnerBottomPadding = 7.0;
+const double desktopProgressOverlayGap = 6.0;
+const double desktopProgressTimeIndicatorBottom =
+    desktopProgressBottomPadding +
+    desktopProgressControlHeight +
+    desktopProgressInnerBottomPadding +
+    desktopProgressInteractiveHeight +
+    desktopProgressOverlayGap;
+const double desktopProgressSeekPreviewBottom =
+    desktopProgressTimeIndicatorBottom + 40.0;
+
 Widget buildDmChart(
   Color color,
   List<double> dmTrend,
@@ -79,7 +95,7 @@ Widget buildSeekPreviewWidget(
               maxWidth: maxWidth,
               previewValue: previewValue,
               anchorWidth: width,
-              bottom: 78,
+              bottom: desktopProgressSeekPreviewBottom,
               child: child,
             );
           }
@@ -288,7 +304,11 @@ class _DesktopProgressPreviewLayoutDelegate extends SingleChildLayoutDelegate {
     final left = (anchorCenter - childSize.width / 2)
         .clamp(margin, maxLeft)
         .toDouble();
-    return Offset(left, size.height - bottom - childSize.height);
+    final maxTop = math.max(margin, size.height - childSize.height - margin);
+    final top = (size.height - bottom - childSize.height)
+        .clamp(margin, maxTop)
+        .toDouble();
+    return Offset(left, top);
   }
 
   @override
@@ -312,10 +332,32 @@ double _desktopPreviewAnchorCenter({
   final availableWidth = math.max(0.0, maxWidth - margin * 2);
   final width = anchorWidth.clamp(0.0, availableWidth).toDouble();
   final maxLeft = math.max(margin, maxWidth - width - margin);
-  final left = (maxWidth * previewValue - width / 2)
+  final anchorCenter = _desktopProgressHoverCenter(
+    maxWidth: maxWidth,
+    previewValue: previewValue,
+  );
+  final left = (anchorCenter - width / 2)
       .clamp(margin, maxLeft)
       .toDouble();
   return left + width / 2;
+}
+
+double _desktopProgressHoverCenter({
+  required double maxWidth,
+  required double previewValue,
+}) {
+  final trackWidth = math.max(
+    0.0,
+    maxWidth - desktopProgressHorizontalInset * 2,
+  );
+  final availableWidth = math.max(
+    0.0,
+    trackWidth - desktopProgressBarHeight,
+  );
+  final value = previewValue.clamp(0.0, 1.0).toDouble();
+  return desktopProgressHorizontalInset +
+      desktopProgressBarHeight / 2 +
+      value * availableWidth;
 }
 
 class _SeekPreviewPlaceholder extends StatelessWidget {
