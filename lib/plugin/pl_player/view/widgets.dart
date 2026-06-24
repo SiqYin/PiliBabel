@@ -75,14 +75,12 @@ Widget buildSeekPreviewWidget(
           if (PlatformUtils.isDesktop &&
               plPlayerController.showDesktopProgressFeedback.value &&
               previewValue != null) {
-            return Positioned.fill(
-              child: _DesktopProgressPreviewLayout(
-                maxWidth: maxWidth,
-                previewValue: previewValue,
-                anchorWidth: width,
-                bottom: 78,
-                child: child,
-              ),
+            return _DesktopProgressPreviewLayout(
+              maxWidth: maxWidth,
+              previewValue: previewValue,
+              anchorWidth: width,
+              bottom: 78,
+              child: child,
             );
           }
           return Align(
@@ -271,6 +269,11 @@ class _DesktopProgressPreviewLayoutDelegate extends SingleChildLayoutDelegate {
         : maxWidth;
     final height = constraints.maxHeight.isFinite ? constraints.maxHeight : 0.0;
     return Size(width, height);
+  }
+
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) {
+    return constraints.loosen();
   }
 
   @override
