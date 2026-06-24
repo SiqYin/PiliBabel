@@ -117,7 +117,12 @@ class ZanButtonGrpc extends StatelessWidget {
     final dislikeBtn = SizedBox(
       height: 32,
       child: TextButton(
-        style: style,
+        style: const ButtonStyle(
+          visualDensity: .compact,
+          tapTargetSize: .shrinkWrap,
+          padding: WidgetStatePropertyAll(.zero),
+          minimumSize: WidgetStatePropertyAll(.square(40)),
+        ),
         onPressed: () => onHateReply(
           context,
           isProcessing,

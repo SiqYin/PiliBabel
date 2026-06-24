@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show ValueChanged;
+import 'package:PiliPlus/common/widgets/scroll_physics.dart' show ReloadMixin;
 import 'package:PiliPlus/http/dynamics.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/reply.dart';
@@ -8,12 +9,9 @@ import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
-class DynamicDetailController extends CommonDynController {
+class DynamicDetailController extends CommonDynController with ReloadMixin {
   static const String _kWebLinkPlaceholder = '网页链接';
-
-  @override
   late int oid;
-  @override
   late int replyType;
   late DynamicItemModel dynItem;
   final RxInt detailVersion = 0.obs;
@@ -138,5 +136,11 @@ class DynamicDetailController extends CommonDynController {
         }
       });
     }
+  }
+
+  @override
+  Future<void> onReload() {
+    reload = true;
+    return super.onReload();
   }
 }
