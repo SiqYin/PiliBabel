@@ -42,6 +42,7 @@ class ProgressBar extends LeafRenderObjectWidget {
     required this.progressBarColor,
     required this.bufferedBarColor,
     this.thumbRadius = 10.0,
+    this.minHeight,
     required this.thumbColor,
     required this.thumbGlowColor,
     this.thumbGlowRadius = 30.0,
@@ -149,6 +150,9 @@ class ProgressBar extends LeafRenderObjectWidget {
   /// The radius of the circle for the moveable progress bar thumb.
   final double thumbRadius;
 
+  /// The minimum layout height used for pointer hit testing.
+  final double? minHeight;
+
   /// The color of the circle for the moveable progress bar thumb.
   ///
   /// By default it is your theme's primary color.
@@ -200,6 +204,7 @@ class ProgressBar extends LeafRenderObjectWidget {
       progressBarColor: progressBarColor,
       bufferedBarColor: bufferedBarColor,
       thumbRadius: thumbRadius,
+      minHeight: minHeight,
       thumbColor: thumbColor,
       thumbGlowColor: thumbGlowColor,
       thumbGlowRadius: thumbGlowRadius,
@@ -228,6 +233,7 @@ class ProgressBar extends LeafRenderObjectWidget {
       ..progressBarColor = progressBarColor
       ..bufferedBarColor = bufferedBarColor
       ..thumbRadius = thumbRadius
+      ..minHeight = minHeight
       ..thumbColor = thumbColor
       ..thumbGlowColor = thumbGlowColor
       ..thumbGlowRadius = thumbGlowRadius
@@ -295,6 +301,7 @@ class ProgressBar extends LeafRenderObjectWidget {
       ..add(ColorProperty('progressBarColor', progressBarColor))
       ..add(ColorProperty('bufferedBarColor', bufferedBarColor))
       ..add(DoubleProperty('thumbRadius', thumbRadius))
+      ..add(DoubleProperty('minHeight', minHeight))
       ..add(ColorProperty('thumbColor', thumbColor))
       ..add(ColorProperty('thumbGlowColor', thumbGlowColor))
       ..add(DoubleProperty('thumbGlowRadius', thumbGlowRadius))
@@ -377,6 +384,7 @@ class RenderProgressBar extends RenderBox implements MouseTrackerAnnotation {
     required this._progressBarColor,
     required this._bufferedBarColor,
     double thumbRadius = 20.0,
+    double? minHeight,
     required this._thumbColor,
     required this._thumbGlowColor,
     double thumbGlowRadius = 30.0,
@@ -388,6 +396,8 @@ class RenderProgressBar extends RenderBox implements MouseTrackerAnnotation {
        _onHoverUpdateUserCallback = onHoverUpdate,
        _onHoverEndUserCallback = onHoverEnd,
        _thumbRadius = thumbRadius,
+       // ignore: prefer_initializing_formals
+       _minHeight = minHeight,
        _thumbGlowRadius = thumbGlowRadius,
        _paintThumbGlow = thumbGlowRadius > thumbRadius,
        _hitTestSelf =
@@ -704,6 +714,14 @@ class RenderProgressBar extends RenderBox implements MouseTrackerAnnotation {
     markNeedsLayout();
   }
 
+  double? get minHeight => _minHeight;
+  double? _minHeight;
+  set minHeight(double? value) {
+    if (_minHeight == value) return;
+    _minHeight = value;
+    markNeedsLayout();
+  }
+
   /// The color of the pressed-down effect of the moveable thumb.
   Color get thumbGlowColor => _thumbGlowColor;
   Color _thumbGlowColor;
@@ -775,7 +793,7 @@ class RenderProgressBar extends RenderBox implements MouseTrackerAnnotation {
   }
 
   double _heightWhenNoLabels() {
-    return max(2 * _thumbRadius, _barHeight);
+    return max(_minHeight ?? 0, max(2 * _thumbRadius, _barHeight));
   }
 
   @override

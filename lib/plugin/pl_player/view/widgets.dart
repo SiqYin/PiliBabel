@@ -2,7 +2,14 @@ part of 'view.dart';
 
 const double desktopProgressHorizontalInset = 20.0;
 const double desktopProgressBarHeight = 3.5;
-const double desktopProgressInteractiveHeight = 40.0;
+const double desktopProgressHoverPadding = 10.0;
+const double desktopProgressThumbRadius = 7.0;
+const double desktopProgressInteractiveHeight =
+    desktopProgressHoverPadding * 2 + desktopProgressBarHeight;
+const double desktopProgressBarTopInset =
+    desktopProgressHoverPadding + desktopProgressBarHeight;
+const double desktopProgressDmChartOffset =
+    desktopProgressBarTopInset - 4.25;
 const double desktopProgressBottomPadding = 12.0;
 const double desktopProgressControlHeight = 30.0;
 const double desktopProgressInnerBottomPadding = 7.0;
@@ -21,47 +28,69 @@ Widget buildDmChart(
   List<double> dmTrend,
   VideoDetailController videoDetailController, [
   double offset = 0,
+  bool fixedLayoutHeight = false,
 ]) {
-  return IgnorePointer(
-    child: Container(
-      height: 12,
-      margin: EdgeInsets.only(
-        bottom:
-            videoDetailController.viewPointList.isNotEmpty &&
-                videoDetailController.showVP.value
-            ? 19.25 + offset
-            : 4.25 + offset,
-      ),
-      child: LineChart(
-        LineChartData(
-          titlesData: const FlTitlesData(show: false),
-          lineTouchData: const LineTouchData(enabled: false),
-          gridData: const FlGridData(show: false),
-          borderData: FlBorderData(show: false),
-          minX: 0,
-          maxX: (dmTrend.length - 1).toDouble(),
-          minY: 0,
-          maxY: dmTrend.max,
-          lineBarsData: [
-            LineChartBarData(
-              spots: List.generate(
-                dmTrend.length,
-                (index) => FlSpot(
-                  index.toDouble(),
-                  dmTrend[index],
-                ),
-              ),
-              isCurved: true,
-              barWidth: 1,
-              color: color,
-              dotData: const FlDotData(show: false),
-              belowBarData: BarAreaData(
-                show: true,
-                color: color.withValues(alpha: 0.4),
-              ),
+  final bottomMargin =
+      videoDetailController.viewPointList.isNotEmpty &&
+          videoDetailController.showVP.value
+      ? 19.25 + offset
+      : 4.25 + offset;
+  final chart = LineChart(
+    LineChartData(
+      titlesData: const FlTitlesData(show: false),
+      lineTouchData: const LineTouchData(enabled: false),
+      gridData: const FlGridData(show: false),
+      borderData: FlBorderData(show: false),
+      minX: 0,
+      maxX: (dmTrend.length - 1).toDouble(),
+      minY: 0,
+      maxY: dmTrend.max,
+      lineBarsData: [
+        LineChartBarData(
+          spots: List.generate(
+            dmTrend.length,
+            (index) => FlSpot(
+              index.toDouble(),
+              dmTrend[index],
             ),
-          ],
+          ),
+          isCurved: true,
+          barWidth: 1,
+          color: color,
+          dotData: const FlDotData(show: false),
+          belowBarData: BarAreaData(
+            show: true,
+            color: color.withValues(alpha: 0.4),
+          ),
         ),
+      ],
+    ),
+  );
+  if (!fixedLayoutHeight) {
+    return IgnorePointer(
+      child: Container(
+        height: 12,
+        margin: EdgeInsets.only(bottom: bottomMargin),
+        child: chart,
+      ),
+    );
+  }
+  return IgnorePointer(
+    child: SizedBox(
+      height: 12,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: bottomMargin,
+            child: SizedBox(
+              height: 12,
+              child: chart,
+            ),
+          ),
+        ],
       ),
     ),
   );
