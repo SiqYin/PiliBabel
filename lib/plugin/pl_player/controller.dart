@@ -811,6 +811,9 @@ class PlPlayerController with BlockConfigMixin {
       updateBufferedSecond();
       // 数据加载完成
       dataStatus.value = DataStatus.loaded;
+      if (_canUseSeekPreview) {
+        unawaited(ensureVideoShot());
+      }
 
       if (autoFullScreenFlag && autoEnterFullScreen) {
         triggerFullScreen(status: true);
@@ -1953,6 +1956,9 @@ class PlPlayerController with BlockConfigMixin {
   bool _desktopProgressPointerInside = false;
   bool requireDesktopProgressHoverReenter = false;
 
+  bool get _canUseSeekPreview =>
+      !isFileSource && showSeekPreview && cid != null;
+
   void refreshDesktopProgressPreviewLayout() {
     desktopProgressPreviewLayoutVersion.value++;
   }
@@ -2036,23 +2042,66 @@ class PlPlayerController with BlockConfigMixin {
     }
   }
 
-  void updatePreviewIndex(int seconds) {
-    if (videoShot == null) {
-      videoShot = LoadingState.loading();
-      showPreview.value = true;
-      getVideoShot();
-      return;
-    }
-    if (videoShot is Loading) {
-      showPreview.value = true;
-      return;
-    }
-    if (videoShot case Success(:final response)) {
-      showPreview.value = true;
+  void _setPreviewIndexFromShot(int seconds) {
+    final shot = videoShot;
+    if (shot case Success(:final response)) {
       previewIndex.value = max(
         0,
         (response.index.where((item) => item <= seconds).length - 2),
       );
+    }
+  }
+
+  Future<void> ensureVideoShot() async {
+    if (!_canUseSeekPreview) {
+      return;
+    }
+    if (videoShot is Loading) {
+      return;
+    }
+    if (videoShot case Success()) {
+      return;
+    }
+
+    final requestBvid = bvid;
+    final requestCid = cid!;
+    videoShot = LoadingState.loading();
+    final response = await VideoHttp.videoshot(
+      bvid: requestBvid,
+      cid: requestCid,
+    );
+    if (requestBvid != _bvid || requestCid != cid) {
+      return;
+    }
+
+    videoShot = response;
+    if (!showPreview.value) {
+      return;
+    }
+    if (response case Success()) {
+      _setPreviewIndexFromShot(sliderTempPosition.value.inSeconds);
+    } else {
+      showPreview.value = false;
+      previewIndex.value = null;
+    }
+  }
+
+  void updatePreviewIndex(int seconds) {
+    if (!_canUseSeekPreview) {
+      return;
+    }
+    showPreview.value = true;
+    if (videoShot == null) {
+      previewIndex.value = null;
+      unawaited(ensureVideoShot());
+      return;
+    }
+    if (videoShot is Loading) {
+      previewIndex.value = null;
+      return;
+    }
+    if (videoShot case Success()) {
+      _setPreviewIndexFromShot(seconds);
     } else {
       showPreview.value = false;
       previewIndex.value = null;
@@ -2067,19 +2116,6 @@ class PlPlayerController with BlockConfigMixin {
       i?.dispose();
     }
     previewCache.clear();
-  }
-
-  Future<void> getVideoShot() async {
-    videoShot = await VideoHttp.videoshot(bvid: bvid, cid: cid!);
-    if (!showPreview.value) {
-      return;
-    }
-    if (videoShot case Success()) {
-      updatePreviewIndex(sliderTempPosition.value.inSeconds);
-    } else {
-      showPreview.value = false;
-      previewIndex.value = null;
-    }
   }
 
   Future<void> takeScreenshot() async {

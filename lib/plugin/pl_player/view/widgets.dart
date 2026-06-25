@@ -10,16 +10,22 @@ const double desktopProgressBarTopInset =
     desktopProgressHoverPadding + desktopProgressBarHeight;
 const double desktopProgressDmChartOffset =
     desktopProgressBarTopInset - 4.25;
+// 底部控制栏和进度条之间的基础留白。
 const double desktopProgressBottomPadding = 12.0;
+// 底部控制栏本身的高度。
 const double desktopProgressControlHeight = 30.0;
+// 控制栏和进度条之间的内层间距。
 const double desktopProgressInnerBottomPadding = 7.0;
-const double desktopProgressOverlayGap = 6.0;
+// 进度条和 Hover 浮层（时间指示器和预览窗口）整体之间的额外间距。
+const double desktopProgressOverlayGap = 9.0;
+// 时间指示器距离底部的总偏移基准。
 const double desktopProgressTimeIndicatorBottom =
     desktopProgressBottomPadding +
     desktopProgressControlHeight +
     desktopProgressInnerBottomPadding +
     desktopProgressInteractiveHeight +
     desktopProgressOverlayGap;
+// 预览窗在时间指示器基准上再往上抬的距离。
 const double desktopProgressSeekPreviewBottom =
     desktopProgressTimeIndicatorBottom + 40.0;
 
