@@ -2,17 +2,7 @@ part of 'view.dart';
 
 const double desktopProgressHorizontalInset = 20.0;
 const double desktopProgressBarHeight = 3.5;
-const double desktopProgressHoverPadding = 10.0;
-const double desktopProgressThumbRadius = 7.0;
-const double desktopProgressInteractiveHeight =
-    desktopProgressHoverPadding * 2 + desktopProgressBarHeight;
-const double desktopProgressThumbBottomInset =
-    desktopProgressHoverPadding -
-    (desktopProgressThumbRadius * 2 - desktopProgressBarHeight) / 2;
-const double desktopProgressBarTopInset =
-    desktopProgressHoverPadding + desktopProgressBarHeight;
-const double desktopProgressDmChartOffset =
-    desktopProgressBarTopInset - 4.25;
+const double desktopProgressInteractiveHeight = 40.0;
 const double desktopProgressBottomPadding = 12.0;
 const double desktopProgressControlHeight = 30.0;
 const double desktopProgressInnerBottomPadding = 7.0;

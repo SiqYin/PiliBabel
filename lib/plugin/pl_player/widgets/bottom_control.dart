@@ -119,40 +119,35 @@ class BottomControl extends StatelessWidget {
                     clipBehavior: Clip.none,
                     alignment: Alignment.bottomCenter,
                     children: [
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: desktopProgressThumbBottomInset,
-                        child: Obx(() {
-                          final int value =
-                              controller.sliderPositionSeconds.value;
-                          final duration = controller.duration.value;
-                          return ProgressBar(
-                            progress: Duration(seconds: value),
-                            buffered: Duration(
-                              seconds: controller.bufferedSeconds.value,
-                            ),
-                            total: duration,
-                            progressBarColor: primary,
-                            baseBarColor: const Color(0x33FFFFFF),
-                            bufferedBarColor: bufferedBarColor,
-                            thumbColor: primary,
-                            thumbGlowColor: thumbGlowColor,
-                            barHeight: desktopProgressBarHeight,
-                            thumbRadius: desktopProgressThumbRadius,
-                            thumbGlowRadius: 25,
-                            onDragStart: onDragStart,
-                            onDragUpdate: onDragUpdate,
-                            onSeek: onSeek,
-                          );
-                        }),
-                      ),
+                      Obx(() {
+                        final int value =
+                            controller.sliderPositionSeconds.value;
+                        final duration = controller.duration.value;
+                        return ProgressBar(
+                          progress: Duration(seconds: value),
+                          buffered: Duration(
+                            seconds: controller.bufferedSeconds.value,
+                          ),
+                          total: duration,
+                          progressBarColor: primary,
+                          baseBarColor: const Color(0x33FFFFFF),
+                          bufferedBarColor: bufferedBarColor,
+                          thumbColor: primary,
+                          thumbGlowColor: thumbGlowColor,
+                          barHeight: desktopProgressBarHeight,
+                          thumbRadius: 7,
+                          thumbGlowRadius: 25,
+                          onDragStart: onDragStart,
+                          onDragUpdate: onDragUpdate,
+                          onSeek: onSeek,
+                        );
+                      }),
                       if (controller.enableBlock &&
                           videoDetailController.segmentProgressList.isNotEmpty)
                         Positioned(
                           left: 0,
                           right: 0,
-                          bottom: desktopProgressHoverPadding,
+                          bottom: 5.25,
                           child: SegmentProgressBar(
                             segments:
                                 videoDetailController.segmentProgressList,
@@ -165,7 +160,7 @@ class BottomControl extends StatelessWidget {
                         Positioned(
                           left: 0,
                           right: 0,
-                          bottom: desktopProgressHoverPadding,
+                          bottom: 5.25,
                           child: ViewPointDividerBar(
                             segments: videoDetailController.viewPointList,
                             progress: controller.duration.value.inSeconds > 0
@@ -178,10 +173,8 @@ class BottomControl extends StatelessWidget {
                           controller.showViewPoints &&
                           videoDetailController.viewPointList.isNotEmpty &&
                           videoDetailController.showVP.value)
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          bottom: desktopProgressBarTopInset,
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8.75),
                           child: ViewPointSegmentProgressBar(
                             segments: videoDetailController.viewPointList,
                             onSeek: PlatformUtils.isDesktop
@@ -199,24 +192,30 @@ class BottomControl extends StatelessWidget {
                             primary,
                             list,
                             videoDetailController,
-                            desktopProgressDmChartOffset,
+                            4.5,
                           ),
 
                       if (PlatformUtils.isDesktop)
-                        Positioned.fill(
-                          child: IgnorePointer(
-                            child: Obx(() {
-                              final hoverValue =
-                                  controller.showDesktopProgressFeedback.value
-                                  ? controller.desktopProgressHoverValue.value
-                                  : null;
-                              return CustomPaint(
-                                painter: _DesktopProgressHoverPainter(
-                                  hoverValue: hoverValue,
-                                  color: primary,
-                                ),
-                              );
-                            }),
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: SizedBox(
+                            height: 14,
+                            child: IgnorePointer(
+                              child: Obx(() {
+                                final hoverValue =
+                                    controller.showDesktopProgressFeedback.value
+                                    ? controller.desktopProgressHoverValue.value
+                                    : null;
+                                return CustomPaint(
+                                  painter: _DesktopProgressHoverPainter(
+                                    hoverValue: hoverValue,
+                                    color: primary,
+                                  ),
+                                );
+                              }),
+                            ),
                           ),
                         ),
                     ],
@@ -256,8 +255,8 @@ class _DesktopProgressHoverPainter extends CustomPainter {
       ..color = color
       ..style = PaintingStyle.fill;
 
-    const triangleHalfWidth = 4.5;
-    const triangleHeight = 5.0;
+    const triangleHalfWidth = 6.0;
+    const triangleHeight = 8.0;
     const gap = 4.0;
 
     canvas
