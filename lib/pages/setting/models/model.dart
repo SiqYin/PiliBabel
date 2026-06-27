@@ -1,4 +1,3 @@
-import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/models/common/enum_with_label.dart';
 import 'package:PiliPlus/pages/setting/widgets/normal_item.dart';
 import 'package:PiliPlus/pages/setting/widgets/popup_item.dart';
@@ -29,6 +28,30 @@ sealed class SettingsModel {
     this.contentPadding,
     this.titleStyle,
   });
+}
+
+class WidgetModel extends SettingsModel {
+  const WidgetModel({
+    required this.child,
+    this.searchTitle = '',
+    this.searchSubtitle,
+  });
+
+  final Widget child;
+  final String searchTitle;
+  final String? searchSubtitle;
+
+  @override
+  String? get title => null;
+
+  @override
+  String get effectiveTitle => searchTitle;
+
+  @override
+  String? get effectiveSubtitle => searchSubtitle;
+
+  @override
+  Widget get widget => child;
 }
 
 class SplitModel extends SettingsModel {

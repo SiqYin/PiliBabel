@@ -234,9 +234,6 @@ class PlDanmakuController {
     // // Track base font sizes for merged danmaku to avoid recalculation
     // final baseFontSizes = HashMap<String, int>();
 
-    final filters = _plPlayerController.filters;
-    final danmakuWeight = DanmakuOptions.danmakuWeight;
-    final shouldFilter = filters.count != 0;
     for (final element in elems) {
       if (_isLogin) {
         element.isSelf = element.midHash == _plPlayerController.midHash;
@@ -338,12 +335,13 @@ class PlDanmakuController {
   }
 
   void _storeDanmaku(List<DanmakuElem> elems) {
-    final shouldFilter = _plPlayerController.filters.count != 0;
+    final filters = _plPlayerController.filters;
+    final shouldFilter = filters.count != 0;
     final danmakuWeight = DanmakuOptions.danmakuWeight;
     for (final element in elems) {
       if (!element.isSelf) {
         if (element.weight < danmakuWeight ||
-            (shouldFilter && _plPlayerController.filters.remove(element))) {
+            (shouldFilter && filters.remove(element))) {
           continue;
         }
       }
@@ -405,7 +403,7 @@ class PlDanmakuController {
   }
 
   int? get _maxSegmentIndex {
-    final totalDurationMs = _plPlayerController.duration.value.inMilliseconds;
+    final totalDurationMs = _plPlayerController.duration.value * 1000;
     if (totalDurationMs <= 0) {
       return null;
     }

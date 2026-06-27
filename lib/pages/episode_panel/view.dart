@@ -24,7 +24,6 @@ import 'package:PiliPlus/pages/common/slide/common_slide_page.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/widgets/page.dart';
-import 'package:PiliPlus/models/common/account_type.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
@@ -264,15 +263,15 @@ class _EpisodePanelState extends State<EpisodePanel>
       }
       return offset + 7;
     } else {
-      return index * 100 + 7;
+      return index * 112 + 7;
     }
   }
 
   double _calcItemHeight(ugc.BaseEpisodeItem episode) {
     if (episode is ugc.EpisodeItem && episode.pages!.length > 1) {
-      return 145; // 98 + 2 + 10 + 35
+      return 157; // 110 + 2 + 10 + 35
     }
-    return 100;
+    return 112;
   }
 
   Widget _buildBody(
@@ -313,7 +312,7 @@ class _EpisodePanelState extends State<EpisodePanel>
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            episodeItem, // 98
+                            episodeItem, // 110
                             Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
@@ -354,7 +353,7 @@ class _EpisodePanelState extends State<EpisodePanel>
                         isCurrentIndex: isCurrItem,
                       );
                     },
-                    itemExtent: 100,
+                    itemExtent: 112,
                   ),
           ),
         ],
@@ -430,9 +429,9 @@ class _EpisodePanelState extends State<EpisodePanel>
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
       child: SizedBox(
-        height: 98,
+        height: 110,
         child: Material(
-          type: MaterialType.transparency,
+          type: .transparency,
           child: InkWell(
             onTap: () {
               if (episode.badge == "会员" &&
@@ -464,7 +463,7 @@ class _EpisodePanelState extends State<EpisodePanel>
             onLongPress: onLongPress,
             onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
             child: Padding(
-              padding: const EdgeInsets.symmetric(
+              padding: const .symmetric(
                 horizontal: Style.safeSpace,
                 vertical: 5,
               ),
@@ -477,8 +476,8 @@ class _EpisodePanelState extends State<EpisodePanel>
                       children: [
                         NetworkImgLayer(
                           src: cover,
-                          width: 140.8,
-                          height: 88,
+                          width: 160,
+                          height: 100,
                           cacheWidth: cacheWidth,
                         ),
                         if (duration != null && duration > 0)

@@ -31,20 +31,22 @@ class BottomControl extends StatelessWidget {
     feedBack();
     controller
       ..onDesktopProgressDragStart(duration.timeStamp)
-      ..onChangedSliderStart(duration.timeStamp);
+      ..position.value = duration.seconds
+      ..isSeeking.value = true;
   }
 
   void onDragUpdate(ThumbDragDetails duration) {
-    controller
-      ..updateDesktopProgressPreviewFromDrag(duration.timeStamp)
-      ..onUpdatedSliderProgress(duration.timeStamp);
+    controller.updateDesktopProgressPreviewFromDrag(duration.timeStamp);
+    if (!controller.isFileSource && controller.showSeekPreview) {
+      controller.updatePreviewIndex(duration.seconds);
+    }
+    controller.position.value = duration.seconds;
   }
 
-  void onSeek(Duration duration) {
+  void onSeek(int milliseconds) {
     controller
-      ..onChangedSliderEnd()
-      ..onChangedSlider(duration.inSeconds)
-      ..seekTo(Duration(seconds: duration.inSeconds), isSeek: false);
+      ..onSeekEnd()
+      ..seekTo(Duration(milliseconds: milliseconds), isSeek: false);
   }
 
   @override
@@ -71,15 +73,11 @@ class BottomControl extends StatelessWidget {
                   clipBehavior: Clip.none,
                   alignment: Alignment.bottomCenter,
                   children: [
-                    Obx(() {
-                      final int value = controller.sliderPositionSeconds.value;
-                      final duration = controller.duration.value;
-                      return ProgressBar(
-                        progress: Duration(seconds: value),
-                        buffered: Duration(
-                          seconds: controller.bufferedSeconds.value,
-                        ),
-                        total: duration,
+                    Obx(
+                      () => ProgressBar(
+                        progress: controller.position.value,
+                        buffered: controller.buffered.value,
+                        total: controller.duration.value,
                         progressBarColor: primary,
                         baseBarColor: const Color(0x33FFFFFF),
                         bufferedBarColor: bufferedBarColor,
@@ -109,8 +107,8 @@ class BottomControl extends StatelessWidget {
                         onHoverEnd: isDesktop
                             ? controller.onDesktopProgressHoverEnd
                             : null,
-                      );
-                    }),
+                      ),
+                    ),
                     if (controller.enableBlock &&
                         videoDetailController.segmentProgressList.isNotEmpty)
                       Positioned(
@@ -131,9 +129,9 @@ class BottomControl extends StatelessWidget {
                         bottom: isDesktop ? desktopProgressHoverPadding : 5.25,
                         child: ViewPointDividerBar(
                           segments: videoDetailController.viewPointList,
-                          progress: controller.duration.value.inSeconds > 0
-                              ? controller.sliderPositionSeconds.value /
-                                    controller.duration.value.inSeconds
+                          progress: controller.duration.value > 0
+                              ? controller.position.value /
+                                    controller.duration.value
                               : 0.0,
                         ),
                       ),

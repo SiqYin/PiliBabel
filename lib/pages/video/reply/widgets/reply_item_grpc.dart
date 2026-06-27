@@ -185,13 +185,10 @@ class ReplyItemGrpc extends StatelessWidget {
                           ),
                         ),
                       ),
-                      Image.asset(
-                        BiliUtils.levelName(
-                          member.level,
-                          isSeniorMember: member.isSeniorMember == 1,
-                        ),
+                      BiliUtils.levelPicture(
+                        member.level.toInt(),
+                        isSeniorMember: member.isSeniorMember == 1,
                         height: 11,
-                        cacheHeight: 11.cacheSize(context),
                       ),
                       if (replyItem.mid == upMid)
                         const PBadge(
@@ -846,7 +843,7 @@ class ReplyItemGrpc extends StatelessWidget {
             final ctr = Get.find<AudioController>(tag: heroTag);
             isValid =
                 DurationUtils.parseDuration(matchStr) * 1000 <=
-                ctr.duration.value.inMilliseconds;
+                ctr.duration.value * 1000;
             if (kDebugMode) debugPrint('Found AudioController, isValid: $isValid');
           } catch (_) {
             try {

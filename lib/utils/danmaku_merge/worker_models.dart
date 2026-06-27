@@ -3,7 +3,6 @@
 
 import 'dart:typed_data';
 
-import 'package:PiliPlus/grpc/bilibili/community/service/dm/v1.pb.dart';
 import 'package:PiliPlus/utils/danmaku_merge/models.dart';
 
 class DanmakuMergeTaskPayload {

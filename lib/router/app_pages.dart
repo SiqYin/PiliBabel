@@ -54,19 +54,12 @@ import 'package:PiliPlus/pages/popular_series/view.dart';
 import 'package:PiliPlus/pages/search/view.dart';
 import 'package:PiliPlus/pages/search_result/view.dart';
 import 'package:PiliPlus/pages/search_trending/view.dart';
-import 'package:PiliPlus/pages/setting/dynamics_setting.dart';
-import 'package:PiliPlus/pages/setting/extra_setting.dart';
 import 'package:PiliPlus/pages/setting/pages/bar_set.dart';
 import 'package:PiliPlus/pages/setting/pages/color_select.dart';
 import 'package:PiliPlus/pages/setting/pages/display_mode.dart';
 import 'package:PiliPlus/pages/setting/pages/font_size_select.dart';
 import 'package:PiliPlus/pages/setting/pages/logs.dart';
 import 'package:PiliPlus/pages/setting/pages/play_speed_set.dart';
-import 'package:PiliPlus/pages/setting/play_setting.dart';
-import 'package:PiliPlus/pages/setting/privacy_setting.dart';
-import 'package:PiliPlus/pages/setting/recommend_setting.dart';
-import 'package:PiliPlus/pages/setting/style_setting.dart';
-import 'package:PiliPlus/pages/setting/video_setting.dart';
 import 'package:PiliPlus/pages/setting/view.dart';
 import 'package:PiliPlus/pages/settings_search/view.dart';
 import 'package:PiliPlus/pages/space_setting/view.dart';
@@ -118,20 +111,6 @@ class Routes {
     // 用户中心
     GetPage(name: '/member', page: () => const MemberPage()),
     GetPage(name: '/memberSearch', page: () => const MemberSearchPage()),
-    // 推荐流设置
-    GetPage(name: '/recommendSetting', page: () => const RecommendSetting()),
-    // 动态流设置
-    GetPage(name: '/dynamicsSetting', page: () => const DynamicsSetting()),
-    // 音视频设置
-    GetPage(name: '/videoSetting', page: () => const VideoSetting()),
-    // 播放器设置
-    GetPage(name: '/playSetting', page: () => const PlaySetting()),
-    // 外观设置
-    GetPage(name: '/styleSetting', page: () => const StyleSetting()),
-    // 隐私设置
-    GetPage(name: '/privacySetting', page: () => const PrivacySetting()),
-    // 其它设置
-    GetPage(name: '/extraSetting', page: () => const ExtraSetting()),
     //
     GetPage(name: '/blackListPage', page: () => const BlackListPage()),
     GetPage(name: '/colorSetting', page: () => const ColorSelectPage()),
@@ -140,7 +119,6 @@ class Routes {
     GetPage(name: '/displayModeSetting', page: () => const SetDisplayMode()),
     // 关于
     GetPage(name: '/about', page: () => const AboutPage()),
-    //
     GetPage(name: '/articlePage', page: () => const ArticlePage()),
 
     // 历史记录搜索

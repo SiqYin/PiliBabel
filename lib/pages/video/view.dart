@@ -13,6 +13,7 @@ import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
 import 'package:PiliPlus/common/widgets/route_aware_mixin.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart';
 import 'package:PiliPlus/common/widgets/sliver/sliver_pinned_dynamic_header.dart';
+import 'package:PiliPlus/common/widgets/svg/play_icon.dart';
 import 'package:PiliPlus/models/common/episode_panel_type.dart';
 import 'package:PiliPlus/models/common/list_order.dart';
 import 'package:PiliPlus/models_new/pgc/pgc_info_model/result.dart';
@@ -58,7 +59,6 @@ import 'package:PiliPlus/services/shutdown_timer_service.dart'
     show shutdownTimerService;
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/android/bindings.g.dart';
-import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
@@ -101,9 +101,6 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   // 标志位：_onPopInvokedWithResult 触发了 didPop=true 但 PiP 被其他视频/直播抢占，
   // 需要在 didPopNext 关闭其他 PiP 后重试启动
   bool _pipRetryPending = false;
-
-  // 标志位：是否刚从 PiP 返回（用于触发 UI 重建）
-  bool _justReturnedFromPip = false;
 
   // 从 PiP 恢复时提前取出的 additional controllers（在 stopPip 清空前保存）
   dynamic _savedIntroControllerFromPip;
@@ -343,8 +340,6 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     }
 
     if (fromPip) {
-      _justReturnedFromPip = true;
-
       plPlayerController = videoDetailController.plPlayerController;
       final wasPlaying = plPlayerController!.playerStatus.isPlaying;
 
@@ -380,9 +375,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
       // 立即调用 setState 触发 build
       if (mounted) {
-        setState(() {
-          _justReturnedFromPip = false;
-        });
+        setState(() {});
       }
 
       // 然后在下一帧刷新所有 observable
@@ -1709,12 +1702,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             child: IconButton(
               tooltip: '播放',
               onPressed: handlePlay,
-              icon: Image.asset(
-                Assets.play,
-                width: 60,
-                height: 60,
-                cacheHeight: 60.cacheSize(context),
-              ),
+              icon: const PlayIcon(),
             ),
           ),
         ],
@@ -2818,10 +2806,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         _logSponsorBlock(
           'Returning from PiP, positionSubscription will be preserved',
         );
-        final currentPosition = plPlayerController?.position;
+        final currentPosition = plPlayerController?.positionInMilliseconds;
         final args = Map<String, dynamic>.from(videoDetailController.args);
         final progress =
-            currentPosition?.inMilliseconds ??
+            currentPosition ??
             videoDetailController.playedTime?.inMilliseconds;
         if (progress != null) {
           args['progress'] = progress;
@@ -2855,7 +2843,9 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     plPlayerController ??= videoDetailController.plPlayerController;
     if (plPlayerController != null) {
       if (videoDetailController.isFileSource) {
-        videoDetailController.playedTime = plPlayerController!.position;
+        videoDetailController.playedTime = Duration(
+          milliseconds: plPlayerController!.positionInMilliseconds,
+        );
         videoDetailController.cacheLocalProgress();
       }
       videoDetailController.makeHeartBeat();
