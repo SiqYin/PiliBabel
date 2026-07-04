@@ -253,14 +253,13 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     removeObserverMobile(this);
     plPlayerController.removeStatusLister(playerListener);
 
-    // 如果正在播放且不是全屏状态，启动小窗
-    if (plPlayerController.playerStatus.isPlaying && !isFullScreen) {
+    if (plPlayerController.playerStatus.isPlaying &&
+        !isFullScreen &&
+        _shouldStartLivePip()) {
       _startLivePipIfNeeded();
     } else {
-      // 不启动小窗，只暂停
       _liveRoomController
         ..danmakuController?.clear()
-        ..danmakuController?.pause()
         ..cancelLiveTimer()
         ..closeLiveMsg()
         ..isPlaying = plPlayerController.playerStatus.isPlaying;
@@ -1025,7 +1024,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                 Obx(
                   () {
                     final enableShowLiveDanmaku =
-                        plPlayerController.enableShowDanmaku.value;
+                        plPlayerController.enableShowLiveDanmaku.value;
                     return SizedBox(
                       width: 34,
                       height: 34,
@@ -1033,7 +1032,8 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                         style: IconButton.styleFrom(padding: .zero),
                         onPressed: () {
                           final newVal = !enableShowLiveDanmaku;
-                          plPlayerController.enableShowDanmaku.value = newVal;
+                          plPlayerController.enableShowLiveDanmaku.value =
+                              newVal;
                           if (!plPlayerController.tempPlayerConf) {
                             GStorage.setting.put(
                               SettingBoxKey.enableShowLiveDanmaku,
@@ -1307,7 +1307,7 @@ class _LiveDanmakuState extends State<LiveDanmaku> {
     final option = DanmakuOptions.get(notFullscreen: widget.notFullscreen);
     return Obx(
       () => AnimatedOpacity(
-        opacity: plPlayerController.enableShowDanmaku.value
+        opacity: plPlayerController.enableShowLiveDanmaku.value
             ? plPlayerController.danmakuOpacity.value
             : 0,
         duration: const Duration(milliseconds: 100),
