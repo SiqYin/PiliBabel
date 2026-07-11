@@ -57,7 +57,7 @@ class _ViewPointsPageState extends State<ViewPointsPage>
               child: Switch(
                 value: videoDetailController.showVP.value,
                 onChanged: (value) {
-                  videoDetailController.showVP.value = value;
+                  videoDetailController.showVP.call(value);
                   if (plPlayerController?.tempPlayerConf != true) {
                     GStorage.setting.put(
                       SettingBoxKey.showViewPointsOverlay,
