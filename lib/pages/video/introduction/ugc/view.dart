@@ -1,6 +1,7 @@
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/widgets/animated_height.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/expandable.dart';
 import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
@@ -235,14 +236,14 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                     ..._infos(theme, videoDetail)
                   else
                     Obx(
-                      () => ExpandablePanel(
-                        collapsed: const SizedBox(width: .infinity, height: 0),
-                        expanded: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                      () => AnimatedHeight(
+                        expand: introController.expand.value,
+                        duration: const Duration(milliseconds: 300),
+                        child: Column(
+                          mainAxisSize: .min,
+                          crossAxisAlignment: .start,
                           children: _infos(theme, videoDetail),
                         ),
-                        expand: introController.expand.value,
                       ),
                     ),
                   Obx(
