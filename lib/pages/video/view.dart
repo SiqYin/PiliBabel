@@ -1742,6 +1742,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     required double width,
     required double height,
     bool isPipMode = false,
+    bool isInAppPip = false,
   }) => popScope(
     key: videoDetailController.videoPlayerKey,
     canPop:
@@ -1759,6 +1760,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
               maxWidth: width,
               maxHeight: height,
               isPipMode: isPipMode,
+              isInAppPip: isInAppPip,
               plPlayerController: plPlayerController!,
               videoDetailController: videoDetailController,
               introController: introController,
@@ -2775,6 +2777,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         width: w,
         height: h,
         isPipMode: true,
+        isInAppPip: !isNative,
       ),
       onClose: () {
         _isEnteringPipMode = false;

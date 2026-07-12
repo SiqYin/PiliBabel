@@ -99,6 +99,7 @@ class PLVideoPlayer extends StatefulWidget {
     this.showEpisodes,
     this.showViewPoints,
     this.isPipMode = false,
+    this.isInAppPip = false,
     this.fill = Colors.black,
     this.alignment = Alignment.center,
     super.key,
@@ -123,6 +124,10 @@ class PLVideoPlayer extends StatefulWidget {
   showEpisodes;
   final VoidCallback? showViewPoints;
   final bool isPipMode;
+
+  /// 应用内小窗（我们独有的浮窗，非系统 PiP）。
+  /// 窗口过小时不渲染字幕，避免（尤其是双语）字幕挤占画面。
+  final bool isInAppPip;
   final Color fill;
   final Alignment alignment;
 
@@ -1473,7 +1478,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         if (widget.danmuWidget case final danmaku?)
           Positioned.fill(top: 4, child: danmaku),
 
-        if (!isLive)
+        if (!isLive && !widget.isInAppPip)
           Positioned.fill(
             child: IgnorePointer(
               ignoring: !plPlayerController.enableDragSubtitle,
