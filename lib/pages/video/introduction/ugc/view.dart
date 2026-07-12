@@ -275,7 +275,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
   );
 
   List<Widget> _infos(VideoDetailData videoDetail) => [
-    const SizedBox(height: 8),
+    const SizedBox(height: 8, width: .infinity),
     GestureDetector(
       onTap: () => Utils.copyText('${videoDetail.bvid}'),
       child: Text(
