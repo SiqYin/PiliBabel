@@ -1374,6 +1374,8 @@ class HeaderControlState extends State<HeaderControl>
 
   /// 字幕设置
   void showSetSubtitle() {
+    // 0 = 主字幕, 1 = 副字幕。字号/字重/描边/背景独立,位置边距共用(仅主字幕页显示)
+    int segment = 0;
     showBottomSheet(
       padding: () => isFullScreen ? const .only(bottom: 70) : .zero,
       (context, setState) {
@@ -1388,54 +1390,115 @@ class HeaderControlState extends State<HeaderControl>
           thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6.0),
         );
 
-        void updateStrokeWidth(double val) {
-          plPlayerController
-            ..subtitleStrokeWidth = val
-            ..updateSubtitleStyle();
+        final isPrimary = segment == 0;
+
+        void update(VoidCallback apply) {
+          apply();
+          plPlayerController.updateSubtitleStyle();
           setState(() {});
         }
 
-        void updateOpacity(double val) {
-          plPlayerController
-            ..subtitleBgOpacity = val.toPrecision(2)
-            ..updateSubtitleStyle();
-          setState(() {});
-        }
+        final fontScale = isPrimary
+            ? subtitleFontScale
+            : plPlayerController.subtitleSecondaryFontScale;
+        final fontScaleFS = isPrimary
+            ? subtitleFontScaleFS
+            : plPlayerController.subtitleSecondaryFontScaleFS;
+        final fontWeight = isPrimary
+            ? subtitleFontWeight
+            : plPlayerController.subtitleSecondaryFontWeight;
+        final strokeWidth = isPrimary
+            ? subtitleStrokeWidth
+            : plPlayerController.subtitleSecondaryStrokeWidth;
+        final bgOpacity = isPrimary
+            ? subtitleBgOpacity
+            : plPlayerController.subtitleSecondaryBgOpacity;
 
-        void updateBottomPadding(double val) {
-          plPlayerController
-            ..subtitlePaddingB = val.round()
-            ..updateSubtitleStyle();
-          setState(() {});
-        }
+        void updateFontScale(double val) => update(() {
+          if (isPrimary) {
+            plPlayerController.subtitleFontScale = val;
+          } else {
+            plPlayerController.subtitleSecondaryFontScale = val;
+          }
+        });
 
-        void updateHorizontalPadding(double val) {
-          plPlayerController
-            ..subtitlePaddingH = val.round()
-            ..updateSubtitleStyle();
-          setState(() {});
-        }
+        void updateFontScaleFS(double val) => update(() {
+          if (isPrimary) {
+            plPlayerController.subtitleFontScaleFS = val;
+          } else {
+            plPlayerController.subtitleSecondaryFontScaleFS = val;
+          }
+        });
 
-        void updateFontScaleFS(double val) {
-          plPlayerController
-            ..subtitleFontScaleFS = val
-            ..updateSubtitleStyle();
-          setState(() {});
-        }
+        void updateFontWeight(double val) => update(() {
+          if (isPrimary) {
+            plPlayerController.subtitleFontWeight = val.toInt();
+          } else {
+            plPlayerController.subtitleSecondaryFontWeight = val.toInt();
+          }
+        });
 
-        void updateFontScale(double val) {
-          plPlayerController
-            ..subtitleFontScale = val
-            ..updateSubtitleStyle();
-          setState(() {});
-        }
+        void updateStrokeWidth(double val) => update(() {
+          if (isPrimary) {
+            plPlayerController.subtitleStrokeWidth = val;
+          } else {
+            plPlayerController.subtitleSecondaryStrokeWidth = val;
+          }
+        });
 
-        void updateFontWeight(double val) {
-          plPlayerController
-            ..subtitleFontWeight = val.toInt()
-            ..updateSubtitleStyle();
-          setState(() {});
-        }
+        void updateOpacity(double val) => update(() {
+          if (isPrimary) {
+            plPlayerController.subtitleBgOpacity = val.toPrecision(2);
+          } else {
+            plPlayerController.subtitleSecondaryBgOpacity = val.toPrecision(2);
+          }
+        });
+
+        void updateBottomPadding(double val) => update(() {
+          plPlayerController.subtitlePaddingB = val.round();
+        });
+
+        void updateHorizontalPadding(double val) => update(() {
+          plPlayerController.subtitlePaddingH = val.round();
+        });
+
+        List<Widget> sliderRow({
+          required String title,
+          required Widget reset,
+          required double min,
+          required double max,
+          int? divisions,
+          required double value,
+          String? label,
+          required ValueChanged<double> onChanged,
+        }) => [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(title),
+              reset,
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.only(
+              top: 0,
+              bottom: 6,
+              left: 10,
+              right: 10,
+            ),
+            child: SliderTheme(
+              data: sliderTheme,
+              child: Slider(
+                min: min,
+                max: max,
+                value: value,
+                divisions: divisions,
+                label: label,
+                onChanged: onChanged,
+              ),
+            ),
+          ),
+        ];
 
         return Padding(
           padding: const EdgeInsets.all(12),
@@ -1452,192 +1515,108 @@ class HeaderControlState extends State<HeaderControl>
                     height: 45,
                     child: Center(child: Text('字幕设置', style: titleStyle)),
                   ),
+                  Center(
+                    child: SegmentedButton<int>(
+                      showSelectedIcon: false,
+                      style: const ButtonStyle(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      segments: const [
+                        ButtonSegment(value: 0, label: Text('主字幕')),
+                        ButtonSegment(value: 1, label: Text('副字幕')),
+                      ],
+                      selected: {segment},
+                      onSelectionChanged: (val) =>
+                          setState(() => segment = val.first),
+                    ),
+                  ),
                   const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '字体大小 ${(subtitleFontScale * 100).toStringAsFixed(1)}%',
+                  ...sliderRow(
+                    title: '字体大小 ${(fontScale * 100).toStringAsFixed(1)}%',
+                    reset: isPrimary
+                        ? resetBtn(theme, '100.0%', () => updateFontScale(1.0))
+                        : resetBtn(theme, '80.0%', () => updateFontScale(0.8)),
+                    min: 0.5,
+                    max: 2.5,
+                    divisions: 20,
+                    value: fontScale,
+                    label: '${(fontScale * 100).toStringAsFixed(1)}%',
+                    onChanged: updateFontScale,
+                  ),
+                  ...sliderRow(
+                    title:
+                        '全屏字体大小 ${(fontScaleFS * 100).toStringAsFixed(1)}%',
+                    reset: isPrimary
+                        ? resetBtn(
+                            theme,
+                            '150.0%',
+                            () => updateFontScaleFS(1.5),
+                          )
+                        : resetBtn(
+                            theme,
+                            '120.0%',
+                            () => updateFontScaleFS(1.2),
+                          ),
+                    min: 0.5,
+                    max: 2.5,
+                    divisions: 20,
+                    value: fontScaleFS,
+                    label: '${(fontScaleFS * 100).toStringAsFixed(1)}%',
+                    onChanged: updateFontScaleFS,
+                  ),
+                  ...sliderRow(
+                    title: '字体粗细 ${fontWeight + 1}（可能无法精确调节）',
+                    reset: resetBtn(theme, 6, () => updateFontWeight(5)),
+                    min: 0,
+                    max: 8,
+                    divisions: 8,
+                    value: fontWeight.toDouble(),
+                    label: '${fontWeight + 1}',
+                    onChanged: updateFontWeight,
+                  ),
+                  ...sliderRow(
+                    title: '描边粗细 $strokeWidth',
+                    reset: resetBtn(theme, 2.0, () => updateStrokeWidth(2.0)),
+                    min: 0,
+                    max: 5,
+                    divisions: 10,
+                    value: strokeWidth,
+                    label: '$strokeWidth',
+                    onChanged: updateStrokeWidth,
+                  ),
+                  if (isPrimary) ...[
+                    ...sliderRow(
+                      title: '左右边距 $subtitlePaddingH',
+                      reset: resetBtn(
+                        theme,
+                        24,
+                        () => updateHorizontalPadding(24),
                       ),
-                      resetBtn(theme, '100.0%', () => updateFontScale(1.0)),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 0,
-                      bottom: 6,
-                      left: 10,
-                      right: 10,
+                      min: 0,
+                      max: 100,
+                      divisions: 100,
+                      value: subtitlePaddingH.toDouble(),
+                      label: '$subtitlePaddingH',
+                      onChanged: updateHorizontalPadding,
                     ),
-                    child: SliderTheme(
-                      data: sliderTheme,
-                      child: Slider(
-                        min: 0.5,
-                        max: 2.5,
-                        value: subtitleFontScale,
-                        divisions: 20,
-                        label:
-                            '${(subtitleFontScale * 100).toStringAsFixed(1)}%',
-                        onChanged: updateFontScale,
-                      ),
+                    ...sliderRow(
+                      title: '底部边距 $subtitlePaddingB',
+                      reset: resetBtn(theme, 24, () => updateBottomPadding(24)),
+                      min: 0,
+                      max: 200,
+                      divisions: 200,
+                      value: subtitlePaddingB.toDouble(),
+                      label: '$subtitlePaddingB',
+                      onChanged: updateBottomPadding,
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '全屏字体大小 ${(subtitleFontScaleFS * 100).toStringAsFixed(1)}%',
-                      ),
-                      resetBtn(theme, '150.0%', () => updateFontScaleFS(1.5)),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 0,
-                      bottom: 6,
-                      left: 10,
-                      right: 10,
-                    ),
-                    child: SliderTheme(
-                      data: sliderTheme,
-                      child: Slider(
-                        min: 0.5,
-                        max: 2.5,
-                        value: subtitleFontScaleFS,
-                        divisions: 20,
-                        label:
-                            '${(subtitleFontScaleFS * 100).toStringAsFixed(1)}%',
-                        onChanged: updateFontScaleFS,
-                      ),
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('字体粗细 ${subtitleFontWeight + 1}（可能无法精确调节）'),
-                      resetBtn(theme, 6, () => updateFontWeight(5)),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 0,
-                      bottom: 6,
-                      left: 10,
-                      right: 10,
-                    ),
-                    child: SliderTheme(
-                      data: sliderTheme,
-                      child: Slider(
-                        min: 0,
-                        max: 8,
-                        value: subtitleFontWeight.toDouble(),
-                        divisions: 8,
-                        label: '${subtitleFontWeight + 1}',
-                        onChanged: updateFontWeight,
-                      ),
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('描边粗细 $subtitleStrokeWidth'),
-                      resetBtn(theme, 2.0, () => updateStrokeWidth(2.0)),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 0,
-                      bottom: 6,
-                      left: 10,
-                      right: 10,
-                    ),
-                    child: SliderTheme(
-                      data: sliderTheme,
-                      child: Slider(
-                        min: 0,
-                        max: 5,
-                        value: subtitleStrokeWidth,
-                        divisions: 10,
-                        label: '$subtitleStrokeWidth',
-                        onChanged: updateStrokeWidth,
-                      ),
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('左右边距 $subtitlePaddingH'),
-                      resetBtn(theme, 24, () => updateHorizontalPadding(24)),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 0,
-                      bottom: 6,
-                      left: 10,
-                      right: 10,
-                    ),
-                    child: SliderTheme(
-                      data: sliderTheme,
-                      child: Slider(
-                        min: 0,
-                        max: 100,
-                        value: subtitlePaddingH.toDouble(),
-                        divisions: 100,
-                        label: '$subtitlePaddingH',
-                        onChanged: updateHorizontalPadding,
-                      ),
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('底部边距 $subtitlePaddingB'),
-                      resetBtn(theme, 24, () => updateBottomPadding(24)),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 0,
-                      bottom: 6,
-                      left: 10,
-                      right: 10,
-                    ),
-                    child: SliderTheme(
-                      data: sliderTheme,
-                      child: Slider(
-                        min: 0,
-                        max: 200,
-                        value: subtitlePaddingB.toDouble(),
-                        divisions: 200,
-                        label: '$subtitlePaddingB',
-                        onChanged: updateBottomPadding,
-                      ),
-                    ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('背景不透明度 ${(subtitleBgOpacity * 100).toInt()}%'),
-                      resetBtn(theme, '67%', () => updateOpacity(0.67)),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 0,
-                      bottom: 6,
-                      left: 10,
-                      right: 10,
-                    ),
-                    child: SliderTheme(
-                      data: sliderTheme,
-                      child: Slider(
-                        min: 0,
-                        max: 1,
-                        value: subtitleBgOpacity,
-                        onChanged: updateOpacity,
-                      ),
-                    ),
+                  ],
+                  ...sliderRow(
+                    title: '背景不透明度 ${(bgOpacity * 100).toInt()}%',
+                    reset: resetBtn(theme, '67%', () => updateOpacity(0.67)),
+                    min: 0,
+                    max: 1,
+                    value: bgOpacity,
+                    onChanged: updateOpacity,
                   ),
                 ],
               ),

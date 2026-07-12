@@ -801,38 +801,20 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             return StaticPopupMenuButton<int>(
               tooltip: '字幕',
               requestFocus: false,
-              initialValue: val,
               color: Colors.black.withValues(alpha: 0.8),
               menuPadding: EdgeInsets.zero,
               menuItemOuterPadding: EdgeInsets.zero,
               menuItemStateLayerColor: Colors.white,
               itemBuilder: (context) {
                 return [
+                  // 主/副字幕双栏选择面板,点击不关闭菜单,可连续设置
                   PopupMenuItem<int>(
-                    value: 0,
-                    height: 35,
-                    onTap: () => videoDetailController.setSubtitle(0),
-                    child: const Text(
-                      "关闭字幕",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                      ),
+                    enabled: false,
+                    padding: EdgeInsets.zero,
+                    child: _SubtitleSelectPanel(
+                      controller: videoDetailController,
                     ),
                   ),
-                  ...videoDetailController.subtitles.mapIndexed((i, e) {
-                    return PopupMenuItem<int>(
-                      value: i + 1,
-                      height: 35,
-                      onTap: () => videoDetailController.setSubtitle(i + 1),
-                      child: Text(
-                        e.lanDoc ?? e.lan,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const .new(color: Colors.white, fontSize: 13),
-                      ),
-                    );
-                  }),
                 ];
               },
               child: SizedBox(
@@ -2619,6 +2601,121 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             ],
           },
         ),
+      ),
+    );
+  }
+}
+
+/// 主/副字幕双栏选择面板(双语字幕)。
+/// 左栏选主字幕(mpv sid),右栏选副字幕(mpv secondary-sid),
+/// 同一轨不能同时为主副,已被另一栏选中的项置灰。
+class _SubtitleSelectPanel extends StatelessWidget {
+  const _SubtitleSelectPanel({required this.controller});
+
+  final VideoDetailController controller;
+
+  static const _headerStyle = TextStyle(color: Colors.white70, fontSize: 12);
+  static const _itemStyle = TextStyle(color: Colors.white, fontSize: 13);
+  static const _disabledStyle = TextStyle(color: Colors.white38, fontSize: 13);
+
+  Widget _item({
+    required String label,
+    required bool selected,
+    required bool disabled,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: disabled ? null : onTap,
+      child: Container(
+        height: 35,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: disabled ? _disabledStyle : _itemStyle,
+              ),
+            ),
+            if (selected)
+              const Icon(Icons.check, size: 16, color: Colors.white),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _column({
+    required String title,
+    required int selectedIndex,
+    required int disabledIndex,
+    required ValueChanged<int> onSelect,
+  }) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SizedBox(
+          height: 32,
+          child: Center(child: Text(title, style: _headerStyle)),
+        ),
+        _item(
+          label: '关闭',
+          selected: selectedIndex == 0,
+          disabled: false,
+          onTap: () => onSelect(0),
+        ),
+        ...controller.subtitles.mapIndexed(
+          (i, e) => _item(
+            label: e.lanDoc ?? e.lan,
+            selected: selectedIndex == i + 1,
+            disabled: disabledIndex == i + 1,
+            onTap: () => onSelect(i + 1),
+          ),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 300,
+      child: Obx(
+        () {
+          final primary = controller.vttSubtitlesIndex.value;
+          final secondary = controller.vttSecondarySubtitlesIndex.value;
+          return IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _column(
+                    title: '主字幕',
+                    selectedIndex: primary,
+                    disabledIndex: secondary,
+                    onSelect: controller.setSubtitle,
+                  ),
+                ),
+                const VerticalDivider(
+                  width: 1,
+                  thickness: 1,
+                  color: Colors.white24,
+                ),
+                Expanded(
+                  child: _column(
+                    title: '副字幕',
+                    selectedIndex: secondary,
+                    disabledIndex: primary,
+                    onSelect: controller.setSecondarySubtitle,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

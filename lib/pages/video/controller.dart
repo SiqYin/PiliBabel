@@ -1396,32 +1396,53 @@ class VideoDetailController extends GetxController
       return;
     }
 
-    Future<void> setSub(({bool isData, String id}) subtitle) async {
-      final sub = subtitles[index - 1];
-
-      String subUri = subtitle.id;
-      if (subtitle.isData) {
-        subUri = 'memory://$subUri';
-      }
-      await plPlayerController.videoPlayerController?.setSubtitleTrack(
-        SubtitleTrack(subUri, sub.lanDoc, sub.lan, uri: true),
-      );
-      vttSubtitlesIndex.value = index;
+    // 主副不能同轨:主字幕选到副字幕所在轨时,先取消副字幕
+    if (index == vttSecondarySubtitlesIndex.value) {
+      await setSecondarySubtitle(0);
     }
 
-    ({bool isData, String id})? subtitle = vttSubtitles[index - 1];
-    if (subtitle != null) {
-      await setSub(subtitle);
-    } else {
-      final result = await VideoHttp.vttSubtitles(
-        subtitles[index - 1].subtitleUrl!,
-      );
-      if (!isClosed && result != null) {
-        final subtitle = (isData: true, id: result);
-        vttSubtitles[index - 1] = subtitle;
-        await setSub(subtitle);
-      }
+    final subUri = await _resolveVttUri(index - 1);
+    if (isClosed || subUri == null) return;
+    final sub = subtitles[index - 1];
+    await plPlayerController.videoPlayerController?.setSubtitleTrack(
+      SubtitleTrack(subUri, sub.lanDoc, sub.lan, uri: true),
+    );
+    vttSubtitlesIndex.value = index;
+  }
+
+  // 副字幕(双语字幕):0 表示关闭,>0 对应 subtitles[index - 1]
+  late final RxInt vttSecondarySubtitlesIndex = 0.obs;
+
+  Future<void> setSecondarySubtitle(int index) async {
+    final player = plPlayerController.videoPlayerController;
+    if (player == null) return;
+
+    if (index <= 0 || index == vttSubtitlesIndex.value) {
+      vttSecondarySubtitlesIndex.value = 0;
+      await player.setSecondarySubtitleTrack(.no());
+      return;
     }
+
+    final subUri = await _resolveVttUri(index - 1);
+    if (isClosed || subUri == null) return;
+    final sub = subtitles[index - 1];
+    await player.setSecondarySubtitleTrack(
+      SubtitleTrack(subUri, sub.lanDoc, sub.lan, uri: true),
+    );
+    vttSecondarySubtitlesIndex.value = index;
+  }
+
+  /// 取 subtitles[subIdx] 的 VTT 播放地址(本地文件路径或 memory:// 数据),
+  /// 网络字幕转换结果缓存于 [vttSubtitles]。
+  Future<String?> _resolveVttUri(int subIdx) async {
+    ({bool isData, String id})? subtitle = vttSubtitles[subIdx];
+    if (subtitle == null) {
+      final result = await VideoHttp.vttSubtitles(subtitles[subIdx].subtitleUrl!);
+      if (result == null) return null;
+      subtitle = (isData: true, id: result);
+      vttSubtitles[subIdx] = subtitle;
+    }
+    return subtitle.isData ? 'memory://${subtitle.id}' : subtitle.id;
   }
 
   // interactive video
@@ -1477,6 +1498,7 @@ class VideoDetailController extends GetxController
   Future<void> _queryPlayInfo() async {
     vttSubtitles.clear();
     vttSubtitlesIndex.value = 0;
+    vttSecondarySubtitlesIndex.value = 0;
     if (plPlayerController.showViewPoints) {
       viewPointList.clear();
     }
