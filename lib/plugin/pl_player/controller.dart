@@ -365,6 +365,7 @@ class PlPlayerController with BlockConfigMixin {
   late double subtitleSecondaryBgOpacity = Pref.subtitleSecondaryBgOpacity;
   late double subtitleSecondaryStrokeWidth = Pref.subtitleSecondaryStrokeWidth;
   late int subtitleSecondaryFontWeight = Pref.subtitleSecondaryFontWeight;
+  late double subtitleSecondarySpacing = Pref.subtitleSecondarySpacing;
 
   // settings
   late final showFSActionItem = Pref.showFSActionItem;
@@ -484,6 +485,7 @@ class PlPlayerController with BlockConfigMixin {
         subtitleSecondaryBgOpacity,
         subtitleSecondaryStrokeWidth,
       ),
+      spacing: subtitleSecondarySpacing,
       padding: EdgeInsets.only(
         left: subtitlePaddingH.toDouble(),
         right: subtitlePaddingH.toDouble(),
@@ -1822,6 +1824,7 @@ class PlPlayerController with BlockConfigMixin {
       SettingBoxKey.subtitleSecondaryBgOpacity: subtitleSecondaryBgOpacity,
       SettingBoxKey.subtitleSecondaryStrokeWidth: subtitleSecondaryStrokeWidth,
       SettingBoxKey.subtitleSecondaryFontWeight: subtitleSecondaryFontWeight,
+      SettingBoxKey.subtitleSecondarySpacing: subtitleSecondarySpacing,
     });
   }
 

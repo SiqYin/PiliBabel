@@ -694,7 +694,7 @@ abstract final class Pref {
 
   static double get subtitleSecondaryFontScaleFS => _setting.get(
     SettingBoxKey.subtitleSecondaryFontScaleFS,
-    defaultValue: 1.2,
+    defaultValue: 1.1,
   );
 
   static double get subtitleSecondaryBgOpacity => _setting.get(
@@ -709,6 +709,11 @@ abstract final class Pref {
 
   static int get subtitleSecondaryFontWeight =>
       _setting.get(SettingBoxKey.subtitleSecondaryFontWeight, defaultValue: 5);
+
+  static double get subtitleSecondarySpacing => _setting.get(
+    SettingBoxKey.subtitleSecondarySpacing,
+    defaultValue: 4.0,
+  );
 
   static bool get badCertificateCallback =>
       _setting.get(SettingBoxKey.badCertificateCallback, defaultValue: false);

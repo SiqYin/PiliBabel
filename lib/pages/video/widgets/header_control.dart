@@ -1462,6 +1462,10 @@ class HeaderControlState extends State<HeaderControl>
           plPlayerController.subtitlePaddingH = val.round();
         });
 
+        void updateSecondarySpacing(double val) => update(() {
+          plPlayerController.subtitleSecondarySpacing = val;
+        });
+
         List<Widget> sliderRow({
           required String title,
           required Widget reset,
@@ -1609,7 +1613,23 @@ class HeaderControlState extends State<HeaderControl>
                       label: '$subtitlePaddingB',
                       onChanged: updateBottomPadding,
                     ),
-                  ],
+                  ] else
+                    ...sliderRow(
+                      title:
+                          '与主字幕间距 ${plPlayerController.subtitleSecondarySpacing.toStringAsFixed(1)}',
+                      reset: resetBtn(
+                        theme,
+                        4.0,
+                        () => updateSecondarySpacing(4.0),
+                      ),
+                      min: 0,
+                      max: 40,
+                      divisions: 40,
+                      value: plPlayerController.subtitleSecondarySpacing,
+                      label: plPlayerController.subtitleSecondarySpacing
+                          .toStringAsFixed(1),
+                      onChanged: updateSecondarySpacing,
+                    ),
                   ...sliderRow(
                     title: '背景不透明度 ${(bgOpacity * 100).toInt()}%',
                     reset: resetBtn(theme, '67%', () => updateOpacity(0.67)),
