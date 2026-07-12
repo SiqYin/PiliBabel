@@ -1337,6 +1337,8 @@ class VideoDetailController extends GetxController
   }
 
   Future<void> _loadFileSubtitles() async {
+    // 与 _queryPlayInfo 一致:清理副字幕状态及 mpv secondary-sid 残留
+    await setSecondarySubtitle(0);
     final indexFile = File(
       path.join(
         entry.entryDirPath,
@@ -1415,13 +1417,14 @@ class VideoDetailController extends GetxController
 
   Future<void> setSecondarySubtitle(int index) async {
     final player = plPlayerController.videoPlayerController;
-    if (player == null) return;
 
     if (index <= 0 || index == vttSubtitlesIndex.value) {
       vttSecondarySubtitlesIndex.value = 0;
-      await player.setSecondarySubtitleTrack(.no());
+      await player?.setSecondarySubtitleTrack(.no());
       return;
     }
+
+    if (player == null) return;
 
     final subUri = await _resolveVttUri(index - 1);
     if (isClosed || subUri == null) return;
@@ -1498,7 +1501,9 @@ class VideoDetailController extends GetxController
   Future<void> _queryPlayInfo() async {
     vttSubtitles.clear();
     vttSubtitlesIndex.value = 0;
-    vttSecondarySubtitlesIndex.value = 0;
+    // 副字幕不跨 P/视频保留;同时清掉 mpv 的 secondary-sid 选项,
+    // 避免残留选项与下个视频 sub-add 产生的轨道 id 冲突
+    await setSecondarySubtitle(0);
     if (plPlayerController.showViewPoints) {
       viewPointList.clear();
     }
