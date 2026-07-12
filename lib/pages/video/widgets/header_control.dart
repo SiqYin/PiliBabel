@@ -52,8 +52,8 @@ import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
-import 'package:PiliPlus/utils/subtitle_utils.dart';
 import 'package:PiliPlus/utils/storage_utils.dart';
+import 'package:PiliPlus/utils/subtitle_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:PiliPlus/utils/video_utils.dart';
 import 'package:battery_plus/battery_plus.dart';
@@ -790,7 +790,7 @@ class HeaderControlState extends State<HeaderControl>
                           if (!mounted) return;
                           String sub = buffer.toString();
                           sub = await compute<List, String>(
-                            VideoHttp.processList,
+                            SubtitleUtils.json2Vtt,
                             jsonDecode(sub)['body'],
                           );
                           if (!mounted) return;
@@ -1224,23 +1224,6 @@ class HeaderControlState extends State<HeaderControl>
     );
   }
 
-  Future<_SubtitleFormat?> _showFormatDialog() {
-    return showDialog<_SubtitleFormat>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: const Text('选择格式'),
-        children: _SubtitleFormat.values
-            .map(
-              (format) => DialogOption(
-                onPressed: () => Get.back(result: format),
-                child: Text(format.label),
-              ),
-            )
-            .toList(),
-      ),
-    );
-  }
-
   Future<Uint8List?> _loadSubtitleJsonBytes(Subtitle item) async {
     final url = item.subtitleUrl;
     if (url == null || url.isEmpty) return null;
@@ -1281,55 +1264,99 @@ class HeaderControlState extends State<HeaderControl>
     showDialog(
       context: context,
       builder: (context) {
+        SubtitleFormat format = .vtt;
         final subtitles = videoDetailCtr.subtitles;
+        final secondary = ColorScheme.of(context).secondary;
         return SimpleDialog(
-          clipBehavior: Clip.hardEdge,
-          contentPadding: const EdgeInsets.only(bottom: 12),
-          titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-          title: const Text('保存字幕'),
+          clipBehavior: .hardEdge,
+          contentPadding: const .only(bottom: 12),
+          titlePadding: const .fromLTRB(20, 20, 20, 12),
+          title: Row(
+            children: [
+              const Expanded(child: Text('保存字幕')),
+              const Text('格式: ', style: TextStyle(fontSize: 14)),
+              Builder(
+                builder: (context) => PopupMenuButton<SubtitleFormat>(
+                  tooltip: '',
+                  initialValue: format,
+                  onSelected: (value) {
+                    format = value;
+                    (context as Element).markNeedsBuild();
+                  },
+                  itemBuilder: (_) => SubtitleFormat.values
+                      .map(
+                        (e) => PopupMenuItem(
+                          value: e,
+                          height: 35,
+                          child: Text(e.label),
+                        ),
+                      )
+                      .toList(),
+                  child: Padding(
+                    padding: const .symmetric(horizontal: 2, vertical: 5),
+                    child: Text.rich(
+                      style: .new(fontSize: 14, color: secondary),
+                      TextSpan(
+                        children: [
+                          TextSpan(text: format.label),
+                          WidgetSpan(
+                            alignment: .middle,
+                            child: Icon(
+                              size: 14,
+                              MdiIcons.unfoldMoreHorizontal,
+                              color: secondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
           children: List.generate(subtitles.length, (i) {
             final item = subtitles[i];
             return DialogOption(
               onPressed: () async {
                 Get.back();
-                final format = await _showFormatDialog();
-                if (format == null) return;
                 try {
-                  final bytes = switch (format) {
-                    .vtt => await _loadSubtitleVttBytes(i, item),
-                    .json => await _loadSubtitleJsonBytes(item),
-                    .srt => await _loadSubtitleJsonBytes(item).then((bytes) {
-                      if (bytes == null) return null;
-                      final json =
-                          jsonDecode(utf8.decode(bytes))
-                              as Map<String, dynamic>;
-                      final body = json['body'] as List<dynamic>;
-                      final srtText = SubtitleUtils.bccToSrt(body);
-                      return Uint8List.fromList(utf8.encode(srtText));
-                    }),
-                  };
+                  Uint8List? bytes;
+                  switch (format) {
+                    case .vtt:
+                      bytes = await _loadSubtitleVttBytes(i, item);
+                    case .srt:
+                      final url = item.subtitleUrl;
+                      if (url == null || url.isEmpty) return;
+                      final subtitle = await VideoHttp.vttSubtitles(
+                        url,
+                        format: .srt,
+                      );
+                      if (subtitle == null) return;
+                      bytes = Uint8List.fromList(utf8.encode(subtitle));
+                    case .json:
+                      bytes = await _loadSubtitleJsonBytes(item);
+                  }
                   if (bytes == null) return;
-                  String name =
-                      '${introController.videoDetail.value.title}-${videoDetailCtr.bvid}-${videoDetailCtr.cid.value}-${item.lanDoc}.${format.extension}';
+                  final videoDetail = introController.videoDetail.value;
+                  final name =
+                      '${videoDetail.title}-${videoDetail.owner?.name}(${videoDetail.owner?.mid})-${videoDetailCtr.bvid}-${videoDetailCtr.cid.value}-${item.lanDoc}.${format.name}'
+                          .replaceAll(
+                            Platform.isWindows ? RegExp(r'[<>:/\\|?*"]') : '/',
+                            '_',
+                          );
                   // Reserved characters may not be used in file names. See: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#naming-conventions
-                  name = name.replaceAll(
-                    Platform.isWindows ? RegExp(r'[<>:/\\|?*"]') : '/',
-                    '_',
-                  );
                   StorageUtils.saveBytes2File(
                     name: name,
                     bytes: bytes,
-                    allowedExtensions: [format.extension],
+                    allowedExtensions: [format.name],
                   );
                 } catch (e, s) {
                   Utils.reportError(e, s);
                   SmartDialog.showToast(e.toString());
                 }
               },
-              child: Text(
-                item.lanDoc ?? item.lan,
-                style: const TextStyle(fontSize: 14),
-              ),
+              child: Text(item.lanDoc ?? item.lan),
             );
           }),
         );
@@ -2184,15 +2211,4 @@ class HeaderControlState extends State<HeaderControl>
       ),
     );
   }
-}
-
-enum _SubtitleFormat {
-  json('JSON', 'json'),
-  srt('SRT', 'srt'),
-  vtt('WEBVTT', 'vtt');
-
-  final String label;
-  final String extension;
-
-  const _SubtitleFormat(this.label, this.extension);
 }

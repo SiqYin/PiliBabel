@@ -1,27 +1,57 @@
-// Logic inspired by BiliRoamingX.
+import 'package:PiliPlus/models/common/enum_with_label.dart';
+import 'package:collection/collection.dart' show IterableExtension;
+
+enum SubtitleFormat implements EnumWithLabel {
+  json('JSON'),
+  vtt('WEBVTT'),
+  srt('SRT');
+
+  @override
+  final String label;
+  const SubtitleFormat(this.label);
+}
+
 abstract final class SubtitleUtils {
-  /// Converts seconds to SRT timecode format: HH:mm:ss,mmm
-  static String _srtTimecode(num seconds) {
-    int h = seconds ~/ 3600;
-    int m = (seconds % 3600) ~/ 60;
-    int s = seconds.toInt() % 60;
-    int ms = ((seconds - seconds.toInt()) * 1000).round();
-    return "${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')},${ms.toString().padLeft(3, '0')}";
+  static String _vttTimecode(num seconds) {
+    final int h = seconds ~/ 3600;
+    seconds %= 3600;
+    final int m = seconds ~/ 60;
+    seconds %= 60;
+    final String sms = seconds.toStringAsFixed(3).padLeft(6, '0');
+    return "${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:$sms";
   }
 
-  /// Converts Bilibili BCC (JSON) body list to standard SRT string
-  static String bccToSrt(List list) {
-    final sb = StringBuffer();
-    for (int i = 0; i < list.length; i++) {
-      final item = list[i];
-      if (item == null) continue;
+  static String json2Vtt(List list) {
+    final sb = StringBuffer('WEBVTT\n\n')
+      ..writeAll(
+        list.map(
+          (item) =>
+              '${_vttTimecode(item['from'])} --> ${_vttTimecode(item['to'])}\n${item['content'].trim()}',
+        ),
+        '\n\n',
+      );
+    return sb.toString();
+  }
 
-      // SRT structure: Index, Timestamp, Content, Empty Line
-      sb.writeln(i + 1);
-      sb.writeln("${_srtTimecode(item['from'])} --> ${_srtTimecode(item['to'])}");
-      sb.writeln(item['content'].toString().trim());
-      sb.writeln();
-    }
+  static String _srtTimecode(num seconds) {
+    final int h = seconds ~/ 3600;
+    seconds %= 3600;
+    final int m = seconds ~/ 60;
+    seconds %= 60;
+    final int s = seconds.toInt();
+    final int ms = ((seconds - s) * 1000).round();
+    return '${h.toString().padLeft(2, '0')}:${m.toString().padLeft(2, '0')}:${s.toString().padLeft(2, '0')},${ms.toString().padLeft(3, '0')}';
+  }
+
+  static String json2Srt(List list) {
+    final sb = StringBuffer()
+      ..writeAll(
+        list.mapIndexed(
+          (i, e) =>
+              '${i + 1}\n${_srtTimecode(e['from'])} --> ${_srtTimecode(e['to'])}\n${e['content'].trim()}',
+        ),
+        '\n\n',
+      );
     return sb.toString();
   }
 }
