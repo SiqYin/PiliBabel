@@ -1398,7 +1398,8 @@ class VideoDetailController extends GetxController
       return;
     }
 
-    // 主副不能同轨:主字幕选到副字幕所在轨时,先取消副字幕
+    // 防御性兜底:主副不能同轨。正常路径下选择器已将副字幕所在轨置灰,
+    // 此处仅防绕过 UI 的调用或面板打开期间的状态竞态;冲突时副字幕让位。
     if (index == vttSecondarySubtitlesIndex.value) {
       await setSecondarySubtitle(0);
     }
@@ -1418,6 +1419,8 @@ class VideoDetailController extends GetxController
   Future<void> setSecondarySubtitle(int index) async {
     final player = plPlayerController.videoPlayerController;
 
+    // index == 主字幕轨为防御性兜底(UI 已置灰该项),与 setSubtitle 的
+    // 守卫同规则:冲突时副字幕让位,即视为关闭副字幕。
     if (index <= 0 || index == vttSubtitlesIndex.value) {
       vttSecondarySubtitlesIndex.value = 0;
       await player?.setSecondarySubtitleTrack(.no());

@@ -806,11 +806,43 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             return StaticPopupMenuButton<int>(
               tooltip: '字幕',
               requestFocus: false,
+              initialValue: val,
               color: Colors.black.withValues(alpha: 0.8),
               menuPadding: EdgeInsets.zero,
               menuItemOuterPadding: EdgeInsets.zero,
               menuItemStateLayerColor: Colors.white,
               itemBuilder: (context) {
+                // 只有一条字幕时退回旧版单列菜单
+                // 两条以上才用主/副双栏面板
+                if (videoDetailController.subtitles.length < 2) {
+                  return [
+                    PopupMenuItem<int>(
+                      value: 0,
+                      height: 35,
+                      onTap: () => videoDetailController.setSubtitle(0),
+                      child: const Text(
+                        "关闭字幕",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                    ...videoDetailController.subtitles.mapIndexed((i, e) {
+                      return PopupMenuItem<int>(
+                        value: i + 1,
+                        height: 35,
+                        onTap: () => videoDetailController.setSubtitle(i + 1),
+                        child: Text(
+                          e.lanDoc ?? e.lan,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const .new(color: Colors.white, fontSize: 13),
+                        ),
+                      );
+                    }),
+                  ];
+                }
                 return [
                   // 主/副字幕双栏选择面板,点击不关闭菜单,可连续设置
                   PopupMenuItem<int>(
@@ -2686,13 +2718,13 @@ class _SubtitleSelectPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 300,
-      child: Obx(
-        () {
-          final primary = controller.vttSubtitlesIndex.value;
-          final secondary = controller.vttSecondarySubtitlesIndex.value;
-          return IntrinsicHeight(
+    return Obx(
+      () {
+        final primary = controller.vttSubtitlesIndex.value;
+        final secondary = controller.vttSecondarySubtitlesIndex.value;
+        return SizedBox(
+          width: 300,
+          child: IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -2719,9 +2751,9 @@ class _SubtitleSelectPanel extends StatelessWidget {
                 ),
               ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 }
