@@ -1,9 +1,25 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
+
+/// AI 接口请求异常，toString 输出带实际请求地址的用户可读文案
+class AiApiException implements Exception {
+  final String url;
+  final int? statusCode;
+  final String detail;
+
+  AiApiException({required this.url, this.statusCode, required this.detail});
+
+  @override
+  String toString() =>
+      '请求 $url 出错'
+      '${statusCode != null ? '（HTTP $statusCode）' : ''}'
+      '：$detail';
+}
 
 class AiPromptTemplate {
   String name;
@@ -29,21 +45,97 @@ class AiChatService {
     );
   }
 
+  /// 版本路径由用户填写，不自动拼接（各服务商版本段不同：
+  /// /v1、/v1beta/openai、/api/v3 等），仅补全 /models、/chat/completions
   static String _baseUrl() {
     var url = Pref.aiApiUrl.trimRight();
-    if (url.endsWith('/')) url = url.substring(0, url.length - 1);
-    if (url.endsWith('/v1')) url = url.substring(0, url.length - 3);
+    while (url.endsWith('/')) {
+      url = url.substring(0, url.length - 1);
+    }
     return url;
   }
 
-  /// Fetch model list from /v1/models
+  static String _snippet(String s, [int max = 300]) {
+    s = s.trim();
+    return s.length <= max ? s : '${s.substring(0, max)}…';
+  }
+
+  /// 提取错误响应的可读信息：优先 OpenAI 风格 error.message，否则返回原文
+  static Future<String> _responseText(Response? response) async {
+    dynamic data = response?.data;
+    if (data is ResponseBody) {
+      try {
+        data = await utf8.decodeStream(data.stream);
+      } catch (_) {
+        return '';
+      }
+    }
+    if (data is String) {
+      try {
+        data = jsonDecode(data);
+      } catch (_) {
+        return data;
+      }
+    }
+    if (data is Map) {
+      final err = data['error'];
+      if (err is Map && err['message'] != null) {
+        return err['message'].toString();
+      }
+      if (err != null) return err.toString();
+      if (data['message'] != null) return data['message'].toString();
+      return jsonEncode(data);
+    }
+    return data?.toString() ?? '';
+  }
+
+  /// 记录到错误日志（设置-关于-错误日志，受"启用日志"开关控制）后返回原异常
+  static AiApiException _logged(AiApiException ex, [StackTrace? stackTrace]) {
+    logger.e('AI 请求失败', error: ex, stackTrace: stackTrace);
+    return ex;
+  }
+
+  /// 将 Dio 异常翻译为带实际请求地址的 [AiApiException]
+  static Future<AiApiException> _requestError(String url, DioException e) async {
+    String detail;
+    if (e.type == DioExceptionType.badResponse) {
+      detail = _snippet(await _responseText(e.response));
+      if (detail.isEmpty) detail = '服务器返回错误';
+    } else {
+      detail = switch (e.type) {
+        DioExceptionType.connectionTimeout ||
+        DioExceptionType.sendTimeout ||
+        DioExceptionType.receiveTimeout =>
+          '连接超时',
+        DioExceptionType.badCertificate => '证书校验失败',
+        DioExceptionType.cancel => '请求已取消',
+        _ => '无法连接（${e.message ?? e.error ?? e.type.name}）',
+      };
+    }
+    return _logged(
+      AiApiException(
+        url: url,
+        statusCode: e.response?.statusCode,
+        detail: detail,
+      ),
+      e.stackTrace,
+    );
+  }
+
+  /// Fetch model list from {base}/models
   static Future<List<String>> fetchModels() async {
     final baseUrl = _baseUrl();
     if (baseUrl.isEmpty) throw Exception('请先配置 API 地址');
-    final res = await Dio().get(
-      '$baseUrl/v1/models',
-      options: _options(receiveTimeout: const Duration(seconds: 30)),
-    );
+    final url = '$baseUrl/models';
+    final Response res;
+    try {
+      res = await Dio().get(
+        url,
+        options: _options(receiveTimeout: const Duration(seconds: 30)),
+      );
+    } on DioException catch (e) {
+      throw await _requestError(url, e);
+    }
     final data = res.data;
     if (data is Map && data['data'] is List) {
       return (data['data'] as List)
@@ -51,10 +143,15 @@ class AiChatService {
           .where((e) => e.isNotEmpty)
           .toList();
     }
-    return [];
+    throw _logged(AiApiException(
+      url: url,
+      statusCode: res.statusCode,
+      detail: '响应不是模型列表，请检查接口地址与版本路径'
+          '${data == null ? '' : '（${_snippet(data.toString(), 200)}）'}',
+    ));
   }
 
-  /// Stream chat completion from /v1/chat/completions
+  /// Stream chat completion from {base}/chat/completions
   /// Returns a stream of content strings (each token/chunk)
   static Stream<String> streamChat({
     required List<Map<String, String>> messages,
@@ -65,26 +162,41 @@ class AiChatService {
     final useModel = model ?? Pref.aiModel;
     if (useModel.isEmpty) throw Exception('请先选择模型');
 
+    final url = '$baseUrl/chat/completions';
     final opts = _options(receiveTimeout: const Duration(minutes: 10))
       ..responseType = ResponseType.stream;
-    final response = await Dio().post<ResponseBody>(
-      '$baseUrl/v1/chat/completions',
-      data: jsonEncode({
-        'model': useModel,
-        'messages': messages,
-        'stream': true,
-      }),
-      options: opts,
-    );
+    final Response<ResponseBody> response;
+    try {
+      response = await Dio().post<ResponseBody>(
+        url,
+        data: jsonEncode({
+          'model': useModel,
+          'messages': messages,
+          'stream': true,
+        }),
+        options: opts,
+      );
+    } on DioException catch (e) {
+      throw await _requestError(url, e);
+    }
 
     final stream = response.data!.stream;
 
+    // 记录是否出现过 SSE data 行：200 但响应不是 SSE（如填错地址时服务器
+    // 返回 HTML 页面或完整 JSON）会静默产出空回复，需在流结束后报错
+    var sawData = false;
+    final nonSse = StringBuffer();
     await for (final line in stream
         .cast<List<int>>()
         .transform(utf8.decoder)
         .transform(const LineSplitter())) {
       final trimmed = line.trim();
-      if (trimmed.isEmpty || !trimmed.startsWith('data:')) continue;
+      if (trimmed.isEmpty) continue;
+      if (!trimmed.startsWith('data:')) {
+        if (!sawData && nonSse.length < 300) nonSse.writeln(trimmed);
+        continue;
+      }
+      sawData = true;
       final data = trimmed.replaceFirst('data:', '').trim();
       if (data == '[DONE]') return;
       if (data.isEmpty) continue;
@@ -101,6 +213,16 @@ class AiChatService {
       } catch (e) {
         if (kDebugMode) debugPrint('SSE parse error: $e');
       }
+    }
+    if (!sawData) {
+      final contentType = response.headers.value(Headers.contentTypeHeader);
+      throw _logged(AiApiException(
+        url: url,
+        statusCode: response.statusCode,
+        detail: '未返回流式响应，请检查接口地址与版本路径'
+            '${contentType == null ? '' : '（content-type: $contentType）'}'
+            '${nonSse.isEmpty ? '' : '：${_snippet(nonSse.toString())}'}',
+      ));
     }
   }
 
