@@ -1979,18 +1979,13 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             ),
           ),
 
-        if (!isLive)
+        if (!isLive && plPlayerController.showSeekPreview)
           Positioned.fill(
-            child: Obx(
-              () => plPlayerController.showSeekPreview &&
-                      plPlayerController.showPreview.value
-                  ? buildSeekPreviewWidget(
-                      plPlayerController,
-                      maxWidth,
-                      maxHeight,
-                      () => mounted,
-                    )
-                  : const SizedBox.shrink(),
+            child: buildSeekPreviewWidget(
+              plPlayerController,
+              maxWidth,
+              maxHeight,
+              () => mounted,
             ),
           ),
 
