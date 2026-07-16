@@ -1,7 +1,6 @@
 import 'package:PiliPlus/common/widgets/flutter/page/tabs.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart';
-import 'package:PiliPlus/common/widgets/selectable_text.dart';
 import 'package:PiliPlus/common/widgets/stat/stat.dart';
 import 'package:PiliPlus/models/common/stat_type.dart';
 import 'package:PiliPlus/models_new/pgc/pgc_info_model/result.dart';
@@ -127,9 +126,10 @@ class _IntroDetailState extends State<PgcIntroPanel>
         bottom: MediaQuery.viewPaddingOf(context).bottom + 100,
       ),
       children: [
-        selectableText(
+        SelectableText(
           widget.item.title!,
           style: const TextStyle(fontSize: 16),
+          scrollPhysics: const NeverSelectableScrollPhysics(),
         ),
         const SizedBox(height: 4),
         Row(
@@ -171,9 +171,10 @@ class _IntroDetailState extends State<PgcIntroPanel>
             style: theme.textTheme.titleMedium,
           ),
           const SizedBox(height: 4),
-          selectableText(
+          SelectableText(
             widget.item.evaluate!,
             style: textStyle,
+            scrollPhysics: const NeverSelectableScrollPhysics(),
           ),
         ],
         if (widget.item.actors?.isNotEmpty == true) ...[

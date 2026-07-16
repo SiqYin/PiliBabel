@@ -1,9 +1,11 @@
-import 'dart:async';
-import 'dart:convert';
+import 'dart:async' show Timer;
+import 'dart:convert' show jsonDecode;
 
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
+import 'package:PiliPlus/common/widgets/scroll_physics.dart'
+    show NeverSelectableScrollPhysics;
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
@@ -368,6 +370,7 @@ class _ReportCard extends StatelessWidget {
               fontFamily: 'Monospace',
               color: colorScheme.onSurfaceVariant,
             ),
+            scrollPhysics: const NeverSelectableScrollPhysics(),
           ),
         ),
         // stackTrace may be null or String("null") or blank
@@ -406,6 +409,7 @@ class _ReportCard extends StatelessWidget {
                     .toList(),
               ),
               style: const TextStyle(fontFamily: 'Monospace', fontSize: 13),
+              scrollPhysics: const NeverSelectableScrollPhysics(),
             ),
           ),
         ],

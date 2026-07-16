@@ -314,6 +314,7 @@ class UserInfoCard extends StatelessWidget {
       child: SelectableText(
         card.sign!.trim().replaceAll(RegExp(r'\n{2,}'), '\n'),
         style: const TextStyle(fontSize: 14),
+        scrollPhysics: const NeverSelectableScrollPhysics(),
       ),
     );
   }

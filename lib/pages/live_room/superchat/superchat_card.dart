@@ -1,7 +1,8 @@
-import 'dart:async';
+import 'dart:async' show Timer;
 
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
-import 'package:PiliPlus/models/common/image_type.dart';
+import 'package:PiliPlus/common/widgets/scroll_physics.dart'
+    show NeverSelectableScrollPhysics;
 import 'package:PiliPlus/models_new/live/live_superchat/item.dart';
 import 'package:PiliPlus/pages/member/widget/medal_widget.dart';
 import 'package:PiliPlus/utils/color_utils.dart';
@@ -196,7 +197,7 @@ class _SuperChatCardState extends State<SuperChatCard> {
                   src: item.userInfo.face,
                   width: 45,
                   height: 45,
-                  type: ImageType.avatar,
+                  type: .avatar,
                 ),
                 Expanded(
                   child: Column(
@@ -234,19 +235,18 @@ class _SuperChatCardState extends State<SuperChatCard> {
             borderRadius: const .vertical(bottom: .circular(8)),
             color: bottomColor,
           ),
-          padding: const EdgeInsets.all(8),
-          child: SelectionArea(
-            child: Text(
-              item.message,
-              style: TextStyle(
-                color: ColourUtils.parseColor(item.messageFontColor),
-                decoration: widget.persistentSC && item.deleted
-                    ? .lineThrough
-                    : null,
-                decorationThickness: 1.5,
-                decorationStyle: .double,
-                decorationColor: Colors.white,
-              ),
+          padding: const .all(8),
+          child: SelectableText(
+            item.message,
+            scrollPhysics: const NeverSelectableScrollPhysics(),
+            style: TextStyle(
+              color: ColourUtils.parseColor(item.messageFontColor),
+              decoration: widget.persistentSC && item.deleted
+                  ? .lineThrough
+                  : null,
+              decorationThickness: 1.5,
+              decorationStyle: .double,
+              decorationColor: Colors.white,
             ),
           ),
         ),

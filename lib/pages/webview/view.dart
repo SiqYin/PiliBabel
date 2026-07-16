@@ -1,5 +1,7 @@
-import 'dart:io';
+import 'dart:io' show Platform;
 
+import 'package:PiliPlus/common/widgets/scroll_physics.dart'
+    show NeverSelectableScrollPhysics;
 import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/main.dart';
 import 'package:PiliPlus/models/common/webview_menu_type.dart';
@@ -268,7 +270,10 @@ class _WebviewPageState extends State<WebviewPage> {
                           '下载文件: $suggestedFilename ?',
                           style: const TextStyle(fontSize: 18),
                         ),
-                        content: SelectableText(request.url.toString()),
+                        content: SelectableText(
+                          request.url.toString(),
+                          scrollPhysics: const NeverSelectableScrollPhysics(),
+                        ),
                         actions: [
                           TextButton(
                             onPressed: Get.back,

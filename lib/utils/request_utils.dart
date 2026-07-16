@@ -1,9 +1,10 @@
-import 'dart:async';
-import 'dart:convert';
+import 'dart:convert' show jsonEncode;
 import 'dart:math';
 
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
+import 'package:PiliPlus/common/widgets/scroll_physics.dart'
+    show NeverSelectableScrollPhysics;
 import 'package:PiliPlus/grpc/bilibili/im/type.pbenum.dart';
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show ReplyInfo;
@@ -363,6 +364,7 @@ abstract final class RequestUtils {
               title: const Text('动态检查结果'),
               content: SelectableText(
                 '${isSuccess ? '无账号状态下找到了你的动态，动态正常！' : '你的动态被shadow ban（仅自己可见）！'}${dynText != null ? ' \n\n动态内容: $dynText' : ''}',
+                scrollPhysics: const NeverSelectableScrollPhysics(),
               ),
               actions: actions.isEmpty ? null : actions,
             ),
@@ -580,6 +582,7 @@ abstract final class RequestUtils {
         builder: (context) => AlertDialog(
           title: SelectableText(
             show ? response.name! : response.rejectPage?.title ?? '',
+            scrollPhysics: const NeverSelectableScrollPhysics(),
           ),
           content: show ? null : Text(response.rejectPage?.text ?? ''),
           actions: [

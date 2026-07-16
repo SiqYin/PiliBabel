@@ -1,5 +1,7 @@
 import 'dart:io' show Platform;
 
+import 'package:PiliPlus/common/widgets/scroll_physics.dart'
+    show NeverSelectableScrollPhysics;
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show ReplyInfo;
 import 'package:PiliPlus/http/loading_state.dart';
@@ -137,7 +139,10 @@ abstract final class ReplyUtils {
         barrierDismissible: isManual,
         builder: (context) => AlertDialog(
           title: const Text('评论检查结果'),
-          content: SelectableText(message),
+          content: SelectableText(
+            message,
+            scrollPhysics: const NeverSelectableScrollPhysics(),
+          ),
           actions: actions.isEmpty ? null : actions,
         ),
       );

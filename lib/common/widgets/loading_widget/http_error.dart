@@ -1,4 +1,6 @@
 import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/common/widgets/scroll_physics.dart'
+    show NeverSelectableScrollPhysics;
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
@@ -35,7 +37,7 @@ class HttpError extends StatelessWidget {
             errMsg ?? '没有数据',
             textAlign: TextAlign.center,
             style: theme.textTheme.titleSmall,
-            scrollPhysics: const NeverScrollableScrollPhysics(),
+            scrollPhysics: const NeverSelectableScrollPhysics(),
           ),
         ),
         if (onReload != null)

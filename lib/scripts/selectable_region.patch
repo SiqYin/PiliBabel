@@ -1,8 +1,17 @@
 diff --git a/packages/flutter/lib/src/widgets/selectable_region.dart b/packages/flutter/lib/src/widgets/selectable_region.dart
-index 59de8bae20b..07ac6981c78 100644
+index 59de8bae20b..a1b6ea5651e 100644
 --- a/packages/flutter/lib/src/widgets/selectable_region.dart
 +++ b/packages/flutter/lib/src/widgets/selectable_region.dart
-@@ -2822,7 +2822,10 @@ abstract class MultiSelectableSelectionContainerDelegate extends SelectionContai
+@@ -1957,6 +1957,8 @@ class SelectableRegionState extends State<SelectableRegion>
+         // the region on non-web platforms.
+         if (kIsWeb) {
+           _focusNode.unfocus();
++        } else {
++          clearSelection();
+         }
+       },
+       child: CompositedTransformTarget(
+@@ -2822,7 +2824,10 @@ abstract class MultiSelectableSelectionContainerDelegate extends SelectionContai
        return null;
      }
      final buffer = StringBuffer();

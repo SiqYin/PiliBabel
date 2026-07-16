@@ -1,12 +1,20 @@
 // 内容
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/text/text.dart' as custom_text;
+import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/image_grid/image_grid_view.dart';
+import 'package:PiliPlus/common/widgets/scroll_physics.dart'
+    show ClampingScrollPhysicsExt, NeverSelectableScrollPhysics;
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/pages/dynamics/widgets/rich_node_panel.dart';
+import 'package:PiliPlus/utils/extension/editable_text_ext.dart';
+import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+part 'package:PiliPlus/common/widgets/context_menu/dyn_menu_helper.dart';
 
 Widget content(
   BuildContext context, {
@@ -77,7 +85,12 @@ Widget content(
                       : const TextStyle(fontSize: 16),
                   contextMenuBuilder: text == null || text.isEmpty
                       ? null
-                      : (_, state) => _contextMenuBuilder(state, text),
+                      : (_, state) => dynTextMenuBuilder(
+                          state,
+                          text,
+                          item.modules.moduleDynamic,
+                        ),
+                  scrollPhysics: const NeverSelectableScrollPhysics(),
                 )
               : custom_text.Text.rich(
                   style: floor == 1
@@ -103,31 +116,6 @@ Widget content(
                 .toList(),
           ),
       ],
-    ),
-  );
-}
-
-Widget _contextMenuBuilder(EditableTextState state, String text) {
-  return AdaptiveTextSelectionToolbar.buttonItems(
-    buttonItems: state.contextMenuButtonItems
-      ..add(
-        ContextMenuButtonItem(label: '文本', onPressed: () => _onCopyText(text)),
-      ),
-    anchors: state.contextMenuAnchors,
-  );
-}
-
-void _onCopyText(String text) {
-  showDialog(
-    context: Get.context!,
-    builder: (context) => Dialog(
-      child: Padding(
-        padding: const .symmetric(horizontal: 20, vertical: 16),
-        child: SelectableText(
-          text,
-          style: const TextStyle(fontSize: 15, height: 1.7),
-        ),
-      ),
     ),
   );
 }

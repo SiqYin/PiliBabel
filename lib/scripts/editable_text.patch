@@ -1,0 +1,45 @@
+diff --git a/packages/flutter/lib/src/widgets/editable_text.dart b/packages/flutter/lib/src/widgets/editable_text.dart
+index b1ae878f2cc..8a7540350ef 100644
+--- a/packages/flutter/lib/src/widgets/editable_text.dart
++++ b/packages/flutter/lib/src/widgets/editable_text.dart
+@@ -5046,7 +5046,9 @@ class EditableTextState extends State<EditableText>
+   void userUpdateTextEditingValue(TextEditingValue value, SelectionChangedCause? cause) {
+     // Compare the current TextEditingValue with the pre-format new
+     // TextEditingValue value, in case the formatter would reject the change.
+-    final shouldShowCaret = widget.readOnly ? _value.selection != value.selection : _value != value;
++    final shouldShowCaret =
++        cause != SelectionChangedCause.drag &&
++        (widget.readOnly ? _value.selection != value.selection : _value != value);
+     if (shouldShowCaret) {
+       _scheduleShowCaretOnScreen(withAnimation: true);
+     }
+@@ -5709,7 +5711,7 @@ class EditableTextState extends State<EditableText>
+     PasteTextIntent: _makeOverridable(_PasteSelectionAction(this)),
+ 
+     TransposeCharactersIntent: _makeOverridable(_transposeCharactersAction),
+-    EditableTextTapOutsideIntent: _makeOverridable(_EditableTextTapOutsideAction()),
++    EditableTextTapOutsideIntent: _makeOverridable(_EditableTextTapOutsideAction(this)),
+     EditableTextTapUpOutsideIntent: _makeOverridable(_EditableTextTapUpOutsideAction()),
+   };
+ 
+@@ -6775,10 +6777,19 @@ class _WebClipboardStatusNotifier extends ClipboardStatusNotifier {
+ }
+ 
+ class _EditableTextTapOutsideAction extends ContextAction<EditableTextTapOutsideIntent> {
+-  _EditableTextTapOutsideAction();
++  _EditableTextTapOutsideAction(this.state);
++
++  final EditableTextState state;
+ 
+   @override
+   void invoke(EditableTextTapOutsideIntent intent, [BuildContext? context]) {
++    state.hideToolbar();
++    final controller = state.widget.controller;
++    final selection = controller.value.selection;
++    if (!selection.isCollapsed) {
++      controller.selection = TextSelection.collapsed(offset: selection.end);
++    }
++    return;
+     // The focus dropping behavior is only present on desktop platforms.
+     switch (defaultTargetPlatform) {
+       case TargetPlatform.android:
