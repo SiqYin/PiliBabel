@@ -153,9 +153,8 @@ class PlayerFocus extends StatelessWidget {
       if (isDigit1 || key == LogicalKeyboardKey.digit2) {
         if (HardwareKeyboard.instance.isShiftPressed && hasPlayer) {
           final speed = isDigit1 ? 1.0 : 2.0;
-          if (speed != plPlayerController.playbackSpeed) {
-            plPlayerController.setPlaybackSpeed(speed);
-          }
+          // 无条件走手动调速：锁定态下即使速度相同也需要解除锁定
+          plPlayerController.setManualPlaybackSpeed(speed);
           SmartDialog.showToast('${speed}x播放');
         }
         return true;
