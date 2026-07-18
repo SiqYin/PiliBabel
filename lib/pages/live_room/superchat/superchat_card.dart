@@ -6,6 +6,7 @@ import 'package:PiliPlus/common/widgets/scroll_physics.dart'
 import 'package:PiliPlus/models_new/live/live_superchat/item.dart';
 import 'package:PiliPlus/pages/member/widget/medal_widget.dart';
 import 'package:PiliPlus/utils/color_utils.dart';
+import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
@@ -168,6 +169,32 @@ class _SuperChatCardState extends State<SuperChatCard> {
       }
     }
 
+    Widget price = Text("￥${item.price}", style: TextStyle(color: bottomColor));
+    Widget? remains;
+    if (_remains != null) {
+      remains = Obx(
+        () => Text(
+          _remains.toString(),
+          style: const TextStyle(fontSize: 14, color: Colors.grey),
+        ),
+      );
+    } else {
+      price = Row(
+        crossAxisAlignment: .end,
+        mainAxisAlignment: .spaceBetween,
+        children: [
+          price,
+          Text(
+            DateFormatUtils.format(
+              item.startSime,
+              format: DateFormatUtils.longFormatDs,
+            ),
+            style: TextStyle(color: bottomColor, fontSize: 13.5),
+          ),
+        ],
+      );
+    }
+
     return Column(
       mainAxisSize: .min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -203,29 +230,10 @@ class _SuperChatCardState extends State<SuperChatCard> {
                   child: Column(
                     mainAxisSize: .min,
                     crossAxisAlignment: .start,
-                    children: [
-                      name,
-                      Text(
-                        "￥${item.price}",
-                        style: TextStyle(
-                          color: ColourUtils.parseColor(
-                            item.backgroundPriceColor,
-                          ),
-                        ),
-                      ),
-                    ],
+                    children: [name, price],
                   ),
                 ),
-                if (_remains != null)
-                  Obx(
-                    () => Text(
-                      _remains.toString(),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
+                ?remains,
               ],
             ),
           ),
@@ -238,6 +246,7 @@ class _SuperChatCardState extends State<SuperChatCard> {
           padding: const .all(8),
           child: SelectableText(
             item.message,
+            selectionColor: Colors.black26,
             scrollPhysics: const NeverSelectableScrollPhysics(),
             style: TextStyle(
               color: ColourUtils.parseColor(item.messageFontColor),
