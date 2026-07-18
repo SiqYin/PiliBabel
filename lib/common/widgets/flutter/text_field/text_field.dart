@@ -299,7 +299,7 @@ class RichTextField extends StatefulWidget {
     this.scrollPadding = const EdgeInsets.all(20.0),
     this.dragStartBehavior = DragStartBehavior.start,
     bool? enableInteractiveSelection,
-    this.selectAllOnFocus,
+    this.selectAllOnFocus = false,
     this.selectionControls,
     this.onTap,
     this.onTapAlwaysCalled = false,
