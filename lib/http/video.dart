@@ -373,11 +373,13 @@ abstract final class VideoHttp {
     }
   }
 
-  // 投币
+  // 投币（视频 avtype: 1，专栏 avtype: 2）
   static Future<LoadingState<void>> coinVideo({
-    required String bvid,
+    required Object aid,
     required int multiply,
     int selectLike = 0,
+    int avtype = 1,
+    String? referer,
   }) async {
     final hasAccessKey = !Accounts.main.accessKey.isNullOrEmpty;
     final options = Options(
@@ -386,17 +388,17 @@ abstract final class VideoHttp {
           ? null
           : {
               'origin': 'https://www.bilibili.com',
-              'referer': 'https://www.bilibili.com/video/$bvid',
+              'referer': ?referer,
               'user-agent': BrowserUa.pc,
             },
     );
     final res = await Request().post(
       hasAccessKey ? Api.coinVideo : Api.coinVideoWeb,
       data: {
-        'aid': IdUtils.bv2av(bvid).toString(),
-        // 'bvid': bvid,
+        'aid': aid.toString(),
         'multiply': multiply.toString(),
         'select_like': selectLike.toString(),
+        'avtype': avtype.toString(),
         if (!hasAccessKey) 'csrf': Accounts.main.csrf,
       },
       options: options,

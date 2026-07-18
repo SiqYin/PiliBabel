@@ -126,9 +126,10 @@ abstract class CommonIntroController extends GetxController
       return;
     }
     final res = await VideoHttp.coinVideo(
-      bvid: bvid,
+      aid: IdUtils.bv2av(bvid),
       multiply: coin,
       selectLike: coinWithLike ? 1 : 0,
+      referer: 'https://www.bilibili.com/video/$bvid',
     );
     if (res.isSuccess) {
       SmartDialog.showToast('投币成功');
