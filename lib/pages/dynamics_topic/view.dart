@@ -421,14 +421,15 @@ class _DynTopicPageState extends State<DynTopicPage>
   Widget _buildFoldItem(FoldCardItem item) {
     return Padding(
       padding: const .only(top: 12),
-      child: InkWell(
-        onTap: _controller.topicFold,
-        child: Ink(
-          padding: const .symmetric(vertical: 10),
-          color: colorScheme.outline.withValues(alpha: .05),
-          child: Center(
+      child: Material(
+        color: colorScheme.outline.withValues(alpha: .05),
+        child: InkWell(
+          onTap: _controller.topicFold,
+          child: Padding(
+            padding: const .symmetric(vertical: 10),
             child: Row(
               mainAxisSize: .min,
+              mainAxisAlignment: .center,
               children: [
                 Text(item.foldDesc!),
                 const Icon(Icons.keyboard_arrow_right, size: 22),

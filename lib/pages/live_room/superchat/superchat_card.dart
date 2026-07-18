@@ -244,18 +244,23 @@ class _SuperChatCardState extends State<SuperChatCard> {
             color: bottomColor,
           ),
           padding: const .all(8),
-          child: SelectableText(
-            item.message,
-            selectionColor: Colors.black26,
-            scrollPhysics: const NeverSelectableScrollPhysics(),
-            style: TextStyle(
-              color: ColourUtils.parseColor(item.messageFontColor),
-              decoration: widget.persistentSC && item.deleted
-                  ? .lineThrough
-                  : null,
-              decorationThickness: 1.5,
-              decorationStyle: .double,
-              decorationColor: Colors.white,
+          child: TextSelectionTheme(
+            data: TextSelectionThemeData(
+              selectionHandleColor: Color.lerp(bottomColor, Colors.white, .26),
+            ),
+            child: SelectableText(
+              item.message,
+              scrollPhysics: const NeverSelectableScrollPhysics(),
+              selectionColor: Color.lerp(bottomColor, Colors.black, .26),
+              style: TextStyle(
+                color: ColourUtils.parseColor(item.messageFontColor),
+                // decoration: widget.persistentSC && item.deleted
+                //     ? .lineThrough
+                //     : null,
+                // decorationThickness: 1.5,
+                // decorationStyle: .double,
+                // decorationColor: Colors.white,
+              ),
             ),
           ),
         ),
