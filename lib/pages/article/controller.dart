@@ -259,6 +259,7 @@ class ArticleController extends CommonDynController {
       multiply: coin,
       selectLike: coinWithLike ? 1 : 0,
       avtype: 2,
+      upid: summary.author?.mid,
       referer: url,
     );
     if (res.isSuccess) {

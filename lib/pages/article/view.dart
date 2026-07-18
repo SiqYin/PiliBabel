@@ -269,19 +269,14 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
             PopupMenuItem(
               onTap: controller.actionCoin,
               child: Obx(() {
-                final hasCoin = controller.hasCoin;
-                final color = hasCoin ? theme.colorScheme.primary : null;
+                final color = controller.hasCoin
+                    ? theme.colorScheme.primary
+                    : null;
                 return Row(
                   spacing: 10,
                   mainAxisSize: .min,
                   children: [
-                    Icon(
-                      hasCoin
-                          ? Icons.monetization_on
-                          : Icons.monetization_on_outlined,
-                      size: 19,
-                      color: color,
-                    ),
+                    Icon(FontAwesomeIcons.b, size: 19, color: color),
                     Text('投币', style: TextStyle(color: color)),
                   ],
                 );
