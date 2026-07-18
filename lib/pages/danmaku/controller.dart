@@ -122,7 +122,7 @@ class PlDanmakuController {
   /// - count > threshold: return log(count) / log(base)
   /// Both threshold and base can be configured in settings
   double _calcEnlargeRate(int count) {
-    if (count <= _enlargeThreshold) {
+    if (!Pref.danmakuEnlarge || count <= _enlargeThreshold) {
       return 1.0;
     }
     return log(count) / _logBaseValue;

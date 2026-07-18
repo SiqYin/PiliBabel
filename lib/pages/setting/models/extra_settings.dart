@@ -279,19 +279,19 @@ List<SettingsModel> get extraSettings => [
       if (!enabled) return '已关闭';
       final window = Pref.mergeDanmakuWindowSeconds;
       final crossMode = Pref.mergeDanmakuCrossMode ? '跨类型' : '同类型';
-      final threshold = Pref.danmakuEnlargeThreshold;
-      return '时间窗: ${window}s, $crossMode, 放大门槛: $threshold';
+      final enlarge = Pref.danmakuEnlarge
+          ? '放大门槛: ${Pref.danmakuEnlargeThreshold}'
+          : '字号放大: 关';
+      return '时间窗: ${window}s, $crossMode, $enlarge';
     },
     leading: const Icon(Icons.merge),
     onTap: (context, setState) async {
-      final result = await Navigator.of(context).push<bool>(
+      await Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => const DanmakuMergeSettingPage(),
         ),
       );
-      if (result == true) {
-        setState();
-      }
+      setState();
     },
   ),
   const SwitchModel(

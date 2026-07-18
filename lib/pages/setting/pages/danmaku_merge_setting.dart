@@ -38,6 +38,7 @@ class _DanmakuMergeSettingPageState extends State<DanmakuMergeSettingPage> {
   late bool _skipBottom;
   late int _markPosition;
   late double _markThreshold;
+  late bool _enlarge;
   late double _enlargeThreshold;
   late double _enlargeLogBase;
 
@@ -63,6 +64,7 @@ class _DanmakuMergeSettingPageState extends State<DanmakuMergeSettingPage> {
     _skipBottom = Pref.mergeDanmakuSkipBottom;
     _markPosition = Pref.mergeDanmakuMarkPosition;
     _markThreshold = Pref.mergeDanmakuMarkThreshold.toDouble();
+    _enlarge = Pref.danmakuEnlarge;
     _enlargeThreshold = Pref.danmakuEnlargeThreshold.toDouble();
     _enlargeLogBase = Pref.danmakuEnlargeLogBase.toDouble();
   }
@@ -216,56 +218,68 @@ class _DanmakuMergeSettingPageState extends State<DanmakuMergeSettingPage> {
               ),
             ),
           ),
-          ListTile(
-            title: const Text('字体放大门槛'),
-            subtitle: Text('重复 ${_enlargeThreshold.round()} 条以上开始放大'),
-            trailing: Text(
-              '${_enlargeThreshold.round()}',
-              style: TextStyle(color: theme.colorScheme.primary, fontSize: 16),
+          SwitchListTile(
+            title: const Text('字号随数量放大'),
+            subtitle: const Text('重复弹幕越多字号越大，关闭后与普通弹幕字号一致'),
+            value: _enlarge,
+            onChanged: (value) => _updateBool(
+              () => _enlarge = value,
+              SettingBoxKey.danmakuEnlarge,
+              value,
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Slider(
-              value: _enlargeThreshold,
-              min: 2,
-              max: 20,
-              divisions: 18,
-              label: '${_enlargeThreshold.round()}',
-              onChanged: (value) => _updateDouble(
-                () => _enlargeThreshold = value,
-              ),
-              onChangeEnd: (value) => _persist(
-                SettingBoxKey.danmakuEnlargeThreshold,
-                value.round(),
+          if (_enlarge) ...[
+            ListTile(
+              title: const Text('字体放大门槛'),
+              subtitle: Text('重复 ${_enlargeThreshold.round()} 条以上开始放大'),
+              trailing: Text(
+                '${_enlargeThreshold.round()}',
+                style: TextStyle(color: theme.colorScheme.primary, fontSize: 16),
               ),
             ),
-          ),
-          ListTile(
-            title: const Text('放大速度'),
-            subtitle: Text('对数底数 ${_enlargeLogBase.round()}（越小放大越快）'),
-            trailing: Text(
-              '${_enlargeLogBase.round()}',
-              style: TextStyle(color: theme.colorScheme.primary, fontSize: 16),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Slider(
-              value: _enlargeLogBase,
-              min: 3,
-              max: 10,
-              divisions: 7,
-              label: '${_enlargeLogBase.round()}',
-              onChanged: (value) => _updateDouble(
-                () => _enlargeLogBase = value,
-              ),
-              onChangeEnd: (value) => _persist(
-                SettingBoxKey.danmakuEnlargeLogBase,
-                value.round(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Slider(
+                value: _enlargeThreshold,
+                min: 2,
+                max: 20,
+                divisions: 18,
+                label: '${_enlargeThreshold.round()}',
+                onChanged: (value) => _updateDouble(
+                  () => _enlargeThreshold = value,
+                ),
+                onChangeEnd: (value) => _persist(
+                  SettingBoxKey.danmakuEnlargeThreshold,
+                  value.round(),
+                ),
               ),
             ),
-          ),
+            ListTile(
+              title: const Text('放大速度'),
+              subtitle: Text('对数底数 ${_enlargeLogBase.round()}（越小放大越快）'),
+              trailing: Text(
+                '${_enlargeLogBase.round()}',
+                style: TextStyle(color: theme.colorScheme.primary, fontSize: 16),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Slider(
+                value: _enlargeLogBase,
+                min: 3,
+                max: 10,
+                divisions: 7,
+                label: '${_enlargeLogBase.round()}',
+                onChanged: (value) => _updateDouble(
+                  () => _enlargeLogBase = value,
+                ),
+                onChangeEnd: (value) => _persist(
+                  SettingBoxKey.danmakuEnlargeLogBase,
+                  value.round(),
+                ),
+              ),
+            ),
+          ],
           _SectionTitle('高级选项', theme),
           ListTile(
             title: const Text('编辑距离合并阈值'),
@@ -393,6 +407,7 @@ class _DanmakuMergeSettingPageState extends State<DanmakuMergeSettingPage> {
       SettingBoxKey.mergeDanmakuSkipBottom,
       SettingBoxKey.mergeDanmakuMarkPosition,
       SettingBoxKey.mergeDanmakuMarkThreshold,
+      SettingBoxKey.danmakuEnlarge,
       SettingBoxKey.danmakuEnlargeThreshold,
       SettingBoxKey.danmakuEnlargeLogBase,
     ];
@@ -419,6 +434,7 @@ class _DanmakuMergeSettingPageState extends State<DanmakuMergeSettingPage> {
       _skipBottom = Pref.mergeDanmakuSkipBottom;
       _markPosition = Pref.mergeDanmakuMarkPosition;
       _markThreshold = Pref.mergeDanmakuMarkThreshold.toDouble();
+      _enlarge = Pref.danmakuEnlarge;
       _enlargeThreshold = Pref.danmakuEnlargeThreshold.toDouble();
       _enlargeLogBase = Pref.danmakuEnlargeLogBase.toDouble();
     });
