@@ -39,30 +39,39 @@ class DanmakuMergeConfig {
 class DanmakuPreparedText {
   const DanmakuPreparedText({
     required this.normalizedText,
-    required this.charTokens,
-    required this.gramTokens,
+    required this.charLength,
+    required this.charCounts,
+    required this.gramCounts,
+    required this.gramSelfDot,
+    required this.pinyinLength,
+    required this.pinyinCounts,
   });
 
   final String normalizedText;
-  final List<int> charTokens;
-  final List<int> gramTokens;
+
+  // Token-count bags (and the gram self dot product) are precomputed once per
+  // unique text so per-pair comparisons in DanmakuSimilarityMatcher never
+  // rebuild hash maps inside the O(N x K) matching loop.
+  final int charLength;
+  final Map<int, int> charCounts;
+  final Map<int, int> gramCounts;
+  final int gramSelfDot;
+  final int pinyinLength;
+  final Map<int, int> pinyinCounts;
 }
 
 class DanmakuMergeCandidate {
   const DanmakuMergeCandidate({
     required this.element,
     required this.segmentIndex,
-    required this.normalizedText,
-    required this.charTokens,
-    required this.gramTokens,
+    required this.prepared,
   });
 
   final DanmakuElem element;
   final int segmentIndex;
-  final String normalizedText;
-  final List<int> charTokens;
-  final List<int> gramTokens;
+  final DanmakuPreparedText prepared;
 
+  String get normalizedText => prepared.normalizedText;
   int get mode => element.mode;
   int get progress => element.progress;
 }

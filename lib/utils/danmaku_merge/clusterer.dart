@@ -3,6 +3,8 @@
 // - pakkujs/core/combine_worker.ts
 // - pakkujs/core/scheduler.ts
 
+import 'dart:collection';
+
 import 'package:PiliPlus/grpc/bilibili/community/service/dm/v1.pb.dart';
 import 'package:PiliPlus/utils/danmaku_merge/models.dart';
 import 'package:PiliPlus/utils/danmaku_merge/normalizer.dart';
@@ -14,21 +16,45 @@ class DanmakuClusterer {
     required this.config,
     required DanmakuPinyinEncoder pinyinEncoder,
     DanmakuPreparedText Function(String text)? prepareText,
-  }) : _matcher = DanmakuSimilarityMatcher(
-         config: config,
-         pinyinEncoder: pinyinEncoder,
-       ),
-       _prepareText = prepareText ?? _defaultPrepareText;
+  }) : _matcher = DanmakuSimilarityMatcher(config: config),
+       _prepareText =
+           prepareText ??
+           ((text) => DanmakuClusterer.prepareText(text, pinyinEncoder));
 
   final DanmakuMergeConfig config;
   final DanmakuSimilarityMatcher _matcher;
   final DanmakuPreparedText Function(String text) _prepareText;
 
-  Future<List<DanmakuElem>> mergeSegment({
+  static DanmakuPreparedText prepareText(
+    String text,
+    DanmakuPinyinEncoder pinyinEncoder,
+  ) {
+    final normalizedText = DanmakuNormalizer.normalize(text);
+    final charTokens = normalizedText.runes.toList(growable: false);
+    final gramCounts = DanmakuSimilarityMatcher.countTokens(
+      DanmakuSimilarityMatcher.buildGramTokens(normalizedText),
+    );
+    var gramSelfDot = 0;
+    for (final value in gramCounts.values) {
+      gramSelfDot += value * value;
+    }
+    final pinyinTokens = pinyinEncoder.encode(normalizedText);
+    return DanmakuPreparedText(
+      normalizedText: normalizedText,
+      charLength: charTokens.length,
+      charCounts: DanmakuSimilarityMatcher.countTokens(charTokens),
+      gramCounts: gramCounts,
+      gramSelfDot: gramSelfDot,
+      pinyinLength: pinyinTokens.length,
+      pinyinCounts: DanmakuSimilarityMatcher.countTokens(pinyinTokens),
+    );
+  }
+
+  List<DanmakuElem> mergeSegment({
     required int segmentIndex,
     required List<DanmakuElem> currentSegment,
     required List<DanmakuElem> nextSegmentPrefix,
-  }) async {
+  }) {
     if (!config.enabled || currentSegment.isEmpty) {
       return currentSegment;
     }
@@ -39,45 +65,45 @@ class DanmakuClusterer {
       ..sort((a, b) => a.progress.compareTo(b.progress));
 
     final output = <DanmakuElem>[];
-    
-    final List<DanmakuMergeCluster>? activeClustersFlat =
-        config.crossMode ? <DanmakuMergeCluster>[] : null;
-    final Map<int, List<DanmakuMergeCluster>>? activeClustersByMode =
-        config.crossMode ? null : <int, List<DanmakuMergeCluster>>{};
+
+    final ListQueue<DanmakuMergeCluster>? activeClustersFlat =
+        config.crossMode ? ListQueue<DanmakuMergeCluster>() : null;
+    final Map<int, ListQueue<DanmakuMergeCluster>>? activeClustersByMode =
+        config.crossMode ? null : <int, ListQueue<DanmakuMergeCluster>>{};
 
     final exactMatchMap = <String, DanmakuMergeCluster>{};
 
-    String _getExactKey(DanmakuMergeCandidate c) =>
+    String getExactKey(DanmakuMergeCandidate c) =>
         config.crossMode ? c.normalizedText : '${c.mode}:${c.normalizedText}';
 
     void removeCluster(DanmakuMergeCluster cluster) {
       output.add(_buildRepresentative(cluster));
       for (final peer in cluster.peers) {
-        exactMatchMap.remove(_getExactKey(peer));
+        exactMatchMap.remove(getExactKey(peer));
       }
     }
 
     // Inspired by pakku's active-cluster queue: clusters are emitted once they
     // are outside the configured merge window.
-    Future<void> flushExpired(int currentProgress) async {
+    void flushExpired(int currentProgress) {
       if (config.crossMode) {
         while (activeClustersFlat!.isNotEmpty &&
             currentProgress - activeClustersFlat.first.progress >
                 config.windowMs) {
-          removeCluster(activeClustersFlat.removeAt(0));
+          removeCluster(activeClustersFlat.removeFirst());
         }
       } else {
         for (final clusters in activeClustersByMode!.values) {
           while (clusters.isNotEmpty &&
               currentProgress - clusters.first.progress > config.windowMs) {
-            removeCluster(clusters.removeAt(0));
+            removeCluster(clusters.removeFirst());
           }
         }
       }
     }
 
     for (final element in current) {
-      await flushExpired(element.progress);
+      flushExpired(element.progress);
       if (!_isMergeable(element)) {
         output.add(element);
         continue;
@@ -86,20 +112,19 @@ class DanmakuClusterer {
       final candidate = _toCandidate(element, segmentIndex);
       var matched = false;
 
-      final exactKey = _getExactKey(candidate);
+      final exactKey = getExactKey(candidate);
       final exactCluster = exactMatchMap[exactKey];
       if (exactCluster != null) {
         exactCluster.add(candidate);
         continue;
       }
-      
+
       final Iterable<DanmakuMergeCluster> searchSpace = config.crossMode
           ? activeClustersFlat!
-          : activeClustersByMode!.putIfAbsent(
-              candidate.mode, () => <DanmakuMergeCluster>[]);
+          : activeClustersByMode!.putIfAbsent(candidate.mode, ListQueue.new);
 
       for (final cluster in searchSpace) {
-        final result = await _matcher.match(candidate, cluster.root);
+        final result = _matcher.match(candidate, cluster.root);
         if (result != null) {
           cluster.add(candidate);
           exactMatchMap[exactKey] = cluster;
@@ -122,13 +147,13 @@ class DanmakuClusterer {
     // Adapted from pakku's next-chunk prefix matching to reduce segment-edge
     // misses without requiring a full multi-segment scheduler.
     for (final element in next) {
-      await flushExpired(element.progress);
+      flushExpired(element.progress);
       if (!_isMergeable(element)) {
         continue;
       }
       final candidate = _toCandidate(element, segmentIndex + 1);
 
-      final exactKey = _getExactKey(candidate);
+      final exactKey = getExactKey(candidate);
       final exactCluster = exactMatchMap[exactKey];
       if (exactCluster != null) {
         exactCluster.add(candidate);
@@ -140,7 +165,7 @@ class DanmakuClusterer {
           : (activeClustersByMode![candidate.mode] ?? const []);
 
       for (final cluster in searchSpace) {
-        final result = await _matcher.match(candidate, cluster.root);
+        final result = _matcher.match(candidate, cluster.root);
         if (result != null) {
           cluster.add(candidate);
           exactMatchMap[exactKey] = cluster;
@@ -151,12 +176,12 @@ class DanmakuClusterer {
 
     if (config.crossMode) {
       while (activeClustersFlat!.isNotEmpty) {
-        removeCluster(activeClustersFlat.removeAt(0));
+        removeCluster(activeClustersFlat.removeFirst());
       }
     } else {
       for (final clusters in activeClustersByMode!.values) {
         while (clusters.isNotEmpty) {
-          removeCluster(clusters.removeAt(0));
+          removeCluster(clusters.removeFirst());
         }
       }
     }
@@ -184,22 +209,10 @@ class DanmakuClusterer {
   }
 
   DanmakuMergeCandidate _toCandidate(DanmakuElem element, int segmentIndex) {
-    final prepared = _prepareText(element.content);
     return DanmakuMergeCandidate(
       element: element,
       segmentIndex: segmentIndex,
-      normalizedText: prepared.normalizedText,
-      charTokens: prepared.charTokens,
-      gramTokens: prepared.gramTokens,
-    );
-  }
-
-  static DanmakuPreparedText _defaultPrepareText(String text) {
-    final normalizedText = DanmakuNormalizer.normalize(text);
-    return DanmakuPreparedText(
-      normalizedText: normalizedText,
-      charTokens: normalizedText.runes.toList(growable: false),
-      gramTokens: DanmakuSimilarityMatcher.buildGramTokens(normalizedText),
+      prepared: _prepareText(element.content),
     );
   }
 

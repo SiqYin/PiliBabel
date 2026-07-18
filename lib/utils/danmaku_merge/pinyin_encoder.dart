@@ -6,43 +6,27 @@ import 'dart:collection';
 import 'dart:io' show File;
 
 class DanmakuPinyinEncoder {
-  DanmakuPinyinEncoder._({required Future<String> Function(String path) loader})
-    : _loader = loader;
+  // The dictionary is parsed eagerly so encode() can stay synchronous inside
+  // the merge hot loop.
+  DanmakuPinyinEncoder.withDictionaryContent(String content) {
+    _load(content);
+  }
+
+  factory DanmakuPinyinEncoder.fromFileSystem() {
+    return DanmakuPinyinEncoder.withDictionaryContent(
+      File(_assetPath).readAsStringSync(),
+    );
+  }
 
   static const String _assetPath = 'assets/danmaku_merge/pinyin_dict.txt';
   static const int _tokenBase = 0xE000;
 
   static String get assetPath => _assetPath;
 
-  factory DanmakuPinyinEncoder.withLoader(
-    Future<String> Function(String path) loader,
-  ) {
-    return DanmakuPinyinEncoder._(loader: loader);
-  }
-
-  factory DanmakuPinyinEncoder.fromFileSystem() {
-    return DanmakuPinyinEncoder._(
-      loader: (path) => File(path).readAsString(),
-    );
-  }
-
-  factory DanmakuPinyinEncoder.withDictionaryContent(String content) {
-    return DanmakuPinyinEncoder._(
-      loader: (_) async => content,
-    );
-  }
-
-  final Map<String, List<int>> _cache = <String, List<int>>{};
+  final Map<String, List<int>> _cache = HashMap<String, List<int>>();
   final Map<int, List<int>> _dict = HashMap<int, List<int>>();
-  final Future<String> Function(String path) _loader;
-  Future<void>? _loading;
 
-  Future<void> ensureLoaded() {
-    return _loading ??= _load();
-  }
-
-  Future<List<int>> encode(String text) async {
-    await ensureLoaded();
+  List<int> encode(String text) {
     return _cache.putIfAbsent(text, () {
       // Adapted from pakku's pinyin token strategy: map Hanzi to lightweight
       // private-use tokens and lowercase ASCII for mixed-language matching.
@@ -63,8 +47,7 @@ class DanmakuPinyinEncoder {
     });
   }
 
-  Future<void> _load() async {
-    final content = await _loader(_assetPath);
+  void _load(String content) {
     final lineRe = RegExp(r'^\{0x([0-9a-fA-F]+), \{(\d+), (\d+)\}\},?$');
     for (final rawLine in content.split('\n')) {
       final line = rawLine.trim();

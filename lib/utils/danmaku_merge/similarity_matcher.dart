@@ -5,63 +5,75 @@ import 'dart:collection';
 import 'dart:math' show max;
 
 import 'package:PiliPlus/utils/danmaku_merge/models.dart';
-import 'package:PiliPlus/utils/danmaku_merge/pinyin_encoder.dart';
 
 class DanmakuSimilarityMatcher {
   static const int _hashMod = 1007;
 
-  DanmakuSimilarityMatcher({
-    required this.config,
-    required this.pinyinEncoder,
-  });
+  DanmakuSimilarityMatcher({required this.config});
 
   final DanmakuMergeConfig config;
-  final DanmakuPinyinEncoder pinyinEncoder;
 
-  Future<DanmakuSimilarityMatchResult?> match(
+  DanmakuSimilarityMatchResult? match(
     DanmakuMergeCandidate source,
     DanmakuMergeCandidate target,
-  ) async {
+  ) {
     if (!config.crossMode && source.mode != target.mode) {
       return null;
     }
 
-    if (source.normalizedText == target.normalizedText) {
+    final sourceText = source.prepared;
+    final targetText = target.prepared;
+    if (sourceText.normalizedText == targetText.normalizedText) {
       return const DanmakuSimilarityMatchResult(
         reason: DanmakuMergeReason.exact,
         distance: 0,
       );
     }
 
-    final charDistance = _matchDistance(source.charTokens, target.charTokens);
-    if (charDistance != null) {
-      return DanmakuSimilarityMatchResult(
-        reason: DanmakuMergeReason.charDistance,
-        distance: charDistance,
-      );
-    }
-
-    if (config.usePinyin) {
-      final sourcePinyin = await _getPinyinTokens(source.normalizedText);
-      final targetPinyin = await _getPinyinTokens(target.normalizedText);
-      final pinyinDistance = _matchDistance(sourcePinyin, targetPinyin);
-      if (pinyinDistance != null) {
+    final lenSum = sourceText.charLength + targetText.charLength;
+    int? charDist;
+    if ((sourceText.charLength - targetText.charLength).abs() <=
+        config.maxDistance) {
+      charDist = _bagDistance(sourceText.charCounts, targetText.charCounts);
+      if (_withinDistance(charDist, lenSum)) {
         return DanmakuSimilarityMatchResult(
-          reason: DanmakuMergeReason.pinyinDistance,
-          distance: pinyinDistance,
+          reason: DanmakuMergeReason.charDistance,
+          distance: charDist,
         );
       }
     }
 
-    final cosineSimilarity = _cosineSimilarity(
-      source.gramTokens,
-      target.gramTokens,
-    );
-    if (_canUseCosine(source, target, charDistance, cosineSimilarity)) {
-      return DanmakuSimilarityMatchResult(
-        reason: DanmakuMergeReason.cosineDistance,
-        distance: cosineSimilarity,
+    if (config.usePinyin &&
+        (sourceText.pinyinLength - targetText.pinyinLength).abs() <=
+            config.maxDistance) {
+      final pinyinDist = _bagDistance(
+        sourceText.pinyinCounts,
+        targetText.pinyinCounts,
       );
+      if (_withinDistance(
+        pinyinDist,
+        sourceText.pinyinLength + targetText.pinyinLength,
+      )) {
+        return DanmakuSimilarityMatchResult(
+          reason: DanmakuMergeReason.pinyinDistance,
+          distance: pinyinDist,
+        );
+      }
+    }
+
+    if (config.maxCosine <= 100) {
+      // pakku's no-common-char guard, reusing the char distance computed
+      // above instead of recomputing it.
+      final noCommonChar = charDist != null && charDist >= lenSum;
+      if (!noCommonChar) {
+        final cosine = _cosineSimilarity(sourceText, targetText);
+        if (cosine >= config.maxCosine) {
+          return DanmakuSimilarityMatchResult(
+            reason: DanmakuMergeReason.cosineDistance,
+            distance: cosine,
+          );
+        }
+      }
     }
 
     return null;
@@ -80,113 +92,75 @@ class DanmakuSimilarityMatcher {
       grams.add(previous * _hashMod + current);
       previous = current;
     }
-    return List<int>.unmodifiable(grams);
+    return grams;
   }
 
-  int charDistance(List<int> source, List<int> target) {
-    return _bagDistance(source, target);
-  }
-
-  Future<int> pinyinDistance(String source, String target) async {
-    final sourcePinyin = await _getPinyinTokens(source);
-    final targetPinyin = await _getPinyinTokens(target);
-    return _bagDistance(sourcePinyin, targetPinyin);
-  }
-
-  int cosineSimilarity(List<int> source, List<int> target) {
-    return _cosineSimilarity(source, target);
-  }
-
-  Future<List<int>> _getPinyinTokens(String text) {
-    return pinyinEncoder.encode(text);
-  }
-
-  int? _matchDistance(List<int> source, List<int> target) {
-    if ((source.length - target.length).abs() > config.maxDistance) {
-      return null;
+  static HashMap<int, int> countTokens(List<int> tokens) {
+    final counts = HashMap<int, int>();
+    for (final token in tokens) {
+      counts[token] = (counts[token] ?? 0) + 1;
     }
+    return counts;
+  }
 
-    // Adapted from pakku's O(n) bag-distance approximation instead of using a
-    // textbook edit distance, to keep matching fast in danmaku-heavy segments.
-    final distance = _bagDistance(source, target);
-    final lenSum = source.length + target.length;
+  int charDistance(DanmakuPreparedText source, DanmakuPreparedText target) =>
+      _bagDistance(source.charCounts, target.charCounts);
+
+  int pinyinDistance(DanmakuPreparedText source, DanmakuPreparedText target) =>
+      _bagDistance(source.pinyinCounts, target.pinyinCounts);
+
+  int cosineSimilarity(
+    DanmakuPreparedText source,
+    DanmakuPreparedText target,
+  ) => _cosineSimilarity(source, target);
+
+  // Adapted from pakku's O(n) bag-distance approximation instead of using a
+  // textbook edit distance, to keep matching fast in danmaku-heavy segments.
+  bool _withinDistance(int distance, int lenSum) {
     final minDanmakuSize = max(1, config.maxDistance * 2);
-    final matched = lenSum < minDanmakuSize
+    return lenSum < minDanmakuSize
         ? distance < config.maxDistance * lenSum / minDanmakuSize
         : distance <= config.maxDistance;
-    return matched ? distance : null;
   }
 
-  bool _canUseCosine(
-    DanmakuMergeCandidate source,
-    DanmakuMergeCandidate target,
-    int? matchedCharDistance,
-    int cosineSimilarity,
-  ) {
-    if (config.maxCosine > 100) {
-      return false;
-    }
-
-    final charLengthDiff = (source.charTokens.length - target.charTokens.length)
-        .abs();
-    final charDistance =
-        matchedCharDistance ??
-        (charLengthDiff <= config.maxDistance
-            ? _bagDistance(source.charTokens, target.charTokens)
-            : null);
-    final lenSum = source.charTokens.length + target.charTokens.length;
-    final noCommonChar = charDistance != null && charDistance >= lenSum;
-    if (noCommonChar) {
-      return false;
-    }
-    return cosineSimilarity >= config.maxCosine;
-  }
-
-  int _bagDistance(List<int> source, List<int> target) {
-    final diff = HashMap<int, int>();
-    for (final token in source) {
-      diff[token] = (diff[token] ?? 0) + 1;
-    }
-    for (final token in target) {
-      diff[token] = (diff[token] ?? 0) - 1;
-    }
-
+  int _bagDistance(Map<int, int> source, Map<int, int> target) {
     var distance = 0;
-    for (final value in diff.values) {
-      distance += value.abs();
+    for (final entry in source.entries) {
+      distance += (entry.value - (target[entry.key] ?? 0)).abs();
+    }
+    for (final entry in target.entries) {
+      if (!source.containsKey(entry.key)) {
+        distance += entry.value;
+      }
     }
     return distance;
   }
 
-  int _cosineSimilarity(List<int> source, List<int> target) {
-    if (source.isEmpty || target.isEmpty) {
+  int _cosineSimilarity(
+    DanmakuPreparedText source,
+    DanmakuPreparedText target,
+  ) {
+    final y = source.gramSelfDot;
+    final z = target.gramSelfDot;
+    if (y == 0 || z == 0) {
       return 0;
     }
 
-    final sourceCounts = HashMap<int, int>();
-    final targetCounts = HashMap<int, int>();
-    for (final token in source) {
-      sourceCounts[token] = (sourceCounts[token] ?? 0) + 1;
+    var small = source.gramCounts;
+    var large = target.gramCounts;
+    if (small.length > large.length) {
+      final swap = small;
+      small = large;
+      large = swap;
     }
-    for (final token in target) {
-      targetCounts[token] = (targetCounts[token] ?? 0) + 1;
-    }
-
     var x = 0;
-    var y = 0;
-    for (final entry in sourceCounts.entries) {
-      final sourceValue = entry.value;
-      final targetValue = targetCounts[entry.key] ?? 0;
-      x += sourceValue * targetValue;
-      y += sourceValue * sourceValue;
+    for (final entry in small.entries) {
+      final other = large[entry.key];
+      if (other != null) {
+        x += entry.value * other;
+      }
     }
-
-    var z = 0;
-    for (final targetValue in targetCounts.values) {
-      z += targetValue * targetValue;
-    }
-
-    if (x == 0 || y == 0 || z == 0) {
+    if (x == 0) {
       return 0;
     }
 

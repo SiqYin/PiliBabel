@@ -34,6 +34,10 @@ class DanmakuMergeWorkerClient {
     required List<DanmakuElem> nextSegmentPrefix,
   }) async {
     await _ensureStarted();
+    final sendPort = _sendPort;
+    if (sendPort == null) {
+      throw StateError('Danmaku merge worker disposed');
+    }
     final taskId = _nextTaskId++;
     final completer = Completer<List<DanmakuElem>>();
     _pending[taskId] = completer;
@@ -44,7 +48,7 @@ class DanmakuMergeWorkerClient {
       );
     }
 
-    _sendPort!.send(
+    sendPort.send(
       DanmakuMergeTaskPayload(
         taskId: taskId,
         segmentIndex: segmentIndex,
@@ -58,8 +62,25 @@ class DanmakuMergeWorkerClient {
     return completer.future;
   }
 
+  /// Spawns the isolate ahead of time (e.g. in parallel with the first
+  /// danmaku request) so the first merge doesn't pay the startup cost.
+  Future<void> warmUp() async {
+    try {
+      await _ensureStarted();
+    } catch (_) {
+      // Startup failures surface through the first real merge call, which
+      // retries from a clean state.
+    }
+  }
+
   Future<void> dispose() async {
     _sendPort?.send(const <String, Object?>{'type': 'shutdown'});
+    final startup = _startupCompleter;
+    if (startup != null && !startup.isCompleted) {
+      startup.completeError(
+        StateError('Danmaku merge worker disposed during startup'),
+      );
+    }
     for (final completer in _pending.values) {
       if (!completer.isCompleted) {
         completer.completeError(
@@ -88,20 +109,40 @@ class DanmakuMergeWorkerClient {
 
     final completer = Completer<void>();
     _startupCompleter = completer;
-    _receivePort = ReceivePort();
-    _subscription = _receivePort!.listen(_handleMessage);
+    try {
+      _receivePort = ReceivePort();
+      _subscription = _receivePort!.listen(_handleMessage);
 
-    final dictContent = await dictionaryLoader(DanmakuPinyinEncoder.assetPath);
-    if (kDebugMode) {
-      debugPrint(
-        '[DanmakuMergeWorker] spawning isolate, dictLength=${dictContent.length}',
+      final dictContent = await dictionaryLoader(DanmakuPinyinEncoder.assetPath);
+      if (kDebugMode) {
+        debugPrint(
+          '[DanmakuMergeWorker] spawning isolate, dictLength=${dictContent.length}',
+        );
+      }
+      final isolate = await Isolate.spawn<List<Object?>>(
+        danmakuMergeWorkerMain,
+        <Object?>[_receivePort!.sendPort, dictContent],
       );
+      if (completer.isCompleted) {
+        // Disposed while starting up.
+        isolate.kill(priority: Isolate.immediate);
+      } else {
+        _isolate = isolate;
+      }
+    } catch (e, s) {
+      await _subscription?.cancel();
+      _receivePort?.close();
+      _subscription = null;
+      _receivePort = null;
+      _isolate = null;
+      if (identical(_startupCompleter, completer)) {
+        _startupCompleter = null;
+      }
+      if (!completer.isCompleted) {
+        completer.completeError(e, s);
+      }
     }
-    _isolate = await Isolate.spawn<List<Object?>>(
-      danmakuMergeWorkerMain,
-      <Object?>[_receivePort!.sendPort, dictContent],
-    );
-    await completer.future;
+    return completer.future;
   }
 
   void _handleMessage(Object? message) {

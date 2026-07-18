@@ -7,7 +7,6 @@ import 'dart:io';
 import 'package:PiliPlus/grpc/bilibili/community/service/dm/v1.pb.dart';
 import 'package:PiliPlus/utils/danmaku_merge/clusterer.dart';
 import 'package:PiliPlus/utils/danmaku_merge/models.dart';
-import 'package:PiliPlus/utils/danmaku_merge/normalizer.dart';
 import 'package:PiliPlus/utils/danmaku_merge/pinyin_encoder.dart';
 import 'package:PiliPlus/utils/danmaku_merge/similarity_matcher.dart';
 
@@ -26,7 +25,7 @@ Future<void> main(List<String> args) async {
         exitCode = 1;
         return;
       }
-      await _compare(args[1], args[2]);
+      _compare(args[1], args[2]);
       return;
     case 'merge':
       if (args.length < 2) {
@@ -44,51 +43,39 @@ Future<void> main(List<String> args) async {
   }
 }
 
-Future<void> _compare(String left, String right) async {
+void _compare(String left, String right) {
   final config = _defaultConfig();
   final encoder = DanmakuPinyinEncoder.fromFileSystem();
-  final matcher = DanmakuSimilarityMatcher(
-    config: config,
-    pinyinEncoder: encoder,
-  );
+  final matcher = DanmakuSimilarityMatcher(config: config);
 
-  final leftNormalized = DanmakuNormalizer.normalize(left);
-  final rightNormalized = DanmakuNormalizer.normalize(right);
-  final leftTokens = leftNormalized.runes.toList(growable: false);
-  final rightTokens = rightNormalized.runes.toList(growable: false);
+  final leftPrepared = DanmakuClusterer.prepareText(left, encoder);
+  final rightPrepared = DanmakuClusterer.prepareText(right, encoder);
 
-  final result = await matcher.match(
+  final result = matcher.match(
     DanmakuMergeCandidate(
       element: _fakeElem(content: left, progress: 0),
       segmentIndex: 0,
-      normalizedText: leftNormalized,
-      charTokens: leftTokens,
-      gramTokens: DanmakuSimilarityMatcher.buildGramTokens(leftNormalized),
+      prepared: leftPrepared,
     ),
     DanmakuMergeCandidate(
       element: _fakeElem(content: right, progress: 0),
       segmentIndex: 0,
-      normalizedText: rightNormalized,
-      charTokens: rightTokens,
-      gramTokens: DanmakuSimilarityMatcher.buildGramTokens(rightNormalized),
+      prepared: rightPrepared,
     ),
   );
 
-  final charDistance = matcher.charDistance(leftTokens, rightTokens);
-  final pinyinDistance = await matcher.pinyinDistance(
-    leftNormalized,
-    rightNormalized,
-  );
+  final charDistance = matcher.charDistance(leftPrepared, rightPrepared);
+  final pinyinDistance = matcher.pinyinDistance(leftPrepared, rightPrepared);
   final cosineSimilarity = matcher.cosineSimilarity(
-    DanmakuSimilarityMatcher.buildGramTokens(leftNormalized),
-    DanmakuSimilarityMatcher.buildGramTokens(rightNormalized),
+    leftPrepared,
+    rightPrepared,
   );
 
   final buffer = StringBuffer()
     ..writeln('left.raw       : $left')
     ..writeln('right.raw      : $right')
-    ..writeln('left.normalized: $leftNormalized')
-    ..writeln('right.normalized: $rightNormalized')
+    ..writeln('left.normalized: ${leftPrepared.normalizedText}')
+    ..writeln('right.normalized: ${rightPrepared.normalizedText}')
     ..writeln('charDistance   : $charDistance')
     ..writeln('pinyinDistance : $pinyinDistance')
     ..writeln('cosineSimilarity: $cosineSimilarity')
@@ -111,7 +98,7 @@ Future<void> _mergeFile(String inputPath) async {
     config: _defaultConfig(),
     pinyinEncoder: DanmakuPinyinEncoder.fromFileSystem(),
   );
-  final merged = await clusterer.mergeSegment(
+  final merged = clusterer.mergeSegment(
     segmentIndex: 0,
     currentSegment: elements,
     nextSegmentPrefix: const <DanmakuElem>[],

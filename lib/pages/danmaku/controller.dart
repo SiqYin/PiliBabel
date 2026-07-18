@@ -31,6 +31,10 @@ class PlDanmakuController {
         'cid=$_cid fileSource=$_isFileSource merge=$_mergeDanmaku',
       );
     }
+    if (_mergeDanmaku) {
+      // Spawn the merge isolate in parallel with the first danmaku request.
+      unawaited(_mergeWorker.warmUp());
+    }
   }
 
   final int _cid;
@@ -50,10 +54,12 @@ class PlDanmakuController {
   late final Set<int> _queuedSeg = HashSet();
   late final Set<int> _mergedSeg = HashSet();
   final ListQueue<_QueuedDanmakuRequest> _downloadQueue = ListQueue();
-  bool _downloadLoopRunning = false;
+  final Set<int> _mergingSeg = HashSet();
+  int _activeDownloads = 0;
   bool _disposed = false;
 
   static const int segmentLength = 60 * 6 * 1000;
+  static const int _maxConcurrentDownloads = 2;
   static const int _prefetchRetryCooldownMs = 5000;
   static const int _prefetchLeadMs = 30000;
   static const int _maxPrefetchFailures = 5;
@@ -64,10 +70,6 @@ class PlDanmakuController {
   late final DanmakuMergeWorkerClient _mergeWorker = DanmakuMergeWorkerClient(
     dictionaryLoader: rootBundle.loadString,
   );
-
-  /// Get the current enlarge threshold from settings
-  /// Can be configured by user in danmaku settings
-  int get _enlargeThreshold => Pref.danmakuEnlargeThreshold;
 
   int get _mergeWindowMs => Pref.mergeDanmakuWindowSeconds * 1000;
 
@@ -83,13 +85,6 @@ class PlDanmakuController {
     skipAdvanced: Pref.mergeDanmakuSkipAdvanced,
     skipBottom: Pref.mergeDanmakuSkipBottom,
   );
-
-  /// Get the current log base from settings
-  /// Can be configured by user in danmaku settings
-  int get _logBase => Pref.danmakuEnlargeLogBase;
-
-  /// Get precomputed log value for the current base
-  double get _logBaseValue => log(_logBase.toDouble());
 
   void dispose() {
     if (kDebugMode) {
@@ -108,30 +103,12 @@ class PlDanmakuController {
     _requestedSeg.clear();
     _queuedSeg.clear();
     _mergedSeg.clear();
+    _mergingSeg.clear();
     _downloadQueue.clear();
   }
 
   static int calcSegment(int progress) {
     return progress ~/ segmentLength;
-  }
-
-  /// Calculate the font size enlargement rate based on the number of merged danmaku
-  ///
-  /// Formula adapted from Pakku.js for mobile screens:
-  /// - count <= threshold: return 1 (no enlargement)
-  /// - count > threshold: return log(count) / log(base)
-  /// Both threshold and base can be configured in settings
-  double _calcEnlargeRate(int count) {
-    if (!Pref.danmakuEnlarge || count <= _enlargeThreshold) {
-      return 1.0;
-    }
-    return log(count) / _logBaseValue;
-  }
-
-  /// Calculate enlarged font size for merged danmaku
-  /// Base font size is typically 15 for standard danmaku
-  int _calcEnlargedFontSize(int baseFontSize, int count) {
-    return (baseFontSize * _calcEnlargeRate(count)).round();
   }
 
   Future<void> queryDanmaku(int segmentIndex, {bool isPrefetch = false}) async {
@@ -197,9 +174,6 @@ class PlDanmakuController {
         _plPlayerController.dmState.add(_cid);
       }
       await handleDanmaku(segmentIndex, response.elems);
-      if (_mergeDanmaku) {
-        _scheduleSegment(segmentIndex + 1, isPrefetch: true);
-      }
     } else {
       if (kDebugMode) {
         debugPrint(
@@ -261,16 +235,20 @@ class PlDanmakuController {
   }
 
   Future<void> _mergeSegment(int segmentIndex) async {
-    if (_mergedSeg.contains(segmentIndex)) {
+    if (_mergedSeg.contains(segmentIndex) ||
+        _mergingSeg.contains(segmentIndex)) {
       return;
     }
     final currentSegment = _rawDmSegMap[segmentIndex];
     if (currentSegment == null || currentSegment.isEmpty) {
       return;
     }
+    // A permanently missing successor (marked after repeated prefetch
+    // failures) shouldn't block this segment forever: merge without prefix.
     if (!_isFileSource &&
         !_isLastSegment(segmentIndex) &&
-        !_rawDmSegMap.containsKey(segmentIndex + 1)) {
+        !_rawDmSegMap.containsKey(segmentIndex + 1) &&
+        !_missingSeg.contains(segmentIndex + 1)) {
       if (kDebugMode) {
         debugPrint(
           '[DanmakuMerge] postpone segment=$segmentIndex waiting for next chunk',
@@ -279,9 +257,12 @@ class PlDanmakuController {
       return;
     }
 
-    final sortedCurrent = List<DanmakuElem>.from(currentSegment)
-      ..sort((a, b) => a.progress.compareTo(b.progress));
-    final lastProgress = sortedCurrent.last.progress;
+    var lastProgress = 0;
+    for (final element in currentSegment) {
+      if (element.progress > lastProgress) {
+        lastProgress = element.progress;
+      }
+    }
 
     final nextSegment = _rawDmSegMap[segmentIndex + 1];
     final nextSegmentPrefix =
@@ -292,11 +273,12 @@ class PlDanmakuController {
             .toList(growable: false) ??
         const <DanmakuElem>[];
 
+    _mergingSeg.add(segmentIndex);
     try {
       if (kDebugMode) {
         debugPrint(
           '[DanmakuMerge] start segment=$segmentIndex '
-          'current=${sortedCurrent.length} nextPrefix=${nextSegmentPrefix.length} '
+          'current=${currentSegment.length} nextPrefix=${nextSegmentPrefix.length} '
           'window=$_mergeWindowMs maxDistance=${_mergeConfig.maxDistance} '
           'maxCosine=${_mergeConfig.maxCosine} usePinyin=${_mergeConfig.usePinyin}',
         );
@@ -304,7 +286,7 @@ class PlDanmakuController {
       final merged = await _mergeWorker.mergeSegment(
         segmentIndex: segmentIndex,
         config: _mergeConfig,
-        currentSegment: sortedCurrent,
+        currentSegment: currentSegment,
         nextSegmentPrefix: nextSegmentPrefix,
       );
       if (_disposed) {
@@ -313,7 +295,7 @@ class PlDanmakuController {
       if (kDebugMode) {
         debugPrint(
           '[DanmakuMerge] merged segment=$segmentIndex '
-          'input=${sortedCurrent.length} output=${merged.length}',
+          'input=${currentSegment.length} output=${merged.length}',
         );
       }
       _mergedSeg.add(segmentIndex);
@@ -330,7 +312,9 @@ class PlDanmakuController {
         return;
       }
       _mergedSeg.add(segmentIndex);
-      _storeDanmaku(sortedCurrent);
+      _storeDanmaku(currentSegment);
+    } finally {
+      _mergingSeg.remove(segmentIndex);
     }
   }
 
@@ -338,6 +322,9 @@ class PlDanmakuController {
     final filters = _plPlayerController.filters;
     final shouldFilter = filters.count != 0;
     final danmakuWeight = DanmakuOptions.danmakuWeight;
+    final enlarge = Pref.danmakuEnlarge;
+    final enlargeThreshold = Pref.danmakuEnlargeThreshold;
+    final logBaseValue = log(Pref.danmakuEnlargeLogBase.toDouble());
     for (final element in elems) {
       if (!element.isSelf) {
         if (element.weight < danmakuWeight ||
@@ -347,10 +334,13 @@ class PlDanmakuController {
       }
 
       if (element.count > 1) {
-        element.fontsize = _calcEnlargedFontSize(
-          _defaultFontSize,
-          element.count,
-        );
+        // Enlarge rate adapted from Pakku.js: log(count) / log(base) once the
+        // count passes the threshold; rate 1 keeps the 15px baseline that
+        // matches the global danmaku size in view.dart (15 * scale).
+        final rate = enlarge && element.count > enlargeThreshold
+            ? log(element.count) / logBaseValue
+            : 1.0;
+        element.fontsize = (_defaultFontSize * rate).round();
       }
 
       final pos = element.progress ~/ 100;
@@ -363,14 +353,14 @@ class PlDanmakuController {
       initFileDmIfNeeded();
     } else {
       final int segmentIndex = calcSegment(progress);
-      if (_shouldPrefetchNextSegment(progress, segmentIndex)) {
-        if (kDebugMode) {
-          debugPrint(
-            '[PlDanmakuController] prefetch instance=${identityHashCode(this)} '
-            'cid=$_cid progress=$progress currentSegment=$segmentIndex nextSegment=${segmentIndex + 1}',
-          );
-        }
+      if (_mergeDanmaku &&
+          (!_mergedSeg.contains(segmentIndex) ||
+              _shouldPrefetchNextSegment(progress, segmentIndex))) {
+        // Merging a segment requires its successor, so keep up to two
+        // segments ahead of the playhead requested instead of
+        // chain-downloading the whole video.
         _scheduleSegment(segmentIndex + 1, isPrefetch: true);
+        _scheduleSegment(segmentIndex + 2, isPrefetch: true);
       }
       if (!_requestedSeg.contains(segmentIndex)) {
         if (kDebugMode) {
@@ -380,7 +370,9 @@ class PlDanmakuController {
           );
         }
         _scheduleSegment(segmentIndex);
-        _scheduleSegment(segmentIndex + 1, isPrefetch: true);
+        if (!_mergeDanmaku) {
+          _scheduleSegment(segmentIndex + 1, isPrefetch: true);
+        }
         return null;
       }
     }
@@ -474,21 +466,22 @@ class PlDanmakuController {
   }
 
   Future<void> _pumpDownloadQueue() async {
-    if (_downloadLoopRunning || _disposed) {
-      return;
-    }
-    _downloadLoopRunning = true;
-    try {
-      while (_downloadQueue.isNotEmpty && !_disposed) {
-        final request = _downloadQueue.removeFirst();
-        _queuedSeg.remove(request.segmentIndex);
-        await queryDanmaku(
-          request.segmentIndex,
-          isPrefetch: request.isPrefetch,
-        );
-      }
-    } finally {
-      _downloadLoopRunning = false;
+    while (_downloadQueue.isNotEmpty &&
+        !_disposed &&
+        _activeDownloads < _maxConcurrentDownloads) {
+      final request = _downloadQueue.removeFirst();
+      _queuedSeg.remove(request.segmentIndex);
+      _activeDownloads++;
+      unawaited(
+        queryDanmaku(request.segmentIndex, isPrefetch: request.isPrefetch)
+            .catchError(Utils.reportError)
+            .whenComplete(() {
+              _activeDownloads--;
+              if (!_disposed) {
+                _pumpDownloadQueue();
+              }
+            }),
+      );
     }
   }
 
