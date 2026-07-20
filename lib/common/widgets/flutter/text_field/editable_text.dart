@@ -5950,7 +5950,7 @@ class EditableTextState extends State<EditableText>
         child: Builder(
           builder: (BuildContext context) {
             return TextFieldTapRegion(
-              groupId: widget.groupId,
+              // groupId: widget.groupId,
               onTapOutside: _hasFocus
                   ? (PointerDownEvent event) => _onTapOutside(context, event)
                   : null,
