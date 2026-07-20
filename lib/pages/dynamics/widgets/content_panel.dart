@@ -3,12 +3,11 @@ import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/text/text.dart' as custom_text;
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/image_grid/image_grid_view.dart';
-import 'package:PiliPlus/common/widgets/scroll_physics.dart'
-    show ClampingScrollPhysicsExt, NeverSelectableScrollPhysics;
+import 'package:PiliPlus/common/widgets/selection_text.dart';
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/pages/dynamics/widgets/rich_node_panel.dart';
-import 'package:PiliPlus/utils/extension/editable_text_ext.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
+import 'package:PiliPlus/utils/extension/selectable_region_ext.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/material.dart';
@@ -78,7 +77,7 @@ Widget content(
           ),
         if (richNodes != null)
           isDetail && floor == 1
-              ? SelectableText.rich(
+              ? SelectionText.rich(
                   richNodes,
                   style: isSave
                       ? const TextStyle(fontSize: 15)
@@ -90,7 +89,6 @@ Widget content(
                           text,
                           item.modules.moduleDynamic,
                         ),
-                  scrollPhysics: const NeverSelectableScrollPhysics(),
                 )
               : custom_text.Text.rich(
                   style: floor == 1

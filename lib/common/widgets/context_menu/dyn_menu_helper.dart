@@ -1,7 +1,7 @@
 part of 'package:PiliPlus/pages/dynamics/widgets/content_panel.dart';
 
 Widget dynTextMenuBuilder(
-  EditableTextState state,
+  SelectableRegionState state,
   String text,
   ModuleDynamicModel? moduleDynamic,
 ) {
@@ -23,7 +23,7 @@ Widget dynTextMenuBuilder(
         onPressed: () {
           state
             ..hideToolbar()
-            ..clearSelectionIfNeeded();
+            ..clearSelection();
           _showEmoteDialog(moduleDynamic);
         },
       ),
@@ -55,32 +55,33 @@ void _showEmoteDialog(ModuleDynamicModel? moduleDynamic) {
     builder: (context) => Dialog(
       child: Padding(
         padding: const .symmetric(horizontal: 20, vertical: 16),
-        child: SelectableText.rich(
-          TextSpan(
-            children: emotes!.entries.mapIndexed(
-              (i, e) {
-                final emoji = e.value;
-                final size = emoji.size * 25.0;
-                return TextSpan(
-                  children: [
-                    if (i != 0) const TextSpan(text: '\n\n'),
-                    WidgetSpan(
-                      child: NetworkImgLayer(
-                        src: emoji.url,
-                        type: .emote,
-                        width: size,
-                        height: size,
+        child: SingleChildScrollView(
+          child: SelectionText.rich(
+            TextSpan(
+              children: emotes!.entries.mapIndexed(
+                (i, e) {
+                  final emoji = e.value;
+                  final size = emoji.size * 25.0;
+                  return TextSpan(
+                    children: [
+                      if (i != 0) const TextSpan(text: '\n\n'),
+                      WidgetSpan(
+                        child: NetworkImgLayer(
+                          src: emoji.url,
+                          type: .emote,
+                          width: size,
+                          height: size,
+                        ),
                       ),
-                    ),
-                    TextSpan(text: '\n${e.key}\n${emoji.url}'),
-                  ],
-                );
-              },
-            ).toList(),
+                      TextSpan(text: '\n${e.key}\n${emoji.url}'),
+                    ],
+                  );
+                },
+              ).toList(),
+            ),
+            contextMenuBuilder: openUrlMenuBuilder,
+            style: const TextStyle(fontSize: 15, height: 1.7),
           ),
-          contextMenuBuilder: openUrlMenuBuilder,
-          style: const TextStyle(fontSize: 15, height: 1.7),
-          scrollPhysics: const ClampingScrollPhysicsExt(),
         ),
       ),
     ),
@@ -93,18 +94,19 @@ void _showTextDialog(String text) {
     builder: (context) => Dialog(
       child: Padding(
         padding: const .symmetric(horizontal: 20, vertical: 16),
-        child: SelectableText(
-          text,
-          contextMenuBuilder: openUrlMenuBuilder,
-          style: const TextStyle(fontSize: 15, height: 1.7),
-          scrollPhysics: const ClampingScrollPhysicsExt(),
+        child: SingleChildScrollView(
+          child: SelectionText(
+            text,
+            contextMenuBuilder: openUrlMenuBuilder,
+            style: const TextStyle(fontSize: 15, height: 1.7),
+          ),
         ),
       ),
     ),
   );
 }
 
-Widget openUrlMenuBuilder(_, EditableTextState state) {
+Widget openUrlMenuBuilder(_, SelectableRegionState state) {
   final buttonItems = state.contextMenuButtonItems;
   state.addLaunchMenuIfNeeded(buttonItems, index: 3);
   return AdaptiveTextSelectionToolbar.buttonItems(

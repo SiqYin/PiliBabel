@@ -1,8 +1,7 @@
 import 'dart:async' show Timer;
 
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
-import 'package:PiliPlus/common/widgets/scroll_physics.dart'
-    show NeverSelectableScrollPhysics;
+import 'package:PiliPlus/common/widgets/selection_text.dart';
 import 'package:PiliPlus/models_new/live/live_superchat/item.dart';
 import 'package:PiliPlus/pages/member/widget/medal_widget.dart';
 import 'package:PiliPlus/utils/color_utils.dart';
@@ -246,12 +245,11 @@ class _SuperChatCardState extends State<SuperChatCard> {
           padding: const .all(8),
           child: TextSelectionTheme(
             data: TextSelectionThemeData(
+              selectionColor: Color.lerp(bottomColor, Colors.black, .26),
               selectionHandleColor: Color.lerp(bottomColor, Colors.white, .26),
             ),
-            child: SelectableText(
+            child: SelectionText(
               item.message,
-              scrollPhysics: const NeverSelectableScrollPhysics(),
-              selectionColor: Color.lerp(bottomColor, Colors.black, .26),
               style: TextStyle(
                 color: ColourUtils.parseColor(item.messageFontColor),
                 // decoration: widget.persistentSC && item.deleted

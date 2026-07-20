@@ -7,8 +7,7 @@ import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/image_viewer/hero.dart';
 import 'package:PiliPlus/common/widgets/marquee.dart';
-import 'package:PiliPlus/common/widgets/scroll_physics.dart'
-    show NeverSelectableScrollPhysics;
+import 'package:PiliPlus/common/widgets/selection_text.dart';
 import 'package:PiliPlus/common/widgets/sliver/sliver_to_box_adapter.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/music.dart';
@@ -555,7 +554,7 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
                 ],
               ),
               const SizedBox(height: 10),
-              SelectableText(
+              SelectionText(
                 [
                   if (!(item.originArtist ?? item.originArtistList)
                       .isNullOrEmpty)
@@ -563,7 +562,6 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
                   if (!item.album.isNullOrEmpty) '专辑：${item.album}',
                   if (!item.musicSource.isNullOrEmpty) '出处：${item.musicSource}',
                 ].join('\n'),
-                scrollPhysics: const NeverSelectableScrollPhysics(),
               ),
               const Divider(),
               Row(

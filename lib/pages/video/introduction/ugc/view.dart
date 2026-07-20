@@ -8,7 +8,8 @@ import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart'
-    show ReloadScrollPhysics, NeverSelectableScrollPhysics;
+    show ReloadScrollPhysics;
+import 'package:PiliPlus/common/widgets/selection_text.dart';
 import 'package:PiliPlus/common/widgets/stat/stat.dart';
 import 'package:PiliPlus/common/widgets/translucent_column.dart';
 import 'package:PiliPlus/http/sponsor_block.dart';
@@ -284,10 +285,9 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
     ),
     if (videoDetail.descV2 case final descV2? when descV2.isNotEmpty) ...[
       const SizedBox(height: 8),
-      SelectableText.rich(
+      SelectionText.rich(
         buildDesc(descV2),
         style: const TextStyle(height: 1.4),
-        scrollPhysics: const NeverSelectableScrollPhysics(),
       ),
     ],
     NoTranslucentArea(
@@ -409,10 +409,9 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
         ],
       );
       if (isSelectable) {
-        return SelectableText.rich(
+        return SelectionText.rich(
           textSpan,
           style: const TextStyle(fontSize: 16),
-          scrollPhysics: const NeverSelectableScrollPhysics(),
         );
       }
       return Text.rich(

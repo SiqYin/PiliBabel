@@ -4,8 +4,7 @@ import 'dart:convert' show jsonDecode;
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
-import 'package:PiliPlus/common/widgets/scroll_physics.dart'
-    show NeverSelectableScrollPhysics;
+import 'package:PiliPlus/common/widgets/selection_text.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
@@ -364,13 +363,12 @@ class _ReportCard extends StatelessWidget {
             borderRadius: const .all(.circular(8)),
             border: .all(color: colorScheme.outline.withValues(alpha: 0.5)),
           ),
-          child: SelectableText(
+          child: SelectionText(
             report.item.error.toString(),
             style: TextStyle(
               fontFamily: 'Monospace',
               color: colorScheme.onSurfaceVariant,
             ),
-            scrollPhysics: const NeverSelectableScrollPhysics(),
           ),
         ),
         // stackTrace may be null or String("null") or blank
@@ -392,7 +390,7 @@ class _ReportCard extends StatelessWidget {
               borderRadius: const .all(.circular(8)),
               border: .all(color: colorScheme.outline.withValues(alpha: 0.5)),
             ),
-            child: SelectableText.rich(
+            child: SelectionText.rich(
               TextSpan(
                 children: stackTrace
                     .map(
@@ -409,7 +407,6 @@ class _ReportCard extends StatelessWidget {
                     .toList(),
               ),
               style: const TextStyle(fontFamily: 'Monospace', fontSize: 13),
-              scrollPhysics: const NeverSelectableScrollPhysics(),
             ),
           ),
         ],
