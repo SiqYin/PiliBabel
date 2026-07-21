@@ -46,9 +46,7 @@ void showReplyCopyDialog(
                   ContextMenuButtonItem(
                     label: showEmote ? '文本' : '表情',
                     onPressed: () {
-                      state
-                        ..hideToolbar()
-                        ..clearSelection();
+                      state.hideAndClear();
                       showEmote = !showEmote;
                       (context as Element).markNeedsBuild();
                     },
@@ -58,55 +56,49 @@ void showReplyCopyDialog(
                   state.addLaunchMenuIfNeeded(buttonItems, index: 4);
                 }
               }
-              try {
-                if (state.selectionEndpoints.first !=
-                    state.selectionEndpoints[1]) {
-                  buttonItems.add(
-                    ContextMenuButtonItem(
-                      onPressed: () {
-                        final selectedText = (state as dynamic).selectable
-                            ?.getSelectedContent()
-                            ?.plainText;
-                        String text = RegExp.escape(selectedText);
-                        if (ReplyGrpc.enableFilter) text = '|$text';
+              if (state.isUncollapsed) {
+                buttonItems.add(
+                  ContextMenuButtonItem(
+                    onPressed: () {
+                      String text = RegExp.escape(state.selectedText!);
+                      if (ReplyGrpc.enableFilter) text = '|$text';
 
-                        showConfirmDialog(
-                          context: context,
-                          title: const Text('是否确认评论过滤的变更：'),
-                          content: Text.rich(
-                            TextSpan(
-                              text: ReplyGrpc.replyRegExp.pattern,
-                              children: [
-                                TextSpan(
-                                  text: text,
-                                  style: const TextStyle(
-                                    color: Colors.green,
-                                    fontWeight: .bold,
-                                  ),
+                      showConfirmDialog(
+                        context: context,
+                        title: const Text('是否确认评论过滤的变更：'),
+                        content: Text.rich(
+                          TextSpan(
+                            text: ReplyGrpc.replyRegExp.pattern,
+                            children: [
+                              TextSpan(
+                                text: text,
+                                style: const TextStyle(
+                                  color: Colors.green,
+                                  fontWeight: .bold,
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
-                          onConfirm: () {
-                            final filter = ReplyGrpc.replyRegExp.pattern + text;
-                            ReplyGrpc.replyRegExp = RegExp(
-                              filter,
-                              caseSensitive: true,
-                            );
-                            ReplyGrpc.enableFilter = true;
-                            GStorage.setting.put(
-                              SettingBoxKey.banWordForReply,
-                              filter,
-                            );
-                            SmartDialog.showToast('已保存');
-                          },
-                        );
-                      },
-                      label: '加入过滤',
-                    ),
-                  );
-                }
-              } catch (_) {}
+                        ),
+                        onConfirm: () {
+                          final filter = ReplyGrpc.replyRegExp.pattern + text;
+                          ReplyGrpc.replyRegExp = RegExp(
+                            filter,
+                            caseSensitive: true,
+                          );
+                          ReplyGrpc.enableFilter = true;
+                          GStorage.setting.put(
+                            SettingBoxKey.banWordForReply,
+                            filter,
+                          );
+                          SmartDialog.showToast('已保存');
+                        },
+                      );
+                    },
+                    label: '加入过滤',
+                  ),
+                );
+              }
               return AdaptiveTextSelectionToolbar.buttonItems(
                 buttonItems: buttonItems,
                 anchors: state.contextMenuAnchors,

@@ -15,18 +15,21 @@ index 97a41dafb8d..70c55832625 100644
        }
      }
 diff --git a/packages/flutter/lib/src/widgets/selectable_region.dart b/packages/flutter/lib/src/widgets/selectable_region.dart
-index 59de8bae20b..525bb76c064 100644
+index 59de8bae20b..17220a77d04 100644
 --- a/packages/flutter/lib/src/widgets/selectable_region.dart
 +++ b/packages/flutter/lib/src/widgets/selectable_region.dart
-@@ -404,6 +404,7 @@ class SelectableRegionState extends State<SelectableRegion>
+@@ -402,8 +402,10 @@ class SelectableRegionState extends State<SelectableRegion>
+   final LayerLink _endHandleLayerLink = LayerLink();
+   final LayerLink _toolbarLayerLink = LayerLink();
    final StaticSelectionContainerDelegate _selectionDelegate = StaticSelectionContainerDelegate();
++  StaticSelectionContainerDelegate  get selectionDelegate => _selectionDelegate;
    // there should only ever be one selectable, which is the SelectionContainer.
    Selectable? _selectable;
 +  Selectable? get selectable => _selectable;
  
    bool get _hasSelectionOverlayGeometry =>
        _selectionDelegate.value.startSelectionPoint != null ||
-@@ -599,48 +600,32 @@ class SelectableRegionState extends State<SelectableRegion>
+@@ -599,48 +601,32 @@ class SelectableRegionState extends State<SelectableRegion>
    //
    // This method should be used in all instances when details.consecutiveTapCount
    // would be used.
@@ -94,7 +97,7 @@ index 59de8bae20b..525bb76c064 100644
      }
    }
  
-@@ -782,22 +767,8 @@ class SelectableRegionState extends State<SelectableRegion>
+@@ -782,22 +768,8 @@ class SelectableRegionState extends State<SelectableRegion>
              _selectionStatusNotifier.value = SelectableRegionSelectionStatus.changing;
          }
        case 3:
@@ -119,7 +122,7 @@ index 59de8bae20b..525bb76c064 100644
      }
      _updateSelectedContentIfNeeded();
    }
-@@ -1049,10 +1020,10 @@ class SelectableRegionState extends State<SelectableRegion>
+@@ -1049,10 +1021,10 @@ class SelectableRegionState extends State<SelectableRegion>
        case TargetPlatform.windows:
          // If _lastSecondaryTapDownPosition is within the current selection then
          // keep the current selection, if not then collapse it.
@@ -134,7 +137,7 @@ index 59de8bae20b..525bb76c064 100644
            // Restore _lastSecondaryTapDownPosition since it may be cleared if a user
            // accesses contextMenuAnchors.
            _lastSecondaryTapDownPosition = details.globalPosition;
-@@ -1957,6 +1928,8 @@ class SelectableRegionState extends State<SelectableRegion>
+@@ -1957,6 +1929,8 @@ class SelectableRegionState extends State<SelectableRegion>
          // the region on non-web platforms.
          if (kIsWeb) {
            _focusNode.unfocus();
@@ -143,7 +146,7 @@ index 59de8bae20b..525bb76c064 100644
          }
        },
        child: CompositedTransformTarget(
-@@ -2822,7 +2795,10 @@ abstract class MultiSelectableSelectionContainerDelegate extends SelectionContai
+@@ -2822,7 +2796,10 @@ abstract class MultiSelectableSelectionContainerDelegate extends SelectionContai
        return null;
      }
      final buffer = StringBuffer();
