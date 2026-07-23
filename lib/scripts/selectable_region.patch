@@ -1,7 +1,20 @@
 diff --git a/packages/flutter/lib/src/rendering/paragraph.dart b/packages/flutter/lib/src/rendering/paragraph.dart
-index 97a41dafb8d..70c55832625 100644
+index 97a41dafb8d..0be1766148e 100644
 --- a/packages/flutter/lib/src/rendering/paragraph.dart
 +++ b/packages/flutter/lib/src/rendering/paragraph.dart
+@@ -1925,9 +1925,9 @@ class _SelectableFragment
+     final Matrix4 transform = paragraph.getTransformTo(null);
+     transform.invert();
+     final Offset localPosition = MatrixUtils.transformPoint(transform, globalPosition);
+-    if (_rect.isEmpty) {
+-      return SelectionUtils.getResultBasedOnRect(_rect, localPosition);
+-    }
++    // if (_rect.isEmpty) {
++    //   return SelectionUtils.getResultBasedOnRect(_rect, localPosition);
++    // }
+     final Offset adjustedOffset = SelectionUtils.adjustDragOffset(
+       _rect,
+       localPosition,
 @@ -3568,7 +3568,10 @@ class _SelectableFragment
        final selectionPaint = Paint()
          ..style = PaintingStyle.fill
