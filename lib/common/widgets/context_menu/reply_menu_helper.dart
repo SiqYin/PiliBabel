@@ -23,7 +23,8 @@ void showReplyCopyDialog(
                         return TextSpan(
                           children: [
                             if (i != 0) const TextSpan(text: '\n\n'),
-                            WidgetSpan(
+                            EmoteSpan(
+                              rawText: Style.placeHolder,
                               child: NetworkImgLayer(
                                 src: emote.url,
                                 type: .emote,
