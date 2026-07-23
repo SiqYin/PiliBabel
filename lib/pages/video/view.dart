@@ -8,6 +8,8 @@ import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
 import 'package:PiliPlus/common/widgets/route_aware_mixin.dart';
+import 'package:PiliPlus/common/widgets/scroll_behavior.dart'
+    show NoOverscrollIndicator;
 import 'package:PiliPlus/common/widgets/scroll_physics.dart'
     show tabBarView, platformAlwaysClampingPhysics, platformClampingPhysics;
 import 'package:PiliPlus/common/widgets/sliver/video_header.dart';
@@ -520,6 +522,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             physics: platformClampingPhysics,
             key: videoDetailController.scrollKey,
             controller: videoDetailController.scrollCtr,
+            scrollBehavior: const NoOverscrollIndicator(),
             pinnedHeaderSliverHeightBuilder: () {
               double pinnedHeight = this.isFullScreen || !isPortrait
                   ? maxHeight - (isWindowMode && !isPortrait ? 0 : padding.top)
