@@ -448,6 +448,13 @@ List<SettingsModel> get extraSettings => [
     defaultVal: true,
   ),
   const SwitchModel(
+    title: '启用双指旋转画面',
+    subtitle: '双指缩放时可旋转画面，松手自动吸附到直角',
+    leading: Icon(Icons.rotate_90_degrees_ccw),
+    setKey: SettingBoxKey.enablePinchRotate,
+    defaultVal: true,
+  ),
+  const SwitchModel(
     title: '动态/专栏详情页展示底部操作栏',
     leading: Icon(Icons.more_horiz),
     setKey: SettingBoxKey.showDynActionBar,

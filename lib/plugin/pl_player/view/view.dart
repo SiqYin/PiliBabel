@@ -1085,6 +1085,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     showRestoreScaleBtn.value =
         translation.x.abs() > 0.5 ||
         translation.y.abs() > 0.5 ||
+        matrix.storage[1].abs() > 1e-3 ||
         (matrix.getMaxScaleOnAxis() - 1).abs() > 1e-3;
   }
 
@@ -2310,6 +2311,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           child: Obx(
             () => MouseInteractiveViewer(
               scaleEnabled: !plPlayerController.controlsLock.value,
+              rotateEnabled: plPlayerController.enablePinchRotate,
               pointerSignalFallback: _onPointerSignal,
               onPointerPanZoomUpdate: _onPointerPanZoomUpdate,
               onPointerPanZoomEnd: _onPointerPanZoomEnd,
