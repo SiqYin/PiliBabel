@@ -1,5 +1,6 @@
 import 'dart:io' show Platform;
 
+import 'package:PiliPlus/common/widgets/emote_span.dart';
 import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/image_grid/image_grid_view.dart';
@@ -25,7 +26,7 @@ TextSpan? richNode(
 }) {
   try {
     late final style = TextStyle(color: theme.colorScheme.primary);
-    List<InlineSpan> spanChildren = [];
+    final List<InlineSpan> spanChildren = [];
 
     final moduleDynamic = item.modules.moduleDynamic;
     List<RichTextNodeItem>? richTextNodes;
@@ -63,18 +64,13 @@ TextSpan? richNode(
       for (final i in richTextNodes) {
         switch (i.type) {
           case 'RICH_TEXT_NODE_TYPE_TEXT':
-            spanChildren.add(
-              TextSpan(
-                text: i.origText,
-                style: const TextStyle(height: 1.65),
-              ),
-            );
+            spanChildren.add(TextSpan(text: i.origText));
             break;
           // @用户
           case 'RICH_TEXT_NODE_TYPE_AT':
             spanChildren.add(
               TextSpan(
-                text: ' ${i.text}',
+                text: '${spanChildren.isNotEmpty ? ' ' : ''}${i.text}',
                 style: style,
                 recognizer: NoDeadlineTapGestureRecognizer()
                   ..onTap = () => Get.toNamed('/member?mid=${i.rid}'),
@@ -157,7 +153,8 @@ TextSpan? richNode(
           case 'RICH_TEXT_NODE_TYPE_EMOJI' when (i.emoji != null):
             final size = i.emoji!.size * 20.0;
             spanChildren.add(
-              WidgetSpan(
+              EmoteSpan(
+                rawText: i.origText,
                 child: NetworkImgLayer(
                   src: i.emoji!.url,
                   type: ImageType.emote,
@@ -357,7 +354,10 @@ TextSpan? richNode(
             break;
         }
       }
-      return TextSpan(children: spanChildren);
+      return TextSpan(
+        children: spanChildren,
+        style: const TextStyle(height: 1.65),
+      );
     }
   } catch (err) {
     if (kDebugMode) debugPrint('❌rich_node_panel err: $err');

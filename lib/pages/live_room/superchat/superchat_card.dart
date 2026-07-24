@@ -1,12 +1,15 @@
-import 'dart:async';
+import 'dart:async' show Timer;
 
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
-import 'package:PiliPlus/models/common/image_type.dart';
+import 'package:PiliPlus/common/widgets/selection_text.dart';
 import 'package:PiliPlus/models/common/super_chat_time_type.dart';
 import 'package:PiliPlus/models_new/live/live_superchat/item.dart';
 import 'package:PiliPlus/pages/member/widget/medal_widget.dart';
+import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/color_utils.dart';
+import 'package:PiliPlus/utils/extension/iterable_ext.dart';
+import 'package:PiliPlus/utils/extension/selectable_region_ext.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
@@ -15,6 +18,8 @@ import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+part 'package:PiliPlus/common/widgets/context_menu/live_menu_helper.dart';
 
 class SuperChatCard extends StatefulWidget {
   const SuperChatCard({
@@ -186,6 +191,17 @@ class _SuperChatCardState extends State<SuperChatCard> {
       }
     }
 
+    Widget price = Text("￥${item.price}", style: TextStyle(color: bottomColor));
+    Widget? remains;
+    if (_remains != null) {
+      remains = Obx(
+        () => Text(
+          _remains.toString(),
+          style: const TextStyle(fontSize: 14, color: Colors.grey),
+        ),
+      );
+    }
+
     return Column(
       mainAxisSize: .min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -215,23 +231,13 @@ class _SuperChatCardState extends State<SuperChatCard> {
                   src: item.userInfo.face,
                   width: 45,
                   height: 45,
-                  type: ImageType.avatar,
+                  type: .avatar,
                 ),
                 Expanded(
                   child: Column(
                     mainAxisSize: .min,
                     crossAxisAlignment: .start,
-                    children: [
-                      name,
-                      Text(
-                        "￥${item.price}",
-                        style: TextStyle(
-                          color: ColourUtils.parseColor(
-                            item.backgroundPriceColor,
-                          ),
-                        ),
-                      ),
-                    ],
+                    children: [name, price],
                   ),
                 ),
                 if (_showTime)
@@ -239,16 +245,7 @@ class _SuperChatCardState extends State<SuperChatCard> {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (_remains != null)
-                        Obx(
-                          () => Text(
-                            _remains.toString(),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                          ),
-                        ),
+                      ?remains,
                       Text(
                         _formatTime(item.ts),
                         style: TextStyle(
@@ -260,16 +257,8 @@ class _SuperChatCardState extends State<SuperChatCard> {
                       ),
                     ],
                   )
-                else if (_remains != null)
-                  Obx(
-                    () => Text(
-                      _remains.toString(),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ),
+                else
+                  ?remains,
               ],
             ),
           ),
@@ -279,18 +268,23 @@ class _SuperChatCardState extends State<SuperChatCard> {
             borderRadius: const .vertical(bottom: .circular(8)),
             color: bottomColor,
           ),
-          padding: const EdgeInsets.all(8),
-          child: SelectionArea(
-            child: Text(
+          padding: const .all(8),
+          child: TextSelectionTheme(
+            data: TextSelectionThemeData(
+              selectionColor: Color.lerp(bottomColor, Colors.black, .26),
+              selectionHandleColor: Color.lerp(bottomColor, Colors.white, .26),
+            ),
+            child: SelectionText(
               item.message,
+              contextMenuBuilder: scMenuBuilder,
               style: TextStyle(
                 color: ColourUtils.parseColor(item.messageFontColor),
-                decoration: widget.persistentSC && item.deleted
-                    ? .lineThrough
-                    : null,
-                decorationThickness: 1.5,
-                decorationStyle: .double,
-                decorationColor: Colors.white,
+                // decoration: widget.persistentSC && item.deleted
+                //     ? .lineThrough
+                //     : null,
+                // decorationThickness: 1.5,
+                // decorationStyle: .double,
+                // decorationColor: Colors.white,
               ),
             ),
           ),

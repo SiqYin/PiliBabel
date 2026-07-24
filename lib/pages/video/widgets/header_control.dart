@@ -656,7 +656,17 @@ class HeaderControlState extends State<HeaderControl>
                               onTap: () {
                                 plPlayerController.onlyPlayAudio.value =
                                     !onlyPlayAudio;
-                                widget.videoDetailCtr.playerInit();
+                                final player =
+                                    plPlayerController.videoPlayerController!;
+                                if (onlyPlayAudio &&
+                                    player.state.tracks.video.length <= 2) {
+                                  videoDetailCtr.playerInit();
+                                } else {
+                                  player.setProperty(
+                                    'file-local-options/vid',
+                                    onlyPlayAudio ? 'auto' : 'no',
+                                  );
+                                }
                               },
                               text: " 听视频 ",
                               selectStatus: onlyPlayAudio,
@@ -1408,6 +1418,7 @@ class HeaderControlState extends State<HeaderControl>
             : plPlayerController.subtitleSecondaryBgOpacity;
 
         void updateFontScale(double val) => update(() {
+          val = val.toPrecision(2);
           if (isPrimary) {
             plPlayerController.subtitleFontScale = val;
           } else {
@@ -1416,6 +1427,7 @@ class HeaderControlState extends State<HeaderControl>
         });
 
         void updateFontScaleFS(double val) => update(() {
+          val = val.toPrecision(2);
           if (isPrimary) {
             plPlayerController.subtitleFontScaleFS = val;
           } else {
@@ -1535,7 +1547,7 @@ class HeaderControlState extends State<HeaderControl>
                         : resetBtn(theme, '80.0%', () => updateFontScale(0.8)),
                     min: 0.5,
                     max: 2.5,
-                    divisions: 20,
+                    divisions: 200,
                     value: fontScale,
                     label: '${(fontScale * 100).toStringAsFixed(1)}%',
                     onChanged: updateFontScale,
@@ -1556,7 +1568,7 @@ class HeaderControlState extends State<HeaderControl>
                           ),
                     min: 0.5,
                     max: 2.5,
-                    divisions: 20,
+                    divisions: 200,
                     value: fontScaleFS,
                     label: '${(fontScaleFS * 100).toStringAsFixed(1)}%',
                     onChanged: updateFontScaleFS,
@@ -1624,10 +1636,12 @@ class HeaderControlState extends State<HeaderControl>
                       onChanged: updateSecondarySpacing,
                     ),
                   ...sliderRow(
-                    title: '背景不透明度 ${(bgOpacity * 100).toInt()}%',
+                    title:
+                        '背景不透明度 ${(bgOpacity * 100).toStringAsFixed(1)}%',
                     reset: resetBtn(theme, '67%', () => updateOpacity(0.67)),
                     min: 0,
                     max: 1,
+                    divisions: 100,
                     value: bgOpacity,
                     onChanged: updateOpacity,
                   ),

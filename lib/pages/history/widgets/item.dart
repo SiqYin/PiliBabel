@@ -70,13 +70,17 @@ class HistoryItem extends StatelessWidget {
                     SmartDialog.showToast('直播未开播');
                   }
                 } else if (business == 'pgc') {
-                  PageUtils.viewPgc(epId: item.history.epid);
+                  PageUtils.viewPgc(
+                    epId: item.history.epid,
+                    progress: item.playbackProgress,
+                  );
                 } else if (business == 'cheese') {
                   if (item.uri?.isNotEmpty == true) {
                     PageUtils.viewPgcFromUri(
                       item.uri!,
                       isPgc: false,
                       aid: item.history.oid,
+                      progress: item.playbackProgress,
                     );
                   }
                 } else {
@@ -102,6 +106,7 @@ class HistoryItem extends StatelessWidget {
                       cover: item.cover,
                       title: item.title,
                       dimension: dimension,
+                      progress: item.playbackProgress,
                     );
                   }
                 }

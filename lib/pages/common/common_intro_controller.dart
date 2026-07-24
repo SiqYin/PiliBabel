@@ -154,7 +154,7 @@ abstract class CommonIntroController extends GetxController
     final res = await (hasLater.value
         ? UserHttp.toViewDel(aids: IdUtils.bv2av(bvid).toString())
         : UserHttp.toViewLater(bvid: bvid));
-    if (res.isSuccess) hasLater.value = !hasLater.value;
+    if (res.isSuccess) hasLater.toggle();
   }
 }
 
@@ -240,7 +240,7 @@ mixin FavMixin on TripleMixin {
           SmartDialog.dismiss();
           if (result.isSuccess) {
             updateFavCount(hasFav ? -1 : 1);
-            this.hasFav.value = !hasFav;
+            this.hasFav.toggle();
             SmartDialog.showToast(hasFav ? '已从默认收藏夹中移除' : '已加入默认收藏夹');
           } else {
             res.toast();

@@ -4,8 +4,8 @@ import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/dialog/report.dart';
-import 'package:PiliPlus/common/widgets/extra_hit_test_widget.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
+import 'package:PiliPlus/common/widgets/translucent_row.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/reply.dart';
@@ -98,67 +98,68 @@ class AuthorPanel extends StatelessWidget {
         );
       }
     }
-    Widget header = GestureDetector(
-      onTap: moduleAuthor.type == 'AUTHOR_TYPE_NORMAL'
-          ? () {
-              feedBack();
-              Get.toNamed('/member?mid=${moduleAuthor.mid}');
-            }
-          : null,
-      child: ExtraHitTestWidget(
-        width: 50,
-        child: Row(
-          spacing: 10,
+    final children = [
+      PendantAvatar(
+        size: 40,
+        moduleAuthor.face,
+        pendantImage: moduleAuthor.pendant?.image,
+      ),
+      Flexible(
+        child: Column(
+          crossAxisAlignment: .start,
           children: [
-            PendantAvatar(
-              size: 40,
-              moduleAuthor.face,
-              pendantImage: moduleAuthor.pendant?.image,
-            ),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            Text.rich(
+              maxLines: 1,
+              overflow: .ellipsis,
+              TextSpan(
                 children: [
-                  Text.rich(
-                    maxLines: 1,
-                    overflow: .ellipsis,
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: moduleAuthor.name!,
-                          style: TextStyle(
-                            color:
-                                moduleAuthor.vip != null &&
-                                    moduleAuthor.vip!.status > 0 &&
-                                    moduleAuthor.vip!.type == 2
-                                ? theme.colorScheme.vipColor
-                                : theme.colorScheme.onSurface,
-                            fontSize: theme.textTheme.titleSmall!.fontSize,
-                          ),
-                        ),
-                        if (GlobalData().remarkMids[moduleAuthor.mid]
-                            case final String remark
-                            when remark.isNotEmpty)
-                          TextSpan(
-                            text: '（$remark）',
-                            style: TextStyle(
-                              color: theme.colorScheme.primary,
-                              fontSize:
-                                  (theme.textTheme.titleSmall!.fontSize ?? 14) -
-                                  1,
-                            ),
-                          ),
-                      ],
+                  TextSpan(
+                    text: moduleAuthor.name!,
+                    style: TextStyle(
+                      color:
+                          moduleAuthor.vip != null &&
+                              moduleAuthor.vip!.status > 0 &&
+                              moduleAuthor.vip!.type == 2
+                          ? theme.colorScheme.vipColor
+                          : theme.colorScheme.onSurface,
+                      fontSize: theme.textTheme.titleSmall!.fontSize,
                     ),
                   ),
-                  ?pubTs,
+                  if (GlobalData().remarkMids[moduleAuthor.mid]
+                      case final String remark
+                      when remark.isNotEmpty)
+                    TextSpan(
+                      text: '（$remark）',
+                      style: TextStyle(
+                        color: theme.colorScheme.primary,
+                        fontSize:
+                            (theme.textTheme.titleSmall!.fontSize ?? 14) - 1,
+                      ),
+                    ),
                 ],
               ),
             ),
+            ?pubTs,
           ],
         ),
       ),
-    );
+    ];
+    Widget header;
+    if (moduleAuthor.type == 'AUTHOR_TYPE_NORMAL') {
+      header = GestureDetector(
+        onTap: () => {
+          feedBack(),
+          Get.toNamed('/member?mid=${moduleAuthor.mid}'),
+        },
+        child: TranslucentRow(
+          spacing: 10,
+          extraWidth: 50,
+          children: children,
+        ),
+      );
+    } else {
+      header = Row(spacing: 10, children: children);
+    }
     Widget? moreBtn = isSave
         ? null
         : SizedBox(

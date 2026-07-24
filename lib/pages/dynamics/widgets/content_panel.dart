@@ -1,17 +1,26 @@
 // 内容
+import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
+import 'package:PiliPlus/common/widgets/emote_span.dart';
 import 'package:PiliPlus/common/widgets/flutter/text/text.dart' as custom_text;
+import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/image_grid/image_grid_view.dart';
+import 'package:PiliPlus/common/widgets/selection_text.dart';
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/pages/dynamics/widgets/rich_node_panel.dart';
+import 'package:PiliPlus/utils/extension/iterable_ext.dart';
+import 'package:PiliPlus/utils/extension/selectable_region_ext.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
+
+part 'package:PiliPlus/common/widgets/context_menu/dyn_menu_helper.dart';
 
 Widget content(
   BuildContext context, {
@@ -75,14 +84,18 @@ Widget content(
           ),
         if (richNodes != null)
           isDetail && floor == 1
-              ? SelectableText.rich(
+              ? SelectionText.rich(
                   richNodes,
                   style: isSave
                       ? const TextStyle(fontSize: 15)
                       : const TextStyle(fontSize: 16),
                   contextMenuBuilder: text == null || text.isEmpty
                       ? null
-                      : (_, state) => _contextMenuBuilder(state, text),
+                      : (_, state) => dynTextMenuBuilder(
+                          state,
+                          text,
+                          item.modules.moduleDynamic,
+                        ),
                 )
               : custom_text.Text.rich(
                   style: floor == 1
@@ -108,83 +121,6 @@ Widget content(
                 .toList(),
           ),
       ],
-    ),
-  );
-}
-
-Widget _contextMenuBuilder(EditableTextState state, String text) {
-  final items = state.contextMenuButtonItems;
-  if (!state.textEditingValue.selection.isCollapsed) {
-    // 插入到第四个位置（索引3），即在"复制"、"全选"、"分享"等系统默认项之后
-    // 这样在 Android 上可以让"加入过滤"更优先显示，减少被折叠的概率
-    final insertIndex = items.length >= 3 ? 3 : items.length;
-    items.insert(
-      insertIndex,
-      ContextMenuButtonItem(
-        onPressed: () {
-          Navigator.of(state.context).pop();
-          final select = state.textEditingValue;
-          final escapedText = RegExp.escape(
-            select.selection.textInside(select.text),
-          );
-
-          showConfirmDialog(
-            context: state.context,
-            title: const Text('是否将以下内容加入动态过滤：'),
-            content: Text(
-              escapedText,
-              style: const TextStyle(
-                color: Colors.green,
-                fontWeight: .bold,
-              ),
-            ),
-            onConfirm: () {
-              final currentStored = Pref.banWordForDyn;
-              // 检查是否已存在（按行分割检查）
-              final existingKeywords = currentStored.isEmpty
-                  ? <String>[]
-                  : currentStored.split('\n');
-              if (existingKeywords.contains(escapedText)) {
-                SmartDialog.showToast('该关键词已在过滤列表中');
-                return;
-              }
-              final newStored = currentStored.isEmpty
-                  ? escapedText
-                  : '$currentStored\n$escapedText';
-              GStorage.setting.put(SettingBoxKey.banWordForDyn, newStored);
-              final newPattern = Pref.parseBanWordToRegex(newStored);
-              DynamicsDataModel.banWordForDyn =
-                  RegExp(newPattern, caseSensitive: true);
-              DynamicsDataModel.enableFilter = true;
-              SmartDialog.showToast('已保存');
-            },
-          );
-        },
-        label: '加入过滤',
-      ),
-    );
-  }
-  items.add(
-    ContextMenuButtonItem(label: '文本', onPressed: () => _onCopyText(text)),
-  );
-  return AdaptiveTextSelectionToolbar.buttonItems(
-    buttonItems: items,
-    anchors: state.contextMenuAnchors,
-  );
-}
-
-void _onCopyText(String text) {
-  showDialog(
-    context: Get.context!,
-    builder: (context) => Dialog(
-      child: Padding(
-        padding: const .symmetric(horizontal: 20, vertical: 16),
-        child: SelectableText(
-          text,
-          style: const TextStyle(fontSize: 15, height: 1.7),
-          contextMenuBuilder: (_, state) => _contextMenuBuilder(state, text),
-        ),
-      ),
     ),
   );
 }
