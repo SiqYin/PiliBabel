@@ -26,6 +26,7 @@ Widget dynTextMenuBuilder(
         },
       ),
     );
+  state.addLaunchMenuIfNeeded(buttonItems, index: 5);
   return AdaptiveTextSelectionToolbar.buttonItems(
     buttonItems: buttonItems,
     anchors: state.contextMenuAnchors,

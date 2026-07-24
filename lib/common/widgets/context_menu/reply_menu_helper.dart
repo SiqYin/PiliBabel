@@ -53,9 +53,7 @@ void showReplyCopyDialog(
                     },
                   ),
                 );
-                if (showEmote) {
-                  state.addLaunchMenuIfNeeded(buttonItems, index: 4);
-                }
+                state.addLaunchMenuIfNeeded(buttonItems, index: 4);
               }
               if (state.isUncollapsed) {
                 buttonItems.add(
