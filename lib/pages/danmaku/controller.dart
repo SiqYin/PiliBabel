@@ -203,22 +203,21 @@ class PlDanmakuController {
   }
 
   Future<void> handleDanmaku(int segmentIndex, List<DanmakuElem> elems) async {
-    if (elems.isEmpty) return;
-    // final uniques = HashMap<String, DanmakuElem>();
-    // // Track base font sizes for merged danmaku to avoid recalculation
-    // final baseFontSizes = HashMap<String, int>();
-
-    for (final element in elems) {
-      if (_isLogin) {
+    if (_isLogin) {
+      for (final element in elems) {
         element.isSelf = element.midHash == _plPlayerController.midHash;
       }
     }
 
     if (!_mergeDanmaku) {
-      _storeDanmaku(elems);
+      if (elems.isNotEmpty) {
+        _storeDanmaku(elems);
+      }
       return;
     }
 
+    // 空段也必须入表：它是"后继段已就绪"的信号，否则前一段会永远
+    // 等不到合并时机（如 6 分零几秒的视频，尾段存在但没有弹幕）。
     _rawDmSegMap[segmentIndex] = elems;
     await _tryMergeReadySegments(segmentIndex);
   }
@@ -240,7 +239,12 @@ class PlDanmakuController {
       return;
     }
     final currentSegment = _rawDmSegMap[segmentIndex];
-    if (currentSegment == null || currentSegment.isEmpty) {
+    if (currentSegment == null) {
+      return;
+    }
+    if (currentSegment.isEmpty) {
+      // 空段视为已合并，避免播放到该段时每帧都在重试调度。
+      _mergedSeg.add(segmentIndex);
       return;
     }
     // A permanently missing successor (marked after repeated prefetch
