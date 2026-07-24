@@ -151,7 +151,7 @@ class HistoryCardItem extends StatelessWidget {
                       PBadge(
                         text: item.progress == -1
                             ? '已看完'
-                            : DurationUtils.formatDuration(item.progress),
+                            : '${DurationUtils.formatDuration(item.progress)}/${DurationUtils.formatDuration(item.duration)}',
                         right: 6.0,
                         bottom: 6.0,
                         type: PBadgeType.gray,
