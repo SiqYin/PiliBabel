@@ -809,12 +809,22 @@ class PlPlayerController with BlockConfigMixin {
       }
 
       if (_playerCount == 0) {
+        if (kDebugMode) {
+          debugPrint(
+            '[PlPlayer] setDataSource aborted: _playerCount == 0 before init',
+          );
+        }
         return;
       }
       // 配置Player 音轨、字幕等等
       await _createVideoController(dataSource, seekTo, volume);
 
       if (_playerCount == 0) {
+        if (kDebugMode) {
+          debugPrint(
+            '[PlPlayer] setDataSource aborted: _playerCount == 0 after createVideoController',
+          );
+        }
         _removeListeners();
         _videoPlayerController?.dispose();
         _videoPlayerController = null;

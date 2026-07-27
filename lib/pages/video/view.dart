@@ -2831,7 +2831,16 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         videoDetailController.cacheLocalProgress();
       }
       videoDetailController.makeHeartBeat();
-      plPlayerController!.dispose();
+      if (mounted) {
+        // owner 页面仍在路由栈内，只能暂停：dispose 会消耗页面持有的
+        // _playerCount，返回后恢复时 setDataSource 会因计数为 0 静默中止，
+        // 播放器区域永久黑屏且失去交互
+        plPlayerController!.pause();
+        // 按 X 是明确的停止意图，改写快照使返回后保持暂停而非续播
+        videoDetailController.playerStatus = PlayerStatus.paused;
+      } else {
+        plPlayerController!.dispose();
+      }
     } else {
       PlPlayerController.updatePlayCount();
     }
