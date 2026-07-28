@@ -736,7 +736,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
     // 无论是否进入小窗，离开当前页面时都标记隐藏播放器 UI
     // 这样做有两个目的：
-    // 1. 释放 GlobalKey (videoPlayerKey)，确保小窗能够接管它而不会冲突
+    // 1. 收起页面内的播放器副本，小窗展示的是独立副本（不共享 GlobalKey），
+    //    避免两份 PLVideoPlayer 同时渲染
     // 2. 确保下次 didPopNext 时 videoState.value = true 能触发 Obx 刷新
     videoDetailController.videoState.value = false;
 
@@ -894,8 +895,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       plPlayerController = videoDetailController.plPlayerController;
     } else {
       // 场景 3：直接恢复关联的小窗/后台播放器，确保界面正常显示
-      // 由于小窗可能刚刚被关闭（OverlayEntry 移除），我们需要延迟一个帧再显示主页播放器
-      // 以确保 GlobalKey (videoPlayerKey) 已经从小窗中彻底释放，避免冲突
+      // 由于小窗可能刚刚被关闭（OverlayEntry 移除），延迟一帧再展开主页播放器，
+      // 确保移除生效后两份播放器副本不会同帧共存
       _logSponsorBlock('Restoring current player (delayed refresh)');
       // 统一对账：以离开页面/小窗时记录的期望状态为准，对齐实际播放状态。
       // 期望播放但实际暂停（如 didPushNext 未进小窗时暂停、关小窗时暂停）→ 恢复播放；
@@ -1746,8 +1747,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     required double height,
     bool isPipMode = false,
     bool isInAppPip = false,
+    bool forOverlay = false,
   }) => popScope(
-    key: videoDetailController.videoPlayerKey,
+    // 小窗副本不挂 videoPlayerKey：页面副本常驻路由栈（收起时仍 mounted），
+    // 共享 key 会导致 overlay 插入时偷走页面 element，留下截断的 Stack
+    key: forOverlay ? null : videoDetailController.videoPlayerKey,
     canPop:
         !isFullScreen &&
         !videoDetailController.plPlayerController.isDesktopPip &&
@@ -1768,7 +1772,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
               videoDetailController: videoDetailController,
               introController: introController,
               headerControl: HeaderControl(
-                key: videoDetailController.headerCtrKey,
+                // PLVideoPlayer 内部会把 headerControl.key 强转为
+                // GlobalKey<TimeBatteryMixin>，不能传 null，小窗副本用独立 key
+                key: forOverlay
+                    ? videoDetailController.pipHeaderCtrKey
+                    : videoDetailController.headerCtrKey,
                 isPortrait: isPortrait,
                 controller: videoDetailController.plPlayerController,
                 videoDetailCtr: videoDetailController,
@@ -2777,6 +2785,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         height: h,
         isPipMode: true,
         isInAppPip: !isNative,
+        forOverlay: true,
       ),
       onClose: () {
         _isEnteringPipMode = false;

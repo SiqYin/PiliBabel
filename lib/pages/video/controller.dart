@@ -162,6 +162,9 @@ class VideoDetailController extends GetxController
   double? brightness;
 
   late final headerCtrKey = GlobalKey<TimeBatteryMixin>();
+  // 应用内小窗副本专用，与页面副本的 headerCtrKey 隔离，
+  // 避免还原展开时两棵树同帧共存导致 GlobalKey 双挂载
+  late final pipHeaderCtrKey = GlobalKey<TimeBatteryMixin>();
 
   Box setting = GStorage.setting;
 
