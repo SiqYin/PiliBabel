@@ -13,6 +13,12 @@ analyzer:
   exclude:
     - lib/grpc/bilibili/**
     - docs/**
+    - lib/utils/android/bindings.g.dart
+    - android/**
+    - ios/**
+    - linux/**
+    - macos/**
+    - windows/**
     # - lib/common/widgets/flutter/**
 
 formatter:

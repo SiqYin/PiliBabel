@@ -619,8 +619,8 @@ class _GalleryViewerState extends State<GalleryViewer>
       items: [
         CustomPopupMenuItem<void>(
           height: 42,
-          onTap: () => Utils.copyText(item.url),
-          child: const Text('复制链接', style: TextStyle(fontSize: 14)),
+          onTap: () => ImageUtils.downloadImg([item.url]),
+          child: const Text('保存图片', style: TextStyle(fontSize: 14)),
         ),
         CustomPopupMenuItem<void>(
           height: 42,
@@ -629,8 +629,8 @@ class _GalleryViewerState extends State<GalleryViewer>
         ),
         CustomPopupMenuItem<void>(
           height: 42,
-          onTap: () => ImageUtils.downloadImg([item.url]),
-          child: const Text('保存图片', style: TextStyle(fontSize: 14)),
+          onTap: () => Utils.copyText(item.url),
+          child: const Text('复制链接', style: TextStyle(fontSize: 14)),
         ),
         CustomPopupMenuItem<void>(
           height: 42,

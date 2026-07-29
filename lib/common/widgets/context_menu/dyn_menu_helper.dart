@@ -27,6 +27,7 @@ Widget dynTextMenuBuilder(
       ),
     );
   _addDynFilterItem(buttonItems, state);
+  state.addLaunchMenuIfNeeded(buttonItems, index: 5);
   return AdaptiveTextSelectionToolbar.buttonItems(
     buttonItems: buttonItems,
     anchors: state.contextMenuAnchors,
@@ -104,33 +105,34 @@ void _showEmoteDialog(ModuleDynamicModel? moduleDynamic) {
     builder: (context) => Dialog(
       child: Padding(
         padding: const .symmetric(horizontal: 20, vertical: 16),
-        child: SingleChildScrollView(
-          child: SelectionText.rich(
-            TextSpan(
-              children: emotes!.entries.mapIndexed(
-                (i, e) {
-                  final emoji = e.value;
-                  final size = emoji.size * 25.0;
-                  return TextSpan(
-                    children: [
-                      if (i != 0) const TextSpan(text: '\n\n'),
-                      EmoteSpan(
-                        rawText: Style.placeHolder,
-                        child: NetworkImgLayer(
-                          src: emoji.url,
-                          type: .emote,
-                          width: size,
-                          height: size,
+        child: SelectionArea(
+          contextMenuBuilder: openUrlMenuBuilder,
+          child: SingleChildScrollView(
+            child: Text.rich(
+              TextSpan(
+                children: emotes!.entries.mapIndexed(
+                  (i, e) {
+                    final emoji = e.value;
+                    final size = emoji.size * 25.0;
+                    return TextSpan(
+                      children: [
+                        if (i != 0) const TextSpan(text: '\n\n'),
+                        WidgetSpan(
+                          child: NetworkImgLayer(
+                            src: emoji.url,
+                            type: .emote,
+                            width: size,
+                            height: size,
+                          ),
                         ),
-                      ),
-                      TextSpan(text: '\n${e.key}\n${emoji.url}'),
-                    ],
-                  );
-                },
-              ).toList(),
+                        TextSpan(text: '\n${e.key}\n${emoji.url}'),
+                      ],
+                    );
+                  },
+                ).toList(),
+              ),
+              style: const TextStyle(fontSize: 15, height: 1.7),
             ),
-            contextMenuBuilder: openUrlMenuBuilder,
-            style: const TextStyle(fontSize: 15, height: 1.7),
           ),
         ),
       ),
@@ -144,19 +146,21 @@ void _showTextDialog(String text) {
     builder: (context) => Dialog(
       child: Padding(
         padding: const .symmetric(horizontal: 20, vertical: 16),
-        child: SingleChildScrollView(
-          child: SelectionText(
-            text,
-            contextMenuBuilder: (_, state) {
-              final buttonItems = state.contextMenuButtonItems;
-              state.addLaunchMenuIfNeeded(buttonItems, index: 3);
-              _addDynFilterItem(buttonItems, state);
-              return AdaptiveTextSelectionToolbar.buttonItems(
-                buttonItems: buttonItems,
-                anchors: state.contextMenuAnchors,
-              );
-            },
-            style: const TextStyle(fontSize: 15, height: 1.7),
+        child: SelectionArea(
+          contextMenuBuilder: (_, state) {
+            final buttonItems = state.contextMenuButtonItems;
+            state.addLaunchMenuIfNeeded(buttonItems, index: 3);
+            _addDynFilterItem(buttonItems, state);
+            return AdaptiveTextSelectionToolbar.buttonItems(
+              buttonItems: buttonItems,
+              anchors: state.contextMenuAnchors,
+            );
+          },
+          child: SingleChildScrollView(
+            child: Text(
+              text,
+              style: const TextStyle(fontSize: 15, height: 1.7),
+            ),
           ),
         ),
       ),
