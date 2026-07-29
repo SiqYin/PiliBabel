@@ -8,6 +8,7 @@ import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
+import 'package:PiliPlus/common/widgets/pip_mini_video_content.dart';
 import 'package:PiliPlus/common/widgets/route_aware_mixin.dart';
 import 'package:PiliPlus/common/widgets/scroll_behavior.dart'
     show NoOverscrollIndicator;
@@ -55,6 +56,7 @@ import 'package:PiliPlus/plugin/pl_player/view/view.dart';
 import 'package:PiliPlus/services/live_pip_overlay_service.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/pip_overlay_service.dart';
+import 'package:PiliPlus/services/pip_transition_coordinator.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/services/shutdown_timer_service.dart'
     show shutdownTimerService;
@@ -106,6 +108,15 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   // 从 PiP 恢复时提前取出的 additional controllers（在 stopPip 清空前保存）
   dynamic _savedIntroControllerFromPip;
   VideoReplyController? _savedReplyControllerFromPip;
+
+  // 归位动画进行中：页面播放器以透明占位先行布局（供量取目标矩形），
+  // 恢复握手完成后亮出，期间小窗是唯一可见端
+  bool _pipRestoreInFlight = false;
+  int _pipRestoreRectAttempts = 0;
+
+  // 页面根节点 key：归位目标矩形以页面根为参照系量取——路由转场期间页面
+  // 整体在移动，相对页面根的矩形 == 页面落定后的全局矩形
+  final _pageRootKey = GlobalKey();
 
   // intro ctr
   late final CommonIntroController introController =
@@ -171,6 +182,65 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   final videoRelatedKey = GlobalKey();
   final videoIntroKey = GlobalKey();
 
+  /// 量取页面播放器矩形。relativeToPage 时以页面根为参照系(用于归位目标,
+  /// 规避路由转场偏移),否则为全局坐标(用于收起源矩形,pop/push 甫一触发
+  /// 页面尚未移动,全局坐标即所见位置)
+  Rect? _playerRect({bool relativeToPage = false}) {
+    final renderObject = videoDetailController
+        .videoPlayerKey
+        .currentContext
+        ?.findRenderObject();
+    if (renderObject is! RenderBox ||
+        !renderObject.attached ||
+        !renderObject.hasSize ||
+        // 占位副本挂载初期是零尺寸 SizedBox.shrink,视为未量到,交由重试
+        renderObject.size.isEmpty) {
+      return null;
+    }
+    if (relativeToPage) {
+      final pageRenderObject = _pageRootKey.currentContext?.findRenderObject();
+      if (pageRenderObject is RenderBox && pageRenderObject.attached) {
+        return renderObject.localToGlobal(
+              Offset.zero,
+              ancestor: pageRenderObject,
+            ) &
+            renderObject.size;
+      }
+      return null;
+    }
+    return renderObject.localToGlobal(Offset.zero) & renderObject.size;
+  }
+
+  /// C1/C2 共用:页面就绪后量取归位目标矩形并上报协调器。
+  /// 播放器占位可能要等 videoState 置位后一两帧才有布局,最多重试 10 帧;
+  /// 始终量不到则上报 null(小窗按预估目标降级收尾)
+  void _schedulePipRestoreAttach() {
+    _pipRestoreRectAttempts = 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _attachPipRestore());
+  }
+
+  void _attachPipRestore() {
+    if (!mounted || !_pipRestoreInFlight) return;
+    final targetRect = _playerRect(relativeToPage: true);
+    if (targetRect == null && _pipRestoreRectAttempts++ < 10) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _attachPipRestore());
+      return;
+    }
+    PipOverlayService.transition.attachRestorePage(
+      targetRect: targetRect,
+      onCompleted: () {
+        // 握手完成(或协调器已离开归位相位的防御路径):亮出页面播放器
+        if (!mounted) {
+          _pipRestoreInFlight = false;
+          return;
+        }
+        setState(() => _pipRestoreInFlight = false);
+        plPlayerController?.controls = true;
+        _resetEnteringPipFlags();
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -207,11 +277,21 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         videoDetailController.$reopenLifeCycle(); // 重置 isClosed
         Get.put(savedController, tag: heroTag);
 
-        PipOverlayService.stopPip(
-          callOnClose: false,
-          immediate: true,
-          targetContextKey: targetContextKey,
-        );
+        // 点击展开（归位动画中）：小窗仍在飞向本页，非销毁式 stopPip 推迟到
+        // 握手完成由协调器触发 _finalizeRestore 执行；本页播放器先透明占位。
+        // 其余场景（如从听视频页带 fromPip 返回）维持旧的瞬时关闭
+        if (PipOverlayService.transition.phase == PipPhase.restoring &&
+            targetContextKey != null &&
+            targetContextKey == PipOverlayService.savedVideoContextKey) {
+          _pipRestoreInFlight = true;
+          _schedulePipRestoreAttach();
+        } else {
+          PipOverlayService.stopPip(
+            callOnClose: false,
+            immediate: true,
+            targetContextKey: targetContextKey,
+          );
+        }
 
         // 将提前取出的 additional controllers 存回局部变量供后续使用
         _savedReplyControllerFromPip = savedReplyControllerFromPip;
@@ -789,19 +869,26 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           'Returning to video page with matching active PiP, closing PiP overlay',
         );
         // 小窗里的实际状态是用户最新的播放意图（可能在小窗中手动暂停过），
-        // 先于 stopPip 记录，交由 didPopNext 末尾统一对账
+        // 先于关闭小窗记录，交由 didPopNext 末尾统一对账
         videoDetailController.playerStatus =
             plPlayerController?.playerStatus.value;
-        PipOverlayService.stopPip(
-          callOnClose: false,
-          immediate: true,
-          targetContextKey: PipOverlayService.contextKeyFromArgs(
-            videoDetailController.args,
-          ),
-        );
-        _resetEnteringPipFlags();
-        // 小窗模式下控制栏可能被隐藏了，恢复它
-        plPlayerController?.controls = true;
+        // 返回展开：小窗飞回页内播放器位置，非销毁式 stopPip 推迟到握手完成；
+        // 无法归位（无小窗会话）则维持旧的瞬时关闭
+        if (PipOverlayService.transition.beginRestore()) {
+          _pipRestoreInFlight = true;
+          _schedulePipRestoreAttach();
+        } else {
+          PipOverlayService.stopPip(
+            callOnClose: false,
+            immediate: true,
+            targetContextKey: PipOverlayService.contextKeyFromArgs(
+              videoDetailController.args,
+            ),
+          );
+          _resetEnteringPipFlags();
+          // 小窗模式下控制栏可能被隐藏了，恢复它
+          plPlayerController?.controls = true;
+        }
       } else {
         // 小窗里播放的是其他视频，返回到新的视频页面时必须关闭小窗，否则会同时播放两个视频
         _logSponsorBlock(
@@ -1746,60 +1833,60 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     required double width,
     required double height,
     bool isPipMode = false,
-    bool isInAppPip = false,
-    bool forOverlay = false,
-  }) => popScope(
-    // 小窗副本不挂 videoPlayerKey：页面副本常驻路由栈（收起时仍 mounted），
-    // 共享 key 会导致 overlay 插入时偷走页面 element，留下截断的 Stack
-    key: forOverlay ? null : videoDetailController.videoPlayerKey,
-    canPop:
-        !isFullScreen &&
-        !videoDetailController.plPlayerController.isDesktopPip &&
-        (videoDetailController.horizontalScreen || isPortrait),
-    onPopInvokedWithResult: _onPopInvokedWithResult,
-    child: Obx(
-      () =>
-          (!isPipMode && !videoDetailController.videoState.value) ||
-              !videoDetailController.autoPlay ||
-              plPlayerController?.videoController == null
-          ? const SizedBox.shrink()
-          : PLVideoPlayer(
-              maxWidth: width,
-              maxHeight: height,
-              isPipMode: isPipMode,
-              isInAppPip: isInAppPip,
-              plPlayerController: plPlayerController!,
-              videoDetailController: videoDetailController,
-              introController: introController,
-              headerControl: HeaderControl(
-                // PLVideoPlayer 内部会把 headerControl.key 强转为
-                // GlobalKey<TimeBatteryMixin>，不能传 null，小窗副本用独立 key
-                key: forOverlay
-                    ? videoDetailController.pipHeaderCtrKey
-                    : videoDetailController.headerCtrKey,
-                isPortrait: isPortrait,
-                controller: videoDetailController.plPlayerController,
-                videoDetailCtr: videoDetailController,
-                heroTag: heroTag,
-              ),
-              danmuWidget: isPipMode && pipNoDanmaku
-                  ? null
-                  : Obx(
-                      () => PlDanmaku(
-                        key: ValueKey(videoDetailController.cid.value),
-                        isPipMode: isPipMode,
-                        cid: videoDetailController.cid.value,
-                        playerController: plPlayerController!,
-                        isFullScreen: plPlayerController!.isFullScreen.value,
-                        isFileSource: videoDetailController.isFileSource,
-                        size: Size(width, height),
+  }) {
+    // 小窗内容已轻量化（PipMiniVideoContent），本方法只服务页面副本，
+    // videoPlayerKey 不再有共享冲突，同时兼任收起源矩形/归位目标矩形的量取锚点
+    final Widget player = popScope(
+      key: videoDetailController.videoPlayerKey,
+      canPop:
+          !isFullScreen &&
+          !videoDetailController.plPlayerController.isDesktopPip &&
+          (videoDetailController.horizontalScreen || isPortrait),
+      onPopInvokedWithResult: _onPopInvokedWithResult,
+      child: Obx(
+        () =>
+            (!isPipMode && !videoDetailController.videoState.value) ||
+                !videoDetailController.autoPlay ||
+                plPlayerController?.videoController == null
+            ? const SizedBox.shrink()
+            : PLVideoPlayer(
+                maxWidth: width,
+                maxHeight: height,
+                isPipMode: isPipMode,
+                plPlayerController: plPlayerController!,
+                videoDetailController: videoDetailController,
+                introController: introController,
+                headerControl: HeaderControl(
+                  key: videoDetailController.headerCtrKey,
+                  isPortrait: isPortrait,
+                  controller: videoDetailController.plPlayerController,
+                  videoDetailCtr: videoDetailController,
+                  heroTag: heroTag,
+                ),
+                danmuWidget: isPipMode && pipNoDanmaku
+                    ? null
+                    : Obx(
+                        () => PlDanmaku(
+                          key: ValueKey(videoDetailController.cid.value),
+                          isPipMode: isPipMode,
+                          cid: videoDetailController.cid.value,
+                          playerController: plPlayerController!,
+                          isFullScreen: plPlayerController!.isFullScreen.value,
+                          isFileSource: videoDetailController.isFileSource,
+                          size: Size(width, height),
+                        ),
                       ),
-                    ),
-              showEpisodes: showEpisodes,
-              showViewPoints: showViewPoints,
-            ),
-    ),
-  );
+                showEpisodes: showEpisodes,
+                showViewPoints: showViewPoints,
+              ),
+      ),
+    );
+    // 归位动画中：透明占位参与布局（供量取目标矩形）但不可见不可点，
+    // 小窗是唯一可见端，恢复握手完成后亮出
+    return _pipRestoreInFlight
+        ? IgnorePointer(child: Opacity(opacity: 0, child: player))
+        : player;
+  }
 
   late ThemeData themeData;
   late bool isPortrait;
@@ -1838,9 +1925,11 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         child: child,
       );
     }
-    return videoDetailController.plPlayerController.darkVideoPage
+    final page = videoDetailController.plPlayerController.darkVideoPage
         ? Theme(data: themeData, child: child)
         : child;
+    // 页面根参照系：归位目标矩形以此量取（规避路由转场期间的整页偏移）
+    return KeyedSubtree(key: _pageRootKey, child: page);
   }
 
   Widget buildTabBar({
@@ -2775,17 +2864,34 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       'Saved ${additionalControllers.length} additional controllers',
     );
 
+    // 收起动画源矩形：页面播放器当前屏幕位置（pop/push 甫一触发，页面尚未
+    // 移动，全局坐标即所见位置）；量取失败则无动画直接以活跃态出现
+    final sourceRect = _playerRect();
+
     PipOverlayService.startPip(
       plPlayerController: plPlayerController!,
       controller: videoDetailController,
       additionalControllers: additionalControllers,
       context: context,
-      videoPlayerBuilder: (isNative, w, h) => plPlayer(
-        width: w,
-        height: h,
-        isPipMode: true,
-        isInAppPip: !isNative,
-        forOverlay: true,
+      sourceRect: sourceRect,
+      // 轻量小窗内容：纹理+弹幕+缓冲指示，不再复用完整 PLVideoPlayer，
+      // 小窗副本与页面副本彻底解耦（字幕随之不在小窗显示）
+      videoPlayerBuilder: (isNative, w, h) => PipMiniVideoContent(
+        plPlayerController: plPlayerController!,
+        transition: PipOverlayService.transition,
+        danmuWidget: pipNoDanmaku
+            ? null
+            : Obx(
+                () => PlDanmaku(
+                  key: ValueKey(videoDetailController.cid.value),
+                  isPipMode: true,
+                  cid: videoDetailController.cid.value,
+                  playerController: plPlayerController!,
+                  isFullScreen: false,
+                  isFileSource: videoDetailController.isFileSource,
+                  size: Size(w, h),
+                ),
+              ),
       ),
       onClose: () {
         _isEnteringPipMode = false;

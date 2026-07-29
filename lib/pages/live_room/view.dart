@@ -38,6 +38,7 @@ import 'package:PiliPlus/plugin/pl_player/view/view.dart';
 import 'package:PiliPlus/services/live_pip_overlay_service.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/pip_overlay_service.dart';
+import 'package:PiliPlus/services/pip_transition_coordinator.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
@@ -86,6 +87,67 @@ class _LiveRoomPageState extends State<LiveRoomPage>
   late final GlobalKey scKey = GlobalKey();
   late final GlobalKey playerKey = GlobalKey();
 
+  // 归位动画进行中：页面播放器以透明占位先行布局（供量取目标矩形），
+  // 恢复握手完成后亮出，期间小窗是唯一可见端
+  bool _pipRestoreInFlight = false;
+  int _pipRestoreRectAttempts = 0;
+
+  // 页面根参照系：归位目标矩形以此量取，规避路由转场期间的整页偏移
+  final _pageRootKey = GlobalKey();
+
+  /// 量取页面播放器矩形（收起源矩形用全局坐标；归位目标以页面根为参照系）
+  Rect? _livePlayerRect({bool relativeToPage = false}) {
+    final renderObject = playerKey.currentContext?.findRenderObject();
+    if (renderObject is! RenderBox ||
+        !renderObject.attached ||
+        !renderObject.hasSize ||
+        // 未加载完成时播放器区是零尺寸 SizedBox.shrink,视为未量到
+        renderObject.size.isEmpty) {
+      return null;
+    }
+    if (relativeToPage) {
+      final pageRenderObject = _pageRootKey.currentContext?.findRenderObject();
+      if (pageRenderObject is RenderBox && pageRenderObject.attached) {
+        return renderObject.localToGlobal(
+              Offset.zero,
+              ancestor: pageRenderObject,
+            ) &
+            renderObject.size;
+      }
+      return null;
+    }
+    return renderObject.localToGlobal(Offset.zero) & renderObject.size;
+  }
+
+  /// C1/C2 共用：页面就绪后量取归位目标矩形并上报协调器（最多重试 10 帧）
+  void _scheduleLivePipRestoreAttach() {
+    _pipRestoreRectAttempts = 0;
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _attachLivePipRestore(),
+    );
+  }
+
+  void _attachLivePipRestore() {
+    if (!mounted || !_pipRestoreInFlight) return;
+    final targetRect = _livePlayerRect(relativeToPage: true);
+    if (targetRect == null && _pipRestoreRectAttempts++ < 10) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _attachLivePipRestore(),
+      );
+      return;
+    }
+    LivePipOverlayService.transition.attachRestorePage(
+      targetRect: targetRect,
+      onCompleted: () {
+        if (!mounted) {
+          _pipRestoreInFlight = false;
+          return;
+        }
+        setState(() => _pipRestoreInFlight = false);
+      },
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -107,10 +169,18 @@ class _LiveRoomPageState extends State<LiveRoomPage>
 
     // 无论是否是同一个房间，既然进入了直播详情页，就关闭现有的小窗（不销毁播放器）
     if (LivePipOverlayService.isInPipMode) {
-      // 使用非销毁式关闭，让新页面接管播放器
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        LivePipOverlayService.stopLivePip(callOnClose: false);
-      });
+      if (isReturningFromPip &&
+          LivePipOverlayService.transition.phase == PipPhase.restoring) {
+        // 点击展开（归位动画中）：小窗仍在飞向本页，非销毁式关闭推迟到
+        // 握手完成由协调器触发 _finalizeRestore 执行；本页播放器先透明占位
+        _pipRestoreInFlight = true;
+        _scheduleLivePipRestoreAttach();
+      } else {
+        // 其他房间/无动画路径：维持旧的非销毁式关闭，让新页面接管播放器
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          LivePipOverlayService.stopLivePip(callOnClose: false);
+        });
+      }
     }
 
     // 如果有视频小窗也关闭
@@ -174,7 +244,17 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     // 如果返回当前页面时应用内小窗正在运行，且房间号匹配，说明是从正在小窗播放的页面返回
     if (LivePipOverlayService.isInPipMode) {
       if (LivePipOverlayService.currentRoomId == _liveRoomController.roomId) {
-        LivePipOverlayService.stopLivePip(callOnClose: false, immediate: true);
+        // 返回展开：小窗飞回页内播放器位置，非销毁式关闭推迟到握手完成；
+        // 无法归位（无小窗会话）则维持旧的瞬时关闭
+        if (LivePipOverlayService.transition.beginRestore()) {
+          _pipRestoreInFlight = true;
+          _scheduleLivePipRestoreAttach();
+        } else {
+          LivePipOverlayService.stopLivePip(
+            callOnClose: false,
+            immediate: true,
+          );
+        }
       } else {
         // 小窗里是其他房间，返回直播间时必须关闭，否则会同时播放两个视频
         LivePipOverlayService.stopLivePip(callOnClose: true, immediate: true);
@@ -364,9 +444,13 @@ class _LiveRoomPageState extends State<LiveRoomPage>
         child: child,
       );
     }
-    return Theme(
-      data: ThemeUtils.darkTheme,
-      child: child,
+    // 页面根参照系：归位目标矩形以此量取
+    return KeyedSubtree(
+      key: _pageRootKey,
+      child: Theme(
+        data: ThemeUtils.darkTheme,
+        child: child,
+      ),
     );
   }
 
@@ -498,11 +582,16 @@ class _LiveRoomPageState extends State<LiveRoomPage>
         ],
       );
     }
-    return popScope(
+    final Widget result = popScope(
       canPop: !isFullScreen && !plPlayerController.isDesktopPip,
       onPopInvokedWithResult: _onPopInvokedWithResult,
       child: player,
     );
+    // 归位动画中：透明占位参与布局（供量取目标矩形）但不可见不可点，
+    // 小窗是唯一可见端，恢复握手完成后亮出
+    return _pipRestoreInFlight
+        ? IgnorePointer(child: Opacity(opacity: 0, child: result))
+        : result;
   }
 
   void _onPopInvokedWithResult(bool didPop, Object? result) {
@@ -553,6 +642,8 @@ class _LiveRoomPageState extends State<LiveRoomPage>
         roomId: _liveRoomController.roomId,
         plPlayerController: plPlayerController,
         controller: _liveRoomController,
+        // 收起动画源矩形：页面播放器当前屏幕位置；量取失败则无动画直接出现
+        sourceRect: _livePlayerRect(),
         onClose: () {
           _isEnteringPipMode = false;
           _liveRoomController.isInPipMode.value = false;
