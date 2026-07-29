@@ -2,13 +2,24 @@ import 'dart:async';
 
 import 'package:flutter/animation.dart' show Curve, Curves;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/rendering.dart' show Rect;
+import 'package:flutter/rendering.dart' show Offset, Rect;
 import 'package:flutter/scheduler.dart';
 
 /// 应用内小窗生命周期相位。
 /// hidden: 无小窗;entering: 收起动画中;active: 活跃(可拖动/可交互);
 /// restoring: 归位动画中(展开)。
 enum PipPhase { hidden, entering, active, restoring }
+
+/// 小窗位置与双击缩放档位的会话级记忆(应用存活期内),视频/直播小窗共用。
+/// 每次 startPip 都会重建 OverlayEntry 与窗体 State,不存这里的话
+/// 新会话总是回到默认右下角。
+class PipWindowMemory {
+  PipWindowMemory._();
+
+  /// 上次摆放的窗口左上角(全局坐标);恢复时按当前屏幕钳回界内
+  static Offset? position;
+  static double scale = 1.0;
+}
 
 /// 应用内小窗过渡动画协调器(视频/直播小窗各持一实例)。
 ///

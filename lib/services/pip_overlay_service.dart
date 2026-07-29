@@ -419,7 +419,7 @@ class _PipWidgetState extends State<PipWidget>
     with WidgetsBindingObserver, TickerProviderStateMixin {
   double? _left;
   double? _top;
-  double _scale = 1.0;
+  double _scale = PipWindowMemory.scale;
 
   PipTransitionCoordinator get _transition => PipOverlayService.transition;
   PipPhase _lastPhase = PipPhase.hidden;
@@ -580,6 +580,8 @@ class _PipWidgetState extends State<PipWidget>
           .clamp(0.0, max(0.0, screenSize.height - _height))
           .toDouble();
     });
+    PipWindowMemory.scale = _scale;
+    PipWindowMemory.position = Offset(_left ?? 0, _top ?? 0);
     _startHideTimer();
   }
 
@@ -587,8 +589,13 @@ class _PipWidgetState extends State<PipWidget>
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
 
-    _left ??= screenSize.width - _width - 16;
-    _top ??= screenSize.height - _height - 100;
+    // 恢复上次摆放位置（会话级记忆）；越界（旋转/窗口尺寸变化）时钳回屏内
+    _left ??= (PipWindowMemory.position?.dx ?? screenSize.width - _width - 16)
+        .clamp(0.0, max(0.0, screenSize.width - _width))
+        .toDouble();
+    _top ??= (PipWindowMemory.position?.dy ?? screenSize.height - _height - 100)
+        .clamp(0.0, max(0.0, screenSize.height - _height))
+        .toDouble();
 
     return Obx(() {
       final bool isNative = PipOverlayService.isNativePip;
@@ -654,6 +661,7 @@ class _PipWidgetState extends State<PipWidget>
                         )
                         .toDouble();
                   });
+                  PipWindowMemory.position = Offset(_left!, _top!);
                 },
                 onPanEnd: (_) {
                   if (_showControls) {
