@@ -106,7 +106,7 @@ class _DynamicDetailPageState
     );
   }
 
-  dynamic _scrollable;
+  ScrollableState? _scrollable;
 
   @override
   void dispose() {
@@ -136,6 +136,7 @@ class _DynamicDetailPageState
       ),
     );
     return SelectionTapRegionSurface(
+      /// apply `lib/scripts/scrollable.patch`
       isScrolling: () => _scrollable?.shouldIgnorePointer ?? false,
       child: child,
     );
