@@ -279,6 +279,17 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       vsync: this,
       duration: const Duration(milliseconds: 100),
     );
+    // 挂载前 showControls 可能已被置真（如小窗恢复路径在页面 initState 先行
+    // controls = true，播放器随 videoState 延后挂载）——Rx.listen 只收变更
+    // 事件，不同步初值的话控制栏要等下一次 showControls 变更才会入场。
+    // 延迟到首帧后执行，让 headerControl 的时间/电量状态也能被正确启动。
+    if (plPlayerController.showControls.value) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && plPlayerController.showControls.value) {
+          _onControlChanged(true);
+        }
+      });
+    }
     videoController = plPlayerController.videoController!;
 
     if (PlatformUtils.isMobile) {

@@ -235,7 +235,9 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           return;
         }
         setState(() => _pipRestoreInFlight = false);
-        plPlayerController?.controls = true;
+        // 恢复后控制栏保持收起（一点即出），底部进度/高能条立即可见；
+        // 置 true 会让高能条被 offstage 到自动隐藏计时结束
+        plPlayerController?.controls = false;
         _resetEnteringPipFlags();
       },
     );
@@ -448,7 +450,9 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       if (plPlayerController!.isFullScreen.value) {
         plPlayerController!.triggerFullScreen(status: false);
       }
-      plPlayerController!.controls = true;
+      // 控制栏保持收起：置 true 会把状态卡在"打开"（挂载前置位无视觉），
+      // 底部进度/高能条被 offstage 到自动隐藏计时结束，且首次点击变成关闭
+      plPlayerController!.controls = false;
 
       _logSponsorBlock(
         'Returning from PiP, segmentList.length: ${videoDetailController.segmentList.length}',
@@ -886,8 +890,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             ),
           );
           _resetEnteringPipFlags();
-          // 小窗模式下控制栏可能被隐藏了，恢复它
-          plPlayerController?.controls = true;
+          // 控制栏保持收起，避免状态卡"打开"导致高能条 offstage、首点失效
+          plPlayerController?.controls = false;
         }
       } else {
         // 小窗里播放的是其他视频，返回到新的视频页面时必须关闭小窗，否则会同时播放两个视频
