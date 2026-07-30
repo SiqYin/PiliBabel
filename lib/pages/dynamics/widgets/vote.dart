@@ -317,10 +317,7 @@ class _VotePanelState extends State<VotePanel> {
           .toList(),
     );
     return Card(
-      clipBehavior: Clip.hardEdge,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(6)),
-      ),
+      shape: const RoundedRectangleBorder(borderRadius: .all(.circular(6))),
       child: Builder(
         builder: (context) {
           final opt = _voteInfo.options[index];
@@ -331,9 +328,10 @@ class _VotePanelState extends State<VotePanel> {
                 : () => _onSelected(context, !selected, opt.optIdx!),
             onLongPress: PlatformUtils.isMobile ? onLongPress : null,
             onSecondaryTap: PlatformUtils.isDesktop ? onLongPress : null,
+            borderRadius: const .all(.circular(6)),
             child: Column(
               spacing: 5,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: .stretch,
               children: [
                 Stack(
                   clipBehavior: Clip.none,
@@ -345,7 +343,7 @@ class _VotePanelState extends State<VotePanel> {
                           src: opt.imgUrl,
                           width: constraints.maxWidth,
                           height: constraints.maxHeight,
-                          type: .emote,
+                          borderRadius: const .vertical(top: .circular(6)),
                         ),
                       ),
                     ),
