@@ -66,6 +66,7 @@ jobs:
         with:
           tag_name: ${{ github.event.inputs.tag }}
           name: ${{ github.event.inputs.tag }}
+          target_commitish: ${{ github.sha }}
           files: |
             PiliNara_windows_*.zip
             PiliNara-Win-Setup/PiliNara_windows_*.exe

@@ -108,10 +108,11 @@ jobs:
 
             - name: Release
               if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag != '' }}
-              uses: softprops/action-gh-release@v2
+              uses: softprops/action-gh-release@v3
               with:
                   tag_name: ${{ github.event.inputs.tag }}
                   name: ${{ github.event.inputs.tag }}
+                  target_commitish: ${{ github.sha }}
                   files: |
                       PiliNara_android_*.apk
 
