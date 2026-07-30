@@ -165,6 +165,7 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
     }
 
     return Scaffold(
+      primary: false,
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.transparent,
       appBar: AppBar(

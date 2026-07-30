@@ -6,6 +6,8 @@ import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
 import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/pair.dart';
+import 'package:PiliPlus/common/widgets/scaffold/mini_scaffold.dart';
+import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_behavior.dart'
     show NoOverscrollIndicator;
 import 'package:PiliPlus/common/widgets/scroll_physics.dart'
@@ -60,7 +62,9 @@ class _DynamicDetailPageState
 
   void _startRefresh() {
     _isRefreshing.value = true;
-    _refreshController.repeat();
+    _refreshController
+      ..value = 0
+      ..repeat();
   }
 
   void _stopRefresh() {
@@ -119,23 +123,20 @@ class _DynamicDetailPageState
 
   @override
   Widget build(BuildContext context) {
-    final child = Scaffold(
-      resizeToAvoidBottomInset: false,
-      appBar: _buildAppBar(),
-      body: Padding(
-        padding: EdgeInsets.only(left: padding.left, right: padding.right),
-        child: _buildBody(),
-      ),
-      floatingActionButtonLocation: floatingActionButtonLocation,
-      floatingActionButton: SlideTransition(
-        position: fabAnimation,
-        child: _buildBottom(),
-      ),
-    );
     return SelectionTapRegionSurface(
       /// apply `lib/scripts/scrollable.patch`
       isScrolling: () => _scrollable?.shouldIgnorePointer ?? false,
-      child: child,
+      child: SimpleScaffold(
+        appBar: _buildAppBar(),
+        body: Padding(
+          padding: EdgeInsets.only(left: padding.left, right: padding.right),
+          child: _buildBody(),
+        ),
+        fab: SlideTransition(
+          position: fabAnimation,
+          child: _buildBottom(),
+        ),
+      ),
     );
   }
 
@@ -482,9 +483,7 @@ class _DynamicDetailPageState
           flex: flex1,
           child: Padding(
             padding: EdgeInsets.only(right: padding),
-            child: Scaffold(
-              backgroundColor: Colors.transparent,
-              resizeToAvoidBottomInset: false,
+            child: MiniScaffold(
               body: Column(
                 children: [
                   _buildTabBar(),

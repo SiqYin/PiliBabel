@@ -13,6 +13,7 @@ import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recogniz
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
 import 'package:PiliPlus/common/widgets/route_aware_mixin.dart';
+import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart'
     show tabBarScrollPhysics;
 import 'package:PiliPlus/models/common/live/live_contribution_rank_type.dart';
@@ -413,10 +414,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                 );
               },
             ),
-          Scaffold(
-            primary: !plPlayerController.removeSafeArea,
-            resizeToAvoidBottomInset: false,
-            backgroundColor: Colors.transparent,
+          ScaffoldLayout(
             appBar: isWindowMode && isFullScreen && !isPortrait
                 ? null
                 : _buildAppBar(isFullScreen),

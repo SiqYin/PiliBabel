@@ -1,4 +1,3 @@
-
 import 'package:flutter/gestures.dart' show Drag;
 import 'package:flutter/material.dart';
 
@@ -25,7 +24,9 @@ class DynDraggableScrollableSheet extends DraggableScrollableSheet {
 class _DynDraggableScrollableSheetState extends DraggableScrollableSheetState {
   @override
   void initScrollController() {
-    scrollController = _DynDraggableScrollableSheetScrollController(extent: extent);
+    scrollController = _DynDraggableScrollableSheetScrollController(
+      extent: extent,
+    );
   }
 }
 

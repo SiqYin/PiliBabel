@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/pair.dart';
+import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/sponsor_block.dart';
 import 'package:PiliPlus/models/common/sponsor_block/action_type.dart';
@@ -186,10 +187,11 @@ class _PostPanelState extends State<PostPanel>
 
   double currentPos() => plPlayerController.positionInMilliseconds / 1000;
 
+  late double bottom;
+
   @override
   Widget buildPage(ThemeData theme) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
+    return SimpleScaffold(
       appBar: AppBar(
         primary: false,
         toolbarHeight: 45,
@@ -230,6 +232,37 @@ class _PostPanelState extends State<PostPanel>
         ],
       ),
       body: enableSlide ? slideList(theme) : buildList(theme),
+      fab: list.isEmpty
+          ? null
+          : Padding(
+              padding: .only(
+                right: kFloatingActionButtonMargin,
+                bottom: kFloatingActionButtonMargin + bottom,
+              ),
+              child: FloatingActionButton(
+                tooltip: '提交',
+                onPressed: () => showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('确定无误再提交'),
+                    actions: [
+                      TextButton(
+                        onPressed: Get.back,
+                        child: Text(
+                          '取消',
+                          style: TextStyle(color: theme.colorScheme.outline),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _onPost,
+                        child: const Text('确定提交'),
+                      ),
+                    ],
+                  ),
+                ),
+                child: const Icon(Icons.check),
+              ),
+            ),
     );
   }
 
@@ -240,6 +273,7 @@ class _PostPanelState extends State<PostPanel>
     super.didChangeDependencies();
     final controller = PrimaryScrollController.of(context);
     _key = ValueKey(controller.hashCode);
+    bottom = MediaQuery.viewPaddingOf(context).bottom;
   }
 
   @override
@@ -247,47 +281,14 @@ class _PostPanelState extends State<PostPanel>
     if (list.isEmpty) {
       return scrollableError;
     }
-    final bottom = MediaQuery.viewPaddingOf(context).bottom;
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        ListView.builder(
-          key: _key,
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: EdgeInsets.only(bottom: 88 + bottom),
-          itemCount: list.length,
-          itemBuilder: (context, index) {
-            return _buildItem(theme, index, list[index]);
-          },
-        ),
-        Positioned(
-          right: kFloatingActionButtonMargin,
-          bottom: kFloatingActionButtonMargin + bottom,
-          child: FloatingActionButton(
-            tooltip: '提交',
-            onPressed: () => showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('确定无误再提交'),
-                actions: [
-                  TextButton(
-                    onPressed: Get.back,
-                    child: Text(
-                      '取消',
-                      style: TextStyle(color: theme.colorScheme.outline),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: _onPost,
-                    child: const Text('确定提交'),
-                  ),
-                ],
-              ),
-            ),
-            child: const Icon(Icons.check),
-          ),
-        ),
-      ],
+    return ListView.builder(
+      key: _key,
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: EdgeInsets.only(bottom: 88 + bottom),
+      itemCount: list.length,
+      itemBuilder: (context, index) {
+        return _buildItem(theme, index, list[index]);
+      },
     );
   }
 

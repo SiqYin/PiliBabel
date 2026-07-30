@@ -2,6 +2,7 @@ import 'package:PiliPlus/common/skeleton/video_reply.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
+import 'package:PiliPlus/common/widgets/scaffold/mini_scaffold.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
 import 'package:PiliPlus/models_new/video/video_note_list/list.dart';
@@ -55,8 +56,7 @@ class _NoteListPageState extends State<NoteListPage>
 
   @override
   Widget buildPage(ThemeData theme) {
-    return Scaffold(
-      resizeToAvoidBottomInset: false,
+    return MiniScaffold(
       body: Column(
         children: [
           SizedBox(
@@ -153,7 +153,7 @@ class _NoteListPageState extends State<NoteListPage>
                   SmartDialog.showToast('账号未登录');
                   return;
                 }
-                Scaffold.of(context).showBottomSheet(
+                MiniScaffold.of(context).showBottomSheet(
                   constraints: const BoxConstraints(),
                   (context) => WebviewPage(
                     oid: widget.oid,

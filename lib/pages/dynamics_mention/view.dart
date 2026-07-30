@@ -3,6 +3,7 @@ import 'dart:math';
 
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
+import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/sliver/sliver_pinned_header.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models_new/dynamic/dyn_mention/group.dart';
@@ -85,142 +86,142 @@ class _DynMentionPanelState
     final theme = Theme.of(context);
     final padding = MediaQuery.paddingOf(context).bottom;
     final viewInset = MediaQuery.viewInsetsOf(context).bottom;
-    return Column(
-      children: [
-        SizedBox(
-          height: 35,
-          child: Center(
-            child: Container(
-              width: 32,
-              height: 3,
-              decoration: BoxDecoration(
-                color: theme.colorScheme.outline,
-                borderRadius: const BorderRadius.all(Radius.circular(3)),
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.only(left: 16, right: 16, bottom: 5),
-          child: TextField(
-            focusNode: _controller.focusNode,
-            controller: _controller.controller,
-            onChanged: ctr!.add,
-            decoration: InputDecoration(
-              visualDensity: .standard,
-              border: const OutlineInputBorder(
-                gapPadding: 0,
-                borderSide: BorderSide.none,
-                borderRadius: BorderRadius.all(Radius.circular(25)),
-              ),
-              isDense: true,
-              filled: true,
-              fillColor: theme.colorScheme.onInverseSurface,
-              hintText: '输入你想@的人',
-              hintStyle: const TextStyle(fontSize: 14),
-              prefixIcon: const Padding(
-                padding: EdgeInsets.only(left: 12, right: 4),
-                child: Icon(Icons.search, size: 20),
-              ),
-              prefixIconConstraints: const .new(minHeight: 0, minWidth: 0),
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 6,
-              ),
-              suffixIcon: Obx(
-                () => _controller.enableClear.value
-                    ? Padding(
-                        padding: const EdgeInsets.only(right: 12),
-                        child: GestureDetector(
-                          child: Container(
-                            padding: const EdgeInsetsDirectional.all(2),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: theme.colorScheme.secondaryContainer,
-                            ),
-                            child: Icon(
-                              Icons.clear,
-                              size: 16,
-                              color: theme.colorScheme.onSecondaryContainer,
-                            ),
-                          ),
-                          onTap: () => _controller
-                            ..enableClear.value = false
-                            ..controller.clear()
-                            ..onRefresh().whenComplete(
-                              () =>
-                                  WidgetsBinding.instance.addPostFrameCallback(
-                                    (_) => widget.scrollController?.jumpToTop(),
-                                  ),
-                            ),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-              suffixIconConstraints: const BoxConstraints(
-                minHeight: 0,
-                minWidth: 0,
-              ),
-            ),
-          ),
-        ),
-        Expanded(
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              NotificationListener<ScrollNotification>(
-                onNotification: (notification) {
-                  if (notification is UserScrollNotification) {
-                    if (_controller.focusNode.hasFocus) {
-                      _controller.focusNode.unfocus();
-                    }
-                  } else if (notification is ScrollEndNotification) {
-                    widget.onCachePos?.call(notification.metrics.pixels);
-                  }
-                  return false;
-                },
-                child: CustomScrollView(
-                  controller: widget.scrollController,
-                  slivers: [
-                    Obx(
-                      () => _buildBody(theme, _controller.loadingState.value),
-                    ),
-                    SliverToBoxAdapter(
-                      child: SizedBox(height: padding + viewInset + 100),
-                    ),
-                  ],
+    return SimpleScaffold(
+      body: Column(
+        children: [
+          SizedBox(
+            height: 35,
+            child: Center(
+              child: Container(
+                width: 32,
+                height: 3,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.outline,
+                  borderRadius: const BorderRadius.all(Radius.circular(3)),
                 ),
               ),
-              Obx(() {
-                return Positioned(
-                  right: kFloatingActionButtonMargin,
-                  bottom:
-                      padding +
-                      kFloatingActionButtonMargin +
-                      (_controller.showBtn.value ? viewInset : 0),
-                  child: AnimatedSlide(
-                    offset: _controller.showBtn.value
-                        ? Offset.zero
-                        : const Offset(0, 3),
-                    duration: const Duration(milliseconds: 120),
-                    child: FloatingActionButton(
-                      onPressed: () {
-                        if (_controller.mentionList.isNullOrEmpty) {
-                          _controller.showBtn.value = false;
-                          return;
-                        }
-                        Get.back(result: _controller.mentionList);
-                        _controller.showBtn.value = false;
-                      },
-                      child: const Icon(Icons.check),
-                    ),
-                  ),
-                );
-              }),
-            ],
+            ),
           ),
-        ),
-      ],
+          Padding(
+            padding: const EdgeInsets.only(left: 16, right: 16, bottom: 5),
+            child: TextField(
+              focusNode: _controller.focusNode,
+              controller: _controller.controller,
+              onChanged: ctr!.add,
+              decoration: InputDecoration(
+                visualDensity: .standard,
+                border: const OutlineInputBorder(
+                  gapPadding: 0,
+                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.all(Radius.circular(25)),
+                ),
+                isDense: true,
+                filled: true,
+                fillColor: theme.colorScheme.onInverseSurface,
+                hintText: '输入你想@的人',
+                hintStyle: const TextStyle(fontSize: 14),
+                prefixIcon: const Padding(
+                  padding: EdgeInsets.only(left: 12, right: 4),
+                  child: Icon(Icons.search, size: 20),
+                ),
+                prefixIconConstraints: const .new(minHeight: 0, minWidth: 0),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 6,
+                ),
+                suffixIcon: Obx(
+                  () => _controller.enableClear.value
+                      ? Padding(
+                          padding: const EdgeInsets.only(right: 12),
+                          child: GestureDetector(
+                            child: Container(
+                              padding: const EdgeInsetsDirectional.all(2),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: theme.colorScheme.secondaryContainer,
+                              ),
+                              child: Icon(
+                                Icons.clear,
+                                size: 16,
+                                color: theme.colorScheme.onSecondaryContainer,
+                              ),
+                            ),
+                            onTap: () => _controller
+                              ..enableClear.value = false
+                              ..controller.clear()
+                              ..onRefresh().whenComplete(
+                                () => WidgetsBinding.instance
+                                    .addPostFrameCallback(
+                                      (_) =>
+                                          widget.scrollController?.jumpToTop(),
+                                    ),
+                              ),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                ),
+                suffixIconConstraints: const BoxConstraints(
+                  minHeight: 0,
+                  minWidth: 0,
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                if (notification is UserScrollNotification) {
+                  if (_controller.focusNode.hasFocus) {
+                    _controller.focusNode.unfocus();
+                  }
+                } else if (notification is ScrollEndNotification) {
+                  widget.onCachePos?.call(notification.metrics.pixels);
+                }
+                return false;
+              },
+              child: CustomScrollView(
+                controller: widget.scrollController,
+                slivers: [
+                  Obx(
+                    () => _buildBody(theme, _controller.loadingState.value),
+                  ),
+                  SliverToBoxAdapter(
+                    child: SizedBox(height: padding + viewInset + 100),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      fab: Obx(() {
+        return Padding(
+          padding: .only(
+            right: kFloatingActionButtonMargin,
+            bottom:
+                padding +
+                kFloatingActionButtonMargin +
+                (_controller.showBtn.value ? viewInset : 0),
+          ),
+          child: AnimatedSlide(
+            offset: _controller.showBtn.value
+                ? Offset.zero
+                : const Offset(0, 3),
+            duration: const Duration(milliseconds: 120),
+            child: FloatingActionButton(
+              onPressed: () {
+                if (_controller.mentionList.isNullOrEmpty) {
+                  _controller.showBtn.value = false;
+                  return;
+                }
+                Get.back(result: _controller.mentionList);
+                _controller.showBtn.value = false;
+              },
+              child: const Icon(Icons.check),
+            ),
+          ),
+        );
+      }),
     );
   }
 

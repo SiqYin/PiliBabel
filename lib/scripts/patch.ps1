@@ -67,6 +67,8 @@ $ScrollPositionPatch = "lib/scripts/scroll_position.patch"
 # expose `_shouldIgnorePointer`
 $ScrollablePatch = "lib/scripts/scrollable.patch"
 
+$ScaffoldPatch = "lib/scripts/scaffold.patch"
+
 $ScrollableGesturePatch = "lib/scripts/scrollable_gesture.patch"
 
 $DraggableScrollableSheetPatch = "lib/scripts/draggable_scrollable_sheet.patch"
@@ -106,7 +108,7 @@ $patches = @($ModalBarrierPatch, $TextSelectionPatch, $MouseCursorPatch,
             $PopupMenuPatch, $FABPatch, $NullSafetySelectableRegionPatch,
             $SelectableRegionPatch, $EditableTextPatch, $TextFieldPatch,
             $ScrollPositionPatch, $ScrollablePatch, $ScrollableGesturePatch,
-            $DraggableScrollableSheetPatch)
+            $DraggableScrollableSheetPatch, $ScaffoldPatch)
 
 switch ($platform.ToLower()) {
     "android" {
