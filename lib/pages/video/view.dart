@@ -587,13 +587,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                   buildTabBar(onTap: videoDetailController.animToTop),
                   Expanded(
                     child: tabBarView(
+                      hitTestBehavior: .translucent,
                       controller: videoDetailController.tabCtr,
                       children: [
-                        videoIntro(
-                          isHorizontal: false,
-                          needCtr: false,
-                          isNested: true,
-                        ),
+                        videoIntro(isHorizontal: false, needCtr: false),
                         if (videoDetailController.showReply)
                           videoReplyPanel(isNested: true),
                         if (_shouldShowSeasonPanel) seasonPanel,
@@ -1648,7 +1645,6 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     bool? isHorizontal,
     bool needRelated = true,
     bool needCtr = true,
-    bool isNested = false,
   }) {
     if (videoDetailController.isFileSource) {
       return localIntroPanel(needCtr: needCtr);
@@ -1708,12 +1704,6 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           ),
         ],
       );
-      if (isNested) {
-        child = ExtendedVisibilityDetector(
-          uniqueKey: const Key('intro-panel'),
-          child: child,
-        );
-      }
       return KeepAliveWrapper(child: child);
     }
 

@@ -4,10 +4,12 @@ import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
+import 'package:PiliPlus/common/widgets/gesture/horizontal_drag_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/pair.dart';
 import 'package:PiliPlus/common/widgets/scroll_behavior.dart'
     show NoOverscrollIndicator;
-import 'package:PiliPlus/common/widgets/scroll_physics.dart';
+import 'package:PiliPlus/common/widgets/scroll_physics.dart'
+    show ReloadScrollPhysics;
 import 'package:PiliPlus/common/widgets/sliver/sliver_floating_header.dart';
 import 'package:PiliPlus/common/widgets/sliver/sliver_to_box_adapter.dart';
 import 'package:PiliPlus/common/widgets/tap_region_surface.dart';
@@ -361,8 +363,12 @@ class _DynamicDetailPageState
         Obx(() => replyList(controller.loadingState.value)),
       ],
     );
-    final child = tabBarView(
+    final child = TabBarView(
       controller: tabController,
+      hitTestBehavior: .translucent,
+      physics: const NeverScrollableScrollPhysics(),
+      horizontalDragGestureRecognizer:
+          CustomHorizontalDragGestureRecognizer.new,
       children: [
         isPortrait
             ? reply

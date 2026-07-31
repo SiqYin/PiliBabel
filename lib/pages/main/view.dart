@@ -442,8 +442,6 @@ class _MainAppState extends PopScopeState<MainApp>
       child = TabBarView(
         controller: _mainController.controller,
         physics: const NeverScrollableScrollPhysics(),
-
-        /// apply `lib/scripts/tabs.patch`
         scrollDirection: _mainController.useBottomNav ? .horizontal : .vertical,
         children: _mainController.navigationBars.map((i) => i.page).toList(),
       );

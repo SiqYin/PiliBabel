@@ -1,6 +1,5 @@
-import 'package:PiliPlus/common/widgets/scroll_physics.dart';
+import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
-import 'package:PiliPlus/models/common/member/search_type.dart';
 import 'package:PiliPlus/pages/member_search/child/view.dart';
 import 'package:PiliPlus/pages/member_search/controller.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -98,11 +97,11 @@ class _MemberSearchPageState extends State<MemberSearchPage> {
                         children: [
                           MemberSearchChildPage(
                             controller: _controller.arcCtr,
-                            searchType: MemberSearchType.archive,
+                            searchType: .archive,
                           ),
                           MemberSearchChildPage(
                             controller: _controller.dynCtr,
-                            searchType: MemberSearchType.dynamic,
+                            searchType: .dynamic,
                           ),
                         ],
                       ),
