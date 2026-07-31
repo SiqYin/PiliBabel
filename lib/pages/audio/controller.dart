@@ -560,23 +560,22 @@ class AudioController extends GetxController
               PageUtils.launchURL(audioUrl);
             },
           ),
-          if (PlatformUtils.isMobile)
-            DialogOption(
-              child: const Text('分享视频', style: TextStyle(fontSize: 14)),
-              onPressed: () {
-                Get.back();
-                if (audioItem.value case DetailItem(
-                  :final arc,
-                  :final owner,
-                )) {
-                  ShareUtils.shareText(
-                    '${arc.title} '
-                    'UP主: ${owner.name}'
-                    ' - $audioUrl',
-                  );
-                }
-              },
-            ),
+          DialogOption(
+            child: const Text('分享视频', style: TextStyle(fontSize: 14)),
+            onPressed: () {
+              Get.back();
+              if (audioItem.value case DetailItem(
+                :final arc,
+                :final owner,
+              )) {
+                ShareUtils.shareText(
+                  '${arc.title} '
+                  'UP主: ${owner.name}'
+                  ' - $audioUrl',
+                );
+              }
+            },
+          ),
           if (isLogin)
             DialogOption(
               child: const Text('分享至动态', style: TextStyle(fontSize: 14)),

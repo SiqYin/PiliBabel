@@ -25,7 +25,6 @@ import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
-import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/share_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/foundation.dart';
@@ -158,20 +157,19 @@ class PgcIntroController extends CommonIntroController {
               PageUtils.launchURL(videoUrl);
             },
           ),
-          if (PlatformUtils.isMobile)
-            DialogOption(
-              child: const Text('分享视频', style: TextStyle(fontSize: 14)),
-              onPressed: () {
-                final item = pgcItem.episodes?.firstWhereOrNull(
-                  (item) => item.epId == epId,
-                );
-                Get.back();
-                ShareUtils.shareText(
-                  '${pgcItem.title}${item != null ? ' ${item.showTitle}' : ''}'
-                  ' - $videoUrl',
-                );
-              },
-            ),
+          DialogOption(
+            child: const Text('分享视频', style: TextStyle(fontSize: 14)),
+            onPressed: () {
+              final item = pgcItem.episodes?.firstWhereOrNull(
+                (item) => item.epId == epId,
+              );
+              Get.back();
+              ShareUtils.shareText(
+                '${pgcItem.title}${item != null ? ' ${item.showTitle}' : ''}'
+                ' - $videoUrl',
+              );
+            },
+          ),
           if (isLogin)
             DialogOption(
               child: const Text('分享至动态', style: TextStyle(fontSize: 14)),
