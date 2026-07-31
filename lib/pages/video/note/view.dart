@@ -56,38 +56,40 @@ class _NoteListPageState extends State<NoteListPage>
 
   @override
   Widget buildPage(ThemeData theme) {
-    return MiniScaffold(
-      body: Column(
-        children: [
-          SizedBox(
-            height: 45,
-            child: AppBar(
-              primary: false,
-              automaticallyImplyLeading: false,
-              titleSpacing: 16,
-              toolbarHeight: 45,
-              backgroundColor: Colors.transparent,
-              title: Obx(() {
-                final count = _controller.count.value;
-                return Text('笔记${count == -1 ? '' : '($count)'}');
-              }),
-              shape: Border(
-                bottom: BorderSide(
-                  color: theme.colorScheme.outline.withValues(alpha: 0.1),
+    return Material(
+      child: MiniScaffold(
+        body: Column(
+          children: [
+            SizedBox(
+              height: 45,
+              child: AppBar(
+                primary: false,
+                automaticallyImplyLeading: false,
+                titleSpacing: 16,
+                toolbarHeight: 45,
+                backgroundColor: Colors.transparent,
+                title: Obx(() {
+                  final count = _controller.count.value;
+                  return Text('笔记${count == -1 ? '' : '($count)'}');
+                }),
+                shape: Border(
+                  bottom: BorderSide(
+                    color: theme.colorScheme.outline.withValues(alpha: 0.1),
+                  ),
                 ),
+                actions: [
+                  IconButton(
+                    tooltip: '关闭',
+                    icon: const Icon(Icons.close, size: 20),
+                    onPressed: Get.back,
+                  ),
+                  const SizedBox(width: 2),
+                ],
               ),
-              actions: [
-                IconButton(
-                  tooltip: '关闭',
-                  icon: const Icon(Icons.close, size: 20),
-                  onPressed: Get.back,
-                ),
-                const SizedBox(width: 2),
-              ],
             ),
-          ),
-          Expanded(child: enableSlide ? slideList(theme) : buildList(theme)),
-        ],
+            Expanded(child: enableSlide ? slideList(theme) : buildList(theme)),
+          ],
+        ),
       ),
     );
   }
