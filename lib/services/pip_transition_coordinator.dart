@@ -1,8 +1,9 @@
 import 'dart:async';
+import 'dart:math' show min;
 
 import 'package:flutter/animation.dart' show Curve, Curves;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/rendering.dart' show Offset, Rect;
+import 'package:flutter/rendering.dart' show Offset, Rect, Size;
 import 'package:flutter/scheduler.dart';
 
 /// 应用内小窗生命周期相位。
@@ -19,6 +20,19 @@ class PipWindowMemory {
   /// 上次摆放的窗口左上角(全局坐标);恢复时按当前屏幕钳回界内
   static Offset? position;
   static double scale = 1.0;
+
+  /// 小窗默认长边基准(未乘缩放档位),按当前窗口短边分档:手机(短边<600)
+  /// 维持现状 200、平板 260、大平板/桌面 300。取短边而非物理屏幕,桌面窗口
+  /// 缩小 / 平板左右分屏时随之回落到较低档。长短边比保持 200:112(≈16:9),
+  /// 双击缩放档位仍乘在此之上;极端窄窗口下的越界由窗体位置钳制兜底。
+  static double basePipLong(Size screen) {
+    final shortest = min(screen.width, screen.height);
+    if (shortest < 600) return 200;
+    if (shortest < 840) return 260;
+    return 300;
+  }
+
+  static double basePipShort(Size screen) => basePipLong(screen) * 112 / 200;
 }
 
 /// 应用内小窗过渡动画协调器(视频/直播小窗各持一实例)。

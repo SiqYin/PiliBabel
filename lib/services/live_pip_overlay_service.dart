@@ -247,8 +247,12 @@ class _LivePipWidgetState extends State<LivePipWidget>
   double? _left;
   double? _top;
   double _scale = PipWindowMemory.scale;
-  double get _width => (LivePipOverlayService.isVertical ? 112 : 200) * _scale;
-  double get _height => (LivePipOverlayService.isVertical ? 200 : 112) * _scale;
+  double _baseLong = 200; // 当前设备档的长边基准(未乘 _scale),build 时更新
+  double _baseShort = 112;
+  double get _width =>
+      (LivePipOverlayService.isVertical ? _baseShort : _baseLong) * _scale;
+  double get _height =>
+      (LivePipOverlayService.isVertical ? _baseLong : _baseShort) * _scale;
 
   bool _showControls = true;
   Timer? _hideTimer;
@@ -393,8 +397,18 @@ class _LivePipWidgetState extends State<LivePipWidget>
   }
 
   @override
+  void didChangeMetrics() {
+    // 屏幕旋转 / 桌面窗口尺寸变化：触发重建，让 build 按新尺寸把小窗位置
+    // 钳回界内。仅重建、不改 _left/_top 意图值，窗口恢复时能自动回原位。
+    if (mounted) setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
+    // 按当前窗口短边分档:手机维持现状,平板/桌面放大
+    _baseLong = PipWindowMemory.basePipLong(screenSize);
+    _baseShort = PipWindowMemory.basePipShort(screenSize);
 
     // 恢复上次摆放位置（会话级记忆）；越界（旋转/窗口尺寸变化）时钳回屏内
     _left ??= (PipWindowMemory.position?.dx ?? screenSize.width - _width - 16)
@@ -425,7 +439,14 @@ class _LivePipWidgetState extends State<LivePipWidget>
         animation: Listenable.merge([_phaseCtr, _closeCtr, _transition]),
         builder: (context, _) {
           final phase = _transition.phase;
-          final miniRect = Rect.fromLTWH(_left!, _top!, _width, _height);
+          // 显示位置按当前屏幕钳回界内；不回写 _left/_top，窗口恢复时自动归位
+          final dispLeft = _left!
+              .clamp(0.0, max(0.0, screenSize.width - _width))
+              .toDouble();
+          final dispTop = _top!
+              .clamp(0.0, max(0.0, screenSize.height - _height))
+              .toDouble();
+          final miniRect = Rect.fromLTWH(dispLeft, dispTop, _width, _height);
           final progress = PipTransitionCoordinator.animCurve.transform(
             _phaseCtr.value,
           );
