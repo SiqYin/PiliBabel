@@ -33,10 +33,8 @@ class _MiniBottomSheetState extends BottomSheetState {
   @override
   void dispose() {
     super.dispose();
-    if (widget.enableDrag) {
-      _verticalDragGestureRecognizer?.dispose();
-      _verticalDragGestureRecognizer = null;
-    }
+    _verticalDragGestureRecognizer?.dispose();
+    _verticalDragGestureRecognizer = null;
   }
 
   void _onPointerDown(PointerDownEvent event) {

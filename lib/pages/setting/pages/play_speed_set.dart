@@ -199,6 +199,9 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
       ),
       body: ViewSafeArea(
         child: ListView(
+          padding: .only(
+            bottom: MediaQuery.viewPaddingOf(context).bottom + 100,
+          ),
           children: [
             Padding(
               padding: const EdgeInsets.only(

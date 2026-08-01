@@ -19,6 +19,7 @@ import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/theme_utils.dart';
 import 'package:collection/collection.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
+import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
@@ -50,7 +51,9 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
     val ??= !ctr.dynamicColor.value;
     if (val && !await MyApp.initPlatformState()) {
       SmartDialog.showToast('设备可能不支持动态取色');
-      return;
+      if (kReleaseMode) {
+        return;
+      }
     }
     ctr.dynamicColor.value = val;
     await GStorage.setting.put(SettingBoxKey.dynamicColor, val);
@@ -71,6 +74,9 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
     return SimpleScaffold(
       appBar: AppBar(title: const Text('选择应用主题')),
       body: ListView(
+        padding: .only(
+          bottom: MediaQuery.viewPaddingOf(context).bottom + 100,
+        ),
         children: [
           ListTile(
             onTap: () async {
@@ -138,7 +144,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
           Padding(
             padding: padding + const .all(12),
             child: Obx(
-              () => AnimatedHeight(
+              () => AnimatedHeightWidgetExt(
                 expand: !ctr.dynamicColor.value,
                 duration: const Duration(milliseconds: 200),
                 child: Wrap(
