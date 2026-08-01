@@ -4,6 +4,7 @@ import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
+import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/models_new/download/bili_download_entry_info.dart';
 import 'package:PiliPlus/models_new/download/download_collection.dart';
 import 'package:PiliPlus/pages/common/fab_mixin.dart';
@@ -430,8 +431,7 @@ class _DownloadPageState extends State<DownloadPage>
             activeMultiSelectCtr.handleSelect();
           }
         },
-        child: Scaffold(
-          resizeToAvoidBottomInset: false,
+        child: SimpleScaffold(
           appBar: MultiSelectAppBarWidget(
             ctr: activeMultiSelectCtr,
             visible: enableMultiSelect,

@@ -91,11 +91,11 @@ class VideoCardV extends StatelessWidget {
       clipBehavior: Clip.none,
       children: [
         Card(
-          clipBehavior: Clip.hardEdge,
           child: InkWell(
             onTap: onPushDetail,
             onLongPress: onLongPress,
             onSecondaryTap: PlatformUtils.isMobile ? null : onLongPress,
+            borderRadius: const .all(.circular(12)),
             child: Column(
               crossAxisAlignment: .start,
               children: [
@@ -112,7 +112,7 @@ class VideoCardV extends StatelessWidget {
                             src: videoItem.cover,
                             width: maxWidth,
                             height: maxHeight,
-                            type: .emote,
+                            borderRadius: const .vertical(top: .circular(12)),
                           ),
                           if (videoItem.duration > 0)
                             PBadge(
