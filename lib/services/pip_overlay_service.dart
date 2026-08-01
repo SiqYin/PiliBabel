@@ -11,6 +11,7 @@ import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/device_utils.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart' show PointerScrollEvent;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -418,6 +419,7 @@ class _PipWidgetState extends State<PipWidget>
   double? _left;
   double? _top;
   double _scale = PipWindowMemory.scale;
+  double _scaleStart = 1.0; // onScaleStart 时记录的起始 scale,捏合按此累乘
 
   PipTransitionCoordinator get _transition => PipOverlayService.transition;
   PipPhase _lastPhase = PipPhase.hidden;
@@ -580,6 +582,21 @@ class _PipWidgetState extends State<PipWidget>
     _startHideTimer();
   }
 
+  // 捏合/滚轮:绕小窗中心把 _scale 设为目标值(钳入连续区间),再钳位置
+  void _applyScaleAroundCenter(double targetScale, Size screenSize) {
+    final centerX = _left! + _width / 2;
+    final centerY = _top! + _height / 2;
+    _scale = PipWindowMemory.clampScaleContinuous(targetScale, screenSize);
+    _left = centerX - _width / 2; // _width 已反映新 _scale
+    _top = centerY - _height / 2;
+    _clampPositionInScreen(screenSize);
+  }
+
+  void _clampPositionInScreen(Size screenSize) {
+    _left = _left!.clamp(0.0, max(0.0, screenSize.width - _width)).toDouble();
+    _top = _top!.clamp(0.0, max(0.0, screenSize.height - _height)).toDouble();
+  }
+
   @override
   void didChangeMetrics() {
     // 屏幕旋转 / 桌面窗口尺寸变化：触发重建，让 build 按新尺寸把小窗位置
@@ -650,35 +667,51 @@ class _PipWidgetState extends State<PipWidget>
             child: IgnorePointer(
               // 收起中/归位中/关闭淡出中不可交互
               ignoring: !interactive,
-              child: GestureDetector(
-                onTap: _onTap,
-                onDoubleTap: _onDoubleTap,
-                onPanStart: (_) {
-                  _hideTimer?.cancel();
-                },
-                onPanUpdate: (details) {
-                  setState(() {
-                    _left = (_left! + details.delta.dx)
-                        .clamp(
-                          0.0,
-                          max(0.0, screenSize.width - _width),
-                        )
-                        .toDouble();
-                    _top = (_top! + details.delta.dy)
-                        .clamp(
-                          0.0,
-                          max(0.0, screenSize.height - _height),
-                        )
-                        .toDouble();
-                  });
-                  PipWindowMemory.position = Offset(_left!, _top!);
-                },
-                onPanEnd: (_) {
-                  if (_showControls) {
-                    _startHideTimer();
+              child: Listener(
+                // 桌面滚轮缩放:绕中心乘性 ±10%/格,同捏合连续区间
+                onPointerSignal: (event) {
+                  if (event is PointerScrollEvent) {
+                    setState(() {
+                      final factor = event.scrollDelta.dy < 0 ? 1.1 : 1 / 1.1;
+                      _applyScaleAroundCenter(_scale * factor, screenSize);
+                    });
+                    PipWindowMemory.scale = _scale;
+                    PipWindowMemory.position = Offset(_left!, _top!);
+                    if (_showControls) _startHideTimer();
                   }
                 },
-                child: FadeTransition(
+                child: GestureDetector(
+                  onTap: _onTap,
+                  onDoubleTap: _onDoubleTap,
+                  // 单指拖动 + 双指捏合缩放统一走 onScale(两者互斥于 onPan)
+                  onScaleStart: (_) {
+                    _hideTimer?.cancel();
+                    _scaleStart = _scale;
+                  },
+                  onScaleUpdate: (details) {
+                    setState(() {
+                      // 平移:单指拖动 / 双指整体移动(focalPointDelta)
+                      _left = _left! + details.focalPointDelta.dx;
+                      _top = _top! + details.focalPointDelta.dy;
+                      // 缩放:双指时 scale≠1;单指恒为 1,仅钳位置
+                      if (details.scale != 1.0) {
+                        _applyScaleAroundCenter(
+                          _scaleStart * details.scale,
+                          screenSize,
+                        );
+                      } else {
+                        _clampPositionInScreen(screenSize);
+                      }
+                    });
+                    PipWindowMemory.position = Offset(_left!, _top!);
+                    PipWindowMemory.scale = _scale;
+                  },
+                  onScaleEnd: (_) {
+                    if (_showControls) {
+                      _startHideTimer();
+                    }
+                  },
+                  child: FadeTransition(
                   opacity: _closeCtr.drive(Tween(begin: 1.0, end: 0.0)),
                   child: ScaleTransition(
                     scale: _closeCtr.drive(
@@ -863,6 +896,7 @@ class _PipWidgetState extends State<PipWidget>
                     ),
                   ),
                 ),
+              ),
               ),
             ),
           );
