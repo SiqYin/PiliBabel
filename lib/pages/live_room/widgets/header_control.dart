@@ -109,17 +109,20 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
       );
     }
     child = Expanded(child: child);
-    return AppBar(
-      backgroundColor: Colors.transparent,
-      foregroundColor: Colors.white,
-      primary: false,
-      automaticallyImplyLeading: false,
-      titleSpacing: 14,
-      title: Row(
+
+    const btnHeight = 30.0;
+
+    return Padding(
+      padding: const .only(
+        left: 14,
+        right: 14,
+        top: (kToolbarHeight - btnHeight) / 2,
+      ),
+      child: Row(
         children: [
           if (isFullScreen || plPlayerController.isDesktopPip)
             ComBtn(
-              height: 30,
+              height: btnHeight,
               tooltip: '返回',
               icon: const Icon(FontAwesomeIcons.arrowLeft, size: 15),
               onTap: () {
@@ -137,7 +140,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
             Obx(() {
               final isAlwaysOnTop = plPlayerController.isAlwaysOnTop.value;
               return ComBtn(
-                height: 30,
+                height: btnHeight,
                 tooltip: '${isAlwaysOnTop ? '取消' : ''}置顶',
                 icon: isAlwaysOnTop
                     ? const Icon(
@@ -155,7 +158,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
             }),
           if (isFullScreen || PlatformUtils.isDesktop)
             ComBtn(
-              height: 30,
+              height: btnHeight,
               tooltip: '发弹幕',
               icon: const Icon(
                 size: 18,
@@ -166,7 +169,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
             ),
           if (Platform.isAndroid || (PlatformUtils.isDesktop && !isFullScreen))
             ComBtn(
-              height: 30,
+              height: btnHeight,
               tooltip: '画中画',
               onTap: () {
                 if (PlatformUtils.isDesktop) {
@@ -185,7 +188,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
             ),
           Obx(
             () => ComBtn(
-              height: 30,
+              height: btnHeight,
               tooltip: '仅播放音频',
               onTap: () {
                 plPlayerController.onlyPlayAudio.toggle();
@@ -209,7 +212,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
               final continuePlayInBackground =
                   plPlayerController.continuePlayInBackground.value;
               return ComBtn(
-                height: 30,
+                height: btnHeight,
                 tooltip: '${continuePlayInBackground ? '关闭' : ''}后台播放',
                 onTap: plPlayerController.setContinuePlayInBackground,
                 icon: continuePlayInBackground
@@ -226,7 +229,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
               );
             }),
           ComBtn(
-            height: 30,
+            height: btnHeight,
             tooltip: '定时关闭',
             onTap: () => shutdownTimerService.showScheduleExitDialog(
               context,

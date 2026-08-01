@@ -2,7 +2,9 @@ import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/dial_prefix.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
+import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
+import 'package:PiliPlus/common/widgets/view_insets_safe_area.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/pages/login/controller.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
@@ -515,7 +517,7 @@ class _LoginPageState extends State<LoginPage> {
         MediaQuery.viewPaddingOf(context).copyWith(top: 0) +
         const EdgeInsets.only(bottom: 25);
     final isLandscape = !MediaQuery.sizeOf(context).isPortrait;
-    return Scaffold(
+    return SimpleScaffold(
       appBar: AppBar(
         leading: IconButton(
           tooltip: '关闭',
@@ -586,14 +588,16 @@ class _LoginPageState extends State<LoginPage> {
           }
           return false;
         },
-        child: tabBarView(
-          controller: _loginPageCtr.tabController,
-          children: [
-            tabViewOuter(loginByPassword(theme)),
-            tabViewOuter(loginBySmS(theme)),
-            tabViewOuter(loginByQRCode(theme)),
-            tabViewOuter(loginByCookie(theme)),
-          ],
+        child: ViewInsetsSafeArea(
+          child: tabBarView(
+            controller: _loginPageCtr.tabController,
+            children: [
+              tabViewOuter(loginByPassword(theme)),
+              tabViewOuter(loginBySmS(theme)),
+              tabViewOuter(loginByQRCode(theme)),
+              tabViewOuter(loginByCookie(theme)),
+            ],
+          ),
         ),
       ),
     );
