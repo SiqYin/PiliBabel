@@ -67,12 +67,17 @@ $ScrollPositionPatch = "lib/scripts/scroll_position.patch"
 # expose `_shouldIgnorePointer`
 $ScrollablePatch = "lib/scripts/scrollable.patch"
 
+# expose
 $ScaffoldPatch = "lib/scripts/scaffold.patch"
 
+# fix nested scrollable gesture
+# custom `HorizontalDragGestureRecognizer` support
 $ScrollableGesturePatch = "lib/scripts/scrollable_gesture.patch"
 
+# expose
 $DraggableScrollableSheetPatch = "lib/scripts/draggable_scrollable_sheet.patch"
 
+# expose
 $TextPatch = "lib/scripts/text.patch"
 
 # TODO: remove
