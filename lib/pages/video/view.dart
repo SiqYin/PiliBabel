@@ -494,12 +494,9 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
               : Obx(
                   () {
                     final scrollRatio = videoDetailController.scrollRatio.value;
-                    Brightness? statusBarIconBrightness;
-                    if (Platform.isAndroid) {
-                      statusBarIconBrightness = isPortrait && scrollRatio >= 0.5
-                          ? colorScheme.brightness.reverse
-                          : .light;
-                    }
+                    final brightness = colorScheme.brightness;
+                    final Brightness statusBarBrightness;
+                    final Brightness statusBarIconBrightness;
                     final backgroundColor = isPortrait && scrollRatio > 0
                         ? Color.lerp(
                             Colors.black,
@@ -507,10 +504,18 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                             scrollRatio,
                           )!
                         : Colors.black;
+                    if (isPortrait && scrollRatio >= 0.5) {
+                      statusBarBrightness = brightness;
+                      statusBarIconBrightness = brightness.reverse;
+                    } else {
+                      statusBarBrightness = .dark;
+                      statusBarIconBrightness = .light;
+                    }
                     return SimpleAppBar(
                       height: padding.top,
                       backgroundColor: backgroundColor,
-                      brightness: colorScheme.brightness,
+                      brightness: brightness,
+                      statusBarBrightness: statusBarBrightness,
                       statusBarIconBrightness: statusBarIconBrightness,
                     );
                   },
