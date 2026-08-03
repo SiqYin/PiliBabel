@@ -249,6 +249,10 @@ class _LivePipWidgetState extends State<LivePipWidget>
   double? _top;
   double _scale = PipWindowMemory.scale;
   double _scaleStart = 1.0; // onScaleStart 时记录的起始 scale,捏合按此累乘
+  // 捏合/滚轮中尺寸须与位置同帧生效:位置钳制是瞬时的,尺寸若走 250ms
+  // 过渡,边缘处会"位置先瞬移、尺寸后长大"地抽搐
+  bool _instantResize = false;
+  Timer? _wheelResizeTimer;
   double _baseLong = 200; // 当前设备档的长边基准(未乘 _scale),build 时更新
   double _baseShort = 112;
   double get _width =>
@@ -340,6 +344,7 @@ class _LivePipWidgetState extends State<LivePipWidget>
       ..dispose();
     _closeCtr.dispose();
     _hideTimer?.cancel();
+    _wheelResizeTimer?.cancel();
     if (LivePipOverlayService._overlayEntry != null) {
       LivePipOverlayService._onCloseCallback = null;
       LivePipOverlayService._onReturnCallback = null;
@@ -375,17 +380,19 @@ class _LivePipWidgetState extends State<LivePipWidget>
   }
 
   void _onDoubleTap() {
+    final screenSize = MediaQuery.of(context).size;
+    // 档位目标同样钳入连续区间(上限 0.95×短边):窄屏设备上 2.0 档由此
+    // 封顶不再溢出,双击最大档与捏合/滚轮上限统一。钳后与当前值几乎重合
+    // (已停在封顶档)则跳回 1.0 档,保证循环不卡死
+    double next = _scale < 1.1 ? 1.5 : (_scale < 1.6 ? 2.0 : 1.0);
+    next = PipWindowMemory.clampScaleContinuous(next, screenSize);
+    if ((next - _scale).abs() < 0.05) {
+      next = PipWindowMemory.clampScaleContinuous(1.0, screenSize);
+    }
     setState(() {
-      if (_scale < 1.1) {
-        _scale = 1.5;
-      } else if (_scale < 1.6) {
-        _scale = 2.0;
-      } else {
-        _scale = 1.0;
-      }
+      _scale = next;
 
       // 缩放后立即计算并约束位置，防止按钮或部分窗口超出屏幕
-      final screenSize = MediaQuery.of(context).size;
       _left = (_left ?? 0.0)
           .clamp(0.0, max(0.0, screenSize.width - _width))
           .toDouble();
@@ -486,6 +493,16 @@ class _LivePipWidgetState extends State<LivePipWidget>
                 // 桌面滚轮缩放:绕中心乘性 ±10%/格,同捏合连续区间
                 onPointerSignal: (event) {
                   if (event is PointerScrollEvent) {
+                    _instantResize = true;
+                    _wheelResizeTimer?.cancel();
+                    _wheelResizeTimer = Timer(
+                      const Duration(milliseconds: 300),
+                      () {
+                        if (mounted) {
+                          setState(() => _instantResize = false);
+                        }
+                      },
+                    );
                     setState(() {
                       final factor = event.scrollDelta.dy < 0 ? 1.1 : 1 / 1.1;
                       _applyScaleAroundCenter(_scale * factor, screenSize);
@@ -502,6 +519,7 @@ class _LivePipWidgetState extends State<LivePipWidget>
                   onScaleStart: (_) {
                     _hideTimer?.cancel();
                     _scaleStart = _scale;
+                    _instantResize = true;
                   },
                   onScaleUpdate: (details) {
                     setState(() {
@@ -522,6 +540,7 @@ class _LivePipWidgetState extends State<LivePipWidget>
                     PipWindowMemory.scale = _scale;
                   },
                   onScaleEnd: (_) {
+                    setState(() => _instantResize = false);
                     if (_showControls) {
                       _startHideTimer();
                     }
@@ -536,9 +555,10 @@ class _LivePipWidgetState extends State<LivePipWidget>
                       ).chain(CurveTween(curve: Curves.easeOut)),
                     ),
                     child: AnimatedContainer(
-                      // 过渡中矩形逐帧由协调器插值给出，容器动画时长归零；
-                      // 活跃态保留双击缩放原有的 250ms 尺寸过渡
-                      duration: inTransition
+                      // 过渡中矩形逐帧由协调器插值给出;捏合/滚轮中尺寸须与
+                      // 位置同帧生效(见 _instantResize)。两者时长归零,
+                      // 仅双击档位切换保留 250ms 尺寸过渡
+                      duration: inTransition || _instantResize
                           ? Duration.zero
                           : const Duration(milliseconds: 250),
                       curve: Curves.easeOutCubic,

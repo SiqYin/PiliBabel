@@ -34,14 +34,14 @@ class PipWindowMemory {
 
   static double basePipShort(Size screen) => basePipLong(screen) * 112 / 200;
 
-  /// 捏合/滚轮连续缩放的合法区间(独立于双击档,比双击更宽):
-  /// 下限保证长边 ≥140dp(控件可点),上限不超当前窗口短边×0.9(不贴满、
-  /// 仍是"小窗")。手机横屏因短边小,上限≈双击最大档;平板/桌面明显更大。
+  /// 连续缩放(捏合/滚轮)与双击档位共用的合法区间:下限保证长边 ≥140dp
+  /// (控件可点),上限不超当前窗口短边×0.95(不贴满,且任一屏幕方向都
+  /// 放得下——双击 2.0 档在窄屏设备上由此封顶,不再溢出)。
   /// 把 [scale] 钳入该区间返回;跨设备/旋转导致的越界由窗体位置钳制兜底。
   static double clampScaleContinuous(double scale, Size screen) {
     final base = basePipLong(screen);
     final minScale = 140 / base;
-    final maxScale = min(screen.width, screen.height) * 0.9 / base;
+    final maxScale = min(screen.width, screen.height) * 0.95 / base;
     if (maxScale <= minScale) return minScale;
     return scale.clamp(minScale, maxScale);
   }
