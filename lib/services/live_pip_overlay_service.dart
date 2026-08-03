@@ -3,7 +3,9 @@ import 'dart:io' show Platform;
 import 'dart:math' show max;
 
 import 'package:PiliPlus/common/widgets/pip_mini_video_content.dart';
+import 'package:PiliPlus/pages/live_room/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
+import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/services/pip_transition_coordinator.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/device_utils.dart';
@@ -263,6 +265,7 @@ class _LivePipWidgetState extends State<LivePipWidget>
   bool _showControls = true;
   Timer? _hideTimer;
   bool _isClosing = false;
+  bool _isRefreshing = false;
 
   PipTransitionCoordinator get _transition => LivePipOverlayService.transition;
   PipPhase _lastPhase = PipPhase.hidden;
@@ -361,13 +364,34 @@ class _LivePipWidgetState extends State<LivePipWidget>
 
   void _startHideTimer() {
     _hideTimer?.cancel();
-    _hideTimer = Timer(const Duration(seconds: 2), () {
+    _hideTimer = Timer(const Duration(seconds: 3), () {
       if (mounted) {
         setState(() {
           _showControls = false;
         });
       }
     });
+  }
+
+  void _resetHideTimer() {
+    if (_showControls) {
+      _startHideTimer();
+    }
+  }
+
+  // 刷新:与页面端刷新按钮同源(queryLiveUrl 重新拉流);进行中忽略连点
+  Future<void> _onRefresh() async {
+    if (_isRefreshing) return;
+    _resetHideTimer();
+    final controller = LivePipOverlayService
+        .getSavedController<LiveRoomController>();
+    if (controller == null) return;
+    _isRefreshing = true;
+    try {
+      await controller.queryLiveUrl();
+    } finally {
+      _isRefreshing = false;
+    }
   }
 
   void _onTap() {
@@ -626,6 +650,58 @@ class _LivePipWidgetState extends State<LivePipWidget>
                                       size: 18,
                                     ),
                                   ),
+                                ),
+                              ),
+                              // 底部控制栏:播放/暂停居中(小窗主键居中的
+                              // 通用心智,与视频小窗键位对齐);左槽与刷新
+                              // 等宽占位,spaceEvenly 下主键即精确居中
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: 8,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    const SizedBox(width: 22),
+                                    // 播放/暂停
+                                    Obx(() {
+                                      final isPlaying =
+                                          widget
+                                              .plPlayerController
+                                              .playerStatus
+                                              .value ==
+                                          PlayerStatus.playing;
+                                      return GestureDetector(
+                                        onTap: () {
+                                          _resetHideTimer();
+                                          if (isPlaying) {
+                                            widget.plPlayerController.pause();
+                                          } else {
+                                            widget.plPlayerController.play();
+                                          }
+                                        },
+                                        child: Icon(
+                                          isPlaying
+                                              ? Icons.pause
+                                              : Icons.play_arrow,
+                                          color: Colors.white,
+                                          size: 30,
+                                        ),
+                                      );
+                                    }),
+                                    // 刷新:直播卡死自救;低频操作降为
+                                    // 70% 白(medium-emphasis),平衡主键
+                                    // 居中后偏右的视觉重量
+                                    GestureDetector(
+                                      onTap: _onRefresh,
+                                      child: const Icon(
+                                        Icons.refresh,
+                                        color: Colors.white70,
+                                        size: 22,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
