@@ -104,51 +104,62 @@ class _HistoryPageState extends State<HistoryPage>
                 left: padding.left,
                 right: padding.right,
               ),
-              child: Obx(() {
-                final tabs = _historyController.tabs;
-                if (tabs.isEmpty) {
-                  return child;
-                }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    TabBar(
-                      controller: _historyController.tabController,
-                      onTap: (index) {
-                        if (!_historyController
-                            .tabController!
-                            .indexIsChanging) {
-                          currCtr().scrollController.animToTop();
-                        } else {
-                          if (enableMultiSelect) {
-                            currCtr(
-                              _historyController.tabController!.previousIndex,
-                            ).handleSelect();
-                          }
-                        }
-                      },
-                      tabs: [
-                        const Tab(text: '全部'),
-                        ...tabs.map((item) => Tab(text: item.name)),
-                      ],
-                    ),
-                    Expanded(
-                      child: TabBarView(
-                        physics: enableMultiSelect
-                            ? const NeverScrollableScrollPhysics()
-                            : tabBarScrollPhysics,
-                        controller: _historyController.tabController,
-                        horizontalDragGestureRecognizer:
-                            CustomHorizontalDragGestureRecognizer.new,
+              child: Column(
+                children: [
+                  ?_buildPauseTip,
+                  Expanded(
+                    child: Obx(() {
+                      final tabs = _historyController.tabs;
+                      if (tabs.isEmpty) {
+                        return child;
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          KeepAliveWrapper(child: child),
-                          ...tabs.map((item) => HistoryPage(type: item.type)),
+                          TabBar(
+                            controller: _historyController.tabController,
+                            onTap: (index) {
+                              if (!_historyController
+                                  .tabController!
+                                  .indexIsChanging) {
+                                currCtr().scrollController.animToTop();
+                              } else {
+                                if (enableMultiSelect) {
+                                  currCtr(
+                                    _historyController
+                                        .tabController!
+                                        .previousIndex,
+                                  ).handleSelect();
+                                }
+                              }
+                            },
+                            tabs: [
+                              const Tab(text: '全部'),
+                              ...tabs.map((item) => Tab(text: item.name)),
+                            ],
+                          ),
+                          Expanded(
+                            child: TabBarView(
+                              physics: enableMultiSelect
+                                  ? const NeverScrollableScrollPhysics()
+                                  : tabBarScrollPhysics,
+                              controller: _historyController.tabController,
+                              horizontalDragGestureRecognizer:
+                                  CustomHorizontalDragGestureRecognizer.new,
+                              children: [
+                                KeepAliveWrapper(child: child),
+                                ...tabs.map(
+                                  (item) => HistoryPage(type: item.type),
+                                ),
+                              ],
+                            ),
+                          ),
                         ],
-                      ),
-                    ),
-                  ],
-                );
-              }),
+                      );
+                    }),
+                  ),
+                ],
+              ),
             ),
           ),
         );
@@ -158,7 +169,6 @@ class _HistoryPageState extends State<HistoryPage>
 
   AppBar get _buildAppBar => AppBar(
     title: const Text('观看记录'),
-    bottom: _buildPauseTip,
     actions: [
       IconButton(
         tooltip: '搜索',
