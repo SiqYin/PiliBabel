@@ -324,131 +324,128 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
           snapSizes: [maxChildSize],
           initialChildSize: maxChildSize,
           builder: (context, scrollController) {
-            final theme = Theme.of(context);
-            final secondary = theme.colorScheme.secondary;
-            final onSurfaceVariant = theme.colorScheme.onSurfaceVariant;
+            final colorScheme = ColorScheme.of(context);
+            final secondary = colorScheme.secondary;
+            final onSurfaceVariant = colorScheme.onSurfaceVariant;
             final currStyle = TextStyle(fontSize: 14, color: secondary);
-            return Theme(
-              data: theme.copyWith(dividerColor: Colors.transparent),
-              child: Column(
-                children: [
-                  InkWell(
-                    onTap: Get.back,
-                    borderRadius: Style.bottomSheetRadius,
-                    child: SizedBox(
-                      height: 35,
-                      child: Center(
-                        child: Container(
-                          width: 32,
-                          height: 3,
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.outline,
-                            borderRadius: const .all(.circular(1.5)),
-                          ),
+            return Column(
+              children: [
+                InkWell(
+                  onTap: Get.back,
+                  borderRadius: Style.bottomSheetRadius,
+                  child: SizedBox(
+                    height: 35,
+                    child: Center(
+                      child: Container(
+                        width: 32,
+                        height: 3,
+                        decoration: BoxDecoration(
+                          color: colorScheme.outline,
+                          borderRadius: const .all(.circular(1.5)),
                         ),
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: ListView(
-                      controller: scrollController,
-                      padding: .only(
-                        bottom: MediaQuery.viewPaddingOf(context).bottom + 100,
-                      ),
-                      children: controller.stream.mapIndexed((si, stream) {
-                        final isCurrStream = si == controller.streamIndex;
-                        final streamColor = isCurrStream
-                            ? secondary
-                            : onSurfaceVariant;
-                        return _ExpansionTile(
-                          initiallyExpanded: isCurrStream,
-                          iconColor: streamColor,
-                          collapsedIconColor: streamColor,
-                          title: Text(
-                            stream.protocolName ?? si.toString(),
-                            style: isCurrStream
-                                ? currStyle
-                                : const TextStyle(fontSize: 14),
-                          ),
-                          children: stream.format.mapIndexed((fi, format) {
-                            final isCurrFormat =
-                                isCurrStream && fi == controller.formatIndex;
-                            final formatColor = isCurrFormat
-                                ? secondary
-                                : onSurfaceVariant;
-                            return _ExpansionTile(
-                              initiallyExpanded: isCurrFormat,
-                              iconColor: formatColor,
-                              collapsedIconColor: formatColor,
-                              title: Text(
-                                format.formatName ?? fi.toString(),
-                                style: isCurrFormat
-                                    ? currStyle
-                                    : const TextStyle(fontSize: 14),
-                              ),
-                              children: format.codec.mapIndexed((ci, codec) {
-                                final isCurrCodec =
-                                    isCurrFormat && ci == controller.codecIndex;
-                                final codecColor = isCurrCodec
-                                    ? secondary
-                                    : onSurfaceVariant;
-                                return _ExpansionTile(
-                                  initiallyExpanded: isCurrCodec,
-                                  iconColor: codecColor,
-                                  collapsedIconColor: codecColor,
-                                  title: Text(
-                                    '${codec.codecName ?? ci.toString()} (${LiveQuality.fromCode(codec.currentQn)?.desc ?? codec.currentQn})',
-                                    style: isCurrCodec
-                                        ? currStyle
-                                        : const TextStyle(fontSize: 14),
-                                  ),
-                                  children: codec.urlInfo.mapIndexed((ui, url) {
-                                    final isCurrUrl =
-                                        isCurrCodec &&
-                                        ui == controller.liveUrlIndex;
-                                    return ListTile(
-                                      dense: true,
-                                      title: Text(
-                                        '${url.host}...',
-                                        style: isCurrUrl
-                                            ? const TextStyle(fontSize: 14)
-                                            : TextStyle(
-                                                fontSize: 14,
-                                                color: onSurfaceVariant,
-                                              ),
-                                      ),
-                                      selected: isCurrUrl,
-                                      onTap: isCurrUrl
-                                          ? null
-                                          : () {
-                                              Get.back();
-                                              controller.initLiveUrl(
-                                                streamIndex: si,
-                                                formatIndex: fi,
-                                                codecIndex: ci,
-                                                liveUrlIndex: ui,
-                                              );
-                                              GStorage.setting.put(
-                                                SettingBoxKey.liveStream,
-                                                [
-                                                  stream.protocolName!,
-                                                  format.formatName!,
-                                                  codec.codecName!,
-                                                ],
-                                              );
-                                            },
-                                    );
-                                  }).toList(),
-                                );
-                              }).toList(),
-                            );
-                          }).toList(),
-                        );
-                      }).toList(),
+                ),
+                Expanded(
+                  child: ListView(
+                    controller: scrollController,
+                    padding: .only(
+                      bottom: MediaQuery.viewPaddingOf(context).bottom + 100,
                     ),
+                    children: controller.stream.mapIndexed((si, stream) {
+                      final isCurrStream = si == controller.streamIndex;
+                      final streamColor = isCurrStream
+                          ? secondary
+                          : onSurfaceVariant;
+                      return _ExpansionTile(
+                        initiallyExpanded: isCurrStream,
+                        iconColor: streamColor,
+                        collapsedIconColor: streamColor,
+                        title: Text(
+                          stream.protocolName ?? si.toString(),
+                          style: isCurrStream
+                              ? currStyle
+                              : const TextStyle(fontSize: 14),
+                        ),
+                        children: stream.format.mapIndexed((fi, format) {
+                          final isCurrFormat =
+                              isCurrStream && fi == controller.formatIndex;
+                          final formatColor = isCurrFormat
+                              ? secondary
+                              : onSurfaceVariant;
+                          return _ExpansionTile(
+                            initiallyExpanded: isCurrFormat,
+                            iconColor: formatColor,
+                            collapsedIconColor: formatColor,
+                            title: Text(
+                              format.formatName ?? fi.toString(),
+                              style: isCurrFormat
+                                  ? currStyle
+                                  : const TextStyle(fontSize: 14),
+                            ),
+                            children: format.codec.mapIndexed((ci, codec) {
+                              final isCurrCodec =
+                                  isCurrFormat && ci == controller.codecIndex;
+                              final codecColor = isCurrCodec
+                                  ? secondary
+                                  : onSurfaceVariant;
+                              return _ExpansionTile(
+                                initiallyExpanded: isCurrCodec,
+                                iconColor: codecColor,
+                                collapsedIconColor: codecColor,
+                                title: Text(
+                                  '${codec.codecName ?? ci.toString()} (${LiveQuality.fromCode(codec.currentQn)?.desc ?? codec.currentQn})',
+                                  style: isCurrCodec
+                                      ? currStyle
+                                      : const TextStyle(fontSize: 14),
+                                ),
+                                children: codec.urlInfo.mapIndexed((ui, url) {
+                                  final isCurrUrl =
+                                      isCurrCodec &&
+                                      ui == controller.liveUrlIndex;
+                                  return ListTile(
+                                    dense: true,
+                                    title: Text(
+                                      '${url.host}...',
+                                      style: isCurrUrl
+                                          ? const TextStyle(fontSize: 14)
+                                          : TextStyle(
+                                              fontSize: 14,
+                                              color: onSurfaceVariant,
+                                            ),
+                                    ),
+                                    selected: isCurrUrl,
+                                    onTap: isCurrUrl
+                                        ? null
+                                        : () {
+                                            Get.back();
+                                            controller.initLiveUrl(
+                                              streamIndex: si,
+                                              formatIndex: fi,
+                                              codecIndex: ci,
+                                              liveUrlIndex: ui,
+                                            );
+                                            GStorage.setting.put(
+                                              SettingBoxKey.liveStream,
+                                              [
+                                                stream.protocolName!,
+                                                format.formatName!,
+                                                codec.codecName!,
+                                              ],
+                                            );
+                                          },
+                                  );
+                                }).toList(),
+                              );
+                            }).toList(),
+                          );
+                        }).toList(),
+                      );
+                    }).toList(),
                   ),
-                ],
-              ),
+                ),
+              ],
             );
           },
         );
@@ -462,8 +459,6 @@ class _ExpansionTile extends ExpansionTile {
     required super.title,
     // ignore: unused_element_parameter
     super.dense = true,
-    // ignore: unused_element_parameter
-    super.controlAffinity = .leading,
     // ignore: unused_element_parameter
     super.childrenPadding = const .only(left: 20),
     super.initiallyExpanded,
