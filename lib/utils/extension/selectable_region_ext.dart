@@ -19,10 +19,14 @@ extension SelectableRegionStateExt on SelectableRegionState {
           onPressed: () => onMenuPressed(
             isScheme
                 ? PageUtils.handleWebview
-                : (text) => Get.offNamed(
-                    '/searchResult',
-                    parameters: {'keyword': text},
-                  ),
+                : (text) {
+                    final params = {'keyword': text};
+                    if (Get.routing.route is PageRoute) {
+                      Get.toNamed('/searchResult', parameters: params);
+                    } else {
+                      Get.offNamed('/searchResult', parameters: params);
+                    }
+                  },
           ),
         ),
       );
