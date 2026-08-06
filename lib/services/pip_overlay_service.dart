@@ -10,8 +10,10 @@ import 'package:PiliPlus/services/pip_transition_coordinator.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/device_utils.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart' show PointerScrollEvent;
+import 'package:flutter/gestures.dart'
+    show PointerEnterEvent, PointerExitEvent, PointerScrollEvent;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -450,6 +452,8 @@ class _PipWidgetState extends State<PipWidget>
 
   bool _showControls = true;
   Timer? _hideTimer;
+  // 桌面端:鼠标悬停时控制栏保持显示,移出即隐藏
+  bool _hovering = false;
 
   bool _isClosing = false;
 
@@ -464,7 +468,12 @@ class _PipWidgetState extends State<PipWidget>
     } else {
       _phaseCtr.value = 1;
     }
-    _startHideTimer();
+    // 桌面端控制栏初始隐藏,由 hover 显示
+    if (PlatformUtils.isDesktop) {
+      _showControls = false;
+    } else {
+      _startHideTimer();
+    }
   }
 
   void _onPhaseChanged() {
@@ -539,6 +548,8 @@ class _PipWidgetState extends State<PipWidget>
 
   void _startHideTimer() {
     _hideTimer?.cancel();
+    // 悬停中不自动隐藏
+    if (_hovering) return;
     _hideTimer = Timer(const Duration(seconds: 3), () {
       if (mounted) {
         setState(() {
@@ -554,7 +565,27 @@ class _PipWidgetState extends State<PipWidget>
     }
   }
 
+  void _onHoverEnter(PointerEnterEvent event) {
+    // 收起/归位动画期间 IgnorePointer 已屏蔽事件,此守卫防异常时序
+    if (_transition.phase != PipPhase.active || _isClosing) return;
+    _hideTimer?.cancel();
+    setState(() {
+      _hovering = true;
+      _showControls = true;
+    });
+  }
+
+  void _onHoverExit(PointerExitEvent event) {
+    _hideTimer?.cancel();
+    setState(() {
+      _hovering = false;
+      _showControls = false;
+    });
+  }
+
   void _onTap() {
+    // 悬停中由 hover 驱动;触摸/笔等无 hover 场景保留点击切换兜底
+    if (_hovering) return;
     setState(() {
       _showControls = !_showControls;
     });
@@ -730,7 +761,10 @@ class _PipWidgetState extends State<PipWidget>
                       _startHideTimer();
                     }
                   },
-                  child: FadeTransition(
+                  child: MouseRegion(
+                    onEnter: _onHoverEnter,
+                    onExit: _onHoverExit,
+                    child: FadeTransition(
                   opacity: _closeCtr.drive(Tween(begin: 1.0, end: 0.0)),
                   child: ScaleTransition(
                     scale: _closeCtr.drive(
@@ -915,6 +949,7 @@ class _PipWidgetState extends State<PipWidget>
                       ),
                     ),
                   ),
+                ),
                 ),
               ),
               ),
