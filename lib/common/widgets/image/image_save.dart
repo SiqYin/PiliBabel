@@ -29,7 +29,7 @@ void imageSaveDialog({
           decoration: _ImageDecoration(
             imageHeight: height,
             color: colorScheme.surface,
-            borderRadius: const .vertical(bottom: Style.imgRadius),
+            borderRadius: const .all(Style.imgRadius),
           ),
           child: SizedBox(
             width: imgWidth,
