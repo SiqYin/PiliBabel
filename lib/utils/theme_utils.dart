@@ -115,6 +115,7 @@ abstract final class ThemeUtils {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(12)),
         ),
+        controlAffinity: .leading,
       ),
       cardTheme: CardThemeData(
         elevation: 1,
@@ -171,6 +172,10 @@ abstract final class ThemeUtils {
             WidgetState.any: null,
           },
         ),
+      ),
+      expansionTileTheme: const ExpansionTileThemeData(
+        shape: Border(),
+        collapsedShape: Border(),
       ),
       pageTransitionsTheme: PageTransitionsTheme(
         builders: {
