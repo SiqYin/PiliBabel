@@ -6,6 +6,7 @@
 
 import 'dart:async' show Completer;
 
+import 'package:PiliPlus/common/widgets/refresh_layout.dart';
 import 'package:PiliPlus/common/widgets/scroll_behavior.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart'
     show BouncingScrollPhysicsExt;
@@ -135,7 +136,6 @@ class RefreshIndicator extends StatefulWidget {
   /// The [semanticsValue] may be used to specify progress on the widget.
   const RefreshIndicator({
     super.key,
-    this.edgeOffset = 0.0,
     required this.onRefresh,
     this.color,
     this.backgroundColor,
@@ -168,7 +168,7 @@ class RefreshIndicator extends StatefulWidget {
   ///
   ///  * [displacement], can be used to change the distance from the edge that
   ///    the indicator settles.
-  final double edgeOffset;
+  // final double edgeOffset;
 
   /// A function that's called when the user has dragged the refresh indicator
   /// far enough to demonstrate that they want the app to refresh. The returned
@@ -510,41 +510,22 @@ class RefreshIndicatorState extends State<RefreshIndicator>
         _status == RefreshIndicatorStatus.refresh ||
         _status == RefreshIndicatorStatus.done;
 
-    child = Stack(
-      clipBehavior: Clip.none,
-      children: <Widget>[
-        child,
-        if (_status != null)
-          Positioned(
-            top: widget.edgeOffset,
-            left: 0.0,
-            right: 0.0,
-            child: SizeTransition(
-              alignment: .bottomStart,
-              sizeFactor: _positionFactor, // This is what brings it down.
-              child: Padding(
-                padding: EdgeInsets.only(top: displacement),
-                child: Align(
-                  alignment: Alignment.topCenter,
-                  child: ScaleTransition(
-                    scale: _scaleFactor,
-                    child: AnimatedBuilder(
-                      animation: _positionController,
-                      builder: (context, child) => RefreshProgressIndicator(
-                        value: showIndeterminateIndicator ? null : _value.value,
-                        valueColor: _valueColor,
-                        backgroundColor: widget.backgroundColor,
-                        strokeWidth: widget.strokeWidth,
-                        elevation: widget.elevation,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-      ],
+    child = RefreshLayout(
+      body: child,
+      scale: _scaleFactor,
+      position: _positionFactor,
+      indicator: AnimatedBuilder(
+        animation: _positionController,
+        builder: (context, child) => RefreshProgressIndicator(
+          value: showIndeterminateIndicator ? null : _value.value,
+          valueColor: _valueColor,
+          backgroundColor: widget.backgroundColor,
+          strokeWidth: widget.strokeWidth,
+          elevation: widget.elevation,
+        ),
+      ),
     );
+
     if (PlatformUtils.isDarwin) {
       if (widget.isClampingScrollPhysics) {
         return ScrollConfiguration(
