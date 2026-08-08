@@ -355,13 +355,10 @@ class MyApp extends StatelessWidget {
         child: child!,
       );
     }
-    if (PlatformUtils.isDesktop) {
-      return BackDetector(
-        onBack: _onBack,
-        child: child,
-      );
-    }
-    return child;
+    return BackDetector(
+      onBack: _onBack,
+      child: child,
+    );
   }
 
   /// from [DynamicColorBuilderState.initPlatformState]
