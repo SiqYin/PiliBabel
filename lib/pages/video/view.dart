@@ -28,6 +28,7 @@ import 'package:PiliPlus/models_new/video/video_detail/ugc_season.dart';
 import 'package:PiliPlus/models_new/video/video_tag/data.dart';
 import 'package:PiliPlus/pages/ai_chat/controller.dart';
 import 'package:PiliPlus/pages/ai_chat/view.dart';
+import 'package:PiliPlus/pages/live_room/controller.dart';
 import 'package:PiliPlus/pages/common/common_intro_controller.dart';
 import 'package:PiliPlus/pages/danmaku/view.dart';
 import 'package:PiliPlus/pages/episode_panel/view.dart';
@@ -279,7 +280,12 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
     // 如果有直播间 PiP 在运行，关闭它（采用非销毁式，避免干扰视频播放器单例）
     if (LivePipOverlayService.isInPipMode && !fromPip) {
+      // 关闭小窗并停止直播播放（从列表点击视频应该停止旧的直播播放）
+      final savedLive =
+          LivePipOverlayService.getSavedController<LiveRoomController>();
       LivePipOverlayService.stopLivePip(callOnClose: false);
+      // stopLivePip(callOnClose: false) 不会调用 onClose，手动暂停直播播放器
+      savedLive?.plPlayerController.pause();
     }
 
     PlPlayerController.setPlayCallBack(playCallBack);
