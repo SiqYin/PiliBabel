@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io' show Platform;
 import 'dart:math' show max;
 
+import 'package:PiliPlus/common/widgets/pip_control_button.dart';
 import 'package:PiliPlus/common/widgets/pip_mini_video_content.dart';
 import 'package:PiliPlus/pages/live_room/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
@@ -687,90 +688,99 @@ class _LivePipWidgetState extends State<LivePipWidget>
                                       ),
                                     ),
                                   ),
-                                  // 左上角关闭：先播缩小淡出再 stopLivePip
+                                  // 左上角关闭：先播缩小淡出再 stopLivePip。
+                                  // 次要按钮触控目标仅比图标大一圈(37),
+                                  // 同系统 PiP 顶部按钮,降低误触
                                   Positioned(
                                     top: 3,
                                     left: 4,
-                                    child: GestureDetector(
+                                    child: PipControlButton(
+                                      targetSize: 37,
                                       onTap: _beginClose,
-                                      child: const Padding(
-                                        padding: EdgeInsets.all(8.0),
-                                        child: Icon(
-                                          Icons.close,
-                                          color: Colors.white,
-                                          size: 21,
-                                        ),
+                                      icon: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 21,
                                       ),
                                     ),
                                   ),
-                                  // 右上角放大/还原：归位动画启动，窗口保持显示飞向页面
+                                  // 右上角放大/还原：归位动画启动，窗口保持显示飞向页面。
+                                  // 次要按钮,触控目标仅比图标大一圈(35)
                                   Positioned(
                                     top: 3,
                                     right: 4,
-                                    child: GestureDetector(
+                                    child: PipControlButton(
+                                      targetSize: 35,
                                       onTap: () {
                                         _hideTimer?.cancel();
                                         widget.onReturn();
                                       },
-                                      child: const Padding(
-                                        padding: EdgeInsets.all(8.0),
-                                        child: Icon(
-                                          Icons.open_in_full,
-                                          color: Colors.white,
-                                          size: 18,
-                                        ),
+                                      icon: const Icon(
+                                        Icons.open_in_full,
+                                        color: Colors.white,
+                                        size: 18,
                                       ),
                                     ),
                                   ),
                                   // 底部控制栏:播放/暂停居中(小窗主键居中的
-                                  // 通用心智,与视频小窗键位对齐);左槽与刷新
-                                  // 等宽占位,spaceEvenly 下主键即精确居中
+                                  // 通用心智,与视频小窗键位对齐);左/右等宽
+                                  // 单元格使主键精确居中。主操作按钮 48dp 触控
+                                  // 目标(同系统 PiP),窄窗下自动收缩
                                   Positioned(
                                     left: 0,
                                     right: 0,
                                     bottom: 8,
                                     child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
                                       children: [
-                                        const SizedBox(width: 22),
+                                        // 左槽占位,与右侧等宽
+                                        const Expanded(
+                                          child: SizedBox.shrink(),
+                                        ),
                                         // 播放/暂停
-                                        Obx(() {
-                                          final isPlaying =
-                                              widget
-                                                  .plPlayerController
-                                                  .playerStatus
-                                                  .value ==
-                                              PlayerStatus.playing;
-                                          return GestureDetector(
-                                            onTap: () {
-                                              _resetHideTimer();
-                                              if (isPlaying) {
-                                                widget.plPlayerController
-                                                    .pause();
-                                              } else {
-                                                widget.plPlayerController
-                                                    .play();
-                                              }
-                                            },
-                                            child: Icon(
-                                              isPlaying
-                                                  ? Icons.pause
-                                                  : Icons.play_arrow,
-                                              color: Colors.white,
-                                              size: 30,
-                                            ),
-                                          );
-                                        }),
+                                        Expanded(
+                                          child: Center(
+                                            child: Obx(() {
+                                              final isPlaying =
+                                                  widget
+                                                      .plPlayerController
+                                                      .playerStatus
+                                                      .value ==
+                                                  PlayerStatus.playing;
+                                              return PipControlButton(
+                                                onTap: () {
+                                                  _resetHideTimer();
+                                                  if (isPlaying) {
+                                                    widget.plPlayerController
+                                                        .pause();
+                                                  } else {
+                                                    widget.plPlayerController
+                                                        .play();
+                                                  }
+                                                },
+                                                icon: Icon(
+                                                  isPlaying
+                                                      ? Icons.pause
+                                                      : Icons.play_arrow,
+                                                  color: Colors.white,
+                                                  size: 30,
+                                                ),
+                                              );
+                                            }),
+                                          ),
+                                        ),
                                         // 刷新:直播卡死自救;低频操作降为
                                         // 70% 白(medium-emphasis),平衡主键
                                         // 居中后偏右的视觉重量
-                                        GestureDetector(
-                                          onTap: _onRefresh,
-                                          child: const Icon(
-                                            Icons.refresh,
-                                            color: Colors.white70,
-                                            size: 22,
+                                        Expanded(
+                                          child: Center(
+                                            child: PipControlButton(
+                                              onTap: _onRefresh,
+                                              icon: const Icon(
+                                                Icons.refresh,
+                                                color: Colors.white70,
+                                                size: 22,
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ],

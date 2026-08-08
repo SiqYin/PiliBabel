@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io' show Platform;
 import 'dart:math' show max;
 
+import 'package:PiliPlus/common/widgets/pip_control_button.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
@@ -846,133 +847,157 @@ class _PipWidgetState extends State<PipWidget>
                                       ),
                                     ),
                                   ),
-                                  // 左上角关闭：先播缩小淡出再 stopPip
+                                  // 左上角关闭：先播缩小淡出再 stopPip。
+                                  // 次要按钮触控目标仅比图标大一圈(37),
+                                  // 同系统 PiP 顶部按钮,降低误触
                                   Positioned(
                                     top: 3,
                                     left: 4,
-                                    child: GestureDetector(
+                                    child: PipControlButton(
+                                      targetSize: 37,
                                       onTap: _beginClose,
-                                      child: const Padding(
-                                        padding: EdgeInsets.all(8.0),
-                                        child: Icon(
-                                          Icons.close,
-                                          color: Colors.white,
-                                          size: 21,
-                                        ),
+                                      icon: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 21,
                                       ),
                                     ),
                                   ),
-                                  // 右上角还原：归位动画启动，窗口保持显示飞向页面
+                                  // 右上角还原：归位动画启动，窗口保持显示飞向页面。
+                                  // 次要按钮,触控目标仅比图标大一圈(35)
                                   Positioned(
                                     top: 3,
                                     right: 4,
-                                    child: GestureDetector(
+                                    child: PipControlButton(
+                                      targetSize: 35,
                                       onTap: () {
                                         _hideTimer?.cancel();
                                         widget.onTapToReturn();
                                       },
-                                      child: const Padding(
-                                        padding: EdgeInsets.all(8.0),
-                                        child: Icon(
-                                          Icons.open_in_full,
-                                          color: Colors.white,
-                                          size: 19,
-                                        ),
+                                      icon: const Icon(
+                                        Icons.open_in_full,
+                                        color: Colors.white,
+                                        size: 19,
                                       ),
                                     ),
                                   ),
-                                  // 底部控制栏
+                                  // 底部控制栏:主操作按钮 48dp 触控目标(同系统 PiP
+                                  // 的 pip_action_size,图标居中四周留白),间距 8dp
+                                  // 同 pip_between_action_padding_land;竖屏窄窗下
+                                  // 由布局约束自动收缩不溢出
                                   Positioned(
                                     left: 0,
                                     right: 0,
                                     bottom: 8,
                                     child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceEvenly,
                                       children: [
                                         // 后退10秒
-                                        GestureDetector(
-                                          onTap: () {
-                                            _resetHideTimer();
-                                            final controller =
-                                                PipOverlayService.getSavedController<
-                                                  VideoDetailController
-                                                >();
-                                            final plController =
-                                                controller?.plPlayerController;
-                                            if (plController != null) {
-                                              final current = Duration(
-                                                seconds:
-                                                    plController.position.value,
-                                              );
-                                              plController.seekTo(
-                                                current -
-                                                    const Duration(seconds: 10),
-                                              );
-                                            }
-                                          },
-                                          child: const Icon(
-                                            Icons.replay_10,
-                                            color: Colors.white,
-                                            size: 22,
+                                        Expanded(
+                                          child: Center(
+                                            child: PipControlButton(
+                                              onTap: () {
+                                                _resetHideTimer();
+                                                final controller =
+                                                    PipOverlayService
+                                                        .getSavedController<
+                                                          VideoDetailController
+                                                        >();
+                                                final plController =
+                                                    controller
+                                                        ?.plPlayerController;
+                                                if (plController != null) {
+                                                  final current = Duration(
+                                                    seconds: plController
+                                                        .position.value,
+                                                  );
+                                                  plController.seekTo(
+                                                    current -
+                                                        const Duration(
+                                                          seconds: 10,
+                                                        ),
+                                                  );
+                                                }
+                                              },
+                                              icon: const Icon(
+                                                Icons.replay_10,
+                                                color: Colors.white,
+                                                size: 22,
+                                              ),
+                                            ),
                                           ),
                                         ),
+                                        const SizedBox(width: 8),
                                         // 播放/暂停
-                                        Obx(() {
-                                          final controller =
-                                              PipOverlayService.getSavedController<
-                                                VideoDetailController
-                                              >();
-                                          final plController =
-                                              controller?.plPlayerController;
-                                          final isPlaying =
-                                              plController
-                                                  ?.playerStatus
-                                                  .value ==
-                                              PlayerStatus.playing;
-                                          return GestureDetector(
-                                            onTap: () {
-                                              _resetHideTimer();
-                                              if (isPlaying) {
-                                                plController?.pause();
-                                              } else {
-                                                plController?.play();
-                                              }
-                                            },
-                                            child: Icon(
-                                              isPlaying
-                                                  ? Icons.pause
-                                                  : Icons.play_arrow,
-                                              color: Colors.white,
-                                              size: 30,
-                                            ),
-                                          );
-                                        }),
+                                        Expanded(
+                                          child: Center(
+                                            child: Obx(() {
+                                              final controller =
+                                                  PipOverlayService
+                                                      .getSavedController<
+                                                        VideoDetailController
+                                                      >();
+                                              final plController =
+                                                  controller
+                                                      ?.plPlayerController;
+                                              final isPlaying =
+                                                  plController
+                                                          ?.playerStatus
+                                                          .value ==
+                                                      PlayerStatus.playing;
+                                              return PipControlButton(
+                                                onTap: () {
+                                                  _resetHideTimer();
+                                                  if (isPlaying) {
+                                                    plController?.pause();
+                                                  } else {
+                                                    plController?.play();
+                                                  }
+                                                },
+                                                icon: Icon(
+                                                  isPlaying
+                                                      ? Icons.pause
+                                                      : Icons.play_arrow,
+                                                  color: Colors.white,
+                                                  size: 30,
+                                                ),
+                                              );
+                                            }),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
                                         // 前进10秒
-                                        GestureDetector(
-                                          onTap: () {
-                                            _resetHideTimer();
-                                            final controller =
-                                                PipOverlayService.getSavedController<
-                                                  VideoDetailController
-                                                >();
-                                            final plController =
-                                                controller?.plPlayerController;
-                                            if (plController != null) {
-                                              final current = Duration(
-                                                seconds:
-                                                    plController.position.value,
-                                              );
-                                              plController.seekTo(
-                                                current +
-                                                    const Duration(seconds: 10),
-                                              );
-                                            }
-                                          },
-                                          child: const Icon(
-                                            Icons.forward_10,
-                                            color: Colors.white,
-                                            size: 22,
+                                        Expanded(
+                                          child: Center(
+                                            child: PipControlButton(
+                                              onTap: () {
+                                                _resetHideTimer();
+                                                final controller =
+                                                    PipOverlayService
+                                                        .getSavedController<
+                                                          VideoDetailController
+                                                        >();
+                                                final plController =
+                                                    controller
+                                                        ?.plPlayerController;
+                                                if (plController != null) {
+                                                  final current = Duration(
+                                                    seconds: plController
+                                                        .position.value,
+                                                  );
+                                                  plController.seekTo(
+                                                    current +
+                                                        const Duration(
+                                                          seconds: 10,
+                                                        ),
+                                                  );
+                                                }
+                                              },
+                                              icon: const Icon(
+                                                Icons.forward_10,
+                                                color: Colors.white,
+                                                size: 22,
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ],
