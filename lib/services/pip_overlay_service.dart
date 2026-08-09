@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:io' show Platform;
-import 'dart:math' show max;
+import 'dart:math' show max, min;
 
 import 'package:PiliPlus/common/widgets/pip_control_button.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
@@ -721,6 +721,15 @@ class _PipWidgetState extends State<PipWidget>
               phase == PipPhase.entering || phase == PipPhase.restoring;
           final bool interactive = phase == PipPhase.active && !_isClosing;
 
+          // 控件触控目标随窗口短边自适应
+          final double shortSide = min(_width, _height);
+          final double topControl = (shortSide * 0.38)
+              .clamp(28.0, 37.0)
+              .toDouble();
+          final double bottomControl = (shortSide - 2 - topControl - 4)
+              .clamp(40.0, 48.0)
+              .toDouble();
+
           // AnimatedPositioned 与下方 AnimatedContainer 共用相同的
           // duration/curve 条件:双击档位切换时位置与尺寸同步 250ms 过渡,
           // 否则右边缘双击放大时"位置先瞬移、尺寸后长大"地抽搐
@@ -848,13 +857,13 @@ class _PipWidgetState extends State<PipWidget>
                                     ),
                                   ),
                                   // 左上角关闭：先播缩小淡出再 stopPip。
-                                  // 次要按钮触控目标仅比图标大一圈(37),
+                                  // 次要按钮触控目标仅比图标大一圈,
                                   // 同系统 PiP 顶部按钮,降低误触
                                   Positioned(
-                                    top: 3,
+                                    top: 2,
                                     left: 4,
                                     child: PipControlButton(
-                                      targetSize: 37,
+                                      targetSize: topControl,
                                       onTap: _beginClose,
                                       icon: const Icon(
                                         Icons.close,
@@ -864,12 +873,12 @@ class _PipWidgetState extends State<PipWidget>
                                     ),
                                   ),
                                   // 右上角还原：归位动画启动，窗口保持显示飞向页面。
-                                  // 次要按钮,触控目标仅比图标大一圈(35)
+                                  // 次要按钮,触控目标仅比图标大一圈
                                   Positioned(
-                                    top: 3,
+                                    top: 2,
                                     right: 4,
                                     child: PipControlButton(
-                                      targetSize: 35,
+                                      targetSize: topControl,
                                       onTap: () {
                                         _hideTimer?.cancel();
                                         widget.onTapToReturn();
@@ -881,20 +890,20 @@ class _PipWidgetState extends State<PipWidget>
                                       ),
                                     ),
                                   ),
-                                  // 底部控制栏:主操作按钮 48dp 触控目标(同系统 PiP
-                                  // 的 pip_action_size,图标居中四周留白),间距 8dp
-                                  // 同 pip_between_action_padding_land;竖屏窄窗下
-                                  // 由布局约束自动收缩不溢出
+                                  // 底部控制栏:主操作按钮触控目标自适应(正常档 48,
+                                  // 同系统 PiP 的 pip_action_size,图标居中四周留白;
+                                  // 窄窗收缩见 bottomControl),间距 8dp
                                   Positioned(
                                     left: 0,
                                     right: 0,
-                                    bottom: 8,
+                                    bottom: 4,
                                     child: Row(
                                       children: [
                                         // 后退10秒
                                         Expanded(
                                           child: Center(
                                             child: PipControlButton(
+                                              targetSize: bottomControl,
                                               onTap: () {
                                                 _resetHideTimer();
                                                 final controller =
@@ -945,6 +954,7 @@ class _PipWidgetState extends State<PipWidget>
                                                           .value ==
                                                       PlayerStatus.playing;
                                               return PipControlButton(
+                                                targetSize: bottomControl,
                                                 onTap: () {
                                                   _resetHideTimer();
                                                   if (isPlaying) {
@@ -969,6 +979,7 @@ class _PipWidgetState extends State<PipWidget>
                                         Expanded(
                                           child: Center(
                                             child: PipControlButton(
+                                              targetSize: bottomControl,
                                               onTap: () {
                                                 _resetHideTimer();
                                                 final controller =
