@@ -21,6 +21,9 @@ class PipWindowMemory {
   static Offset? position;
   static double scale = 1.0;
 
+  /// 小窗长/短边比例(所有设备档一致:200:112),竖屏上限换算用
+  static const double pipAspectRatio = 200 / 112;
+
   /// 小窗默认长边基准(未乘缩放档位),按当前窗口短边分档:手机(短边<600)
   /// 维持现状 200、平板 260、大平板/桌面 300。取短边而非物理屏幕,桌面窗口
   /// 缩小 / 平板左右分屏时随之回落到较低档。长短边比保持 200:112(≈16:9),
@@ -35,13 +38,25 @@ class PipWindowMemory {
   static double basePipShort(Size screen) => basePipLong(screen) * 112 / 200;
 
   /// 连续缩放(捏合/滚轮)与双击档位共用的合法区间:下限保证长边 ≥140dp
-  /// (控件可点),上限不超当前窗口短边×0.95(不贴满,且任一屏幕方向都
-  /// 放得下——双击 2.0 档在窄屏设备上由此封顶,不再溢出)。
-  /// 把 [scale] 钳入该区间返回;跨设备/旋转导致的越界由窗体位置钳制兜底。
-  static double clampScaleContinuous(double scale, Size screen) {
+  /// (控件可点)。上限按视频方向分流:
+  /// - 横屏视频:长边 ≤ 0.95×屏幕短边(旋转安全,不随方向变化);
+  /// - 竖屏视频:长边(高) ≤ factor×min(屏高, 屏宽×宽高比),其中 factor
+  ///   在竖屏屏上取 0.8(竖屏小窗铺在竖屏上会占满屏宽,留边距不贴满),
+  ///   横屏屏上取 0.95(竖屏小窗靠边放是自然组合,保持宽松上限)。
+  /// 把 [scale] 钳入该区间返回;旋转后上限变小(竖屏屏拉大后转横屏)由
+  /// 窗体 build 按新屏幕重新钳制自动缩小。
+  static double clampScaleContinuous(
+    double scale,
+    Size screen, {
+    required bool isVertical,
+  }) {
     final base = basePipLong(screen);
     final minScale = 140 / base;
-    final maxScale = min(screen.width, screen.height) * 0.95 / base;
+    final double maxScale = (isVertical
+            ? min(screen.height, screen.width * pipAspectRatio) *
+                (screen.width < screen.height ? 0.8 : 0.95)
+            : min(screen.width, screen.height) * 0.95) /
+        base;
     if (maxScale <= minScale) return minScale;
     return scale.clamp(minScale, maxScale);
   }

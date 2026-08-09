@@ -437,13 +437,22 @@ class _LivePipWidgetState extends State<LivePipWidget>
 
   void _onDoubleTap() {
     final screenSize = MediaQuery.of(context).size;
-    // 档位目标同样钳入连续区间(上限 0.95×短边):窄屏设备上 2.0 档由此
-    // 封顶不再溢出,双击最大档与捏合/滚轮上限统一。钳后与当前值几乎重合
-    // (已停在封顶档)则跳回 1.0 档,保证循环不卡死
+    // 档位目标同样钳入连续区间(上限按方向分流:横屏 0.95×短边;竖屏
+    // factor×min(屏高,屏宽×宽高比),竖屏屏 0.8 / 横屏屏 0.95):窄屏/横屏
+    // 屏幕上 2.0 档由此封顶不再溢出。钳后与当前值几乎重合(已停在封顶
+    // 档)则跳回 1.0 档,保证循环不卡死
     double next = _scale < 1.1 ? 1.5 : (_scale < 1.6 ? 2.0 : 1.0);
-    next = PipWindowMemory.clampScaleContinuous(next, screenSize);
+    next = PipWindowMemory.clampScaleContinuous(
+      next,
+      screenSize,
+      isVertical: LivePipOverlayService.isVertical,
+    );
     if ((next - _scale).abs() < 0.05) {
-      next = PipWindowMemory.clampScaleContinuous(1.0, screenSize);
+      next = PipWindowMemory.clampScaleContinuous(
+        1.0,
+        screenSize,
+        isVertical: LivePipOverlayService.isVertical,
+      );
     }
     // 双击档位切换:按缩放前窗口距屏幕四边的距离,选较近的一对边作为锚定,
     // 缩放后保持该边缘到屏幕边缘的距离不变。
@@ -487,7 +496,11 @@ class _LivePipWidgetState extends State<LivePipWidget>
   void _applyScaleAroundCenter(double targetScale, Size screenSize) {
     final centerX = _left! + _width / 2;
     final centerY = _top! + _height / 2;
-    _scale = PipWindowMemory.clampScaleContinuous(targetScale, screenSize);
+    _scale = PipWindowMemory.clampScaleContinuous(
+      targetScale,
+      screenSize,
+      isVertical: LivePipOverlayService.isVertical,
+    );
     _left = centerX - _width / 2; // _width 已反映新 _scale
     _top = centerY - _height / 2;
     _clampPositionInScreen(screenSize);
@@ -511,6 +524,14 @@ class _LivePipWidgetState extends State<LivePipWidget>
     // 按当前窗口短边分档:手机维持现状,平板/桌面放大
     _baseLong = PipWindowMemory.basePipLong(screenSize);
     _baseShort = PipWindowMemory.basePipShort(screenSize);
+    // 旋转/窗口尺寸变化后按新屏幕重新钳制 scale:竖屏屏拉大后转横屏时
+    // 上限变小,超出即自动缩小;同时回写会话记忆,恢复时保持缩小后的值
+    _scale = PipWindowMemory.clampScaleContinuous(
+      _scale,
+      screenSize,
+      isVertical: LivePipOverlayService.isVertical,
+    );
+    PipWindowMemory.scale = _scale;
 
     // 恢复上次摆放位置（会话级记忆）；越界（旋转/窗口尺寸变化）时钳回屏内
     _left ??= (PipWindowMemory.position?.dx ?? screenSize.width - _width - 16)
