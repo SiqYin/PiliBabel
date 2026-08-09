@@ -1291,8 +1291,11 @@ class HeaderControlState extends State<HeaderControl>
       (context, setState) {
         final theme = Theme.of(context);
 
+        const EdgeInsets sliderPadding = .symmetric(vertical: 16);
+
         final sliderTheme = SliderThemeData(
           trackHeight: 10,
+          padding: const .symmetric(horizontal: 6),
           trackShape: const MSliderTrackShape(),
           thumbColor: theme.colorScheme.primary,
           activeTrackColor: theme.colorScheme.primary,
@@ -1357,32 +1360,27 @@ class HeaderControlState extends State<HeaderControl>
             borderRadius: const BorderRadius.all(Radius.circular(12)),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  const SizedBox(
-                    height: 45,
-                    child: Center(child: Text('字幕设置', style: titleStyle)),
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '字体大小 ${(subtitleFontScale * 100).toStringAsFixed(1)}%',
-                      ),
-                      resetBtn(theme, '100.0%', () => updateFontScale(1.0)),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 0,
-                      bottom: 6,
-                      left: 10,
-                      right: 10,
+              child: SliderTheme(
+                data: sliderTheme,
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    const SizedBox(
+                      height: 45,
+                      child: Center(child: Text('字幕设置', style: titleStyle)),
                     ),
-                    child: SliderTheme(
-                      data: sliderTheme,
+                    const SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '字体大小 ${(subtitleFontScale * 100).toStringAsFixed(1)}%',
+                        ),
+                        resetBtn(theme, '100.0%', () => updateFontScale(1.0)),
+                      ],
+                    ),
+                    Padding(
+                      padding: sliderPadding,
                       child: Slider(
                         min: 0.5,
                         max: 2.5,
@@ -1393,25 +1391,17 @@ class HeaderControlState extends State<HeaderControl>
                         onChanged: updateFontScale,
                       ),
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '全屏字体大小 ${(subtitleFontScaleFS * 100).toStringAsFixed(1)}%',
-                      ),
-                      resetBtn(theme, '150.0%', () => updateFontScaleFS(1.5)),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 0,
-                      bottom: 6,
-                      left: 10,
-                      right: 10,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '全屏字体大小 ${(subtitleFontScaleFS * 100).toStringAsFixed(1)}%',
+                        ),
+                        resetBtn(theme, '150.0%', () => updateFontScaleFS(1.5)),
+                      ],
                     ),
-                    child: SliderTheme(
-                      data: sliderTheme,
+                    Padding(
+                      padding: sliderPadding,
                       child: Slider(
                         min: 0.5,
                         max: 2.5,
@@ -1422,23 +1412,15 @@ class HeaderControlState extends State<HeaderControl>
                         onChanged: updateFontScaleFS,
                       ),
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('字体粗细 ${subtitleFontWeight + 1}（可能无法精确调节）'),
-                      resetBtn(theme, 6, () => updateFontWeight(5)),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 0,
-                      bottom: 6,
-                      left: 10,
-                      right: 10,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('字体粗细 ${subtitleFontWeight + 1}（可能无法精确调节）'),
+                        resetBtn(theme, 6, () => updateFontWeight(5)),
+                      ],
                     ),
-                    child: SliderTheme(
-                      data: sliderTheme,
+                    Padding(
+                      padding: sliderPadding,
                       child: Slider(
                         min: 0,
                         max: 8,
@@ -1448,23 +1430,15 @@ class HeaderControlState extends State<HeaderControl>
                         onChanged: updateFontWeight,
                       ),
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('描边粗细 $subtitleStrokeWidth'),
-                      resetBtn(theme, 2.0, () => updateStrokeWidth(2.0)),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 0,
-                      bottom: 6,
-                      left: 10,
-                      right: 10,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('描边粗细 $subtitleStrokeWidth'),
+                        resetBtn(theme, 2.0, () => updateStrokeWidth(2.0)),
+                      ],
                     ),
-                    child: SliderTheme(
-                      data: sliderTheme,
+                    Padding(
+                      padding: sliderPadding,
                       child: Slider(
                         min: 0,
                         max: 5,
@@ -1474,23 +1448,15 @@ class HeaderControlState extends State<HeaderControl>
                         onChanged: updateStrokeWidth,
                       ),
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('左右边距 $subtitlePaddingH'),
-                      resetBtn(theme, 24, () => updateHorizontalPadding(24)),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 0,
-                      bottom: 6,
-                      left: 10,
-                      right: 10,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('左右边距 $subtitlePaddingH'),
+                        resetBtn(theme, 24, () => updateHorizontalPadding(24)),
+                      ],
                     ),
-                    child: SliderTheme(
-                      data: sliderTheme,
+                    Padding(
+                      padding: sliderPadding,
                       child: Slider(
                         min: 0,
                         max: 100,
@@ -1500,23 +1466,15 @@ class HeaderControlState extends State<HeaderControl>
                         onChanged: updateHorizontalPadding,
                       ),
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('底部边距 $subtitlePaddingB'),
-                      resetBtn(theme, 24, () => updateBottomPadding(24)),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 0,
-                      bottom: 6,
-                      left: 10,
-                      right: 10,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('底部边距 $subtitlePaddingB'),
+                        resetBtn(theme, 24, () => updateBottomPadding(24)),
+                      ],
                     ),
-                    child: SliderTheme(
-                      data: sliderTheme,
+                    Padding(
+                      padding: sliderPadding,
                       child: Slider(
                         min: 0,
                         max: 200,
@@ -1526,25 +1484,17 @@ class HeaderControlState extends State<HeaderControl>
                         onChanged: updateBottomPadding,
                       ),
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '背景不透明度 ${(subtitleBgOpacity * 100).toStringAsFixed(1)}%',
-                      ),
-                      resetBtn(theme, '67%', () => updateOpacity(0.67)),
-                    ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      top: 0,
-                      bottom: 6,
-                      left: 10,
-                      right: 10,
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          '背景不透明度 ${(subtitleBgOpacity * 100).toStringAsFixed(1)}%',
+                        ),
+                        resetBtn(theme, '67%', () => updateOpacity(0.67)),
+                      ],
                     ),
-                    child: SliderTheme(
-                      data: sliderTheme,
+                    Padding(
+                      padding: sliderPadding,
                       child: Slider(
                         min: 0,
                         max: 1,
@@ -1553,8 +1503,8 @@ class HeaderControlState extends State<HeaderControl>
                         onChanged: updateOpacity,
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),
