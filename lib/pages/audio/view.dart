@@ -106,6 +106,8 @@ class _AudioPageState extends State<AudioPage> {
       );
     }
     if (LivePipOverlayService.isInPipMode) {
+      // 旧直播 controller 就此退休，关闭其弹幕流/计时器/通知条目防泄漏
+      LivePipOverlayService.cleanupSavedController();
       LivePipOverlayService.stopLivePip(callOnClose: false);
     }
   }

@@ -294,6 +294,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       // 关闭小窗并停止直播播放（从列表点击视频应该停止旧的直播播放）
       final savedLive =
           LivePipOverlayService.getSavedController<LiveRoomController>();
+      // 旧直播 controller 就此退休，关闭其弹幕流/计时器/通知条目防泄漏
+      LivePipOverlayService.cleanupSavedController();
       LivePipOverlayService.stopLivePip(callOnClose: false);
       // stopLivePip(callOnClose: false) 不会调用 onClose，手动暂停直播播放器
       savedLive?.plPlayerController.pause();

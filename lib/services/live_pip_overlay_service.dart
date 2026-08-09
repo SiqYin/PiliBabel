@@ -8,6 +8,7 @@ import 'package:PiliPlus/pages/live_room/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/services/pip_transition_coordinator.dart';
+import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/utils/device_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -83,6 +84,22 @@ class LivePipOverlayService {
   static bool get isInPipMode => _isInPipMode;
 
   static T? getSavedController<T>() => _savedController as T?;
+
+  /// 退休被遗弃的旧直播 controller：其 onClose 在进小窗时因 isInPipMode
+  /// 跳过了清理，路由注销后无人再触发，弹幕 WS 流、开播计时器与媒体通知
+  /// 条目会随每次恢复/接管泄漏。仅在新页面将新建 controller 接管的路径调用；
+  /// didPopNext 归位（页面仍在栈内）复用同一实例，不得调用。
+  static void cleanupSavedController() {
+    final saved = _savedController;
+    if (saved is! LiveRoomController) {
+      return;
+    }
+    saved
+      ..closeLiveMsg()
+      ..cancelLiveTimer()
+      ..cancelLikeTimer();
+    videoPlayerServiceHandler?.onVideoDetailDispose(saved.heroTag);
+  }
 
   static void startLivePip({
     required BuildContext context,

@@ -169,6 +169,8 @@ class _LiveRoomPageState extends State<LiveRoomPage>
 
     // 无论是否是同一个房间，既然进入了直播详情页，就关闭现有的小窗（不销毁播放器）
     if (LivePipOverlayService.isInPipMode) {
+      // 本页随后会新建 controller 并自开弹幕流/通知条目，旧 controller 就此退休
+      LivePipOverlayService.cleanupSavedController();
       if (isReturningFromPip &&
           LivePipOverlayService.transition.phase == PipPhase.restoring) {
         // 点击展开（归位动画中）：小窗仍在飞向本页，非销毁式关闭推迟到
@@ -673,6 +675,12 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       return;
     }
     _liveRoomController.isInPipMode.value = false;
+    // 路由 pop 时 onClose 已因 isInPipMode 跳过清理，下方 Get.delete 对已
+    // 注销实例是空操作，弹幕流与计时器需在此显式关闭
+    _liveRoomController
+      ..closeLiveMsg()
+      ..cancelLiveTimer()
+      ..cancelLikeTimer();
     videoPlayerServiceHandler?.onVideoDetailDispose(heroTag);
     if (Platform.isAndroid && !plPlayerController.setSystemBrightness) {
       ScreenBrightnessPlatform.instance.resetApplicationScreenBrightness();
