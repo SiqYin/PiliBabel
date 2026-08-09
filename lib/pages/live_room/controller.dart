@@ -200,6 +200,9 @@ class LiveRoomController extends GetxController {
     if (isReturningFromPip) {
       isPortrait.value = plPlayerController.isVertical;
       isLoaded.value = true;
+      // 播放器无需重建，但 stream/ruid/liveTime 等元数据随旧 controller 丢失，
+      // 必须重新拉取；playerInit 会因 isReturningFromPip 跳过数据源初始化
+      queryLiveUrl();
     } else {
       queryLiveUrl(autoFullScreenFlag: true);
     }
@@ -283,9 +286,6 @@ class LiveRoomController extends GetxController {
       }
       isPortrait.value = response.isPortrait ?? false;
       stream = playurl.stream;
-      if (isReturningFromPip) {
-        isReturningFromPip = false;
-      }
       _initStreamIndex();
       await initLiveUrl(
         streamIndex: streamIndex,
@@ -293,13 +293,17 @@ class LiveRoomController extends GetxController {
         codecIndex: codecIndex,
         liveUrlIndex: liveUrlIndex,
       );
+      // 置于 initLiveUrl 之后：恢复场景的首次拉取靠该标志让 playerInit 跳过
+      // 数据源重建，完成后清零，切换路线/画质才会真正重建数据源
+      isReturningFromPip = false;
       isLoaded.value = true;
     } else {
       _showDialog(res.toString());
     }
   }
 
-  late List<Stream> stream;
+  // 拉取成功前为 null（含小窗恢复后的重拉窗口期），使用处需判空
+  List<Stream>? stream;
   int streamIndex = 0;
   int formatIndex = 0;
   int codecIndex = 0;
@@ -312,7 +316,7 @@ class LiveRoomController extends GetxController {
         final String protocolName = pref[0];
         final String formatName = pref[1];
         final String codecName = pref[2];
-        for (var (i, s) in stream.indexed) {
+        for (var (i, s) in stream!.indexed) {
           if (s.protocolName == protocolName) {
             streamIndex = i;
             for (var (j, f) in s.format.indexed) {
@@ -343,7 +347,7 @@ class LiveRoomController extends GetxController {
     this.codecIndex = codecIndex;
     this.liveUrlIndex = liveUrlIndex;
 
-    final CodecItem item = stream
+    final CodecItem item = stream!
         .getOrFirst(streamIndex)
         .format
         .getOrFirst(formatIndex)
@@ -366,6 +370,10 @@ class LiveRoomController extends GetxController {
   // 直播投屏时，优先选择 HLS 协议的播放地址，且不使用 AV1 编码
   // 实测发现http_stream协议在投屏时会报版权问题，导致无法播放，HLS协议则没有这个问题
   String? _preferredCastUrl() {
+    final stream = this.stream;
+    if (stream == null) {
+      return null;
+    }
     final currentCastUrl = _currentCastUrl();
     if (currentCastUrl != null) {
       return currentCastUrl;
@@ -421,7 +429,7 @@ class LiveRoomController extends GetxController {
   }
 
   String? _currentCastUrl() {
-    final streamItem = stream.getOrFirst(streamIndex);
+    final streamItem = stream!.getOrFirst(streamIndex);
     final formatItem = streamItem.format.getOrFirst(formatIndex);
     final codecItem = formatItem.codec.getOrFirst(codecIndex);
     final url = VideoUtils.getLiveCdnUrl(codecItem, index: liveUrlIndex);
