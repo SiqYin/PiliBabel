@@ -83,6 +83,8 @@ $TextPatch = "lib/scripts/text.patch"
 # expose
 $TextPainterPatch = "lib/scripts/text_painter.patch"
 
+$SliverPatch = "lib/scripts/sliver.patch"
+
 # TODO: remove
 # https://github.com/flutter/flutter/issues/124078
 # https://github.com/flutter/flutter/pull/183261
@@ -119,7 +121,7 @@ $patches = @($ModalBarrierPatch, $TextSelectionPatch, $MouseCursorPatch,
             $SelectableRegionPatch, $EditableTextPatch, $TextFieldPatch,
             $ScrollPositionPatch, $ScrollablePatch, $ScrollableGesturePatch,
             $DraggableScrollableSheetPatch, $ScaffoldPatch, $TextPatch,
-            $TextPainterPatch)
+            $TextPainterPatch, $SliverPatch)
 
 switch ($platform.ToLower()) {
     "android" {
