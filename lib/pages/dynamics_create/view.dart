@@ -310,7 +310,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
                   }),
                   child: const SizedBox.square(
                     dimension: 100,
-                    child: Center(child: Icon(Icons.add, size: 35)),
+                    child: Icon(Icons.add, size: 35),
                   ),
                 ),
               ),
