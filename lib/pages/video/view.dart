@@ -1386,7 +1386,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           return const SizedBox.shrink();
         }
         return Positioned.fill(
-          bottom: -2,
+          bottom: -1,
           child: GestureDetector(
             onTap: () {
               if (!videoDetailController.isFileSource) {
@@ -2199,14 +2199,18 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         child: Stack(
       clipBehavior: Clip.none,
       children: [
-        const Positioned.fill(child: ColoredBox(color: Colors.black)),
+        const Positioned.fill(
+          child: ColoredBox(
+            color: Colors.black,
+            isAntiAlias: false,
+          ),
+        ),
 
         plPlayer(width: width, height: height),
 
         Obx(() {
           if (!videoDetailController.autoPlay) {
             return Positioned.fill(
-              bottom: -1,
               child: GestureDetector(
                 onTap: handlePlay,
                 behavior: .opaque,

@@ -1384,8 +1384,11 @@ class HeaderControlState extends State<HeaderControl>
       (context, setState) {
         final theme = Theme.of(context);
 
+        const EdgeInsets sliderPadding = .symmetric(vertical: 16);
+
         final sliderTheme = SliderThemeData(
           trackHeight: 10,
+          padding: const .symmetric(horizontal: 6),
           trackShape: const MSliderTrackShape(),
           thumbColor: theme.colorScheme.primary,
           activeTrackColor: theme.colorScheme.primary,
@@ -1489,12 +1492,7 @@ class HeaderControlState extends State<HeaderControl>
             ],
           ),
           Padding(
-            padding: const EdgeInsets.only(
-              top: 0,
-              bottom: 6,
-              left: 10,
-              right: 10,
-            ),
+            padding: sliderPadding,
             child: SliderTheme(
               data: sliderTheme,
               child: Slider(

@@ -492,6 +492,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
             cid: cid,
             cover: cover,
             dimension: dimension,
+            title: episode.title,
           );
           return false;
         }
