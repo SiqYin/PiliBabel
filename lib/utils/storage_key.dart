@@ -323,7 +323,10 @@ abstract final class LocalCacheKey {
       mixinKey = 'mixinKey',
       timeStamp = 'timeStamp',
       buvid = 'buvid',
-      remarkMids = 'remarkMids';
+      remarkMids = 'remarkMids',
+      cdnNodeList = 'cdnNodeList',
+      cdnNodeListTime = 'cdnNodeListTime',
+      cdnNodeRegion = 'cdnNodeRegion';
 }
 
 abstract final class VideoBoxKey {
