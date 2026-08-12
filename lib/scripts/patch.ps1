@@ -13,10 +13,6 @@ $BottomSheetAndroidPatch = "lib/scripts/bottom_sheet_android.patch"
 $BottomSheetIOSFlutterPatch = "lib/scripts/bottom_sheet_ios_flutter.patch"
 $BottomSheetIOSPiliPlusPatch = "lib/scripts/bottom_sheet_ios_piliplus.patch"
 
-# TODO: remove
-# https://github.com/flutter/flutter/issues/185052
-$TextSelectionMenuFix = "beb2ad17004a1b118ff2bd09f55cee23198f6652";
-
 # https://github.com/bggRGjQaUbCoE/PiliPlus/issues/1662
 # handle bottom scroll event
 $ScrollViewPatch = "lib/scripts/scroll_view.patch"
@@ -113,7 +109,7 @@ if ($platform.ToLower() -eq "ios") {
 
 Set-Location $env:FLUTTER_ROOT
 
-$picks   = @($TextSelectionMenuFix)
+$picks   = @()
 $reverts = @()
 $patches = @($ModalBarrierPatch, $TextSelectionPatch, $MouseCursorPatch,
             $ImageAnimPatch, $LayoutBuilderPatch, $NavigationDrawerPatch,
