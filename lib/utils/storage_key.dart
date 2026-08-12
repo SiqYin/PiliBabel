@@ -40,6 +40,7 @@ abstract final class SettingBoxKey {
       showControlsOnManualEpisodeChange = 'showControlsOnManualEpisodeChange',
       horizontalScreen = 'horizontalScreen',
       CDNService = 'CDNService',
+      customCDNUrl = 'customCDNUrl',
       disableAudioCDN = 'disableAudioCDN',
       autoPiP = 'autoPiP',
       enableInAppPip = 'enableInAppPip',
