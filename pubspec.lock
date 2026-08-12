@@ -477,7 +477,7 @@ packages:
     description:
       path: "."
       ref: dev
-      resolved-ref: d42876853416a26922587126ebae8fbcd990b181
+      resolved-ref: "9fd6193e69221ae276f3e263ed6a2060b4dc3269"
       url: "https://github.com/bggRGjQaUbCoE/extended_nested_scroll_view.git"
     source: git
     version: "6.2.1"
@@ -1344,10 +1344,10 @@ packages:
     dependency: "direct main"
     description:
       name: permission_handler_apple
-      sha256: "11b7e94a9d2fbee23c27f0cae0105c6266c03fd83b9a2eda6cf09141fc82624b"
+      sha256: f49cb15a064ea9d974fc7fbb302099353b7b170d07284e86e264561579e5bcf8
       url: "https://pub.dev"
     source: hosted
-    version: "9.5.0"
+    version: "9.6.1"
   permission_handler_platform_interface:
     dependency: "direct main"
     description:
