@@ -17,6 +17,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "14.1.0"
+  android_file_picker:
+    dependency: transitive
+    description:
+      name: android_file_picker
+      sha256: "24ccc79cdc9612614703dda2d6fd6c67e8b7b16529b54ab983578488ef2d721c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   ansicolor:
     dependency: transitive
     description:
@@ -477,7 +485,7 @@ packages:
     description:
       path: "."
       ref: dev
-      resolved-ref: "9fd6193e69221ae276f3e263ed6a2060b4dc3269"
+      resolved-ref: "4d92e81e8b697676f33b7459e7bbd239e88785b0"
       url: "https://github.com/bggRGjQaUbCoE/extended_nested_scroll_view.git"
     source: git
     version: "6.2.1"
@@ -517,10 +525,42 @@ packages:
     dependency: "direct main"
     description:
       name: file_picker
-      sha256: fdc6a37f715d19f35b131decf1ce39242eeed5ddae18c0818c3eccb731ab76be
+      sha256: afbaa8015d9efabd224f41084ed9fdeddfa65389ebd7cd3a9eb1476aca66b46d
       url: "https://pub.dev"
     source: hosted
-    version: "12.0.0-beta.7"
+    version: "12.0.0"
+  file_picker_darwin:
+    dependency: transitive
+    description:
+      name: file_picker_darwin
+      sha256: "27be6ab5d48771f036b273c4424d83919226d7ceda04c7389cf8d632d9332303"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
+  file_picker_linux:
+    dependency: transitive
+    description:
+      name: file_picker_linux
+      sha256: "5f8e1de3d032b6d0b2e840d30481abe41ead3ab28c9753a0187f3465d6797bf1"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
+  file_picker_platform_interface:
+    dependency: transitive
+    description:
+      name: file_picker_platform_interface
+      sha256: bfa1bfc65e92d521063ebebe6ffea4e7b0c0be87bbae52d9e69aab08cd2f94f4
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.0"
+  file_picker_web:
+    dependency: transitive
+    description:
+      name: file_picker_web
+      sha256: "3c0d736648b92d488b4ce8de4c88a35998c98287eebd50e9cb3a60bc8a953d96"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.0"
   file_selector_linux:
     dependency: transitive
     description:
@@ -1113,8 +1153,8 @@ packages:
     description:
       path: media_kit
       ref: "version_1.2.5"
-      resolved-ref: deac6b62569584b6a5e28e6c60c187a0a7281b3a
-      url: "https://github.com/My-Responsitories/media-kit.git"
+      resolved-ref: "38b20d0747a26363f5a40a1f9f90b3190966646d"
+      url: "https://github.com/bggRGjQaUbCoE/media-kit.git"
     source: git
     version: "1.1.11"
   media_kit_libs_android_video:
@@ -1122,8 +1162,8 @@ packages:
     description:
       path: "libs/android/media_kit_libs_android_video"
       ref: "version_1.2.5"
-      resolved-ref: deac6b62569584b6a5e28e6c60c187a0a7281b3a
-      url: "https://github.com/My-Responsitories/media-kit.git"
+      resolved-ref: "38b20d0747a26363f5a40a1f9f90b3190966646d"
+      url: "https://github.com/bggRGjQaUbCoE/media-kit.git"
     source: git
     version: "1.3.7"
   media_kit_libs_ios_video:
@@ -1131,8 +1171,8 @@ packages:
     description:
       path: "libs/ios/media_kit_libs_ios_video"
       ref: "version_1.2.5"
-      resolved-ref: deac6b62569584b6a5e28e6c60c187a0a7281b3a
-      url: "https://github.com/My-Responsitories/media-kit.git"
+      resolved-ref: "38b20d0747a26363f5a40a1f9f90b3190966646d"
+      url: "https://github.com/bggRGjQaUbCoE/media-kit.git"
     source: git
     version: "1.1.4"
   media_kit_libs_linux:
@@ -1156,8 +1196,8 @@ packages:
     description:
       path: "libs/universal/media_kit_libs_video"
       ref: "version_1.2.5"
-      resolved-ref: deac6b62569584b6a5e28e6c60c187a0a7281b3a
-      url: "https://github.com/My-Responsitories/media-kit.git"
+      resolved-ref: "38b20d0747a26363f5a40a1f9f90b3190966646d"
+      url: "https://github.com/bggRGjQaUbCoE/media-kit.git"
     source: git
     version: "1.0.5"
   media_kit_libs_windows_video:
@@ -1165,8 +1205,8 @@ packages:
     description:
       path: "libs/windows/media_kit_libs_windows_video"
       ref: "version_1.2.5"
-      resolved-ref: deac6b62569584b6a5e28e6c60c187a0a7281b3a
-      url: "https://github.com/My-Responsitories/media-kit.git"
+      resolved-ref: "38b20d0747a26363f5a40a1f9f90b3190966646d"
+      url: "https://github.com/bggRGjQaUbCoE/media-kit.git"
     source: git
     version: "1.0.10"
   media_kit_native_event_loop:
@@ -1174,8 +1214,8 @@ packages:
     description:
       path: media_kit_native_event_loop
       ref: "version_1.2.5"
-      resolved-ref: deac6b62569584b6a5e28e6c60c187a0a7281b3a
-      url: "https://github.com/My-Responsitories/media-kit.git"
+      resolved-ref: "38b20d0747a26363f5a40a1f9f90b3190966646d"
+      url: "https://github.com/bggRGjQaUbCoE/media-kit.git"
     source: git
     version: "1.0.9"
   media_kit_video:
@@ -1183,8 +1223,8 @@ packages:
     description:
       path: media_kit_video
       ref: "version_1.2.5"
-      resolved-ref: deac6b62569584b6a5e28e6c60c187a0a7281b3a
-      url: "https://github.com/My-Responsitories/media-kit.git"
+      resolved-ref: "38b20d0747a26363f5a40a1f9f90b3190966646d"
+      url: "https://github.com/bggRGjQaUbCoE/media-kit.git"
     source: git
     version: "1.2.5"
   menu_base:
@@ -1948,6 +1988,14 @@ packages:
       url: "https://github.com/bggRGjQaUbCoE/window_manager.git"
     source: git
     version: "0.5.2"
+  windows_file_picker:
+    dependency: transitive
+    description:
+      name: windows_file_picker
+      sha256: bb25e1b0098c316cc5bcfa04e858f36644c68598884dcd254fbedbbd62f68406
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.0"
   xdg_directories:
     dependency: transitive
     description:
