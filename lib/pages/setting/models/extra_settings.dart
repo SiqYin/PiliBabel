@@ -588,6 +588,13 @@ List<SettingsModel> get extraSettings => [
     onTap: _showReplySortDialog,
   ),
   NormalModel(
+    title: '楼中楼展示',
+    subtitle: '单独设置楼中楼回复的默认排序',
+    leading: const Icon(Icons.forum_outlined),
+    getSubtitle: () => '当前优先展示「${Pref.replyReplySortType.title}」',
+    onTap: _showReplyReplySortDialog,
+  ),
+  NormalModel(
     title: '动态展示',
     leading: const Icon(Icons.dynamic_feed_rounded),
     getSubtitle: () => '当前优先展示「${Pref.defaultDynamicType.label}」',
@@ -1134,6 +1141,24 @@ Future<void> _showReplySortDialog(
   );
   if (res != null) {
     await GStorage.setting.put(SettingBoxKey.replySortType, res.index);
+    setState();
+  }
+}
+
+Future<void> _showReplyReplySortDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<ReplySortType>(
+    context: context,
+    builder: (context) => SelectDialog<ReplySortType>(
+      title: '楼中楼展示',
+      value: Pref.replyReplySortType,
+      values: ReplySortType.values.take(2).map((e) => (e, e.title)).toList(),
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(SettingBoxKey.replyReplySortType, res.index);
     setState();
   }
 }

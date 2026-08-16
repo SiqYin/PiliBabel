@@ -1238,6 +1238,14 @@ abstract final class Pref {
         defaultValue: ReplySortType.hot.index,
       )];
 
+  /// 楼中楼默认排序，未单独设置时回退到主楼设置，保证升级无行为变化
+  static ReplySortType get replyReplySortType => ReplySortType.values[
+      _setting.get(SettingBoxKey.replyReplySortType) ??
+          _setting.get(
+            SettingBoxKey.replySortType,
+            defaultValue: ReplySortType.hot.index,
+          )];
+
   static DynamicBadgeMode get dynamicBadgeMode =>
       DynamicBadgeMode.values[_setting.get(
         SettingBoxKey.dynamicBadgeMode,

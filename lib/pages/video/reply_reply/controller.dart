@@ -50,6 +50,10 @@ class VideoReplyReplyController extends ReplyController
   @override
   dynamic get sourceId => replyType == 1 ? IdUtils.av2bv(oid) : oid;
 
+  /// 楼中楼使用独立的默认排序设置
+  @override
+  ReplySortType get defaultSortType => Pref.replyReplySortType;
+
   @override
   void onInit() {
     super.onInit();

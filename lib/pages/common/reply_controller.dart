@@ -40,10 +40,13 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
       _enableCommAntifraud || _biliSendCommAntifraud;
   dynamic get sourceId;
 
+  /// 评论默认排序方式，主楼与楼中楼可分别覆写
+  ReplySortType get defaultSortType => Pref.replySortType;
+
   @override
   void onInit() {
     super.onInit();
-    final cacheSortType = Pref.replySortType;
+    final cacheSortType = defaultSortType;
     sortType = cacheSortType.obs;
     mode = cacheSortType == .time ? Mode.MAIN_LIST_TIME : Mode.MAIN_LIST_HOT;
   }
