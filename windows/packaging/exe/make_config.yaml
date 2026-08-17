@@ -7,7 +7,9 @@ publisher_url: https://github.com/Starfallan/PiliNara
 display_name: PiliNara
 # create_desktop_icon: true
 # See: https://jrsoftware.org/ishelp/index.php?topic=setup_defaultdirname
-# install_dir_name: "D:\\HELLO-WORLD"
+# fastforge 默认用 pubspec.name 推导安装目录（本项目为 PiliPlus），
+# 这里显式指定为 PiliNara，避免装进 PiliPlus 的目录。
+install_dir_name: '{autopf64}\PiliNara'
 # 这里的路径是相对于项目根目录的路径； 图标格式必须是ico格式，不能是png或其它
 setup_icon_file: windows\runner\resources\app_icon.ico
 locales:
