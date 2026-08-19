@@ -53,7 +53,10 @@ void imageSaveDialog({
                         Expanded(
                           child: SelectionText(
                             title,
-                            style: const TextStyle(fontSize: 14),
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: colorScheme.onSurface,
+                            ),
                           ),
                         )
                       else
