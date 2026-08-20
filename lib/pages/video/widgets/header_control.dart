@@ -789,7 +789,7 @@ class HeaderControlState extends State<HeaderControl>
     required NativePlayer player,
   }) {
     final hwdec = player.getProperty('hwdec-current');
-    final volume = player.getProperty('volume').subLength(3);
+    final volume = player.getProperty('volume');
     showDialog(
       context: context,
       builder: (context) {
