@@ -479,8 +479,7 @@ class ImageGridRenderObjectElement extends RenderObjectElement {
     // configuration, or an inherited widget.
     renderObject.scheduleLayoutCallback();
     _needsBuild = true;
-    super
-        .performRebuild(); // Calls widget.updateRenderObject (a no-op in this case).
+    super.performRebuild(); // Calls widget.updateRenderObject (a no-op in this case).
   }
 
   @override

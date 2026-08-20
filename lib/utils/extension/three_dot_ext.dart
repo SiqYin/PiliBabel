@@ -74,10 +74,8 @@ extension ThreeDotItemTypeExt on ThreeDotItemType {
               'talkerId': talkerId,
               'name': item.title,
               'face': switch (talkerId) {
-                844424930131966 =>
-                  'https://message.biliimg.com/bfs/im/489a63efadfb202366c2f88853d2217b5ddc7a13.png',
-                844424930131964 =>
-                  'https://i0.hdslb.com/bfs/im_new/58eda511672db078466e7ab8db22a95c1503684976.png',
+                844424930131966 => 'https://message.biliimg.com/bfs/im/489a63efadfb202366c2f88853d2217b5ddc7a13.png',
+                844424930131964 => 'https://i0.hdslb.com/bfs/im_new/58eda511672db078466e7ab8db22a95c1503684976.png',
                 _ => item.icon,
               },
             },

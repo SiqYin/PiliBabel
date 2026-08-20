@@ -153,8 +153,7 @@ class RenderSliverFloatingHeader extends RenderSliverSingleBoxAdapter {
           _lastStartedScrollDirection == .forward) {
         final childExtent = child!.size.height;
         if (effectiveScrollOffset > childExtent) {
-          effectiveScrollOffset =
-              childExtent; // The header is now just above the start edge of viewport.
+          effectiveScrollOffset = childExtent; // The header is now just above the start edge of viewport.
         }
       } else {
         // delta > 0 and scrolling forward is a contradiction. Assume that it's noise (set delta to 0).
