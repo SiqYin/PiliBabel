@@ -33,6 +33,7 @@ import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/theme_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
+import 'package:audio_service_mpris/audio_service_mpris.dart';
 import 'package:catcher_2/catcher_2.dart';
 import 'package:collection/collection.dart';
 import 'package:dynamic_color/dynamic_color.dart' show DynamicColorPlugin;
@@ -133,6 +134,16 @@ void main() async {
     }
     await setupServiceLocator();
   } else if (Platform.isMacOS) {
+    await setupServiceLocator();
+  } else if (Platform.isLinux) {
+    AudioServiceMpris.init(
+      identity: Constants.appName,
+      canControl: true,
+      canPlay: true,
+      canPause: true,
+      canGoNext: true,
+      canGoPrevious: true,
+    );
     await setupServiceLocator();
   }
 

@@ -46,6 +46,7 @@ dependencies:
     git:
       url: https://github.com/Starfallan/audio_service_win.git
       ref: main
+  audio_service_mpris: 1.0.0-beta.2
   audio_session: ^0.2.2
   battery_plus: ^7.0.0
   brotli: ^0.6.0
