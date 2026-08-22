@@ -250,6 +250,8 @@ if (-not $MaterialUiDir) {
     throw "material_ui package not found in pub cache"
 }
 
+Write-Host "material_ui dir: $($MaterialUiDir.FullName)"
+
 Get-ChildItem -Path "$env:GITHUB_WORKSPACE/lib/scripts/material" -Filter *.patch | ForEach-Object {
     (Get-Content $_.FullName -Raw) -replace "`r`n", "`n" | 
         Set-Content -NoNewline $_.FullName
@@ -292,6 +294,8 @@ $CupertinoUiDir = Get-ChildItem "$PubCacheDir/hosted/pub.dev" -Directory |
 if (-not $CupertinoUiDir) {
     throw "cupertino_ui package not found in pub cache"
 }
+
+Write-Host "cupertino_ui dir: $($CupertinoUiDir.FullName)"
 
 Get-ChildItem -Path "$env:GITHUB_WORKSPACE/lib/scripts/cupertino" -Filter *.patch | ForEach-Object {
     (Get-Content $_.FullName -Raw) -replace "`r`n", "`n" | 
