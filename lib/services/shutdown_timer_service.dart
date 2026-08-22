@@ -147,7 +147,7 @@ class ShutdownTimerService {
     required FixedExtentScrollController scrollController,
   }) {
     return CupertinoPicker(
-      looping: true,
+      // looping: true,
       squeeze: _kSqueeze,
       itemExtent: _kItemExtent,
       scrollController: scrollController,
@@ -191,7 +191,7 @@ class ShutdownTimerService {
             const SizedBox(width: 10),
             Expanded(
               child: _pickerBuider(
-                25,
+                60,
                 scrollController: minuteController,
                 onSelectedItemChanged: (value) => minute = value,
               ),
