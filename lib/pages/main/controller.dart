@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/grpc/dyn.dart';
@@ -233,7 +234,7 @@ class MainController extends GetxController
     }
     this.navigationBars = navigationBars;
     final defPage = Pref.defaultHomePage;
-    selectedIndex.value = navigationBars.indexOf(defPage);
+    selectedIndex.value = math.max(0, navigationBars.indexOf(defPage));
   }
 
   void checkDefaultSearch([bool shouldCheck = false]) {
