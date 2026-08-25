@@ -114,7 +114,7 @@ class AuthorPanel extends StatelessWidget {
               TextSpan(
                 children: [
                   TextSpan(
-                    text: moduleAuthor.name!,
+                    text: remarkedName(moduleAuthor.mid, moduleAuthor.name!),
                     style: TextStyle(
                       color:
                           moduleAuthor.vip != null &&
@@ -125,11 +125,10 @@ class AuthorPanel extends StatelessWidget {
                       fontSize: theme.textTheme.titleSmall!.fontSize,
                     ),
                   ),
-                  if (GlobalData().remarkMids[moduleAuthor.mid]
-                      case final String remark
-                      when remark.isNotEmpty)
+                  if (!GlobalData().remarkReplaceName &&
+                      remarkOf(moduleAuthor.mid) != null)
                     TextSpan(
-                      text: '（$remark）',
+                      text: '（${remarkOf(moduleAuthor.mid)}）',
                       style: TextStyle(
                         color: theme.colorScheme.primary,
                         fontSize:

@@ -11,6 +11,7 @@ import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/models/common/stat_type.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
+import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/em.dart';
 import 'package:PiliPlus/utils/extension/dimension_ext.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
@@ -192,7 +193,10 @@ class SearchArchiveGrpc extends StatelessWidget {
             ),
           ),
           Text(
-            "$pubdate${arc.author.name}",
+            "$pubdate${remarkedName(
+              arc.author.mid.toInt(),
+              arc.author.name,
+            )}",
             maxLines: 1,
             style: TextStyle(
               fontSize: 12,

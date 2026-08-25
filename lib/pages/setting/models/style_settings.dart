@@ -443,6 +443,17 @@ List<SettingsModel> get styleSettings => [
     leading: const Icon(Icons.person_outline),
   ),
   SwitchModel(
+    title: '备注替换昵称',
+    subtitle: '开启后备注首行将替换原昵称，建议首行填写为称呼；余下行仅在主页可见',
+    leading: const Icon(Icons.badge_outlined),
+    setKey: SettingBoxKey.remarkReplaceName,
+    defaultVal: false,
+    onChanged: (value) {
+      GlobalData().remarkReplaceName = value;
+      GlobalData().remarkVersion.value++;
+    },
+  ),
+  SwitchModel(
     title: '返回时直接退出',
     subtitle: '开启后在主页任意tab按返回键都直接退出，关闭则先回到Navbar的第一个tab',
     leading: const Icon(Icons.exit_to_app_outlined),

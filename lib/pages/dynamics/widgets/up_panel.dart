@@ -7,6 +7,7 @@ import 'package:PiliPlus/pages/live_follow/view.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
+import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -242,7 +243,7 @@ class _UpPanelState extends State<UpPanel> {
               Padding(
                 padding: const .symmetric(horizontal: 4),
                 child: Text(
-                  isTop ? '${item.uname}\n' : item.uname!,
+                  isTop ? '${remarkedName(item.mid, item.uname!)}\n' : remarkedName(item.mid, item.uname!),
                   maxLines: 2,
                   textAlign: .center,
                   style: TextStyle(

@@ -308,7 +308,8 @@ abstract final class SettingBoxKey {
       reduceLuxColor = 'reduceLuxColor',
       liveCdnUrl = 'liveCdnUrl',
       saveReply = 'saveReply',
-      swapReplyLikeDislike = 'swapReplyLikeDislike';
+      swapReplyLikeDislike = 'swapReplyLikeDislike',
+      remarkReplaceName = 'remarkReplaceName';
 }
 
 abstract final class LocalCacheKey {

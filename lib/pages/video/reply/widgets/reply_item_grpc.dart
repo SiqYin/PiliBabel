@@ -178,7 +178,7 @@ class ReplyItemGrpc extends StatelessWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        member.name,
+                        remarkedName(member.mid.toInt(), member.name),
                         maxLines: 1,
                         overflow: .ellipsis,
                         style: TextStyle(
@@ -629,7 +629,10 @@ class ReplyItemGrpc extends StatelessWidget {
                       TextSpan(
                         children: [
                           TextSpan(
-                            text: childReply.member.name,
+                            text: remarkedName(
+                              childReply.member.mid.toInt(),
+                              childReply.member.name,
+                            ),
                             style: TextStyle(color: colorScheme.primary),
                             recognizer: NoDeadlineTapGestureRecognizer()
                               ..onTap = () {

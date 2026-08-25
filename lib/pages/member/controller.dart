@@ -224,6 +224,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
                 }
                 Pref.remarkMids = map;
                 remark.value = newRemark;
+                GlobalData().remarkVersion.value++;
                 Get.back();
               },
               child: const Text('确定'),
