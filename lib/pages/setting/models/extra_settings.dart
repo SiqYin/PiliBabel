@@ -1,4 +1,4 @@
-import 'dart:io';
+import 'dart:io' show Platform;
 import 'dart:math' show max;
 
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
@@ -31,6 +31,7 @@ import 'package:PiliPlus/pages/video/reply/widgets/reply_item_grpc.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
+import 'package:PiliPlus/utils/android/bindings.g.dart';
 import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
@@ -45,8 +46,8 @@ import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/update.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
-import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart' show kDebugMode, PlatformDispatcher;
+import 'package:flutter/services.dart' show FilteringTextInputFormatter;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
@@ -72,7 +73,15 @@ List<SettingsModel> get extraSettings => [
       leading: const Icon(Icons.storage),
       onTap: _showDownPathDialog,
     ),
-  ],
+  ] else if (Platform.isAndroid)
+    SwitchModel(
+      title: '允许三方APP访问私有存储',
+      subtitle: '允许三方APP（例如MT管理器）通过访问外部存储的方式访问私有存储下的文件',
+      leading: const Icon(Icons.storage),
+      setKey: SettingBoxKey.enableDocProvider,
+      defaultVal: Pref.enableDocProvider,
+      onChanged: _onDocProviderChanged,
+    ),
   SplitModel(
     normalModel: const NormalModel.split(
       title: '空降助手',
@@ -1194,4 +1203,8 @@ void _showCacheDialog(BuildContext context, VoidCallback setState) {
       ],
     ),
   );
+}
+
+void _onDocProviderChanged(bool value) {
+  AndroidHelper.updateDocProvider(PlatformDispatcher.instance.engineId!, value);
 }
