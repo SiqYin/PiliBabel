@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/models/common/danmaku/danmaku_font_sync_mode.dart';
 import 'package:PiliPlus/utils/app_font.dart';
@@ -26,6 +27,9 @@ class FontSettingPage extends StatefulWidget {
 }
 
 class _FontSettingPageState extends State<FontSettingPage> {
+  /// 字体选择："系统默认" 用空串表示
+  static const String _systemFontSentinel = '';
+
   String? _selectedFont = Pref.appFont;
   int _selectedWeight = Pref.appFontWeight;
   double _selectedScale = Pref.defaultTextScale;
@@ -60,6 +64,15 @@ class _FontSettingPageState extends State<FontSettingPage> {
     colorScheme = ColorScheme.of(context);
   }
 
+  /// 弹幕字体菜单显示名（跟随应用字体 / 系统默认弹幕字体 / 导入字体名）
+  String get _danmakuLabel => switch (_selectedDanmaku) {
+    DanmakuFontSource.global => '跟随应用字体',
+    DanmakuFontSource.system => '系统默认弹幕字体',
+    String family => DanmakuFont.currentFontName ?? family,
+    _ => '系统默认弹幕字体',
+  };
+
+  /// 弹幕字体实际生效的 fontFamily（跟随应用字体时取应用字体；系统默认为 null）
   String? get _danmakuFontFamily => switch (_selectedDanmaku) {
     DanmakuFontSource.global => _selectedFont,
     DanmakuFontSource.system => null,
@@ -129,6 +142,8 @@ class _FontSettingPageState extends State<FontSettingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final importedFamily = Pref.customFontFamily;
+    final danmakuImportedFamily = Pref.customDanmakuFontFamily;
     return SimpleScaffold(
       appBar: AppBar(
         actions: [
@@ -154,6 +169,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
               child: Center(
                 child: Column(
                   mainAxisSize: .min,
+                  crossAxisAlignment: .start,
                   children: [
                     Text(
                       'abcdefghijklmnopqrstuvwxyz\n'
@@ -173,7 +189,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
                         fontSize: 14 * _selectedScale,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     Text(
                       '弹幕预览：前方高能反应 666',
                       style: TextStyle(
@@ -187,18 +203,18 @@ class _FontSettingPageState extends State<FontSettingPage> {
             ),
             _buildItem(
               Row(
-                mainAxisSize: .min,
                 children: [
                   const Text('字体：', style: TextStyle(fontWeight: .bold)),
+                  const SizedBox(width: 8),
                   Expanded(
-                    child: DropdownButton<String>(
-                      focusColor: Colors.transparent,
-                      value: _selectedFont,
-                      isExpanded: true,
-                      items: [
-                        if (Pref.customFontFamily case final importedFamily?)
-                          DropdownMenuItem(
+                    child: StaticPopupMenuButton<String>(
+                      initialValue: _selectedFont ?? _systemFontSentinel,
+                      borderRadius: BorderRadius.circular(8),
+                      itemBuilder: (context) => [
+                        if (importedFamily != null) ...[
+                          PopupMenuItem<String>(
                             value: importedFamily,
+                            height: 40,
                             child: Text(
                               '${AppFont.currentFontName ?? importedFamily}（导入）',
                               style: TextStyle(fontFamily: importedFamily),
@@ -206,9 +222,17 @@ class _FontSettingPageState extends State<FontSettingPage> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        ..._fonts.map(
-                          (font) => DropdownMenuItem(
+                          const CustomPopupMenuDivider(height: 8),
+                        ],
+                        PopupMenuItem<String>(
+                          value: _systemFontSentinel,
+                          height: 40,
+                          child: const Text('系统默认'),
+                        ),
+                        for (final font in _fonts)
+                          PopupMenuItem<String>(
                             value: font,
+                            height: 40,
                             child: Text(
                               font,
                               style: TextStyle(fontFamily: font),
@@ -216,26 +240,28 @@ class _FontSettingPageState extends State<FontSettingPage> {
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                        ),
                       ],
-                      onChanged: (value) {
-                        setState(
-                          () => _selectedFont == value
-                              ? _selectedFont = null
-                              : _selectedFont = value,
-                        );
-                      },
+                      onSelected: (value) => setState(
+                        () => _selectedFont = value.isEmpty
+                            ? null
+                            : value,
+                      ),
+                      child: _selectorLabel(
+                        text: _selectedFont ?? '系统默认',
+                        fontFamily: _selectedFont,
+                      ),
                     ),
                   ),
-                  IconButton(
+                  const SizedBox(width: 4),
+                  _actionIcon(
                     tooltip: '导入字体文件（TTF/OTF）',
-                    icon: const Icon(Icons.file_open_outlined),
+                    icon: Icons.file_open_outlined,
                     onPressed: _importAppFont,
                   ),
-                  if (Pref.customFontFamily != null)
-                    IconButton(
+                  if (importedFamily != null)
+                    _actionIcon(
                       tooltip: '删除已导入字体',
-                      icon: const Icon(Icons.delete_outline),
+                      icon: Icons.delete_outline,
                       onPressed: _deleteAppFont,
                     ),
                 ],
@@ -317,65 +343,83 @@ class _FontSettingPageState extends State<FontSettingPage> {
                 ],
               ),
             ),
-            _buildItem(
-              Text(
-                '弹幕字体',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: .bold,
-                  color: colorScheme.primary,
-                ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10),
+              child: Divider(
+                height: 1,
+                thickness: 1,
+                color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              child: Row(
+                children: [
+                  const Icon(Icons.subtitles_outlined, size: 18),
+                  const SizedBox(width: 6),
+                  Text(
+                    '弹幕字体',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: .bold,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ],
               ),
             ),
             _buildItem(
               Row(
-                mainAxisSize: .min,
                 children: [
                   const Text('弹幕：', style: TextStyle(fontWeight: .bold)),
+                  const SizedBox(width: 8),
                   Expanded(
-                    child: DropdownButton<Object>(
-                      focusColor: Colors.transparent,
-                      value: _selectedDanmaku,
-                      isExpanded: true,
-                      items: [
-                        const DropdownMenuItem(
-                          value: DanmakuFontSource.global,
-                          child: Text('跟随应用字体'),
-                        ),
-                        const DropdownMenuItem(
-                          value: DanmakuFontSource.system,
-                          child: Text('系统默认弹幕字体'),
-                        ),
-                        if (Pref.customDanmakuFontFamily
-                            case final importedFamily?)
-                          DropdownMenuItem(
-                            value: importedFamily,
+                    child: StaticPopupMenuButton<Object>(
+                      initialValue: _selectedDanmaku,
+                      borderRadius: BorderRadius.circular(8),
+                      itemBuilder: (context) => [
+                        if (danmakuImportedFamily != null) ...[
+                          PopupMenuItem<Object>(
+                            value: danmakuImportedFamily,
+                            height: 40,
                             child: Text(
-                              '${DanmakuFont.currentFontName ?? importedFamily}（导入）',
-                              style: TextStyle(fontFamily: importedFamily),
+                              '${DanmakuFont.currentFontName ?? danmakuImportedFamily}（导入）',
+                              style: TextStyle(
+                                fontFamily: danmakuImportedFamily,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
+                          const CustomPopupMenuDivider(height: 8),
+                        ],
+                        const PopupMenuItem<Object>(
+                          value: DanmakuFontSource.global,
+                          height: 40,
+                          child: Text('跟随应用字体'),
+                        ),
+                        const PopupMenuItem<Object>(
+                          value: DanmakuFontSource.system,
+                          height: 40,
+                          child: Text('系统默认弹幕字体'),
+                        ),
                       ],
-                      onChanged: (value) {
-                        setState(
-                          () => _selectedDanmaku == value
-                              ? _selectedDanmaku = DanmakuFontSource.global
-                              : _selectedDanmaku = value,
-                        );
-                      },
+                      onSelected: (value) => setState(
+                        () => _selectedDanmaku = value,
+                      ),
+                      child: _selectorLabel(text: _danmakuLabel),
                     ),
                   ),
-                  IconButton(
+                  const SizedBox(width: 4),
+                  _actionIcon(
                     tooltip: '导入弹幕字体文件（TTF/OTF）',
-                    icon: const Icon(Icons.file_open_outlined),
+                    icon: Icons.file_open_outlined,
                     onPressed: _importDanmakuFont,
                   ),
-                  if (Pref.customDanmakuFontFamily != null)
-                    IconButton(
+                  if (danmakuImportedFamily != null)
+                    _actionIcon(
                       tooltip: '删除已导入弹幕字体',
-                      icon: const Icon(Icons.delete_outline),
+                      icon: Icons.delete_outline,
                       onPressed: _deleteDanmakuFont,
                     ),
                 ],
@@ -384,6 +428,46 @@ class _FontSettingPageState extends State<FontSettingPage> {
           ],
         ),
       ),
+    );
+  }
+
+  /// 当前选中字体的显示名（字体/弹幕共用）
+  Widget _selectorLabel({required String text, String? fontFamily}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              text,
+              style: TextStyle(fontFamily: fontFamily, fontSize: 14),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Icon(
+            Icons.arrow_drop_down,
+            size: 20,
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 紧凑型操作按钮（导入/删除），40x40 命中区与列表行高匹配
+  Widget _actionIcon({
+    required String tooltip,
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    return IconButton(
+      tooltip: tooltip,
+      icon: Icon(icon, size: 20),
+      padding: EdgeInsets.zero,
+      constraints: const BoxConstraints.tightFor(width: 40, height: 40),
+      onPressed: onPressed,
     );
   }
 

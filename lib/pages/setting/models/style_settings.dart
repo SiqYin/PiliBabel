@@ -10,7 +10,6 @@ import 'package:PiliPlus/common/widgets/scroll_physics.dart'
     show kSpringDescription;
 import 'package:PiliPlus/common/widgets/stateful_builder.dart';
 import 'package:PiliPlus/models/common/bar_hide_type.dart';
-import 'package:PiliPlus/models/common/danmaku/danmaku_font_sync_mode.dart';
 import 'package:PiliPlus/models/common/dynamic/dynamic_badge_mode.dart';
 import 'package:PiliPlus/models/common/dynamic/up_panel_position.dart';
 import 'package:PiliPlus/models/common/home_tab_type.dart';
@@ -28,7 +27,6 @@ import 'package:PiliPlus/pages/setting/widgets/multi_select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/slider_dialog.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
-import 'package:PiliPlus/utils/danmaku_font.dart';
 import 'package:PiliPlus/utils/extension/file_ext.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
@@ -99,18 +97,6 @@ List<SettingsModel> get styleSettings => [
     title: 'App字体设置',
     subtitle: '点击设置',
     leading: const Icon(Icons.text_fields),
-    onTap: (context, setState) => Get.toNamed('/fontSetting'),
-  ),
-  NormalModel(
-    title: '弹幕字体',
-    leading: const Icon(Icons.subtitles_outlined),
-    getSubtitle: () => switch (Pref.danmakuFontSyncMode) {
-      DanmakuFontSyncMode.system => '系统默认弹幕字体',
-      DanmakuFontSyncMode.global =>
-        Pref.enableCustomDanmakuFont ? '跟随应用字体' : '系统默认弹幕字体',
-      DanmakuFontSyncMode.custom =>
-        DanmakuFont.currentFontName ?? '独立字体',
-    },
     onTap: (context, setState) => Get.toNamed('/fontSetting'),
   ),
   NormalModel(
