@@ -1850,13 +1850,16 @@ class HeaderControlState extends State<HeaderControl>
             if (introController.isShowOnlineTotal)
               Positioned(
                 left: 0,
-                top: 16,
-                child: Obx(
-                  () => Text(
-                    '${introController.total.value}人正在看',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
+                bottom: 0,
+                child: FractionalTranslation(
+                  translation: const Offset(0, 1),
+                  child: Obx(
+                    () => Text(
+                      '${introController.total.value}人正在看',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 11,
+                      ),
                     ),
                   ),
                 ),
