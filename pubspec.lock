@@ -17,6 +17,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "14.1.0"
+  android_file_picker:
+    dependency: transitive
+    description:
+      name: android_file_picker
+      sha256: "3384b62685e04ce7afeaf57e94bf29bc167e32240be6c6cb382a94632aec0241"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   ansicolor:
     dependency: transitive
     description:
@@ -385,6 +393,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.2"
+  cupertino_ui:
+    dependency: "direct main"
+    description:
+      name: cupertino_ui
+      sha256: "2137c0d41f3b62cc4d3d2495e6c354bd6b6133cd21c6bb155736cc31dbd49a11"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   dart_style:
     dependency: transitive
     description:
@@ -462,10 +478,10 @@ packages:
     dependency: "direct main"
     description:
       name: dynamic_color
-      sha256: "4aeb76de323e8eb660bab5557d826ad7ebbf1434a598f0c6aa8a11a9696a6757"
+      sha256: "869b3bce0100eb519768ecd71c0111f0b5ea679f5f62e1f59c49d80067e730c5"
       url: "https://pub.dev"
     source: hosted
-    version: "1.9.0"
+    version: "2.1.0"
   easy_debounce:
     dependency: "direct main"
     description:
@@ -516,7 +532,7 @@ packages:
     source: hosted
     version: "1.3.3"
   ffi:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: ffi
       sha256: "6d7fd89431262d8f3125e81b50d3847a091d846eafcd4fdb88dd06f36d705a45"
@@ -543,10 +559,42 @@ packages:
     dependency: "direct main"
     description:
       name: file_picker
-      sha256: fdc6a37f715d19f35b131decf1ce39242eeed5ddae18c0818c3eccb731ab76be
+      sha256: "80f3ebee5e23b30f1c3163fbc8b4cd49ef959b4a2d8475ed370f17c34d726dc7"
       url: "https://pub.dev"
     source: hosted
-    version: "12.0.0-beta.7"
+    version: "12.1.0"
+  file_picker_darwin:
+    dependency: transitive
+    description:
+      name: file_picker_darwin
+      sha256: b505d03b6f631dc79ee070866e0935c6472c029172d389d747e2d5594dcab9ff
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
+  file_picker_linux:
+    dependency: transitive
+    description:
+      name: file_picker_linux
+      sha256: "93d3f62f97c657053e7b184fe0f5e22347d85067c053640a30b1ac8ad7844e3b"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
+  file_picker_platform_interface:
+    dependency: transitive
+    description:
+      name: file_picker_platform_interface
+      sha256: b1ddd7909853c9df0eb4dbc5b388837ff313e28d6d5a9a71a83794b70c4c86bd
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.1.0"
+  file_picker_web:
+    dependency: transitive
+    description:
+      name: file_picker_web
+      sha256: "067051c42bb6ceb7650f2771206ca4c4908855a786cc03a0cb7240da441106f3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.2"
   file_selector_linux:
     dependency: transitive
     description:
@@ -599,10 +647,10 @@ packages:
     dependency: "direct main"
     description:
       name: flex_seed_scheme
-      sha256: a3183753bbcfc3af106224bff3ab3e1844b73f58062136b7499919f49f3667e7
+      sha256: "6d725df2c2abd6f2d87cf67bfd3fb335e3b4aa4cfef4d85afcb322b6fa600a6b"
       url: "https://pub.dev"
     source: hosted
-    version: "4.0.1"
+    version: "5.0.0"
   flutter:
     dependency: "direct main"
     description: flutter
@@ -808,8 +856,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "version_4.7.2_patch"
-      resolved-ref: "098d44d371f951f4f4d6b30739a887f87a15d0f8"
+      ref: dev
+      resolved-ref: "1a9517ce8fdfd3ff11a11072d23e0e839ad3b73c"
       url: "https://github.com/Starfallan/getx.git"
     source: git
     version: "4.7.2"
@@ -1182,6 +1230,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  material_ui:
+    dependency: "direct main"
+    description:
+      name: material_ui
+      sha256: "7ba1ca315d50a004791dbab290417c52a61466d56db2822fe3c5c2994903110c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.0"
   media_kit:
     dependency: "direct main"
     description:
@@ -2046,6 +2102,14 @@ packages:
       url: "https://github.com/bggRGjQaUbCoE/window_manager.git"
     source: git
     version: "0.5.2"
+  windows_file_picker:
+    dependency: transitive
+    description:
+      name: windows_file_picker
+      sha256: "1659127cb9e9e31a136352bfcb50fa4bb9e242dd7e0b71f99c3943b142e3026a"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.2"
   xdg_directories:
     dependency: transitive
     description:
@@ -2071,5 +2135,5 @@ packages:
     source: hosted
     version: "3.1.3"
 sdks:
-  dart: ">=3.12.0 <4.0.0"
-  flutter: "3.47.0"
+  dart: ">=3.13.0 <4.0.0"
+  flutter: "3.47.1"

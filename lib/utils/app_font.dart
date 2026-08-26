@@ -37,21 +37,16 @@ abstract final class AppFont {
   }
 
   static Future<bool> pickAndApply() async {
-    final result = await FilePicker.pickFiles(
+    final picked = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: allowedExtensions,
-      withData: true,
     );
-    if (result == null || result.files.isEmpty) {
+    if (picked == null) {
       return false;
     }
 
-    final picked = result.files.single;
-    final extension = path
-        .extension(picked.path ?? picked.name)
-        .replaceFirst('.', '')
-        .toLowerCase();
-    if (!allowedExtensions.contains(extension)) {
+    final extension = picked.extension?.toLowerCase();
+    if (extension == null || !allowedExtensions.contains(extension)) {
       throw UnsupportedError('unsupported font file: $extension');
     }
 
@@ -63,26 +58,23 @@ abstract final class AppFont {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final targetPath = path.join(fontDir.path, 'custom_font_$timestamp.$extension');
     final targetFile = File(targetPath);
-    if (picked.bytes case final Uint8List bytes) {
-      await targetFile.writeAsBytes(bytes, flush: true);
-    } else {
-      final sourcePath = picked.path;
-      if (sourcePath == null || sourcePath.isEmpty) {
-        throw StateError('missing font bytes');
-      }
-      await File(sourcePath).copy(targetPath);
-    }
+    await targetFile.writeAsBytes(await picked.readAsBytes(), flush: true);
 
     final fontFamily = 'custom_font_$timestamp';
     try {
       await _loadFont(fontPath: targetPath, fontFamily: fontFamily);
       final previousFontPath = Pref.customFontPath;
+      final previousFamily = Pref.customFontFamily;
       await GStorage.setting.put(SettingBoxKey.customFontPath, targetPath);
       await GStorage.setting.put(SettingBoxKey.customFontFamily, fontFamily);
       await GStorage.setting.put(
         SettingBoxKey.customFontName,
         path.basename(picked.path ?? picked.name),
       );
+      // 替换旧导入文件时，若正在使用旧导入字体，选择顺延到新文件
+      if (Pref.appFont != null && Pref.appFont == previousFamily) {
+        await GStorage.setting.put(SettingBoxKey.appFont, fontFamily);
+      }
       if (previousFontPath != null && previousFontPath != targetPath) {
         final previousFile = File(previousFontPath);
         if (previousFile.existsSync()) {
@@ -103,13 +95,17 @@ abstract final class AppFont {
 
   static Future<bool> clear() async {
     final fontPath = Pref.customFontPath;
+    final fontFamily = Pref.customFontFamily;
     final hadCustomFont =
         (fontPath != null && fontPath.isNotEmpty) ||
-        Pref.customFontFamily != null ||
+        fontFamily != null ||
         Pref.customFontName != null;
     await GStorage.setting.delete(SettingBoxKey.customFontPath);
     await GStorage.setting.delete(SettingBoxKey.customFontFamily);
     await GStorage.setting.delete(SettingBoxKey.customFontName);
+    if (fontFamily != null && Pref.appFont == fontFamily) {
+      await GStorage.setting.put(SettingBoxKey.appFont, null);
+    }
     if (fontPath != null && fontPath.isNotEmpty) {
       final file = File(fontPath);
       if (file.existsSync()) {

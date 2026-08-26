@@ -37,21 +37,16 @@ abstract final class DanmakuFont {
   }
 
   static Future<bool> pickAndApply() async {
-    final result = await FilePicker.pickFiles(
+    final picked = await FilePicker.pickFile(
       type: FileType.custom,
       allowedExtensions: allowedExtensions,
-      withData: true,
     );
-    if (result == null || result.files.isEmpty) {
+    if (picked == null) {
       return false;
     }
 
-    final picked = result.files.single;
-    final extension = path
-        .extension(picked.path ?? picked.name)
-        .replaceFirst('.', '')
-        .toLowerCase();
-    if (!allowedExtensions.contains(extension)) {
+    final extension = picked.extension?.toLowerCase();
+    if (extension == null || !allowedExtensions.contains(extension)) {
       throw UnsupportedError('unsupported font file: $extension');
     }
 
@@ -63,15 +58,7 @@ abstract final class DanmakuFont {
     final timestamp = DateTime.now().millisecondsSinceEpoch;
     final targetPath = path.join(fontDir.path, 'custom_danmaku_font_$timestamp.$extension');
     final targetFile = File(targetPath);
-    if (picked.bytes case final Uint8List bytes) {
-      await targetFile.writeAsBytes(bytes, flush: true);
-    } else {
-      final sourcePath = picked.path;
-      if (sourcePath == null || sourcePath.isEmpty) {
-        throw StateError('missing font bytes');
-      }
-      await File(sourcePath).copy(targetPath);
-    }
+    await targetFile.writeAsBytes(await picked.readAsBytes(), flush: true);
 
     final fontFamily = 'custom_danmaku_font_$timestamp';
     try {

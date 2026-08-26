@@ -12,9 +12,9 @@ import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/reply_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
+import 'package:material_ui/material_ui.dart';
 
 abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
   final RxInt count = (-1).obs;
@@ -40,13 +40,10 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
       _enableCommAntifraud || _biliSendCommAntifraud;
   dynamic get sourceId;
 
-  /// 评论默认排序方式，主楼与楼中楼可分别覆写
-  ReplySortType get defaultSortType => Pref.replySortType;
-
   @override
   void onInit() {
     super.onInit();
-    final cacheSortType = defaultSortType;
+    final cacheSortType = Pref.replySortType;
     sortType = cacheSortType.obs;
     mode = cacheSortType == .time ? Mode.MAIN_LIST_TIME : Mode.MAIN_LIST_HOT;
   }
@@ -71,7 +68,7 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
       if (hasUpTop = data.hasUpTop()) {
         data.replies.insert(0, data.upTop);
       }
-      if (subjectControl?.title == ReplySortType.select.title) {
+      if (subjectControl?.title == ReplySortType.select.desc) {
         sortType.value = .select;
       }
     }

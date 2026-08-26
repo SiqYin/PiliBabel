@@ -17,11 +17,11 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
 # update when release
-version: 2.1.0+1
+version: 2.1.2+1
 
 environment:
-  sdk: ">=3.12.0"
-  flutter: 3.47.0
+  sdk: ">=3.13.0"
+  flutter: 3.47.1
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -74,6 +74,7 @@ dependencies:
   connectivity_plus: ^7.1.1
   cookie_jar: ^4.0.8
   crypto: ^3.0.6
+  cupertino_ui: ^1.0.0
   desktop_webview_window:
     git:
       url: https://github.com/Predidit/linux_webview_window
@@ -82,17 +83,18 @@ dependencies:
   dio: ^5.9.1
   dio_http2_adapter: ^2.7.1
   dlna_dart: ^0.1.0
-  dynamic_color: ^1.8.1
+  dynamic_color: ^2.1.0
   easy_debounce: ^2.0.3
   encrypt: ^5.0.3
   extended_nested_scroll_view:
     git:
       url: https://github.com/bggRGjQaUbCoE/extended_nested_scroll_view.git
       ref: dev
-  file_picker: ^12.0.0-beta.7
+  ffi: ^2.2.0
+  file_picker: ^12.0.0
   fixnum: ^1.1.1
   fl_chart: ^1.0.0
-  flex_seed_scheme: ^4.0.1
+  flex_seed_scheme: ^5.0.0
   flutter_displaymode: ^0.7.0
   flutter_html: ^3.0.0-beta.2
   flutter_inappwebview: ^6.1.5
@@ -116,7 +118,7 @@ dependencies:
   get:
     git:
       url: https://github.com/Starfallan/getx.git
-      ref: version_4.7.2_patch
+      ref: dev
   hashlib: ^1.12.0
   hive_ce: ^2.19.3
   html: ^0.15.4
@@ -134,6 +136,7 @@ dependencies:
       url: https://github.com/bggRGjQaUbCoE/material_design_icons_flutter.git
       ref: const
   material_new_shapes: ^1.0.0
+  material_ui: ^1.0.0
   media_kit: 1.1.11
   media_kit_libs_video: 1.0.5
   media_kit_video: 1.2.5

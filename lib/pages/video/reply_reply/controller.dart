@@ -1,8 +1,7 @@
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
-    show ReplyInfo, DetailListReply;
+    show ReplyInfo, DetailListReply, Mode;
 import 'package:PiliPlus/grpc/reply.dart';
 import 'package:PiliPlus/http/loading_state.dart';
-import 'package:PiliPlus/models/common/reply/reply_sort_type.dart';
 import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/pages/common/reply_controller.dart';
 import 'package:PiliPlus/pages/video/reply_new/view.dart';
@@ -10,7 +9,7 @@ import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart';
 import 'package:fixnum/fixnum.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:get/get.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
@@ -51,13 +50,12 @@ class VideoReplyReplyController extends ReplyController
   @override
   dynamic get sourceId => replyType == 1 ? IdUtils.av2bv(oid) : oid;
 
-  /// 楼中楼使用独立的默认排序设置
-  @override
-  ReplySortType get defaultSortType => Pref.replyReplySortType;
-
   @override
   void onInit() {
     super.onInit();
+    final cacheSortType = Pref.reply2SortType;
+    sortType.value = cacheSortType;
+    mode = cacheSortType == .time ? Mode.MAIN_LIST_TIME : Mode.MAIN_LIST_HOT;
     queryData();
   }
 

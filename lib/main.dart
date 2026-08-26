@@ -38,13 +38,12 @@ import 'package:catcher_2/catcher_2.dart';
 import 'package:collection/collection.dart';
 import 'package:dynamic_color/dynamic_color.dart' show DynamicColorPlugin;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
@@ -294,11 +293,7 @@ class MyApp extends StatelessWidget {
       theme: light,
       darkTheme: dark,
       themeMode: ThemeUtils.themeMode = Pref.themeMode,
-      localizationsDelegates: const [
-        GlobalCupertinoLocalizations.delegate,
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-      ],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
       locale: const Locale("zh", "CN"),
       fallbackLocale: const Locale("zh", "CN"),
       supportedLocales: const [Locale("zh", "CN"), Locale("en", "US")],

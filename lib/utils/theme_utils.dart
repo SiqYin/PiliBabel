@@ -1,9 +1,9 @@
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
-import 'package:flutter/cupertino.dart' show CupertinoThemeData;
+import 'package:cupertino_ui/cupertino_ui.dart' show CupertinoThemeData;
 import 'package:flutter/foundation.dart' show PlatformDispatcher;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 abstract final class ThemeUtils {
   static late ThemeData lightTheme;
@@ -31,7 +31,6 @@ abstract final class ThemeUtils {
     required bool isDynamic,
     bool isDark = false,
   }) {
-    final customFontFamily = Pref.customFontFamily;
     final appFontWeight = Pref.appFontWeight.clamp(
       -1,
       FontWeight.values.length - 1,
@@ -39,15 +38,13 @@ abstract final class ThemeUtils {
     final fontWeight = appFontWeight == -1
         ? null
         : FontWeight.values[appFontWeight];
-    late final textStyle = TextStyle(
-      fontWeight: fontWeight,
-      fontFamily: customFontFamily,
-    );
+    final font = Pref.appFont;
+    final changeStyle = font == null && fontWeight == null;
+    late final textStyle = TextStyle(fontWeight: fontWeight, fontFamily: font);
     ThemeData theme = ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      fontFamily: customFontFamily,
-      textTheme: fontWeight == null && customFontFamily == null
+      textTheme: changeStyle
           ? null
           : TextTheme(
               displayLarge: textStyle,
@@ -66,9 +63,7 @@ abstract final class ThemeUtils {
               labelMedium: textStyle,
               labelSmall: textStyle,
             ),
-      tabBarTheme: fontWeight == null && customFontFamily == null
-          ? null
-          : TabBarThemeData(labelStyle: textStyle),
+      tabBarTheme: changeStyle ? null : TabBarThemeData(labelStyle: textStyle),
       appBarTheme: AppBarTheme(
         elevation: 0,
         titleSpacing: 0,
@@ -78,7 +73,7 @@ abstract final class ThemeUtils {
         titleTextStyle: TextStyle(
           fontSize: 16,
           color: colorScheme.onSurface,
-          fontFamily: customFontFamily,
+          fontFamily: font,
           fontWeight: fontWeight,
         ),
       ),
@@ -107,7 +102,7 @@ abstract final class ThemeUtils {
             fontSize: 14,
             letterSpacing: 0.1,
             fontWeight: FontWeight.w500,
-            fontFamily: customFontFamily,
+            fontFamily: font,
           ),
         ),
       ),
@@ -134,7 +129,7 @@ abstract final class ThemeUtils {
       dialogTheme: DialogThemeData(
         titleTextStyle: TextStyle(
           fontSize: 18,
-          fontFamily: customFontFamily,
+          fontFamily: font,
           fontWeight: fontWeight,
           color: colorScheme.onSurface,
         ),
@@ -186,12 +181,10 @@ abstract final class ThemeUtils {
         },
       ),
     );
-    if (customFontFamily != null) {
+    if (font != null) {
       theme = theme.copyWith(
-        textTheme: theme.textTheme.apply(fontFamily: customFontFamily),
-        primaryTextTheme: theme.primaryTextTheme.apply(
-          fontFamily: customFontFamily,
-        ),
+        textTheme: theme.textTheme.apply(fontFamily: font),
+        primaryTextTheme: theme.primaryTextTheme.apply(fontFamily: font),
       );
     }
     if (isDark && Pref.isPureBlackTheme) {

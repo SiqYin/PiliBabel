@@ -62,13 +62,13 @@ import 'package:dio/dio.dart';
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show compute;
-import 'package:flutter/material.dart' hide showBottomSheet;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
+import 'package:material_ui/material_ui.dart' hide showBottomSheet;
 import 'package:media_kit/media_kit.dart' show NativePlayer;
 
 class _BatteryInfo {
@@ -334,6 +334,8 @@ class HeaderControl extends StatefulWidget {
       return autoWrapReportDialog(
         context,
         ReportOptions.danmakuReport,
+        withContent: ReportOptions.danmakuReportCheck,
+        contentRequired: ReportOptions.danmakuReportCheck,
         (reasonType, reasonDesc, banUid) {
           if (banUid) {
             final filter = ctr.filters;
@@ -350,10 +352,10 @@ class HeaderControl extends StatefulWidget {
             );
           }
           return DanmakuHttp.danmakuReport(
-            reason: reasonType == 0 ? 11 : reasonType,
+            reason: reasonType,
             cid: ctr.cid!,
             id: extra.id,
-            content: reasonType == 0 ? reasonDesc : null,
+            content: reasonDesc,
           );
         },
       );
@@ -373,6 +375,8 @@ class HeaderControl extends StatefulWidget {
         context,
         ban: false,
         ReportOptions.liveDanmakuReport,
+        withContent: ReportOptions.liveDanmakuReportCheck,
+        contentRequired: ReportOptions.liveDanmakuReportCheck,
         (reasonType, reasonDesc, banUid) {
           // if (banUid) {
           //   final filter = ctr.filters;
@@ -780,14 +784,20 @@ class HeaderControlState extends State<HeaderControl>
                     try {
                       final result = await FilePicker.pickFile(
                         type: .custom,
-                        allowedExtensions: const ['json', 'vtt', 'srt', 'ass'],
+                        allowedExtensions: const [
+                          'json',
+                          'vtt',
+                          'srt',
+                          'ass',
+                          'bcc',
+                        ],
                       );
                       if (result != null) {
                         final file = result.xFile;
                         final path = file.path;
                         final name = file.name;
                         final length = videoDetailCtr.subtitles.length;
-                        if (name.endsWith('.json')) {
+                        if (name.endsWith('.json') || name.endsWith('.bcc')) {
                           final file = File(path);
                           final stream = file.openRead().transform(
                             utf8.decoder,
@@ -930,7 +940,7 @@ class HeaderControlState extends State<HeaderControl>
                       title: const Text("VideoTrack"),
                       subtitle: Text(state.track.video.toString()),
                       onTap: () =>
-                          Utils.copyText('VideoTrack\n${state.track.audio}'),
+                          Utils.copyText('VideoTrack\n${state.track.video}'),
                     ),
                     ListTile(
                       dense: true,
@@ -941,7 +951,7 @@ class HeaderControlState extends State<HeaderControl>
                     ListTile(
                       dense: true,
                       title: const Text("Volume"),
-                      subtitle: Text(volume.toString()),
+                      subtitle: Text(volume),
                       onTap: () => Utils.copyText('Volume\n$volume'),
                     ),
                     ListTile(
@@ -1252,7 +1262,7 @@ class HeaderControlState extends State<HeaderControl>
     if (subtitle == null) {
       final url = item.subtitleUrl;
       if (url == null || url.isEmpty) return null;
-      final res = await VideoHttp.vttSubtitles(url);
+      final res = await VideoHttp.getSubtitles(url);
       if (res == null) return null;
       subtitle = (isData: true, id: res);
       videoDetailCtr.vttSubtitles[index] = subtitle;
@@ -1331,7 +1341,7 @@ class HeaderControlState extends State<HeaderControl>
                     case .srt:
                       final url = item.subtitleUrl;
                       if (url == null || url.isEmpty) return;
-                      final subtitle = await VideoHttp.vttSubtitles(
+                      final subtitle = await VideoHttp.getSubtitles(
                         url,
                         format: .srt,
                       );
