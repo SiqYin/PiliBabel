@@ -190,7 +190,6 @@ class _WebviewPageState extends State<WebviewPage> with RouteAware {
                             ],
                       ),
                     ],
-                    ],
             ),
       body: _isPop
           ? null
