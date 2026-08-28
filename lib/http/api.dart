@@ -1032,4 +1032,13 @@ abstract final class Api {
 
   static const String liveFeedback =
       '${HttpString.liveBaseUrl}/xlive/app-interface/v2/index/feedback';
+
+  static const String liveFansMedalPanel =
+      '${HttpString.liveBaseUrl}/xlive/app-ucenter/v1/fansMedal/panel';
+
+  static const String liveFansMedalWear =
+      '${HttpString.liveBaseUrl}/xlive/app-ucenter/v1/fansMedal/wear';
+
+  static const String liveFansMedalTakeOff =
+      '${HttpString.liveBaseUrl}/xlive/app-ucenter/v1/fansMedal/take_off';
 }

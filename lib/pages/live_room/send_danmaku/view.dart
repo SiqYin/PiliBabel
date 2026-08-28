@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/widgets/button/toolbar_icon_button.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/text_field.dart';
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/http/live.dart';
@@ -8,6 +10,10 @@ import 'package:PiliPlus/pages/common/publish/common_rich_text_pub_page.dart';
 import 'package:PiliPlus/pages/live_emote/controller.dart';
 import 'package:PiliPlus/pages/live_emote/view.dart';
 import 'package:PiliPlus/pages/live_room/controller.dart';
+import 'package:PiliPlus/pages/live_room/fans_medal/view.dart';
+import 'package:PiliPlus/pages/member/widget/medal_widget.dart';
+import 'package:PiliPlus/utils/extension/size_ext.dart';
+import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart' hide TextField;
@@ -38,6 +44,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<LiveSendDmPanel> {
     if (widget.fromEmote) {
       updatePanelType(PanelType.emoji);
     }
+    liveRoomController.loadFansMedal();
   }
 
   @override
@@ -46,6 +53,57 @@ class _ReplyPageState extends CommonRichTextPubPageState<LiveSendDmPanel> {
       tag: liveRoomController.roomId.toString(),
     );
     super.dispose();
+  }
+
+  Widget get fansMedalBtn {
+    if (!liveRoomController.isLogin) return const SizedBox.shrink();
+    return Obx(() {
+      final medal = liveRoomController.wearingMedal.value;
+      if (medal == null) {
+        return ToolbarIconButton(
+          tooltip: '粉丝勋章',
+          selected: false,
+          icon: const Icon(Icons.workspace_premium_outlined, size: 22),
+          onPressed: _showFansMedalPanel,
+        );
+      }
+      return Tooltip(
+        message: '粉丝勋章',
+        child: Material(
+          type: MaterialType.transparency,
+          borderRadius: Style.mdRadius,
+          child: InkWell(
+            borderRadius: Style.mdRadius,
+            onTap: _showFansMedalPanel,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+              child: MedalWidget.fromMedalInfo(
+                medal: medal,
+                padding: MedalWidget.mediumPadding,
+              ),
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  void _showFansMedalPanel() {
+    final context = this.context;
+    final isPortrait = MediaQuery.sizeOf(context).isPortrait;
+    showModalBottomSheet(
+      context: context,
+      useSafeArea: true,
+      clipBehavior: Clip.hardEdge,
+      isScrollControlled: true,
+      showDragHandle: true,
+      constraints: const BoxConstraints(maxWidth: 450),
+      builder: (context) => FractionallySizedBox(
+        widthFactor: 1.0,
+        heightFactor: PlatformUtils.isMobile && !isPortrait ? 1.0 : 0.5,
+        child: FansMedalPanel(liveRoomController: liveRoomController),
+      ),
+    );
   }
 
   @override
@@ -133,7 +191,14 @@ class _ReplyPageState extends CommonRichTextPubPageState<LiveSendDmPanel> {
         child: Row(
           mainAxisAlignment: .spaceBetween,
           children: [
-            emojiBtn,
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                emojiBtn,
+                const SizedBox(width: 4),
+                fansMedalBtn,
+              ],
+            ),
             Obx(
               () => FilledButton.tonal(
                 onPressed: enablePublish.value ? onPublishThrottle : null,
@@ -184,7 +249,8 @@ class _ReplyPageState extends CommonRichTextPubPageState<LiveSendDmPanel> {
       Get.back();
       liveRoomController
         ..savedDanmaku?.clear()
-        ..savedDanmaku = null;
+        ..savedDanmaku = null
+        ..markFansMedalStale();
       SmartDialog.showToast('发送成功');
     } else {
       res.toast();
