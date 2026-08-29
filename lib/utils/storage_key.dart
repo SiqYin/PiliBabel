@@ -313,7 +313,8 @@ abstract final class SettingBoxKey {
       swapReplyLikeDislike = 'swapReplyLikeDislike',
       remarkReplaceName = 'remarkReplaceName',
       appFont = 'appFont',
-      customAppFont = 'customAppFont';
+      customAppFont = 'customAppFont',
+      customAppFontNames = 'customAppFontNames';
 }
 
 abstract final class LocalCacheKey {

@@ -120,32 +120,30 @@ class _FontSettingPageState extends State<FontSettingPage> {
       ..updateMyAppTheme();
   }
 
-  /// 已导入字体需要装载后才能在预览里显示
-  Future<void> _ensureLoaded(String? fontFamily) async {
-    if (fontFamily != null && FontUtils.customFonts.containsKey(fontFamily)) {
-      await FontUtils.loadFontIfNecessary(fontFamily);
-    }
+  /// 选中后再按需装载。必须先反馈选中态再装载：
+  /// 直接 await 装载会让点击在装载完成前毫无反应，看起来像没点到。
+  Future<void> _loadInBackground(String fontFamily) async {
+    if (!FontUtils.customFonts.containsKey(fontFamily)) return;
+    await FontUtils.loadFontIfNecessary(fontFamily);
+    if (mounted) setState(() {});
   }
 
   Future<void> _onFontSelected(String value) async {
     final fontFamily = value.isEmpty ? null : value;
-    await _ensureLoaded(fontFamily);
-    if (!mounted) return;
     setState(() => _selectedFont = fontFamily);
+    if (fontFamily != null) await _loadInBackground(fontFamily);
   }
 
   Future<void> _onDanmakuSelected(Object value) async {
-    await _ensureLoaded(value is String ? value : null);
-    if (!mounted) return;
     setState(() => _selectedDanmaku = value);
+    if (value is String) await _loadInBackground(value);
   }
 
   /// 导入字体文件。应用字体与弹幕字体共用同一个导入池，
   /// 区别只是导入完成后把哪一项指向新字体。
   Future<void> _importFont({required bool forDanmaku}) async {
-    SmartDialog.showLoading();
+    // loading 由 pickFonts 在文件选择器返回后自行管理
     final font = await FontUtils.pickFonts();
-    SmartDialog.dismiss();
     if (!mounted || font == null) return;
     setState(() {
       if (forDanmaku) {
@@ -154,6 +152,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
         _selectedFont = font;
       }
     });
+    await _loadInBackground(font);
   }
 
   Future<void> _removeFont(String fontFamily) async {
@@ -172,7 +171,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
   Future<void> _clearFonts() async {
     SmartDialog.showLoading();
     await FontUtils.clearFonts();
-    SmartDialog.dismiss();
+    SmartDialog.dismiss(status: SmartStatus.loading);
     if (!mounted) return;
     setState(() {
       // 选中的是系统字体时不受影响，只回收指向导入池的选择

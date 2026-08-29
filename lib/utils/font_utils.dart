@@ -35,20 +35,47 @@ abstract final class FontUtils {
   static final _loadedFonts = <String>{};
   static final _loadingFonts = <String, Future<void>>{};
 
-  /// 已导入字体池：key 形如 `<内容哈希>/<字体族名>`，value 为文件绝对路径。
-  /// 哈希前缀既保证 key 唯一、不与系统字体同名，又让同一文件重复导入天然去重。
+  /// 已导入字体池：key 为字体族名，value 为文件绝对路径
   static final customFonts = Pref.customAppFont;
 
-  /// 池 key 的显示名，即族名部分
-  static String displayName(String fontFamily) =>
-      fontFamily.substring(fontFamily.indexOf('/') + 1);
+  /// 字体族名 → 从字体文件解析出的显示名
+  static final _customFontNames = Pref.customAppFontNames;
 
-  /// 启动初始化：迁移旧格式 → 剔除失效条目 → 清理孤儿文件 → 装载在用字体
+  static String _familyOf(String hash) => 'custom_font_$hash';
+
+  /// 已导入字体的显示名，取不到时回落到族名本身
+  static String displayName(String fontFamily) =>
+      _customFontNames[fontFamily] ?? fontFamily;
+
+  static Future<void> _saveFonts() => GStorage.setting.putAll({
+    SettingBoxKey.customAppFont: customFonts,
+    SettingBoxKey.customAppFontNames: _customFontNames,
+  });
+
+  /// 启动初始化：迁移旧格式 → 剔除失效条目 → 清理孤儿文件 → 装载在用字体。
+  ///
+  /// 字体不是启动的必需品，这里整体兜底：任何异常或卡住都只导致字体不生效，
+  /// 绝不能阻断 App 启动（init 在 main 的 Future.wait 里，抛错会导致白屏）。
+  @pragma('vm:notify-debugger-on-exception')
   static Future<void> init() async {
+    try {
+      await _init().timeout(const Duration(seconds: 10));
+    } catch (e) {
+      debugPrint('font init failed: $e');
+    }
+  }
+
+  static Future<void> _init() async {
     await _migrateLegacyFonts();
     await _pruneMissingFonts();
     await _cleanupOrphanFiles();
-    await _loadActiveFonts();
+    // 装载最多只挡 2 秒：正常远快于此，异常也不至于卡住启动。
+    // 超时不会取消装载，它会在后台继续，
+    // 引擎完成注册后发出的 fontsChange 会触发文本重新排版。
+    await _loadActiveFonts().timeout(
+      const Duration(seconds: 2),
+      onTimeout: () {},
+    );
   }
 
   /// 只装载当前真正会用到的字体：应用字体 + 独立弹幕字体
@@ -90,7 +117,10 @@ abstract final class FontUtils {
     } catch (_) {}
   }
 
-  /// 导入字体文件（可多选），返回本批次第一个成功导入的池 key
+  /// 导入字体文件（可多选），返回本批次第一个成功导入的字体族名。
+  ///
+  /// 只落盘与建立索引，不在这里装载字体：多选时逐个装载会让导入非常慢，
+  /// 字体一律等到被选中时再按需装载。
   @pragma('vm:notify-debugger-on-exception')
   static Future<String?> pickFonts() async {
     try {
@@ -100,47 +130,56 @@ abstract final class FontUtils {
       );
       if (files.isEmpty) return null;
 
-      final dir = Directory(_kFontDir);
-      if (!dir.existsSync()) {
-        await dir.create(recursive: true);
-      }
-
-      // 逐个导入：并发落盘会让多个大字体同时占用内存和磁盘带宽
-      final newFonts = <String, String>{};
       String? firstFont;
       var failed = 0;
-      for (final file in files) {
-        final imported = await _importFont(file);
-        if (imported == null) {
-          failed++;
-          continue;
+      // loading 只覆盖落盘与解析，不覆盖用户在系统文件选择器里的操作
+      SmartDialog.showLoading();
+      try {
+        final dir = Directory(_kFontDir);
+        if (!dir.existsSync()) {
+          await dir.create(recursive: true);
         }
-        firstFont ??= imported.key;
-        newFonts[imported.key] = imported.value;
+
+        // 逐个导入：并发落盘会让多个大字体同时占用内存和磁盘带宽
+        var imported = false;
+        for (final file in files) {
+          final font = await _importFont(file);
+          if (font == null) {
+            failed++;
+            continue;
+          }
+          imported = true;
+          firstFont ??= font.family;
+          customFonts[font.family] = font.path;
+          _customFontNames[font.family] = font.name;
+        }
+
+        if (imported) {
+          await _saveFonts();
+        }
+      } finally {
+        // 必须指定 loading：默认的 smart 关的是最顶层弹窗，
+        // 若之后弹了 toast，被关掉的就是 toast，loading 会一直转下去
+        SmartDialog.dismiss(status: SmartStatus.loading);
       }
 
-      if (firstFont == null) {
-        SmartDialog.showToast('字体导入失败');
-        return null;
-      }
       if (failed != 0) {
-        SmartDialog.showToast('$failed 个字体导入失败');
+        SmartDialog.showToast(
+          firstFont == null ? '字体导入失败' : '$failed 个字体导入失败',
+        );
       }
-
-      customFonts.addAll(newFonts);
-      await GStorage.setting.put(SettingBoxKey.customAppFont, customFonts);
-      await loadFontIfNecessary(firstFont);
       return firstFont;
     } catch (_) {
+      SmartDialog.dismiss(status: SmartStatus.loading);
       if (kDebugMode) rethrow;
       SmartDialog.showToast('字体导入失败');
     }
     return null;
   }
 
-  /// 落盘 → 内容哈希 → 解析族名 → 生成池 key。
+  /// 落盘 → 内容哈希 → 解析显示名 → 生成族名。
   /// 先写临时文件再改名，中断不会在池目录留下半个字体。
-  static Future<MapEntry<String, String>?> _importFont(
+  static Future<({String family, String path, String name})?> _importFont(
     PlatformFile file,
   ) async {
     final xFile = file.xFile;
@@ -156,40 +195,41 @@ abstract final class FontUtils {
       final hash = await _hashFile(tmpFile);
       if (hash == null) return null;
 
-      final key = '$hash/${await _resolveFamily(tmpFile.path, xFile.name)}';
+      final family = _familyOf(hash);
+      final name = await _resolveName(tmpFile.path, xFile.name);
 
       // 同一文件已经导入过，直接复用
-      final existing = customFonts[key];
+      final existing = customFonts[family];
       if (existing != null && File(existing).existsSync()) {
         await _deleteFile(tmpFile);
-        return MapEntry(key, existing);
+        return (family: family, path: existing, name: name);
       }
 
       final saveTo = path.join(_kFontDir, '$hash${_extensionOf(xFile.name)}');
       await _deleteFile(File(saveTo));
       await tmpFile.rename(saveTo);
-      return MapEntry(key, saveTo);
+      return (family: family, path: saveTo, name: name);
     } catch (_) {
       await _deleteFile(tmpFile);
       return null;
     }
   }
 
-  /// 族名优先取字体文件内部的名字，解析不出来才回落到文件名
-  static Future<String> _resolveFamily(
+  /// 显示名优先取字体文件内部的名字，解析不出来才回落到文件名
+  static Future<String> _resolveName(
     String filePath,
     String? fallbackName,
   ) async {
-    final family = await FontNameParser.parse(filePath);
-    if (family != null) return family;
+    final name = await FontNameParser.parse(filePath);
+    if (name != null) return name;
     if (fallbackName != null) {
-      final name = Utils.getFileName(fallbackName, fileExt: false);
-      if (name.isNotEmpty) return name;
+      final fromFile = Utils.getFileName(fallbackName, fileExt: false);
+      if (fromFile.isNotEmpty) return fromFile;
     }
     return '未命名字体';
   }
 
-  /// 取内容哈希前 16 位十六进制：足够防碰撞，又不会让 key 过长
+  /// 取内容哈希前 16 位十六进制：足够防碰撞，又不会让族名过长
   static Future<String?> _hashFile(File file) async {
     try {
       final digest = await sha1.bind(file.openRead()).first;
@@ -208,9 +248,10 @@ abstract final class FontUtils {
   static Future<void> removeFont(String fontFamily) async {
     final filePath = customFonts.remove(fontFamily);
     if (filePath == null) return;
+    _customFontNames.remove(fontFamily);
     _loadedFonts.remove(fontFamily);
     await _deleteFile(File(filePath));
-    await GStorage.setting.put(SettingBoxKey.customAppFont, customFonts);
+    await _saveFonts();
     await _resetSelection({fontFamily});
   }
 
@@ -218,6 +259,7 @@ abstract final class FontUtils {
   static Future<void> clearFonts() async {
     final removed = customFonts.keys.toSet();
     customFonts.clear();
+    _customFontNames.clear();
     _loadedFonts.clear();
 
     final dir = Directory(_kFontDir);
@@ -226,7 +268,7 @@ abstract final class FontUtils {
         await dir.delete(recursive: true);
       } catch (_) {}
     }
-    await GStorage.setting.put(SettingBoxKey.customAppFont, customFonts);
+    await _saveFonts();
     await _resetSelection(removed);
   }
 
@@ -256,11 +298,12 @@ abstract final class FontUtils {
         if (!File(entry.value).existsSync()) entry.key,
     };
     if (missing.isEmpty) return;
-    for (final key in missing) {
-      customFonts.remove(key);
-      _loadedFonts.remove(key);
+    for (final family in missing) {
+      customFonts.remove(family);
+      _customFontNames.remove(family);
+      _loadedFonts.remove(family);
     }
-    await GStorage.setting.put(SettingBoxKey.customAppFont, customFonts);
+    await _saveFonts();
     await _resetSelection(missing);
   }
 
@@ -298,25 +341,31 @@ abstract final class FontUtils {
 
     if (legacyAppPath != null) {
       final legacyFamily = Pref.customFontFamily;
-      final key = await _adoptLegacyFont(legacyAppPath, Pref.customFontName);
-      poolChanged |= key != null;
-      // 旧字体文件已丢失时 key 为 null，选中项一并置空
+      final family = await _adoptLegacyFont(
+        legacyAppPath,
+        Pref.customFontName,
+      );
+      poolChanged |= family != null;
+      // appFont 为空时不自动选中：更早的版本没有 appFont 这个 key，
+      // 与"导入过字体但特意选了系统默认"在存储上无法区分，
+      // 宁可回到系统默认——字体已在池中，用户可自行选回。
+      // 旧字体文件已丢失时 family 为 null，选中项一并置空。
       if (legacyFamily != null && Pref.appFont == legacyFamily) {
-        updates[SettingBoxKey.appFont] = key;
+        updates[SettingBoxKey.appFont] = family;
       }
     }
 
     if (legacyDanmakuPath != null) {
       final legacyFamily = Pref.customDanmakuFontFamily;
-      final key = await _adoptLegacyFont(
+      final family = await _adoptLegacyFont(
         legacyDanmakuPath,
         Pref.customDanmakuFontName,
       );
-      poolChanged |= key != null;
+      poolChanged |= family != null;
       if (legacyFamily != null) {
-        // customDanmakuFontFamily 语义变更：改为存池 key
-        updates[SettingBoxKey.customDanmakuFontFamily] = key;
-        if (key == null &&
+        // customDanmakuFontFamily 语义变更：改为存导入池的字体族名
+        updates[SettingBoxKey.customDanmakuFontFamily] = family;
+        if (family == null &&
             Pref.danmakuFontSyncMode == DanmakuFontSyncMode.custom) {
           updates[SettingBoxKey.danmakuFontSyncMode] =
               DanmakuFontSyncMode.global.index;
@@ -325,7 +374,7 @@ abstract final class FontUtils {
     }
 
     if (poolChanged) {
-      await GStorage.setting.put(SettingBoxKey.customAppFont, customFonts);
+      await _saveFonts();
     }
     if (updates.isNotEmpty) {
       await GStorage.setting.putAll(updates);
@@ -348,7 +397,7 @@ abstract final class FontUtils {
     }
   }
 
-  /// 把旧版字体文件复制进导入池，返回新的池 key；文件已丢失时返回 null
+  /// 把旧版字体文件复制进导入池，返回新的字体族名；文件已丢失时返回 null
   static Future<String?> _adoptLegacyFont(
     String filePath,
     String? legacyName,
@@ -365,10 +414,11 @@ abstract final class FontUtils {
       final hash = await _hashFile(file);
       if (hash == null) return null;
 
-      final key = '$hash/${await _resolveFamily(filePath, legacyName)}';
+      final family = _familyOf(hash);
+      _customFontNames[family] = await _resolveName(filePath, legacyName);
 
-      final existing = customFonts[key];
-      if (existing != null && File(existing).existsSync()) return key;
+      final existing = customFonts[family];
+      if (existing != null && File(existing).existsSync()) return family;
 
       final saveTo = path.join(
         _kFontDir,
@@ -376,8 +426,8 @@ abstract final class FontUtils {
       );
       await _deleteFile(File(saveTo));
       await file.copy(saveTo);
-      customFonts[key] = saveTo;
-      return key;
+      customFonts[family] = saveTo;
+      return family;
     } catch (_) {
       return null;
     }

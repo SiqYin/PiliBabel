@@ -1645,4 +1645,13 @@ abstract final class Pref {
       defaultValue: const <String, String>{},
     ),
   );
+
+  /// 已导入字体的显示名：字体族名 → 从字体文件解析出的名字
+  static Map<String, String> get customAppFontNames =>
+      Map<String, String>.from(
+        _setting.get(
+          SettingBoxKey.customAppFontNames,
+          defaultValue: const <String, String>{},
+        ),
+      );
 }
