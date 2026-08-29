@@ -3,8 +3,6 @@ import 'dart:io';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/models/common/danmaku/danmaku_font_sync_mode.dart';
-import 'package:PiliPlus/utils/app_font.dart';
-import 'package:PiliPlus/utils/danmaku_font.dart';
 import 'package:PiliPlus/utils/extension/box_ext.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
@@ -12,11 +10,12 @@ import 'package:PiliPlus/utils/font_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// 弹幕字体来源（下拉内置项）；已导入的独立字体以下拉字符串值表示
+/// 弹幕字体来源（下拉内置项）；选择已导入字体时下拉值为该字体的池 key
 enum DanmakuFontSource { global, system }
 
 class FontSettingPage extends StatefulWidget {
@@ -30,11 +29,22 @@ class _FontSettingPageState extends State<FontSettingPage> {
   /// 字体选择："系统默认" 用空串表示
   static const String _systemFontSentinel = '';
 
+  /// 预览区在未选字体时使用的平台默认字体族
+  ///
+  /// ref [Typography._withPlatform]
+  static final String? _kDefaultFontFamily = (switch (defaultTargetPlatform) {
+    .iOS => Typography.whiteCupertino,
+    .android || .fuchsia => Typography.whiteMountainView,
+    .windows => Typography.whiteRedmond,
+    .macOS => Typography.whiteRedwoodCity,
+    .linux => Typography.whiteHelsinki,
+  }).bodyMedium?.fontFamily;
+
   String? _selectedFont = Pref.appFont;
   int _selectedWeight = Pref.appFontWeight;
   double _selectedScale = Pref.defaultTextScale;
 
-  /// 弹幕字体选择：DanmakuFontSource 或已导入字体的字体族名
+  /// 弹幕字体选择：DanmakuFontSource 或已导入字体的池 key
   Object? _selectedDanmaku = _initialDanmakuSelection();
 
   late final List<String> _fonts;
@@ -64,11 +74,20 @@ class _FontSettingPageState extends State<FontSettingPage> {
     colorScheme = ColorScheme.of(context);
   }
 
-  /// 弹幕字体菜单显示名（跟随应用字体 / 系统默认弹幕字体 / 导入字体名）
+  /// 应用字体菜单显示名：已导入字体显示族名，系统字体显示字体名
+  String get _fontLabel {
+    final font = _selectedFont;
+    if (font == null) return '系统默认';
+    return FontUtils.customFonts.containsKey(font)
+        ? FontUtils.displayName(font)
+        : font;
+  }
+
+  /// 弹幕字体菜单显示名（跟随应用字体 / 系统默认弹幕字体 / 导入字体族名）
   String get _danmakuLabel => switch (_selectedDanmaku) {
     DanmakuFontSource.global => '跟随应用字体',
     DanmakuFontSource.system => '系统默认弹幕字体',
-    String family => DanmakuFont.currentFontName ?? family,
+    String family => FontUtils.displayName(family),
     _ => '系统默认弹幕字体',
   };
 
@@ -81,10 +100,10 @@ class _FontSettingPageState extends State<FontSettingPage> {
   };
 
   void _saveFontSetting() {
-    final (enable, mode) = switch (_selectedDanmaku) {
-      DanmakuFontSource.global => (true, DanmakuFontSyncMode.global),
-      String _ => (true, DanmakuFontSyncMode.custom),
-      _ => (false, DanmakuFontSyncMode.system),
+    final (enable, mode, danmakuFamily) = switch (_selectedDanmaku) {
+      DanmakuFontSource.global => (true, DanmakuFontSyncMode.global, null),
+      String family => (true, DanmakuFontSyncMode.custom, family),
+      _ => (false, DanmakuFontSyncMode.system, null),
     };
 
     GStorage.setting.putAllNE({
@@ -93,6 +112,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
       SettingBoxKey.defaultTextScale: _selectedScale,
       SettingBoxKey.enableCustomDanmakuFont: enable,
       SettingBoxKey.danmakuFontSyncMode: mode.index,
+      SettingBoxKey.customDanmakuFontFamily: danmakuFamily,
     });
 
     Get
@@ -100,41 +120,66 @@ class _FontSettingPageState extends State<FontSettingPage> {
       ..updateMyAppTheme();
   }
 
-  Future<void> _importAppFont() async {
-    try {
-      if (await AppFont.pickAndApply()) {
-        setState(() => _selectedFont = Pref.customFontFamily);
-      }
-    } catch (e) {
-      SmartDialog.showToast('字体加载失败: $e');
+  /// 已导入字体需要装载后才能在预览里显示
+  Future<void> _ensureLoaded(String? fontFamily) async {
+    if (fontFamily != null && FontUtils.customFonts.containsKey(fontFamily)) {
+      await FontUtils.loadFontIfNecessary(fontFamily);
     }
   }
 
-  Future<void> _deleteAppFont() async {
-    final family = Pref.customFontFamily;
-    await AppFont.clear();
+  Future<void> _onFontSelected(String value) async {
+    final fontFamily = value.isEmpty ? null : value;
+    await _ensureLoaded(fontFamily);
+    if (!mounted) return;
+    setState(() => _selectedFont = fontFamily);
+  }
+
+  Future<void> _onDanmakuSelected(Object value) async {
+    await _ensureLoaded(value is String ? value : null);
+    if (!mounted) return;
+    setState(() => _selectedDanmaku = value);
+  }
+
+  /// 导入字体文件。应用字体与弹幕字体共用同一个导入池，
+  /// 区别只是导入完成后把哪一项指向新字体。
+  Future<void> _importFont({required bool forDanmaku}) async {
+    SmartDialog.showLoading();
+    final font = await FontUtils.pickFonts();
+    SmartDialog.dismiss();
+    if (!mounted || font == null) return;
     setState(() {
-      if (_selectedFont == family || family == null) {
-        _selectedFont = null;
+      if (forDanmaku) {
+        _selectedDanmaku = font;
+      } else {
+        _selectedFont = font;
       }
     });
   }
 
-  Future<void> _importDanmakuFont() async {
-    try {
-      if (await DanmakuFont.pickAndApply()) {
-        setState(() => _selectedDanmaku = Pref.customDanmakuFontFamily);
+  Future<void> _removeFont(String fontFamily) async {
+    await FontUtils.removeFont(fontFamily);
+    if (!mounted) return;
+    setState(() {
+      if (_selectedFont == fontFamily) {
+        _selectedFont = null;
       }
-    } catch (e) {
-      SmartDialog.showToast('字体加载失败: $e');
-    }
+      if (_selectedDanmaku == fontFamily) {
+        _selectedDanmaku = DanmakuFontSource.global;
+      }
+    });
   }
 
-  Future<void> _deleteDanmakuFont() async {
-    final family = Pref.customDanmakuFontFamily;
-    await DanmakuFont.clear();
+  Future<void> _clearFonts() async {
+    SmartDialog.showLoading();
+    await FontUtils.clearFonts();
+    SmartDialog.dismiss();
+    if (!mounted) return;
     setState(() {
-      if (_selectedDanmaku == family || family == null) {
+      // 选中的是系统字体时不受影响，只回收指向导入池的选择
+      if (_selectedFont != null && !_fonts.contains(_selectedFont)) {
+        _selectedFont = null;
+      }
+      if (_selectedDanmaku is String) {
         _selectedDanmaku = DanmakuFontSource.global;
       }
     });
@@ -142,8 +187,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final importedFamily = Pref.customFontFamily;
-    final danmakuImportedFamily = Pref.customDanmakuFontFamily;
+    final customFonts = FontUtils.customFonts.keys.toList();
     return SimpleScaffold(
       appBar: AppBar(
         actions: [
@@ -163,6 +207,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
         ],
       ),
       body: SafeArea(
+        top: false,
         child: Column(
           children: [
             Expanded(
@@ -182,7 +227,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
                           : "我能吞下玻璃而不伤身体"}\n\n'
                       '注：部分字体可能无法应用',
                       style: TextStyle(
-                        fontFamily: _selectedFont,
+                        fontFamily: _selectedFont ?? _kDefaultFontFamily,
                         fontWeight: _selectedWeight == -1
                             ? null
                             : FontWeight.values[_selectedWeight],
@@ -193,7 +238,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
                     Text(
                       '弹幕预览：前方高能反应 666',
                       style: TextStyle(
-                        fontFamily: _danmakuFontFamily,
+                        fontFamily: _danmakuFontFamily ?? _kDefaultFontFamily,
                         fontSize: 14 * _selectedScale,
                       ),
                     ),
@@ -211,26 +256,18 @@ class _FontSettingPageState extends State<FontSettingPage> {
                       initialValue: _selectedFont ?? _systemFontSentinel,
                       borderRadius: BorderRadius.circular(8),
                       itemBuilder: (context) => [
-                        if (importedFamily != null) ...[
-                          PopupMenuItem<String>(
-                            value: importedFamily,
-                            height: 40,
-                            child: Text(
-                              '${AppFont.currentFontName ?? importedFamily}（导入）',
-                              style: TextStyle(fontFamily: importedFamily),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
+                        if (customFonts.isNotEmpty) ...[
+                          for (final font in customFonts)
+                            _importedFontItem(font),
                           const CustomPopupMenuDivider(height: 8),
                         ],
-                        PopupMenuItem<String>(
+                        const CustomPopupMenuItem<String>(
                           value: _systemFontSentinel,
                           height: 40,
-                          child: const Text('系统默认'),
+                          child: Text('系统默认'),
                         ),
                         for (final font in _fonts)
-                          PopupMenuItem<String>(
+                          CustomPopupMenuItem<String>(
                             value: font,
                             height: 40,
                             child: Text(
@@ -241,13 +278,9 @@ class _FontSettingPageState extends State<FontSettingPage> {
                             ),
                           ),
                       ],
-                      onSelected: (value) => setState(
-                        () => _selectedFont = value.isEmpty
-                            ? null
-                            : value,
-                      ),
+                      onSelected: _onFontSelected,
                       child: _selectorLabel(
-                        text: _selectedFont ?? '系统默认',
+                        text: _fontLabel,
                         fontFamily: _selectedFont,
                       ),
                     ),
@@ -256,13 +289,13 @@ class _FontSettingPageState extends State<FontSettingPage> {
                   _actionIcon(
                     tooltip: '导入字体文件（TTF/OTF）',
                     icon: Icons.file_open_outlined,
-                    onPressed: _importAppFont,
+                    onPressed: () => _importFont(forDanmaku: false),
                   ),
-                  if (importedFamily != null)
+                  if (customFonts.isNotEmpty)
                     _actionIcon(
-                      tooltip: '删除已导入字体',
-                      icon: Icons.delete_outline,
-                      onPressed: _deleteAppFont,
+                      tooltip: '清空已导入字体',
+                      icon: Icons.delete_sweep_outlined,
+                      onPressed: _clearFonts,
                     ),
                 ],
               ),
@@ -378,55 +411,78 @@ class _FontSettingPageState extends State<FontSettingPage> {
                       initialValue: _selectedDanmaku,
                       borderRadius: BorderRadius.circular(8),
                       itemBuilder: (context) => [
-                        if (danmakuImportedFamily != null) ...[
-                          PopupMenuItem<Object>(
-                            value: danmakuImportedFamily,
-                            height: 40,
-                            child: Text(
-                              '${DanmakuFont.currentFontName ?? danmakuImportedFamily}（导入）',
-                              style: TextStyle(
-                                fontFamily: danmakuImportedFamily,
+                        if (customFonts.isNotEmpty) ...[
+                          for (final font in customFonts)
+                            CustomPopupMenuItem<Object>(
+                              value: font,
+                              height: 40,
+                              child: Text(
+                                FontUtils.displayName(font),
+                                style: TextStyle(fontFamily: font),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
                           const CustomPopupMenuDivider(height: 8),
                         ],
-                        const PopupMenuItem<Object>(
+                        const CustomPopupMenuItem<Object>(
                           value: DanmakuFontSource.global,
                           height: 40,
                           child: Text('跟随应用字体'),
                         ),
-                        const PopupMenuItem<Object>(
+                        const CustomPopupMenuItem<Object>(
                           value: DanmakuFontSource.system,
                           height: 40,
                           child: Text('系统默认弹幕字体'),
                         ),
                       ],
-                      onSelected: (value) => setState(
-                        () => _selectedDanmaku = value,
-                      ),
+                      onSelected: _onDanmakuSelected,
                       child: _selectorLabel(text: _danmakuLabel),
                     ),
                   ),
                   const SizedBox(width: 4),
                   _actionIcon(
-                    tooltip: '导入弹幕字体文件（TTF/OTF）',
+                    tooltip: '导入字体文件（TTF/OTF）',
                     icon: Icons.file_open_outlined,
-                    onPressed: _importDanmakuFont,
+                    onPressed: () => _importFont(forDanmaku: true),
                   ),
-                  if (danmakuImportedFamily != null)
-                    _actionIcon(
-                      tooltip: '删除已导入弹幕字体',
-                      icon: Icons.delete_outline,
-                      onPressed: _deleteDanmakuFont,
-                    ),
                 ],
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// 已导入字体条目，行尾带移除按钮
+  PopupMenuEntry<String> _importedFontItem(String fontFamily) {
+    return CustomPopupMenuItem<String>(
+      value: fontFamily,
+      height: 44,
+      padding: const EdgeInsets.only(left: 12, right: 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              FontUtils.displayName(fontFamily),
+              style: TextStyle(fontFamily: fontFamily),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          IconButton(
+            tooltip: '移除',
+            icon: const Icon(Icons.close, size: 18),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints.tightFor(width: 32, height: 32),
+            onPressed: () {
+              // 先关掉菜单本身，再改动列表
+              if (Get.routing.route is! GetPageRoute) Get.back();
+              _removeFont(fontFamily);
+            },
+          ),
+        ],
       ),
     );
   }
@@ -456,7 +512,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
     );
   }
 
-  /// 紧凑型操作按钮（导入/删除），40x40 命中区与列表行高匹配
+  /// 紧凑型操作按钮（导入/清空），40x40 命中区与列表行高匹配
   Widget _actionIcon({
     required String tooltip,
     required IconData icon,
