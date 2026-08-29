@@ -1,6 +1,6 @@
 import 'dart:ffi';
 import 'dart:io' show Directory, File;
-import 'dart:typed_data' show ByteData;
+import 'dart:ui' show loadFontFromList;
 
 import 'package:PiliPlus/models/common/danmaku/danmaku_font_sync_mode.dart';
 import 'package:PiliPlus/utils/android/bindings.g.dart';
@@ -16,7 +16,6 @@ import 'package:ffi/ffi.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart'
     show kDebugMode, defaultTargetPlatform, debugPrint;
-import 'package:flutter/services.dart' show FontLoader;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:jni/jni.dart';
 import 'package:path/path.dart' as path;
@@ -26,7 +25,7 @@ abstract final class FontUtils {
   static final _fonts = <String>{};
   static bool _initialized = false;
 
-  static const _kFontExts = ['ttf', 'otf'];
+  static const _kFontExts = ['ttf', 'ttc', 'otf'];
   static final _kFontDir = path.join(appSupportDirPath, 'font');
 
   /// 旧版单槽位实现的字体目录，迁移完成后删除
@@ -46,6 +45,10 @@ abstract final class FontUtils {
   /// 已导入字体的显示名，取不到时回落到族名本身
   static String displayName(String fontFamily) =>
       _customFontNames[fontFamily] ?? fontFamily;
+
+  /// 该字体名是否指向已导入的字体（而非系统字体）
+  static bool isCustomFont(String? fontFamily) =>
+      fontFamily != null && customFonts.containsKey(fontFamily);
 
   static Future<void> _saveFonts() => GStorage.setting.putAll({
     SettingBoxKey.customAppFont: customFonts,
@@ -88,7 +91,7 @@ abstract final class FontUtils {
     };
     return Future.wait([
       for (final family in families)
-        if (customFonts.containsKey(family)) ?loadFontIfNecessary(family),
+        if (isCustomFont(family)) ?loadFontIfNecessary(family),
     ]);
   }
 
@@ -110,9 +113,7 @@ abstract final class FontUtils {
       final filePath = customFonts[fontFamily];
       if (filePath == null) return;
       final bytes = await File(filePath).readAsBytes();
-      await (FontLoader(fontFamily)
-            ..addFont(Future.value(ByteData.sublistView(bytes))))
-          .load();
+      await loadFontFromList(bytes, fontFamily: fontFamily);
       _loadedFonts.add(fontFamily);
     } catch (_) {}
   }

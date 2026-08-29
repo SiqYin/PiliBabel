@@ -78,7 +78,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
   String get _fontLabel {
     final font = _selectedFont;
     if (font == null) return '系统默认';
-    return FontUtils.customFonts.containsKey(font)
+    return FontUtils.isCustomFont(font)
         ? FontUtils.displayName(font)
         : font;
   }
@@ -123,7 +123,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
   /// 选中后再按需装载。必须先反馈选中态再装载：
   /// 直接 await 装载会让点击在装载完成前毫无反应，看起来像没点到。
   Future<void> _loadInBackground(String fontFamily) async {
-    if (!FontUtils.customFonts.containsKey(fontFamily)) return;
+    if (!FontUtils.isCustomFont(fontFamily)) return;
     await FontUtils.loadFontIfNecessary(fontFamily);
     if (mounted) setState(() {});
   }
