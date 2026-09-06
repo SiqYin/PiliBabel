@@ -484,48 +484,59 @@ class _AiChatPageState extends State<AiChatPage>
                       },
                       styleSheet: MarkdownStyleSheet(
                         p: TextStyle(
+                          inherit: false,
                           fontSize: 15,
                           height: 1.6,
                           color: colorScheme.onSurfaceVariant,
                         ),
                         h1: TextStyle(
+                          inherit: false,
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: colorScheme.onSurface,
                           height: 1.5,
                         ),
                         h2: TextStyle(
+                          inherit: false,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                           color: colorScheme.onSurface,
                           height: 1.5,
                         ),
                         h3: TextStyle(
+                          inherit: false,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                           color: colorScheme.onSurface,
                           height: 1.4,
                         ),
                         h4: TextStyle(
+                          inherit: false,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           color: colorScheme.onSurface,
                           height: 1.4,
                         ),
                         h5: TextStyle(
+                          inherit: false,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           color: colorScheme.onSurface,
                           height: 1.4,
                         ),
                         h6: TextStyle(
+                          inherit: false,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
                           color: colorScheme.onSurface,
                           height: 1.4,
                         ),
-                        a: TextStyle(color: colorScheme.primary),
+                        a: TextStyle(
+                          color: colorScheme.primary,
+                          inherit: false,
+                        ),
                         blockquote: TextStyle(
+                          inherit: false,
                           fontSize: 15,
                           height: 1.6,
                           color: colorScheme.onSurfaceVariant,
@@ -540,6 +551,7 @@ class _AiChatPageState extends State<AiChatPage>
                         ),
                         blockquotePadding: const EdgeInsets.only(left: 12),
                         code: TextStyle(
+                          inherit: false,
                           fontSize: 13,
                           color: colorScheme.primary,
                           backgroundColor: colorScheme.surfaceContainerHigh,
@@ -550,17 +562,20 @@ class _AiChatPageState extends State<AiChatPage>
                         ),
                         codeblockPadding: const EdgeInsets.all(12),
                         listBullet: TextStyle(
+                          inherit: false,
                           fontSize: 14,
                           color: colorScheme.primary,
                         ),
                         listIndent: 24,
                         blockSpacing: 8,
                         tableHead: TextStyle(
+                          inherit: false,
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: colorScheme.onSurface,
                         ),
                         tableBody: TextStyle(
+                          inherit: false,
                           fontSize: 14,
                           height: 1.5,
                           color: colorScheme.onSurfaceVariant,
@@ -583,6 +598,7 @@ class _AiChatPageState extends State<AiChatPage>
                         tableCellsDecoration: const BoxDecoration(),
                         tablePadding: const EdgeInsets.only(bottom: 4),
                         checkbox: TextStyle(
+                          inherit: false,
                           fontSize: 14,
                           color: colorScheme.primary,
                         ),
