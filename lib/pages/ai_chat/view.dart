@@ -497,6 +497,30 @@ class _AiChatPageState extends State<AiChatPage>
                           color: colorScheme.onSurface,
                           height: 1.4,
                         ),
+                        h4: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                          height: 1.4,
+                        ),
+                        h5: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                          height: 1.4,
+                        ),
+                        h6: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.onSurface,
+                          height: 1.4,
+                        ),
+                        a: TextStyle(color: colorScheme.primary),
+                        blockquote: TextStyle(
+                          fontSize: 15,
+                          height: 1.6,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
                         blockquoteDecoration: BoxDecoration(
                           border: Border(
                             left: BorderSide(
@@ -519,6 +543,47 @@ class _AiChatPageState extends State<AiChatPage>
                         listBullet: TextStyle(
                           fontSize: 14,
                           color: colorScheme.primary,
+                        ),
+                        listIndent: 24,
+                        blockSpacing: 8,
+                        tableHead: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: colorScheme.onSurface,
+                        ),
+                        tableBody: TextStyle(
+                          fontSize: 14,
+                          height: 1.5,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                        tableHeadAlign: TextAlign.center,
+                        tableBorder: TableBorder.all(
+                          color: colorScheme.outlineVariant,
+                        ),
+                        tableCellsPadding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
+                        tableHeadCellsPadding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        tableHeadCellsDecoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHigh,
+                        ),
+                        tableCellsDecoration: const BoxDecoration(),
+                        tablePadding: const EdgeInsets.only(bottom: 4),
+                        checkbox: TextStyle(
+                          fontSize: 14,
+                          color: colorScheme.primary,
+                        ),
+                        horizontalRuleDecoration: BoxDecoration(
+                          border: Border(
+                            top: BorderSide(
+                              color: colorScheme.outlineVariant,
+                              width: 1,
+                            ),
+                          ),
                         ),
                       ),
                     ),
