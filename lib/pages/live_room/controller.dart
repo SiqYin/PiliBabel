@@ -34,6 +34,7 @@ import 'package:PiliPlus/utils/connectivity_utils.dart';
 import 'package:PiliPlus/utils/danmaku_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
+import 'package:PiliPlus/utils/extension/rx_ext.dart';
 import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
@@ -47,6 +48,10 @@ import 'package:flutter/foundation.dart' show kDebugMode, kReleaseMode;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
+
+const int _kMaxChatCount = 500;
+const int _kTrimCount = _kMaxChatCount + 50;
+const int _kSafeTrimIndex = 200;
 
 class LiveRoomController extends GetxController {
   LiveRoomController(this.heroTag, {this.fromPip = false});
@@ -118,9 +123,8 @@ class LiveRoomController extends GetxController {
   final disableAutoScroll = false.obs;
   bool autoScroll = true;
   LiveMessageStream? _msgStream;
-  Future<void>? _blockRulesFuture;
-  List<String> keywordList = const [];
-  Set<int> shieldUids = const {};
+  List<String> _keywordList = const [];
+  Set<int> _shieldUids = const {};
   late final ScrollController scrollController;
   late final RxInt pageIndex = 0.obs;
   PageController? pageController;
@@ -173,6 +177,21 @@ class LiveRoomController extends GetxController {
     }
     return const SizedBox.shrink();
   });
+
+  int chatSimpleIndex = 0;
+  int _trimDmIndex = 0;
+  int get trimDmIndex => _trimDmIndex;
+  void _trimDm() {
+    final trimCount = messages.length - _trimDmIndex;
+    if (trimCount > _kTrimCount) {
+      final endIndex = messages.length - _kMaxChatCount;
+      final canTrim = (chatSimpleIndex - endIndex) > _kSafeTrimIndex;
+      if (canTrim) {
+        messages.fillRangeOnly(_trimDmIndex, endIndex);
+        _trimDmIndex = endIndex;
+      }
+    }
+  }
 
   StreamSubscription? _sizeSub;
 
@@ -306,12 +325,16 @@ class LiveRoomController extends GetxController {
       isPortrait.value = response.isPortrait ?? false;
       stream = playurl.stream;
       _initStreamIndex();
-      await initLiveUrl(
-        streamIndex: streamIndex,
-        formatIndex: formatIndex,
-        codecIndex: codecIndex,
-        liveUrlIndex: liveUrlIndex,
-      );
+      await Future.wait([
+        ?initLiveUrl(
+          streamIndex: streamIndex,
+          formatIndex: formatIndex,
+          codecIndex: codecIndex,
+          liveUrlIndex: liveUrlIndex,
+        ),
+        if (isLogin && !isLoaded.value) _fetchBlockRules(),
+      ]);
+
       // 置于 initLiveUrl 之后：恢复场景的首次拉取靠该标志让 playerInit 跳过
       // 数据源重建，完成后清零，切换路线/画质才会真正重建数据源
       isReturningFromPip = false;
@@ -581,7 +604,7 @@ class LiveRoomController extends GetxController {
 
   Future<void> getSuperChatMsg() async {
     final res = await LiveHttp.superChatMsg(roomId);
-    if (res.dataOrNull?.list case final list?) {
+    if (res.dataOrNull?.list case final list? when list.isNotEmpty) {
       superChatMsg.addAll(list);
     }
   }
@@ -590,47 +613,45 @@ class LiveRoomController extends GetxController {
     superChatMsg.removeWhere((e) => e.expired);
   }
 
-  Future<void> fetchBlockRules() async {
+  Future<void> _fetchBlockRules() async {
     final res = await LiveHttp.getLiveInfoByUser(roomId);
-    if (res case Success(:final response)) {
-      keywordList = response?.keywordList ?? const [];
-      shieldUids = {
-        for (final item in response?.shieldUserList ?? const [])
-          if (item.uid != null) item.uid!,
-      };
+    if (res case Success(:final response?)) {
+      if (response.keywordList case final keywordList?) {
+        _keywordList = keywordList;
+      }
+      if (response.shieldUserList case final shieldUserList?) {
+        _shieldUids = shieldUserList.map((e) => e.uid).toSet();
+      }
     }
   }
 
-  void updateBlockRules(Iterable<String> keywords, Iterable<int> uids) {
-    keywordList = keywords.toList();
-    shieldUids = uids.toSet();
+  void updateBlockRules(List<String> keywords, Set<int> uids) {
+    _keywordList = keywords;
+    _shieldUids = uids;
   }
 
   bool isBlocked(String text, Object uid) {
-    return keywordList.any(text.contains) || shieldUids.contains(uid);
+    return _keywordList.any(text.contains) || _shieldUids.contains(uid);
   }
 
   void startLiveMsg() {
-    _blockRulesFuture ??= fetchBlockRules();
-    _blockRulesFuture!.then((_) {
-      if (messages.isEmpty) {
-        prefetch();
-        if (showSuperChat) {
-          getSuperChatMsg();
-        }
+    if (messages.isEmpty) {
+      prefetch();
+      if (showSuperChat) {
+        getSuperChatMsg();
       }
-      if (_msgStream != null) {
-        return;
+    }
+    if (_msgStream != null) {
+      return;
+    }
+    if (dmInfo != null) {
+      initDm(dmInfo!);
+      return;
+    }
+    LiveHttp.liveRoomGetDanmakuToken(roomId: roomId).then((res) {
+      if (res case Success(:final response)) {
+        initDm(dmInfo = response);
       }
-      if (dmInfo != null) {
-        initDm(dmInfo!);
-        return;
-      }
-      LiveHttp.liveRoomGetDanmakuToken(roomId: roomId).then((res) {
-        if (res case Success(:final response)) {
-          initDm(dmInfo = response);
-        }
-      });
     });
   }
 
@@ -711,6 +732,8 @@ class LiveRoomController extends GetxController {
   }
 
   void addDm(dynamic msg, [DanmakuContentItem<DanmakuExtra>? item]) {
+    _trimDm();
+
     if (plPlayerController.showDanmaku) {
       if (item != null && plPlayerController.enableShowLiveDanmaku.value) {
         danmakuController?.addDanmaku(item);
@@ -734,15 +757,15 @@ class LiveRoomController extends GetxController {
           final info = obj['info'];
           final first = info[0];
           final content = first[15];
-          final Map<String, dynamic> extra = jsonDecode(content['extra']);
           final user = content['user'];
           // final midHash = first[7];
           final uid = user['uid'];
-          final name = user['base']['name'];
           final msg = info[1];
           if (isBlocked(msg, uid)) {
             return;
           }
+          final Map<String, dynamic> extra = jsonDecode(content['extra']);
+          final name = user['base']['name'];
           BaseEmote? uemote;
           if (first[13] case Map<String, dynamic> map) {
             uemote = BaseEmote.fromJson(map);
@@ -911,7 +934,7 @@ class LiveRoomController extends GetxController {
             ? const Duration(milliseconds: 400)
             : PlatformUtils.isDesktop
             ? const Duration(milliseconds: 350)
-            : const Duration(milliseconds: 500),
+            : const Duration(milliseconds: 400),
       ),
     );
   }

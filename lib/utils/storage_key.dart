@@ -283,7 +283,7 @@ abstract final class SettingBoxKey {
 
   static const String themeMode = 'themeMode',
       defaultTextScale = 'textScale',
-      appFontWeight = 'appFontWeight',
+      appFontWeightV2 = 'appFontWeightV2',
       customFontPath = 'customFontPath',
       customFontFamily = 'customFontFamily',
       customFontName = 'customFontName',
