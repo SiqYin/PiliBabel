@@ -31,7 +31,7 @@ class BottomControl extends StatelessWidget {
     feedBack();
     controller
       ..onDesktopProgressDragStart(duration.timeStamp)
-      ..position.value = duration.seconds
+      ..progressPreviewSeconds.value = duration.seconds
       ..isSeeking.value = true;
   }
 
@@ -40,7 +40,7 @@ class BottomControl extends StatelessWidget {
     if (!controller.isFileSource && controller.showSeekPreview) {
       controller.updatePreviewIndex(duration.seconds);
     }
-    controller.position.value = duration.seconds;
+    controller.progressPreviewSeconds.value = duration.seconds;
   }
 
   void onSeek(int milliseconds) {
@@ -75,7 +75,9 @@ class BottomControl extends StatelessWidget {
                   children: [
                     Obx(
                       () => ProgressBar(
-                        progress: controller.position.value,
+                        progress: controller.isSeeking.value
+                            ? controller.progressPreviewSeconds.value
+                            : controller.position.value,
                         buffered: controller.buffered.value,
                         total: controller.duration.value,
                         progressBarColor: primary,
