@@ -969,9 +969,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   }
 
   void _onHorizontalDragEnd() {
-    plPlayerController.onSeekEnd();
     if (plPlayerController.seekToPos case final seekToPos?) {
       plPlayerController
+        ..position.value = seekToPos.inSeconds
         ..seekTo(seekToPos, isSeek: false)
         ..seekToPos = null;
     } else {
@@ -979,6 +979,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           plPlayerController.videoPlayerController?.state.position.inSeconds ??
           0;
     }
+    plPlayerController.onSeekEnd();
   }
 
   void _onPanUpdate(ScaleUpdateDetails details) {
