@@ -217,7 +217,7 @@ class LiveRoomController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    plPlayerController.onNeedsPlayerInit = queryLiveUrl;
+    plPlayerController.onNeedsPlayerInit = () => queryLiveUrl();
 
     // 从参数中提取 roomId（支持 int 或 Map 格式）
     final args = Get.arguments;

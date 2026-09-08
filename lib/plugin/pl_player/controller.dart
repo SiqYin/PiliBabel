@@ -1,4 +1,5 @@
-import 'dart:async' show StreamSubscription, Timer, unawaited;
+import 'dart:async'
+    show Completer, StreamSubscription, Timer, unawaited;
 import 'dart:convert' show ascii, utf8;
 import 'dart:io' show Platform;
 import 'dart:math' show max, min;
@@ -73,6 +74,7 @@ import 'package:window_manager/window_manager.dart';
 import 'package:PiliPlus/plugin/pl_player/models/auto_audio_only_state.dart';
 
 typedef PlayCallback = Future<void>? Function();
+typedef PlayerInitCallback = Future<void> Function();
 
 class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   Player? _videoPlayerController;
@@ -212,9 +214,16 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   Timer? _autoAudioOnlyTimer;
   bool _audioReopened = false;
   AppLifecycleState? _lastAppLifecycleState;
+  bool _autoAudioRestoreInProgress = false;
+  int _autoAudioRestoreGeneration = 0;
+  Timer? _autoAudioRestoreTimer;
+  Completer<bool>? _autoAudioRestoreCompleter;
+  List<StreamSubscription<dynamic>>? _autoAudioRestoreSubscriptions;
+  bool _autoAudioRestoreResumePending = false;
+  final RxBool isAutoAudioRestoring = false.obs;
 
   /// 自动恢复需要重初始化的回调（视频→playerInit，直播→queryLiveUrl）
-  VoidCallback? onNeedsPlayerInit;
+  PlayerInitCallback? onNeedsPlayerInit;
 
   /// 镜像
   late final RxBool flipX = false.obs;
@@ -326,6 +335,10 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   }
 
   void enterPip({bool autoEnter = false}) {
+    if (_autoAudioState == AutoAudioOnlyState.autoAudioOnly) {
+      // 自动只听时没有视频输出，忽略 PiP 请求，避免进入黑色 PiP 窗口。
+      return;
+    }
     if (videoPlayerController case NativePlayer(:final state)) {
       PageUtils.enterPip(
         autoEnter: autoEnter,
@@ -887,6 +900,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
       // 换视频上下文时取消自动只听定时器，状态保持
       _cancelAutoAudioOnlyTimer();
+      _interruptAutoAudioRestore();
       if (_autoAudioState == AutoAudioOnlyState.autoAudioOnly) {
         _audioReopened = true;
       }
@@ -2092,7 +2106,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   /// 手动听视频/仅播放音频标记，由三点菜单或直播按钮调用
   void markManualOnlyPlayAudio(bool enabled) {
+    _interruptAutoAudioRestore();
     if (enabled) {
+      _cancelAutoAudioOnlyTimer();
       _autoAudioState = AutoAudioOnlyState.manualAudioOnly;
     } else {
       if (_autoAudioState == AutoAudioOnlyState.manualAudioOnly ||
@@ -2111,7 +2127,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         _autoAudioState = AutoAudioOnlyState.idle;
       } else if (_autoAudioState == AutoAudioOnlyState.autoAudioOnly) {
         _cancelAutoAudioOnlyTimer();
-        restoreFromAutoAudioOnly();
+        unawaited(restoreFromAutoAudioOnly());
       }
     }
   }
@@ -2156,7 +2172,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     if (isLive) {
       // 直播：重拉 only_audio=1
       _autoAudioState = AutoAudioOnlyState.autoAudioOnly;
-      onNeedsPlayerInit?.call();
+      await onNeedsPlayerInit?.call();
     } else {
       // 点播：vid=no
       try {
@@ -2177,17 +2193,209 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 回到前台，恢复画面
   Future<void> restoreFromAutoAudioOnly() async {
     if (_autoAudioState != AutoAudioOnlyState.autoAudioOnly) return;
+    if (_autoAudioRestoreInProgress) {
+      _autoAudioRestoreResumePending = true;
+      return;
+    }
 
     _cancelAutoAudioOnlyTimer();
-    _fullRestore();
+    _autoAudioRestoreInProgress = true;
+    final restoreGeneration = ++_autoAudioRestoreGeneration;
+    isAutoAudioRestoring.value = !isLive && !_audioReopened;
+
+    try {
+      // 直播，以及自动只听期间已经重开过纯音频 Media 的点播，
+      // 都没有可供 vid=auto 复用的视频输入，直接走页面级恢复。
+      if (isLive || _audioReopened) {
+        await _fullRestore();
+        return;
+      }
+
+      final player = _videoPlayerController;
+      if (player == null || player.current.isEmpty) {
+        await _fullRestore();
+        return;
+      }
+
+      onlyPlayAudio.value = false;
+
+      // 第一层：在当前 EDL Media 上重新选择视频轨，不重开 Media。
+      try {
+        player.setProperty('file-local-options/vid', 'auto');
+      } catch (_) {
+        await _fullRestore();
+        return;
+      }
+      applyVideoPictureParameters();
+
+      final restoredByTrackSwitch =
+          await _waitForVideoOutput(
+            restoreGeneration,
+            checkCurrentState: false,
+          );
+      if (!_isAutoAudioRestoreCurrent(restoreGeneration)) {
+        return;
+      }
+
+      if (restoredByTrackSwitch) {
+        _autoAudioState = AutoAudioOnlyState.idle;
+        _audioReopened = false;
+        return;
+      }
+
+      if (!_canUseAutoAudioRestoreFallback(player)) {
+        _autoAudioState = AutoAudioOnlyState.idle;
+        _audioReopened = false;
+        return;
+      }
+
+      // 第二层：当前 EDL 仍可复用时，只重开这一个 Media。
+      if (await _reopenCurrentMedia(restoreGeneration)) {
+        _autoAudioState = AutoAudioOnlyState.idle;
+        _audioReopened = false;
+        return;
+      }
+
+      if (_isAutoAudioRestoreCurrent(restoreGeneration) &&
+          _canUseAutoAudioRestoreFallback(player)) {
+        // 第三层：当前 Media 也无法恢复时，交给页面重新初始化资源。
+        await _fullRestore();
+      } else if (_isAutoAudioRestoreCurrent(restoreGeneration)) {
+        _autoAudioState = AutoAudioOnlyState.idle;
+        _audioReopened = false;
+      }
+    } finally {
+      if (restoreGeneration == _autoAudioRestoreGeneration) {
+        _autoAudioRestoreInProgress = false;
+        isAutoAudioRestoring.value = false;
+        if (_autoAudioRestoreResumePending &&
+            _lastAppLifecycleState == AppLifecycleState.resumed &&
+            _autoAudioState == AutoAudioOnlyState.autoAudioOnly) {
+          _autoAudioRestoreResumePending = false;
+          unawaited(restoreFromAutoAudioOnly());
+        } else if (_lastAppLifecycleState == AppLifecycleState.resumed) {
+          _autoAudioRestoreResumePending = false;
+        }
+      }
+    }
   }
 
-  /// 点播 playerInit / 直播 queryLiveUrl。vid=auto 对已打开的 EDL 不能稳定拉回视频轨。
-  void _fullRestore() {
+  /// 等待当前 Media 恢复真实视频输出。
+  Future<bool> _waitForVideoOutput(
+    int restoreGeneration, {
+    bool checkCurrentState = true,
+  }) {
+    final player = _videoPlayerController;
+    if (player == null) return Future.value(false);
+    if (checkCurrentState && _hasVideoOutput(player)) {
+      return Future.value(true);
+    }
+
+    _cancelAutoAudioRestoreWait();
+    final completer = Completer<bool>();
+    _autoAudioRestoreCompleter = completer;
+
+    void checkVideoOutput([Object? _]) {
+      if (!_isAutoAudioRestoreCurrent(restoreGeneration)) {
+        _completeAutoAudioRestoreWait(false);
+      } else if (_hasVideoOutput(player)) {
+        _completeAutoAudioRestoreWait(true);
+      }
+    }
+
+    _autoAudioRestoreSubscriptions = [
+      player.stream.videoParams.listen(checkVideoOutput),
+      player.stream.size.listen(checkVideoOutput),
+    ];
+    _autoAudioRestoreTimer = Timer(
+      const Duration(seconds: 4),
+      () => _completeAutoAudioRestoreWait(false),
+    );
+    if (checkCurrentState) {
+      checkVideoOutput();
+    }
+    return completer.future;
+  }
+
+  bool _hasVideoOutput(Player player) {
+    final state = player.state;
+    if (state.track.video.id == 'no') return false;
+    final params = state.videoParams;
+    final width = params.dw ?? params.w ?? 0;
+    final height = params.dh ?? params.h ?? 0;
+    return width > 0 && height > 0;
+  }
+
+  bool _canUseAutoAudioRestoreFallback(Player player) =>
+      playerStatus.isPlaying || player.state.buffering;
+
+  bool _isAutoAudioRestoreCurrent(int restoreGeneration) {
+    final lifecycle = _lastAppLifecycleState;
+    return restoreGeneration == _autoAudioRestoreGeneration &&
+        _autoAudioState == AutoAudioOnlyState.autoAudioOnly &&
+        lifecycle != AppLifecycleState.hidden &&
+        lifecycle != AppLifecycleState.paused &&
+        lifecycle != AppLifecycleState.detached &&
+        !isPipMode;
+  }
+
+  void _completeAutoAudioRestoreWait(bool result) {
+    final completer = _autoAudioRestoreCompleter;
+    if (completer == null || completer.isCompleted) return;
+    _autoAudioRestoreTimer?.cancel();
+    _autoAudioRestoreTimer = null;
+    for (final subscription
+        in _autoAudioRestoreSubscriptions ?? <StreamSubscription<dynamic>>[]) {
+      unawaited(subscription.cancel());
+    }
+    _autoAudioRestoreSubscriptions = null;
+    _autoAudioRestoreCompleter = null;
+    completer.complete(result);
+  }
+
+  void _cancelAutoAudioRestoreWait() {
+    _completeAutoAudioRestoreWait(false);
+    _autoAudioRestoreTimer?.cancel();
+    _autoAudioRestoreTimer = null;
+  }
+
+  void _interruptAutoAudioRestore() {
+    if (!_autoAudioRestoreInProgress) return;
+    _autoAudioRestoreGeneration++;
+    _autoAudioRestoreInProgress = false;
+    _autoAudioRestoreResumePending = false;
+    isAutoAudioRestoring.value = false;
+    _cancelAutoAudioRestoreWait();
+  }
+
+  /// 第二层：重开当前 Media，避免立即进入页面级 playerInit 的加载状态。
+  Future<bool> _reopenCurrentMedia(int restoreGeneration) async {
+    final player = _videoPlayerController;
+    if (player == null || player.current.isEmpty) return false;
+    if (!_isAutoAudioRestoreCurrent(restoreGeneration)) return false;
+
+    try {
+      final shouldResumePlayback = player.state.playing;
+      await player.open(
+        player.current.last.copyWith(start: player.state.position),
+        play: shouldResumePlayback,
+      );
+      applyVideoPictureParameters(player);
+    } catch (_) {
+      return false;
+    }
+
+    if (!_isAutoAudioRestoreCurrent(restoreGeneration)) return false;
+    return _waitForVideoOutput(restoreGeneration);
+  }
+
+  /// 第三层：点播 playerInit，直播 queryLiveUrl。
+  Future<void> _fullRestore() async {
+    isAutoAudioRestoring.value = false;
     onlyPlayAudio.value = false;
     _autoAudioState = AutoAudioOnlyState.idle;
     _audioReopened = false;
-    onNeedsPlayerInit?.call();
+    await onNeedsPlayerInit?.call();
   }
 
   /// 生命周期变化 — 由 view 转发
@@ -2198,6 +2406,10 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       case AppLifecycleState.hidden:
       case AppLifecycleState.paused:
         _cancelAutoAudioOnlyTimer();
+        if (_autoAudioRestoreInProgress) {
+          _cancelAutoAudioRestoreWait();
+          _autoAudioRestoreResumePending = true;
+        }
         // 已在只听/手动听视频时，保持状态不退出
         if (_autoAudioState == AutoAudioOnlyState.autoAudioOnly ||
             _autoAudioState == AutoAudioOnlyState.manualAudioOnly) {
@@ -2216,7 +2428,16 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       case AppLifecycleState.resumed:
         _cancelAutoAudioOnlyTimer();
         if (_autoAudioState == AutoAudioOnlyState.autoAudioOnly) {
-          restoreFromAutoAudioOnly();
+          if (_autoAudioRestoreInProgress) {
+            _autoAudioRestoreResumePending = true;
+          } else {
+            unawaited(restoreFromAutoAudioOnly());
+          }
+        } else if (_autoAudioState == AutoAudioOnlyState.arm ||
+            _autoAudioState == AutoAudioOnlyState.pipHold) {
+          _autoAudioState = AutoAudioOnlyState.idle;
+        } else {
+          _autoAudioRestoreResumePending = false;
         }
         // manualAudioOnly / pipHold / arm / idle：保持状态不重置
         break;
@@ -2225,6 +2446,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         break;
       case AppLifecycleState.detached:
         _cancelAutoAudioOnlyTimer();
+        _cancelAutoAudioRestoreWait();
+        _autoAudioRestoreResumePending = false;
         break;
     }
   }
@@ -2233,6 +2456,10 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   void handleAutoAudioOnlyPipChanged(bool isInPip) {
     if (isInPip) {
       _cancelAutoAudioOnlyTimer();
+      if (_autoAudioRestoreInProgress) {
+        _cancelAutoAudioRestoreWait();
+        _autoAudioRestoreResumePending = true;
+      }
       if (_autoAudioState == AutoAudioOnlyState.arm) {
         _autoAudioState = AutoAudioOnlyState.pipHold;
       }
@@ -2241,7 +2468,10 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       _cancelAutoAudioOnlyTimer();
       if (_lastAppLifecycleState == AppLifecycleState.resumed) {
         if (_autoAudioState == AutoAudioOnlyState.autoAudioOnly) {
-          restoreFromAutoAudioOnly();
+          unawaited(restoreFromAutoAudioOnly());
+        } else if (_autoAudioState == AutoAudioOnlyState.arm ||
+            _autoAudioState == AutoAudioOnlyState.pipHold) {
+          _autoAudioState = AutoAudioOnlyState.idle;
         }
         // manualAudioOnly 保持不动
       } else {
@@ -2261,6 +2491,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   void dispose() {
     _cancelAutoAudioOnlyTimer();
+    _cancelAutoAudioRestoreWait();
+    _autoAudioRestoreGeneration++;
+    _autoAudioRestoreInProgress = false;
+    _autoAudioRestoreResumePending = false;
+    isAutoAudioRestoring.value = false;
     _autoAudioState = AutoAudioOnlyState.idle;
     _audioReopened = false;
     _lastAppLifecycleState = null;
