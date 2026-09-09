@@ -1248,7 +1248,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         final posInSeconds = position.inSeconds;
 
         if (posInSeconds != this.position.value) {
-          this.position.value = posInSeconds;
+          if (!isSeeking.value) {
+            this.position.value = posInSeconds;
+          }
 
           videoPlayerServiceHandler?.onPositionChange(position);
 

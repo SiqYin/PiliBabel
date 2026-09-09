@@ -1119,7 +1119,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     final seconds = newPos ~/ 1000;
     plPlayerController
       ..seekToPos = Duration(milliseconds: newPos)
-      ..progressPreviewSeconds.value = seconds;
+      ..position.value = seconds;
     if (!plPlayerController.isFileSource &&
         plPlayerController.showSeekPreview) {
       plPlayerController.updatePreviewIndex(seconds);
@@ -1196,7 +1196,6 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         if (!plPlayerController.hasToasted) {
           plPlayerController
             ..seekToPos = null
-            ..progressPreviewSeconds.value = plPlayerController.position.value
             ..hasToasted = true;
           if (plPlayerController.showSeekPreview) {
             plPlayerController.showPreview.value = false;
@@ -1724,12 +1723,12 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 () {
                   final desktopPreview = PlatformUtils.isDesktop &&
                       plPlayerController.showDesktopProgressFeedback.value;
-                  final opacity = plPlayerController.isSeeking.value ||
-                      desktopPreview
+                  final opacity = desktopPreview ||
+                          (!PlatformUtils.isDesktop &&
+                              plPlayerController.isSeeking.value)
                       ? 1.0
                       : 0.0;
-                  final displayPosition = plPlayerController.isSeeking.value ||
-                      desktopPreview
+                  final displayPosition = desktopPreview
                       ? plPlayerController.progressPreviewSeconds.value
                       : plPlayerController.position.value;
                   Widget child = AnimatedOpacity(
@@ -2045,9 +2044,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                     children: [
                       Obx(
                         () => ProgressBar(
-                          progress: plPlayerController.isSeeking.value
-                              ? plPlayerController.progressPreviewSeconds.value
-                              : plPlayerController.position.value,
+                          progress: plPlayerController.position.value,
                           buffered: plPlayerController.buffered.value,
                           total: plPlayerController.duration.value,
                           progressBarColor: primary,
