@@ -2183,11 +2183,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         ],
 
         Obx(() {
-          if ((!plPlayerController.isAutoAudioRestoring.value &&
+          if ((!plPlayerController.suppressBufferingIndicator.value &&
                   plPlayerController.dataStatus.loading) ||
               (plPlayerController.isBuffering.value &&
                   plPlayerController.playerStatus.isPlaying &&
-                  !plPlayerController.isAutoAudioRestoring.value)) {
+                  !plPlayerController.suppressBufferingIndicator.value)) {
             return Center(
               child: GestureDetector(
                 onTap: plPlayerController.refreshPlayer,
