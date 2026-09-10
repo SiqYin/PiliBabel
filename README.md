@@ -315,7 +315,7 @@ Fork特性：
 
 ### Arch Linux
 
-感谢 @nlsdt 的打包
+感谢 [@nlsdt](https://github.com/nlsdt) 的打包
 
 #### 推荐：Arch Linux CN 软件源
 
