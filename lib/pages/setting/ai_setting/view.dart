@@ -132,6 +132,70 @@ class AiSettingPage extends StatelessWidget {
           ),
           const SizedBox(height: 24),
 
+          // AI 界面翻译
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('AI 界面翻译', style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 4),
+                  Text(
+                    '复用上方 API 配置，用你自配的模型把界面文案翻译为目标语言。'
+                    '每条只翻译一次并持久固定，重开不再二次翻译。',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.outline,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Obx(
+                    () => SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: const Text('启用界面翻译'),
+                      value: controller.uiTranslateEnabled.value,
+                      onChanged: controller.saveUiTranslateEnabled,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Obx(
+                    () => DropdownButtonFormField<String>(
+                      // ignore: deprecated_member_use
+                      value: controller.uiTranslateLang.value,
+                      items: AiSettingController.uiTranslateLangOptions
+                          .map(
+                            (e) => DropdownMenuItem(
+                              value: e.key,
+                              child: Text(e.value),
+                            ),
+                          )
+                          .toList(),
+                      decoration: const InputDecoration(
+                        labelText: '目标语言',
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                        prefixIcon: Icon(Icons.translate),
+                      ),
+                      onChanged: (value) {
+                        if (value != null) controller.saveUiTranslateLang(value);
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      icon: const Icon(Icons.delete_sweep, size: 18),
+                      label: const Text('清空翻译缓存'),
+                      onPressed: controller.clearTranslateCache,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+
           // 模板管理
           Card(
             child: Padding(

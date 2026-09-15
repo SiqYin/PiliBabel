@@ -151,6 +151,58 @@ class AiChatService {
     ));
   }
 
+  /// 非流式一次性补全，返回完整文本。供界面翻译等需要整段结果的场景使用。
+  static Future<String> complete(
+    List<Map<String, String>> messages, {
+    String? model,
+    Duration? receiveTimeout,
+  }) async {
+    final baseUrl = _baseUrl();
+    if (baseUrl.isEmpty) throw Exception('请先配置 API 地址');
+    final useModel = model ?? Pref.aiModel;
+    if (useModel.isEmpty) throw Exception('请先选择模型');
+
+    final url = '$baseUrl/chat/completions';
+    final Response res;
+    try {
+      res = await Dio().post(
+        url,
+        data: jsonEncode({
+          'model': useModel,
+          'messages': messages,
+          'stream': false,
+        }),
+        options: _options(
+          receiveTimeout: receiveTimeout ?? const Duration(seconds: 120),
+        ),
+      );
+    } on DioException catch (e) {
+      throw await _requestError(url, e);
+    }
+
+    final data = res.data;
+    if (data is Map) {
+      final choices = data['choices'];
+      if (choices is List && choices.isNotEmpty) {
+        final message = choices[0]['message'];
+        if (message is Map && message['content'] is String) {
+          return message['content'] as String;
+        }
+      }
+      throw _logged(AiApiException(
+        url: url,
+        statusCode: res.statusCode,
+        detail: '响应格式异常，未找到 choices[0].message.content'
+            '（${_snippet(data.toString(), 200)}）',
+      ));
+    }
+    throw _logged(AiApiException(
+      url: url,
+      statusCode: res.statusCode,
+      detail: '响应不是 JSON 对象，请检查接口地址与版本路径',
+    ));
+  }
+
   /// Stream chat completion from {base}/chat/completions
   /// Returns a stream of content strings (each token/chunk)
   static Stream<String> streamChat({

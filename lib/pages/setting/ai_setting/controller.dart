@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -12,6 +13,19 @@ class AiSettingController extends GetxController {
   final modelList = <String>[].obs;
   final isLoadingModels = false.obs;
   final templates = <AiPromptTemplate>[].obs;
+
+  // --- AI 界面翻译 ---
+  final uiTranslateEnabled = false.obs;
+  final uiTranslateLang = 'English'.obs;
+  static const List<MapEntry<String, String>> uiTranslateLangOptions = [
+    MapEntry('English', '英语 English'),
+    MapEntry('日本語', '日语 日本語'),
+    MapEntry('한국어', '韩语 한국어'),
+    MapEntry('Français', '法语 Français'),
+    MapEntry('Deutsch', '德语 Deutsch'),
+    MapEntry('Español', '西班牙语 Español'),
+    MapEntry('Русский', '俄语 Русский'),
+  ];
 
   late final TextEditingController apiUrlCtl;
   late final TextEditingController apiKeyCtl;
@@ -28,6 +42,8 @@ class AiSettingController extends GetxController {
     apiKeyCtl = TextEditingController(text: apiKey.value);
     modelCtl = TextEditingController(text: model.value);
     templates.value = AiChatService.getTemplates();
+    uiTranslateEnabled.value = Pref.uiTranslateEnabled;
+    uiTranslateLang.value = Pref.uiTranslateLang;
     _loadCachedModels();
   }
 
@@ -78,6 +94,29 @@ class AiSettingController extends GetxController {
   void saveModel(String value) {
     model.value = value;
     Pref.aiModel = value;
+  }
+
+  void saveUiTranslateEnabled(bool value) {
+    uiTranslateEnabled.value = value;
+    Pref.uiTranslateEnabled = value;
+  }
+
+  void saveUiTranslateLang(String value) {
+    if (uiTranslateLang.value == value) return;
+    uiTranslateLang.value = value;
+    Pref.uiTranslateLang = value;
+    if (Get.isRegistered<UiTranslateService>()) {
+      UiTranslateService.to.resetForNewLanguage();
+    }
+  }
+
+  void clearTranslateCache() {
+    if (Get.isRegistered<UiTranslateService>()) {
+      UiTranslateService.to.clearCache();
+    } else {
+      Pref.uiTranslateCache = {};
+    }
+    SmartDialog.showToast('已清空界面翻译缓存');
   }
 
   void addTemplate(String name, String prompt) {

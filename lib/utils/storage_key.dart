@@ -205,6 +205,10 @@ abstract final class SettingBoxKey {
       aiModelListCacheTime = 'aiModelListCacheTime',
       aiPromptTemplates = 'aiPromptTemplates';
 
+  static const String uiTranslateEnabled = 'uiTranslateEnabled',
+      uiTranslateLang = 'uiTranslateLang',
+      uiTranslateCache = 'uiTranslateCache';
+
   static const String minimizeOnExit = 'minimizeOnExit',
       windowSize = 'windowSize',
       windowPosition = 'windowPosition',
