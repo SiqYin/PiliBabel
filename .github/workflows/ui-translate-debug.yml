@@ -1,7 +1,10 @@
 name: AI UI Translate - Debug APK
 
-# 专供 AI 界面翻译分支：push 到本分支或手动触发即产出 debug APK，
-# 并在失败时把真实报错抛成 annotation / step summary，便于无 token 诊断。
+# AI 界面翻译分支专用：push 到本分支或手动触发即产出 debug APK。
+# 关键点：本 App 依赖打了补丁的 Flutter SDK 与 material_ui/cupertino_ui，
+# 正确做法是调用仓库自带的 lib/scripts/patch.ps1（框架+包补丁）与 build.ps1
+# （版本号 + 生成 pili_release.json），再 flutter build。失败时把真实报错
+# 抛成 annotation / step summary，便于无 token 远程诊断。
 on:
   push:
     branches:
@@ -11,6 +14,9 @@ on:
     paths-ignore:
       - "**.md"
   workflow_dispatch:
+
+env:
+  FLUTTER_VERSION_FILE: pubspec.yaml
 
 jobs:
   android-debug:
@@ -38,61 +44,30 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           channel: stable
-          flutter-version-file: pubspec.yaml
+          flutter-version-file: ${{ env.FLUTTER_VERSION_FILE }}
           cache: true
 
-      - name: Ensure pili_release.json exists
+      - name: Prep env (git ownership / analytics / FLUTTER_ROOT)
         run: |
-          if [ ! -f pili_release.json ]; then
-            echo '{}' > pili_release.json
-            echo "created placeholder pili_release.json"
-          fi
+          git config --global --add safe.directory '*'
+          flutter --version
+          FR="$(cd "$(dirname "$(dirname "$(readlink -f "$(command -v flutter)")")")" && pwd)"
+          echo "FLUTTER_ROOT=$FR" >> "$GITHUB_ENV"
+          echo "exported FLUTTER_ROOT=$FR"
 
-      - name: Revert overscrollindicator patch
-        working-directory: ${{ env.FLUTTER_ROOT }}
-        run: |
-          git config --global user.name "ci"
-          git config --global user.email "ci@example.com"
-          git stash || true
-          git revert 362b1de29974ffc1ed6faa826e1df870d7bec75f --no-edit || true
-          git reset --soft HEAD~1 || true
-          git stash pop || true
-        continue-on-error: true
+      - name: Resolve deps
+        run: flutter pub get
 
-      - name: Apply framework patches
-        working-directory: ${{ env.FLUTTER_ROOT }}
-        run: |
-          for p in bottom_sheet_patch modal_barrier_patch mouse_cursor_patch; do
-            git apply "$GITHUB_WORKSPACE/lib/scripts/$p.diff" || true
-          done
-
-      - name: Set and extract version
+      - name: Patch Flutter + material_ui (patch.ps1)
         shell: pwsh
-        run: lib/scripts/build.ps1 android
-        continue-on-error: true
-
-      # ---- 诊断闸门：先只跑 Dart 静态分析，快速区分「代码错」还是「环境错」----
-      - name: Analyze (hard gate + annotate)
         run: |
-          flutter pub get
-          set +e
-          flutter analyze > analyze.log 2>&1
-          code=$?
-          echo "### flutter analyze (exit=$code)" >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          grep -E "error" analyze.log | head -n 60 >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-          # 把 error 行抛成 annotation（public annotations API 可读）
-          grep -E "error -|error •| error " analyze.log | head -n 40 | \
-            while IFS= read -r line; do
-              msg=$(printf '%s' "$line" | sed 's/%/%25/g; s/:/%3A/g')
-              echo "::error title=AnalyzeError::$msg"
-            done
-          echo "ANALYZE_EXIT=$code"
-          if [ "$code" -ne 0 ]; then
-            echo "analyze 失败：优先怀疑本次 Dart 改动"
-          fi
-          # 故意不因 analyze 失败而中断，继续尝试真机编译以暴露 gradle/native 问题
+          $ErrorActionPreference = 'Stop'
+          & ./lib/scripts/patch.ps1 -platform android
+        continue-on-error: false
+
+      - name: Version + pili_release.json (build.ps1)
+        shell: pwsh
+        run: ./lib/scripts/build.ps1 android
 
       - name: Build Debug APK
         run: |
@@ -101,17 +76,14 @@ jobs:
           code=$?
           echo "### flutter build apk (exit=$code)" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
-          tail -n 150 build.log >> "$GITHUB_STEP_SUMMARY"
+          tail -n 180 build.log >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
-          grep -iE "error:|FAILURE|What went wrong|Execution failed|e: |BUILD FAILED|Target .* failed|Keystore|NDK|Could not" build.log | head -n 40 | \
+          grep -iE "error:|error -|FAILURE|What went wrong|Execution failed|^e: |BUILD FAILED|Target .* failed|Keystore|NDK|Could not|not found" build.log | head -n 40 | \
             while IFS= read -r line; do
               msg=$(printf '%s' "$line" | sed 's/%/%25/g; s/:/%3A/g')
               echo "::error title=BuildError::$msg"
             done
-          echo "BUILD_EXIT=$code"
-          if [ "$code" -ne 0 ]; then
-            exit 1
-          fi
+          if [ "$code" -ne 0 ]; then exit 1; fi
 
       - name: Rename Debug APK
         shell: bash
