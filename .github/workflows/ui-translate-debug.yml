@@ -1,7 +1,7 @@
 name: AI UI Translate - Debug APK
 
 # 专供 AI 界面翻译分支：push 到本分支或手动触发即产出 debug APK，
-# 作为「改代码 -> 自动编译验证」的闭环，无需下载工具链。
+# 并在失败时把真实报错抛成 annotation / step summary，便于无 token 诊断。
 on:
   push:
     branches:
@@ -41,8 +41,6 @@ jobs:
           flutter-version-file: pubspec.yaml
           cache: true
 
-      # 缺失时生成占位 pili_release.json（本仓库将其 gitignore），
-      # 保证 fork 上无密钥也能编译 debug 包；真实构建仍可用你原有的工作流。
       - name: Ensure pili_release.json exists
         run: |
           if [ ! -f pili_release.json ]; then
@@ -50,7 +48,6 @@ jobs:
             echo "created placeholder pili_release.json"
           fi
 
-      # 与 debug_android.yml 一致的 Flutter 框架补丁（如有，失败不阻断）
       - name: Revert overscrollindicator patch
         working-directory: ${{ env.FLUTTER_ROOT }}
         run: |
@@ -74,14 +71,47 @@ jobs:
         run: lib/scripts/build.ps1 android
         continue-on-error: true
 
-      - name: Analyze (仅诊断，不阻断)
+      # ---- 诊断闸门：先只跑 Dart 静态分析，快速区分「代码错」还是「环境错」----
+      - name: Analyze (hard gate + annotate)
         run: |
           flutter pub get
-          flutter analyze || true
-        continue-on-error: true
+          set +e
+          flutter analyze > analyze.log 2>&1
+          code=$?
+          echo "### flutter analyze (exit=$code)" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          grep -E "error" analyze.log | head -n 60 >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          # 把 error 行抛成 annotation（public annotations API 可读）
+          grep -E "error -|error •| error " analyze.log | head -n 40 | \
+            while IFS= read -r line; do
+              msg=$(printf '%s' "$line" | sed 's/%/%25/g; s/:/%3A/g')
+              echo "::error title=AnalyzeError::$msg"
+            done
+          echo "ANALYZE_EXIT=$code"
+          if [ "$code" -ne 0 ]; then
+            echo "analyze 失败：优先怀疑本次 Dart 改动"
+          fi
+          # 故意不因 analyze 失败而中断，继续尝试真机编译以暴露 gradle/native 问题
 
       - name: Build Debug APK
-        run: flutter build apk --debug --dart-define-from-file=pili_release.json --pub
+        run: |
+          set +e
+          flutter build apk --debug --dart-define-from-file=pili_release.json --pub > build.log 2>&1
+          code=$?
+          echo "### flutter build apk (exit=$code)" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          tail -n 150 build.log >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          grep -iE "error:|FAILURE|What went wrong|Execution failed|e: |BUILD FAILED|Target .* failed|Keystore|NDK|Could not" build.log | head -n 40 | \
+            while IFS= read -r line; do
+              msg=$(printf '%s' "$line" | sed 's/%/%25/g; s/:/%3A/g')
+              echo "::error title=BuildError::$msg"
+            done
+          echo "BUILD_EXIT=$code"
+          if [ "$code" -ne 0 ]; then
+            exit 1
+          fi
 
       - name: Rename Debug APK
         shell: bash
