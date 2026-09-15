@@ -119,6 +119,28 @@ class AiSettingController extends GetxController {
     SmartDialog.showToast('已清空界面翻译缓存');
   }
 
+  final isTesting = false.obs;
+
+  Future<void> testTranslate() async {
+    if (!Get.isRegistered<UiTranslateService>()) {
+      SmartDialog.showToast('翻译服务未就绪');
+      return;
+    }
+    if (Pref.aiApiUrl.isEmpty || Pref.aiModel.isEmpty) {
+      SmartDialog.showToast('请先配置 API 地址并选择模型');
+      return;
+    }
+    isTesting.value = true;
+    try {
+      final out = await UiTranslateService.to.debugTranslate('直播');
+      SmartDialog.showToast('测试成功：直播 → $out');
+    } catch (e) {
+      SmartDialog.showToast('测试失败：$e');
+    } finally {
+      isTesting.value = false;
+    }
+  }
+
   void addTemplate(String name, String prompt) {
     templates.add(AiPromptTemplate(name: name, prompt: prompt));
     _saveTemplates();

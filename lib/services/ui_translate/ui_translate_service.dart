@@ -44,6 +44,9 @@ class UiTranslateService extends GetxService {
   /// 收集待翻译字符串的防抖窗口。
   static const Duration _debounceWindow = Duration(milliseconds: 500);
 
+  /// 最近一次翻译失败的原因，供设置页诊断展示。
+  final RxnString lastError = RxnString();
+
   @override
   void onInit() {
     super.onInit();
@@ -104,8 +107,10 @@ class UiTranslateService extends GetxService {
       if (changed) {
         _persist();
         revision.value++;
+        lastError.value = null;
       }
     } catch (e, st) {
+      lastError.value = e.toString();
       logger.e('界面翻译失败', error: e, stackTrace: st);
       // 不自动重试，避免 API 未配置/持续失败时无限自旋；
       // 这些字符串仍显示原文，待下次界面重建时经 tx 自动重新排队。
@@ -136,11 +141,16 @@ class UiTranslateService extends GetxService {
         '界面词尽量简短、术语一致。';
     final user = '待翻译列表：\n$numbered';
 
-    final raw = await AiChatService.complete([
+    // 与「AI 视频总结」使用同一条已验证可用的流式通道：
+    // 部分 OpenAI 兼容网关只支持 stream:true，非流式会直接报错。
+    final buf = StringBuffer();
+    await for (final chunk in AiChatService.streamChat(messages: [
       {'role': 'system', 'content': system},
       {'role': 'user', 'content': user},
-    ]);
-    return _parseArray(raw, sources.length);
+    ])) {
+      buf.write(chunk);
+    }
+    return _parseArray(buf.toString(), sources.length);
   }
 
   /// 从模型输出里稳健地解析出 JSON 数组；解析失败退化为按行切分。
@@ -180,6 +190,7 @@ class UiTranslateService extends GetxService {
   void clearCache() {
     _cache.clear();
     _pending.clear();
+    lastError.value = null;
     Pref.uiTranslateCache = {};
     revision.value++;
   }
@@ -189,4 +200,21 @@ class UiTranslateService extends GetxService {
 
   /// 已缓存的字符串条数。
   int get cachedCount => _cache.length;
+
+  /// 供设置页「测试翻译」使用：立即用当前目标语言翻译样例，
+  /// 走与真实翻译完全相同的通道，成功返回译文，失败抛异常并记录 lastError。
+  Future<String> debugTranslate([String sample = '直播']) async {
+    try {
+      final out = await _translateChunk([sample], targetLang);
+      final result = out.isEmpty ? '' : out.first.trim();
+      if (result.isEmpty) {
+        throw Exception('模型返回空内容');
+      }
+      lastError.value = null;
+      return result;
+    } catch (e) {
+      lastError.value = e.toString();
+      rethrow;
+    }
+  }
 }
