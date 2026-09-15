@@ -218,3 +218,8 @@ class UiTranslateService extends GetxService {
     }
   }
 }
+
+/// 顶层便捷入口：把源字符串映射为译文。
+/// 需在被 Obx（或任何读取了 UiTranslateService 修订号）的构建里调用，
+/// 才能在异步译文回来后自动刷新；否则仅在界面重建时取到缓存译文。
+String uiTx(String src) => UiTranslateService.tx(src);

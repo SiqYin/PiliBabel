@@ -8,6 +8,7 @@ import 'package:PiliPlus/http/search.dart';
 import 'package:PiliPlus/models/home/rcmd/result.dart';
 import 'package:PiliPlus/models/model_rec_video_item.dart';
 import 'package:PiliPlus/models_new/video/video_detail/dimension.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
@@ -171,11 +172,13 @@ class VideoCardV extends StatelessWidget {
           crossAxisAlignment: .start,
           children: [
             Expanded(
-              child: Text(
-                videoItem.title,
-                maxLines: 2,
-                overflow: .ellipsis,
-                style: const TextStyle(height: 1.38),
+              child: Obx(
+                () => Text(
+                  uiTx(videoItem.title),
+                  maxLines: 2,
+                  overflow: .ellipsis,
+                  style: const TextStyle(height: 1.38),
+                ),
               ),
             ),
             videoStat(theme),
@@ -214,21 +217,23 @@ class VideoCardV extends StatelessWidget {
                   ),
                 Expanded(
                   flex: 1,
-                  child: Text(
-                    remarkedName(
-                      videoItem.owner.mid,
-                      videoItem.owner.name.toString(),
-                    ),
-                    maxLines: 1,
-                    overflow: .clip,
-                    semanticsLabel: 'UP：${remarkedName(
-                      videoItem.owner.mid,
-                      videoItem.owner.name.toString(),
-                    )}',
-                    style: TextStyle(
-                      height: 1.5,
-                      fontSize: theme.textTheme.labelMedium!.fontSize,
-                      color: theme.colorScheme.outline,
+                  child: Obx(
+                    () => Text(
+                      remarkedName(
+                        videoItem.owner.mid,
+                        uiTx(videoItem.owner.name.toString()),
+                      ),
+                      maxLines: 1,
+                      overflow: .clip,
+                      semanticsLabel: 'UP：${remarkedName(
+                        videoItem.owner.mid,
+                        uiTx(videoItem.owner.name.toString()),
+                      )}',
+                      style: TextStyle(
+                        height: 1.5,
+                        fontSize: theme.textTheme.labelMedium!.fontSize,
+                        color: theme.colorScheme.outline,
+                      ),
                     ),
                   ),
                 ),
