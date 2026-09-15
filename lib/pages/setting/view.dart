@@ -6,6 +6,7 @@ import 'package:PiliPlus/models/common/setting_type.dart';
 import 'package:PiliPlus/pages/about/view.dart';
 import 'package:PiliPlus/pages/login/controller.dart';
 import 'package:PiliPlus/pages/setting/common_setting.dart';
+import 'package:PiliPlus/pages/setting/ui_translate/view.dart';
 import 'package:PiliPlus/pages/setting/widgets/multi_select_dialog.dart';
 import 'package:PiliPlus/pages/webdav/view.dart';
 import 'package:PiliPlus/utils/accounts.dart';
@@ -57,6 +58,11 @@ class _SettingPageState extends State<SettingPage> {
       type: SettingType.dynamicsSetting,
       subtitle: '关键词过滤、屏蔽用户、带货动态屏蔽',
       icon: Icon(Icons.dynamic_feed_outlined),
+    ),
+    _SettingsModel(
+      type: SettingType.aiTranslateSetting,
+      subtitle: '用自配 AI 模型翻译界面与内容为外语，每条只翻译一次并持久固定',
+      icon: Icon(Icons.auto_translate_outlined),
     ),
     _SettingsModel(
       type: SettingType.videoSetting,
@@ -129,6 +135,9 @@ class _SettingPageState extends State<SettingPage> {
                         settingType: _type,
                         showAppBar: false,
                       ),
+                      .aiTranslateSetting => const UiTranslateSettingPage(
+                        showAppBar: false,
+                      ),
                       .webdavSetting => const WebDavSettingPage(
                         showAppBar: false,
                       ),
@@ -158,6 +167,7 @@ class _SettingPageState extends State<SettingPage> {
           .playSetting ||
           .styleSetting ||
           .extraSetting => CommonSetting(settingType: type),
+          .aiTranslateSetting => const UiTranslateSettingPage(),
           .webdavSetting => const WebDavSettingPage(),
           .about => const AboutPage(),
         },

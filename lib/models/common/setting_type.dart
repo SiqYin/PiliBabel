@@ -11,6 +11,7 @@ enum SettingType {
   privacySetting('隐私设置'),
   recommendSetting('推荐流设置'),
   dynamicsSetting('动态流设置'),
+  aiTranslateSetting('AI 界面翻译'),
   videoSetting('音视频设置'),
   playSetting('播放器设置'),
   styleSetting('外观设置'),
@@ -30,6 +31,6 @@ enum SettingType {
     .playSetting => playSettings,
     .styleSetting => styleSettings,
     .extraSetting => extraSettings,
-    _ => throw UnimplementedError(),
+    _ => const [],
   };
 }

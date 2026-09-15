@@ -8,6 +8,7 @@ import 'package:PiliPlus/common/widgets/video_popup_menu.dart';
 import 'package:PiliPlus/http/search.dart';
 import 'package:PiliPlus/models/horizontal_video_model.dart';
 import 'package:PiliPlus/models_new/video/video_detail/dimension.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/global_data.dart';
@@ -233,7 +234,7 @@ class VideoCardH extends StatelessWidget {
                 final isClicked =
                     key != null && VideoCardH.clickedBvids.contains(key);
                 return Text(
-                  videoItem.title,
+                  uiTx(videoItem.title),
                   textAlign: .start,
                   style: TextStyle(
                     fontSize: theme.textTheme.bodyMedium!.fontSize,
@@ -246,17 +247,19 @@ class VideoCardH extends StatelessWidget {
                 );
               }),
             ),
-          Text(
-            "$pubdate${remarkedName(
-              videoItem.owner.mid,
-              videoItem.owner.name ?? '',
-            )}",
-            maxLines: 1,
-            style: TextStyle(
-              fontSize: 12,
-              height: 1,
-              color: theme.colorScheme.outline,
-              overflow: .clip,
+          Obx(
+            () => Text(
+              "$pubdate${remarkedName(
+                videoItem.owner.mid,
+                uiTx(videoItem.owner.name ?? ''),
+              )}",
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 12,
+                height: 1,
+                color: theme.colorScheme.outline,
+                overflow: .clip,
+              ),
             ),
           ),
           const SizedBox(height: 3),
