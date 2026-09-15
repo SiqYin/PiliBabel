@@ -1,4 +1,5 @@
 import 'package:PiliPlus/pages/setting/ai_setting/controller.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
@@ -182,14 +183,50 @@ class AiSettingPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton.icon(
-                      icon: const Icon(Icons.delete_sweep, size: 18),
-                      label: const Text('清空翻译缓存'),
-                      onPressed: controller.clearTranslateCache,
-                    ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Obx(
+                        () => TextButton.icon(
+                          icon: controller.isTesting.value
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.bolt, size: 18),
+                          label: const Text('测试翻译'),
+                          onPressed:
+                              controller.isTesting.value
+                                  ? null
+                                  : controller.testTranslate,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      TextButton.icon(
+                        icon: const Icon(Icons.delete_sweep, size: 18),
+                        label: const Text('清空翻译缓存'),
+                        onPressed: controller.clearTranslateCache,
+                      ),
+                    ],
                   ),
+                  Obx(() {
+                    final err = Get.isRegistered<UiTranslateService>()
+                        ? UiTranslateService.to.lastError.value
+                        : null;
+                    if (err == null) return const SizedBox.shrink();
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        '最近错误：$err',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: colorScheme.error,
+                        ),
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),
