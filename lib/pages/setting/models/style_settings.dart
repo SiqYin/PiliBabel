@@ -136,6 +136,14 @@ List<SettingsModel> get styleSettings => [
     needReboot: true,
   ),
   const SwitchModel(
+    title: '首页背景渐变',
+    subtitle: '主框架背景由纯色改为渐变色',
+    leading: Icon(Icons.gradient_outlined),
+    setKey: SettingBoxKey.enableGradientBg,
+    defaultVal: false,
+    needReboot: true,
+  ),
+  const SwitchModel(
     title: '悬浮底栏',
     leading: Icon(MdiIcons.soundbar),
     setKey: SettingBoxKey.floatingNavBar,
