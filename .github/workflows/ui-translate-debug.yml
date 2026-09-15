@@ -1,0 +1,98 @@
+name: AI UI Translate - Debug APK
+
+# 专供 AI 界面翻译分支：push 到本分支或手动触发即产出 debug APK，
+# 作为「改代码 -> 自动编译验证」的闭环，无需下载工具链。
+on:
+  push:
+    branches:
+      - feat/ai-ui-translate
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths-ignore:
+      - "**.md"
+  workflow_dispatch:
+
+jobs:
+  android-debug:
+    name: Build Debug APK
+    runs-on: ubuntu-latest
+    permissions: write-all
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "zulu"
+          java-version: "17"
+          cache: "gradle"
+          cache-dependency-path: |
+            android/*.gradle*
+            android/**/gradle-wrapper.properties
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version-file: pubspec.yaml
+          cache: true
+
+      # 缺失时生成占位 pili_release.json（本仓库将其 gitignore），
+      # 保证 fork 上无密钥也能编译 debug 包；真实构建仍可用你原有的工作流。
+      - name: Ensure pili_release.json exists
+        run: |
+          if [ ! -f pili_release.json ]; then
+            echo '{}' > pili_release.json
+            echo "created placeholder pili_release.json"
+          fi
+
+      # 与 debug_android.yml 一致的 Flutter 框架补丁（如有，失败不阻断）
+      - name: Revert overscrollindicator patch
+        working-directory: ${{ env.FLUTTER_ROOT }}
+        run: |
+          git config --global user.name "ci"
+          git config --global user.email "ci@example.com"
+          git stash || true
+          git revert 362b1de29974ffc1ed6faa826e1df870d7bec75f --no-edit || true
+          git reset --soft HEAD~1 || true
+          git stash pop || true
+        continue-on-error: true
+
+      - name: Apply framework patches
+        working-directory: ${{ env.FLUTTER_ROOT }}
+        run: |
+          for p in bottom_sheet_patch modal_barrier_patch mouse_cursor_patch; do
+            git apply "$GITHUB_WORKSPACE/lib/scripts/$p.diff" || true
+          done
+
+      - name: Set and extract version
+        shell: pwsh
+        run: lib/scripts/build.ps1 android
+        continue-on-error: true
+
+      - name: Analyze (仅诊断，不阻断)
+        run: |
+          flutter pub get
+          flutter analyze || true
+        continue-on-error: true
+
+      - name: Build Debug APK
+        run: flutter build apk --debug --dart-define-from-file=pili_release.json --pub
+
+      - name: Rename Debug APK
+        shell: bash
+        run: |
+          mkdir -p output
+          if [ -f "build/app/outputs/flutter-apk/app-debug.apk" ]; then
+            mv "build/app/outputs/flutter-apk/app-debug.apk" "output/PiliNara_ui-translate_debug.apk"
+          fi
+
+      - name: Upload Debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: ui-translate-debug-apk
+          path: output/PiliNara_ui-translate_debug.apk
