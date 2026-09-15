@@ -7,6 +7,7 @@ import 'package:PiliPlus/pages/home/controller.dart';
 import 'package:PiliPlus/pages/home/home_preview_scope.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
 import 'package:PiliPlus/pages/mine/controller.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
@@ -54,7 +55,14 @@ class _HomePageState extends CommonPageState<HomePage>
           width: double.infinity,
           child: TabBar(
             controller: _homeController.tabController,
-            tabs: _homeController.tabs.map((e) => Tab(text: e.label)).toList(),
+            tabs: _homeController.tabs
+                .map(
+                  (e) => Obx(() {
+                    UiTranslateService.to.revision.value;
+                    return Tab(text: UiTranslateService.tx(e.label));
+                  }),
+                )
+                .toList(),
             isScrollable: true,
             dividerColor: Colors.transparent,
             dividerHeight: 0,

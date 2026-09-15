@@ -1630,6 +1630,35 @@ abstract final class Pref {
   static set aiPromptTemplates(String value) =>
       _setting.put(SettingBoxKey.aiPromptTemplates, value);
 
+  static bool get uiTranslateEnabled =>
+      _setting.get(SettingBoxKey.uiTranslateEnabled, defaultValue: false);
+
+  static set uiTranslateEnabled(bool value) =>
+      _setting.put(SettingBoxKey.uiTranslateEnabled, value);
+
+  static String get uiTranslateLang =>
+      _setting.get(SettingBoxKey.uiTranslateLang, defaultValue: 'English');
+
+  static set uiTranslateLang(String value) =>
+      _setting.put(SettingBoxKey.uiTranslateLang, value);
+
+  static Map<String, String> get uiTranslateCache {
+    final raw = _setting.get(SettingBoxKey.uiTranslateCache, defaultValue: '');
+    if (raw is! String || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) {
+        return decoded.map(
+          (k, v) => MapEntry(k.toString(), v.toString()),
+        );
+      }
+    } catch (_) {}
+    return {};
+  }
+
+  static set uiTranslateCache(Map<String, String> value) =>
+      _setting.put(SettingBoxKey.uiTranslateCache, jsonEncode(value));
+
   static int get angleDegrees =>
       _setting.get(SettingBoxKey.angleDegrees, defaultValue: 30);
 
