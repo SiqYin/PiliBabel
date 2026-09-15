@@ -410,7 +410,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
             ),
             const TextSpan(text: ' '),
           ],
-          TextSpan(text: uiTx(videoDetail.title)),
+          TextSpan(text: uiTx(videoDetail.title ?? '')),
         ],
       );
       if (isSelectable) {
