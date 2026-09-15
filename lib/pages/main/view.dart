@@ -13,6 +13,7 @@ import 'package:PiliPlus/pages/home/view.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/android/android_helper.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
@@ -337,7 +338,7 @@ class _MainAppState extends PopScopeState<MainApp>
             destinations: _mainController.navigationBars
                 .map(
                   (e) => FloatingNavigationDestination(
-                    label: e.label,
+                    label: UiTranslateService.tx(e.label),
                     icon: _buildIcon(type: e),
                     selectedIcon: _buildIcon(type: e, selected: true),
                   ),
@@ -354,7 +355,7 @@ class _MainAppState extends PopScopeState<MainApp>
             destinations: _mainController.navigationBars
                 .map(
                   (e) => NavigationDestination(
-                    label: e.label,
+                    label: UiTranslateService.tx(e.label),
                     icon: _buildIcon(type: e),
                     selectedIcon: _buildIcon(type: e, selected: true),
                   ),
@@ -374,7 +375,7 @@ class _MainAppState extends PopScopeState<MainApp>
             items: _mainController.navigationBars
                 .map(
                   (e) => BottomNavigationBarItem(
-                    label: e.label,
+                    label: UiTranslateService.tx(e.label),
                     icon: _buildIcon(type: e),
                     activeIcon: _buildIcon(type: e, selected: true),
                   ),
@@ -437,7 +438,7 @@ class _MainAppState extends PopScopeState<MainApp>
                   children: _mainController.navigationBars
                       .map(
                         (e) => NavigationDrawerDestination(
-                          label: Text(e.label),
+                          label: Text(UiTranslateService.tx(e.label)),
                           icon: _buildIcon(type: e),
                           selectedIcon: _buildIcon(
                             type: e,
@@ -463,7 +464,7 @@ class _MainAppState extends PopScopeState<MainApp>
           destinations: _mainController.navigationBars
               .map(
                 (e) => NavigationRailDestination(
-                  label: Text(e.label),
+                  label: Text(UiTranslateService.tx(e.label)),
                   icon: _buildIcon(type: e),
                   selectedIcon: _buildIcon(type: e, selected: true),
                 ),
