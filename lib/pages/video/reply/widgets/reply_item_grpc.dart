@@ -27,6 +27,7 @@ import 'package:PiliPlus/pages/save_panel/view.dart';
 import 'package:PiliPlus/pages/audio/controller.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/pages/video/reply/widgets/zan_grpc.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/bili_utils.dart';
@@ -534,17 +535,7 @@ class ReplyItemGrpc extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 2),
-        if (replyControl.translationSwitch ==
-            .TRANSLATION_SWITCH_SHOW_TRANSLATION) ...[
-          _buildTranslateBtn(
-            context,
-            colorScheme,
-            replyControl,
-            textStyle,
-            buttonStyle,
-          ),
-          const SizedBox(width: 2),
-        ] else if (replyControl.cardLabels.isNotEmpty) ...[
+        if (replyControl.cardLabels.isNotEmpty) ...[
           Text(
             dialogBtn != null
                 ? replyControl.cardLabels.first.textContent
@@ -744,7 +735,7 @@ class ReplyItemGrpc extends StatelessWidget {
     late List<String> matchedUrls = [];
 
     void addPlainTextSpan(str) {
-      spanChildren.add(TextSpan(text: str));
+      spanChildren.add(TextSpan(text: uiTx(str)));
     }
 
     void addUrl(String matchStr, Url url, {bool addPlainText = false}) {
