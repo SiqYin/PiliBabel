@@ -62,7 +62,7 @@ class _SettingPageState extends State<SettingPage> {
     _SettingsModel(
       type: SettingType.aiTranslateSetting,
       subtitle: '用自配 AI 模型翻译界面与内容为外语，每条只翻译一次并持久固定',
-      icon: Icon(Icons.auto_translate_outlined),
+      icon: Icon(Icons.translate),
     ),
     _SettingsModel(
       type: SettingType.videoSetting,
