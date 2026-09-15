@@ -26,6 +26,7 @@ import 'package:PiliPlus/pages/video/introduction/ugc/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/widgets/action_item.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/widgets/page.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/widgets/season.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/bili_colors.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
@@ -409,7 +410,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
             ),
             const TextSpan(text: ' '),
           ],
-          TextSpan(text: videoDetail.title),
+          TextSpan(text: uiTx(videoDetail.title)),
         ],
       );
       if (isSelectable) {
@@ -426,10 +427,8 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
       );
     }
 
-    if (videoDetailCtr.plPlayerController.enableSponsorBlock) {
-      return Obx(child);
-    }
-    return child();
+    // 始终包 Obx：使 uiTx 读取的译文修订号变化时标题能自动刷新
+    return Obx(child);
   }
 
   Widget followButton(BuildContext context) {
@@ -871,18 +870,20 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
             mainAxisSize: .min,
             crossAxisAlignment: .start,
             children: [
-              Text(
-                remarkedName(
-                  item.mid is int ? item.mid : int.tryParse('${item.mid}'),
-                  item.name!,
-                ),
-                maxLines: 1,
-                overflow: .ellipsis,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: (item.vip?.status ?? 0) > 0 && item.vip?.type == 2
-                      ? colorScheme.vipColor
-                      : null,
+              Obx(
+                () => Text(
+                  remarkedName(
+                    item.mid is int ? item.mid : int.tryParse('${item.mid}'),
+                    uiTx(item.name!),
+                  ),
+                  maxLines: 1,
+                  overflow: .ellipsis,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: (item.vip?.status ?? 0) > 0 && item.vip?.type == 2
+                        ? colorScheme.vipColor
+                        : null,
+                  ),
                 ),
               ),
               Text(

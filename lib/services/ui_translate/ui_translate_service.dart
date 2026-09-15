@@ -64,10 +64,10 @@ class UiTranslateService extends GetxService {
   }
 
   String _tx(String src) {
-    if (!enabled) return src;
-    // 读取一次修订号：在 Obx 构建期调用 tx() 的界面会据此订阅，
-    // 待后台翻译完成、revision 自增时自动重建刷成译文。
+    // 始终读取一次修订号：即便翻译关闭，也能让包裹本调用的 Obx 拥有合法依赖，
+    // 避免 GetX “空 Obx” 运行时报错；开启时则据此在译文回来后刷新。
     revision.value;
+    if (!enabled) return src;
     final hit = _cache[src];
     if (hit != null) return hit;
     // 尚未翻译：先显示原文，排进待翻队列。
