@@ -121,7 +121,12 @@ class ReplyItemGrpc extends StatelessWidget {
 
     Widget child = Padding(
       padding: const .fromLTRB(12, 14, 8, 5),
-      child: Obx(() => _buildContent(context, colorScheme)),
+      child: Obx(() {
+        // 无条件读取，保证 Obx 始终有依赖（纯图/无正文评论也不触发“空 Obx”报错）
+        UiTranslateService.to.revision.value;
+        UiTranslateService.to.contentRev.value;
+        return _buildContent(context, colorScheme);
+      }),
     );
     if (needDivider) {
       child = Column(
@@ -369,6 +374,7 @@ class ReplyItemGrpc extends StatelessWidget {
                       ? replyItem.translatedContent
                       : replyItem.content,
                   replyControl,
+                  replyItem.id.toString(),
                 ),
               ],
             ),
@@ -535,6 +541,43 @@ class ReplyItemGrpc extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 2),
+        if (UiTranslateService.to.enabled) ...[
+          SizedBox(
+            height: 32,
+            child: TextButton(
+              style: buttonStyle,
+              onPressed: () => UiTranslateService.to.toggleShowOriginal(
+                replyItem.id.toString(),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Icon(
+                      Icons.translate,
+                      size: 18,
+                      color: colorScheme.outline.withValues(alpha: 0.8),
+                    ),
+                    if (!UiTranslateService.to.showOriginalFor(
+                          replyItem.id.toString(),
+                        ))
+                      Positioned(
+                        right: -4,
+                        bottom: -3,
+                        child: Icon(
+                          Icons.check,
+                          size: 12,
+                          color: colorScheme.secondary,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
+        ],
         if (replyControl.cardLabels.isNotEmpty) ...[
           Text(
             dialogBtn != null
@@ -660,6 +703,7 @@ class ReplyItemGrpc extends StatelessWidget {
                             colorScheme,
                             childReply.content,
                             childReply.replyControl,
+                            childReply.id.toString(),
                           ),
                         ],
                       ),
@@ -712,6 +756,7 @@ class ReplyItemGrpc extends StatelessWidget {
     ColorScheme colorScheme,
     Content content,
     ReplyControl replyControl,
+    String id,
   ) {
     final List<InlineSpan> spanChildren = <InlineSpan>[];
     bool hasNote = false;
@@ -735,7 +780,7 @@ class ReplyItemGrpc extends StatelessWidget {
     late List<String> matchedUrls = [];
 
     void addPlainTextSpan(str) {
-      spanChildren.add(TextSpan(text: uiTxComment(str)));
+      spanChildren.add(TextSpan(text: uiTxComment(str, id)));
     }
 
     void addUrl(String matchStr, Url url, {bool addPlainText = false}) {
