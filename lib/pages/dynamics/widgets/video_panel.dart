@@ -5,6 +5,7 @@ import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/svg/play_icon.dart';
 import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/models/dynamics/result.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -122,7 +123,7 @@ Widget videoSeasonWidget(
           ),
         if (video.title case final title?)
           Text(
-            title,
+            uiTx(title),
             maxLines: isDetail ? null : 1,
             style: const TextStyle(fontWeight: FontWeight.bold),
             overflow: isDetail ? null : TextOverflow.ellipsis,

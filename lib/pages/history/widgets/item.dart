@@ -10,6 +10,7 @@ import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/models_new/history/list.dart';
 import 'package:PiliPlus/models_new/video/video_detail/dimension.dart';
 import 'package:PiliPlus/pages/common/multi_select/base.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
@@ -224,7 +225,7 @@ class HistoryItem extends StatelessWidget {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            '访问：${item.authorName}',
+                            '${uiTx('访问：')}${uiTx(item.authorName ?? '')}',
                             style: const TextStyle(fontSize: 13),
                           ),
                         ],
@@ -239,22 +240,22 @@ class HistoryItem extends StatelessWidget {
                       onTap: () =>
                           UserHttp.toViewLater(bvid: item.history.bvid),
                       height: 38,
-                      child: const Row(
+                      child: Row(
                         children: [
-                          Icon(Icons.watch_later_outlined, size: 16),
-                          SizedBox(width: 6),
-                          Text('稍后再看', style: TextStyle(fontSize: 13)),
+                          const Icon(Icons.watch_later_outlined, size: 16),
+                          const SizedBox(width: 6),
+                          Text(uiTx('稍后再看'), style: const TextStyle(fontSize: 13)),
                         ],
                       ),
                     ),
                   PopupMenuItem(
                     onTap: () => onDelete(item.kid!, business!),
                     height: 38,
-                    child: const Row(
+                    child: Row(
                       children: [
-                        Icon(Icons.close_outlined, size: 16),
-                        SizedBox(width: 6),
-                        Text('删除记录', style: TextStyle(fontSize: 13)),
+                        const Icon(Icons.close_outlined, size: 16),
+                        const SizedBox(width: 6),
+                        Text(uiTx('删除记录'), style: const TextStyle(fontSize: 13)),
                       ],
                     ),
                   ),
@@ -274,7 +275,7 @@ class HistoryItem extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            item.title!,
+            uiTx(item.title!),
             style: TextStyle(
               fontSize: theme.textTheme.bodyMedium!.fontSize,
               height: 1.42,
@@ -286,7 +287,7 @@ class HistoryItem extends StatelessWidget {
           if (item.history.business == 'pgc' &&
               item.showTitle?.isNotEmpty == true)
             Text(
-              item.showTitle!,
+              uiTx(item.showTitle!),
               style: TextStyle(
                 fontSize: 13,
                 color: theme.colorScheme.outline,
@@ -297,7 +298,7 @@ class HistoryItem extends StatelessWidget {
           const Spacer(),
           if (item.authorName?.isNotEmpty == true)
             Text(
-              item.authorName!,
+              uiTx(item.authorName!),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
