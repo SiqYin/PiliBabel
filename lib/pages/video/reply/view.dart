@@ -14,6 +14,7 @@ import 'package:PiliPlus/pages/video/reply/controller.dart';
 import 'package:PiliPlus/pages/video/reply/vote/reply_vote_item.dart';
 import 'package:PiliPlus/pages/video/reply/widgets/reply_item_grpc.dart';
 import 'package:PiliPlus/pages/video/reply_reply/view.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:get/get.dart';
@@ -95,21 +96,49 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
                           sortType.desc,
                           style: const TextStyle(fontSize: 13),
                         ),
-                        TextButton.icon(
-                          style: Style.buttonStyle,
-                          onPressed: _videoReplyController.queryBySort,
-                          icon: Icon(
-                            Icons.sort,
-                            size: 16,
-                            color: colorScheme.secondary,
-                          ),
-                          label: Text(
-                            sortType.descShort,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: colorScheme.secondary,
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (UiTranslateService.to.enabled)
+                              IconButton(
+                                padding: EdgeInsets.zero,
+                                visualDensity: VisualDensity.compact,
+                                constraints: const BoxConstraints(
+                                  minWidth: 36,
+                                  minHeight: 36,
+                                ),
+                                icon: Icon(
+                                  Icons.translate,
+                                  size: 20,
+                                  color: UiTranslateService
+                                          .to
+                                          .commentShowOriginal
+                                          .value
+                                      ? colorScheme.outline
+                                      : colorScheme.secondary,
+                                ),
+                                onPressed: () => UiTranslateService
+                                    .to
+                                    .commentShowOriginal
+                                    .toggle(),
+                              ),
+                            TextButton.icon(
+                              style: Style.buttonStyle,
+                              onPressed: _videoReplyController.queryBySort,
+                              icon: Icon(
+                                Icons.sort,
+                                size: 16,
+                                color: colorScheme.secondary,
+                              ),
+                              label: Text(
+                                sortType.descShort,
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: colorScheme.secondary,
+                                ),
+                              ),
                             ),
-                          ),
+                          ],
                         ),
                       ],
                     );

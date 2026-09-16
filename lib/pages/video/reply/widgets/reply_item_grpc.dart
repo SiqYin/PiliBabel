@@ -121,7 +121,7 @@ class ReplyItemGrpc extends StatelessWidget {
 
     Widget child = Padding(
       padding: const .fromLTRB(12, 14, 8, 5),
-      child: _buildContent(context, colorScheme),
+      child: Obx(() => _buildContent(context, colorScheme)),
     );
     if (needDivider) {
       child = Column(
@@ -735,7 +735,7 @@ class ReplyItemGrpc extends StatelessWidget {
     late List<String> matchedUrls = [];
 
     void addPlainTextSpan(str) {
-      spanChildren.add(TextSpan(text: uiTx(str)));
+      spanChildren.add(TextSpan(text: uiTxComment(str)));
     }
 
     void addUrl(String matchStr, Url url, {bool addPlainText = false}) {

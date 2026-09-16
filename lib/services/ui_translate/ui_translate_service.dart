@@ -57,6 +57,16 @@ class UiTranslateService extends GetxService {
   /// 最近一次翻译失败的原因，供设置页诊断展示。
   final RxnString lastError = RxnString();
 
+  /// 评论区“显示原文/译文”切换（仅作用于评论/动态正文，不影响界面标签）。
+  final RxBool commentShowOriginal = false.obs;
+
+  /// 评论/动态正文取词：开启“显示原文”时返回原文，否则返回译文。
+  /// 读取 commentShowOriginal 以便评论区 Obx 订阅切换刷新。
+  String commentText(String src) {
+    if (commentShowOriginal.value) return src;
+    return _tx(src);
+  }
+
   @override
   void onInit() {
     super.onInit();
@@ -292,3 +302,9 @@ class UiTranslateService extends GetxService {
 /// 需在被 Obx（或任何读取了 UiTranslateService 修订号）的构建里调用，
 /// 才能在异步译文回来后自动刷新；否则仅在界面重建时取到缓存译文。
 String uiTx(String src) => UiTranslateService.tx(src);
+
+/// 评论/动态正文取词：遵循评论区“显示原文”开关。
+String uiTxComment(String src) =>
+    Get.isRegistered<UiTranslateService>()
+        ? UiTranslateService.to.commentText(src)
+        : src;
