@@ -1,8 +1,10 @@
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart' hide ListTile;
 
 class SetSwitchItem extends StatefulWidget {
@@ -107,9 +109,9 @@ class _SetSwitchItemState extends State<SetSwitchItem> {
       contentPadding: widget.contentPadding,
       enabled: widget.onTap == null ? true : val,
       onTap: widget.onTap == null ? switchChange : () => widget.onTap!(context),
-      title: Text(widget.title, style: titleStyle),
+      title: Obx(() => Text(uiTx(widget.title), style: titleStyle)),
       subtitle: widget.subtitle != null
-          ? Text(widget.subtitle!, style: subTitleStyle)
+          ? Obx(() => Text(uiTx(widget.subtitle!), style: subTitleStyle))
           : null,
       leading: widget.leading,
       trailing: trailing,

@@ -41,6 +41,9 @@ class UiTranslateService extends GetxService {
   /// 单批最大字符串条数，避免超出模型上下文。
   static const int _batchSize = 40;
 
+  /// 首次翻译时同时并发的批次数上限（越大越快，但更吃限流）。
+  static const int _maxConcurrent = 4;
+
   /// 收集待翻译字符串的防抖窗口。
   static const Duration _debounceWindow = Duration(milliseconds: 500);
 
@@ -85,25 +88,46 @@ class UiTranslateService extends GetxService {
     final batch = _pending.toList(growable: false);
     _pending.clear();
 
-    final uncached = batch.where((s) => !_cache.containsKey(s)).toList();
+    final uncached =
+        batch.where((s) => !_cache.containsKey(s)).toSet().toList(growable: false);
     if (uncached.isEmpty) return;
 
     _busy = true;
     try {
-      var changed = false;
+      // 切分成批次
+      final chunks = <List<String>>[];
       for (var i = 0; i < uncached.length; i += _batchSize) {
-        final end = i + _batchSize < uncached.length ? i + _batchSize : uncached.length;
-        final chunk = uncached.sublist(i, end);
-        final translated = await _translateChunk(chunk, targetLang);
-        for (var j = 0; j < chunk.length && j < translated.length; j++) {
-          final value = translated[j].trim();
-          // 只有拿到有效且与原文不同的译文才写缓存；否则保留原文，下次再试。
-          if (value.isNotEmpty && value != chunk[j]) {
-            _cache[chunk[j]] = value;
-            changed = true;
+        final end = i + _batchSize < uncached.length
+            ? i + _batchSize
+            : uncached.length;
+        chunks.add(uncached.sublist(i, end));
+      }
+
+      var changed = false;
+      // 有限并发：一次最多发 _maxConcurrent 批，缩短首次翻译总等待
+      for (var i = 0; i < chunks.length; i += _maxConcurrent) {
+        final wave = chunks.sublist(
+          i,
+          i + _maxConcurrent < chunks.length ? i + _maxConcurrent : chunks.length,
+        );
+        final results = await Future.wait(
+          wave.map((chunk) => _translateChunk(chunk).catchError((_) {
+            return <String>[];
+          })),
+        );
+        for (var w = 0; w < wave.length; w++) {
+          final chunk = wave[w];
+          final translated = results[w];
+          for (var j = 0; j < chunk.length && j < translated.length; j++) {
+            final value = translated[j].trim();
+            if (value.isNotEmpty && value != chunk[j]) {
+              _cache[chunk[j]] = value;
+              changed = true;
+            }
           }
         }
       }
+
       if (changed) {
         _persist();
         revision.value++;
@@ -116,15 +140,16 @@ class UiTranslateService extends GetxService {
       // 这些字符串仍显示原文，待下次界面重建时经 tx 自动重新排队。
     } finally {
       _busy = false;
-      // 若翻译期间又有新的待翻字符串，继续处理。
       if (_pending.isNotEmpty) _scheduleFlush();
     }
   }
 
-  Future<List<String>> _translateChunk(
-    List<String> sources,
-    String lang,
-  ) async {
+  /// 翻译专用模型：为空则回退到视频总结所用模型。
+  static String get translateModel =>
+      Pref.uiTranslateModel.isNotEmpty ? Pref.uiTranslateModel : Pref.aiModel;
+
+  Future<List<String>> _translateChunk(List<String> sources) async {
+    final lang = targetLang;
     final numbered = StringBuffer();
     for (var i = 0; i < sources.length; i++) {
       numbered.writeln('${i + 1}. ${sources[i]}');
@@ -141,13 +166,21 @@ class UiTranslateService extends GetxService {
         '界面词尽量简短、术语一致。';
     final user = '待翻译列表：\n$numbered';
 
+    // 思考模式：开=启用推理(更准但慢)；关=显式关闭推理以求更快。
+    final thinking = Pref.uiTranslateThinking;
+    final extraBody = <String, dynamic>{'enable_thinking': thinking};
+
     // 与「AI 视频总结」使用同一条已验证可用的流式通道：
     // 部分 OpenAI 兼容网关只支持 stream:true，非流式会直接报错。
     final buf = StringBuffer();
-    await for (final chunk in AiChatService.streamChat(messages: [
-      {'role': 'system', 'content': system},
-      {'role': 'user', 'content': user},
-    ])) {
+    await for (final chunk in AiChatService.streamChat(
+      messages: [
+        {'role': 'system', 'content': system},
+        {'role': 'user', 'content': user},
+      ],
+      model: translateModel,
+      extraBody: extraBody,
+    )) {
       buf.write(chunk);
     }
     return _parseArray(buf.toString(), sources.length);

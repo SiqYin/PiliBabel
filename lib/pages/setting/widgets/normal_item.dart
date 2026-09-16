@@ -1,5 +1,7 @@
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:material_ui/material_ui.dart' hide ListTile;
+import 'package:get/get.dart';
 
 class NormalItem extends StatefulWidget {
   final String? title;
@@ -35,10 +37,12 @@ class _NormalItemState extends State<NormalItem> {
     late final theme = Theme.of(context);
     Widget? subtitle;
     if ((widget.subtitle ?? widget.getSubtitle?.call()) case final text?) {
-      subtitle = Text(
-        text,
-        style: theme.textTheme.labelMedium!.copyWith(
-          color: theme.colorScheme.outline,
+      subtitle = Obx(
+        () => Text(
+          uiTx(text),
+          style: theme.textTheme.labelMedium!.copyWith(
+            color: theme.colorScheme.outline,
+          ),
         ),
       );
     }
@@ -47,9 +51,11 @@ class _NormalItemState extends State<NormalItem> {
       onTap: widget.onTap == null
           ? null
           : () => widget.onTap!(context, refresh),
-      title: Text(
-        widget.title ?? widget.getTitle!(),
-        style: widget.titleStyle ?? theme.textTheme.titleMedium!,
+      title: Obx(
+        () => Text(
+          uiTx(widget.title ?? widget.getTitle!()),
+          style: widget.titleStyle ?? theme.textTheme.titleMedium!,
+        ),
       ),
       subtitle: subtitle,
       leading: widget.leading,

@@ -9,6 +9,7 @@ import 'package:PiliPlus/pages/setting/common_setting.dart';
 import 'package:PiliPlus/pages/setting/ui_translate/view.dart';
 import 'package:PiliPlus/pages/setting/widgets/multi_select_dialog.dart';
 import 'package:PiliPlus/pages/webdav/view.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
@@ -61,8 +62,8 @@ class _SettingPageState extends State<SettingPage> {
     ),
     _SettingsModel(
       type: SettingType.aiTranslateSetting,
-      subtitle: '用自配 AI 模型翻译界面与内容为外语，每条只翻译一次并持久固定',
-      icon: Icon(Icons.translate),
+      subtitle: 'AI 接入、视频总结与界面翻译的集中配置入口',
+      icon: Icon(Icons.auto_awesome),
     ),
     _SettingsModel(
       type: SettingType.videoSetting,
@@ -106,7 +107,9 @@ class _SettingPageState extends State<SettingPage> {
   Widget build(BuildContext context) {
     return SimpleScaffold(
       appBar: AppBar(
-        title: _isPortrait ? const Text('设置') : Text(_type.title),
+        title: _isPortrait
+            ? Text(uiTx('设置'))
+            : Obx(() => Text(uiTx(_type.title))),
       ),
       body: ViewSafeArea(
         child: _isPortrait
@@ -203,16 +206,20 @@ class _SettingPageState extends State<SettingPage> {
                 tileColor: _getTileColor(theme, item.type),
                 onTap: () => _toPage(item.type),
                 leading: item.icon,
-                title: Text(item.type.title, style: titleStyle),
+                title: Obx(
+                  () => Text(uiTx(item.type.title), style: titleStyle),
+                ),
                 subtitle: item.subtitle == null
                     ? null
-                    : Text(item.subtitle!, style: subTitleStyle),
+                    : Obx(
+                        () => Text(uiTx(item.subtitle!), style: subTitleStyle),
+                      ),
               ),
             ),
         ListTile(
           onTap: () => LoginPageController.switchAccountDialog(context),
           leading: const Icon(Icons.switch_account_outlined),
-          title: Text('切换账号', style: titleStyle),
+          title: Text(uiTx('切换账号'), style: titleStyle),
         ),
         Obx(
           () => _noAccount.value
@@ -220,14 +227,16 @@ class _SettingPageState extends State<SettingPage> {
               : ListTile(
                   leading: const Icon(Icons.logout_outlined),
                   onTap: () => _logoutDialog(context),
-                  title: Text('退出登录', style: titleStyle),
+                  title: Text(uiTx('退出登录'), style: titleStyle),
                 ),
         ),
         ListTile(
           tileColor: _getTileColor(theme, _items.last.type),
           onTap: () => _toPage(_items.last.type),
           leading: _items.last.icon,
-          title: Text(_items.last.type.title, style: titleStyle),
+          title: Obx(
+            () => Text(uiTx(_items.last.type.title), style: titleStyle),
+          ),
         ),
       ],
     );

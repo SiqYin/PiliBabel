@@ -8,7 +8,9 @@ class AiSettingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(AiSettingController());
+    final controller = Get.isRegistered<AiSettingController>()
+        ? Get.find<AiSettingController>()
+        : Get.put(AiSettingController());
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 

@@ -17,6 +17,8 @@ class AiSettingController extends GetxController {
   // --- AI 界面翻译 ---
   final uiTranslateEnabled = false.obs;
   final uiTranslateLang = 'English'.obs;
+  final translateModel = ''.obs;
+  final thinking = false.obs;
   static const List<MapEntry<String, String>> uiTranslateLangOptions = [
     MapEntry('English', '英语 English'),
     MapEntry('日本語', '日语 日本語'),
@@ -44,6 +46,8 @@ class AiSettingController extends GetxController {
     templates.value = AiChatService.getTemplates();
     uiTranslateEnabled.value = Pref.uiTranslateEnabled;
     uiTranslateLang.value = Pref.uiTranslateLang;
+    translateModel.value = Pref.uiTranslateModel;
+    thinking.value = Pref.uiTranslateThinking;
     _loadCachedModels();
   }
 
@@ -99,6 +103,16 @@ class AiSettingController extends GetxController {
   void saveUiTranslateEnabled(bool value) {
     uiTranslateEnabled.value = value;
     Pref.uiTranslateEnabled = value;
+  }
+
+  void saveTranslateModel(String value) {
+    translateModel.value = value;
+    Pref.uiTranslateModel = value;
+  }
+
+  void saveThinking(bool value) {
+    thinking.value = value;
+    Pref.uiTranslateThinking = value;
   }
 
   void saveUiTranslateLang(String value) {

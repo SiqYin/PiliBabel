@@ -1642,6 +1642,18 @@ abstract final class Pref {
   static set uiTranslateLang(String value) =>
       _setting.put(SettingBoxKey.uiTranslateLang, value);
 
+  static String get uiTranslateModel =>
+      _setting.get(SettingBoxKey.uiTranslateModel, defaultValue: '');
+
+  static set uiTranslateModel(String value) =>
+      _setting.put(SettingBoxKey.uiTranslateModel, value);
+
+  static bool get uiTranslateThinking =>
+      _setting.get(SettingBoxKey.uiTranslateThinking, defaultValue: false);
+
+  static set uiTranslateThinking(bool value) =>
+      _setting.put(SettingBoxKey.uiTranslateThinking, value);
+
   static Map<String, String> get uiTranslateCache {
     final raw = _setting.get(SettingBoxKey.uiTranslateCache, defaultValue: '');
     if (raw is! String || raw.isEmpty) return {};
