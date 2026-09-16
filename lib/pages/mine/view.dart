@@ -502,7 +502,7 @@ class _MediaPageState extends CommonPageState<MinePage>
               TextSpan(
                 children: [
                   TextSpan(
-                    text: '稍后再看  ',
+                    text: uiTx('稍后再看  '),
                     style: TextStyle(
                       fontSize: theme.textTheme.titleMedium!.fontSize,
                       fontWeight: FontWeight.bold,
@@ -609,7 +609,7 @@ class _MediaPageState extends CommonPageState<MinePage>
               TextSpan(
                 children: [
                   TextSpan(
-                    text: '观看记录  ',
+                    text: uiTx('观看记录  '),
                     style: TextStyle(
                       fontSize: theme.textTheme.titleMedium!.fontSize,
                       fontWeight: FontWeight.bold,
@@ -722,7 +722,7 @@ class _MediaPageState extends CommonPageState<MinePage>
               TextSpan(
                 children: [
                   TextSpan(
-                    text: '我的收藏  ',
+                    text: uiTx('我的收藏  '),
                     style: TextStyle(
                       fontSize: theme.textTheme.titleMedium!.fontSize,
                       fontWeight: .bold,

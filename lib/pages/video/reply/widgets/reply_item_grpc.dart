@@ -806,7 +806,9 @@ class ReplyItemGrpc extends StatelessWidget {
             ),
           ),
         TextSpan(
-          text: isCv ? '[笔记] ' : url.title,
+          text: isCv
+              ? uiTxComment('[笔记] ', id)
+              : uiTxComment(url.title ?? '', id),
           style: TextStyle(color: colorScheme.primary),
           recognizer: NoDeadlineTapGestureRecognizer()
             ..onTap = () {

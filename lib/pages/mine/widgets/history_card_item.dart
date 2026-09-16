@@ -2,6 +2,7 @@ import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/models_new/history/list.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
@@ -166,7 +167,7 @@ class HistoryCardItem extends StatelessWidget {
           SizedBox(
             width: _cardWidth,
             child: Text(
-              ' ${item.title ?? ''}',
+              ' ${uiTx(item.title ?? '')}',
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
               style: theme.textTheme.bodySmall,
@@ -176,7 +177,7 @@ class HistoryCardItem extends StatelessWidget {
           SizedBox(
             width: _cardWidth,
             child: Text(
-              ' ${item.authorName ?? item.showTitle ?? ''}',
+              ' ${uiTx(item.authorName ?? item.showTitle ?? '')}',
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
               style: theme.textTheme.labelSmall!.copyWith(

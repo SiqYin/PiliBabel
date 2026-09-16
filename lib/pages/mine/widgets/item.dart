@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models_new/fav/fav_folder/list.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/bili_utils.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
@@ -59,12 +60,13 @@ class FavFolderItem extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            ' ${item.title}',
+            ' ${uiTx(item.title ?? '')}',
             overflow: TextOverflow.fade,
             maxLines: 1,
           ),
           Text(
-            ' 共${item.mediaCount}条视频 · ${BiliUtils.isPublicFavText(item.attr)}',
+            ' ${uiTx('共')}${item.mediaCount}${uiTx('条视频 · ')}'
+            '${uiTx(BiliUtils.isPublicFavText(item.attr))}',
             style: theme.textTheme.labelSmall!.copyWith(
               color: theme.colorScheme.outline,
             ),
