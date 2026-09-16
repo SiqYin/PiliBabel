@@ -238,7 +238,7 @@ class UiTranslateService extends GetxService {
   /// 走与真实翻译完全相同的通道，成功返回译文，失败抛异常并记录 lastError。
   Future<String> debugTranslate([String sample = '直播']) async {
     try {
-      final out = await _translateChunk([sample], targetLang);
+      final out = await _translateChunk([sample]);
       final result = out.isEmpty ? '' : out.first.trim();
       if (result.isEmpty) {
         throw Exception('模型返回空内容');
