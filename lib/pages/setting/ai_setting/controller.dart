@@ -14,24 +14,22 @@ class AiSettingController extends GetxController {
   final isLoadingModels = false.obs;
   final templates = <AiPromptTemplate>[].obs;
 
-  // --- AI 界面翻译 ---
+  // --- AI 界面翻译（使用独立 API）---
   final uiTranslateEnabled = false.obs;
-  final uiTranslateLang = 'English'.obs;
+  final uiTranslateLang = 'zh-CN'.obs;
+  final translateApiUrl = ''.obs;
+  final translateApiKey = ''.obs;
   final translateModel = ''.obs;
+  final translateModelList = <String>[].obs;
+  final isLoadingTranslateModels = false.obs;
   final thinking = false.obs;
-  static const List<MapEntry<String, String>> uiTranslateLangOptions = [
-    MapEntry('English', '英语 English'),
-    MapEntry('日本語', '日语 日本語'),
-    MapEntry('한국어', '韩语 한국어'),
-    MapEntry('Français', '法语 Français'),
-    MapEntry('Deutsch', '德语 Deutsch'),
-    MapEntry('Español', '西班牙语 Español'),
-    MapEntry('Русский', '俄语 Русский'),
-  ];
 
   late final TextEditingController apiUrlCtl;
   late final TextEditingController apiKeyCtl;
   late final TextEditingController modelCtl;
+  late final TextEditingController translateApiUrlCtl;
+  late final TextEditingController translateApiKeyCtl;
+  late final TextEditingController translateModelCtl;
 
   @override
   void onInit() {
@@ -46,8 +44,13 @@ class AiSettingController extends GetxController {
     templates.value = AiChatService.getTemplates();
     uiTranslateEnabled.value = Pref.uiTranslateEnabled;
     uiTranslateLang.value = Pref.uiTranslateLang;
+    translateApiUrl.value = Pref.uiTranslateApiUrl;
+    translateApiKey.value = Pref.uiTranslateApiKey;
     translateModel.value = Pref.uiTranslateModel;
     thinking.value = Pref.uiTranslateThinking;
+    translateApiUrlCtl = TextEditingController(text: translateApiUrl.value);
+    translateApiKeyCtl = TextEditingController(text: translateApiKey.value);
+    translateModelCtl = TextEditingController(text: translateModel.value);
     _loadCachedModels();
   }
 
@@ -56,6 +59,9 @@ class AiSettingController extends GetxController {
     apiUrlCtl.dispose();
     apiKeyCtl.dispose();
     modelCtl.dispose();
+    translateApiUrlCtl.dispose();
+    translateApiKeyCtl.dispose();
+    translateModelCtl.dispose();
     super.onClose();
   }
 
@@ -115,6 +121,36 @@ class AiSettingController extends GetxController {
     Pref.uiTranslateThinking = value;
   }
 
+  void saveTranslateApiUrl(String value) {
+    translateApiUrl.value = value;
+    Pref.uiTranslateApiUrl = value;
+  }
+
+  void saveTranslateApiKey(String value) {
+    translateApiKey.value = value;
+    Pref.uiTranslateApiKey = value;
+  }
+
+  Future<void> fetchTranslateModels() async {
+    if (translateApiUrl.value.trim().isEmpty) {
+      SmartDialog.showToast('请先填写翻译接口地址');
+      return;
+    }
+    isLoadingTranslateModels.value = true;
+    try {
+      final models = await AiChatService.fetchModels(
+        apiUrl: translateApiUrl.value,
+        apiKey: translateApiKey.value,
+      );
+      translateModelList.value = models;
+      if (models.isEmpty) SmartDialog.showToast('未获取到模型列表，请检查地址/Key');
+    } catch (e) {
+      SmartDialog.showToast('获取翻译模型失败: $e');
+    } finally {
+      isLoadingTranslateModels.value = false;
+    }
+  }
+
   void saveUiTranslateLang(String value) {
     if (uiTranslateLang.value == value) return;
     uiTranslateLang.value = value;
@@ -140,14 +176,16 @@ class AiSettingController extends GetxController {
       SmartDialog.showToast('翻译服务未就绪');
       return;
     }
-    if (Pref.aiApiUrl.isEmpty || Pref.aiModel.isEmpty) {
-      SmartDialog.showToast('请先配置 API 地址并选择模型');
+    if (Pref.uiTranslateApiUrl.isEmpty || Pref.uiTranslateModel.isEmpty) {
+      SmartDialog.showToast('请先配置「界面翻译」的接口地址并选择翻译模型');
       return;
     }
     isTesting.value = true;
     try {
-      final out = await UiTranslateService.to.debugTranslate('直播');
-      SmartDialog.showToast('测试成功：直播 → $out');
+      final chineseTarget = UiTranslateService.to.isChineseTarget;
+      final sample = chineseTarget ? 'Hello world' : '直播';
+      final out = await UiTranslateService.to.debugTranslate(sample);
+      SmartDialog.showToast('测试成功：$sample → $out');
     } catch (e) {
       SmartDialog.showToast('测试失败：$e');
     } finally {

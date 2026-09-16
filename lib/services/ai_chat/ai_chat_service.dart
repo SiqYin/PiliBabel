@@ -34,25 +34,26 @@ class AiPromptTemplate {
 }
 
 class AiChatService {
-  static Options _options({Duration? receiveTimeout}) {
-    final apiKey = Pref.aiApiKey;
+  static Options _options({Duration? receiveTimeout, String? apiKey}) {
+    final key = apiKey ?? Pref.aiApiKey;
     return Options(
       headers: {
         'Content-Type': 'application/json',
-        if (apiKey.isNotEmpty) 'Authorization': 'Bearer $apiKey',
+        if (key.isNotEmpty) 'Authorization': 'Bearer $key',
       },
       receiveTimeout: receiveTimeout ?? const Duration(seconds: 60),
     );
   }
 
   /// 版本路径由用户填写，不自动拼接（各服务商版本段不同：
-  /// /v1、/v1beta/openai、/api/v3 等），仅补全 /models、/chat/completions
-  static String _baseUrl() {
-    var url = Pref.aiApiUrl.trimRight();
-    while (url.endsWith('/')) {
-      url = url.substring(0, url.length - 1);
+  /// /v1、/v1beta/openai、/api/v3 等），仅补全 /models、/chat/completions。
+  /// 传入 [url] 时基于该地址（供界面翻译使用独立接口），否则用视频总结地址。
+  static String _baseUrl([String? url]) {
+    var u = (url ?? Pref.aiApiUrl).trimRight();
+    while (u.endsWith('/')) {
+      u = u.substring(0, u.length - 1);
     }
-    return url;
+    return u;
   }
 
   static String _snippet(String s, [int max = 300]) {
@@ -123,15 +124,21 @@ class AiChatService {
   }
 
   /// Fetch model list from {base}/models
-  static Future<List<String>> fetchModels() async {
-    final baseUrl = _baseUrl();
+  static Future<List<String>> fetchModels({
+    String? apiUrl,
+    String? apiKey,
+  }) async {
+    final baseUrl = _baseUrl(apiUrl);
     if (baseUrl.isEmpty) throw Exception('请先配置 API 地址');
     final url = '$baseUrl/models';
     final Response res;
     try {
       res = await Dio().get(
         url,
-        options: _options(receiveTimeout: const Duration(seconds: 30)),
+        options: _options(
+          receiveTimeout: const Duration(seconds: 30),
+          apiKey: apiKey,
+        ),
       );
     } on DioException catch (e) {
       throw await _requestError(url, e);
@@ -209,15 +216,19 @@ class AiChatService {
     required List<Map<String, String>> messages,
     String? model,
     Map<String, dynamic>? extraBody,
+    String? apiUrl,
+    String? apiKey,
   }) async* {
-    final baseUrl = _baseUrl();
+    final baseUrl = _baseUrl(apiUrl);
     if (baseUrl.isEmpty) throw Exception('请先配置 API 地址');
     final useModel = model ?? Pref.aiModel;
     if (useModel.isEmpty) throw Exception('请先选择模型');
 
     final url = '$baseUrl/chat/completions';
-    final opts = _options(receiveTimeout: const Duration(minutes: 10))
-      ..responseType = ResponseType.stream;
+    final opts = _options(
+      receiveTimeout: const Duration(minutes: 10),
+      apiKey: apiKey,
+    )..responseType = ResponseType.stream;
     final Response<ResponseBody> response;
     try {
       response = await Dio().post<ResponseBody>(

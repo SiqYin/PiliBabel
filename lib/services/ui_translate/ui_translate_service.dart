@@ -3,6 +3,7 @@ import 'dart:convert';
 
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
 import 'package:PiliPlus/services/logger.dart';
+import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
 
@@ -21,8 +22,14 @@ class UiTranslateService extends GetxService {
   /// 是否开启界面翻译（跟随设置页开关，运行期可即时生效）。
   bool get enabled => Pref.uiTranslateEnabled;
 
-  /// 目标语言名称，直接作为提示词里的语言描述（如 English / 日本語）。
-  String get targetLang => Pref.uiTranslateLang;
+  /// 当前选择的应用语言（含书写/地区规范说明，供模型使用）。
+  AppLanguage get currentLanguage => appLanguageByCode(Pref.uiTranslateLang);
+
+  /// 目标语言名称，直接作为提示词里的语言描述（发给模型，不显示给用户）。
+  String get targetLang => currentLanguage.toModel;
+
+  /// 目标是否中文家族：中文家族下，本身已是中文的内容不再翻译，仅译外文。
+  bool get isChineseTarget => currentLanguage.chineseFamily;
 
   /// 持久化缓存的内存副本。
   final Map<String, String> _cache = {};
@@ -71,6 +78,8 @@ class UiTranslateService extends GetxService {
     // 避免 GetX “空 Obx” 运行时报错；开启时则据此在译文回来后刷新。
     revision.value;
     if (!enabled) return src;
+    // 中文家族目标：本身已是中文的内容不翻译，只有外文才译成中文。
+    if (isChineseTarget && _looksChinese(src)) return src;
     final hit = _cache[src];
     if (hit != null) return hit;
     // 尚未翻译：先显示原文，排进待翻队列。
@@ -144,9 +153,10 @@ class UiTranslateService extends GetxService {
     }
   }
 
-  /// 翻译专用模型：为空则回退到视频总结所用模型。
-  static String get translateModel =>
-      Pref.uiTranslateModel.isNotEmpty ? Pref.uiTranslateModel : Pref.aiModel;
+  /// 翻译使用独立的接口地址 / 密钥 / 模型（与视频总结完全分离，各配各的）。
+  static String get translateApiUrl => Pref.uiTranslateApiUrl;
+  static String get translateApiKey => Pref.uiTranslateApiKey;
+  static String get translateModel => Pref.uiTranslateModel;
 
   Future<List<String>> _translateChunk(List<String> sources) async {
     final lang = targetLang;
@@ -156,8 +166,8 @@ class UiTranslateService extends GetxService {
     }
 
     final system =
-        '你是应用界面本地化翻译引擎。用户会给出一个带编号的中文界面文案列表，'
-        '请把每一条翻译成『$lang』。'
+        '你是应用界面本地化翻译引擎。用户会给出一个带编号的界面文案列表'
+        '（每条可能为中文或外文），请把每一条翻译成『$lang』。'
         '严格要求：'
         '1) 只输出一个 JSON 数组，元素个数与输入条数相同、顺序一一对应，'
         '每个元素是该条的译文纯文本；'
@@ -170,8 +180,7 @@ class UiTranslateService extends GetxService {
     final thinking = Pref.uiTranslateThinking;
     final extraBody = <String, dynamic>{'enable_thinking': thinking};
 
-    // 与「AI 视频总结」使用同一条已验证可用的流式通道：
-    // 部分 OpenAI 兼容网关只支持 stream:true，非流式会直接报错。
+    // 走翻译独立的接口地址与密钥；仍使用已验证可用的流式通道。
     final buf = StringBuffer();
     await for (final chunk in AiChatService.streamChat(
       messages: [
@@ -179,11 +188,38 @@ class UiTranslateService extends GetxService {
         {'role': 'user', 'content': user},
       ],
       model: translateModel,
+      apiUrl: translateApiUrl,
+      apiKey: translateApiKey,
       extraBody: extraBody,
     )) {
       buf.write(chunk);
     }
     return _parseArray(buf.toString(), sources.length);
+  }
+
+  /// 判断一段文本是否“本身基本就是中文”：外文字符占比低于阈值即视为中文。
+  /// 用于中文家族目标下跳过对本就中文内容的翻译，只把外文译成中文。
+  static bool _looksChinese(String s) {
+    int han = 0;
+    int foreign = 0;
+    for (final rune in s.runes) {
+      if (rune >= 0x4E00 && rune <= 0x9FFF) {
+        han++;
+      } else if ((rune >= 0x3041 && rune <= 0x30FF) || // 日文假名
+          (rune >= 0xAC00 && rune <= 0xD7AF) || // 谚文
+          (rune >= 0x0400 && rune <= 0x04FF) || // 西里尔
+          (rune >= 0x0600 && rune <= 0x06FF) || // 阿拉伯
+          (rune >= 0x0590 && rune <= 0x05FF) || // 希伯来
+          (rune >= 0x0E00 && rune <= 0x0E7F) || // 泰文
+          (rune >= 0x41 && rune <= 0x5A) || // 拉丁大写
+          (rune >= 0x61 && rune <= 0x7A)) {
+        // 拉丁小写
+        foreign++;
+      }
+    }
+    final total = han + foreign;
+    if (total == 0) return true;
+    return foreign * 100 < total * 25;
   }
 
   /// 从模型输出里稳健地解析出 JSON 数组；解析失败退化为按行切分。

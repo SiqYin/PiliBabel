@@ -208,6 +208,8 @@ abstract final class SettingBoxKey {
   static const String uiTranslateEnabled = 'uiTranslateEnabled',
       uiTranslateLang = 'uiTranslateLang',
       uiTranslateModel = 'uiTranslateModel',
+      uiTranslateApiUrl = 'uiTranslateApiUrl',
+      uiTranslateApiKey = 'uiTranslateApiKey',
       uiTranslateThinking = 'uiTranslateThinking',
       uiTranslateCache = 'uiTranslateCache';
 
