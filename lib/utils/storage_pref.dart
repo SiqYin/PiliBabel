@@ -1637,7 +1637,7 @@ abstract final class Pref {
       _setting.put(SettingBoxKey.uiTranslateEnabled, value);
 
   static String get uiTranslateLang =>
-      _setting.get(SettingBoxKey.uiTranslateLang, defaultValue: 'English');
+      _setting.get(SettingBoxKey.uiTranslateLang, defaultValue: 'zh-CN');
 
   static set uiTranslateLang(String value) =>
       _setting.put(SettingBoxKey.uiTranslateLang, value);
@@ -1647,6 +1647,18 @@ abstract final class Pref {
 
   static set uiTranslateModel(String value) =>
       _setting.put(SettingBoxKey.uiTranslateModel, value);
+
+  static String get uiTranslateApiUrl =>
+      _setting.get(SettingBoxKey.uiTranslateApiUrl, defaultValue: '');
+
+  static set uiTranslateApiUrl(String value) =>
+      _setting.put(SettingBoxKey.uiTranslateApiUrl, value);
+
+  static String get uiTranslateApiKey =>
+      _setting.get(SettingBoxKey.uiTranslateApiKey, defaultValue: '');
+
+  static set uiTranslateApiKey(String value) =>
+      _setting.put(SettingBoxKey.uiTranslateApiKey, value);
 
   static bool get uiTranslateThinking =>
       _setting.get(SettingBoxKey.uiTranslateThinking, defaultValue: false);

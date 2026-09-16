@@ -1,11 +1,12 @@
 import 'package:PiliPlus/pages/setting/ai_setting/controller.dart';
+import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 
-/// 统一「AI 功能」一级设置页：
-/// 顶部共用 API 接入；下面分「AI 视频总结」「AI 界面翻译」两块，各自可选模型。
+/// 统一「AI 功能」一级设置页。
+/// 「AI 视频总结」与「AI 界面翻译」各自使用独立的接口地址 / 密钥 / 模型。
 class UiTranslateSettingPage extends StatelessWidget {
   const UiTranslateSettingPage({super.key, this.showAppBar = true});
 
@@ -24,35 +25,7 @@ class UiTranslateSettingPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         children: [
-          // ===== AI 接入（共用）=====
-          _sectionTitle(theme, 'AI 接入'),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    controller: controller.apiUrlCtl,
-                    decoration: const InputDecoration(
-                      labelText: '接口地址（OpenAI 兼容）',
-                      hintText: 'https://api.example.com/v1',
-                      helperText:
-                          '填到版本路径为止，自动补全 /models、/chat/completions',
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.link),
-                    ),
-                    onChanged: controller.saveApiUrl,
-                  ),
-                  const SizedBox(height: 12),
-                  _ApiKeyField(controller: controller),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // ===== AI 视频总结 =====
+          // ================= AI 视频总结 =================
           _sectionTitle(theme, 'AI 视频总结'),
           Obx(
             () => SwitchListTile(
@@ -66,11 +39,20 @@ class UiTranslateSettingPage extends StatelessWidget {
               },
             ),
           ),
-          _ModelDropdown(
-            controller: controller,
+          _ApiFields(
+            urlCtl: controller.apiUrlCtl,
+            keyCtl: controller.apiKeyCtl,
+            onUrl: controller.saveApiUrl,
+            onKey: controller.saveApiKey,
+          ),
+          _ModelPicker(
             label: '视频总结模型',
-            value: controller.model,
+            list: controller.modelList,
+            current: controller.model,
+            manualCtl: controller.modelCtl,
+            loading: controller.isLoadingModels,
             onSelect: controller.saveModel,
+            onFetch: controller.fetchModels,
           ),
           ListTile(
             contentPadding: EdgeInsets.zero,
@@ -80,41 +62,74 @@ class UiTranslateSettingPage extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Get.toNamed('/aiSetting'),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
-          // ===== AI 界面翻译 =====
+          // ================= AI 界面翻译 =================
           _sectionTitle(theme, 'AI 界面翻译'),
           Obx(
             () => SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('启用界面翻译'),
-              subtitle: const Text('把界面与内容翻译为目标语言，每条只翻一次并持久固定'),
+              title: const Text('启用 AI 翻译'),
+              subtitle: const Text('将界面与外文内容翻译为所选应用语言'),
               value: controller.uiTranslateEnabled.value,
               onChanged: controller.saveUiTranslateEnabled,
             ),
           ),
-          Obx(
-            () => DropdownButtonFormField<String>(
-              // ignore: deprecated_member_use
-              value: controller.uiTranslateLang.value,
-              items: AiSettingController.uiTranslateLangOptions
-                  .map(
-                    (e) => DropdownMenuItem(value: e.key, child: Text(e.value)),
-                  )
-                  .toList(),
-              decoration: const InputDecoration(
-                labelText: '目标语言',
-                border: OutlineInputBorder(),
-                isDense: true,
-                prefixIcon: Icon(Icons.translate),
-              ),
-              onChanged: (v) {
-                if (v != null) controller.saveUiTranslateLang(v);
-              },
-            ),
-          ),
+          Obx(() {
+            final lang = appLanguageByCode(controller.uiTranslateLang.value);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                DropdownButtonFormField<String>(
+                  // ignore: deprecated_member_use
+                  value: lang.code,
+                  isExpanded: true,
+                  items: appLanguages
+                      .map(
+                        (e) => DropdownMenuItem(
+                          value: e.code,
+                          child: Text(e.name),
+                        ),
+                      )
+                      .toList(),
+                  decoration: const InputDecoration(
+                    labelText: '选择应用语言',
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                    prefixIcon: Icon(Icons.translate),
+                  ),
+                  onChanged: (v) {
+                    if (v != null) controller.saveUiTranslateLang(v);
+                  },
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  lang.chineseFamily
+                      ? '当前为中文：外文内容会被翻译成该中文，本身是中文的内容保持不变。'
+                      : '若选择非简体中文，需要在下方配置 API 才能实现 AI 翻译。',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.outline,
+                  ),
+                ),
+              ],
+            );
+          }),
           const SizedBox(height: 12),
-          _TranslateModelDropdown(controller: controller),
+          _ApiFields(
+            urlCtl: controller.translateApiUrlCtl,
+            keyCtl: controller.translateApiKeyCtl,
+            onUrl: controller.saveTranslateApiUrl,
+            onKey: controller.saveTranslateApiKey,
+          ),
+          _ModelPicker(
+            label: '翻译模型',
+            list: controller.translateModelList,
+            current: controller.translateModel,
+            manualCtl: controller.translateModelCtl,
+            loading: controller.isLoadingTranslateModels,
+            onSelect: controller.saveTranslateModel,
+            onFetch: controller.fetchTranslateModels,
+          ),
           const SizedBox(height: 4),
           Obx(
             () => SwitchListTile(
@@ -122,7 +137,7 @@ class UiTranslateSettingPage extends StatelessWidget {
               title: const Text('思考模式'),
               subtitle: Text(
                 controller.thinking.value
-                    ? '启用推理，翻译更准但更慢'
+                    ? '启用推理，翻译更准但可能更慢'
                     : '关闭推理，出结果更快（推荐）',
               ),
               value: controller.thinking.value,
@@ -174,9 +189,8 @@ class UiTranslateSettingPage extends StatelessWidget {
               ),
             );
           }),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
-          // 说明
           Card(
             color: colorScheme.surfaceContainerHighest,
             child: Padding(
@@ -193,10 +207,10 @@ class UiTranslateSettingPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '• 两个功能共用上面的接口地址与 Key，可各自选择模型\n'
-                    '• 界面翻译每条只翻一次、本地持久固定，切语言会清缓存重翻\n'
-                    '• 首次出现的文字先显示原文，后台翻完自动刷新\n'
-                    '• 追求速度可关「思考模式」，并为翻译单独选一个更快的模型',
+                    '• 视频总结与界面翻译各自配置独立的接口地址/Key/模型，互不影响\n'
+                    '• 应用语言默认简体中文：只把外文自动译成中文，中文内容不动\n'
+                    '• 选择其它语言即把界面与内容整体翻译为该语言（需配置翻译 API）\n'
+                    '• 每条只翻译一次并本地持久固定，切换语言会清缓存重翻',
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -210,37 +224,116 @@ class UiTranslateSettingPage extends StatelessWidget {
   }
 
   Widget _sectionTitle(ThemeData theme, String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
+    padding: const EdgeInsets.only(bottom: 8, top: 2),
     child: Text(text, style: theme.textTheme.titleMedium),
   );
 }
 
-/// 视频总结模型选择（沿用控制器已拉取的 modelList，含手动输入兜底）。
-class _ModelDropdown extends StatelessWidget {
-  const _ModelDropdown({
-    required this.controller,
-    required this.label,
-    required this.value,
-    required this.onSelect,
+/// 一组 API 配置：接口地址 + 密钥（两处功能各用各的实例）。
+class _ApiFields extends StatefulWidget {
+  const _ApiFields({
+    required this.urlCtl,
+    required this.keyCtl,
+    required this.onUrl,
+    required this.onKey,
   });
 
-  final AiSettingController controller;
+  final TextEditingController urlCtl;
+  final TextEditingController keyCtl;
+  final ValueChanged<String> onUrl;
+  final ValueChanged<String> onKey;
+
+  @override
+  State<_ApiFields> createState() => _ApiFieldsState();
+}
+
+class _ApiFieldsState extends State<_ApiFields> {
+  bool _obscure = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 6, bottom: 12),
+          child: TextField(
+            controller: widget.urlCtl,
+            decoration: const InputDecoration(
+              labelText: '接口地址（OpenAI 兼容）',
+              hintText: 'https://api.example.com/v1',
+              border: OutlineInputBorder(),
+              prefixIcon: Icon(Icons.link),
+            ),
+            onChanged: widget.onUrl,
+          ),
+        ),
+        TextField(
+          controller: widget.keyCtl,
+          decoration: InputDecoration(
+            labelText: 'API Key',
+            hintText: 'sk-...',
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.key),
+            suffixIcon: IconButton(
+              icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
+              onPressed: () => setState(() => _obscure = !_obscure),
+            ),
+          ),
+          obscureText: _obscure,
+          autocorrect: false,
+          enableSuggestions: false,
+          onChanged: widget.onKey,
+        ),
+      ],
+    );
+  }
+}
+
+/// 模型选择：有列表用下拉，否则手动输入；带一个拉取模型列表按钮。
+class _ModelPicker extends StatelessWidget {
+  const _ModelPicker({
+    required this.label,
+    required this.list,
+    required this.current,
+    required this.manualCtl,
+    required this.loading,
+    required this.onSelect,
+    required this.onFetch,
+  });
+
   final String label;
-  final RxString value;
+  final RxList<String> list;
+  final RxString current;
+  final TextEditingController manualCtl;
+  final RxBool loading;
   final ValueChanged<String> onSelect;
+  final VoidCallback onFetch;
+
+  Widget _fetchSuffix() => IconButton(
+    icon: Obx(
+      () => loading.value
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.refresh),
+    ),
+    tooltip: '拉取模型列表',
+    onPressed: onFetch,
+  );
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 4),
+      padding: const EdgeInsets.only(top: 12, bottom: 4),
       child: Obx(() {
-        if (controller.modelList.isNotEmpty) {
+        if (list.isNotEmpty) {
           return DropdownButtonFormField<String>(
             // ignore: deprecated_member_use
-            value: controller.modelList.contains(value.value)
-                ? value.value
-                : null,
-            items: controller.modelList
+            value: list.contains(current.value) ? current.value : null,
+            isExpanded: true,
+            items: list
                 .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                 .toList(),
             decoration: InputDecoration(
@@ -248,17 +341,7 @@ class _ModelDropdown extends StatelessWidget {
               border: const OutlineInputBorder(),
               isDense: true,
               prefixIcon: const Icon(Icons.smart_toy),
-              suffixIcon: IconButton(
-                icon: controller.isLoadingModels.value
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.refresh),
-                tooltip: '拉取模型列表',
-                onPressed: controller.fetchModels,
-              ),
+              suffixIcon: _fetchSuffix(),
             ),
             onChanged: (v) {
               if (v != null) onSelect(v);
@@ -266,99 +349,16 @@ class _ModelDropdown extends StatelessWidget {
           );
         }
         return TextField(
-          controller: controller.modelCtl,
+          controller: manualCtl,
           decoration: InputDecoration(
-            labelText: label,
+            labelText: '$label（可手填，或点右侧拉取）',
             border: const OutlineInputBorder(),
             prefixIcon: const Icon(Icons.smart_toy),
-            suffixIcon: IconButton(
-              icon: const Icon(Icons.refresh),
-              tooltip: '拉取模型列表',
-              onPressed: controller.fetchModels,
-            ),
+            suffixIcon: _fetchSuffix(),
           ),
           onChanged: onSelect,
         );
       }),
-    );
-  }
-}
-
-/// 界面翻译模型选择：多一个「跟随视频总结模型」空选项。
-class _TranslateModelDropdown extends StatelessWidget {
-  const _TranslateModelDropdown({required this.controller});
-
-  final AiSettingController controller;
-
-  @override
-  Widget build(BuildContext context) {
-    return Obx(() {
-      final current = controller.translateModel.value;
-      if (controller.modelList.isNotEmpty) {
-        final items = <DropdownMenuItem<String>>[
-          const DropdownMenuItem(value: '', child: Text('跟随视频总结模型')),
-          ...controller.modelList.map(
-            (e) => DropdownMenuItem(value: e, child: Text(e)),
-          ),
-        ];
-        return DropdownButtonFormField<String>(
-          // ignore: deprecated_member_use
-          value: items.any((it) => it.value == current) ? current : '',
-          items: items,
-          decoration: const InputDecoration(
-            labelText: '翻译模型',
-            border: OutlineInputBorder(),
-            isDense: true,
-            prefixIcon: Icon(Icons.auto_awesome),
-          ),
-          onChanged: (v) {
-            if (v != null) controller.saveTranslateModel(v);
-          },
-        );
-      }
-      return TextField(
-        controller: TextEditingController(text: current)
-          ..selection = TextSelection.collapsed(offset: current.length),
-        decoration: const InputDecoration(
-          labelText: '翻译模型（留空=跟随视频总结）',
-          border: OutlineInputBorder(),
-          prefixIcon: Icon(Icons.auto_awesome),
-        ),
-        onChanged: controller.saveTranslateModel,
-      );
-    });
-  }
-}
-
-class _ApiKeyField extends StatefulWidget {
-  const _ApiKeyField({required this.controller});
-  final AiSettingController controller;
-
-  @override
-  State<_ApiKeyField> createState() => _ApiKeyFieldState();
-}
-
-class _ApiKeyFieldState extends State<_ApiKeyField> {
-  bool _obscure = true;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextField(
-      controller: widget.controller.apiKeyCtl,
-      decoration: InputDecoration(
-        labelText: 'API Key',
-        hintText: 'sk-...',
-        border: const OutlineInputBorder(),
-        prefixIcon: const Icon(Icons.key),
-        suffixIcon: IconButton(
-          icon: Icon(_obscure ? Icons.visibility_off : Icons.visibility),
-          onPressed: () => setState(() => _obscure = !_obscure),
-        ),
-      ),
-      obscureText: _obscure,
-      autocorrect: false,
-      enableSuggestions: false,
-      onChanged: widget.controller.saveApiKey,
     );
   }
 }
