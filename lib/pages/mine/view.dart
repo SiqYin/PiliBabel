@@ -18,6 +18,7 @@ import 'package:PiliPlus/pages/mine/controller.dart';
 import 'package:PiliPlus/pages/mine/widgets/history_card_item.dart';
 import 'package:PiliPlus/pages/mine/widgets/item.dart';
 import 'package:PiliPlus/pages/mine/widgets/to_view_card_item.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/bili_utils.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
@@ -157,9 +158,11 @@ class _MediaPageState extends CommonPageState<MinePage>
                       mainAxisAlignment: .center,
                       children: [
                         Icon(e.icon, color: primary),
-                        Text(
-                          e.title,
-                          style: const TextStyle(fontSize: 13),
+                        Obx(
+                          () => Text(
+                            uiTx(e.title),
+                            style: const TextStyle(fontSize: 13),
+                          ),
                         ),
                       ],
                     ),
@@ -341,7 +344,7 @@ class _MediaPageState extends CommonPageState<MinePage>
                         children: [
                           Flexible(
                             child: Text(
-                              userInfo.uname ?? '点击登录',
+                              userInfo.uname ?? uiTx('点击登录'),
                               style: theme.textTheme.titleMedium!.copyWith(
                                 height: 1,
                                 color: isVip && userInfo.vipType == 2
@@ -464,9 +467,11 @@ class _MediaPageState extends CommonPageState<MinePage>
                   count?.toString() ?? '-',
                   style: countStyle,
                 ),
-                Text(
-                  name,
-                  style: labelStyle,
+                Obx(
+                  () => Text(
+                    uiTx(name),
+                    style: labelStyle,
+                  ),
                 ),
               ],
             ),
