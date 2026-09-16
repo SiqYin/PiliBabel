@@ -10,6 +10,7 @@ import 'package:PiliPlus/models/common/image_preview_type.dart'
     show SourceModel;
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/pages/dynamics/widgets/vote.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/parse_string.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
@@ -32,7 +33,7 @@ TextSpan? richNode(
     if (moduleDynamic?.desc case final desc?) {
       richTextNodes = desc.richTextNodes;
       if (richTextNodes == null || richTextNodes.isEmpty) {
-        return TextSpan(text: desc.text);
+        return TextSpan(text: uiTxComment(desc.text ?? ''));
       }
     } else if (moduleDynamic?.major?.opus case DynamicOpusModel(
       :final title,
@@ -43,13 +44,13 @@ TextSpan? richNode(
       if (title != null && title.isNotEmpty) {
         if (richTextNodes == null || richTextNodes.isEmpty) {
           return TextSpan(
-            text: title,
+            text: uiTxComment(title ?? ''),
             style: const TextStyle(fontWeight: FontWeight.bold),
           );
         } else {
           spanChildren.add(
             TextSpan(
-              text: '$title\n',
+              text: '${uiTxComment(title ?? '')}\n',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           );
@@ -63,7 +64,7 @@ TextSpan? richNode(
       for (final i in richTextNodes) {
         switch (i.type) {
           case 'RICH_TEXT_NODE_TYPE_TEXT':
-            spanChildren.add(TextSpan(text: i.origText));
+            spanChildren.add(TextSpan(text: uiTxComment(i.origText ?? '')));
             break;
           // 表情
           case 'RICH_TEXT_NODE_TYPE_EMOJI' when (i.emoji != null):

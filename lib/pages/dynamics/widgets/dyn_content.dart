@@ -4,6 +4,7 @@ import 'package:PiliPlus/pages/dynamics/widgets/blocked_item.dart';
 import 'package:PiliPlus/pages/dynamics/widgets/content_panel.dart';
 import 'package:PiliPlus/pages/dynamics/widgets/module_panel.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:get/get.dart';
 
 List<Widget> dynContent(
   BuildContext context, {
@@ -16,13 +17,15 @@ List<Widget> dynContent(
   final moduleDynamic = item.modules.moduleDynamic;
   return [
     if (item.type != 'DYNAMIC_TYPE_NONE')
-      content(
-        context,
-        theme: theme,
-        isSave: isSave,
-        isDetail: isDetail,
-        item: item,
-        floor: floor,
+      Obx(
+        () => content(
+          context,
+          theme: theme,
+          isSave: isSave,
+          isDetail: isDetail,
+          item: item,
+          floor: floor,
+        ),
       ),
     module(
       context,
