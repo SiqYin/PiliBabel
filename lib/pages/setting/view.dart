@@ -335,21 +335,21 @@ class _SettingPageState extends State<SettingPage> {
       child: InkWell(
         onTap: () => Get.toNamed('/settingsSearch'),
         borderRadius: const BorderRadius.all(Radius.circular(50)),
-        child: const Padding(
-          padding: EdgeInsets.symmetric(vertical: 8),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
           child: Center(
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
+                const Icon(
                   size: 18,
                   applyTextScaling: true,
                   Icons.search,
                 ),
                 Text(
-                  ' 搜索',
-                  style: TextStyle(height: 1),
-                  strutStyle: StrutStyle(height: 1, leading: 0),
+                  uiTx(' 搜索'),
+                  style: const TextStyle(height: 1),
+                  strutStyle: const StrutStyle(height: 1, leading: 0),
                 ),
               ],
             ),

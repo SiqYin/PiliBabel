@@ -76,7 +76,7 @@ class AuthorPanel extends StatelessWidget {
     Widget? pubTs;
     if (pubTime != null) {
       pubTs = Text(
-        '$pubTime${moduleAuthor.pubAction != null ? ' ${moduleAuthor.pubAction}' : ''}',
+        '${uiTx(pubTime!)}${moduleAuthor.pubAction != null ? ' ${uiTx(moduleAuthor.pubAction!)}' : ''}',
         style: TextStyle(
           color: theme.colorScheme.outline,
           fontSize: theme.textTheme.labelSmall!.fontSize,

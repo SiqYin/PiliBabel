@@ -4,6 +4,7 @@ import 'package:PiliPlus/models/common/dynamic/up_panel_position.dart';
 import 'package:PiliPlus/models/dynamics/up.dart';
 import 'package:PiliPlus/pages/dynamics/controller.dart';
 import 'package:PiliPlus/pages/live_follow/view.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
@@ -243,7 +244,9 @@ class _UpPanelState extends State<UpPanel> {
               Padding(
                 padding: const .symmetric(horizontal: 4),
                 child: Text(
-                  isTop ? '${remarkedName(item.mid, item.uname!)}\n' : remarkedName(item.mid, item.uname!),
+                  isTop
+                      ? '${remarkedName(item.mid, uiTx(item.uname!))}\n'
+                      : remarkedName(item.mid, uiTx(item.uname!)),
                   maxLines: 2,
                   textAlign: .center,
                   style: TextStyle(

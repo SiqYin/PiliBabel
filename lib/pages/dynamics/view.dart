@@ -9,6 +9,7 @@ import 'package:PiliPlus/pages/dynamics/widgets/up_panel.dart';
 import 'package:PiliPlus/pages/dynamics_create/view.dart';
 import 'package:PiliPlus/pages/dynamics_tab/view.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
@@ -190,7 +191,12 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
                         ?.copyWith(fontSize: 13) ??
                     const TextStyle(fontSize: 13),
                 tabs: DynamicsTabType.values
-                    .map((e) => Tab(text: e.label))
+                    .map(
+                      (e) => Obx(() {
+                        UiTranslateService.to.revision.value;
+                        return Tab(text: uiTx(e.label));
+                      }),
+                    )
                     .toList(),
                 onTap: (index) {
                   if (!_dynamicsController.tabController.indexIsChanging) {
