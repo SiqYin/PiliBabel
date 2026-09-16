@@ -13,6 +13,7 @@ import 'package:PiliPlus/models_new/history/list.dart';
 import 'package:PiliPlus/pages/history/base_controller.dart';
 import 'package:PiliPlus/pages/history/controller.dart';
 import 'package:PiliPlus/pages/history/widgets/item.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:PiliPlus/utils/grid.dart';
 import 'package:get/get.dart';
@@ -158,7 +159,7 @@ class _HistoryPageState extends State<HistoryPage>
   }
 
   AppBar get _buildAppBar => AppBar(
-    title: const Text('观看记录'),
+    title: Text(uiTx('观看记录')),
     actions: [
       IconButton(
         tooltip: '搜索',
@@ -171,8 +172,8 @@ class _HistoryPageState extends State<HistoryPage>
             onTap: () => _historyController.baseCtr.onPauseHistory(context),
             child: Text(
               !_historyController.baseCtr.pauseStatus.value
-                  ? '暂停观看记录'
-                  : '恢复观看记录',
+                  ? uiTx('暂停观看记录')
+                  : uiTx('恢复观看记录'),
             ),
           ),
           PopupMenuItem(
@@ -193,11 +194,11 @@ class _HistoryPageState extends State<HistoryPage>
                 }
               },
             ),
-            child: const Text('清空观看记录'),
+            child: Text(uiTx('清空观看记录')),
           ),
           PopupMenuItem(
             onTap: currCtr().onDelViewedHistory,
-            child: const Text('删除已看记录'),
+            child: Text(uiTx('删除已看记录')),
           ),
         ],
       ),

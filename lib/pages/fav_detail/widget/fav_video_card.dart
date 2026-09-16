@@ -12,6 +12,7 @@ import 'package:PiliPlus/models/common/stat_type.dart';
 import 'package:PiliPlus/models_new/fav/fav_detail/media.dart';
 import 'package:PiliPlus/pages/audio/view.dart';
 import 'package:PiliPlus/pages/fav_detail/controller.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
@@ -162,7 +163,7 @@ class FavVideoCardH extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                item.title!,
+                uiTx(item.title!),
                 textAlign: TextAlign.start,
                 style: const TextStyle(
                   letterSpacing: 0.3,
@@ -172,7 +173,7 @@ class FavVideoCardH extends StatelessWidget {
               ),
               if (item.type == 24 && item.intro?.isNotEmpty == true)
                 Text(
-                  item.intro!,
+                  uiTx(item.intro!),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
@@ -182,7 +183,7 @@ class FavVideoCardH extends StatelessWidget {
                 ),
               const Spacer(),
               Text(
-                '${DateFormatUtils.dateFormat(item.favTime)} ${item.upper?.name}',
+                '${DateFormatUtils.dateFormat(item.favTime)} ${uiTx(item.upper?.name ?? '')}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
