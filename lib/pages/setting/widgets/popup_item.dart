@@ -1,6 +1,7 @@
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/models/common/enum_with_label.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:material_ui/material_ui.dart' hide ListTile;
 import 'package:material_ui/material_ui.dart' as material show PopupMenuItem;
@@ -13,7 +14,7 @@ typedef PopupMenuItemSelected<T> = void Function(
 List<PopupMenuEntry<T>> enumItemBuilder<T extends EnumWithLabel>(
   Iterable<T> items,
 ) => items
-    .map((e) => CustomPopupMenuItem(value: e, child: Text(e.label)))
+    .map((e) => CustomPopupMenuItem(value: e, child: Text(uiTx(e.label))))
     .toList();
 
 enum DescPosType { subtitle, title, trailing }
@@ -130,7 +131,7 @@ class _PopupListTileState<T> extends State<PopupListTile<T>> {
     Widget? subtitle;
     Widget? trailing;
     final desc = Text(
-      descStr,
+      uiTx(descStr),
       style: (widget.descStyle ?? theme.textTheme.labelMedium!).copyWith(
         color: widget.enabled
             ? theme.colorScheme.secondary

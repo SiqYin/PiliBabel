@@ -4,6 +4,7 @@ import 'package:PiliPlus/pages/setting/widgets/popup_item.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/pages/setting/widgets/switch_item.dart';
 import 'package:PiliPlus/pages/setting/widgets/list_editor_dialog.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:flutter/services.dart' show FilteringTextInputFormatter;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -119,7 +120,7 @@ class PopupModel<T extends EnumWithLabel> extends SettingsModel {
   Widget get widget => PopupListTile<T>(
     safeArea: false,
     leading: leading,
-    title: Text(title),
+    title: Text(uiTx(title)),
     value: () {
       final v = value();
       return (v, v.label);

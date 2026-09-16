@@ -15,6 +15,7 @@ import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/pages/dynamics/controller.dart';
 import 'package:PiliPlus/pages/save_panel/view.dart';
 import 'package:PiliPlus/pages/setting/dynamics_setting.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/color_utils.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
@@ -114,7 +115,10 @@ class AuthorPanel extends StatelessWidget {
               TextSpan(
                 children: [
                   TextSpan(
-                    text: remarkedName(moduleAuthor.mid, moduleAuthor.name!),
+                    text: remarkedName(
+                      moduleAuthor.mid,
+                      uiTx(moduleAuthor.name!),
+                    ),
                     style: TextStyle(
                       color:
                           moduleAuthor.vip != null &&
