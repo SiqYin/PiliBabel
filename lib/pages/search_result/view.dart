@@ -9,6 +9,7 @@ import 'package:PiliPlus/pages/search_panel/pgc/view.dart';
 import 'package:PiliPlus/pages/search_panel/user/view.dart';
 import 'package:PiliPlus/pages/search_panel/video/view.dart';
 import 'package:PiliPlus/pages/search_result/controller.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -112,7 +113,7 @@ class _SearchResultPageState extends State<SearchResultPage>
                         int count = _searchResultController.count[item.index];
                         return Tab(
                           text:
-                              '${item.label}${count != -1 ? ' ${count > 99 ? '99+' : count}' : ''}',
+                              '${uiTx(item.label)}${count != -1 ? ' ${count > 99 ? '99+' : count}' : ''}',
                         );
                       },
                     ),
