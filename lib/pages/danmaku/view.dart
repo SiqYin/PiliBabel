@@ -6,6 +6,7 @@ import 'package:PiliPlus/pages/danmaku/danmaku_model.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/danmaku_options.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/danmaku_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:canvas_danmaku/canvas_danmaku.dart';
@@ -175,7 +176,7 @@ class _PlDanmakuState extends State<PlDanmaku> {
           
           _controller!.addDanmaku(
             DanmakuContentItem(
-              e.content,
+              uiTx(e.content),
               color: blockColorful
                   ? Colors.white
                   : DmUtils.decimalToColor(e.color),
