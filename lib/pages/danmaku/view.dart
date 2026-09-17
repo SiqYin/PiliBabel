@@ -79,7 +79,10 @@ class _PlDanmakuState extends State<PlDanmaku> {
     _danmakuTranslateWorker = ever(
       UiTranslateService.to.danmakuTranslate,
       (bool on) {
-        if (on) _controller?.clear();
+        if (on) {
+          _preTranslateCursor = 0;
+          _controller?.clear();
+        }
       },
     );
   }
@@ -127,16 +130,25 @@ class _PlDanmakuState extends State<PlDanmaku> {
     }
     latestAddedPosition = currentPosition;
 
-    // 弹幕翻译：提前约 15 秒预译下一批，使播放到达时缓存已热、即时出译文
+    // 弹幕翻译：预译“当前进度往后 ~15 秒”的弹幕，使播放到达时已是译文；
+    // 用游标避免重复入队，并在跳转（含拖到中间再开启）时从当前位置重新计。
     if (UiTranslateService.to.danmakuTranslate.value) {
-      final ahead = _plDanmakuController.getCurrentDanmaku(
-        currentPosition + 15000,
-      );
-      if (ahead != null) {
-        for (final e in ahead) {
-          if (e.mode == 7) continue;
-          uiTx(e.content);
+      final to = currentPosition + 15000;
+      if (_preTranslateCursor < currentPosition - 5000 ||
+          _preTranslateCursor > to) {
+        _preTranslateCursor = currentPosition;
+      }
+      if (to > _preTranslateCursor) {
+        for (int t = _preTranslateCursor; t <= to; t += 1000) {
+          final list = _plDanmakuController.getCurrentDanmaku(t);
+          if (list != null) {
+            for (final e in list) {
+              if (e.mode == 7) continue;
+              uiTx(e.content);
+            }
+          }
         }
+        _preTranslateCursor = to;
       }
     }
 
