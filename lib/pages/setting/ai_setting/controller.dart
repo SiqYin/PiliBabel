@@ -109,6 +109,9 @@ class AiSettingController extends GetxController {
   void saveUiTranslateEnabled(bool value) {
     uiTranslateEnabled.value = value;
     Pref.uiTranslateEnabled = value;
+    if (value && Get.isRegistered<UiTranslateService>()) {
+      UiTranslateService.to.prewarm();
+    }
   }
 
   void saveTranslateModel(String value) {
@@ -157,6 +160,7 @@ class AiSettingController extends GetxController {
     Pref.uiTranslateLang = value;
     if (Get.isRegistered<UiTranslateService>()) {
       UiTranslateService.to.resetForNewLanguage();
+      UiTranslateService.to.prewarm();
     }
   }
 

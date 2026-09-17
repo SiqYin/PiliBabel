@@ -85,6 +85,26 @@ class UiTranslateService extends GetxService {
     return _tx(src);
   }
 
+  /// 需要“提前翻好”的高频交互文案（弹窗/按钮），避免首次出现时来不及译。
+  static const List<String> _commonPrewarm = [
+    '弹幕 AI 翻译需要消耗较多 token，请确认是否打开',
+    '取消',
+    '确定',
+    '弹幕翻译',
+  ];
+
+  /// 预热常用文案：开启翻译后调用，使这些串尽早进入缓存。
+  void prewarm() {
+    if (!enabled) return;
+    var queued = false;
+    for (final s in _commonPrewarm) {
+      if (_cache.containsKey(s)) continue;
+      if (isChineseTarget && _looksChinese(s)) continue;
+      if (_pending.add(s)) queued = true;
+    }
+    if (queued) _scheduleFlush();
+  }
+
   @override
   void onInit() {
     super.onInit();

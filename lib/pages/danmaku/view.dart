@@ -44,6 +44,7 @@ class _PlDanmakuState extends State<PlDanmaku> {
 
   late final PlDanmakuController _plDanmakuController;
   DanmakuController<DanmakuExtra>? _controller;
+  Worker? _danmakuTranslateWorker;
   int latestAddedPosition = -1;
   bool _loggedEarlySpecialDanmaku = false;
 
@@ -74,6 +75,13 @@ class _PlDanmakuState extends State<PlDanmaku> {
     playerController
       ..addStatusLister(playerListener)
       ..addPositionListener(videoPositionListen);
+    // 开启弹幕翻译时立即清屏，下一拍以译文重新添加
+    _danmakuTranslateWorker = ever(
+      UiTranslateService.to.danmakuTranslate,
+      (bool on) {
+        if (on) _controller?.clear();
+      },
+    );
   }
 
   @override
@@ -213,6 +221,7 @@ class _PlDanmakuState extends State<PlDanmaku> {
       ..removePositionListener(videoPositionListen)
       ..removeStatusLister(playerListener);
     _plDanmakuController.dispose();
+    _danmakuTranslateWorker?.dispose();
     _controller = null;
     super.dispose();
   }
