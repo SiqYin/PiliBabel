@@ -39,6 +39,7 @@ import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_repeat.dart';
 import 'package:PiliPlus/services/shutdown_timer_service.dart'
     show shutdownTimerService, ShutdownPanel;
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:PiliPlus/utils/android/bindings.g.dart';
@@ -2082,6 +2083,57 @@ class HeaderControlState extends State<HeaderControl>
                 ),
               ),
             ),
+            if (UiTranslateService.to.canTranslate)
+              SizedBox(
+                width: btnWidth,
+                height: btnHeight,
+                child: Obx(() {
+                  // 预热确认文案与按钮文字的翻译，确保弹窗出现时已是目标语言
+                  uiTx('弹幕 AI 翻译需要消耗较多 token，请确认是否打开');
+                  uiTx('取消');
+                  uiTx('确定');
+                  final on = UiTranslateService.to.danmakuTranslate.value;
+                  return IconButton(
+                    tooltip: uiTx('弹幕翻译'),
+                    style: btnStyle,
+                    onPressed: () {
+                      if (on) {
+                        UiTranslateService.to.danmakuTranslate.value = false;
+                        return;
+                      }
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          content: Text(
+                            uiTx(
+                              '弹幕 AI 翻译需要消耗较多 token，请确认是否打开',
+                            ),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: Text(uiTx('取消')),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                UiTranslateService.to.danmakuTranslate.value =
+                                    true;
+                                Navigator.pop(ctx);
+                              },
+                              child: Text(uiTx('确定')),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    icon: Icon(
+                      Icons.translate,
+                      size: 20,
+                      color: on ? Colors.amberAccent : Colors.white,
+                    ),
+                  );
+                }),
+              ),
             if (Platform.isAndroid ||
                 (PlatformUtils.isDesktop && !isFullScreen))
               SizedBox(

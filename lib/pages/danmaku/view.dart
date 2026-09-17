@@ -176,7 +176,9 @@ class _PlDanmakuState extends State<PlDanmaku> {
           
           _controller!.addDanmaku(
             DanmakuContentItem(
-              uiTx(e.content),
+              UiTranslateService.to.danmakuTranslate.value
+                  ? uiTx(e.content)
+                  : e.content,
               color: blockColorful
                   ? Colors.white
                   : DmUtils.decimalToColor(e.color),
