@@ -63,6 +63,15 @@ class UiTranslateService extends GetxService {
   /// 原文/译文切换的版本号，供各条 Obx 订阅以刷新。
   final RxInt contentRev = 0.obs;
 
+  /// 弹幕翻译运行时开关（默认关闭，不持久化；每次进入播放器需手动开启）。
+  final RxBool danmakuTranslate = false.obs;
+
+  /// 是否具备使用弹幕翻译的条件：界面翻译已启用，且已配置翻译独立接口地址与模型。
+  bool get canTranslate =>
+      enabled &&
+      Pref.uiTranslateApiUrl.trim().isNotEmpty &&
+      Pref.uiTranslateModel.trim().isNotEmpty;
+
   bool showOriginalFor(String id) => _originalIds.contains(id);
 
   void toggleShowOriginal(String id) {
