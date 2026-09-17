@@ -8,6 +8,7 @@ import 'package:PiliPlus/grpc/bilibili/app/im/v1.pb.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/pages/whisper/widgets/item.dart';
 import 'package:PiliPlus/pages/whisper_secondary/controller.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/extension/three_dot_ext.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
@@ -60,7 +61,7 @@ class _WhisperSecPageState extends State<WhisperSecPage> {
                           child: Row(
                             children: [
                               e.type.icon,
-                              Text('  ${e.title}'),
+                              Text('  ${uiTx(e.title ?? '')}'),
                             ],
                           ),
                         ),
