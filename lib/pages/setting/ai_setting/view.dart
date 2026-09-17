@@ -1,4 +1,5 @@
 import 'package:PiliPlus/pages/setting/ai_setting/controller.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
@@ -15,14 +16,16 @@ class AiSettingPage extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('AI 视频总结设置')),
-      body: ListView(
+      appBar: AppBar(title: Text(uiTx('AI 视频总结设置'))),
+      body: Obx(() {
+        UiTranslateService.to.revision.value;
+        return ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         children: [
           // 总开关
           Obx(() => SwitchListTile(
-                title: const Text('启用 AI 视频助手'),
-                subtitle: const Text('关闭后视频详情页不再显示 AI 按钮'),
+                title: Text(uiTx('启用 AI 视频助手')),
+                subtitle: Text(uiTx('关闭后视频详情页不再显示 AI 按钮')),
                 value: controller.enableAiChat.value,
                 onChanged: (value) {
                   controller.enableAiChat.value = value;
@@ -38,19 +41,19 @@ class AiSettingPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('API 配置', style: theme.textTheme.titleMedium),
+                  Text(uiTx('API 配置'), style: theme.textTheme.titleMedium),
                   const SizedBox(height: 12),
                   TextField(
                     controller: controller.apiUrlCtl,
-                    decoration: const InputDecoration(
-                      labelText: '接口地址',
+                    decoration: InputDecoration(
+                      labelText: uiTx('接口地址'),
                       hintText: 'https://api.example.com/v1',
-                      helperText:
+                      helperText: uiTx(
                           '填到版本路径为止，将自动补全 /models、/chat/completions；'
-                          '如 OpenAI …/v1、Gemini …/v1beta、火山方舟 …/api/v3',
+                          '如 OpenAI …/v1、Gemini …/v1beta、火山方舟 …/api/v3'),
                       helperMaxLines: 3,
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.link),
+                      border: const OutlineInputBorder(),
+                      prefixIcon: const Icon(Icons.link),
                     ),
                     onChanged: controller.saveApiUrl,
                   ),
@@ -71,7 +74,7 @@ class AiSettingPage extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Text('模型选择', style: theme.textTheme.titleMedium),
+                      Text(uiTx('模型选择'), style: theme.textTheme.titleMedium),
                       const Spacer(),
                       Obx(
                         () => controller.isLoadingModels.value
@@ -84,7 +87,7 @@ class AiSettingPage extends StatelessWidget {
                               )
                             : IconButton.filled(
                                 icon: const Icon(Icons.refresh),
-                                tooltip: '拉取模型列表',
+                                tooltip: uiTx('拉取模型列表'),
                                 onPressed: controller.fetchModels,
                               ),
                       ),
@@ -119,11 +122,11 @@ class AiSettingPage extends StatelessWidget {
                     }
                     return TextField(
                       controller: controller.modelCtl,
-                      decoration: const InputDecoration(
-                        labelText: '模型名称',
+                      decoration: InputDecoration(
+                        labelText: uiTx('模型名称'),
                         hintText: 'gpt-5.4',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.smart_toy),
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.smart_toy),
                       ),
                       onChanged: controller.saveModel,
                     );
@@ -143,11 +146,11 @@ class AiSettingPage extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Text('提示词模板', style: theme.textTheme.titleMedium),
+                      Text(uiTx('提示词模板'), style: theme.textTheme.titleMedium),
                       const Spacer(),
                       TextButton.icon(
                         icon: const Icon(Icons.restore, size: 18),
-                        label: const Text('恢复默认'),
+                        label: Text(uiTx('恢复默认')),
                         onPressed: () => _confirmRestoreDefaults(
                           context,
                           controller,
@@ -156,7 +159,7 @@ class AiSettingPage extends StatelessWidget {
                       const SizedBox(width: 4),
                       FilledButton.tonalIcon(
                         icon: const Icon(Icons.add, size: 18),
-                        label: const Text('添加'),
+                        label: Text(uiTx('添加')),
                         onPressed: () =>
                             _showTemplateDialog(context, controller),
                       ),
@@ -169,7 +172,7 @@ class AiSettingPage extends StatelessWidget {
                         padding: const EdgeInsets.all(16),
                         child: Center(
                           child: Text(
-                            '暂无模板，点击上方添加',
+                            uiTx('暂无模板，点击上方添加'),
                             style: TextStyle(color: colorScheme.outline),
                           ),
                         ),
@@ -270,7 +273,7 @@ class AiSettingPage extends StatelessWidget {
                           color: colorScheme.primary, size: 20),
                       const SizedBox(width: 8),
                       Text(
-                        '使用说明',
+                        uiTx('使用说明'),
                         style: theme.textTheme.titleSmall?.copyWith(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.bold,
@@ -280,13 +283,15 @@ class AiSettingPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '• 支持 OpenAI 兼容的 API 接口\n'
-                    '• 在视频详情页点击 AI 按钮使用\n'
-                    '• 点击「分析」自动载入视频上下文，也可手动载入后自由提问\n'
-                    '• 无字幕时仍可使用通用问答\n'
-                    '• 支持 Markdown 和 LaTeX，时间戳可点击跳转\n'
-                    '• 内置模板名称（概貌总结、详细分析）的内容会被版本更新覆盖\n'
-                    '• 自定义模板请使用不同名称，避免与内置模板重名',
+                    uiTx(
+                      '• 支持 OpenAI 兼容的 API 接口\n'
+                      '• 在视频详情页点击 AI 按钮使用\n'
+                      '• 点击「分析」自动载入视频上下文，也可手动载入后自由提问\n'
+                      '• 无字幕时仍可使用通用问答\n'
+                      '• 支持 Markdown 和 LaTeX，时间戳可点击跳转\n'
+                      '• 内置模板名称（概貌总结、详细分析）的内容会被版本更新覆盖\n'
+                      '• 自定义模板请使用不同名称，避免与内置模板重名',
+                    ),
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -295,7 +300,8 @@ class AiSettingPage extends StatelessWidget {
           ),
           const SizedBox(height: 100),
         ],
-      ),
+        );
+      }),
     );
   }
 
