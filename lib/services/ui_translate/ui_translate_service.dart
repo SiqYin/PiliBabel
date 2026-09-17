@@ -49,7 +49,7 @@ class UiTranslateService extends GetxService {
   static const int _batchSize = 40;
 
   /// 首次翻译时同时并发的批次数上限（越大越快，但更吃限流）。
-  static const int _maxConcurrent = 4;
+  static const int _maxConcurrent = 8;
 
   /// 收集待翻译字符串的防抖窗口。
   static const Duration _debounceWindow = Duration(milliseconds: 500);
@@ -136,7 +136,14 @@ class UiTranslateService extends GetxService {
   }
 
   void _scheduleFlush() {
-    _debounce?.cancel();
+    // 攒满一批立即开翻，避免大批量（如切换语言）时干等防抖窗口
+    if (_pending.length >= _batchSize) {
+      _debounce?.cancel();
+      _flush();
+      return;
+    }
+    // 已有待触发的定时器就不再重置，防止连续入队把 flush 无限推迟
+    if (_debounce?.isActive ?? false) return;
     _debounce = Timer(_debounceWindow, _flush);
   }
 
