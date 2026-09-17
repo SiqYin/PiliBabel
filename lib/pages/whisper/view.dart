@@ -8,6 +8,7 @@ import 'package:PiliPlus/grpc/bilibili/app/im/v1.pb.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/pages/whisper/controller.dart';
 import 'package:PiliPlus/pages/whisper/widgets/item.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/extension/three_dot_ext.dart';
 import 'package:PiliPlus/utils/theme_utils.dart';
@@ -31,7 +32,7 @@ class _WhisperPageState extends State<WhisperPage> {
     final padding = MediaQuery.viewPaddingOf(context);
     return SimpleScaffold(
       appBar: AppBar(
-        title: const Text('消息'),
+        title: Text(uiTx('消息')),
         actions: [
           IconButton(
             tooltip: '新增粉丝',
@@ -80,7 +81,7 @@ class _WhisperPageState extends State<WhisperPage> {
                           child: Row(
                             children: [
                               e.type.icon,
-                              Text('  ${e.title}'),
+                              Text('  ${uiTx(e.title ?? '')}'),
                             ],
                           ),
                         ),
@@ -198,7 +199,7 @@ class _WhisperPageState extends State<WhisperPage> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      item.name,
+                      uiTx(item.name),
                       style: const TextStyle(fontSize: 13),
                     ),
                   ],

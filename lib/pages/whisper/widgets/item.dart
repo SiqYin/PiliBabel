@@ -13,6 +13,7 @@ import 'package:PiliPlus/grpc/im.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/msg.dart';
 import 'package:PiliPlus/pages/whisper_secondary/view.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
@@ -295,7 +296,7 @@ class WhisperSessionItem extends StatelessWidget {
               children: [
                 Flexible(
                   child: Text(
-                    item.sessionInfo.sessionName,
+                    uiTx(item.sessionInfo.sessionName),
                     maxLines: 1,
                     overflow: .ellipsis,
                     style: TextStyle(
@@ -342,7 +343,7 @@ class WhisperSessionItem extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              item.msgSummary.rawMsg,
+              uiTx(item.msgSummary.rawMsg),
               maxLines: 1,
               overflow: .ellipsis,
               style: theme.textTheme.labelMedium!.copyWith(

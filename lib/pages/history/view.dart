@@ -135,7 +135,7 @@ class _HistoryPageState extends State<HistoryPage>
                         ...tabs.map(
                           (item) => Obx(() {
                             UiTranslateService.to.revision.value;
-                            return Tab(text: uiTx(item.name));
+                            return Tab(text: uiTx(item.name ?? ''));
                           }),
                         ),
                       ],
