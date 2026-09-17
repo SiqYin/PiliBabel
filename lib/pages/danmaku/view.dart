@@ -127,6 +127,19 @@ class _PlDanmakuState extends State<PlDanmaku> {
     }
     latestAddedPosition = currentPosition;
 
+    // 弹幕翻译：提前约 15 秒预译下一批，使播放到达时缓存已热、即时出译文
+    if (UiTranslateService.to.danmakuTranslate.value) {
+      final ahead = _plDanmakuController.getCurrentDanmaku(
+        currentPosition + 15000,
+      );
+      if (ahead != null) {
+        for (final e in ahead) {
+          if (e.mode == 7) continue;
+          uiTx(e.content);
+        }
+      }
+    }
+
     List<DanmakuElem>? currentDanmakuList = _plDanmakuController
         .getCurrentDanmaku(currentPosition);
     if (currentDanmakuList != null) {

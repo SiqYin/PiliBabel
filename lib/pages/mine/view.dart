@@ -367,7 +367,7 @@ class _MediaPageState extends CommonPageState<MinePage>
                         TextSpan(
                           children: [
                             TextSpan(
-                              text: '硬币 ',
+                              text: uiTx('硬币 '),
                               style: coinLabelStyle,
                             ),
                             TextSpan(
@@ -375,7 +375,7 @@ class _MediaPageState extends CommonPageState<MinePage>
                               style: coinValStyle,
                             ),
                             TextSpan(
-                              text: "      经验 ",
+                              text: uiTx("      经验 "),
                               style: coinLabelStyle,
                             ),
                             TextSpan(

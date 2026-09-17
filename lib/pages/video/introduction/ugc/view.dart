@@ -448,14 +448,16 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                 : colorScheme.secondaryContainer,
           ),
           child: Text(
-            switch (attr) {
-              1 => '悄悄关注',
-              2 => '已关注',
-              4 || 6 => '已互关',
-              128 => '已拉黑',
-              -10 => '特别关注',
-              _ => ' 关注 ',
-            },
+            uiTx(
+              switch (attr) {
+                1 => '悄悄关注',
+                2 => '已关注',
+                4 || 6 => '已互关',
+                128 => '已拉黑',
+                -10 => '特别关注',
+                _ => ' 关注 ',
+              },
+            ),
             style: const TextStyle(fontSize: 13),
           ),
         );
@@ -481,7 +483,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
               selectIcon: const Icon(FontAwesomeIcons.solidThumbsUp),
               selectStatus: introController.hasLike.value,
               semanticsLabel: '点赞',
-              text: !isLoading ? NumUtils.numFormat(stat!.like) : null,
+              text: !isLoading ? uiTx(NumUtils.numFormat(stat!.like)) : null,
               onStartTriple: introController.onStartTriple,
               onCancelTriple: introController.onCancelTriple,
             ),
@@ -495,7 +497,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
               ),
               selectStatus: introController.hasDislike.value,
               semanticsLabel: '点踩',
-              text: "点踩",
+              text: uiTx("点踩"),
             ),
           ),
           Obx(
@@ -506,7 +508,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
               onTap: introController.actionCoinVideo,
               selectStatus: introController.hasCoin,
               semanticsLabel: '投币',
-              text: !isLoading ? NumUtils.numFormat(stat!.coin) : null,
+              text: !isLoading ? uiTx(NumUtils.numFormat(stat!.coin)) : null,
             ),
           ),
           Obx(
@@ -521,7 +523,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
               ),
               selectStatus: introController.hasFav.value,
               semanticsLabel: '收藏',
-              text: !isLoading ? NumUtils.numFormat(stat!.favorite) : null,
+              text: !isLoading ? uiTx(NumUtils.numFormat(stat!.favorite)) : null,
             ),
           ),
           Obx(
@@ -532,7 +534,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                   introController.handleAction(introController.viewLater),
               selectStatus: introController.hasLater.value,
               semanticsLabel: '再看',
-              text: '再看',
+              text: uiTx('再看'),
             ),
           ),
           ActionItem(
@@ -540,7 +542,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
             onTap: () => introController.actionShareVideo(context),
             selectStatus: false,
             semanticsLabel: '分享',
-            text: !isLoading ? NumUtils.numFormat(stat!.share!) : null,
+            text: !isLoading ? uiTx(NumUtils.numFormat(stat!.share!)) : null,
           ),
           if (Pref.enableAiChat)
             ActionItem(
@@ -958,7 +960,8 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                     ),
                   ),
                   Text(
-                    '${NumUtils.numFormat(userStat.follower)}粉丝    ${'${NumUtils.numFormat(userStat.archiveCount)}视频'}',
+                    '${NumUtils.numFormat(userStat.follower)}${uiTx('粉丝')}    '
+                    '${NumUtils.numFormat(userStat.archiveCount)}${uiTx('视频')}',
                     style: TextStyle(fontSize: 12, color: colorScheme.outline),
                   ),
                 ],
