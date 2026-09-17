@@ -46,6 +46,7 @@ class _PlDanmakuState extends State<PlDanmaku> {
   DanmakuController<DanmakuExtra>? _controller;
   Worker? _danmakuTranslateWorker;
   int latestAddedPosition = -1;
+  int _preTranslateCursor = 0;
   bool _loggedEarlySpecialDanmaku = false;
 
   @override
