@@ -59,17 +59,27 @@ class FavFolderItem extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(
-            ' ${uiTx(item.title ?? '')}',
-            overflow: TextOverflow.fade,
-            maxLines: 1,
+          Obx(
+            () {
+              UiTranslateService.to.revision.value;
+              return Text(
+                ' ${uiTx(item.title ?? '')}',
+                overflow: TextOverflow.fade,
+                maxLines: 1,
+              );
+            },
           ),
-          Text(
-            ' ${uiTx('共')}${item.mediaCount}${uiTx('条视频 · ')}'
-            '${uiTx(BiliUtils.isPublicFavText(item.attr))}',
-            style: theme.textTheme.labelSmall!.copyWith(
-              color: theme.colorScheme.outline,
-            ),
+          Obx(
+            () {
+              UiTranslateService.to.revision.value;
+              return Text(
+                ' ${uiTx('共')}${item.mediaCount}${uiTx('条视频 · ')}'
+                '${uiTx(BiliUtils.isPublicFavText(item.attr))}',
+                style: theme.textTheme.labelSmall!.copyWith(
+                  color: theme.colorScheme.outline,
+                ),
+              );
+            },
           ),
         ],
       ),

@@ -21,7 +21,7 @@ class UiTranslateSettingPage extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: showAppBar ? AppBar(title: const Text('AI 功能')) : null,
+      appBar: showAppBar ? AppBar(title: Text(uiTx('AI 功能'))) : null,
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         children: [
@@ -30,8 +30,8 @@ class UiTranslateSettingPage extends StatelessWidget {
           Obx(
             () => SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('启用视频总结助手'),
-              subtitle: const Text('在视频详情页用 AI 生成字幕分析/总结'),
+              title: Text(uiTx('启用视频总结助手')),
+              subtitle: Text(uiTx('在视频详情页用 AI 生成字幕分析/总结')),
               value: controller.enableAiChat.value,
               onChanged: (v) {
                 controller.enableAiChat.value = v;
@@ -57,8 +57,8 @@ class UiTranslateSettingPage extends StatelessWidget {
           ListTile(
             contentPadding: EdgeInsets.zero,
             leading: const Icon(Icons.tune),
-            title: const Text('提示词模板'),
-            subtitle: const Text('管理视频总结的提示词模板'),
+            title: Text(uiTx('提示词模板')),
+            subtitle: Text(uiTx('管理视频总结的提示词模板')),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Get.toNamed('/aiSetting'),
           ),
@@ -69,8 +69,8 @@ class UiTranslateSettingPage extends StatelessWidget {
           Obx(
             () => SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('启用 AI 翻译'),
-              subtitle: const Text('将界面与外文内容翻译为所选应用语言'),
+              title: Text(uiTx('启用 AI 翻译')),
+              subtitle: Text(uiTx('将界面与外文内容翻译为所选应用语言')),
               value: controller.uiTranslateEnabled.value,
               onChanged: controller.saveUiTranslateEnabled,
             ),
@@ -134,11 +134,11 @@ class UiTranslateSettingPage extends StatelessWidget {
           Obx(
             () => SwitchListTile(
               contentPadding: EdgeInsets.zero,
-              title: const Text('思考模式'),
+              title: Text(uiTx('思考模式')),
               subtitle: Text(
                 controller.thinking.value
-                    ? '启用推理，翻译更准但可能更慢'
-                    : '关闭推理，出结果更快（推荐）',
+                    ? uiTx('启用推理，翻译更准但可能更慢')
+                    : uiTx('关闭推理，出结果更快（推荐）'),
               ),
               value: controller.thinking.value,
               onChanged: controller.saveThinking,
@@ -157,7 +157,7 @@ class UiTranslateSettingPage extends StatelessWidget {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.bolt, size: 18),
-                    label: const Text('测试翻译'),
+                    label: Text(uiTx('测试翻译')),
                     onPressed: controller.isTesting.value
                         ? null
                         : controller.testTranslate,
@@ -168,7 +168,7 @@ class UiTranslateSettingPage extends StatelessWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   icon: const Icon(Icons.delete_sweep, size: 18),
-                  label: const Text('清空缓存'),
+                  label: Text(uiTx('清空缓存')),
                   onPressed: controller.clearTranslateCache,
                 ),
               ),
@@ -225,7 +225,7 @@ class UiTranslateSettingPage extends StatelessWidget {
 
   Widget _sectionTitle(ThemeData theme, String text) => Padding(
     padding: const EdgeInsets.only(bottom: 8, top: 2),
-    child: Text(text, style: theme.textTheme.titleMedium),
+    child: Text(uiTx(text), style: theme.textTheme.titleMedium),
   );
 }
 
