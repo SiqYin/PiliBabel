@@ -22,7 +22,9 @@ class UiTranslateSettingPage extends StatelessWidget {
 
     return Scaffold(
       appBar: showAppBar ? AppBar(title: Text(uiTx('AI 功能'))) : null,
-      body: ListView(
+      body: Obx(() {
+        UiTranslateService.to.revision.value;
+        return ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         children: [
           // ================= AI 视频总结 =================
@@ -92,11 +94,11 @@ class UiTranslateSettingPage extends StatelessWidget {
                         ),
                       )
                       .toList(),
-                  decoration: const InputDecoration(
-                    labelText: '选择应用语言',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: uiTx('选择应用语言'),
+                    border: const OutlineInputBorder(),
                     isDense: true,
-                    prefixIcon: Icon(Icons.translate),
+                    prefixIcon: const Icon(Icons.translate),
                   ),
                   onChanged: (v) {
                     if (v != null) controller.saveUiTranslateLang(v);
@@ -105,8 +107,8 @@ class UiTranslateSettingPage extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   lang.chineseFamily
-                      ? '当前为中文：外文内容会被翻译成该中文，本身是中文的内容保持不变。'
-                      : '若选择非简体中文，需要在下方配置 API 才能实现 AI 翻译。',
+                      ? uiTx('当前为中文：外文内容会被翻译成该中文，本身是中文的内容保持不变。')
+                      : uiTx('若选择非简体中文，需要在下方配置 API 才能实现 AI 翻译。'),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.outline,
                   ),
@@ -199,7 +201,7 @@ class UiTranslateSettingPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '使用说明',
+                    uiTx('使用说明'),
                     style: theme.textTheme.titleSmall?.copyWith(
                       color: colorScheme.primary,
                       fontWeight: FontWeight.bold,
@@ -207,10 +209,12 @@ class UiTranslateSettingPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '• 视频总结与界面翻译各自配置独立的接口地址/Key/模型，互不影响\n'
-                    '• 应用语言默认简体中文：只把外文自动译成中文，中文内容不动\n'
-                    '• 选择其它语言即把界面与内容整体翻译为该语言（需配置翻译 API）\n'
-                    '• 每条只翻译一次并本地持久固定，切换语言会清缓存重翻',
+                    uiTx(
+                      '• 视频总结与界面翻译各自配置独立的接口地址/Key/模型，互不影响\n'
+                      '• 应用语言默认简体中文：只把外文自动译成中文，中文内容不动\n'
+                      '• 选择其它语言即把界面与内容整体翻译为该语言（需配置翻译 API）\n'
+                      '• 每条只翻译一次并本地持久固定，切换语言会清缓存重翻',
+                    ),
                     style: theme.textTheme.bodySmall,
                   ),
                 ],
@@ -219,7 +223,8 @@ class UiTranslateSettingPage extends StatelessWidget {
           ),
           const SizedBox(height: 100),
         ],
-      ),
+        );
+      }),
     );
   }
 
@@ -258,11 +263,11 @@ class _ApiFieldsState extends State<_ApiFields> {
           padding: const EdgeInsets.only(top: 6, bottom: 12),
           child: TextField(
             controller: widget.urlCtl,
-            decoration: const InputDecoration(
-              labelText: '接口地址（OpenAI 兼容）',
+            decoration: InputDecoration(
+              labelText: uiTx('接口地址（OpenAI 兼容）'),
               hintText: 'https://api.example.com/v1',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.link),
+              border: const OutlineInputBorder(),
+              prefixIcon: const Icon(Icons.link),
             ),
             onChanged: widget.onUrl,
           ),
@@ -270,7 +275,7 @@ class _ApiFieldsState extends State<_ApiFields> {
         TextField(
           controller: widget.keyCtl,
           decoration: InputDecoration(
-            labelText: 'API Key',
+            labelText: uiTx('API Key'),
             hintText: 'sk-...',
             border: const OutlineInputBorder(),
             prefixIcon: const Icon(Icons.key),
@@ -319,7 +324,7 @@ class _ModelPicker extends StatelessWidget {
             )
           : const Icon(Icons.refresh),
     ),
-    tooltip: '拉取模型列表',
+    tooltip: uiTx('拉取模型列表'),
     onPressed: onFetch,
   );
 
@@ -337,7 +342,7 @@ class _ModelPicker extends StatelessWidget {
                 .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                 .toList(),
             decoration: InputDecoration(
-              labelText: label,
+              labelText: uiTx(label),
               border: const OutlineInputBorder(),
               isDense: true,
               prefixIcon: const Icon(Icons.smart_toy),
@@ -351,7 +356,7 @@ class _ModelPicker extends StatelessWidget {
         return TextField(
           controller: manualCtl,
           decoration: InputDecoration(
-            labelText: '$label（可手填，或点右侧拉取）',
+            labelText: '${uiTx(label)}${uiTx('（可手填，或点右侧拉取）')}',
             border: const OutlineInputBorder(),
             prefixIcon: const Icon(Icons.smart_toy),
             suffixIcon: _fetchSuffix(),

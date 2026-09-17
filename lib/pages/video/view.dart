@@ -66,6 +66,7 @@ import 'package:PiliPlus/services/pip_transition_coordinator.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/services/shutdown_timer_service.dart'
     show shutdownTimerService;
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/android/bindings.g.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
@@ -1296,9 +1297,14 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       mainAxisSize: .min,
       children: [
         Icon(icon, color: colorScheme.primary),
-        Text(
-          '$playStat播放',
-          style: TextStyle(color: colorScheme.primary),
+        Obx(
+          () {
+            UiTranslateService.to.revision.value;
+            return Text(
+              '${uiTx(playStat)}${uiTx('播放')}',
+              style: TextStyle(color: colorScheme.primary),
+            );
+          },
         ),
       ],
     );
@@ -2096,17 +2102,23 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           if (text == '评论') {
             return Obx(() {
               final count = _videoReplyController.count.value;
+              UiTranslateService.to.revision.value;
               return Tab(
                 child: Text(
-                  '评论${count == -1 ? '' : ' ${NumUtils.numFormat(count)}'}',
+                  '${uiTx('评论')}${count == -1 ? '' : ' ${NumUtils.numFormat(count)}'}',
                   softWrap: false,
                   overflow: .visible,
                 ),
               );
             });
           } else {
-            return Tab(
-              child: Text(text, softWrap: false, overflow: .visible),
+            return Obx(
+              () {
+                UiTranslateService.to.revision.value;
+                return Tab(
+                  child: Text(uiTx(text), softWrap: false, overflow: .visible),
+                );
+              },
             );
           }
         }).toList(),
@@ -2145,7 +2157,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                 ),
                 onPressed: videoDetailController.showShootDanmakuSheet,
                 child: Text(
-                  '发弹幕',
+                  uiTx('发弹幕'),
                   style: TextStyle(
                     fontSize: 12,
                     color: colorScheme.onSurfaceVariant,

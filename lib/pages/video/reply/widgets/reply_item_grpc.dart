@@ -240,7 +240,7 @@ class ReplyItemGrpc extends StatelessWidget {
                     ),
                     if (replyItem.replyControl.hasLocation())
                       Text(
-                        ' • ${replyItem.replyControl.location}',
+                        ' • ${uiTx(replyItem.replyControl.location ?? '')}',
                         style: TextStyle(
                           fontSize: 11,
                           color: colorScheme.outline,
@@ -535,7 +535,7 @@ class ReplyItemGrpc extends StatelessWidget {
                   size: 18,
                   color: colorScheme.outline.withValues(alpha: 0.8),
                 ),
-                Text('回复', style: textStyle),
+                Text(uiTx('回复'), style: textStyle),
               ],
             ),
           ),
@@ -727,7 +727,7 @@ class ReplyItemGrpc extends StatelessWidget {
                       children: [
                         if (replyItem.replyControl.upReply)
                           TextSpan(
-                            text: 'UP主等人 ',
+                            text: uiTx('UP主等人 '),
                             style: TextStyle(
                               color: colorScheme.onSurface.withValues(
                                 alpha: 0.85,
@@ -735,7 +735,8 @@ class ReplyItemGrpc extends StatelessWidget {
                             ),
                           ),
                         TextSpan(
-                          text: '共${replyItem.count}条回复',
+                          text:
+                              '${uiTx('共')}${replyItem.count}${uiTx('条回复')}',
                           style: TextStyle(
                             color: colorScheme.primary,
                           ),
