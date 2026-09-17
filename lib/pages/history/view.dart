@@ -128,8 +128,16 @@ class _HistoryPageState extends State<HistoryPage>
                         }
                       },
                       tabs: [
-                        const Tab(text: '全部'),
-                        ...tabs.map((item) => Tab(text: item.name)),
+                        Obx(() {
+                          UiTranslateService.to.revision.value;
+                          return Tab(text: uiTx('全部'));
+                        }),
+                        ...tabs.map(
+                          (item) => Obx(() {
+                            UiTranslateService.to.revision.value;
+                            return Tab(text: uiTx(item.name));
+                          }),
+                        ),
                       ],
                     ),
                     Expanded(

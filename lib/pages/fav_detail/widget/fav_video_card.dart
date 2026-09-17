@@ -162,14 +162,19 @@ class FavVideoCardH extends StatelessWidget {
             spacing: 3,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                uiTx(item.title!),
-                textAlign: TextAlign.start,
-                style: const TextStyle(
-                  letterSpacing: 0.3,
-                ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              Obx(
+                () {
+                  UiTranslateService.to.revision.value;
+                  return Text(
+                    uiTx(item.title!),
+                    textAlign: TextAlign.start,
+                    style: const TextStyle(
+                      letterSpacing: 0.3,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  );
+                },
               ),
               if (item.type == 24 && item.intro?.isNotEmpty == true)
                 Text(
@@ -182,8 +187,11 @@ class FavVideoCardH extends StatelessWidget {
                   ),
                 ),
               const Spacer(),
-              Text(
-                '${DateFormatUtils.dateFormat(item.favTime)} ${uiTx(item.upper?.name ?? '')}',
+              Obx(
+                () {
+                  UiTranslateService.to.revision.value;
+                  return Text(
+                    '${DateFormatUtils.dateFormat(item.favTime)} ${uiTx(item.upper?.name ?? '')}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
@@ -191,6 +199,8 @@ class FavVideoCardH extends StatelessWidget {
                   fontSize: 12,
                   color: colorScheme.outline,
                 ),
+                  );
+                },
               ),
               if (item.type != 24)
                 Row(
