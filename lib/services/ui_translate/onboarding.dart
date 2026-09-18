@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:PiliPlus/utils/storage.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -11,11 +11,15 @@ bool _showing = false;
 /// shortcut straight to the settings page. Silently no-ops after the first run.
 Future<void> showAiTranslateOnboardingIfNeeded() async {
   if (Pref.uiTranslateOnboarded || _showing) return;
+  final context = Get.context;
+  if (context == null) return;
   _showing = true;
-  // Wait for the first route / navigator to be ready.
+  // Wait briefly so the first route / overlay is settled.
   await Future.delayed(const Duration(milliseconds: 700));
-  await Get.dialog<void>(
-    AlertDialog(
+  await showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => AlertDialog(
       title: const Text('AI interface translation'),
       content: const SingleChildScrollView(
         child: Column(
@@ -54,8 +58,6 @@ Future<void> showAiTranslateOnboardingIfNeeded() async {
         ),
       ],
     ),
-    barrierDismissible: false,
-    useSafeArea: true,
   );
   _showing = false;
 }
