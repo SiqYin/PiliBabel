@@ -218,7 +218,7 @@ class VideoCardHMemberVideo extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              videoItem.title,
+              uiTx(videoItem.title),
               textAlign: TextAlign.start,
               style: TextStyle(
                 fontWeight: isCurr ? FontWeight.bold : null,

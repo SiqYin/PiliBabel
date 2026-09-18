@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/grpc/bilibili/app/dynamic/v2.pb.dart'
     show ModuleAuthor;
@@ -52,7 +53,7 @@ class DynLikeItem extends StatelessWidget {
                           children: [
                             Flexible(
                               child: Text(
-                                author.name,
+                                uiTx(author.name),
                                 maxLines: 1,
                                 overflow: .ellipsis,
                                 style: TextStyle(

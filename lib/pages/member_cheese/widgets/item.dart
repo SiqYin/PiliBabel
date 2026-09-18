@@ -28,7 +28,7 @@ class MemberCheeseItem extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          item.title!,
+          uiTx(item.title!),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),

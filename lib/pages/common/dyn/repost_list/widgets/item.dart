@@ -103,7 +103,7 @@ class DynRepostItem extends StatelessWidget {
                             children: [
                               Flexible(
                                 child: Text(
-                                  author.name,
+                                  uiTx(author.name),
                                   maxLines: 1,
                                   overflow: .ellipsis,
                                   style: TextStyle(

@@ -202,7 +202,7 @@ class VideoCardHLater extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      videoItem.subtitle!,
+                      uiTx(videoItem.subtitle!),
                       textAlign: TextAlign.start,
                       style: TextStyle(
                         fontSize: 13,
@@ -217,7 +217,7 @@ class VideoCardHLater extends StatelessWidget {
                 : [
                     Expanded(
                       child: Text(
-                        videoItem.title!,
+                        uiTx(videoItem.title!),
                         style: TextStyle(
                           fontSize: theme.textTheme.bodyMedium!.fontSize,
                           height: 1.42,

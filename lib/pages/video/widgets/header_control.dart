@@ -1229,7 +1229,7 @@ class HeaderControlState extends State<HeaderControl>
                               SmartDialog.showToast(uiTx("解码已变为：${format.name}"));
                             },
                             contentPadding: const .symmetric(horizontal: 20),
-                            title: Text(format.description),
+                            title: Text(uiTx(format.description)),
                             subtitle: Text(item, style: subTitleStyle),
                             trailing: isCurr
                                 ? Icon(Icons.done, color: colorScheme.primary)
@@ -1745,7 +1745,7 @@ class HeaderControlState extends State<HeaderControl>
           contentPadding: const EdgeInsets.symmetric(horizontal: 14),
           onLongPress: () => Utils.copyText(item.content.text),
           title: Text(
-            item.content.text,
+            uiTx(item.content.text),
             style: const TextStyle(fontSize: 14),
           ),
           trailing: Row(

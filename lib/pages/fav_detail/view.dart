@@ -160,7 +160,7 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _favDetailController.folderInfo.value.title,
+                  uiTx(_favDetailController.folderInfo.value.title),
                   style: theme.textTheme.titleMedium,
                 ),
                 Text(uiTx('共${_favDetailController.folderInfo.value.mediaCount}条视频'),
@@ -436,7 +436,7 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
                         children: [
                           Expanded(
                             child: Text(
-                              folderInfo.title,
+                              uiTx(folderInfo.title),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(

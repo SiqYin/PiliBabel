@@ -217,7 +217,7 @@ Widget module(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        music.title!,
+                        uiTx(music.title!),
                         style: TextStyle(
                           color: theme.colorScheme.primary,
                         ),
@@ -226,7 +226,7 @@ Widget module(
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        music.label!,
+                        uiTx(music.label!),
                         style: TextStyle(
                           color: theme.colorScheme.outline,
                           fontSize: theme.textTheme.labelMedium!.fontSize,

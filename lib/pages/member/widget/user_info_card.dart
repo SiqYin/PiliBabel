@@ -137,7 +137,7 @@ class UserInfoCard extends StatelessWidget {
               style: const TextStyle(fontSize: 14),
             ),
             Text(
-              type.title,
+              uiTx(type.title),
               style: TextStyle(
                 height: 1.2,
                 fontSize: 12,
@@ -209,7 +209,7 @@ class UserInfoCard extends StatelessWidget {
           GestureDetector(
             onTap: () => Utils.copyText(card.name!),
             child: Text(
-              card.name!,
+              uiTx(card.name!),
               strutStyle: const StrutStyle(
                 height: 1,
                 leading: 0,
@@ -1085,7 +1085,7 @@ Widget _headerTitle(TopTitle title) {
       crossAxisAlignment: .end,
       children: [
         Text(
-          title.title!,
+          uiTx(title.title!),
           maxLines: 1,
           overflow: .ellipsis,
           style: const TextStyle(fontSize: 12, color: Colors.white),

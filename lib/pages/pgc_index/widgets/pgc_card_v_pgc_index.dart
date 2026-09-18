@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
@@ -83,7 +84,7 @@ class PgcCardVPgcIndex extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              item.title!,
+              uiTx(item.title!),
               textAlign: TextAlign.start,
               style: const TextStyle(
                 letterSpacing: 0.3,

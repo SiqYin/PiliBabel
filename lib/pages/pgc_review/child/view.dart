@@ -283,7 +283,7 @@ class _PgcReviewChildPageState extends State<PgcReviewChildPage>
               const SizedBox(height: 5),
               if (item.title != null)
                 Text(
-                  item.title!,
+                  uiTx(item.title!),
                   style: const TextStyle(
                     height: 1.75,
                     fontSize: 15,

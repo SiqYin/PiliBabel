@@ -279,7 +279,7 @@ class _MemberPageState extends State<MemberPage> {
                     return ListTile(
                       dense: true,
                       title: Text(
-                        e.name!,
+                        uiTx(e.name!),
                         style: const TextStyle(fontSize: 14),
                       ),
                       subtitle: Padding(

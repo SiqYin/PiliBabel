@@ -134,7 +134,7 @@ class _WhisperLinkSettingPageState extends State<WhisperLinkSettingPage> {
                           officialType: item.official?.type,
                         ),
                         title: Text(
-                          item.name!,
+                          uiTx(item.name!),
                           style: TextStyle(
                             fontSize: 14,
                             color:

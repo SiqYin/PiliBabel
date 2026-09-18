@@ -257,7 +257,7 @@ class _LiveAreaPageState extends State<LiveAreaPage> {
               ),
               const SizedBox(height: 4),
               Text(
-                item.name!,
+                uiTx(item.name!),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(fontSize: 12),

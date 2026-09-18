@@ -114,7 +114,7 @@ class SubItem extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  item.title!,
+                  uiTx(item.title!),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.start,

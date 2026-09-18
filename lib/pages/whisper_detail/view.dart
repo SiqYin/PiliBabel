@@ -83,7 +83,7 @@ class _WhisperDetailPageState
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
-                  _whisperDetailController.name,
+                  uiTx(_whisperDetailController.name),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(height: 1, fontSize: 16),

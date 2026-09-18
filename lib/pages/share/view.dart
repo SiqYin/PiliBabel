@@ -137,7 +137,7 @@ class _SharePanelState extends State<SharePanel> {
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        item.name,
+                                        uiTx(item.name),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: const TextStyle(fontSize: 12),

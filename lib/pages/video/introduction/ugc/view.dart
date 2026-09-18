@@ -888,7 +888,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                 ),
               ),
               Text(
-                item.title!,
+                uiTx(item.title!),
                 style: TextStyle(fontSize: 12, color: colorScheme.outline),
               ),
             ],

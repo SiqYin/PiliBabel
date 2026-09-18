@@ -156,7 +156,7 @@ class _PopularSeriesPageState extends State<PopularSeriesPage> with GridMixin {
                       }
                     },
                     title: Text(
-                      item.name!,
+                      uiTx(item.name!),
                       style: const TextStyle(fontSize: 14),
                     ),
                     trailing: isCurr ? const Icon(Icons.check, size: 20) : null,

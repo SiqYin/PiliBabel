@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -46,7 +47,7 @@ class PgcCardVMemberPgc extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.fromLTRB(4, 5, 0, 3),
               child: Text(
-                item.title,
+                uiTx(item.title),
                 textAlign: TextAlign.start,
                 style: const TextStyle(
                   letterSpacing: 0.3,
