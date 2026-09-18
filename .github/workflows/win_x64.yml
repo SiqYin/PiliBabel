@@ -9,6 +9,11 @@ on:
         default: ""
         type: string
   workflow_dispatch:
+  push:
+    branches:
+      - ci/desktop
+    tags:
+      - "v*"
 
 jobs:
   build-windows-app:
@@ -61,11 +66,11 @@ jobs:
         shell: pwsh
 
       - name: Release
-        if: ${{ github.event.inputs.tag != '' }}
+        if: ${{ github.event.inputs.tag != '' || github.ref_type == 'tag' }}
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ github.event.inputs.tag }}
-          name: ${{ github.event.inputs.tag }}
+          tag_name: ${{ github.event.inputs.tag != '' && github.event.inputs.tag || github.ref_name }}
+          name: ${{ github.event.inputs.tag != '' && github.event.inputs.tag || github.ref_name }}
           target_commitish: ${{ github.sha }}
           files: |
             PiliNara_windows_*.zip
