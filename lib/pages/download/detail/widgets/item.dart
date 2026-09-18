@@ -538,9 +538,9 @@ class DetailItem extends StatelessWidget {
                         ) {
                           _ExportDialog.progressNotifier.value = progress;
                         });
-                        SmartDialog.showToast('已导出到 $dest');
+                        SmartDialog.showToast(uiTx('已导出到 $dest'));
                       } catch (e) {
-                        SmartDialog.showToast('导出失败: $e');
+                        SmartDialog.showToast(uiTx('导出失败: $e'));
                       } finally {
                         SmartDialog.dismiss(tag: 'export');
                       }

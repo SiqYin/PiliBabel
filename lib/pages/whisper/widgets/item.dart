@@ -48,7 +48,7 @@ class WhisperSessionItem extends StatelessWidget {
         ackSeqno: response.ackSeqno.toInt(),
       );
       if (res.isSuccess) {
-        SmartDialog.showToast('已标为已读');
+        SmartDialog.showToast(uiTx('已标为已读'));
         item.clearUnread();
         if (context.mounted) {
           (context as Element).markNeedsBuild();

@@ -53,13 +53,13 @@ class _BarSetPageState extends State<BarSetPage> with ReorderMixin {
       key,
       list.where((e) => e.second).map((e) => e.first.index).toList(),
     );
-    SmartDialog.showToast('保存成功，下次启动时生效');
+    SmartDialog.showToast(uiTx('保存成功，下次启动时生效'));
   }
 
   void onReset() {
     Get.back();
     GStorage.setting.delete(key);
-    SmartDialog.showToast('重置成功，下次启动时生效');
+    SmartDialog.showToast(uiTx('重置成功，下次启动时生效'));
   }
 
   void onReorderItem(int oldIndex, int newIndex) {

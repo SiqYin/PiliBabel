@@ -70,7 +70,7 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
       folderIds,
     );
     _controller.handleSelect();
-    SmartDialog.showToast('已更新文件夹');
+    SmartDialog.showToast(uiTx('已更新文件夹'));
   }
 
   Future<void> _exportSelected() async {
@@ -100,7 +100,7 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
       widget.folderId,
       entries.map((item) => item.cid).toList(),
     );
-    SmartDialog.showToast('已按缓存时间重置');
+    SmartDialog.showToast(uiTx('已按缓存时间重置'));
   }
 
   void _onSortSelected(_FolderSortAction action) {

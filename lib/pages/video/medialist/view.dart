@@ -181,7 +181,7 @@ class _MediaListPanelState extends State<MediaListPanel>
           child: InkWell(
             onTap: () {
               if (item.type != 2) {
-                SmartDialog.showToast('不支持播放该类型视频');
+                SmartDialog.showToast(uiTx('不支持播放该类型视频'));
                 return;
               }
               Get.back();

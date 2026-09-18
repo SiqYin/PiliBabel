@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/http/live.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models_new/live/live_area_list/area_item.dart';
@@ -62,7 +63,7 @@ class LiveAreaController extends CommonListController<List<AreaList>?, AreaList>
       );
       if (res.isSuccess) {
         isEditing.toggle();
-        SmartDialog.showToast('设置成功');
+        SmartDialog.showToast(uiTx('设置成功'));
       } else {
         res.toast();
       }

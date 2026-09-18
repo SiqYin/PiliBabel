@@ -1884,7 +1884,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       PopupMenuItem(
         onTap: () {
           if (!Accounts.main.isLogin) {
-            SmartDialog.showToast('账号未登录');
+            SmartDialog.showToast(uiTx('账号未登录'));
           } else {
             PageUtils.reportVideo(videoDetailController.aid);
           }
@@ -2703,7 +2703,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
   void onReversePlay({required bool isSeason}) {
     if (isSeason && videoDetailController.isPlayAll) {
-      SmartDialog.showToast('当前为播放全部，合集不支持倒序');
+      SmartDialog.showToast(uiTx('当前为播放全部，合集不支持倒序'));
       return;
     }
 

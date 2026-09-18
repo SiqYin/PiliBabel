@@ -248,7 +248,7 @@ class _CreateVotePageState extends State<CreateVotePage> {
                           const Duration(minutes: 5)) {
                         _controller.endtime.value = newEndtime;
                       } else {
-                        SmartDialog.showToast('至少选择5分钟之后');
+                        SmartDialog.showToast(uiTx('至少选择5分钟之后'));
                       }
                     }
                   }

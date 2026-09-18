@@ -331,7 +331,7 @@ SettingsModel getListBanWordModel({
                   })
                   .join('|');
         onChanged(RegExp(regexPattern, caseSensitive: false));
-        SmartDialog.showToast('已保存');
+        SmartDialog.showToast(uiTx('已保存'));
         GStorage.setting.put(key, banWord);
       }
     },
@@ -413,7 +413,7 @@ SettingsModel getListUidWithNameModel({
         setUidsMap(newMap);
         onUpdate();
         setState();
-        SmartDialog.showToast('已保存');
+        SmartDialog.showToast(uiTx('已保存'));
       }
     },
   );
@@ -471,7 +471,7 @@ SettingsModel getListUidModel({
         setUids(newUids);
         onUpdate();
         setState();
-        SmartDialog.showToast('已保存');
+        SmartDialog.showToast(uiTx('已保存'));
       }
     },
   );

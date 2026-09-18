@@ -110,7 +110,7 @@ abstract final class ReplyUtils {
             notifyType: .warning,
           );
         } else {
-          SmartDialog.showToast('评论检查通过：无账号状态下可见');
+          SmartDialog.showToast(uiTx('评论检查通过：无账号状态下可见'));
         }
         return;
       }
@@ -197,7 +197,7 @@ abstract final class ReplyUtils {
       );
 
       if (res case Error(:final errMsg)) {
-        SmartDialog.showToast('获取评论主列表时发生错误：$errMsg');
+        SmartDialog.showToast(uiTx('获取评论主列表时发生错误：$errMsg'));
         return;
       } else if (res case Success(:final response)) {
         final index =

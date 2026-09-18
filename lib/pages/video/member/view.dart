@@ -318,7 +318,7 @@ class _HorizontalMemberPageState extends State<HorizontalMemberPage> {
                   Get.toNamed('/editProfile');
                 } else {
                   if (!account.isLogin) {
-                    SmartDialog.showToast('账号未登录');
+                    SmartDialog.showToast(uiTx('账号未登录'));
                     return;
                   }
                   RequestUtils.actionRelationMod(

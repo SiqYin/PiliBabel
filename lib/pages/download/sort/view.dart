@@ -48,7 +48,7 @@ class _DownloadVideoSortPageState extends State<DownloadVideoSortPage> {
             onPressed: () async {
               await widget.onSave(_sortList.map((item) => item.cid).toList());
               if (mounted) {
-                SmartDialog.showToast('排序完成');
+                SmartDialog.showToast(uiTx('排序完成'));
                 Get.back();
               }
             },

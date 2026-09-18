@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:io' show Platform;
 import 'dart:math' show max, min;
@@ -159,7 +160,7 @@ class LivePipOverlayService {
         if (kDebugMode) {
           debugPrint('Error inserting live pip overlay: $e');
         }
-        SmartDialog.showToast('小窗启动失败: $e');
+        SmartDialog.showToast(uiTx('小窗启动失败: $e'));
         _setSystemAutoPipEnabled(plPlayerController, false);
 
         // 完整清理所有状态

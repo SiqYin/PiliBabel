@@ -290,7 +290,7 @@ List<SettingsModel> get playSettings => [
       defaultVal: false,
       onChanged: (val) {
         if (val && !videoPlayerServiceHandler!.enableBackgroundPlay) {
-          SmartDialog.showToast('建议开启后台音频服务');
+          SmartDialog.showToast(uiTx('建议开启后台音频服务'));
         }
       },
     ),
@@ -457,7 +457,7 @@ Future<void> showPlayerVolumeDialog(
   ValueChanged<double>? onChanged,
 }) {
   if (Pref.enableAppVolume) {
-    SmartDialog.showToast('应用内音量开启时，播放器音量设置不生效');
+    SmartDialog.showToast(uiTx('应用内音量开启时，播放器音量设置不生效'));
     return Future.value();
   }
   return showVolumeDialog(

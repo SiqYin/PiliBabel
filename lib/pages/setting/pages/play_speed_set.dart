@@ -92,7 +92,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
               try {
                 final val = double.parse(initialValue);
                 if (speedList.contains(val)) {
-                  SmartDialog.showToast('该倍速已存在');
+                  SmartDialog.showToast(uiTx('该倍速已存在'));
                 } else {
                   Get.back();
                   speedList
@@ -170,7 +170,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
         playSpeedDefault,
         longPressSpeedDefault,
       ].contains(speed)) {
-        SmartDialog.showToast('不支持删除默认倍速');
+        SmartDialog.showToast(uiTx('不支持删除默认倍速'));
         return;
       }
       speedList.removeAt(index);

@@ -43,7 +43,7 @@ mixin BaseFavController
         ..value.data!.removeAt(index)
         ..refresh();
       updateCount?.call(1);
-      SmartDialog.showToast('取消收藏');
+      SmartDialog.showToast(uiTx('取消收藏'));
     } else {
       res.toast();
     }
@@ -66,7 +66,7 @@ mixin BaseFavController
         if (res.isSuccess) {
           updateCount?.call(removeList.length);
           afterDelete(removeList);
-          SmartDialog.showToast('取消收藏');
+          SmartDialog.showToast(uiTx('取消收藏'));
         } else {
           res.toast();
         }
@@ -187,7 +187,7 @@ class FavDetailController
 
   Future<void> onFav(bool isFav) async {
     if (!account.isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast(uiTx('账号未登录'));
       return;
     }
     final res = isFav
@@ -207,7 +207,7 @@ class FavDetailController
   Future<void> cleanFav() async {
     final res = await FavHttp.cleanFav(mediaId: mediaId);
     if (res.isSuccess) {
-      SmartDialog.showToast('清除成功');
+      SmartDialog.showToast(uiTx('清除成功'));
       Future.delayed(const Duration(milliseconds: 200), onReload);
     } else {
       res.toast();
@@ -218,7 +218,7 @@ class FavDetailController
     if (loadingState.value case Success(:final response)) {
       if (response != null && response.isNotEmpty) {
         if (folderInfo.value.mediaCount > 1000) {
-          SmartDialog.showToast('内容太多啦！超过1000不支持排序');
+          SmartDialog.showToast(uiTx('内容太多啦！超过1000不支持排序'));
           return;
         }
         Get.to(FavSortPage(favDetailController: this));

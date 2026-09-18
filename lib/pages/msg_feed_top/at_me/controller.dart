@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/msg.dart';
 import 'package:PiliPlus/models_new/msg/msg_at/data.dart';
@@ -44,7 +45,7 @@ class AtMeController extends CommonListController<MsgAtData, MsgAtItem> {
         loadingState
           ..value.data!.removeAt(index)
           ..refresh();
-        SmartDialog.showToast('删除成功');
+        SmartDialog.showToast(uiTx('删除成功'));
       } else {
         res.toast();
       }

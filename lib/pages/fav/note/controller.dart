@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/http/fav.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models_new/fav/fav_note/list.dart';
@@ -44,7 +45,7 @@ class FavNoteController
     );
     if (res.isSuccess) {
       afterDelete(removeList);
-      SmartDialog.showToast('删除成功');
+      SmartDialog.showToast(uiTx('删除成功'));
     } else {
       res.toast();
     }

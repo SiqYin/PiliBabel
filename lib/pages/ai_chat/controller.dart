@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 
 import 'package:PiliPlus/http/video.dart';
@@ -84,7 +85,7 @@ class AiChatController extends GetxController {
         final subtitle = _videoCtl.subtitles.first;
         final body = await VideoHttp.fetchSubtitleBody(subtitle.subtitleUrl!);
         if (body == null || body.isEmpty) {
-          SmartDialog.showToast('获取字幕数据失败');
+          SmartDialog.showToast(uiTx('获取字幕数据失败'));
           return;
         }
         final processed = VideoHttp.preprocessSubtitlesForAi(body);
@@ -158,7 +159,7 @@ class AiChatController extends GetxController {
 
       await _streamResponse();
     } catch (e) {
-      SmartDialog.showToast('分析失败: $e');
+      SmartDialog.showToast(uiTx('分析失败: $e'));
       _removeLastIfStreaming();
     } finally {
       isAnalyzing.value = false;
@@ -177,7 +178,7 @@ class AiChatController extends GetxController {
     try {
       await _streamResponse();
     } catch (e) {
-      SmartDialog.showToast('请求失败: $e');
+      SmartDialog.showToast(uiTx('请求失败: $e'));
       _removeLastIfStreaming();
     } finally {
       isAnalyzing.value = false;

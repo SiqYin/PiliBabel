@@ -85,7 +85,7 @@ class _FavPageState extends State<FavPage> with SingleTickerProviderStateMixin {
                     onPressed: () {
                       if (_favController.loadingState.value.isSuccess) {
                         if (!_favController.isEnd) {
-                          SmartDialog.showToast('加载全部收藏夹再排序');
+                          SmartDialog.showToast(uiTx('加载全部收藏夹再排序'));
                           return;
                         }
                         Get.to(

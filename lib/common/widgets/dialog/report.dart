@@ -163,13 +163,13 @@ Future<void> autoWrapReportDialog(
               SmartDialog.dismiss();
               if (res.isSuccess) {
                 Get.back();
-                SmartDialog.showToast('举报成功');
+                SmartDialog.showToast(uiTx('举报成功'));
               } else {
                 res.toast();
               }
             } catch (e, s) {
               SmartDialog.dismiss();
-              SmartDialog.showToast('提交失败：$e');
+              SmartDialog.showToast(uiTx('提交失败：$e'));
               Utils.reportError(e, s);
             }
           },

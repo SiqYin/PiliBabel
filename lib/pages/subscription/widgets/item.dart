@@ -37,7 +37,7 @@ class SubItem extends StatelessWidget {
       child: InkWell(
         onTap: () {
           if (item.state == 1) {
-            SmartDialog.showToast('该$type已失效');
+            SmartDialog.showToast(uiTx('该$type已失效'));
             return;
           }
           if (item.type == 11) {

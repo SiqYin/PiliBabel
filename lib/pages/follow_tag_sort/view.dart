@@ -49,7 +49,7 @@ class _FollowTagSortPageState extends State<FollowTagSortPage>
                       tagids: _customTags.map((e) => e.tagid).join(','),
                     );
                     if (res.isSuccess) {
-                      SmartDialog.showToast('排序完成');
+                      SmartDialog.showToast(uiTx('排序完成'));
                       final tabs = _defTags + _customTags;
                       widget.controller
                         ..tabs.value = tabs

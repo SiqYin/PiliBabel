@@ -67,10 +67,10 @@ class ShutdownTimerService {
   void _startShutdownTimer(int durationInMinutes) {
     reset(durationInMinutes);
     if (durationInMinutes == 0) {
-      SmartDialog.showToast('取消定时关闭');
+      SmartDialog.showToast(uiTx('取消定时关闭'));
       return;
     }
-    SmartDialog.showToast('设置 ${_format(durationInMinutes)} 后定时关闭');
+    SmartDialog.showToast(uiTx('设置 ${_format(durationInMinutes)} 后定时关闭'));
     _deadline = DateTime.now().add(Duration(minutes: durationInMinutes));
     _shutdownTimer = Timer(
       Duration(minutes: durationInMinutes),
@@ -90,7 +90,7 @@ class ShutdownTimerService {
           } else {
             _durationInMinutes = 0;
             (onPause ?? player?.pause)?.call();
-            SmartDialog.showToast('定时时间已到，已暂停');
+            SmartDialog.showToast(uiTx('定时时间已到，已暂停'));
           }
         }
       case .exit:
@@ -113,7 +113,7 @@ class ShutdownTimerService {
       case .pause:
         _isWaiting = false;
         _durationInMinutes = 0;
-        SmartDialog.showToast('定时时间已到，已暂停');
+        SmartDialog.showToast(uiTx('定时时间已到，已暂停'));
       case .exit:
         _syncProgressAndExit();
     }

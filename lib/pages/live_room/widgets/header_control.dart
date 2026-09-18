@@ -349,7 +349,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
   void _showLiveStreamDialog() {
     final controller = widget.liveController;
     if (controller.stream == null) {
-      SmartDialog.showToast('直播流信息未就绪');
+      SmartDialog.showToast(uiTx('直播流信息未就绪'));
       return;
     }
     showModalBottomSheet(

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async' show FutureOr, Timer;
 
 import 'package:PiliPlus/http/fav.dart';
@@ -134,7 +135,7 @@ abstract class CommonIntroController extends GetxController
       referer: 'https://www.bilibili.com/video/$bvid',
     );
     if (res.isSuccess) {
-      SmartDialog.showToast('投币成功');
+      SmartDialog.showToast(uiTx('投币成功'));
       coinNum.value += coin;
       GlobalData().afterCoin(coin);
       stat.coin += coin;
@@ -206,7 +207,7 @@ mixin FavMixin on TripleMixin {
   // 收藏
   void showFavBottomSheet(BuildContext context, {bool isLongPress = false}) {
     if (!Accounts.main.isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast(uiTx('账号未登录'));
       return;
     }
     // 快速收藏 &

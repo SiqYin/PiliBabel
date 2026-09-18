@@ -11,7 +11,7 @@ List<SettingsModel> get privacySettings => [
   NormalModel(
     onTap: (context, setState) {
       if (!Accounts.main.isLogin) {
-        SmartDialog.showToast('登录后查看');
+        SmartDialog.showToast(uiTx('登录后查看'));
         return;
       }
       Get.toNamed('/blackListPage');

@@ -101,7 +101,7 @@ class HistoryController
     if (viewedList != null && viewedList.isNotEmpty) {
       _onDelete(viewedList);
     } else {
-      SmartDialog.showToast('无已看记录');
+      SmartDialog.showToast(uiTx('无已看记录'));
     }
   }
 
@@ -116,7 +116,7 @@ class HistoryController
     SmartDialog.dismiss();
     if (res.isSuccess) {
       afterDelete(removeList);
-      SmartDialog.showToast('已删除');
+      SmartDialog.showToast(uiTx('已删除'));
     } else {
       res.toast();
     }

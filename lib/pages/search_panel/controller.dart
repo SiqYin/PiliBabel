@@ -225,7 +225,7 @@ class SearchPanelController<R extends SearchNumData<T>, T>
     if (result != null) {
       keywords.value = result;
       setState(() {});
-      SmartDialog.showToast('已更新$title');
+      SmartDialog.showToast(uiTx('已更新$title'));
     }
   }
 
@@ -236,7 +236,7 @@ class SearchPanelController<R extends SearchNumData<T>, T>
     if (getBack) Get.back();
     SmartDialog.dismiss();
     if (label != null) {
-      SmartDialog.showToast("「$label」的筛选结果");
+      SmartDialog.showToast(uiTx("「$label」的筛选结果"));
     }
     SmartDialog.showLoading(msg: 'loading');
     onReload().whenComplete(SmartDialog.dismiss);

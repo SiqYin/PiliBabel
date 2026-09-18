@@ -220,7 +220,7 @@ Commit Hash: ${BuildConfig.commitHash}''',
                     SmartDialog.showLoading(msg: '正在清除...');
                     try {
                       await CacheManager.clearLibraryCache();
-                      SmartDialog.showToast('清除成功');
+                      SmartDialog.showToast(uiTx('清除成功'));
                     } catch (err) {
                       SmartDialog.showToast(err.toString());
                     } finally {
@@ -290,7 +290,7 @@ Commit Hash: ${BuildConfig.commitHash}''',
                           GStorage.setting.clear(),
                           GStorage.video.clear(),
                         ]);
-                        SmartDialog.showToast('重置成功');
+                        SmartDialog.showToast(uiTx('重置成功'));
                       },
                       child: Text(uiTx('重置可导出的设置'), style: style),
                     ),
@@ -298,7 +298,7 @@ Commit Hash: ${BuildConfig.commitHash}''',
                       onPressed: () async {
                         Get.back();
                         await GStorage.clear();
-                        SmartDialog.showToast('重置成功');
+                        SmartDialog.showToast(uiTx('重置成功'));
                       },
                       child: Text(uiTx('重置所有数据（含登录信息）'), style: style),
                     ),

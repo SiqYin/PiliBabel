@@ -62,7 +62,7 @@ void _addDynFilterItem(
                   ? <String>[]
                   : currentStored.split('\n');
               if (existingKeywords.contains(escapedText)) {
-                SmartDialog.showToast('该关键词已在过滤列表中');
+                SmartDialog.showToast(uiTx('该关键词已在过滤列表中'));
                 return;
               }
               final newStored = currentStored.isEmpty
@@ -75,7 +75,7 @@ void _addDynFilterItem(
                 caseSensitive: true,
               );
               DynamicsDataModel.enableFilter = true;
-              SmartDialog.showToast('已保存');
+              SmartDialog.showToast(uiTx('已保存'));
             },
           );
         },

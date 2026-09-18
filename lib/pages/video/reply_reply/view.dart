@@ -363,7 +363,7 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
       ),
       jumpToDialogue: () {
         if (!_controller.setIndexById(replyItem.parent)) {
-          SmartDialog.showToast('评论可能已被删除');
+          SmartDialog.showToast(uiTx('评论可能已被删除'));
         }
       },
       onCheckReply: (item) => _controller.onCheckReply(item, isManual: true),

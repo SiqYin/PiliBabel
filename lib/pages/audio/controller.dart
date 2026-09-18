@@ -442,7 +442,7 @@ class AudioController extends GetxController
   @override
   Future<void> actionLikeVideo() async {
     if (!isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast(uiTx('账号未登录'));
       return;
     }
     final newVal = !hasLike.value;
@@ -471,7 +471,7 @@ class AudioController extends GetxController
   @override
   Future<void> actionTriple() async {
     if (!isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast(uiTx('账号未登录'));
       return;
     }
     final res = await AudioGrpc.audioTripleLike(
@@ -493,9 +493,9 @@ class AudioController extends GetxController
       }
       hasFav.value = true;
       if (!hasCoin) {
-        SmartDialog.showToast('投币失败');
+        SmartDialog.showToast(uiTx('投币失败'));
       } else {
-        SmartDialog.showToast('三连成功');
+        SmartDialog.showToast(uiTx('三连成功'));
       }
     } else {
       res.toast();
@@ -540,7 +540,7 @@ class AudioController extends GetxController
   @override
   void showFavBottomSheet(BuildContext context, {bool isLongPress = false}) {
     if (!isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast(uiTx('账号未登录'));
       return;
     }
     if (enableQuickFav) {

@@ -162,7 +162,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             text: response.name,
             onTap: () {
               if (response.coins! < 6) {
-                SmartDialog.showToast('硬币不足');
+                SmartDialog.showToast(uiTx('硬币不足'));
               } else {
                 _editDialog(
                   type: ProfileType.uname,
@@ -327,7 +327,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             TextButton(
               onPressed: () {
                 if (_textController.text == text) {
-                  SmartDialog.showToast('与原$title相同');
+                  SmartDialog.showToast(uiTx('与原$title相同'));
                 } else {
                   _update(type: type);
                 }
@@ -346,7 +346,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }) async {
     final accessKey = Accounts.main.accessKey;
     if (accessKey == null || accessKey.isEmpty) {
-      SmartDialog.showToast('请退出账号后重新登录');
+      SmartDialog.showToast(uiTx('请退出账号后重新登录'));
       return;
     }
     final data = <String, String>{
@@ -400,7 +400,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             } else if (type == ProfileType.sex) {
               data.sex = datum;
             }
-            SmartDialog.showToast('修改成功');
+            SmartDialog.showToast(uiTx('修改成功'));
             if (mounted) {
               setState(() {});
             }
@@ -483,7 +483,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ?.split('/')
             .elementAtOrNull(1);
         if (mimeType == 'gif') {
-          SmartDialog.showToast('不能选GIF');
+          SmartDialog.showToast(uiTx('不能选GIF'));
           return;
         }
         if (PlatformUtils.isMobile) {
@@ -529,7 +529,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               )
               .then((res) {
                 if (res.data['code'] == 0) {
-                  SmartDialog.showToast('修改成功');
+                  SmartDialog.showToast(uiTx('修改成功'));
                   Future.delayed(const Duration(milliseconds: 500), () {
                     if (mounted) {
                       _getInfo();

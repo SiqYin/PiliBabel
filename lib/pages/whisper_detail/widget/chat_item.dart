@@ -346,7 +346,7 @@ class ChatItem extends StatelessWidget {
                       SmartDialog.showToast(err.toString());
                     }
                   } else {
-                    SmartDialog.showToast('未匹配到 BV 号');
+                    SmartDialog.showToast(uiTx('未匹配到 BV 号'));
                     PageUtils.handleWebview(i['jump_url']);
                   }
                 },

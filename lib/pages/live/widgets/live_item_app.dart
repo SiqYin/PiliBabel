@@ -90,7 +90,7 @@ class LiveCardVApp extends StatelessWidget {
                     );
                     SmartDialog.dismiss();
                     if (res.isSuccess) {
-                      SmartDialog.showToast('提交成功');
+                      SmartDialog.showToast(uiTx('提交成功'));
                     } else {
                       res.toast();
                     }

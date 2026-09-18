@@ -125,7 +125,7 @@ abstract final class RequestUtils {
       final res = await MemberHttp.createFollowTag(tagName);
       if (res case Success(:final response)) {
         onSuccess((tagid: response, tagName: tagName));
-        SmartDialog.showToast('创建成功');
+        SmartDialog.showToast(uiTx('创建成功'));
       } else {
         res.toast();
       }
@@ -150,7 +150,7 @@ abstract final class RequestUtils {
         reSrc: 11,
       );
       if (res.isSuccess) {
-        SmartDialog.showToast('关注成功');
+        SmartDialog.showToast(uiTx('关注成功'));
         afterMod?.call(2);
       } else {
         res.toast();
@@ -183,7 +183,7 @@ abstract final class RequestUtils {
                     isAdd: !isSpecialFollowed,
                   );
                   if (res.isSuccess) {
-                    SmartDialog.showToast('$text成功');
+                    SmartDialog.showToast(uiTx('$text成功'));
                     afterMod?.call(isSpecialFollowed ? 2 : -10);
                   } else {
                     res.toast();
@@ -240,7 +240,7 @@ abstract final class RequestUtils {
                     reSrc: 11,
                   );
                   if (res.isSuccess) {
-                    SmartDialog.showToast('取消关注成功');
+                    SmartDialog.showToast(uiTx('取消关注成功'));
                     afterMod?.call(0);
                   } else {
                     res.toast();
@@ -332,7 +332,7 @@ abstract final class RequestUtils {
           );
           final isSuccess = res.isSuccess;
           if (isSuccess) {
-            SmartDialog.showToast('动态检查通过');
+            SmartDialog.showToast(uiTx('动态检查通过'));
             return;
           }
           showDialog(
@@ -562,7 +562,7 @@ abstract final class RequestUtils {
     }
 
     if (!isGeeArgumentValid()) {
-      SmartDialog.showToast("参数为空");
+      SmartDialog.showToast(uiTx("参数为空"));
       return;
     }
 

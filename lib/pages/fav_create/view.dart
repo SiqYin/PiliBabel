@@ -82,7 +82,7 @@ class _CreateFavPageState extends State<CreateFavPage> {
           TextButton(
             onPressed: () {
               if (_titleController.text.isEmpty) {
-                SmartDialog.showToast('名称不能为空');
+                SmartDialog.showToast(uiTx('名称不能为空'));
                 return;
               }
               FavHttp.addOrEditFolder(

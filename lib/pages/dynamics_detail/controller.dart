@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:flutter/foundation.dart' show ValueChanged;
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show ReloadMixin;
 import 'package:PiliPlus/http/dynamics.dart';
@@ -121,7 +122,7 @@ class DynamicDetailController extends CommonDynController with ReloadMixin {
     if (res.isSuccess) {
       dynItem.modules.moduleAuthor?.badgeText = isPrivate ? null : '仅自己可见';
       detailVersion.value++;
-      SmartDialog.showToast('设置成功');
+      SmartDialog.showToast(uiTx('设置成功'));
     } else {
       res.toast();
     }

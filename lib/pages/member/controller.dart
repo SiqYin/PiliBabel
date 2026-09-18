@@ -237,7 +237,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
 
   void blockUser(BuildContext context) {
     if (!account.isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast(uiTx('账号未登录'));
       return;
     }
     showDialog(
@@ -287,7 +287,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
       _onBlock();
     } else {
       if (!account.isLogin) {
-        SmartDialog.showToast('账号未登录');
+        SmartDialog.showToast(uiTx('账号未登录'));
         return;
       }
       RequestUtils.actionRelationMod(
@@ -312,7 +312,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
       if (relation.value == 4) {
         relation.value = 2;
       }
-      SmartDialog.showToast('移除成功');
+      SmartDialog.showToast(uiTx('移除成功'));
     } else {
       res.toast();
     }
@@ -327,7 +327,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
   Future<void> vipExpAdd() async {
     final res = await UserHttp.vipExpAdd();
     if (res.isSuccess) {
-      SmartDialog.showToast('领取成功');
+      SmartDialog.showToast(uiTx('领取成功'));
     } else {
       res.toast();
     }

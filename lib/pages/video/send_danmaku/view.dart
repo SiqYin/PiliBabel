@@ -442,7 +442,7 @@ class _SendDanmakuPanelState extends CommonTextPubPageState<SendDanmakuPanel> {
     if (res case Success(:final response)) {
       hasPub = true;
       Get.back();
-      SmartDialog.showToast('发送成功');
+      SmartDialog.showToast(uiTx('发送成功'));
       VideoDanmaku? extra;
       if (response.dmid case final dmid?) {
         extra = VideoDanmaku(

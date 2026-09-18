@@ -36,7 +36,7 @@ class HistoryBaseController extends GetxController {
               final res = await UserHttp.clearHistory(account: account);
               SmartDialog.dismiss();
               if (res.isSuccess) {
-                SmartDialog.showToast('清空观看历史');
+                SmartDialog.showToast(uiTx('清空观看历史'));
                 onSuccess();
               } else {
                 res.toast();

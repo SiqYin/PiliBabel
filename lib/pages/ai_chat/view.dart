@@ -114,7 +114,7 @@ class _AiChatPageState extends State<AiChatPage>
   void _sendSelectedPrompt() {
     if (_templates.isEmpty) return;
     if (!chatCtl.hasSubtitles) {
-      SmartDialog.showToast('当前视频无字幕，请「载入上下文」后直接提问');
+      SmartDialog.showToast(uiTx('当前视频无字幕，请「载入上下文」后直接提问'));
       return;
     }
     if (_selectedPromptIndex >= 0 && _selectedPromptIndex < _templates.length) {
@@ -133,7 +133,7 @@ class _AiChatPageState extends State<AiChatPage>
   void _copyMessage(ChatMessage msg) {
     if (msg.content.isEmpty) return;
     Clipboard.setData(ClipboardData(text: msg.content));
-    SmartDialog.showToast('已复制到剪贴板');
+    SmartDialog.showToast(uiTx('已复制到剪贴板'));
   }
 
   @override
@@ -642,7 +642,7 @@ class _AiChatPageState extends State<AiChatPage>
       final videoCtl = Get.find<VideoDetailController>(tag: widget.heroTag);
       final duration = videoCtl.plPlayerController.duration.value;
       if (duration > 0 && seconds > duration) {
-        SmartDialog.showToast('时间戳超出视频时长');
+        SmartDialog.showToast(uiTx('时间戳超出视频时长'));
         return;
       }
       videoCtl.plPlayerController.seekTo(
@@ -650,7 +650,7 @@ class _AiChatPageState extends State<AiChatPage>
         isSeek: false,
       );
     } catch (_) {
-      SmartDialog.showToast('跳转失败');
+      SmartDialog.showToast(uiTx('跳转失败'));
     }
   }
 

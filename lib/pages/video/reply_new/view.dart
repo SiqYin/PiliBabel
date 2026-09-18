@@ -182,7 +182,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
                     : const Icon(Icons.image_not_supported, size: 22),
                 onPressed: widget.canUploadPic
                     ? onPickImage
-                    : () => SmartDialog.showToast('当前评论区不支持发送图片'),
+                    : () => SmartDialog.showToast(uiTx('当前评论区不支持发送图片')),
               ),
             ],
             const SizedBox(width: 8),
@@ -336,7 +336,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
               item(
                 onTap: () async {
                   if (imageList.length >= limit) {
-                    SmartDialog.showToast('最多选择$limit张图片');
+                    SmartDialog.showToast(uiTx('最多选择$limit张图片'));
                     return;
                   }
                   try {
@@ -399,7 +399,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
     );
     if (res case Success(:final response)) {
       hasPub = true;
-      SmartDialog.showToast('发送成功');
+      SmartDialog.showToast(uiTx('发送成功'));
       Get.back(result: response);
     } else {
       res.toast();

@@ -75,7 +75,7 @@ class _SetSwitchItemState extends State<SetSwitchItem> {
 
     widget.onChanged?.call(val);
     if (widget.needReboot) {
-      SmartDialog.showToast('重启生效');
+      SmartDialog.showToast(uiTx('重启生效'));
     }
     if (mounted) {
       setState(() {});

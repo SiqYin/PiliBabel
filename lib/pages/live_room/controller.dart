@@ -502,7 +502,7 @@ class LiveRoomController extends GetxController {
     final currentUrl = videoUrl;
     final url = _preferredCastUrl() ?? currentUrl;
     if (url == null || url.isEmpty) {
-      SmartDialog.showToast('播放地址未就绪');
+      SmartDialog.showToast(uiTx('播放地址未就绪'));
       return;
     }
     final castTitle = title.value.isNotEmpty ? title.value : null;
@@ -890,7 +890,7 @@ class LiveRoomController extends GetxController {
       anchorId: roomInfoH5.value?.roomInfo?.uid,
     );
     if (res.isSuccess) {
-      SmartDialog.showToast('点赞成功');
+      SmartDialog.showToast(uiTx('点赞成功'));
     } else {
       res.toast();
     }
@@ -898,7 +898,7 @@ class LiveRoomController extends GetxController {
   }
 
   void toastNotLogin() {
-    SmartDialog.showToast('账号未登录');
+    SmartDialog.showToast(uiTx('账号未登录'));
   }
 
   void onSendDanmaku([bool fromEmote = false]) {
@@ -1133,7 +1133,7 @@ class LiveRoomController extends GetxController {
       _applyWearStatus(medalId, 0);
       wearingMedal.value = null;
       _fansMedalStale = true;
-      SmartDialog.showToast('已取消佩戴');
+      SmartDialog.showToast(uiTx('已取消佩戴'));
       return true;
     } else {
       res.toast();

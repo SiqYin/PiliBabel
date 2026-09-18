@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/grpc/bilibili/community/service/dm/v1.pb.dart';
 import 'package:PiliPlus/models/user/danmaku_block.dart';
 import 'package:PiliPlus/services/logger.dart';
@@ -29,7 +30,7 @@ class RuleFilter {
         dmRegExp.add(RegExp(normalized, caseSensitive: false));
       } catch (error, stackTrace) {
         final displayFilter = _shortText(raw);
-        SmartDialog.showToast('"$displayFilter"无法处理，已跳过');
+        SmartDialog.showToast(uiTx('"$displayFilter"无法处理，已跳过'));
 
         final message =
             '[DanmakuFilter] skip invalid regex: '

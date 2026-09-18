@@ -420,7 +420,7 @@ class _RepostPanelState extends CommonRichTextPubPageState<RepostPanel>
     if (res case Success(:final response)) {
       hasPub = true;
       Get.back();
-      SmartDialog.showToast('转发成功');
+      SmartDialog.showToast(uiTx('转发成功'));
       widget.onSuccess?.call();
       final id = response?['dyn_id'];
       RequestUtils.insertCreatedDyn(id);

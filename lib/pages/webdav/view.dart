@@ -143,12 +143,12 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
               try {
                 final res = await WebDav().init();
                 if (res.first) {
-                  SmartDialog.showToast('配置成功');
+                  SmartDialog.showToast(uiTx('配置成功'));
                 } else {
-                  SmartDialog.showToast('配置失败: ${res.second}');
+                  SmartDialog.showToast(uiTx('配置失败: ${res.second}'));
                 }
               } catch (e) {
-                SmartDialog.showToast('配置失败: ${e.toString()}');
+                SmartDialog.showToast(uiTx('配置失败: ${e.toString()}'));
                 return;
               }
             },

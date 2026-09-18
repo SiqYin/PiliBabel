@@ -44,7 +44,7 @@ class BlackListController
             ..value.data!.removeAt(index)
             ..refresh();
           total.value -= 1;
-          SmartDialog.showToast('移除成功');
+          SmartDialog.showToast(uiTx('移除成功'));
         }
       },
     );

@@ -122,7 +122,7 @@ class MineController extends CommonDataController<FavFolderData, FavFolderData>
 
   bool get isLogin {
     if (!accountService.isLogin.value) {
-      // SmartDialog.showToast('账号未登录');
+      // SmartDialog.showToast(uiTx('账号未登录'));
       return false;
     }
     return true;
@@ -181,7 +181,7 @@ class MineController extends CommonDataController<FavFolderData, FavFolderData>
 
   static void onChangeAnonymity() {
     if (Accounts.account.isEmpty) {
-      SmartDialog.showToast('请先登录');
+      SmartDialog.showToast(uiTx('请先登录'));
       return;
     }
     final newVal = !anonymity.value;
@@ -234,7 +234,7 @@ class MineController extends CommonDataController<FavFolderData, FavFolderData>
                       TextButton(
                         onPressed: () {
                           SmartDialog.dismiss(result: true);
-                          SmartDialog.showToast('已设为永久无痕模式');
+                          SmartDialog.showToast(uiTx('已设为永久无痕模式'));
                         },
                         child: Text(uiTx('保存为永久'), style: style),
                       ),
@@ -242,7 +242,7 @@ class MineController extends CommonDataController<FavFolderData, FavFolderData>
                       TextButton(
                         onPressed: () {
                           SmartDialog.dismiss();
-                          SmartDialog.showToast('已设为临时无痕模式');
+                          SmartDialog.showToast(uiTx('已设为临时无痕模式'));
                         },
                         child: Text(uiTx('仅本次（默认）'), style: style),
                       ),

@@ -71,9 +71,9 @@ class _DownloadSearchPageState
         controller.handleSelect();
         final res = await Future.wait(future);
         if (res.every((e) => e)) {
-          SmartDialog.showToast('更新成功');
+          SmartDialog.showToast(uiTx('更新成功'));
         } else {
-          SmartDialog.showToast('更新失败');
+          SmartDialog.showToast(uiTx('更新失败'));
         }
       },
       child: Text(uiTx('更新'),

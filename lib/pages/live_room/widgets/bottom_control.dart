@@ -86,7 +86,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
                     arguments: liveRoomCtr,
                   );
                 } else {
-                  SmartDialog.showToast('账号未登录');
+                  SmartDialog.showToast(uiTx('账号未登录'));
                 }
               },
             ),

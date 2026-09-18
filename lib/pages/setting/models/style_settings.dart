@@ -187,7 +187,7 @@ List<SettingsModel> get styleSettings => [
       GStorage.setting
           .put(SettingBoxKey.upPanelPosition, value.index)
           .whenComplete(setState);
-      SmartDialog.showToast('重启生效');
+      SmartDialog.showToast(uiTx('重启生效'));
     },
   ),
   const SwitchModel(
@@ -241,7 +241,7 @@ List<SettingsModel> get styleSettings => [
       GStorage.setting
           .put(SettingBoxKey.barHideType, value.index)
           .whenComplete(setState);
-      SmartDialog.showToast('重启生效');
+      SmartDialog.showToast(uiTx('重启生效'));
     },
   ),
   SwitchModel(
@@ -365,7 +365,7 @@ List<SettingsModel> get styleSettings => [
       GStorage.setting
           .put(SettingBoxKey.defaultHomePage, value.index)
           .whenComplete(setState);
-      SmartDialog.showToast('重启生效');
+      SmartDialog.showToast(uiTx('重启生效'));
     },
   ),
   const NormalModel(
@@ -458,7 +458,7 @@ void _showQualityDialog({
     ),
   ).then((result) {
     if (result != null) {
-      SmartDialog.showToast('设置成功');
+      SmartDialog.showToast(uiTx('设置成功'));
       onChanged(result.toInt());
     }
   });
@@ -658,7 +658,7 @@ void _showSpringDialog(BuildContext context, _) {
           onPressed: () {
             Get.back();
             GStorage.setting.delete(SettingBoxKey.springDescription);
-            SmartDialog.showToast('重置成功，重启生效');
+            SmartDialog.showToast(uiTx('重置成功，重启生效'));
           },
           child: Text(uiTx('重置')),
         ),
@@ -682,7 +682,7 @@ void _showSpringDialog(BuildContext context, _) {
                 stiffness: res[1],
                 damping: res[2],
               );
-              SmartDialog.showToast('设置成功');
+              SmartDialog.showToast(uiTx('设置成功'));
             } catch (e) {
               SmartDialog.showToast(e.toString());
             }
@@ -736,7 +736,7 @@ Future<void> _showCardWidthDialog(
       SettingBoxKey.recommendCardWidth: res.$1,
       SettingBoxKey.smallCardWidth: res.$2,
     });
-    SmartDialog.showToast('重启生效');
+    SmartDialog.showToast(uiTx('重启生效'));
     setState();
   }
 }
@@ -828,7 +828,7 @@ Future<void> _showMsgUnReadDialog(
       SettingBoxKey.msgUnReadTypeV2,
       res.map((item) => item.index).toList()..sort(),
     );
-    SmartDialog.showToast('设置成功');
+    SmartDialog.showToast(uiTx('设置成功'));
     setState();
   }
 }
@@ -851,7 +851,7 @@ void _showReduceColorDialog(
             if (color == Colors.white) {
               NetworkImgLayer.reduceLuxColor = null;
               GStorage.setting.delete(SettingBoxKey.reduceLuxColor);
-              SmartDialog.showToast('设置成功');
+              SmartDialog.showToast(uiTx('设置成功'));
               setState();
             } else {
               void onConfirm() {
@@ -860,7 +860,7 @@ void _showReduceColorDialog(
                   SettingBoxKey.reduceLuxColor,
                   color.toARGB32(),
                 );
-                SmartDialog.showToast('设置成功');
+                SmartDialog.showToast(uiTx('设置成功'));
                 setState();
               }
 
@@ -900,7 +900,7 @@ Future<void> _showToastDialog(
   if (res != null) {
     CustomToast.toastOpacity = res;
     await GStorage.setting.put(SettingBoxKey.defaultToastOp, res);
-    SmartDialog.showToast('设置成功');
+    SmartDialog.showToast(uiTx('设置成功'));
     setState();
   }
 }

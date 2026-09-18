@@ -82,7 +82,7 @@ class _DownloadFolderManagePageState extends State<DownloadFolderManagePage> {
                 _folders.map((item) => item.id).toList(),
               );
               if (mounted) {
-                SmartDialog.showToast('排序完成');
+                SmartDialog.showToast(uiTx('排序完成'));
                 Get.back();
               }
             },

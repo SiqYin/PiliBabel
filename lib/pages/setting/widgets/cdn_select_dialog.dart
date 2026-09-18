@@ -48,15 +48,15 @@ Future<void> applyCdnSelectResult(
       VideoUtils.customCDNUrl = null;
       await GStorage.setting.put(SettingBoxKey.CDNService, service.name);
       await GStorage.setting.delete(SettingBoxKey.customCDNUrl);
-      SmartDialog.showToast('已设置为 ${service.desc}$toastSuffix');
+      SmartDialog.showToast(uiTx('已设置为 ${service.desc}$toastSuffix'));
     case CdnCustomResult(:final host):
       VideoUtils.customCDNUrl = host;
       await GStorage.setting.put(SettingBoxKey.customCDNUrl, host);
-      SmartDialog.showToast('已设置自定义 CDN：$host$toastSuffix');
+      SmartDialog.showToast(uiTx('已设置自定义 CDN：$host$toastSuffix'));
     case CdnClearCustomResult():
       VideoUtils.customCDNUrl = null;
       await GStorage.setting.delete(SettingBoxKey.customCDNUrl);
-      SmartDialog.showToast('已清除自定义 CDN$toastSuffix');
+      SmartDialog.showToast(uiTx('已清除自定义 CDN$toastSuffix'));
   }
 }
 

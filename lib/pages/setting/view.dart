@@ -300,7 +300,7 @@ class _SettingPageState extends State<SettingPage> {
                 SmartDialog.dismiss();
                 final logoutAccounts = res.nonNulls.toSet();
                 if (logoutAccounts.isEmpty) {
-                  SmartDialog.showToast('所选账号均退出登录失败');
+                  SmartDialog.showToast(uiTx('所选账号均退出登录失败'));
                 } else {
                   Get.back();
                   _removeAccounts(logoutAccounts);

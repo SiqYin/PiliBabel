@@ -468,7 +468,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         ),
         onTap: () {
           if (!introController.prevPlay(manual: true)) {
-            SmartDialog.showToast('已经是第一集了');
+            SmartDialog.showToast(uiTx('已经是第一集了'));
           }
         },
       ),
@@ -485,7 +485,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         ),
         onTap: () {
           if (!introController.nextPlay(manual: true)) {
-            SmartDialog.showToast('已经是最后一集了');
+            SmartDialog.showToast(uiTx('已经是最后一集了'));
           }
         },
       ),
@@ -968,7 +968,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         ..currentVideoQa.value = newQa
                         ..updatePlayer();
 
-                      SmartDialog.showToast("画质已变为：${newQa.desc}");
+                      SmartDialog.showToast(uiTx("画质已变为：${newQa.desc}"));
 
                       // update
                       videoDetailController.persistVideoQa(quality);
@@ -1266,7 +1266,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               !plPlayerController.volumeBoostUnlocked &&
               Pref.enableAppVolume &&
               Pref.enableVolumeBoost) {
-            SmartDialog.showToast('再次滑动以突破 100%');
+            SmartDialog.showToast(uiTx('再次滑动以突破 100%'));
           }
           plPlayerController.setVolume(volume);
         },
@@ -1471,7 +1471,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               !plPlayerController.volumeBoostUnlocked &&
               Pref.enableAppVolume &&
               Pref.enableVolumeBoost) {
-            SmartDialog.showToast('再次滑动以突破 100%');
+            SmartDialog.showToast(uiTx('再次滑动以突破 100%'));
           }
           plPlayerController.setVolume(volume);
         },
@@ -2518,7 +2518,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             needToast: true,
           );
         } else {
-          SmartDialog.showToast('转码出现错误或已取消');
+          SmartDialog.showToast(uiTx('转码出现错误或已取消'));
         }
         if (isPlay) ctr.play();
       },
