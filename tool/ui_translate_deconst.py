@@ -3,7 +3,25 @@ import os, re, sys
 DRY = "--apply" not in sys.argv
 ROOT = "lib"
 EXCLUDE_DIRS = {os.path.join("lib", "grpc")}
-head = re.compile(r"\bconst\s+(?=[A-Za-z_][A-Za-z0-9_]*\s*\(|\[|\{)")
+head = re.compile(
+    r"\bconst\s+(?=[A-Za-z_][A-Za-z0-9_.]*(?:<[^<>]*>)?\s*\(|\[|\{)"
+)
+
+def _skip_generics(src, j):
+    n = len(src)
+    if j < n and src[j] == "<":
+        depth = 0
+        while j < n:
+            c = src[j]
+            if c == "<":
+                depth += 1
+            elif c == ">":
+                depth -= 1
+                if depth == 0:
+                    j += 1
+                    break
+            j += 1
+    return j
 
 def find_const_spans(src):
     spans = []
@@ -15,8 +33,9 @@ def find_const_spans(src):
             break
         start = m.start()
         j = m.end()
-        while j < n and (src[j].isalnum() or src[j] == "_"):
+        while j < n and (src[j].isalnum() or src[j] in "_."):
             j += 1
+        j = _skip_generics(src, j)
         while j < n and src[j] in " \t\r\n":
             j += 1
         if j < n and src[j] in "([{":
