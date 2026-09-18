@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 if [ "$1" = "remove" ] || [ "$1" = "deconfigure" ]; then
-    echo "Stopping PiliNara if running..."
-    pkill -x pilinara || true
+    echo "Stopping PiliBabel if running..."
+    pkill -x pilibabel || true
 fi
 
 exit 0
