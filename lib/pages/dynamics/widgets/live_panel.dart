@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:material_ui/material_ui.dart';
@@ -32,7 +33,7 @@ Widget livePanel(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                live.title!,
+                uiTx(live.title!),
                 maxLines: isDetail ? null : 2,
                 overflow: isDetail ? null : TextOverflow.ellipsis,
               ),

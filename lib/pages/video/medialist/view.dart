@@ -234,7 +234,7 @@ class _MediaListPanelState extends State<MediaListPanel>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              item.title!,
+                              uiTx(item.title!),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: TextStyle(

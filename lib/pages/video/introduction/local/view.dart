@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io';
 
 import 'package:PiliPlus/common/style.dart';
@@ -133,7 +134,7 @@ class _LocalIntroPanelState extends State<LocalIntroPanel>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              entry.title,
+                              uiTx(entry.title),
                               textAlign: TextAlign.start,
                               style: TextStyle(
                                 fontSize: theme.textTheme.bodyMedium!.fontSize,

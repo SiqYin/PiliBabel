@@ -53,7 +53,7 @@ Widget? addWidget(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        ugc.title!,
+                        uiTx(ugc.title!),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -88,7 +88,7 @@ Widget? addWidget(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          reserve.title!,
+                          uiTx(reserve.title!),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -342,7 +342,7 @@ Widget? addWidget(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              e.name!,
+                              uiTx(e.name!),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),

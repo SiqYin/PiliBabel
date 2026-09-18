@@ -544,7 +544,7 @@ class OpusContent extends StatelessWidget {
                             Text(uiTx(music.title!)),
                             if (music.label != null)
                               Text(
-                                music.label!,
+                                uiTx(music.label!),
                                 maxLines: 2,
                                 overflow: .ellipsis,
                                 style: TextStyle(

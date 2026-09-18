@@ -787,7 +787,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                     height: 35,
                     value: e.lang,
                     child: Text(
-                      e.title!,
+                      uiTx(e.title!),
                       style: const TextStyle(color: Colors.white, fontSize: 13),
                     ),
                   ),

@@ -265,7 +265,7 @@ class _AudioPageState extends State<AudioPage> {
                         collapsedIconColor: isCurr ? colorScheme.primary : null,
                         iconColor: isCurr ? null : colorScheme.onSurfaceVariant,
                         title: Text(
-                          item.arc.title,
+                          uiTx(item.arc.title),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: isCurr

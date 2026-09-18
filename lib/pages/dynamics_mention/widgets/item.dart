@@ -32,7 +32,7 @@ class DynMentionItem extends StatelessWidget {
           type: ImageType.avatar,
         ),
         title: Text(
-          item.name!,
+          uiTx(item.name!),
           style: const TextStyle(fontSize: 14),
         ),
         subtitle: Text(uiTx('${NumUtils.numFormat(item.fans)}粉丝'),

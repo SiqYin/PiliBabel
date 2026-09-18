@@ -109,7 +109,7 @@ class _BubblePageState extends State<BubblePage>
                               }
                             },
                             title: Text(
-                              e.text!,
+                              uiTx(e.text!),
                               style: const TextStyle(fontSize: 14),
                             ),
                             trailing: isSelected
@@ -211,7 +211,7 @@ class _BubblePageState extends State<BubblePage>
                     },
                   ),
                   title: Text(
-                    item.title!,
+                    uiTx(item.title!),
                     maxLines: 1,
                     overflow: .ellipsis,
                   ),

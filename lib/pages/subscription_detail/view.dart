@@ -141,7 +141,7 @@ class _SubDetailPageState extends State<SubDetailPage> with GridMixin {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            info.title!,
+            uiTx(info.title!),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium,
@@ -177,7 +177,7 @@ class _SubDetailPageState extends State<SubDetailPage> with GridMixin {
                   children: [
                     Expanded(
                       child: Text(
-                        info.title!,
+                        uiTx(info.title!),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(

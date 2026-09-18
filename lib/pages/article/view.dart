@@ -223,7 +223,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                 SliverToBoxWithVisibilityAdapter(
                   onVisibilityChanged: controller.showTitle.call,
                   child: Text(
-                    controller.summary.title!,
+                    uiTx(controller.summary.title!),
                     style: const TextStyle(fontSize: 17, fontWeight: .bold),
                   ),
                 ),

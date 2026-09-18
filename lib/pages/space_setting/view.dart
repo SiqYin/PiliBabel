@@ -117,7 +117,7 @@ class _SpaceSettingPageState extends State<SpaceSettingPage> {
           dense: true,
           onTap: onChanged,
           title: Text(
-            item.name,
+            uiTx(item.name),
             style: const TextStyle(fontSize: 14),
           ),
           trailing: Transform.scale(

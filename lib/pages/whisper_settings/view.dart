@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -113,7 +114,7 @@ class _WhisperSettingsPageState extends State<WhisperSettingsPage> {
                   }
                 },
                 child: Text(
-                  e.text,
+                  uiTx(e.text),
                   style: TextStyle(
                     fontSize: 14,
                     color: e.selected ? theme.colorScheme.primary : null,

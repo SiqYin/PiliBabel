@@ -201,7 +201,7 @@ class AiSettingPage extends StatelessWidget {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        t.name,
+                                        uiTx(t.name),
                                         style: theme.textTheme.titleSmall,
                                       ),
                                       const SizedBox(height: 2),

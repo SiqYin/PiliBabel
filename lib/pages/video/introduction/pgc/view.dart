@@ -373,7 +373,7 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
         if (item.subtitle?.isNotEmpty == true) ...[
           const SizedBox(height: 5),
           Text(
-            item.subtitle!,
+            uiTx(item.subtitle!),
             style: TextStyle(
               fontSize: 13,
               color: colorScheme.onSurfaceVariant,

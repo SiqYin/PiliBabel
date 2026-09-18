@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
@@ -44,7 +45,7 @@ class LiveSearchUserItem extends StatelessWidget {
                 Row(
                   children: [
                     Text(
-                      item.name!,
+                      uiTx(item.name!),
                       style: const TextStyle(
                         fontSize: 14,
                       ),

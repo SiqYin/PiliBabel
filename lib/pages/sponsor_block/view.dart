@@ -668,7 +668,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
             ],
           ),
           subtitle: Text(
-            item.first.description,
+            uiTx(item.first.description),
             style: TextStyle(
               fontSize: 12,
               color: isDisable ? null : theme.colorScheme.outline,

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
 import 'package:PiliPlus/models_new/video/video_ai_conclusion/model_result.dart';
 import 'package:PiliPlus/pages/common/slide/common_slide_page.dart';
@@ -69,7 +70,7 @@ class AiConclusionPanel extends CommonSlidePage {
                     children: [
                       if (index != 0) const SizedBox(height: 10),
                       Text(
-                        item.title!,
+                        uiTx(item.title!),
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.bold,

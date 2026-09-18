@@ -44,7 +44,7 @@ class ImSettingsItem extends StatelessWidget {
         dense: true,
         onTap: onChanged,
         title: Text(
-          item.switch_1.title,
+          uiTx(item.switch_1.title),
           style: titleStyle,
         ),
         subtitle: item.switch_1.hasSubtitle()
@@ -85,7 +85,7 @@ class ImSettingsItem extends StatelessWidget {
         dense: true,
         onTap: onRedirect,
         title: Text(
-          item.redirect.title,
+          uiTx(item.redirect.title),
           style: titleStyle,
         ),
         subtitle: item.redirect.hasSubtitle()
@@ -96,12 +96,12 @@ class ImSettingsItem extends StatelessWidget {
           children: [
             if (selected != null)
               Text(
-                selected.text,
+                uiTx(selected.text),
                 style: TextStyle(fontSize: 13, color: outline),
               )
             else if (sw1tch != null)
               Text(
-                sw1tch.title,
+                uiTx(sw1tch.title),
                 style: TextStyle(fontSize: 13, color: outline),
               )
             else if (item.redirect.hasSelectedSummary())

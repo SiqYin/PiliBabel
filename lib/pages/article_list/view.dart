@@ -128,7 +128,7 @@ class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.name!,
+                    uiTx(item.name!),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(

@@ -140,7 +140,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
                 iconColor: theme.colorScheme.onSurface,
                 leading: item.icon,
                 title: Text(
-                  item.title,
+                  uiTx(item.title),
                   style: const TextStyle(fontSize: 14),
                 ),
               ),

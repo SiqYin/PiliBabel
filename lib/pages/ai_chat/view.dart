@@ -269,7 +269,7 @@ class _AiChatPageState extends State<AiChatPage>
                       return DropdownMenuItem(
                         value: entry.key,
                         child: Text(
-                          entry.value.name,
+                          uiTx(entry.value.name),
                           overflow: TextOverflow.ellipsis,
                         ),
                       );

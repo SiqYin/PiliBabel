@@ -289,7 +289,7 @@ class _WebviewPageState extends State<WebviewPage> with RouteAware {
           PopupMenuItem(
             value: WebviewMenuItem.goBack,
             child: Text(
-              WebviewMenuItem.goBack.title,
+              uiTx(WebviewMenuItem.goBack.title),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.error,
               ),

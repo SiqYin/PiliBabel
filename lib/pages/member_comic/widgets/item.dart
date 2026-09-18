@@ -73,7 +73,7 @@ class MemberComicItem extends StatelessWidget {
                     ],
                     if (item.label != null) ...[
                       Text(
-                        item.label!,
+                        uiTx(item.label!),
                         style: style,
                       ),
                     ],

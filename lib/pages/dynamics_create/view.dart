@@ -470,7 +470,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
             ),
             const SizedBox(width: 4),
             Text(
-              _replyOption.value.title,
+              uiTx(_replyOption.value.title),
               style: TextStyle(
                 height: 1,
                 color: color,

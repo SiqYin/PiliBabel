@@ -669,7 +669,7 @@ class EpisodePanelState extends State<EpisodePanel>
       children: [
         if (showTitle)
           Text(
-            widget.type.title,
+            uiTx(widget.type.title),
             style: theme.textTheme.titleMedium,
           ),
         if (_favState != null) Obx(() => _buildFavBtn(_favState!.value)),
