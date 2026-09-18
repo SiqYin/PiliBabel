@@ -121,19 +121,28 @@ class _AboutPageState extends State<AboutPage> {
             title: Text(
               Constants.appName,
               textAlign: TextAlign.center,
-              style: theme.textTheme.titleMedium!.copyWith(height: 2),
+              style: theme.textTheme.titleLarge!.copyWith(
+                height: 2,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            subtitle: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            subtitle: Column(
               children: [
-                Text(uiTx('基于PiliPlus做了一些自用修改'),
+                Text(
+                  'A third-party Bilibili client with AI-powered translation',
+                  textAlign: TextAlign.center,
                   style: TextStyle(color: outline),
-                  semanticsLabel: uiTx('与你一起，发现不一样的世界'),
                 ),
-                Icon(
-                  Icons.accessibility_new,
-                  semanticLabel: uiTx("无障碍适配"),
-                  size: 18,
+                const SizedBox(height: 6),
+                Text(
+                  'Babel — tearing down the language barrier, so everyone '
+                  'can enjoy bilibili in their own language.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: outline,
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),
@@ -167,6 +176,15 @@ Commit Hash: ${BuildConfig.commitHash}''',
                 ? null
                 : () => Utils.copyText(BuildConfig.commitHash),
           ),
+          ListTile(
+            title: Text(
+              'PiliBabel is an independent third-party fork of PiliNara '
+              '(itself a fork of PiliPlus). It adds AI interface & content '
+              'translation so the whole app speaks your language.',
+              style: const TextStyle(fontSize: 13, height: 1.5),
+            ),
+            leading: const Icon(Icons.translate),
+          ),
           Divider(
             thickness: 1,
             height: 30,
@@ -175,14 +193,23 @@ Commit Hash: ${BuildConfig.commitHash}''',
           ListTile(
             onTap: () => PageUtils.launchURL(Constants.sourceCodeUrl),
             leading: const Icon(Icons.code),
-            title: const Text('Source Code'),
+            title: const Text('Source Code (PiliBabel)'),
             subtitle: Text(Constants.sourceCodeUrl, style: subTitleStyle),
           ),
           ListTile(
             onTap: () => PageUtils.launchURL(Constants.upstreamCodeUrl),
             leading: const Icon(Icons.code),
-            title: const Text('Upstream Code'),
+            title: const Text('Upstream (PiliNara)'),
             subtitle: Text(Constants.upstreamCodeUrl, style: subTitleStyle),
+          ),
+          ListTile(
+            onTap: () => PageUtils.launchURL(Constants.originalUpstreamCodeUrl),
+            leading: const Icon(Icons.code),
+            title: const Text('Original Upstream (PiliPlus)'),
+            subtitle: Text(
+              Constants.originalUpstreamCodeUrl,
+              style: subTitleStyle,
+            ),
           ),
           if (Platform.isAndroid)
             ListTile(
