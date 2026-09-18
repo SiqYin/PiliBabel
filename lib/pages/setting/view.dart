@@ -44,7 +44,7 @@ class _SettingPageState extends State<SettingPage> {
   late bool _isPortrait;
   late ThemeData theme;
 
-  static const List<_SettingsModel> _items = [
+  static final List<_SettingsModel> _items =[
     _SettingsModel(
       type: SettingType.privacySetting,
       subtitle: uiTx('黑名单'),
