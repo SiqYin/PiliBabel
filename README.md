@@ -118,10 +118,13 @@ The repository has **no i18n / ARB resource layer** — UI strings are hard-code
 
 ## Platforms / 適配平台
 - [x] Android
-- [x] iOS
-- [x] Pad
-- [x] Windows
-- [x] Linux
+- [ ] iOS
+- [ ] Pad
+- [ ] Windows
+- [ ] Linux
+
+**EN.** PiliBabel currently ships an **Android APK** only; the other platforms share the same codebase as upstream but aren't packaged in this fork yet.
+**中文。** PiliBabel 目前僅產出 **Android APK**；其它平台與上游共用同一套代碼，惟此分支尚未打包。
 
 <br/>
 
