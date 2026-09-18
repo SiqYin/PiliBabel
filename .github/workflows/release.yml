@@ -1,0 +1,125 @@
+name: Release APK
+
+# 打 tag（v*）即自动构建 release APK 并发布一个 GitHub Release。
+# 复用与 debug 工作流相同的补丁 Flutter SDK + material_ui/cupertino_ui 流程；
+# 用自带的 GITHUB_TOKEN（permissions: contents: write）创建 Release，
+# 因此不需要额外的个人访问权限来产出发布物。
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "已有要发布的 tag（留空则用当前 commit 的 tag）"
+        required: false
+        default: ""
+
+env:
+  FLUTTER_VERSION_FILE: pubspec.yaml
+
+jobs:
+  android-release:
+    name: Build & publish release APK
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "zulu"
+          java-version: "17"
+          cache: "gradle"
+          cache-dependency-path: |
+            android/*.gradle*
+            android/**/gradle-wrapper.properties
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version-file: ${{ env.FLUTTER_VERSION_FILE }}
+          cache: true
+
+      - name: Prep env (git ownership / analytics / FLUTTER_ROOT)
+        run: |
+          git config --global --add safe.directory '*'
+          flutter --version
+          FR="$(cd "$(dirname "$(dirname "$(readlink -f "$(command -v flutter)")")")" && pwd)"
+          echo "FLUTTER_ROOT=$FR" >> "$GITHUB_ENV"
+
+      - name: Resolve deps
+        run: flutter pub get
+
+      - name: Patch Flutter + material_ui (patch.ps1)
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          & ./lib/scripts/patch.ps1 -platform android
+
+      - name: Version + pili_release.json (build.ps1)
+        shell: pwsh
+        run: ./lib/scripts/build.ps1
+
+      - name: Build Release APK
+        run: |
+          set +e
+          flutter build apk --release --split-debug-info=split-debug --dart-define-from-file=pili_release.json --pub > build.log 2>&1
+          code=$?
+          echo "### flutter build apk --release (exit=$code)" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          tail -n 180 build.log >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          grep -iE "error:|error -|FAILURE|What went wrong|Execution failed|^e: |BUILD FAILED|Target .* failed|Keystore|NDK|Could not|not found" build.log | head -n 40 | \
+            while IFS= read -r line; do
+              msg=$(printf '%s' "$line" | sed 's/%/%25/g; s/:/%3A/g')
+              echo "::error title=BuildError::$msg"
+            done
+          if [ "$code" -ne 0 ]; then exit 1; fi
+
+      - name: Rename Release APK
+        shell: bash
+        run: |
+          mkdir -p output
+          cp "build/app/outputs/flutter-apk/app-release.apk" "output/PiliBabel.apk" 2>/dev/null || true
+          ls -lh output || true
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: |
+          TAG="${GITHUB_REF_NAME:-${{ github.event.inputs.tag }}}"
+          echo "publishing release for tag: $TAG"
+          # 若 release 已存在则跳过创建，直接上传
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            gh release create "$TAG" \
+              --target "$GITHUB_SHA" \
+              --title "PiliBabel $TAG" \
+              --notes "$(cat <<'EOF'
+### PiliBabel $TAG
+
+AI interface & content translation on top of PiliNara / PiliPlus — the whole app speaks your language.
+
+**Install (Android)**: download `PiliBabel.apk` below, allow "install unknown apps", and open it. It is signed with a **debug key for this initial 0.1.0 preview** (coexists alongside PiliNara).
+
+**What's new**
+- AI interface & content translation with **translate-once + local persistence** (never re-translated on reopen)
+- ~35 target languages via **your own** OpenAI-compatible endpoint; independent endpoint from AI video summary
+- Chinese target only translates foreign→Chinese; non-Chinese target renders the whole UI
+- Per-comment Original ⇄ Translation toggle (hyperlinks preserved & clickable)
+- Danmaku translation (independent toggle, ~15s-ahead batch pre-translation)
+- Thinking-mode switch, test-translate, and a batched/concurrent translation pipeline (≤40/batch, ≤8 concurrent)
+
+> Unofficial third-party client, not affiliated with bilibili. For learning & testing; delete within 24h. GPL-3.0.
+EOF
+)"
+          fi
+          gh release upload "$TAG" output/PiliBabel.apk --clobber
