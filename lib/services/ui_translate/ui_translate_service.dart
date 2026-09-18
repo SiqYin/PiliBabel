@@ -44,15 +44,17 @@ class UiTranslateService extends GetxService {
   bool _busy = false;
 
   Timer? _debounce;
+  Timer? _persistTimer;
 
-  /// 单批最大字符串条数，避免超出模型上下文。
-  static const int _batchSize = 40;
+  /// 单批最大字符串条数。较小 → 单次模型请求更快返回、译文更早逐块出现；
+  /// 靠更大并发与逐块应用保证总吞吐。
+  static const int _batchSize = 16;
 
-  /// 首次翻译时同时并发的批次数上限（越大越快，但更吃限流）。
-  static const int _maxConcurrent = 8;
+  /// 同时并发的批次数上限（越大越快，但更吃限流）。
+  static const int _maxConcurrent = 10;
 
-  /// 收集待翻译字符串的防抖窗口。
-  static const Duration _debounceWindow = Duration(milliseconds: 500);
+  /// 收集待翻译字符串的防抖窗口（较短，减少首屏等待）。
+  static const Duration _debounceWindow = Duration(milliseconds: 180);
 
   /// 最近一次翻译失败的原因，供设置页诊断展示。
   final RxnString lastError = RxnString();
@@ -111,6 +113,14 @@ class UiTranslateService extends GetxService {
     _cache.addAll(Pref.uiTranslateCache);
   }
 
+  @override
+  void onClose() {
+    _debounce?.cancel();
+    _persistTimer?.cancel();
+    _persist();
+    super.onClose();
+  }
+
   /// 全局静态入口：把任意要显示的源字符串映射为译文。
   ///
   /// 该函数是同步的、必须在 build 里安全调用。未开启、空串、未命中缓存时
@@ -149,16 +159,18 @@ class UiTranslateService extends GetxService {
 
   Future<void> _flush() async {
     if (_busy || _pending.isEmpty) return;
-    final batch = _pending.toList(growable: false);
-    _pending.clear();
-
-    final uncached =
-        batch.where((s) => !_cache.containsKey(s)).toSet().toList(growable: false);
-    if (uncached.isEmpty) return;
-
     _busy = true;
     try {
-      // 切分成批次
+      final batch = _pending.toList(growable: false);
+      _pending.clear();
+
+      final uncached = batch
+          .where((s) => !_cache.containsKey(s))
+          .toSet()
+          .toList(growable: false);
+      if (uncached.isEmpty) return;
+
+      // 切成小批
       final chunks = <List<String>>[];
       for (var i = 0; i < uncached.length; i += _batchSize) {
         final end = i + _batchSize < uncached.length
@@ -167,21 +179,19 @@ class UiTranslateService extends GetxService {
         chunks.add(uncached.sublist(i, end));
       }
 
-      var changed = false;
-      // 有限并发：一次最多发 _maxConcurrent 批，缩短首次翻译总等待
-      for (var i = 0; i < chunks.length; i += _maxConcurrent) {
-        final wave = chunks.sublist(
-          i,
-          i + _maxConcurrent < chunks.length ? i + _maxConcurrent : chunks.length,
-        );
-        final results = await Future.wait(
-          wave.map((chunk) => _translateChunk(chunk).catchError((_) {
+      // worker 池：每块一返回就写缓存 + 递增 revision（渐进刷新），
+      // 不再等整批全部完成，首屏因此更早出现译文。
+      var next = 0;
+      Future<void> worker() async {
+        while (true) {
+          final my = next;
+          if (my >= chunks.length) return;
+          next++;
+          final chunk = chunks[my];
+          final translated = await _translateChunk(chunk).catchError((_) {
             return <String>[];
-          })),
-        );
-        for (var w = 0; w < wave.length; w++) {
-          final chunk = wave[w];
-          final translated = results[w];
+          });
+          var changed = false;
           for (var j = 0; j < chunk.length && j < translated.length; j++) {
             final value = translated[j].trim();
             if (value.isNotEmpty && value != chunk[j]) {
@@ -189,14 +199,20 @@ class UiTranslateService extends GetxService {
               changed = true;
             }
           }
+          if (changed) {
+            revision.value++;
+            _schedulePersist();
+            lastError.value = null;
+          }
         }
       }
 
-      if (changed) {
-        _persist();
-        revision.value++;
-        lastError.value = null;
-      }
+      await Future.wait(
+        List.generate(
+          _maxConcurrent < chunks.length ? _maxConcurrent : chunks.length,
+          (_) => worker(),
+        ),
+      );
     } catch (e, st) {
       lastError.value = e.toString();
       logger.e('界面翻译失败', error: e, stackTrace: st);
@@ -204,8 +220,15 @@ class UiTranslateService extends GetxService {
       // 这些字符串仍显示原文，待下次界面重建时经 tx 自动重新排队。
     } finally {
       _busy = false;
+      _persist();
       if (_pending.isNotEmpty) _scheduleFlush();
     }
+  }
+
+  /// 节流写盘：高频逐块更新时，合并持久化，避免每次 revision 都序列化整表。
+  void _schedulePersist() {
+    _persistTimer?.cancel();
+    _persistTimer = Timer(const Duration(milliseconds: 1200), _persist);
   }
 
   /// 翻译使用独立的接口地址 / 密钥 / 模型（与视频总结完全分离，各配各的）。
