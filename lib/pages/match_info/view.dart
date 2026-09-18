@@ -78,7 +78,7 @@ class _MatchInfoPageState extends CommonDynPageState<MatchInfoPage> {
                 src: 'https://i1.hdslb.com${team.logo}',
                 type: ImageType.emote,
               ),
-              Text(team.title!),
+              Text(uiTx(team.title!)),
             ],
           );
         }

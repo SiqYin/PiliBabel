@@ -42,7 +42,7 @@ class _DownloadVideoSortPageState extends State<DownloadVideoSortPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(uiTx(widget.title)),
         actions: [
           TextButton(
             onPressed: () async {

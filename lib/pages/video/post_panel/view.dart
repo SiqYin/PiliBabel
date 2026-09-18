@@ -446,7 +446,7 @@ class _PostPanelState extends State<PostPanel>
                       itemBuilder: (context) => SegmentType.values
                           .map(
                             (e) =>
-                                PopupMenuItem(value: e, child: Text(e.title)),
+                                PopupMenuItem(value: e, child: Text(uiTx(e.title))),
                           )
                           .toList(),
                       getSelectTitle: (category) => category.title,
@@ -478,7 +478,7 @@ class _PostPanelState extends State<PostPanel>
                             (e) => PopupMenuItem(
                               enabled: item.category.toActionType.contains(e),
                               value: e,
-                              child: Text(e.title),
+                              child: Text(uiTx(e.title)),
                             ),
                           )
                           .toList(),

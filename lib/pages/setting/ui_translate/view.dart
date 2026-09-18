@@ -90,7 +90,7 @@ class UiTranslateSettingPage extends StatelessWidget {
                       .map(
                         (e) => DropdownMenuItem(
                           value: e.code,
-                          child: Text(e.name),
+                          child: Text(uiTx(e.name)),
                         ),
                       )
                       .toList(),

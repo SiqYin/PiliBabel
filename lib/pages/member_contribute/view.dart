@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/models/common/member/contribute_type.dart';
 import 'package:PiliPlus/models_new/space/space/tab2.dart';
@@ -147,7 +148,7 @@ class _MemberContributeState extends State<MemberContribute>
         mid: widget.mid,
         heroTag: widget.heroTag,
       ),
-      _ => Center(child: Text(item.title!)),
+      _ => Center(child: Text(uiTx(item.title!))),
     };
   }
 }

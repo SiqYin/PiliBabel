@@ -333,7 +333,7 @@ class LiveRoomChatPanel extends StatelessWidget {
       items: <PopupMenuEntry<Never>>[
         CustomPopupMenuItem(
           height: 38,
-          child: Text(item.name, style: const TextStyle(fontSize: 13)),
+          child: Text(uiTx(item.name), style: const TextStyle(fontSize: 13)),
         ),
         const CustomPopupMenuDivider(height: 1),
         CustomPopupMenuItem(

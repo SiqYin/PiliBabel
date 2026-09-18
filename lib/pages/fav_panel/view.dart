@@ -70,7 +70,7 @@ class _FavPanelState extends State<FavPanel> {
                         ? const Icon(Icons.folder_outlined)
                         : const Icon(Icons.lock_outline),
                     minLeadingWidth: 0,
-                    title: Text(item.title),
+                    title: Text(uiTx(item.title)),
                     subtitle: Text(uiTx('${item.mediaCount}个内容 . ${BiliUtils.isPublicFavText(item.attr)}'),
                     ),
                     trailing: Transform.scale(

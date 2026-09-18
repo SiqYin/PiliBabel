@@ -32,7 +32,7 @@ class _MultiSelectDialogState<T> extends State<MultiSelectDialog<T>> {
     final theme = Theme.of(context);
     return AlertDialog(
       clipBehavior: Clip.hardEdge,
-      title: Text(widget.title),
+      title: Text(uiTx(widget.title)),
       contentPadding: const EdgeInsets.only(top: 12),
       content: Material(
         type: .transparency,

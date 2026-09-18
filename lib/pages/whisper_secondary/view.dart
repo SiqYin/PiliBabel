@@ -43,7 +43,7 @@ class _WhisperSecPageState extends State<WhisperSecPage> {
   Widget build(BuildContext context) {
     return SimpleScaffold(
       appBar: AppBar(
-        title: Text(widget.name),
+        title: Text(uiTx(widget.name)),
         actions: [
           Obx(() {
             final threeDotItems = _controller.threeDotItems.value;

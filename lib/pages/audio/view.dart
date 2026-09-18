@@ -150,7 +150,7 @@ class _AudioPageState extends State<AudioPage> {
                   (context as Element).markNeedsBuild();
                 },
                 itemBuilder: (context) => ListOrder.values
-                    .map((e) => PopupMenuItem(value: e, child: Text(e.title)))
+                    .map((e) => PopupMenuItem(value: e, child: Text(uiTx(e.title))))
                     .toList(),
               );
             },

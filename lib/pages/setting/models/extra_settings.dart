@@ -1071,7 +1071,7 @@ Future<void> _showFavDialog(BuildContext context) async {
                       (item) => RadioListTile(
                         toggleable: true,
                         dense: true,
-                        title: Text(item.title),
+                        title: Text(uiTx(item.title)),
                         value: item.id,
                       ),
                     )
