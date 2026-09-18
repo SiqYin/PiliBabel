@@ -147,6 +147,50 @@ class _AboutPageState extends State<AboutPage> {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 4),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'About PiliBabel',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                ),
+                SizedBox(height: 6),
+                Text(
+                  'PiliBabel is an independent, open-source, third-party '
+                  'Bilibili client — a fork of PiliNara (which is itself a '
+                  'fork of PiliPlus → PiliPala). It keeps everything those '
+                  'clients offer and adds one thing on top: AI interface & '
+                  'content translation, so the whole app can speak your '
+                  'language.',
+                  style: TextStyle(fontSize: 13, height: 1.5),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  '• Translate once: every string is translated exactly once '
+                  'and cached locally, so it never re-translates on reopen.\n'
+                  '• Bring your own model: point it at any OpenAI-compatible '
+                  'endpoint; the translation endpoint is fully independent '
+                  'from AI video summary.\n'
+                  '• ~35 languages: a Chinese target only translates '
+                  'foreign → Chinese; any non-Chinese target renders the '
+                  'entire interface.\n'
+                  '• Deep coverage: UI labels, video titles & UP names, '
+                  'comments (hyperlinks preserved), dynamics, and live '
+                  'danmaku.',
+                  style: TextStyle(fontSize: 13, height: 1.6),
+                ),
+                SizedBox(height: 10),
+                Text(
+                  'Unofficial — not affiliated with or endorsed by bilibili. '
+                  'For learning & testing; delete within 24 hours. Licensed '
+                  'under GPL-3.0.',
+                  style: TextStyle(fontSize: 12, height: 1.5, color: outline),
+                ),
+              ],
+            ),
+          ),
           ListTile(
             onTap: () => Update.checkUpdate(false),
             onLongPress: () => Utils.copyText(currentVersion),
