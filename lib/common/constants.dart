@@ -1,7 +1,9 @@
 abstract final class Constants {
-  static const appName = 'PiliNara';
-  static const sourceCodeUrl = 'https://github.com/Starfallan/PiliNara';
-  static const upstreamCodeUrl = 'https://github.com/bggRGjQaUbCoE/PiliPlus';
+  static const appName = 'PiliBabel';
+  static const sourceCodeUrl = 'https://github.com/SiqYin/PiliBabel';
+  static const upstreamCodeUrl = 'https://github.com/Starfallan/PiliNara';
+  static const originalUpstreamCodeUrl =
+      'https://github.com/bggRGjQaUbCoE/PiliPlus';
     
 
   // 27eb53fc9058f8c3  移动端 Android
