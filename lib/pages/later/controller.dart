@@ -33,7 +33,7 @@ mixin BaseLaterController
       content: Text(uiTx('确认删除所选稍后再看吗？')),
       onConfirm: () async {
         final removeList = allChecked.toSet();
-        SmartDialog.showLoading(msg: '请求中');
+        SmartDialog.showLoading(msg: uiTx('请求中'));
         final res = await UserHttp.toViewDel(
           aids: removeList.map((item) => item.aid).join(','),
         );

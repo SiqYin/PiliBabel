@@ -50,7 +50,7 @@ class HistorySearchController
       title: Text(uiTx('提示')),
       content: Text(uiTx('确认删除所选历史记录吗？')),
       onConfirm: () async {
-        SmartDialog.showLoading(msg: '请求中');
+        SmartDialog.showLoading(msg: uiTx('请求中'));
         final removeList = allChecked.toSet();
         final response = await UserHttp.delHistory(
           removeList

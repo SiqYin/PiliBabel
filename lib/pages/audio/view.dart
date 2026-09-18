@@ -701,7 +701,7 @@ class _AudioPageState extends State<AudioPage> {
                 FontAwesomeIcons.solidThumbsUp,
               ),
               selectStatus: _controller.hasLike.value,
-              semanticsLabel: '点赞',
+              semanticsLabel: uiTx('点赞'),
               text: NumUtils.numFormat(audioItem.stat.like),
               onStartTriple: _controller.onStartTriple,
               onCancelTriple: _controller.onCancelTriple,
@@ -714,7 +714,7 @@ class _AudioPageState extends State<AudioPage> {
               selectIcon: const Icon(FontAwesomeIcons.b),
               onTap: _controller.actionCoinVideo,
               selectStatus: _controller.hasCoin,
-              semanticsLabel: '投币',
+              semanticsLabel: uiTx('投币'),
               text: NumUtils.numFormat(
                 audioItem.stat.coin,
               ),
@@ -733,7 +733,7 @@ class _AudioPageState extends State<AudioPage> {
                 isLongPress: true,
               ),
               selectStatus: _controller.hasFav.value,
-              semanticsLabel: '收藏',
+              semanticsLabel: uiTx('收藏'),
               text: NumUtils.numFormat(
                 audioItem.stat.favourite,
               ),
@@ -742,7 +742,7 @@ class _AudioPageState extends State<AudioPage> {
           ActionItem(
             icon: const Icon(FontAwesomeIcons.comment),
             onTap: _controller.showReply,
-            semanticsLabel: '评论',
+            semanticsLabel: uiTx('评论'),
             text: NumUtils.numFormat(
               audioItem.stat.reply,
             ),
@@ -753,7 +753,7 @@ class _AudioPageState extends State<AudioPage> {
             ),
             onTap: () => _controller.actionShareVideo(context),
             selectStatus: false,
-            semanticsLabel: '分享',
+            semanticsLabel: uiTx('分享'),
             text: NumUtils.numFormat(
               audioItem.stat.share,
             ),
@@ -770,7 +770,7 @@ class _AudioPageState extends State<AudioPage> {
                 );
               },
               selectStatus: false,
-              semanticsLabel: '看MV',
+              semanticsLabel: uiTx('看MV'),
               text: '看MV',
             ),
         ],

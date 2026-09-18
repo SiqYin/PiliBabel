@@ -787,7 +787,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
       SmartDialog.showToast(uiTx("账号未登录"));
       return null;
     }
-    SmartDialog.showLoading(msg: '正在获取AI总结');
+    SmartDialog.showLoading(msg: uiTx('正在获取AI总结'));
     final res = await VideoHttp.aiConclusion(
       bvid: bvid,
       cid: cid,

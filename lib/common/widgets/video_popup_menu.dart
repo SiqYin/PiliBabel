@@ -220,7 +220,7 @@ class VideoPopupMenu extends StatelessWidget {
                       RecommendFilter.rcmdRegExp = value;
                       RecommendFilter.enableFilter = value.pattern.isNotEmpty;
                     },
-                    successMsg: '已加入标题关键词屏蔽',
+                    successMsg: uiTx('已加入标题关键词屏蔽'),
                   );
                 },
               ),
@@ -239,7 +239,7 @@ class VideoPopupMenu extends StatelessWidget {
                     VideoHttp.zoneRegExp = value;
                     VideoHttp.enableFilter = value.pattern.isNotEmpty;
                   },
-                  successMsg: '已加入频道关键词屏蔽',
+                  successMsg: uiTx('已加入频道关键词屏蔽'),
                 );
               },
             ),
@@ -334,7 +334,7 @@ class VideoPopupMenu extends StatelessWidget {
               }
               VoidCallback onReasonTap({Reason? r, Reason? f}) => () async {
                 Get.back();
-                SmartDialog.showLoading(msg: '正在提交');
+                SmartDialog.showLoading(msg: uiTx('正在提交'));
                 final res = await VideoHttp.feedDislike(
                   reasonId: r?.id,
                   feedbackId: f?.id,
@@ -382,7 +382,7 @@ class VideoPopupMenu extends StatelessWidget {
                   TextButton(
                     onPressed: () async {
                       SmartDialog.showLoading(
-                        msg: '正在提交',
+                        msg: uiTx('正在提交'),
                       );
                       final res = await VideoHttp.feedDislikeCancel(
                         id: item.param!,
@@ -414,7 +414,7 @@ class VideoPopupMenu extends StatelessWidget {
                         FilledButton.tonal(
                           onPressed: () async {
                             Get.back();
-                            SmartDialog.showLoading(msg: '正在提交');
+                            SmartDialog.showLoading(msg: uiTx('正在提交'));
                             final res = await VideoHttp.dislikeVideo(
                               bvid: videoItem.bvid!,
                               type: true,
@@ -435,7 +435,7 @@ class VideoPopupMenu extends StatelessWidget {
                         FilledButton.tonal(
                           onPressed: () async {
                             Get.back();
-                            SmartDialog.showLoading(msg: '正在提交');
+                            SmartDialog.showLoading(msg: uiTx('正在提交'));
                             final res = await VideoHttp.dislikeVideo(
                               bvid: videoItem.bvid!,
                               type: false,

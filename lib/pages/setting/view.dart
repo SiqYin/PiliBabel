@@ -47,42 +47,42 @@ class _SettingPageState extends State<SettingPage> {
   static const List<_SettingsModel> _items = [
     _SettingsModel(
       type: SettingType.privacySetting,
-      subtitle: '黑名单',
+      subtitle: uiTx('黑名单'),
       icon: Icon(Icons.privacy_tip_outlined),
     ),
     _SettingsModel(
       type: SettingType.recommendSetting,
-      subtitle: '推荐来源（web/app）、刷新保留内容、过滤器',
+      subtitle: uiTx('推荐来源（web/app）、刷新保留内容、过滤器'),
       icon: Icon(Icons.explore_outlined),
     ),
     _SettingsModel(
       type: SettingType.dynamicsSetting,
-      subtitle: '关键词过滤、屏蔽用户、带货动态屏蔽',
+      subtitle: uiTx('关键词过滤、屏蔽用户、带货动态屏蔽'),
       icon: Icon(Icons.dynamic_feed_outlined),
     ),
     _SettingsModel(
       type: SettingType.aiTranslateSetting,
-      subtitle: 'AI 接入、视频总结与界面翻译的集中配置入口',
+      subtitle: uiTx('AI 接入、视频总结与界面翻译的集中配置入口'),
       icon: Icon(Icons.auto_awesome),
     ),
     _SettingsModel(
       type: SettingType.videoSetting,
-      subtitle: '画质、音质、解码、缓冲、音频输出等',
+      subtitle: uiTx('画质、音质、解码、缓冲、音频输出等'),
       icon: Icon(Icons.video_settings_outlined),
     ),
     _SettingsModel(
       type: SettingType.playSetting,
-      subtitle: '双击/长按、全屏、后台播放、弹幕、字幕、底部进度条等',
+      subtitle: uiTx('双击/长按、全屏、后台播放、弹幕、字幕、底部进度条等'),
       icon: Icon(Icons.touch_app_outlined),
     ),
     _SettingsModel(
       type: SettingType.styleSetting,
-      subtitle: '横屏适配（平板）、侧栏、列宽、首页、动态红点、主题、字号、图片、帧率等',
+      subtitle: uiTx('横屏适配（平板）、侧栏、列宽、首页、动态红点、主题、字号、图片、帧率等'),
       icon: Icon(Icons.style_outlined),
     ),
     _SettingsModel(
       type: SettingType.extraSetting,
-      subtitle: '震动、搜索、收藏、ai、评论、代理、更新检查等',
+      subtitle: uiTx('震动、搜索、收藏、ai、评论、代理、更新检查等'),
       icon: Icon(Icons.extension_outlined),
     ),
     _SettingsModel(

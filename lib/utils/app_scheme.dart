@@ -892,7 +892,7 @@ abstract final class PiliScheme {
       aid ??= IdUtils.bv2av(bvid!);
       bvid ??= IdUtils.av2bv(aid);
       if (showDialog) {
-        SmartDialog.showLoading<dynamic>(msg: '获取中...');
+        SmartDialog.showLoading<dynamic>(msg: uiTx('获取中...'));
       }
       final res = await SearchHttp.ab2cWithDimension(
         bvid: bvid,

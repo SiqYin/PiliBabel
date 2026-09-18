@@ -164,7 +164,7 @@ class _MainReplyPageState extends State<MainReplyPage>
                 },
               )
             : HttpError(
-                errMsg: '还没有评论',
+                errMsg: uiTx('还没有评论'),
                 onReload: _controller.onReload,
               ),
       Error(:final errMsg) => HttpError(

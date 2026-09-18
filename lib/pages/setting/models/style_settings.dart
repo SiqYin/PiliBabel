@@ -66,7 +66,7 @@ List<SettingsModel> get styleSettings => [
   if (Platform.isLinux) _useSSDModel(),
   SwitchModel(
     title: '横屏适配',
-    subtitle: '启用横屏布局与逻辑，平板、折叠屏等可开启；建议全屏方向设为【不改变当前方向】',
+    subtitle: uiTx('启用横屏布局与逻辑，平板、折叠屏等可开启；建议全屏方向设为【不改变当前方向】'),
     leading: const Icon(Icons.phonelink_outlined),
     setKey: SettingBoxKey.horizontalScreen,
     defaultVal: Pref.horizontalScreen,
@@ -78,9 +78,9 @@ List<SettingsModel> get styleSettings => [
       }
     },
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '改用侧边栏',
-    subtitle: '开启后底栏与顶栏被替换，且相关设置失效',
+    subtitle: uiTx('开启后底栏与顶栏被替换，且相关设置失效'),
     leading: Icon(Icons.chrome_reader_mode_outlined),
     setKey: SettingBoxKey.useSideBar,
     defaultVal: false,
@@ -88,7 +88,7 @@ List<SettingsModel> get styleSettings => [
   ),
   SwitchModel(
     title: '自动侧边栏切换',
-    subtitle: '屏幕较宽时（如折叠屏展开）自动改用侧边栏。点击自定义触发宽度。',
+    subtitle: uiTx('屏幕较宽时（如折叠屏展开）自动改用侧边栏。点击自定义触发宽度。'),
     leading: const Icon(Icons.vertical_split_outlined),
     setKey: SettingBoxKey.autoSideBar,
     defaultVal: false,
@@ -96,7 +96,7 @@ List<SettingsModel> get styleSettings => [
   ),
   NormalModel(
     title: 'App字体设置',
-    subtitle: '点击设置',
+    subtitle: uiTx('点击设置'),
     leading: const Icon(Icons.text_fields),
     onTap: (context, setState) => Get.toNamed('/fontSetting'),
   ),
@@ -113,9 +113,9 @@ List<SettingsModel> get styleSettings => [
     onTap: _showTransitionDialog,
   ),
   if (Platform.isAndroid)
-    const SwitchModel(
+    SwitchModel(
       title: '预测性返回动画',
-      subtitle: '开启后侧滑返回可原生预览上一页及桌面，需将页面过渡动画设为Native',
+      subtitle: uiTx('开启后侧滑返回可原生预览上一页及桌面，需将页面过渡动画设为Native'),
       leading: Icon(Icons.swipe_left_outlined),
       setKey: SettingBoxKey.enablePredictiveBack,
       defaultVal: true,
@@ -128,17 +128,17 @@ List<SettingsModel> get styleSettings => [
     defaultVal: true,
     needReboot: true,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: 'MD3样式底栏',
-    subtitle: 'Material You设计规范底栏，关闭可变窄',
+    subtitle: uiTx('Material You设计规范底栏，关闭可变窄'),
     leading: Icon(Icons.design_services_outlined),
     setKey: SettingBoxKey.enableMYBar,
     defaultVal: true,
     needReboot: true,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '首页背景渐变',
-    subtitle: '主框架背景由纯色改为渐变色',
+    subtitle: uiTx('主框架背景由纯色改为渐变色'),
     leading: Icon(Icons.gradient_outlined),
     setKey: SettingBoxKey.enableGradientBg,
     defaultVal: false,
@@ -172,7 +172,7 @@ List<SettingsModel> get styleSettings => [
   ),
   SwitchModel(
     title: '动态页启用瀑布流',
-    subtitle: '关闭会显示为单列',
+    subtitle: uiTx('关闭会显示为单列'),
     leading: const Icon(Icons.view_array_outlined),
     setKey: SettingBoxKey.dynamicsWaterfallFlow,
     defaultVal: Pref.horizontalScreen,
@@ -190,9 +190,9 @@ List<SettingsModel> get styleSettings => [
       SmartDialog.showToast(uiTx('重启生效'));
     },
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '动态页UP主列表显示“我”置顶',
-    subtitle: '用于快速查看个人的动态',
+    subtitle: uiTx('用于快速查看个人的动态'),
     leading: Icon(Icons.push_pin_outlined),
     setKey: SettingBoxKey.dynamicsShowSelfUp,
     defaultVal: true,
@@ -246,7 +246,7 @@ List<SettingsModel> get styleSettings => [
   ),
   SwitchModel(
     title: '首页顶栏收起',
-    subtitle: '首页列表滑动时，收起顶栏',
+    subtitle: uiTx('首页列表滑动时，收起顶栏'),
     leading: const Icon(Icons.vertical_align_top_outlined),
     setKey: SettingBoxKey.hideTopBar,
     defaultVal: PlatformUtils.isMobile,
@@ -254,7 +254,7 @@ List<SettingsModel> get styleSettings => [
   ),
   SwitchModel(
     title: '首页底栏收起',
-    subtitle: '首页列表滑动时，收起底栏',
+    subtitle: uiTx('首页列表滑动时，收起底栏'),
     leading: const Icon(Icons.vertical_align_bottom_outlined),
     setKey: SettingBoxKey.hideBottomBar,
     defaultVal: PlatformUtils.isMobile,
@@ -272,7 +272,7 @@ List<SettingsModel> get styleSettings => [
       },
     ),
     title: '图片质量',
-    subtitle: '选择合适的图片清晰度，上限100%',
+    subtitle: uiTx('选择合适的图片清晰度，上限100%'),
     leading: const Icon(Icons.image_outlined),
     getTrailing: (theme) => Text(
       '${Pref.picQuality}%',
@@ -290,7 +290,7 @@ List<SettingsModel> get styleSettings => [
       },
     ),
     title: '查看大图质量',
-    subtitle: '选择合适的图片清晰度，上限100%',
+    subtitle: uiTx('选择合适的图片清晰度，上限100%'),
     leading: const Icon(Icons.image_outlined),
     getTrailing: (theme) => Text(
       '${Pref.previewQ}%',
@@ -300,7 +300,7 @@ List<SettingsModel> get styleSettings => [
   NormalModel(
     onTap: _showReduceColorDialog,
     title: '深色下图片颜色叠加',
-    subtitle: '显示颜色=图片原色x所选颜色，大图查看不受影响',
+    subtitle: uiTx('显示颜色=图片原色x所选颜色，大图查看不受影响'),
     leading: const Icon(Icons.format_color_fill_outlined),
     getTrailing: (theme) => Container(
       width: 20,
@@ -314,7 +314,7 @@ List<SettingsModel> get styleSettings => [
   NormalModel(
     leading: const Icon(Icons.opacity_outlined),
     title: '气泡提示不透明度',
-    subtitle: '自定义气泡提示(Toast)不透明度',
+    subtitle: uiTx('自定义气泡提示(Toast)不透明度'),
     getTrailing: (theme) => Text(
       CustomToast.toastOpacity.toStringAsFixed(1),
       style: theme.textTheme.titleSmall,
@@ -383,7 +383,7 @@ List<SettingsModel> get styleSettings => [
       },
     ),
     title: '首页标签页',
-    subtitle: '删除或调换首页标签页',
+    subtitle: uiTx('删除或调换首页标签页'),
     leading: const Icon(Icons.toc_outlined),
   ),
   NormalModel(
@@ -396,7 +396,7 @@ List<SettingsModel> get styleSettings => [
       },
     ),
     title: 'Navbar编辑',
-    subtitle: '删除或调换Navbar',
+    subtitle: uiTx('删除或调换Navbar'),
     leading: const Icon(Icons.toc_outlined),
   ),
   NormalModel(
@@ -409,12 +409,12 @@ List<SettingsModel> get styleSettings => [
       },
     ),
     title: '我的页卡片编辑',
-    subtitle: '选择并排列「我的」页面显示的卡片板块',
+    subtitle: uiTx('选择并排列「我的」页面显示的卡片板块'),
     leading: const Icon(Icons.person_outline),
   ),
   SwitchModel(
     title: '备注替换昵称',
-    subtitle: '开启后备注首行将替换原昵称，建议首行填写为称呼；余下行仅在主页可见',
+    subtitle: uiTx('开启后备注首行将替换原昵称，建议首行填写为称呼；余下行仅在主页可见'),
     leading: const Icon(Icons.badge_outlined),
     setKey: SettingBoxKey.remarkReplaceName,
     defaultVal: false,
@@ -425,7 +425,7 @@ List<SettingsModel> get styleSettings => [
   ),
   SwitchModel(
     title: '返回时直接退出',
-    subtitle: '开启后在主页任意tab按返回键都直接退出，关闭则先回到Navbar的第一个tab',
+    subtitle: uiTx('开启后在主页任意tab按返回键都直接退出，关闭则先回到Navbar的第一个tab'),
     leading: const Icon(Icons.exit_to_app_outlined),
     setKey: SettingBoxKey.directExitOnBack,
     defaultVal: false,

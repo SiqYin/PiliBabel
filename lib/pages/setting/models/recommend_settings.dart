@@ -25,7 +25,7 @@ List<SettingsModel> get recommendSettings => [
   ),
   SwitchModel(
     title: '保留首页推荐刷新',
-    subtitle: '下拉刷新时保留上次内容',
+    subtitle: uiTx('下拉刷新时保留上次内容'),
     leading: const Icon(Icons.refresh),
     setKey: SettingBoxKey.enableSaveLastData,
     defaultVal: true,
@@ -41,7 +41,7 @@ List<SettingsModel> get recommendSettings => [
   ),
   SwitchModel(
     title: '显示上次看到位置提示',
-    subtitle: '保留上次推荐时，在上次刷新位置显示提示',
+    subtitle: uiTx('保留上次推荐时，在上次刷新位置显示提示'),
     leading: const Icon(Icons.tips_and_updates_outlined),
     setKey: SettingBoxKey.savedRcmdTip,
     defaultVal: true,
@@ -101,7 +101,7 @@ List<SettingsModel> get recommendSettings => [
   getListUidWithNameModel(
     title: '白名单用户',
     leading: const Icon(Icons.person_add_alt_1_outlined),
-    emptySubtitle: '点击添加白名单用户',
+    emptySubtitle: uiTx('点击添加白名单用户'),
     countSubtitleBuilder: (count) => '已加入白名单 $count 个用户',
     getUidsMap: () => Pref.whitelistMids,
     setUidsMap: UserWhitelist.save,
@@ -156,7 +156,7 @@ List<SettingsModel> get recommendSettings => [
   ),
   SwitchModel(
     title: '已关注UP豁免推荐过滤',
-    subtitle: '推荐中已关注用户发布的内容不会被过滤',
+    subtitle: uiTx('推荐中已关注用户发布的内容不会被过滤'),
     leading: const Icon(Icons.favorite_border_outlined),
     setKey: SettingBoxKey.exemptFilterForFollowed,
     defaultVal: true,
@@ -164,7 +164,7 @@ List<SettingsModel> get recommendSettings => [
   ),
   SwitchModel(
     title: '过滤器也应用于详情页相关视频',
-    subtitle: '其它（如热门视频、搜索等）均不受过滤器影响，无法豁免相关视频中的已关注UP',
+    subtitle: uiTx('其它（如热门视频、搜索等）均不受过滤器影响，无法豁免相关视频中的已关注UP'),
     leading: const Icon(Icons.explore_outlined),
     setKey: SettingBoxKey.applyFilterToRelatedVideos,
     defaultVal: true,
@@ -172,7 +172,7 @@ List<SettingsModel> get recommendSettings => [
   ),
   SwitchModel(
     title: '过滤器也应用于热门视频',
-    subtitle: '开启后对热门视频应用完整过滤（标题和UP名称关键词、时长、播放量、点赞率、屏蔽用户）',
+    subtitle: uiTx('开启后对热门视频应用完整过滤（标题和UP名称关键词、时长、播放量、点赞率、屏蔽用户）'),
     leading: const Icon(Icons.local_fire_department_outlined),
     setKey: SettingBoxKey.applyFilterToHotVideos,
     defaultVal: false,
@@ -180,7 +180,7 @@ List<SettingsModel> get recommendSettings => [
   ),
   SwitchModel(
     title: '过滤器也应用于分区视频',
-    subtitle: '开启后对 UGC 分区视频应用完整过滤；番剧等 PGC 内容仅过滤标题关键词',
+    subtitle: uiTx('开启后对 UGC 分区视频应用完整过滤；番剧等 PGC 内容仅过滤标题关键词'),
     leading: const Icon(Icons.leaderboard_outlined),
     setKey: SettingBoxKey.applyFilterToRankVideos,
     defaultVal: false,
@@ -188,7 +188,7 @@ List<SettingsModel> get recommendSettings => [
   ),
   SwitchModel(
     title: '过滤器也应用于搜索结果',
-    subtitle: '对视频、专栏、用户搜索生效，仅过滤标题关键词和屏蔽用户',
+    subtitle: uiTx('对视频、专栏、用户搜索生效，仅过滤标题关键词和屏蔽用户'),
     leading: const Icon(Icons.search_off_outlined),
     setKey: SettingBoxKey.applyFilterToSearch,
     defaultVal: false,

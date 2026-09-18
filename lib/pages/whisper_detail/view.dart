@@ -332,7 +332,7 @@ class _WhisperDetailPageState
                       );
                       if (pickedFile != null) {
                         final path = pickedFile.path;
-                        SmartDialog.showLoading(msg: '正在上传图片');
+                        SmartDialog.showLoading(msg: uiTx('正在上传图片'));
                         final result = await MsgHttp.uploadBfs(
                           path: path,
                           biz: 'im',
@@ -351,7 +351,7 @@ class _WhisperDetailPageState
                             'original': 1,
                             'size': response.imgSize,
                           };
-                          SmartDialog.showLoading(msg: '正在发送');
+                          SmartDialog.showLoading(msg: uiTx('正在发送'));
                           await _whisperDetailController
                               .sendMsg(
                                 picMsg: picMsg,

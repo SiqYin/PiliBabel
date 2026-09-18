@@ -82,7 +82,7 @@ class LiveCardVApp extends StatelessWidget {
                   text: r.name!,
                   onTap: (_) async {
                     Get.back();
-                    SmartDialog.showLoading(msg: '正在提交');
+                    SmartDialog.showLoading(msg: uiTx('正在提交'));
                     final res = await LiveHttp.liveFeedback(
                       item.roomid!,
                       r.id!,
