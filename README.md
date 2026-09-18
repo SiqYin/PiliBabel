@@ -55,9 +55,6 @@ The idea mirrors bilibili's official "AI interface translation", but it runs ent
 - **You bring the model.** Point it at any OpenAI-compatible endpoint (`/chat/completions`) with your own base URL / API key / model. The AI video-summary feature and the AI translation feature have **completely independent** endpoints and settings, both living under one **"AI features"** page.
 - **Translate once, then it's fixed.** Each source string is translated **exactly once**; the result is persisted locally and **never re-translated** when you reopen a screen — the same principle as the official client, for stable, predictable translations.
 - **Pick your app language.** Defaults to Simplified Chinese. About 35 languages, including world languages (English, 日本語, 한국어, Français, Deutsch, Español, Italiano, Русский, ไทย, Tiếng Việt, Bahasa Melayu / Bahasa Indonesia, Filipino, Türkçe, العربية, עברית), languages of China's ethnic minorities (Tibetan, Mongolian, Uyghur, Zhuang, …), and Chinese varieties (Cantonese and Wu in Simplified / Traditional script, plus Min Nan — Hokkien and Taiwanese).
-  - With a **Chinese** variety selected, only **foreign → Chinese** is translated; your existing Chinese text is left untouched (this replaces and extends the native "comment foreign→Chinese" behaviour).
-  - With a **non-Chinese** language selected, the **entire interface** is rendered in that language.
-  - Language-specific writing rules (Simplified/Traditional script, Taiwan's Ministry-of-Education standard, regional wording) are encoded **only in the prompt sent to the model**, never cluttering the UI.
 - **Per-comment Original ⇄ Translation toggle** (a small icon, not a Chinese word). `@mentions / [emoji] / #topics# / links` are preserved as tokens, and **comments containing hyperlinks still translate while keeping the link clickable**.
 - **Danmaku (弹幕) translation** — an independent toggle in the player's top-right control row, **off by default** and gated behind a confirmation whose own text is translated. Once enabled, danmaku ahead of the playhead are pre-translated in **~15-second batches** (seeking to the middle is handled correctly, not from the start), so the translation is usually ready by the time it scrolls in.
 - **Thinking-mode switch** (`enable_thinking`) for quality-vs-speed, plus **"test translation"** and **clear-cache** buttons in settings.
@@ -68,9 +65,6 @@ The idea mirrors bilibili's official "AI interface translation", but it runs ent
 - **模型自備。** 填入你自己的 OpenAI 相容端點（`/chat/completions`）的網址／API 金鑰／模型即可。AI 影片摘要與 AI 翻譯兩者擁有**完全獨立**的端點與設定，統一收在一個「**AI 功能**」頁面下。
 - **只翻一次，翻完即固定。** 每條原文**僅翻譯一次**，結果落地快取、重開畫面**絕不重翻**——與官方客戶端同原理，翻譯穩定且可預期。
 - **選擇 App 語言。** 預設為簡體中文。約 35 種語言，包含國際語言（English、日本語、한국어、Français、Deutsch、Español、Italiano、Русский、ไทย、Tiếng Việt、Bahasa Melayu／Bahasa Indonesia、Filipino、Türkçe、العربية、עברית）、中國少數民族語言（藏語、蒙古語、維吾爾語、壯語……）與漢語變體（粵語、吳語——各分簡體／繁體；閩南語——大陸閩南語、臺灣閩南語）。
-  - 選擇**中文變體**時，**只翻外文→中文**，你原有的中文內容不動（取代並延伸原生「留言外文→中文」行為）。
-  - 選擇**非中文**語言時，**整個介面**都會以該語言呈現。
-  - 各語言的書寫規範（簡／繁體、臺灣教育部國字標準字體、地域用詞）只寫進**送給模型的提示詞**，不佔用介面。
 - **逐則留言的「原文 ⇄ 譯文」切換**（一個小圖示，不用中文詞）。`@提及 / [表情] / #話題# / 連結` 會作為 token 保留，**含超連結的留言也能翻譯且連結維持可點擊**。
 - **彈幕翻譯**——播放器右上角控制列的獨立開關，**預設關閉**，開啟前需確認（確認文案本身也會翻譯）。開啟後，播放頭之後約 **15 秒**視窗內的彈幕會**分批預先翻譯**（拖曳到影片中段也能正確處理，而非從頭算起），滑入時譯文多半已就緒。
 - **思考模式開關**（`enable_thinking`）供品質／速度取捨，設定裡並有**「測試翻譯」**與**清空快取**按鈕。
