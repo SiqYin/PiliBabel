@@ -65,7 +65,7 @@ Future<bool> confirmRemoveEntriesFromFolder({
       entryList,
       excludedFolderIds: {folderId},
     ),
-    confirmText: '删除缓存并移出',
+    confirmText: uiTx('删除缓存并移出'),
   );
   if (!confirmed) {
     return false;
@@ -130,7 +130,7 @@ Future<bool> confirmDeleteFolders({
       entries,
       excludedFolderIds: folderIds,
     ),
-    confirmText: '删除缓存并删除文件夹',
+    confirmText: uiTx('删除缓存并删除文件夹'),
   );
   if (!confirmed) {
     return false;
