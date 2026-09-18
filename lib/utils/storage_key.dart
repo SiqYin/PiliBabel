@@ -211,7 +211,8 @@ abstract final class SettingBoxKey {
       uiTranslateApiUrl = 'uiTranslateApiUrl',
       uiTranslateApiKey = 'uiTranslateApiKey',
       uiTranslateThinking = 'uiTranslateThinking',
-      uiTranslateCache = 'uiTranslateCache';
+      uiTranslateCache = 'uiTranslateCache',
+      uiTranslateOnboarded = 'uiTranslateOnboarded';
 
   static const String minimizeOnExit = 'minimizeOnExit',
       windowSize = 'windowSize',
