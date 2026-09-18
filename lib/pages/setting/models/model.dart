@@ -502,7 +502,7 @@ SettingsModel getVideoFilterSelectModel({
       var result = await showDialog<int>(
         context: context,
         builder: (context) => SelectDialog<int>(
-          title: '选择$title${isFilter ? '（0即不过滤）' : ''}',
+          title: uiTx('选择$title${isFilter ? ')（0即不过滤）' : ''}',
           value: value,
           values:
               (values
