@@ -10,7 +10,7 @@ files = [f for f in subprocess.run(["git","ls-files","lib"],capture_output=True,
          if f.endswith(".dart")]
 IMPORT = "import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';"
 MEMBERS = "label|title|name|message|displayName|subtitle|text"
-rx = re.compile(r'(?P<t>\bText\(\s*)(?!uiTx\()(?P<e>[A-Za-z_]\w*(?:\.\w+)*\.(?:' + MEMBERS + r')\b!?)(?![\w.])')
+rx = re.compile(r'(?P<t>\bText\(\s*)(?!uiTx\()(?P<e>[A-Za-z_]\w*(?:\.\w+)*\.(?:' + MEMBERS + r')\b!?)(?=\s*[),])')
 SKIP = {"lib/services/ui_translate/ui_translate_service.dart"}
 per = {}
 newsrc = {}
