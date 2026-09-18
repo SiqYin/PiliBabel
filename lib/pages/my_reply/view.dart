@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/dialog/export_import.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -45,7 +46,7 @@ class _MyReplyState extends State<MyReply> with DynMixin {
   Widget build(BuildContext context) {
     return SimpleScaffold(
       appBar: AppBar(
-        title: const Text('我的评论'),
+        title: Text(uiTx('我的评论')),
         actions: [
           if (kDebugMode)
             IconButton(
@@ -157,7 +158,7 @@ class _MyReplyState extends State<MyReply> with DynMixin {
         children: [
           ListTile(
             dense: true,
-            title: const Text('导出至剪贴板', style: style),
+            title: Text(uiTx('导出至剪贴板'), style: style),
             onTap: () {
               Get.back();
               exportToClipBoard(onExport: _onExport);
@@ -165,7 +166,7 @@ class _MyReplyState extends State<MyReply> with DynMixin {
           ),
           ListTile(
             dense: true,
-            title: const Text('导出文件至本地', style: style),
+            title: Text(uiTx('导出文件至本地'), style: style),
             onTap: () {
               Get.back();
               exportToLocalFile(
@@ -201,7 +202,7 @@ class _MyReplyState extends State<MyReply> with DynMixin {
         children: [
           ListTile(
             dense: true,
-            title: const Text('从剪贴板导入', style: style),
+            title: Text(uiTx('从剪贴板导入'), style: style),
             onTap: () {
               Get.back();
               importFromClipBoard<List<dynamic>>(
@@ -215,7 +216,7 @@ class _MyReplyState extends State<MyReply> with DynMixin {
           ),
           ListTile(
             dense: true,
-            title: const Text('从本地文件导入', style: style),
+            title: Text(uiTx('从本地文件导入'), style: style),
             onTap: () {
               Get.back();
               importFromLocalFile<List<dynamic>>(onImport: _onImport);

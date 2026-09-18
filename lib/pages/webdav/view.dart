@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/view_insets_safe_area.dart';
@@ -41,7 +42,7 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
     final showAppBar = widget.showAppBar;
     final padding = MediaQuery.viewPaddingOf(context);
     return SimpleScaffold(
-      appBar: showAppBar ? AppBar(title: const Text('WebDAV 设置')) : null,
+      appBar: showAppBar ? AppBar(title: Text(uiTx('WebDAV 设置'))) : null,
       body: ViewInsetsSafeArea(
         child: ListView(
           padding: padding.copyWith(
@@ -101,7 +102,7 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
                       ),
                     ),
                     onPressed: WebDav().backup,
-                    child: const Text('备份设置'),
+                    child: Text(uiTx('备份设置')),
                   ),
                 ),
                 const SizedBox(width: 20),
@@ -113,7 +114,7 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
                       ),
                     ),
                     onPressed: WebDav().restore,
-                    child: const Text('恢复设置'),
+                    child: Text(uiTx('恢复设置')),
                   ),
                 ),
               ],

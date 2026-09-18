@@ -1,5 +1,6 @@
 // ignore_for_file: constant_identifier_names
 
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async' show StreamSubscription;
 
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -369,7 +370,7 @@ abstract final class PiliScheme {
           case 'livearea':
             Get.to(
               SimpleScaffold(
-                appBar: AppBar(title: const Text('直播')),
+                appBar: AppBar(title: Text(uiTx('直播'))),
                 body: const ViewSafeArea(child: LivePage()),
               ),
             );
@@ -377,7 +378,7 @@ abstract final class PiliScheme {
           case 'rank':
             Get.to(
               SimpleScaffold(
-                appBar: AppBar(title: const Text('排行榜')),
+                appBar: AppBar(title: Text(uiTx('排行榜'))),
                 body: const ViewSafeArea(child: RankPage()),
               ),
             );

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io';
 
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
@@ -200,11 +201,11 @@ class _FontSettingPageState extends State<FontSettingPage> {
               _selectedWeight = _normalFontWeight;
               _selectedScale = 1;
             }),
-            child: const Text('重置'),
+            child: Text(uiTx('重置')),
           ),
           TextButton(
             onPressed: _saveFontSetting,
-            child: const Text('确定'),
+            child: Text(uiTx('确定')),
           ),
           const SizedBox(width: 12),
         ],
@@ -236,8 +237,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Text(
-                      '弹幕预览：前方高能反应 666',
+                    Text(uiTx('弹幕预览：前方高能反应 666'),
                       style: TextStyle(
                         fontFamily: _danmakuFontFamily ?? _kDefaultFontFamily,
                         fontSize: 14 * _selectedScale,
@@ -250,7 +250,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
             _buildItem(
               Row(
                 children: [
-                  const Text('字体：', style: TextStyle(fontWeight: .bold)),
+                  Text(uiTx('字体：'), style: TextStyle(fontWeight: .bold)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: StaticPopupMenuButton<String>(
@@ -265,7 +265,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
                         const CustomPopupMenuItem<String>(
                           value: _systemFontSentinel,
                           height: 40,
-                          child: Text('系统默认'),
+                          child: Text(uiTx('系统默认')),
                         ),
                         for (final font in _fonts)
                           CustomPopupMenuItem<String>(
@@ -304,7 +304,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
             _buildItem(
               Row(
                 children: [
-                  const Text('字重：', style: TextStyle(fontWeight: .bold)),
+                  Text(uiTx('字重：'), style: TextStyle(fontWeight: .bold)),
                   const SizedBox(
                     width: 40,
                     child: Text(
@@ -339,10 +339,10 @@ class _FontSettingPageState extends State<FontSettingPage> {
             _buildItem(
               Row(
                 children: [
-                  const Text('字号：', style: TextStyle(fontWeight: .bold)),
-                  const SizedBox(
+                  Text(uiTx('字号：'), style: TextStyle(fontWeight: .bold)),
+                  SizedBox(
                     width: 40,
-                    child: Text('小', style: TextStyle(fontSize: 11.9)),
+                    child: Text(uiTx('小'), style: TextStyle(fontSize: 11.9)),
                   ),
                   Expanded(
                     child: Slider(
@@ -359,11 +359,11 @@ class _FontSettingPageState extends State<FontSettingPage> {
                           setState(() => _selectedScale = value.toPrecision(2)),
                     ),
                   ),
-                  const SizedBox(
+                  SizedBox(
                     width: 50,
                     child: Align(
                       alignment: .centerRight,
-                      child: Text('大', style: TextStyle(fontSize: 22.4)),
+                      child: Text(uiTx('大'), style: TextStyle(fontSize: 22.4)),
                     ),
                   ),
                 ],
@@ -383,8 +383,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
                 children: [
                   const Icon(Icons.subtitles_outlined, size: 18),
                   const SizedBox(width: 6),
-                  Text(
-                    '弹幕字体',
+                  Text(uiTx('弹幕字体'),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: .bold,
@@ -397,7 +396,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
             _buildItem(
               Row(
                 children: [
-                  const Text('弹幕：', style: TextStyle(fontWeight: .bold)),
+                  Text(uiTx('弹幕：'), style: TextStyle(fontWeight: .bold)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: StaticPopupMenuButton<Object>(
@@ -421,12 +420,12 @@ class _FontSettingPageState extends State<FontSettingPage> {
                         const CustomPopupMenuItem<Object>(
                           value: DanmakuFontSource.global,
                           height: 40,
-                          child: Text('跟随应用字体'),
+                          child: Text(uiTx('跟随应用字体')),
                         ),
                         const CustomPopupMenuItem<Object>(
                           value: DanmakuFontSource.system,
                           height: 40,
-                          child: Text('系统默认弹幕字体'),
+                          child: Text(uiTx('系统默认弹幕字体')),
                         ),
                       ],
                       onSelected: _onDanmakuSelected,

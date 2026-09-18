@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
@@ -99,13 +100,13 @@ class _FavNoteChildPageState extends State<FavNoteChildPage>
                     checked: !_favNoteController.allSelected.value,
                     disableSelect: false,
                   ),
-                  child: const Padding(
+                  child: Padding(
                     padding: EdgeInsets.only(
                       top: 14,
                       bottom: 14,
                       right: 12,
                     ),
-                    child: Text('全选'),
+                    child: Text(uiTx('全选')),
                   ),
                 ),
                 const Spacer(),
@@ -118,12 +119,12 @@ class _FavNoteChildPageState extends State<FavNoteChildPage>
                     if (_favNoteController.checkedCount != 0) {
                       showConfirmDialog(
                         context: context,
-                        title: const Text('确定删除已选中的笔记吗？'),
+                        title: Text(uiTx('确定删除已选中的笔记吗？')),
                         onConfirm: _favNoteController.onRemove,
                       );
                     }
                   },
-                  child: const Text('删除'),
+                  child: Text(uiTx('删除')),
                 ),
                 const SizedBox(width: 16),
               ],

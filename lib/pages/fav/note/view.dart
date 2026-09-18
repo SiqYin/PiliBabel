@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/pages/fav/note/child_view.dart';
 import 'package:PiliPlus/pages/fav/note/controller.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
@@ -102,7 +103,7 @@ class _FavNotePageState extends State<FavNotePage>
             //       }
             //     }
             //   },
-            //   child: const Text('管理'),
+            //   child: Text(uiTx('管理')),
             // ),
             // const SizedBox(width: 12),
           ],

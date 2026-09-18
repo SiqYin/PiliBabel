@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math';
 
 import 'package:PiliPlus/common/skeleton/msg_feed_top.dart';
@@ -160,8 +161,7 @@ class _FollowChildPageState extends State<FollowChildPage>
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            '我们的共同关注',
+                          Text(uiTx('我们的共同关注'),
                             style: TextStyle(
                               color: colorScheme.onSurfaceVariant,
                             ),
@@ -189,8 +189,7 @@ class _FollowChildPageState extends State<FollowChildPage>
                         top: 16,
                         bottom: 6,
                       ),
-                      child: Text(
-                        '全部关注',
+                      child: Text(uiTx('全部关注'),
                         style: TextStyle(
                           color: colorScheme.onSurfaceVariant,
                         ),

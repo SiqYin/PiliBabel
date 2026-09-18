@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 
 import 'package:PiliPlus/common/assets.dart';
@@ -119,8 +120,7 @@ class _SeasonPanelState extends State<SeasonPanel> {
             child: Row(
               children: <Widget>[
                 Expanded(
-                  child: Text(
-                    '合集：${videoDetail.ugcSeason!.title!}',
+                  child: Text(uiTx('合集：${videoDetail.ugcSeason!.title!}'),
                     style: theme.textTheme.labelMedium,
                     overflow: TextOverflow.ellipsis,
                   ),

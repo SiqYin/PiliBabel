@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -150,7 +151,7 @@ class _MemberVideoState extends State<MemberVideo>
                           _jumpToIndex(locatedIndex);
                         }
                       },
-                      label: const Text('定位至上次观看'),
+                      label: Text(uiTx('定位至上次观看')),
                     ),
                   ),
                 )
@@ -222,8 +223,7 @@ class _MemberVideoState extends State<MemberVideo>
   Widget? _buildCount() {
     final count = _controller.count;
     if (count != null) {
-      return Text(
-        '共$count视频',
+      return Text(uiTx('共$count视频'),
         style: const TextStyle(fontSize: 13),
       );
     }

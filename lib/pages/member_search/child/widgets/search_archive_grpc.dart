@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
@@ -141,11 +142,11 @@ class SearchArchiveGrpc extends StatelessWidget {
                 PopupMenuItem(
                   height: 45,
                   onTap: () => UserHttp.toViewLater(bvid: bvid),
-                  child: const Row(
+                  child: Row(
                     spacing: 6,
                     children: [
                       Icon(MdiIcons.clockTimeEightOutline, size: 16),
-                      Text('稍后再看', style: TextStyle(fontSize: 13)),
+                      Text(uiTx('稍后再看'), style: TextStyle(fontSize: 13)),
                     ],
                   ),
                 ),

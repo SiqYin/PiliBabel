@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
@@ -23,7 +24,7 @@ class _DynTopicRcmdPageState extends State<DynTopicRcmdPage> {
   @override
   Widget build(BuildContext context) {
     return SimpleScaffold(
-      appBar: AppBar(title: const Text('话题')),
+      appBar: AppBar(title: Text(uiTx('话题'))),
       body: refreshIndicator(
         onRefresh: _controller.onRefresh,
         child: CustomScrollView(

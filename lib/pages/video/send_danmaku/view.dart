@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
@@ -176,8 +177,7 @@ class _SendDanmakuPanelState extends CommonTextPubPageState<SendDanmakuPanel> {
       children: [
         Row(
           children: [
-            Text(
-              '弹幕字号',
+            Text(uiTx('弹幕字号'),
               style: TextStyle(
                 fontSize: 15,
                 color: theme.colorScheme.onSurface,
@@ -192,8 +192,7 @@ class _SendDanmakuPanelState extends CommonTextPubPageState<SendDanmakuPanel> {
         const SizedBox(height: 12),
         Row(
           children: [
-            Text(
-              '弹幕样式',
+            Text(uiTx('弹幕样式'),
               style: TextStyle(
                 fontSize: 15,
                 color: theme.colorScheme.onSurface,
@@ -211,8 +210,7 @@ class _SendDanmakuPanelState extends CommonTextPubPageState<SendDanmakuPanel> {
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '弹幕颜色',
+            Text(uiTx('弹幕颜色'),
               style: TextStyle(
                 fontSize: 15,
                 color: theme.colorScheme.onSurface,

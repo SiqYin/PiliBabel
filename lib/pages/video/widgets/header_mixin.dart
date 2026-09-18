@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/widgets/menu_row.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
@@ -173,10 +174,10 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                 child: ListView(
                   padding: EdgeInsets.zero,
                   children: [
-                    const SizedBox(
+                    SizedBox(
                       height: 45,
                       child: Center(
-                        child: Text('弹幕设置', style: TextStyle(fontSize: 14)),
+                        child: Text(uiTx('弹幕设置'), style: TextStyle(fontSize: 14)),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -184,7 +185,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                       Row(
                         mainAxisAlignment: .spaceBetween,
                         children: [
-                          Text('智能云屏蔽 ${DanmakuOptions.danmakuWeight} 级'),
+                          Text(uiTx('智能云屏蔽 ${DanmakuOptions.danmakuWeight} 级')),
                           TextButton(
                             style: TextButton.styleFrom(
                               padding: EdgeInsets.zero,
@@ -197,8 +198,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                                 '/danmakuBlock',
                                 arguments: plPlayerController,
                               ),
-                            child: Text(
-                              "屏蔽管理(${plPlayerController.filters.count})",
+                            child: Text(uiTx("屏蔽管理(${plPlayerController.filters.count})"),
                             ),
                           ),
                         ],
@@ -215,7 +215,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                         ),
                       ),
                     ],
-                    const Text('按类型屏蔽'),
+                    Text(uiTx('按类型屏蔽')),
                     SingleChildScrollView(
                       scrollDirection: .horizontal,
                       padding: const .symmetric(vertical: 10),
@@ -235,7 +235,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                         ).toList(),
                       ),
                     ),
-                    const Text('其他'),
+                    Text(uiTx('其他')),
                     SingleChildScrollView(
                       scrollDirection: .horizontal,
                       padding: const .symmetric(vertical: 10),
@@ -278,8 +278,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '显示区域 ${(DanmakuOptions.danmakuShowArea * 100).toStringAsFixed(1)}%',
+                        Text(uiTx('显示区域 ${(DanmakuOptions.danmakuShowArea * 100).toStringAsFixed(1)}%'),
                         ),
                         resetBtn(theme, '50.0%', () => updateShowArea(0.5)),
                       ],
@@ -298,8 +297,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '不透明度 ${(plPlayerController.danmakuOpacity * 100).toStringAsFixed(1)}%',
+                        Text(uiTx('不透明度 ${(plPlayerController.danmakuOpacity * 100).toStringAsFixed(1)}%'),
                         ),
                         resetBtn(theme, '100.0%', () => updateOpacity(1.0)),
                       ],
@@ -319,8 +317,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '字体粗细 ${DanmakuOptions.danmakuFontWeight + 1}（可能无法精确调节）',
+                        Text(uiTx('字体粗细 ${DanmakuOptions.danmakuFontWeight + 1}（可能无法精确调节）'),
                         ),
                         resetBtn(theme, 6, () => updateFontWeight(5)),
                       ],
@@ -339,7 +336,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('描边粗细 ${DanmakuOptions.danmakuStrokeWidth}'),
+                        Text(uiTx('描边粗细 ${DanmakuOptions.danmakuStrokeWidth}')),
                         resetBtn(theme, 1.5, () => updateStrokeWidth(1.5)),
                       ],
                     ),
@@ -357,8 +354,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '字体大小 ${(DanmakuOptions.danmakuFontScale * 100).toStringAsFixed(1)}%',
+                        Text(uiTx('字体大小 ${(DanmakuOptions.danmakuFontScale * 100).toStringAsFixed(1)}%'),
                         ),
                         resetBtn(theme, '100.0%', () => updateFontSize(1.0)),
                       ],
@@ -378,8 +374,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '全屏字体大小 ${(DanmakuOptions.danmakuFontScaleFS * 100).toStringAsFixed(1)}%',
+                        Text(uiTx('全屏字体大小 ${(DanmakuOptions.danmakuFontScaleFS * 100).toStringAsFixed(1)}%'),
                         ),
                         resetBtn(theme, '120.0%', () => updateFontSizeFS(1.2)),
                       ],
@@ -399,7 +394,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('滚动弹幕时长 ${DanmakuOptions.danmakuDuration} 秒'),
+                        Text(uiTx('滚动弹幕时长 ${DanmakuOptions.danmakuDuration} 秒')),
                         resetBtn(theme, 7.0, () => updateDuration(7.0)),
                       ],
                     ),
@@ -417,8 +412,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '静态弹幕时长 ${DanmakuOptions.danmakuStaticDuration} 秒',
+                        Text(uiTx('静态弹幕时长 ${DanmakuOptions.danmakuStaticDuration} 秒'),
                         ),
                         resetBtn(theme, 4.0, () => updateStaticDuration(4.0)),
                       ],
@@ -437,7 +431,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('弹幕行高 ${DanmakuOptions.danmakuLineHeight}'),
+                        Text(uiTx('弹幕行高 ${DanmakuOptions.danmakuLineHeight}')),
                         resetBtn(theme, 1.6, () => updateLineHeight(1.6)),
                       ],
                     ),
@@ -593,10 +587,9 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                       height: 45,
                       child: Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: Center(
-                              child: Text(
-                                '视频参数',
+                              child: Text(uiTx('视频参数'),
                                 style: TextStyle(fontSize: 14),
                               ),
                             ),
@@ -627,17 +620,15 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                       ),
                     ),
                     buildAudioDelay(plPlayerController.audioDelayMs.value),
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.only(top: 4),
-                      child: Text(
-                        '音频延迟：正值延后音频（画面相对提前），负值延后画面（音频相对提前）',
+                      child: Text(uiTx('音频延迟：正值延后音频（画面相对提前），负值延后画面（音频相对提前）'),
                         style: TextStyle(fontSize: 12),
                       ),
                     ),
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.only(top: 4, bottom: 14),
-                      child: Text(
-                        '部分设备或视频输出驱动可能不支持画面调节',
+                      child: Text(uiTx('部分设备或视频输出驱动可能不支持画面调节'),
                         style: TextStyle(fontSize: 12),
                       ),
                     ),

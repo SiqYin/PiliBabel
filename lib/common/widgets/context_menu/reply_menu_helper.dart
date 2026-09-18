@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 part of 'package:PiliPlus/pages/video/reply/widgets/reply_item_grpc.dart';
 
 void showReplyCopyDialog(
@@ -37,7 +38,7 @@ void showReplyCopyDialog(
 
                     showConfirmDialog(
                       context: context,
-                      title: const Text('是否将以下内容加入评论过滤：'),
+                      title: Text(uiTx('是否将以下内容加入评论过滤：')),
                       content: Text(
                         escapedText,
                         style: const TextStyle(

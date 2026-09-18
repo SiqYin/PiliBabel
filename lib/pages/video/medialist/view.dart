@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
@@ -296,7 +297,7 @@ class _MediaListPanelState extends State<MediaListPanel>
                       customBorder: const CircleBorder(),
                       onTap: () => showConfirmDialog(
                         context: context,
-                        title: const Text('确定移除该视频？'),
+                        title: Text(uiTx('确定移除该视频？')),
                         onConfirm: () => widget.onDelete!(item, index),
                       ),
                       onLongPress: () => widget.onDelete!(item, index),

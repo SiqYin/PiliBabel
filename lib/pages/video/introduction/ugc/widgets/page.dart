@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -106,10 +107,9 @@ class _PagesPanelState extends State<PagesPanel> {
             child: Row(
               mainAxisAlignment: .spaceBetween,
               children: [
-                const Text('视频选集 '),
+                Text(uiTx('视频选集 ')),
                 Expanded(
-                  child: Text(
-                    ' 正在播放：${pages[pageIndex].part}',
+                  child: Text(uiTx(' 正在播放：${pages[pageIndex].part}'),
                     overflow: .ellipsis,
                     style: TextStyle(fontSize: 12, color: colorScheme.outline),
                   ),
@@ -129,8 +129,7 @@ class _PagesPanelState extends State<PagesPanel> {
                       IdUtils.bv2av(widget.bvid),
                       cid,
                     ),
-                    child: Text(
-                      '共${pages.length}集',
+                    child: Text(uiTx('共${pages.length}集'),
                       style: const TextStyle(fontSize: 13),
                     ),
                   ),

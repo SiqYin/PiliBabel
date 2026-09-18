@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -50,10 +51,10 @@ class _ViewPointsPageState extends State<ViewPointsPage>
         child: Row(
           children: [
             const SizedBox(width: 16),
-            const Expanded(
-              child: Text('分段信息', style: TextStyle(fontSize: 16)),
+            Expanded(
+              child: Text(uiTx('分段信息'), style: TextStyle(fontSize: 16)),
             ),
-            const Text('分段进度条 ', style: TextStyle(fontSize: 16)),
+            Text(uiTx('分段进度条 '), style: TextStyle(fontSize: 16)),
             Obx(
               () => Transform.scale(
                 alignment: Alignment.centerLeft,

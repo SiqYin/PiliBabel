@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:convert' show jsonEncode;
 import 'dart:math';
 
@@ -109,7 +110,7 @@ abstract final class RequestUtils {
     String tagName = '';
     final onCreate = await showConfirmDialog(
       context: context,
-      title: const Text('新建分组'),
+      title: Text(uiTx('新建分组')),
       content: TextFormField(
         autofocus: true,
         initialValue: tagName,
@@ -228,7 +229,7 @@ abstract final class RequestUtils {
                     afterMod?.call(result.contains(-10) ? -10 : 2);
                   }
                 },
-                child: const Text('设置分组', style: TextStyle(fontSize: 14)),
+                child: Text(uiTx('设置分组'), style: TextStyle(fontSize: 14)),
               ),
               DialogOption(
                 onPressed: () async {
@@ -245,7 +246,7 @@ abstract final class RequestUtils {
                     res.toast();
                   }
                 },
-                child: const Text('取消关注', style: TextStyle(fontSize: 14)),
+                child: Text(uiTx('取消关注'), style: TextStyle(fontSize: 14)),
               ),
             ],
           ),
@@ -354,13 +355,12 @@ abstract final class RequestUtils {
                         },
                       );
                     },
-                    child: const Text('申诉'),
+                    child: Text(uiTx('申诉')),
                   ),
                 if (!isManual)
                   TextButton(
                     onPressed: Get.back,
-                    child: Text(
-                      '关闭',
+                    child: Text(uiTx('关闭'),
                       style: TextStyle(color: colorScheme.outline),
                     ),
                   ),
@@ -476,8 +476,7 @@ abstract final class RequestUtils {
               actions: [
                 TextButton(
                   onPressed: Get.back,
-                  child: Text(
-                    '取消',
+                  child: Text(uiTx('取消'),
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.outline,
                     ),
@@ -521,7 +520,7 @@ abstract final class RequestUtils {
                       });
                     }
                   },
-                  child: const Text('确认'),
+                  child: Text(uiTx('确认')),
                 ),
               ],
             );
@@ -615,7 +614,7 @@ abstract final class RequestUtils {
           actions: [
             TextButton(
               onPressed: Get.back,
-              child: const Text('关闭'),
+              child: Text(uiTx('关闭')),
             ),
           ],
         ),

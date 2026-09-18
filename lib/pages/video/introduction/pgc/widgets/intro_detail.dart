@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart'
     show tabBarScrollPhysics;
@@ -165,8 +166,7 @@ class _IntroDetailState extends State<PgcIntroPanel>
         ),
         if (widget.item.evaluate?.isNotEmpty == true) ...[
           const SizedBox(height: 20),
-          Text(
-            '简介：',
+          Text(uiTx('简介：'),
             style: theme.textTheme.titleMedium,
           ),
           const SizedBox(height: 4),
@@ -177,8 +177,7 @@ class _IntroDetailState extends State<PgcIntroPanel>
         ],
         if (widget.item.actors?.isNotEmpty == true) ...[
           const SizedBox(height: 20),
-          Text(
-            '演职人员：',
+          Text(uiTx('演职人员：'),
             style: theme.textTheme.titleMedium,
           ),
           const SizedBox(height: 4),

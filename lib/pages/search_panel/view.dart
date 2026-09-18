@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -117,8 +118,7 @@ abstract class CommonSearchPanelState<
                 color: theme.colorScheme.outline,
               ),
               const SizedBox(height: 12),
-              Text(
-                '当前页结果已被关键词过滤',
+              Text(uiTx('当前页结果已被关键词过滤'),
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w500,
@@ -126,8 +126,7 @@ abstract class CommonSearchPanelState<
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
-                '可以继续加载更多结果，直到找到符合条件的内容',
+              Text(uiTx('可以继续加载更多结果，直到找到符合条件的内容'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
@@ -148,8 +147,7 @@ abstract class CommonSearchPanelState<
                 label: Text(_isLoadingMore ? '加载中...' : '继续加载'),
               ),
               const SizedBox(height: 8),
-              Text(
-                '加载完成后方可进行下次加载，避免触发频率限制',
+              Text(uiTx('加载完成后方可进行下次加载，避免触发频率限制'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 11,

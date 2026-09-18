@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/http/user.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -19,13 +20,12 @@ class HistoryBaseController extends GetxController {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('提示'),
-        content: const Text('啊叻？你要清空历史记录功能吗？'),
+        title: Text(uiTx('提示')),
+        content: Text(uiTx('啊叻？你要清空历史记录功能吗？')),
         actions: [
           TextButton(
             onPressed: Get.back,
-            child: Text(
-              '取消',
+            child: Text(uiTx('取消'),
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -42,7 +42,7 @@ class HistoryBaseController extends GetxController {
                 res.toast();
               }
             },
-            child: const Text('确认清空'),
+            child: Text(uiTx('确认清空')),
           ),
         ],
       ),
@@ -55,13 +55,12 @@ class HistoryBaseController extends GetxController {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('提示'),
+        title: Text(uiTx('提示')),
         content: Text(pauseStatus ? '啊叻？你要暂停历史记录功能吗？' : '啊叻？要恢复历史记录功能吗？'),
         actions: [
           TextButton(
             onPressed: Get.back,
-            child: Text(
-              '取消',
+            child: Text(uiTx('取消'),
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -135,7 +136,7 @@ class LiveCardVApp extends StatelessWidget {
                             style: FilledButton.styleFrom(
                               visualDensity: VisualDensity.compact,
                             ),
-                            child: const Text('取消'),
+                            child: Text(uiTx('取消')),
                           ),
                         ),
                       ],

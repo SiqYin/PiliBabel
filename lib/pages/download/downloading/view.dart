@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
@@ -46,7 +47,7 @@ class _DownloadingPageState extends State<DownloadingPage>
           appBar: MultiSelectAppBarWidget(
             ctr: this,
             child: AppBar(
-              title: const Text('正在缓存'),
+              title: Text(uiTx('正在缓存')),
               actions: [
                 IconButton(
                   tooltip: '多选',
@@ -105,7 +106,7 @@ class _DownloadingPageState extends State<DownloadingPage>
   void onRemove() {
     showConfirmDialog(
       context: context,
-      title: const Text('确定删除选中视频？'),
+      title: Text(uiTx('确定删除选中视频？')),
       onConfirm: () async {
         SmartDialog.showLoading();
         final allChecked = this.allChecked.toSet();

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/pages/common/multi_select/base.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
@@ -29,12 +30,12 @@ class MultiSelectAppBarWidget extends StatelessWidget
           onPressed: ctr.handleSelect,
           icon: const Icon(Icons.close_outlined),
         ),
-        title: Obx(() => Text('已选: ${ctr.checkedCount}')),
+        title: Obx(() => Text(uiTx('已选: ${ctr.checkedCount}'))),
         actions: [
           TextButton(
             style: style,
             onPressed: () => ctr.handleSelect(checked: true),
-            child: const Text('全选'),
+            child: Text(uiTx('全选')),
           ),
           ...?actions,
           TextButton(
@@ -45,8 +46,7 @@ class MultiSelectAppBarWidget extends StatelessWidget
               }
               ctr.onRemove();
             },
-            child: Text(
-              '移除',
+            child: Text(uiTx('移除'),
               style: TextStyle(color: colorScheme.error),
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -47,7 +48,7 @@ class _MemberDynamicsPageState extends State<MemberDynamicsPage>
     final padding = MediaQuery.viewPaddingOf(context);
     return widget.mid == null
         ? SimpleScaffold(
-            appBar: AppBar(title: const Text('我的动态')),
+            appBar: AppBar(title: Text(uiTx('我的动态'))),
             body: Padding(
               padding: EdgeInsets.only(
                 left: padding.left,

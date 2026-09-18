@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async' show Timer;
 
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
@@ -114,24 +115,21 @@ class _SuperChatCardState extends State<SuperChatCard> {
         CustomPopupMenuItem<void>(
           height: 38,
           onTap: () => Get.toNamed('/member?mid=${item.uid}'),
-          child: Text(
-            '访问: ${item.userInfo.uname}',
+          child: Text(uiTx('访问: ${item.userInfo.uname}'),
             style: const TextStyle(fontSize: 13),
           ),
         ),
         CustomPopupMenuItem<void>(
           height: 38,
           onTap: () => Utils.copyText(Utils.jsonEncoder.convert(item.toJson())),
-          child: const Text(
-            '复制 SC 信息',
+          child: Text(uiTx('复制 SC 信息'),
             style: TextStyle(fontSize: 13),
           ),
         ),
         CustomPopupMenuItem<void>(
           height: 38,
           onTap: widget.onReport,
-          child: const Text(
-            '举报',
+          child: Text(uiTx('举报'),
             style: TextStyle(fontSize: 13),
           ),
         ),

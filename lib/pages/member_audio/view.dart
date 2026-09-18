@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -79,8 +80,7 @@ class _MemberAudioState extends State<MemberAudio>
                       padding: const EdgeInsets.fromLTRB(14, 2.5, 8, 2.5),
                       child: Row(
                         children: [
-                          Text(
-                            '共${_controller.totalSize ?? 0}首',
+                          Text(uiTx('共${_controller.totalSize ?? 0}首'),
                             style: const TextStyle(fontSize: 13),
                           ),
                           Padding(
@@ -93,8 +93,7 @@ class _MemberAudioState extends State<MemberAudio>
                                 size: 16,
                                 color: colorScheme.secondary,
                               ),
-                              label: Text(
-                                '播放全部',
+                              label: Text(uiTx('播放全部'),
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: colorScheme.secondary,

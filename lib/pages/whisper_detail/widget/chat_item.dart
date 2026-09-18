@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -115,8 +116,7 @@ class ChatItem extends StatelessWidget {
                 child,
                 isPic ? const SizedBox(height: 7) : const SizedBox(height: 2),
                 if (item.msgStatus == 1)
-                  Text(
-                    '  已撤回',
+                  Text(uiTx('  已撤回'),
                     style: theme.textTheme.labelSmall!.copyWith(
                       color: theme.colorScheme.onErrorContainer,
                     ),
@@ -127,8 +127,7 @@ class ChatItem extends StatelessWidget {
                     thickness: 1,
                     color: theme.colorScheme.outline.withValues(alpha: 0.2),
                   ),
-                  Text(
-                    '此条消息为自动回复',
+                  Text(uiTx('此条消息为自动回复'),
                     style: theme.textTheme.labelMedium!.copyWith(
                       color: theme.colorScheme.outline,
                     ),

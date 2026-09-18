@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math' show max;
 
 import 'package:PiliPlus/common/style.dart';
@@ -545,7 +546,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
                     }
                   }
                 },
-          child: const Text('定时发布'),
+          child: Text(uiTx('定时发布')),
         )
       : OutlinedButton.icon(
           style: OutlinedButton.styleFrom(
@@ -837,7 +838,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
                   spacing: 3,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text('直播预约: ${reserveCard.title}'),
+                    Text(uiTx('直播预约: ${reserveCard.title}')),
                     Text(
                       '${DateFormatUtils.longFormatD.format(
                         DateTime.fromMillisecondsSinceEpoch(reserveCard.livePlanStartTime! * 1000),

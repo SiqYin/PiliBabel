@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show Platform;
 import 'dart:math' show max;
 
@@ -176,8 +177,7 @@ List<SettingsModel> get extraSettings => [
     title: '评论折叠行数',
     subtitle: '0行为不折叠',
     leading: const Icon(Icons.compress),
-    getTrailing: (theme) => Text(
-      '${ReplyItemGrpc.replyLengthLimit}行',
+    getTrailing: (theme) => Text(uiTx('${ReplyItemGrpc.replyLengthLimit}行'),
       style: theme.textTheme.titleSmall,
     ),
     onTap: _showReplyLengthDialog,
@@ -719,12 +719,12 @@ Future<void> audioNormalization(
       await showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('自定义参数'),
+          title: Text(uiTx('自定义参数')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             spacing: 16,
             children: [
-              const Text('等同于 --lavfi-complex="[aid1] 参数 [ao]"'),
+              Text(uiTx('等同于 --lavfi-complex="[aid1] 参数 [ao]"')),
               TextField(
                 autofocus: true,
                 onChanged: (value) => param = value,
@@ -734,8 +734,7 @@ Future<void> audioNormalization(
           actions: [
             TextButton(
               onPressed: Get.back,
-              child: Text(
-                '取消',
+              child: Text(uiTx('取消'),
                 style: TextStyle(color: ColorScheme.of(context).outline),
               ),
             ),
@@ -749,7 +748,7 @@ Future<void> audioNormalization(
                 }
                 setState();
               },
-              child: const Text('确定'),
+              child: Text(uiTx('确定')),
             ),
           ],
         ),
@@ -776,7 +775,7 @@ void _showDownPathDialog(BuildContext context, VoidCallback setState) {
             Get.back();
             Utils.copyText(downloadPath);
           },
-          child: const Text('复制', style: TextStyle(fontSize: 14)),
+          child: Text(uiTx('复制'), style: TextStyle(fontSize: 14)),
         ),
         DialogOption(
           onPressed: () {
@@ -788,7 +787,7 @@ void _showDownPathDialog(BuildContext context, VoidCallback setState) {
             Get.find<DownloadService>().initDownloadList();
             GStorage.setting.delete(SettingBoxKey.downloadPath);
           },
-          child: const Text('重置', style: TextStyle(fontSize: 14)),
+          child: Text(uiTx('重置'), style: TextStyle(fontSize: 14)),
         ),
         DialogOption(
           onPressed: () async {
@@ -800,7 +799,7 @@ void _showDownPathDialog(BuildContext context, VoidCallback setState) {
             Get.find<DownloadService>().initDownloadList();
             GStorage.setting.put(SettingBoxKey.downloadPath, path);
           },
-          child: const Text('设置新路径', style: TextStyle(fontSize: 14)),
+          child: Text(uiTx('设置新路径'), style: TextStyle(fontSize: 14)),
         ),
       ],
     ),
@@ -812,7 +811,7 @@ void _showDynDialog(BuildContext context) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('检查周期'),
+      title: Text(uiTx('检查周期')),
       content: TextFormField(
         autofocus: true,
         initialValue: dynamicPeriod,
@@ -824,8 +823,7 @@ void _showDynDialog(BuildContext context) {
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -840,7 +838,7 @@ void _showDynDialog(BuildContext context) {
               SmartDialog.showToast(e.toString());
             }
           },
-          child: const Text('确定'),
+          child: Text(uiTx('确定')),
         ),
       ],
     ),
@@ -852,7 +850,7 @@ void _showReplyLengthDialog(BuildContext context, VoidCallback setState) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('评论折叠行数'),
+      title: Text(uiTx('评论折叠行数')),
       content: TextFormField(
         autofocus: true,
         initialValue: replyLengthLimit,
@@ -864,8 +862,7 @@ void _showReplyLengthDialog(BuildContext context, VoidCallback setState) {
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -881,7 +878,7 @@ void _showReplyLengthDialog(BuildContext context, VoidCallback setState) {
               SmartDialog.showToast(e.toString());
             }
           },
-          child: const Text('确定'),
+          child: Text(uiTx('确定')),
         ),
       ],
     ),
@@ -893,7 +890,7 @@ void _showDmHeightDialog(BuildContext context, VoidCallback setState) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('弹幕行高'),
+      title: Text(uiTx('弹幕行高')),
       content: TextFormField(
         autofocus: true,
         initialValue: danmakuLineHeight,
@@ -904,8 +901,7 @@ void _showDmHeightDialog(BuildContext context, VoidCallback setState) {
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -923,7 +919,7 @@ void _showDmHeightDialog(BuildContext context, VoidCallback setState) {
               SmartDialog.showToast(e.toString());
             }
           },
-          child: const Text('确定'),
+          child: Text(uiTx('确定')),
         ),
       ],
     ),
@@ -935,7 +931,7 @@ void _showTouchSlopDialog(BuildContext context, VoidCallback setState) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('横向滑动阈值'),
+      title: Text(uiTx('横向滑动阈值')),
       content: TextFormField(
         autofocus: true,
         initialValue: initialValue,
@@ -946,8 +942,7 @@ void _showTouchSlopDialog(BuildContext context, VoidCallback setState) {
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -963,7 +958,7 @@ void _showTouchSlopDialog(BuildContext context, VoidCallback setState) {
               SmartDialog.showToast(e.toString());
             }
           },
-          child: const Text('确定'),
+          child: Text(uiTx('确定')),
         ),
       ],
     ),
@@ -977,7 +972,7 @@ Future<void> _showRefreshDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('刷新指示器高度'),
+      title: Text(uiTx('刷新指示器高度')),
       min: 10.0,
       max: 100.0,
       divisions: 9,
@@ -1060,7 +1055,7 @@ Future<void> _showFavDialog(BuildContext context) async {
         context: context,
         builder: (context) => AlertDialog(
           clipBehavior: Clip.hardEdge,
-          title: const Text('选择默认收藏夹'),
+          title: Text(uiTx('选择默认收藏夹')),
           contentPadding: const EdgeInsets.only(top: 5, bottom: 18),
           content: SingleChildScrollView(
             child: RadioGroup(
@@ -1099,7 +1094,7 @@ Future<void> _showReplyCountDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('连接重试次数'),
+      title: Text(uiTx('连接重试次数')),
       min: 0,
       max: 8,
       divisions: 8,
@@ -1121,7 +1116,7 @@ Future<void> _showReplyDelayDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('连接重试间隔'),
+      title: Text(uiTx('连接重试间隔')),
       min: 0,
       max: 1000,
       divisions: 10,
@@ -1162,7 +1157,7 @@ void _showProxyDialog(BuildContext context) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('设置代理'),
+      title: Text(uiTx('设置代理')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1195,8 +1190,7 @@ void _showProxyDialog(BuildContext context) {
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -1212,7 +1206,7 @@ void _showProxyDialog(BuildContext context) {
               systemProxyPort,
             );
           },
-          child: const Text('确认'),
+          child: Text(uiTx('确认')),
         ),
       ],
     ),
@@ -1224,7 +1218,7 @@ void _showCacheDialog(BuildContext context, VoidCallback setState) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('最大缓存大小'),
+      title: Text(uiTx('最大缓存大小')),
       content: TextField(
         autofocus: true,
         onChanged: (value) => valueStr = value,
@@ -1235,8 +1229,7 @@ void _showCacheDialog(BuildContext context, VoidCallback setState) {
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -1254,7 +1247,7 @@ void _showCacheDialog(BuildContext context, VoidCallback setState) {
               SmartDialog.showToast(e.toString());
             }
           },
-          child: const Text('确定'),
+          child: Text(uiTx('确定')),
         ),
       ],
     ),

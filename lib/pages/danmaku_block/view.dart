@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/dialog/export_import.dart';
@@ -54,7 +55,7 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
   Widget build(BuildContext context) {
     return SimpleScaffold(
       appBar: AppBar(
-        title: const Text('弹幕屏蔽'),
+        title: Text(uiTx('弹幕屏蔽')),
         actions: [
           IconButton(
             tooltip: '导入/导出',
@@ -131,7 +132,7 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
           icon: const Icon(Icons.delete_outlined),
           onPressed: () => showConfirmDialog(
             context: context,
-            title: const Text('确定删除该规则？'),
+            title: Text(uiTx('确定删除该规则？')),
             onConfirm: () => _controller.danmakuFilterDel(
               tabIndex,
               itemIndex,
@@ -185,7 +186,7 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('${itemId != null ? "编辑" : "添加新的"}${type.label}规则'),
+        title: Text(uiTx('${itemId != null ? "编辑" : "添加新的"}${type.label}规则')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -205,13 +206,12 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
         actions: [
           TextButton(
             onPressed: Get.back,
-            child: Text(
-              '取消',
+            child: Text(uiTx('取消'),
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
           TextButton(
-            child: const Text('确定'),
+            child: Text(uiTx('确定')),
             onPressed: () async {
               if (filter != initFilter) {
                 Get.back();

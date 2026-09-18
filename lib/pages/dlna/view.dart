@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -73,7 +74,7 @@ class _DLNAPageState extends State<DLNAPage> {
     final colorScheme = ColorScheme.of(context);
     return SimpleScaffold(
       appBar: AppBar(
-        title: const Text('投屏'),
+        title: Text(uiTx('投屏')),
         actions: [
           IconButton(
             tooltip: '搜索',

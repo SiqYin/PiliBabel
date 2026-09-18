@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/models/search/result.dart';
 import 'package:PiliPlus/utils/bili_utils.dart';
@@ -75,8 +76,7 @@ class SearchUserItem extends StatelessWidget {
                     ),
                   ],
                 ),
-                Text(
-                  '粉丝：${NumUtils.numFormat(item.fans)}  视频：${NumUtils.numFormat(item.videos)}',
+                Text(uiTx('粉丝：${NumUtils.numFormat(item.fans)}  视频：${NumUtils.numFormat(item.videos)}'),
                   style: style,
                 ),
                 if (item.officialVerify?.desc?.isNotEmpty == true)

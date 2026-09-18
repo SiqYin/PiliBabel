@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:convert';
 
 import 'package:PiliPlus/common/widgets/dialog/export_import.dart';
@@ -223,8 +224,7 @@ class _SearchPageState extends State<SearchPage> {
                               onPressed: () => Get.toNamed('/searchTrending'),
                               child: Row(
                                 children: [
-                                  Text(
-                                    '完整榜单',
+                                  Text(uiTx('完整榜单'),
                                     strutStyle: const StrutStyle(
                                       leading: 0,
                                       height: 1,
@@ -258,8 +258,7 @@ class _SearchPageState extends State<SearchPage> {
                       size: 18,
                       color: secondary,
                     ),
-                    label: Text(
-                      '刷新',
+                    label: Text(uiTx('刷新'),
                       strutStyle: const StrutStyle(leading: 0, height: 1),
                       style: TextStyle(height: 1, color: secondary),
                     ),
@@ -308,8 +307,7 @@ class _SearchPageState extends State<SearchPage> {
                 sliver: SliverToBoxAdapter(
                   child: Row(
                     children: [
-                      Text(
-                        '搜索历史',
+                      Text(uiTx('搜索历史'),
                         strutStyle: const StrutStyle(leading: 0, height: 1),
                         style: theme.textTheme.titleMedium!.copyWith(
                           height: 1,
@@ -334,8 +332,7 @@ class _SearchPageState extends State<SearchPage> {
                           size: 18,
                           color: secondary,
                         ),
-                        label: Text(
-                          '清空',
+                        label: Text(uiTx('清空'),
                           style: TextStyle(height: 1, color: secondary),
                         ),
                       ),

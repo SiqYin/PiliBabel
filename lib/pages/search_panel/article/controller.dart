@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math';
 
 import 'package:PiliPlus/http/loading_state.dart';
@@ -84,7 +85,7 @@ class SearchArticleController
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 10),
-                const Text('排序', style: TextStyle(fontSize: 16)),
+                Text(uiTx('排序'), style: TextStyle(fontSize: 16)),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
@@ -110,7 +111,7 @@ class SearchArticleController
                   ).toList(),
                 ),
                 const SizedBox(height: 20),
-                const Text('分区', style: TextStyle(fontSize: 16)),
+                Text(uiTx('分区'), style: TextStyle(fontSize: 16)),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,

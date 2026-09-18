@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
@@ -49,8 +50,7 @@ class FansMedalPanel extends StatelessWidget {
             ];
             if (items.isEmpty) {
               return Center(
-                child: Text(
-                  '还没有粉丝勋章',
+                child: Text(uiTx('还没有粉丝勋章'),
                   style: theme.textTheme.bodyLarge?.copyWith(
                     color: theme.colorScheme.onSurfaceVariant,
                   ),
@@ -82,8 +82,7 @@ class _TitleBar extends StatelessWidget {
         padding: const EdgeInsets.only(left: 16, right: 8),
         child: Row(
           children: [
-            Text(
-              '粉丝勋章',
+            Text(uiTx('粉丝勋章'),
               style: theme.textTheme.titleMedium,
             ),
             const Spacer(),
@@ -92,8 +91,7 @@ class _TitleBar extends StatelessWidget {
               if (total != null) {
                 return Padding(
                   padding: const EdgeInsets.only(right: 4),
-                  child: Text(
-                    '共 $total 枚',
+                  child: Text(uiTx('共 $total 枚'),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -147,7 +145,7 @@ class _ErrorView extends StatelessWidget {
           const SizedBox(height: 12),
           TextButton(
             onPressed: onRetry,
-            child: const Text('重试'),
+            child: Text(uiTx('重试')),
           ),
         ],
       ),

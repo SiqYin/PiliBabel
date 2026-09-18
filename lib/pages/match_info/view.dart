@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -41,7 +42,7 @@ class _MatchInfoPageState extends CommonDynPageState<MatchInfoPage> {
   Widget build(BuildContext context) {
     return fabAnimWrapper(
       child: SimpleScaffold(
-        appBar: AppBar(title: const Text('比赛详情')),
+        appBar: AppBar(title: Text(uiTx('比赛详情'))),
         body: ViewSafeArea(
           child: refreshIndicator(
             onRefresh: controller.onRefresh,
@@ -143,7 +144,7 @@ class _MatchInfoPageState extends CommonDynPageState<MatchInfoPage> {
                             ),
                             onPressed: () =>
                                 PageUtils.toLiveRoom(response.liveRoom),
-                            child: const Text('看直播'),
+                            child: Text(uiTx('看直播')),
                           )
                         else if (response.contestStatus == 3)
                           Text(
@@ -192,7 +193,7 @@ class _MatchInfoPageState extends CommonDynPageState<MatchInfoPage> {
       Get.to(
         SimpleScaffold(
           appBar: AppBar(
-            title: const Text('评论详情'),
+            title: Text(uiTx('评论详情')),
             shape: Border(
               bottom: BorderSide(
                 color: theme.colorScheme.outline.withValues(alpha: 0.1),

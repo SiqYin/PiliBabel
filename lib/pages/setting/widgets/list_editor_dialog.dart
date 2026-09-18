@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -174,8 +175,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Center(
-                  child: Text(
-                    '暂无${widget.itemLabel}',
+                  child: Text(uiTx('暂无${widget.itemLabel}'),
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.outline,
                     ),
@@ -244,8 +244,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(color: theme.colorScheme.outline),
           ),
         ),
@@ -264,7 +263,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
             if (!_addItem()) return;
             Get.back(result: _items);
           },
-          child: const Text('保存'),
+          child: Text(uiTx('保存')),
         ),
       ],
     );

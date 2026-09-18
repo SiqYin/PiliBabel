@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/http/member.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
@@ -35,8 +36,7 @@ Future<void> showMemberReportDialog(
                 spacing: 4,
                 crossAxisAlignment: .start,
                 children: [
-                  Text(
-                    '举报: $name',
+                  Text(uiTx('举报: $name'),
                     style: const TextStyle(fontSize: 18),
                   ),
                   Text('uid: $mid'),
@@ -62,9 +62,9 @@ Future<void> showMemberReportDialog(
             mainAxisSize: .min,
             crossAxisAlignment: .start,
             children: [
-              const Padding(
+              Padding(
                 padding: .only(left: 18),
-                child: Text('举报内容（必选，可多选）'),
+                child: Text(uiTx('举报内容（必选，可多选）')),
               ),
               ...List.generate(
                 3,
@@ -108,9 +108,9 @@ Future<void> showMemberReportDialog(
                   },
                 ),
               ),
-              const Padding(
+              Padding(
                 padding: .only(left: 18),
-                child: Text('举报理由（单选，非必选）'),
+                child: Text(uiTx('举报理由（单选，非必选）')),
               ),
               Builder(
                 builder: (context) => Column(
@@ -163,8 +163,7 @@ Future<void> showMemberReportDialog(
         actions: [
           TextButton(
             onPressed: Get.back,
-            child: Text(
-              '取消',
+            child: Text(uiTx('取消'),
               style: TextStyle(color: theme.colorScheme.outline),
             ),
           ),
@@ -181,7 +180,7 @@ Future<void> showMemberReportDialog(
                 );
               }
             },
-            child: const Text('确定'),
+            child: Text(uiTx('确定')),
           ),
         ],
       );

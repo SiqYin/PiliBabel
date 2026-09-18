@@ -502,7 +502,7 @@ class ReplyItemGrpc extends StatelessWidget {
         child: TextButton(
           onPressed: showDialogue,
           style: buttonStyle,
-          child: Text('查看对话', style: textStyle),
+          child: Text(uiTx('查看对话'), style: textStyle),
         ),
       );
     } else if (replyLevel == 3 && replyItem.parent != replyItem.root) {
@@ -511,7 +511,7 @@ class ReplyItemGrpc extends StatelessWidget {
         child: TextButton(
           onPressed: jumpToDialogue,
           style: buttonStyle,
-          child: Text('跳转回复', style: textStyle),
+          child: Text(uiTx('跳转回复'), style: textStyle),
         ),
       );
     }
@@ -1150,7 +1150,7 @@ class ReplyItemGrpc extends StatelessWidget {
                   builder: (context) {
                     final colorScheme = ColorScheme.of(context);
                     return AlertDialog(
-                      title: const Text('删除评论'),
+                      title: Text(uiTx('删除评论')),
                       content: Text.rich(
                         TextSpan(
                           children: [
@@ -1171,8 +1171,7 @@ class ReplyItemGrpc extends StatelessWidget {
                       actions: [
                         TextButton(
                           onPressed: () => Get.back(result: false),
-                          child: Text(
-                            '取消',
+                          child: Text(uiTx('取消'),
                             style: TextStyle(
                               color: colorScheme.outline,
                             ),
@@ -1180,7 +1179,7 @@ class ReplyItemGrpc extends StatelessWidget {
                         ),
                         TextButton(
                           onPressed: () => Get.back(result: true),
-                          child: const Text('确定'),
+                          child: Text(uiTx('确定')),
                         ),
                       ],
                     );
@@ -1205,7 +1204,7 @@ class ReplyItemGrpc extends StatelessWidget {
               },
               minLeadingWidth: 0,
               leading: Icon(Icons.delete_outlined, color: errorColor, size: 19),
-              title: Text('删除', style: style.copyWith(color: errorColor)),
+              title: Text(uiTx('删除'), style: style.copyWith(color: errorColor)),
             ),
           if (ownerMid != Int64.ZERO)
             ListTile(
@@ -1239,7 +1238,7 @@ class ReplyItemGrpc extends StatelessWidget {
               },
               minLeadingWidth: 0,
               leading: Icon(Icons.error_outline, color: errorColor, size: 19),
-              title: Text('举报', style: style.copyWith(color: errorColor)),
+              title: Text(uiTx('举报'), style: style.copyWith(color: errorColor)),
             ),
           if (item.member.mid != Int64.ZERO)
             ListTile(
@@ -1256,7 +1255,7 @@ class ReplyItemGrpc extends StatelessWidget {
               },
               minLeadingWidth: 0,
               leading: const Icon(Icons.person_off_outlined, size: 19),
-              title: Text('屏蔽用户', style: style),
+              title: Text(uiTx('屏蔽用户'), style: style),
             ),
           if (replyLevel == 1 && !isSubReply && ownerMid == upMid)
             ListTile(
@@ -1278,7 +1277,7 @@ class ReplyItemGrpc extends StatelessWidget {
             },
             minLeadingWidth: 0,
             leading: const Icon(Icons.copy_all_outlined, size: 19),
-            title: Text('复制全部', style: style),
+            title: Text(uiTx('复制全部'), style: style),
           ),
           ListTile(
             onTap: () {
@@ -1287,7 +1286,7 @@ class ReplyItemGrpc extends StatelessWidget {
             },
             minLeadingWidth: 0,
             leading: const Icon(Icons.copy_outlined, size: 19),
-            title: Text('自由复制', style: style),
+            title: Text(uiTx('自由复制'), style: style),
           ),
           ListTile(
             onTap: () {
@@ -1296,7 +1295,7 @@ class ReplyItemGrpc extends StatelessWidget {
             },
             minLeadingWidth: 0,
             leading: const Icon(Icons.save_alt, size: 19),
-            title: Text('保存评论', style: style),
+            title: Text(uiTx('保存评论'), style: style),
           ),
           if (kDebugMode || item.mid == ownerMid)
             ListTile(
@@ -1306,7 +1305,7 @@ class ReplyItemGrpc extends StatelessWidget {
               },
               minLeadingWidth: 0,
               leading: const Icon(CustomIcons.shield_reply, size: 19),
-              title: Text('检查评论', style: style),
+              title: Text(uiTx('检查评论'), style: style),
             ),
         ],
       ),

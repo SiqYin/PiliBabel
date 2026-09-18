@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show Platform;
 import 'dart:math' as math;
 
@@ -272,11 +273,11 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
                   PopupMenuItem(
                     height: 42,
                     onTap: _showLiveStreamDialog,
-                    child: const Row(
+                    child: Row(
                       spacing: 8,
                       children: [
                         Icon(Icons.alt_route, size: 20),
-                        Text('切换路线', style: TextStyle(fontSize: 14)),
+                        Text(uiTx('切换路线'), style: TextStyle(fontSize: 14)),
                       ],
                     ),
                   ),
@@ -284,21 +285,21 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
                     PopupMenuItem(
                       height: 42,
                       onTap: liveController.onCast,
-                      child: const Row(
+                      child: Row(
                         spacing: 8,
                         children: [
                           Icon(Icons.cast, size: 20),
-                          Text('投屏', style: TextStyle(fontSize: 14)),
+                          Text(uiTx('投屏'), style: TextStyle(fontSize: 14)),
                         ],
                       ),
                     ),
                   PopupMenuItem(
                     height: 42,
-                    child: const Row(
+                    child: Row(
                       spacing: 8,
                       children: [
                         Icon(Icons.info_outline, size: 20),
-                        Text('播放信息', style: TextStyle(fontSize: 14)),
+                        Text(uiTx('播放信息'), style: TextStyle(fontSize: 14)),
                       ],
                     ),
                     onTap: () => HeaderControlState.showPlayerInfo(
@@ -310,11 +311,11 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
                     PopupMenuItem(
                       height: 42,
                       onTap: showVideoPictureParameters,
-                      child: const Row(
+                      child: Row(
                         spacing: 8,
                         children: [
                           Icon(Icons.tune, size: 20),
-                          Text('视频参数', style: TextStyle(fontSize: 14)),
+                          Text(uiTx('视频参数'), style: TextStyle(fontSize: 14)),
                         ],
                       ),
                     ),

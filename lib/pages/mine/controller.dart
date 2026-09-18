@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/http/fav.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -214,7 +215,7 @@ class MineController extends CommonDataController<FavFolderData, FavFolderData>
                     children: <Widget>[
                       const Icon(MdiIcons.incognito, size: 20),
                       const SizedBox(width: 10),
-                      Text('已进入无痕模式', style: theme.textTheme.titleMedium),
+                      Text(uiTx('已进入无痕模式'), style: theme.textTheme.titleMedium),
                     ],
                   ),
                   const SizedBox(height: 10),
@@ -235,7 +236,7 @@ class MineController extends CommonDataController<FavFolderData, FavFolderData>
                           SmartDialog.dismiss(result: true);
                           SmartDialog.showToast('已设为永久无痕模式');
                         },
-                        child: Text('保存为永久', style: style),
+                        child: Text(uiTx('保存为永久'), style: style),
                       ),
                       const SizedBox(width: 10),
                       TextButton(
@@ -243,7 +244,7 @@ class MineController extends CommonDataController<FavFolderData, FavFolderData>
                           SmartDialog.dismiss();
                           SmartDialog.showToast('已设为临时无痕模式');
                         },
-                        child: Text('仅本次（默认）', style: style),
+                        child: Text(uiTx('仅本次（默认）'), style: style),
                       ),
                     ],
                   ),
@@ -284,7 +285,7 @@ class MineController extends CommonDataController<FavFolderData, FavFolderData>
                 children: [
                   const Icon(MdiIcons.incognitoOff, size: 20),
                   const SizedBox(width: 10),
-                  Text('已退出无痕模式', style: theme.textTheme.titleMedium),
+                  Text(uiTx('已退出无痕模式'), style: theme.textTheme.titleMedium),
                 ],
               ),
             ),

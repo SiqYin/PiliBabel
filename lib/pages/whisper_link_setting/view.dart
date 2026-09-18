@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -48,7 +49,7 @@ class _WhisperLinkSettingPageState extends State<WhisperLinkSettingPage> {
       color: theme.colorScheme.outline.withValues(alpha: 0.1),
     );
     return SimpleScaffold(
-      appBar: AppBar(title: const Text('聊天设置')),
+      appBar: AppBar(title: Text(uiTx('聊天设置'))),
       body: ListView(
         padding: EdgeInsets.only(
           bottom: MediaQuery.viewPaddingOf(context).bottom + 100,
@@ -78,7 +79,7 @@ class _WhisperLinkSettingPageState extends State<WhisperLinkSettingPage> {
           ListTile(
             dense: true,
             onTap: _controller.report,
-            title: const Text('举报', style: TextStyle(fontSize: 14)),
+            title: Text(uiTx('举报'), style: TextStyle(fontSize: 14)),
             trailing: Icon(
               Icons.keyboard_arrow_right,
               color: theme.colorScheme.outline,
@@ -94,7 +95,7 @@ class _WhisperLinkSettingPageState extends State<WhisperLinkSettingPage> {
     return ListTile(
       dense: true,
       onTap: () => _controller.setBlock(isBlocked),
-      title: const Text('加入黑名单', style: TextStyle(fontSize: 14)),
+      title: Text(uiTx('加入黑名单'), style: TextStyle(fontSize: 14)),
       trailing: Transform.scale(
         alignment: Alignment.centerRight,
         scale: 0.8,
@@ -191,9 +192,8 @@ class _WhisperLinkSettingPageState extends State<WhisperLinkSettingPage> {
                 ListTile(
                   dense: true,
                   onTap: () => _controller.setPush(response.pushSetting == 0),
-                  title: const Text('接收消息推送', style: TextStyle(fontSize: 14)),
-                  subtitle: Text(
-                    '若关闭此开关，你将不再收到该账号的图文消息与稿件推送，但通知类消息不受影响',
+                  title: Text(uiTx('接收消息推送'), style: TextStyle(fontSize: 14)),
+                  subtitle: Text(uiTx('若关闭此开关，你将不再收到该账号的图文消息与稿件推送，但通知类消息不受影响'),
                     style: subTitleS,
                   ),
                   trailing: Transform.scale(
@@ -211,7 +211,7 @@ class _WhisperLinkSettingPageState extends State<WhisperLinkSettingPage> {
                 () => ListTile(
                   dense: true,
                   onTap: _controller.setPin,
-                  title: const Text('置顶聊天', style: TextStyle(fontSize: 14)),
+                  title: Text(uiTx('置顶聊天'), style: TextStyle(fontSize: 14)),
                   trailing: Transform.scale(
                     alignment: Alignment.centerRight,
                     scale: 0.8,
@@ -241,7 +241,7 @@ class _WhisperLinkSettingPageState extends State<WhisperLinkSettingPage> {
             ? ListTile(
                 dense: true,
                 onTap: () => _controller.setMute(response.first.setting == 1),
-                title: const Text('消息免打扰', style: TextStyle(fontSize: 14)),
+                title: Text(uiTx('消息免打扰'), style: TextStyle(fontSize: 14)),
                 trailing: Transform.scale(
                   alignment: Alignment.centerRight,
                   scale: 0.8,

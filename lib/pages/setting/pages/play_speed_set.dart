@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math';
 
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
@@ -61,7 +62,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('添加倍速'),
+        title: Text(uiTx('添加倍速')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -82,8 +83,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
         actions: [
           TextButton(
             onPressed: Get.back,
-            child: Text(
-              '取消',
+            child: Text(uiTx('取消'),
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -105,7 +105,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
                 SmartDialog.showToast(e.toString());
               }
             },
-            child: const Text('确认'),
+            child: Text(uiTx('确认')),
           ),
         ],
       ),
@@ -184,7 +184,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
     final theme = Theme.of(context);
     return SimpleScaffold(
       appBar: AppBar(
-        title: const Text('倍速设置'),
+        title: Text(uiTx('倍速设置')),
         actions: [
           TextButton(
             onPressed: () async {
@@ -192,7 +192,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
               speedList = Pref.speedList;
               setState(() {});
             },
-            child: const Text('重置'),
+            child: Text(uiTx('重置')),
           ),
           const SizedBox(width: 16),
         ],
@@ -210,13 +210,12 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
                 top: 6,
                 bottom: 0,
               ),
-              child: Text(
-                '点击下方按钮设置默认（长按）倍速',
+              child: Text(uiTx('点击下方按钮设置默认（长按）倍速'),
                 style: TextStyle(color: theme.colorScheme.outline),
               ),
             ),
             ListTile(
-              title: const Text('默认倍速'),
+              title: Text(uiTx('默认倍速')),
               subtitle: Text(playSpeedDefault.toString()),
             ),
             SetSwitchItem(
@@ -229,7 +228,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
             ),
             if (!enableAutoLongPressSpeed)
               ListTile(
-                title: const Text('默认长按倍速'),
+                title: Text(uiTx('默认长按倍速')),
                 subtitle: Text(longPressSpeedDefault.toString()),
               ),
             Padding(
@@ -241,14 +240,13 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
               ),
               child: Row(
                 children: [
-                  Text(
-                    '倍速列表',
+                  Text(uiTx('倍速列表'),
                     style: theme.textTheme.titleMedium,
                   ),
                   const SizedBox(width: 12),
                   TextButton(
                     onPressed: onAddSpeed,
-                    child: const Text('添加'),
+                    child: Text(uiTx('添加')),
                   ),
                 ],
               ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show Platform;
 
 import 'package:PiliPlus/common/skeleton/video_reply.dart';
@@ -174,7 +175,7 @@ class _NoteListPageState extends State<NoteListPage>
                 ),
               ),
               onPressed: _onTakeNote,
-              child: const Text('开始记笔记'),
+              child: Text(uiTx('开始记笔记')),
             ),
           ),
         ),
@@ -296,8 +297,7 @@ class _NoteListPageState extends State<NoteListPage>
                           fontSize: theme.textTheme.bodyMedium!.fontSize,
                         ),
                       ),
-                      Text(
-                        '查看全部',
+                      Text(uiTx('查看全部'),
                         style: TextStyle(
                           color: theme.colorScheme.primary,
                           height: 1.75,

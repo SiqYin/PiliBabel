@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/pages/fan/view.dart';
@@ -42,7 +43,7 @@ class _ContactPageState extends State<ContactPage>
   Widget build(BuildContext context) {
     return SimpleScaffold(
       appBar: AppBar(
-        title: const Text('通讯录'),
+        title: Text(uiTx('通讯录')),
         actions: [
           IconButton(
             onPressed: () async {

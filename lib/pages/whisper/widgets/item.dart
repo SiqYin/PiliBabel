@@ -103,7 +103,7 @@ class WhisperSessionItem extends StatelessWidget {
                     Get.back();
                     _updateAck(context);
                   },
-                  child: const Text('标为已读'),
+                  child: Text(uiTx('标为已读')),
                 ),
               DialogOption(
                 onPressed: () {
@@ -117,12 +117,12 @@ class WhisperSessionItem extends StatelessWidget {
                   Get.back();
                   showConfirmDialog(
                     context: context,
-                    title: const Text('确定删除该对话？'),
+                    title: Text(uiTx('确定删除该对话？')),
                     onConfirm: () =>
                         onRemove(item.id.privateId.talkerUid.toInt()),
                   );
                 },
-                child: const Text('删除'),
+                child: Text(uiTx('删除')),
               ),
             ],
           ],
@@ -144,7 +144,7 @@ class WhisperSessionItem extends StatelessWidget {
                     CustomPopupMenuItem<void>(
                       height: 42,
                       onTap: () => _updateAck(context),
-                      child: const Text('标为已读'),
+                      child: Text(uiTx('标为已读')),
                     ),
                   // if (kDebugMode)
                   //   CustomPopupMenuItem<void>(
@@ -156,7 +156,7 @@ class WhisperSessionItem extends StatelessWidget {
                   //       );
                   //       (context as Element).markNeedsBuild();
                   //     },
-                  //     child: const Text('标为未读'),
+                  //     child: Text(uiTx('标为未读')),
                   //   ),
                   CustomPopupMenuItem<void>(
                     height: 42,
@@ -169,12 +169,11 @@ class WhisperSessionItem extends StatelessWidget {
                     height: 42,
                     onTap: () => showConfirmDialog(
                       context: context,
-                      title: const Text('确定删除该对话？'),
+                      title: Text(uiTx('确定删除该对话？')),
                       onConfirm: () =>
                           onRemove(item.id.privateId.talkerUid.toInt()),
                     ),
-                    child: Text(
-                      '删除',
+                    child: Text(uiTx('删除'),
                       style: TextStyle(color: theme.colorScheme.error),
                     ),
                   ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io';
 import 'dart:math';
 import 'dart:ui';
@@ -827,8 +828,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     onTap: _showRank,
     child: Obx(() {
       if (_liveRoomController.onlineCount.value case final onlineCount?) {
-        return Text(
-          '高能观众($onlineCount)',
+        return Text(uiTx('高能观众($onlineCount)'),
           style: const TextStyle(fontSize: 12, color: Colors.white),
         );
       }
@@ -939,35 +939,35 @@ class _LiveRoomPageState extends State<LiveRoomPage>
             return <PopupMenuEntry>[
               PopupMenuItem(
                 onTap: () => Utils.copyText(liveUrl),
-                child: const Row(
+                child: Row(
                   spacing: 10,
                   mainAxisSize: .min,
                   children: [
                     Icon(Icons.copy, size: 19),
-                    Text('复制链接'),
+                    Text(uiTx('复制链接')),
                   ],
                 ),
               ),
               if (PlatformUtils.isMobile)
                 PopupMenuItem(
                   onTap: () => ShareUtils.shareText(liveUrl),
-                  child: const Row(
+                  child: Row(
                     spacing: 10,
                     mainAxisSize: .min,
                     children: [
                       Icon(Icons.share, size: 19),
-                      Text('分享直播间'),
+                      Text(uiTx('分享直播间')),
                     ],
                   ),
                 ),
               PopupMenuItem(
                 onTap: () => PageUtils.inAppWebview(liveUrl, off: true),
-                child: const Row(
+                child: Row(
                   spacing: 10,
                   mainAxisSize: .min,
                   children: [
                     Icon(Icons.open_in_browser, size: 19),
-                    Text('浏览器打开'),
+                    Text(uiTx('浏览器打开')),
                   ],
                 ),
               ),
@@ -994,12 +994,12 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                       SmartDialog.showToast(e.toString());
                     }
                   },
-                  child: const Row(
+                  child: Row(
                     spacing: 10,
                     mainAxisSize: .min,
                     children: [
                       Icon(Icons.forward_to_inbox, size: 19),
-                      Text('分享至消息'),
+                      Text(uiTx('分享至消息')),
                     ],
                   ),
                 ),
@@ -1140,8 +1140,8 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                     );
                   },
                 ),
-                const Expanded(
-                  child: Text('发送弹幕', style: TextStyle(color: baseWhite)),
+                Expanded(
+                  child: Text(uiTx('发送弹幕'), style: TextStyle(color: baseWhite)),
                 ),
                 Builder(
                   builder: (context) {

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
@@ -136,7 +137,7 @@ class _BubblePageState extends State<BubblePage>
           if (tribeName == null) {
             return const SizedBox.shrink();
           }
-          return Text('$tribeName小站');
+          return Text(uiTx('$tribeName小站'));
         }),
       ),
       body: Padding(

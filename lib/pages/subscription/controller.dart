@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/http/fav.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/user.dart';
@@ -32,13 +33,12 @@ class SubController extends CommonListController<SubData, SubItemModel> {
     showDialog(
       context: Get.context!,
       builder: (context) => AlertDialog(
-        title: const Text('提示'),
-        content: const Text('确定取消订阅吗？'),
+        title: Text(uiTx('提示')),
+        content: Text(uiTx('确定取消订阅吗？')),
         actions: [
           TextButton(
             onPressed: Get.back,
-            child: Text(
-              '取消',
+            child: Text(uiTx('取消'),
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -58,7 +58,7 @@ class SubController extends CommonListController<SubData, SubItemModel> {
               }
               Get.back();
             },
-            child: const Text('确定'),
+            child: Text(uiTx('确定')),
           ),
         ],
       ),

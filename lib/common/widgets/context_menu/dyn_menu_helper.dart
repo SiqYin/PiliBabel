@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 part of 'package:PiliPlus/pages/dynamics/widgets/content_panel.dart';
 
 Widget dynTextMenuBuilder(
@@ -46,7 +47,7 @@ void _addDynFilterItem(
 
           showConfirmDialog(
             context: Get.context!,
-            title: const Text('是否将以下内容加入动态过滤：'),
+            title: Text(uiTx('是否将以下内容加入动态过滤：')),
             content: Text(
               escapedText,
               style: const TextStyle(

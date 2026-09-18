@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/pair.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -84,7 +85,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
           showDialog(
             context: context,
             builder: (_) => AlertDialog(
-              title: Text('最短片段时长', style: titleStyle),
+              title: Text(uiTx('最短片段时长'), style: titleStyle),
               content: TextFormField(
                 keyboardType: const .numberWithOptions(decimal: true),
                 controller: _textController,
@@ -95,8 +96,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
               actions: [
                 TextButton(
                   onPressed: Get.back,
-                  child: Text(
-                    '取消',
+                  child: Text(uiTx('取消'),
                     style: TextStyle(color: theme.colorScheme.outline),
                   ),
                 ),
@@ -111,15 +111,14 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
                       SmartDialog.showToast(e.toString());
                     }
                   },
-                  child: const Text('确定'),
+                  child: Text(uiTx('确定')),
                 ),
               ],
             ),
           );
         },
-        title: Text('最短片段时长', style: titleStyle),
-        subtitle: Text(
-          '忽略短于此时长的片段',
+        title: Text(uiTx('最短片段时长'), style: titleStyle),
+        subtitle: Text(uiTx('忽略短于此时长的片段'),
           style: subTitleStyle,
         ),
         trailing: Text(
@@ -132,7 +131,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
 
   Widget _aboutItem(TextStyle titleStyle, TextStyle subTitleStyle) => ListTile(
     dense: true,
-    title: Text('关于空降助手', style: titleStyle),
+    title: Text(uiTx('关于空降助手'), style: titleStyle),
     subtitle: Text(_url, style: subTitleStyle),
     onTap: () => PageUtils.launchURL(_url),
   );
@@ -145,7 +144,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
     builder: (context) {
       return ListTile(
         dense: true,
-        title: Text('用户ID', style: titleStyle),
+        title: Text(uiTx('用户ID'), style: titleStyle),
         subtitle: Text(_userId, style: subTitleStyle),
         onTap: () {
           final key = GlobalKey<FormFieldState<String>>();
@@ -154,7 +153,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
             context: context,
             builder: (_) {
               return AlertDialog(
-                title: Text('用户ID', style: titleStyle),
+                title: Text(uiTx('用户ID'), style: titleStyle),
                 content: TextFormField(
                   key: key,
                   minLines: 1,
@@ -182,12 +181,11 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
                       setting.put(SettingBoxKey.blockUserID, _userId);
                       (context as Element).markNeedsBuild();
                     },
-                    child: const Text('随机'),
+                    child: Text(uiTx('随机')),
                   ),
                   TextButton(
                     onPressed: Get.back,
-                    child: Text(
-                      '取消',
+                    child: Text(uiTx('取消'),
                       style: TextStyle(
                         color: theme.colorScheme.outline,
                       ),
@@ -202,7 +200,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
                         (context as Element).markNeedsBuild();
                       }
                     },
-                    child: const Text('确定'),
+                    child: Text(uiTx('确定')),
                   ),
                 ],
               );
@@ -224,8 +222,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
       return ListTile(
         dense: true,
         onTap: update,
-        title: Text(
-          '显示跳过Toast',
+        title: Text(uiTx('显示跳过Toast'),
           style: titleStyle,
         ),
         trailing: Transform.scale(
@@ -254,8 +251,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
       return ListTile(
         dense: true,
         onTap: update,
-        title: Text(
-          '跳过次数统计跟踪',
+        title: Text(uiTx('跳过次数统计跟踪'),
           style: titleStyle,
         ),
         subtitle: Text(
@@ -292,12 +288,10 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
       return ListTile(
         dense: true,
         onTap: update,
-        title: Text(
-          '快进至片段中间时跳过',
+        title: Text(uiTx('快进至片段中间时跳过'),
           style: titleStyle,
         ),
-        subtitle: Text(
-          '通过方向键或进度跳转进入片段中间时，仍按该片段的跳过类型处理',
+        subtitle: Text(uiTx('通过方向键或进度跳转进入片段中间时，仍按该片段的跳过类型处理'),
           style: subTitleStyle,
         ),
         trailing: Transform.scale(
@@ -324,8 +318,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
           _userInfo.value = LoadingState.loading();
           _getUserInfo();
         },
-        title: Text(
-          '您的信息',
+        title: Text(uiTx('您的信息'),
           style: titleStyle,
         ),
         subtitle: switch (_userInfo.value) {
@@ -356,7 +349,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
           showDialog(
             context: context,
             builder: (_) => AlertDialog(
-              title: Text('服务器地址', style: titleStyle),
+              title: Text(uiTx('服务器地址'), style: titleStyle),
               content: TextFormField(
                 keyboardType: TextInputType.url,
                 controller: _textController,
@@ -371,12 +364,11 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
                     AccountManager.blockServer = _blockServer;
                     (context as Element).markNeedsBuild();
                   },
-                  child: const Text('重置'),
+                  child: Text(uiTx('重置')),
                 ),
                 TextButton(
                   onPressed: Get.back,
-                  child: Text(
-                    '取消',
+                  child: Text(uiTx('取消'),
                     style: TextStyle(
                       color: theme.colorScheme.outline,
                     ),
@@ -392,14 +384,13 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
                     _getUserInfo();
                     (context as Element).markNeedsBuild();
                   },
-                  child: const Text('确定'),
+                  child: Text(uiTx('确定')),
                 ),
               ],
             ),
           );
         },
-        title: Text(
-          '服务器地址',
+        title: Text(uiTx('服务器地址'),
           style: titleStyle,
         ),
         subtitle: Text(
@@ -430,7 +421,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
           _serverStatus.value = null;
           _checkServerStatus();
         },
-        title: Text('服务器状态', style: titleStyle),
+        title: Text(uiTx('服务器状态'), style: titleStyle),
         trailing: Text(
           status,
           style: TextStyle(fontSize: 13, color: color),
@@ -520,7 +511,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
     );
 
     return SimpleScaffold(
-      appBar: AppBar(title: const Text('空降助手')),
+      appBar: AppBar(title: Text(uiTx('空降助手'))),
       body: CustomScrollView(
         slivers: [
           dividerL,

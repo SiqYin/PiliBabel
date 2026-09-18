@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io';
 
 import 'package:PiliPlus/models/common/video/audio_quality.dart';
@@ -237,7 +238,7 @@ Future<void> _showLiveCDNDialog(
   String? res = await showDialog<String>(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('输入CDN host'),
+      title: Text(uiTx('输入CDN host')),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -250,7 +251,7 @@ Future<void> _showLiveCDNDialog(
           const SizedBox(height: 4),
           TextButton.icon(
             icon: const Icon(Icons.travel_explore_outlined, size: 18),
-            label: const Text('从节点列表选择'),
+            label: Text(uiTx('从节点列表选择')),
             onPressed: () async {
               final node = await showDialog<String>(
                 context: context,
@@ -266,14 +267,13 @@ Future<void> _showLiveCDNDialog(
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
         TextButton(
           onPressed: () => Get.back(result: host),
-          child: const Text('确定'),
+          child: Text(uiTx('确定')),
         ),
       ],
     ),
@@ -550,7 +550,7 @@ void _showAutoSyncDialog(BuildContext context, VoidCallback setState) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('自动同步'),
+      title: Text(uiTx('自动同步')),
       content: TextFormField(
         autofocus: true,
         initialValue: autosync,
@@ -561,8 +561,7 @@ void _showAutoSyncDialog(BuildContext context, VoidCallback setState) {
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -578,7 +577,7 @@ void _showAutoSyncDialog(BuildContext context, VoidCallback setState) {
               SmartDialog.showToast(e.toString());
             }
           },
-          child: const Text('确定'),
+          child: Text(uiTx('确定')),
         ),
       ],
     ),
@@ -609,8 +608,7 @@ void _showDecimalDialog(
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -625,7 +623,7 @@ void _showDecimalDialog(
               SmartDialog.showToast(e.toString());
             }
           },
-          child: const Text('确定'),
+          child: Text(uiTx('确定')),
         ),
       ],
     ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show Platform;
 
 import 'package:collection/collection.dart';
@@ -70,7 +71,7 @@ abstract final class Update {
                   child: Text(text),
                 );
             return AlertDialog(
-              title: const Text('🎉 发现新版本 '),
+              title: Text(uiTx('🎉 发现新版本 ')),
               content: SizedBox(
                 height: 280,
                 child: SingleChildScrollView(
@@ -87,8 +88,7 @@ abstract final class Update {
                         onPressed: () => PageUtils.launchURL(
                           '${Constants.sourceCodeUrl}/commits/main',
                         ),
-                        child: Text(
-                          "点此查看完整更新(即commit)内容",
+                        child: Text(uiTx("点此查看完整更新(即commit)内容"),
                           style: TextStyle(color: colorScheme.primary),
                         ),
                       ),
@@ -106,15 +106,13 @@ abstract final class Update {
                         data['tag_name'],
                       );
                     },
-                    child: Text(
-                      '不再提醒',
+                    child: Text(uiTx('不再提醒'),
                       style: TextStyle(color: colorScheme.outline),
                     ),
                   ),
                 TextButton(
                   onPressed: SmartDialog.dismiss,
-                  child: Text(
-                    '取消',
+                  child: Text(uiTx('取消'),
                     style: TextStyle(color: colorScheme.outline), 
                   ),
                 ),

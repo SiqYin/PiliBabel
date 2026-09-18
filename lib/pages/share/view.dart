@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/self_sized_horizontal_list.dart';
@@ -88,7 +89,7 @@ class _SharePanelState extends State<SharePanel> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('分享给'),
+                Text(uiTx('分享给')),
                 iconButton(
                   size: 32,
                   iconSize: 18,
@@ -211,7 +212,7 @@ class _SharePanelState extends State<SharePanel> {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        const Text('更多', style: TextStyle(fontSize: 12)),
+                        Text(uiTx('更多'), style: TextStyle(fontSize: 12)),
                       ],
                     ),
                   ),
@@ -257,7 +258,7 @@ class _SharePanelState extends State<SharePanel> {
                       vertical: -1,
                     ),
                   ),
-                  child: const Text('发送'),
+                  child: Text(uiTx('发送')),
                 ),
               ],
             ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:io' show Platform;
 
@@ -572,21 +573,21 @@ class AudioController extends GetxController
         contentPadding: const EdgeInsets.symmetric(vertical: 12),
         children: [
           DialogOption(
-            child: const Text('复制链接', style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('复制链接'), style: TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               Utils.copyText(audioUrl);
             },
           ),
           DialogOption(
-            child: const Text('其它app打开', style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('其它app打开'), style: TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               PageUtils.launchURL(audioUrl);
             },
           ),
           DialogOption(
-            child: const Text('分享视频', style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('分享视频'), style: TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               if (audioItem.value case DetailItem(
@@ -603,7 +604,7 @@ class AudioController extends GetxController
           ),
           if (isLogin)
             DialogOption(
-              child: const Text('分享至动态', style: TextStyle(fontSize: 14)),
+              child: Text(uiTx('分享至动态'), style: TextStyle(fontSize: 14)),
               onPressed: () {
                 Get.back();
                 if (audioItem.value case DetailItem(
@@ -627,7 +628,7 @@ class AudioController extends GetxController
             ),
           if (isUgc && isLogin)
             DialogOption(
-              child: const Text('分享至消息', style: TextStyle(fontSize: 14)),
+              child: Text(uiTx('分享至消息'), style: TextStyle(fontSize: 14)),
               onPressed: () {
                 Get.back();
                 if (audioItem.value case DetailItem(

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 
 import 'package:PiliPlus/common/assets.dart';
@@ -99,10 +100,9 @@ class _PgcPanelState extends State<PgcPanel> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('合集 '),
+              Text(uiTx('合集 ')),
               Expanded(
-                child: Text(
-                  ' 正在播放：${currEpisode.longTitle ?? currEpisode.title}',
+                child: Text(uiTx(' 正在播放：${currEpisode.longTitle ?? currEpisode.title}'),
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(fontSize: 12, color: theme.outline),
                 ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
 import 'package:PiliPlus/pages/setting/models/dynamics_settings.dart';
@@ -47,7 +48,7 @@ class _DynamicsSettingState extends State<DynamicsSetting> {
     final theme = Theme.of(context);
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: widget.showAppBar ? AppBar(title: const Text('动态流设置')) : null,
+      appBar: widget.showAppBar ? AppBar(title: Text(uiTx('动态流设置'))) : null,
       body: ListView(
         padding: EdgeInsets.only(
           left: showAppBar ? padding.left : 0,

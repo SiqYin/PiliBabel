@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/user.dart';
@@ -28,8 +29,8 @@ mixin BaseLaterController
   void onRemove() {
     showConfirmDialog(
       context: Get.context!,
-      title: const Text('提示'),
-      content: const Text('确认删除所选稍后再看吗？'),
+      title: Text(uiTx('提示')),
+      content: Text(uiTx('确认删除所选稍后再看吗？')),
       onConfirm: () async {
         final removeList = allChecked.toSet();
         SmartDialog.showLoading(msg: '请求中');
@@ -54,13 +55,12 @@ mixin BaseLaterController
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('提示'),
-        content: const Text('即将移除该视频，确定是否移除'),
+        title: Text(uiTx('提示')),
+        content: Text(uiTx('即将移除该视频，确定是否移除')),
         actions: [
           TextButton(
             onPressed: Get.back,
-            child: Text(
-              '取消',
+            child: Text(uiTx('取消'),
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -75,7 +75,7 @@ mixin BaseLaterController
                 updateCount?.call(1);
               }
             },
-            child: const Text('确认移除'),
+            child: Text(uiTx('确认移除')),
           ),
         ],
       ),
@@ -135,7 +135,7 @@ class LaterController extends MultiSelectController<LaterData, LaterItemModel>
     };
     showConfirmDialog(
       context: context,
-      title: const Text('确认'),
+      title: Text(uiTx('确认')),
       content: Text(content),
       onConfirm: () async {
         final res = await UserHttp.toViewClear(cleanType);

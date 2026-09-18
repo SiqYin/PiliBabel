@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:convert' show jsonDecode;
 import 'dart:io';
@@ -2071,7 +2072,7 @@ class VideoDetailController extends GetxController
       context: Get.context!,
       builder: (context) => AlertDialog(
         constraints: Style.dialogFixedConstraints,
-        title: const Text('播放地址'),
+        title: Text(uiTx('播放地址')),
         content: Column(
           spacing: 20,
           mainAxisSize: MainAxisSize.min,
@@ -2097,7 +2098,7 @@ class VideoDetailController extends GetxController
               this.audioUrl = audioUrl;
               playerInit();
             },
-            child: const Text('确定'),
+            child: Text(uiTx('确定')),
           ),
         ],
       ),

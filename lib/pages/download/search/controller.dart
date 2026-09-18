@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async' show unawaited;
 
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
@@ -63,7 +64,7 @@ class DownloadSearchController
   void onRemove() {
     showConfirmDialog(
       context: Get.context!,
-      title: const Text('确定删除选中视频？'),
+      title: Text(uiTx('确定删除选中视频？')),
       onConfirm: () async {
         SmartDialog.showLoading();
         final allChecked = this.allChecked.toSet();

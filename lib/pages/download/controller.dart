@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/models_new/download/bili_download_entry_info.dart';
 import 'package:PiliPlus/models_new/download/download_collection.dart';
@@ -74,7 +75,7 @@ class DownloadPageController extends GetxController
   void onRemove() {
     showConfirmDialog(
       context: Get.context!,
-      title: const Text('确定删除选中视频？'),
+      title: Text(uiTx('确定删除选中视频？')),
       onConfirm: () async {
         SmartDialog.showLoading();
         final selected = allChecked.toSet();

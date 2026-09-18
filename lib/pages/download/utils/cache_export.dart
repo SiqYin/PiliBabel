@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/models_new/download/bili_download_entry_info.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
@@ -63,8 +64,7 @@ class _BatchExportDialog extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                '正在导出 ($current/$total)',
+              Text(uiTx('正在导出 ($current/$total)'),
                 style: TextStyle(
                   fontSize: 14,
                   color: theme.colorScheme.onSurfaceVariant,

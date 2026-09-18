@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/models_new/download/bili_download_entry_info.dart';
 import 'package:PiliPlus/models_new/download/download_collection.dart';
@@ -57,8 +58,8 @@ class _DownloadFolderManagePageState extends State<DownloadFolderManagePage> {
   Future<void> _deleteFolder(DownloadFolder folder) async {
     showConfirmDialog(
       context: context,
-      title: const Text('确定删除该文件夹？'),
-      content: const Text('只会删除文件夹关联，不会删除本地缓存文件。'),
+      title: Text(uiTx('确定删除该文件夹？')),
+      content: Text(uiTx('只会删除文件夹关联，不会删除本地缓存文件。')),
       onConfirm: () async {
         await widget.collectionService.deleteFolder(folder.id);
         _folders.removeWhere((item) => item.id == folder.id);
@@ -73,7 +74,7 @@ class _DownloadFolderManagePageState extends State<DownloadFolderManagePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('排序文件夹'),
+        title: Text(uiTx('排序文件夹')),
         actions: [
           TextButton(
             onPressed: () async {
@@ -85,7 +86,7 @@ class _DownloadFolderManagePageState extends State<DownloadFolderManagePage> {
                 Get.back();
               }
             },
-            child: const Text('完成'),
+            child: Text(uiTx('完成')),
           ),
           const SizedBox(width: 16),
         ],

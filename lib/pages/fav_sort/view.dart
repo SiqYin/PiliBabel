@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/reorder_mixin.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/http/fav.dart';
@@ -49,7 +50,7 @@ class _FavSortPageState extends State<FavSortPage> with ReorderMixin {
   Widget build(BuildContext context) {
     return SimpleScaffold(
       appBar: AppBar(
-        title: Text('排序: ${_favDetailController.folderInfo.value.title}'),
+        title: Text(uiTx('排序: ${_favDetailController.folderInfo.value.title}')),
         actions: [
           TextButton(
             onPressed: () {
@@ -72,7 +73,7 @@ class _FavSortPageState extends State<FavSortPage> with ReorderMixin {
                 }
               });
             },
-            child: const Text('完成'),
+            child: Text(uiTx('完成')),
           ),
           const SizedBox(width: 16),
         ],

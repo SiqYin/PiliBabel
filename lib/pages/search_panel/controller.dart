@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async' show StreamSubscription;
 
 import 'package:PiliPlus/http/loading_state.dart';
@@ -90,7 +91,7 @@ class SearchPanelController<R extends SearchNumData<T>, T>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 20),
-        const Text('关键词过滤', style: TextStyle(fontSize: 16)),
+        Text(uiTx('关键词过滤'), style: TextStyle(fontSize: 16)),
         const SizedBox(height: 10),
         if (hasAny) ...[
           Wrap(
@@ -189,7 +190,7 @@ class SearchPanelController<R extends SearchNumData<T>, T>
               excludeKeywords.clear();
               setState(() {});
             },
-            child: const Text('清除所有关键词'),
+            child: Text(uiTx('清除所有关键词')),
           ),
       ],
     );

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -145,8 +146,7 @@ class _SubDetailPageState extends State<SubDetailPage> with GridMixin {
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.titleMedium,
           ),
-          Text(
-            '共${info.mediaCount}条视频',
+          Text(uiTx('共${info.mediaCount}条视频'),
             style: theme.textTheme.labelMedium,
           ),
         ],
@@ -195,10 +195,9 @@ class _SubDetailPageState extends State<SubDetailPage> with GridMixin {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text('共${info.mediaCount}条视频', style: style),
+                    Text(uiTx('共${info.mediaCount}条视频'), style: style),
                     const SizedBox(height: 4),
-                    Text(
-                      '${NumUtils.numFormat(info.viewCount ?? info.cntInfo?.play)}次播放',
+                    Text(uiTx('${NumUtils.numFormat(info.viewCount ?? info.cntInfo?.play)}次播放'),
                       style: style,
                     ),
                   ],

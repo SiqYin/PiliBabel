@@ -1,5 +1,6 @@
 // 定时关闭服务
 
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async' show Timer;
 import 'dart:io' show exit;
 
@@ -198,7 +199,7 @@ class ShutdownTimerService {
                 onSelectedItemChanged: (value) => hour = value,
               ),
             ),
-            const Text('时'),
+            Text(uiTx('时')),
             const SizedBox(width: 10),
             Expanded(
               child: _pickerBuider(
@@ -207,14 +208,13 @@ class ShutdownTimerService {
                 onSelectedItemChanged: (value) => minute = value,
               ),
             ),
-            const Text('分'),
+            Text(uiTx('分')),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              '取消',
+            child: Text(uiTx('取消'),
               style: TextStyle(color: ColorScheme.of(context).outline),
             ),
           ),
@@ -225,7 +225,7 @@ class ShutdownTimerService {
               onCountdown();
               setState(() {});
             },
-            child: const Text('确认'),
+            child: Text(uiTx('确认')),
           ),
         ],
       ),
@@ -262,7 +262,7 @@ class ShutdownTimerService {
                   alignment: .center,
                   clipBehavior: .none,
                   children: [
-                    const Text('定时关闭', style: titleStyle),
+                    Text(uiTx('定时关闭'), style: titleStyle),
                     Positioned(top: 0, bottom: 0, right: 16, child: countdown),
                   ],
                 ),
@@ -296,7 +296,7 @@ class ShutdownTimerService {
                   dense: true,
                   onTap: () =>
                       _showTimePickerDialog(context, onCountdown, setState),
-                  title: const Text('自定义', style: titleStyle),
+                  title: Text(uiTx('自定义'), style: titleStyle),
                 ),
                 if (!isLive) ...[
                   Builder(
@@ -309,7 +309,7 @@ class ShutdownTimerService {
                       return ListTile(
                         dense: true,
                         onTap: onChanged,
-                        title: const Text('额外等待视频播放完毕', style: titleStyle),
+                        title: Text(uiTx('额外等待视频播放完毕'), style: titleStyle),
                         trailing: Transform.scale(
                           alignment: .centerRight,
                           scale: 0.8,
@@ -330,7 +330,7 @@ class ShutdownTimerService {
                       return Row(
                         spacing: 12,
                         children: [
-                          const Text('倒计时结束:', style: titleStyle),
+                          Text(uiTx('倒计时结束:'), style: titleStyle),
                           ..._ShutdownType.values.map(
                             (e) => ActionRowLineItem(
                               onTap: () {

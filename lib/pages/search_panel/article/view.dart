@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/sliver/sliver_floating_header.dart';
 import 'package:PiliPlus/models/search/result.dart';
 import 'package:PiliPlus/pages/search_panel/article/controller.dart';
@@ -56,16 +57,14 @@ class _SearchArticlePanelState
         child: Row(
           children: [
             Obx(
-              () => Text(
-                '排序: ${controller.articleOrderType.value.label}',
+              () => Text(uiTx('排序: ${controller.articleOrderType.value.label}'),
                 maxLines: 1,
                 style: TextStyle(color: theme.colorScheme.outline),
               ),
             ),
             const Spacer(),
             Obx(
-              () => Text(
-                '分区: ${controller.articleZoneType!.value.label}',
+              () => Text(uiTx('分区: ${controller.articleZoneType!.value.label}'),
                 maxLines: 1,
                 style: TextStyle(color: theme.colorScheme.outline),
               ),

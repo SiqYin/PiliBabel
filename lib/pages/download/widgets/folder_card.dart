@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io';
 
 import 'package:PiliPlus/common/style.dart';
@@ -71,8 +72,7 @@ class DownloadFolderCard extends StatelessWidget {
                       style: const TextStyle(letterSpacing: 0.3),
                     ),
                     const SizedBox(height: 6),
-                    Text(
-                      '$count 个视频',
+                    Text(uiTx('$count 个视频'),
                       style: TextStyle(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.outline,

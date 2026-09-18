@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:io' show File;
 
@@ -208,13 +209,13 @@ class _WhisperDetailPageState
               msgType: .EN_MSG_TYPE_DRAW_BACK,
               index: index,
             ),
-            child: const Text('撤回', style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('撤回'), style: TextStyle(fontSize: 14)),
           )
         else
           CustomPopupMenuItem<void>(
             height: 42,
             onTap: () => onReport(item),
-            child: const Text('举报', style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('举报'), style: TextStyle(fontSize: 14)),
           ),
       ],
     );
@@ -252,7 +253,7 @@ class _WhisperDetailPageState
                   );
                 },
                 dense: true,
-                title: const Text('撤回', style: TextStyle(fontSize: 14)),
+                title: Text(uiTx('撤回'), style: TextStyle(fontSize: 14)),
               )
             : ListTile(
                 onTap: () {
@@ -260,7 +261,7 @@ class _WhisperDetailPageState
                   onReport(item);
                 },
                 dense: true,
-                title: const Text('举报', style: TextStyle(fontSize: 14)),
+                title: Text(uiTx('举报'), style: TextStyle(fontSize: 14)),
               ),
       ),
     );

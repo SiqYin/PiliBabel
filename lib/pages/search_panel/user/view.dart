@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/skeleton/msg_feed_top.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/widgets/sliver/sliver_floating_header.dart';
@@ -54,16 +55,14 @@ class _SearchUserPanelState
         child: Row(
           children: [
             Obx(
-              () => Text(
-                '排序: ${controller.userOrderType!.value.label}',
+              () => Text(uiTx('排序: ${controller.userOrderType!.value.label}'),
                 maxLines: 1,
                 style: TextStyle(color: theme.colorScheme.outline),
               ),
             ),
             const Spacer(),
             Obx(
-              () => Text(
-                '用户类型: ${controller.userType!.value.label}',
+              () => Text(uiTx('用户类型: ${controller.userType!.value.label}'),
                 maxLines: 1,
                 style: TextStyle(color: theme.colorScheme.outline),
               ),

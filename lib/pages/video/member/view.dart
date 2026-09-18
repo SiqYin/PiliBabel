@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/skeleton/video_card_h.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -146,8 +147,7 @@ class _HorizontalMemberPageState extends State<HorizontalMemberPage> {
   Widget? _buildCount() {
     final count = _controller.count;
     if (count != null) {
-      return Text(
-        '共$count视频',
+      return Text(uiTx('共$count视频'),
         style: const TextStyle(fontSize: 13),
       );
     }
@@ -352,8 +352,7 @@ class _HorizontalMemberPageState extends State<HorizontalMemberPage> {
                 visualDensity: const VisualDensity(vertical: -2),
               ),
               onPressed: () => Get.toNamed('/member?mid=${widget.mid}'),
-              child: const Text(
-                '查看主页',
+              child: Text(uiTx('查看主页'),
                 maxLines: 1,
                 style: TextStyle(fontSize: 14),
               ),

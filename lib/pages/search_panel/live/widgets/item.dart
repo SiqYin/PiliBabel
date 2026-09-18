@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -122,8 +123,7 @@ class LiveItem extends StatelessWidget {
             cateName!,
             style: const TextStyle(fontSize: 11, color: Colors.white),
           ),
-          Text(
-            '${NumUtils.numFormat(online)}围观',
+          Text(uiTx('${NumUtils.numFormat(online)}围观'),
             style: const TextStyle(fontSize: 11, color: Colors.white),
           ),
         ],

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/models_new/download/download_collection.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -75,8 +76,7 @@ class _DownloadSearchPageState
           SmartDialog.showToast('更新失败');
         }
       },
-      child: Text(
-        '更新',
+      child: Text(uiTx('更新'),
         style: TextStyle(color: ColorScheme.of(context).onSurface),
       ),
     ),

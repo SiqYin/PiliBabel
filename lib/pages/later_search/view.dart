@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/models/common/video/source_type.dart';
 import 'package:PiliPlus/models_new/later/data.dart';
 import 'package:PiliPlus/models_new/later/list.dart';
@@ -46,7 +47,7 @@ class _LaterSearchPageState
           mediaId: null,
           mid: controller.mid,
         ),
-        child: Text('复制', style: textStyle),
+        child: Text(uiTx('复制'), style: textStyle),
       ),
       TextButton(
         style: btnStyle,
@@ -57,7 +58,7 @@ class _LaterSearchPageState
           mediaId: null,
           mid: controller.mid,
         ),
-        child: Text('移动', style: textStyle),
+        child: Text(uiTx('移动'), style: textStyle),
       ),
     ];
   }

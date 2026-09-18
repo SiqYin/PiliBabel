@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/skeleton/msg_feed_top.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
@@ -98,8 +99,7 @@ class _BlackListPageState extends State<BlackListPage> {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 14),
                     ),
-                    subtitle: Text(
-                      '添加时间: ${DateFormatUtils.format(item.mtime, format: DateFormatUtils.longFormatDs)}',
+                    subtitle: Text(uiTx('添加时间: ${DateFormatUtils.format(item.mtime, format: DateFormatUtils.longFormatDs)}'),
                       maxLines: 1,
                       style: style,
                       overflow: TextOverflow.ellipsis,
@@ -112,7 +112,7 @@ class _BlackListPageState extends State<BlackListPage> {
                         item.uname,
                         item.mid,
                       ),
-                      child: const Text('移除'),
+                      child: Text(uiTx('移除')),
                     ),
                   );
                 },

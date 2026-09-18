@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show Platform;
 
 import 'package:PiliPlus/common/widgets/animated_height.dart';
@@ -72,7 +73,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
       context,
     ).copyWith(top: 0, bottom: 0);
     return SimpleScaffold(
-      appBar: AppBar(title: const Text('选择应用主题')),
+      appBar: AppBar(title: Text(uiTx('选择应用主题'))),
       body: ListView(
         padding: .only(
           bottom: MediaQuery.viewPaddingOf(context).bottom + 100,
@@ -98,10 +99,9 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
               }
             },
             leading: const Icon(Icons.flashlight_on_outlined),
-            title: Text('主题模式', style: titleStyle),
+            title: Text(uiTx('主题模式'), style: titleStyle),
             subtitle: Obx(
-              () => Text(
-                '当前模式：${ctr.themeType.value.label}',
+              () => Text(uiTx('当前模式：${ctr.themeType.value.label}'),
                 style: subTitleStyle,
               ),
             ),
@@ -110,7 +110,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
             () => PopupListTile<FlexSchemeVariant>(
               enabled: !ctr.dynamicColor.value,
               leading: const Icon(Icons.palette_outlined),
-              title: const Text('调色板风格'),
+              title: Text(uiTx('调色板风格')),
               value: () =>
                   (_dynamicSchemeVariant, _dynamicSchemeVariant.variantName),
               itemBuilder: (_) => FlexSchemeVariant.values
@@ -129,7 +129,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
           if (!Platform.isIOS)
             Obx(
               () => ListTile(
-                title: const Text('动态取色'),
+                title: Text(uiTx('动态取色')),
                 leading: ExcludeFocus(
                   child: Checkbox(
                     value: ctr.dynamicColor.value,

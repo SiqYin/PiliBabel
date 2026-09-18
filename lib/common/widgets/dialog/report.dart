@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/radio_widget.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -44,7 +45,7 @@ Future<void> autoWrapReportDialog(
     }
   }
 
-  Widget title = const Text('举报');
+  Widget title = Text(uiTx('举报'));
   if (reportUrl != null) {
     title = Row(
       mainAxisAlignment: .spaceBetween,
@@ -80,9 +81,9 @@ Future<void> autoWrapReportDialog(
                   builder: (context) => Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Padding(
+                      Padding(
                         padding: .only(left: 22, right: 22, bottom: 5),
-                        child: Text('请选择举报的理由：'),
+                        child: Text(uiTx('请选择举报的理由：')),
                       ),
                       RadioGroup(
                         onChanged: (value) {
@@ -142,8 +143,7 @@ Future<void> autoWrapReportDialog(
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -173,7 +173,7 @@ Future<void> autoWrapReportDialog(
               Utils.reportError(e, s);
             }
           },
-          child: const Text('确定'),
+          child: Text(uiTx('确定')),
         ),
       ],
     ),

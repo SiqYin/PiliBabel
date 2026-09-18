@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/live_list_view.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
@@ -224,7 +225,7 @@ class LiveRoomChatPanel extends StatelessWidget {
                   child: ElevatedButton.icon(
                     style: const ButtonStyle(visualDensity: .comfortable),
                     icon: const Icon(Icons.arrow_downward_rounded, size: 20),
-                    label: const Text('回到底部'),
+                    label: Text(uiTx('回到底部')),
                     onPressed: liveRoomController.handleJumpToBottom,
                   ),
                 )
@@ -338,12 +339,12 @@ class LiveRoomChatPanel extends StatelessWidget {
         CustomPopupMenuItem(
           height: 38,
           onTap: () => Utils.copyText(Utils.jsonEncoder.convert(item.toJson())),
-          child: const Text('复制弹幕信息', style: TextStyle(fontSize: 13)),
+          child: Text(uiTx('复制弹幕信息'), style: TextStyle(fontSize: 13)),
         ),
         CustomPopupMenuItem(
           height: 38,
           onTap: () => Get.toNamed('/member?mid=${item.extra.mid}'),
-          child: const Text('去TA的个人空间', style: TextStyle(fontSize: 13)),
+          child: Text(uiTx('去TA的个人空间'), style: TextStyle(fontSize: 13)),
         ),
         if (liveRoomController.isLogin) ...[
           CustomPopupMenuItem(
@@ -368,8 +369,7 @@ class LiveRoomChatPanel extends StatelessWidget {
                 res.toast();
               }
             },
-            child: const Text(
-              '屏蔽发送者',
+            child: Text(uiTx('屏蔽发送者'),
               style: TextStyle(fontSize: 13),
             ),
           ),
@@ -381,8 +381,7 @@ class LiveRoomChatPanel extends StatelessWidget {
               msg: item.text,
               extra: item.extra,
             ),
-            child: const Text(
-              '举报选中弹幕',
+            child: Text(uiTx('举报选中弹幕'),
               style: TextStyle(fontSize: 13),
             ),
           ),

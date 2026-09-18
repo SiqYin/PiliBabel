@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -462,8 +463,7 @@ class _SavePanelState extends State<SavePanel> {
                                                       color: colorScheme.primary,
                                                     ),
                                                   ),
-                                                Text(
-                                                  '识别二维码，$viewType$itemType',
+                                                Text(uiTx('识别二维码，$viewType$itemType'),
                                                   textAlign: .end,
                                                   style: TextStyle(
                                                     color: colorScheme

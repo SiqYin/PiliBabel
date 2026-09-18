@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show Platform;
 
 import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
@@ -131,8 +132,8 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
   Future<void> _deleteFolder() async {
     showConfirmDialog(
       context: context,
-      title: const Text('确定删除该文件夹？'),
-      content: const Text('只会删除文件夹关联，不会删除本地缓存文件。'),
+      title: Text(uiTx('确定删除该文件夹？')),
+      content: Text(uiTx('只会删除文件夹关联，不会删除本地缓存文件。')),
       onConfirm: () async {
         await _collectionService.deleteFolder(widget.folderId);
         if (mounted) {
@@ -177,8 +178,7 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
                     res.every((item) => item) ? '更新成功' : '更新失败',
                   );
                 },
-                child: Text(
-                  '更新',
+                child: Text(uiTx('更新'),
                   style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                 ),
               ),
@@ -188,7 +188,7 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
                 ),
                 onPressed:
                     _controller.checkedCount == 0 ? null : _addSelectedToFolder,
-                child: const Text('添加到'),
+                child: Text(uiTx('添加到')),
               ),
               if (Platform.isAndroid)
                 TextButton(
@@ -197,7 +197,7 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
                   ),
                   onPressed:
                       _controller.checkedCount == 0 ? null : _exportSelected,
-                  child: const Text('导出'),
+                  child: Text(uiTx('导出')),
                 ),
             ],
             child: AppBar(
@@ -221,14 +221,14 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
                     onPressed: () {
                       showStaticPositionMenu<_FolderSortAction>(
                         context: context,
-                        items: const [
+                        items: [
                           CustomPopupMenuItem(
                             value: _FolderSortAction.manual,
-                            child: Text('手动排序'),
+                            child: Text(uiTx('手动排序')),
                           ),
                           CustomPopupMenuItem(
                             value: _FolderSortAction.reset,
-                            child: Text('按缓存时间'),
+                            child: Text(uiTx('按缓存时间')),
                           ),
                         ],
                       ).then((value) {
@@ -244,14 +244,13 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
                       showStaticPositionMenu<int>(
                         context: context,
                         items: [
-                          const CustomPopupMenuItem(
+                          CustomPopupMenuItem(
                             value: 0,
-                            child: Text('重命名'),
+                            child: Text(uiTx('重命名')),
                           ),
                           CustomPopupMenuItem(
                             value: 1,
-                            child: Text(
-                              '删除文件夹',
+                            child: Text(uiTx('删除文件夹'),
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.error,
                               ),
@@ -274,11 +273,11 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
               ViewSliverSafeArea(
                 sliver: Obx(() {
                   if (_controller.entries.isEmpty) {
-                    return const SliverToBoxAdapter(
+                    return SliverToBoxAdapter(
                       child: Padding(
                         padding: EdgeInsets.symmetric(vertical: 48),
                         child: Center(
-                          child: Text('文件夹里还没有视频'),
+                          child: Text(uiTx('文件夹里还没有视频')),
                         ),
                       ),
                     );

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/models_new/download/download_collection.dart';
 import 'package:PiliPlus/services/download/download_collection_service.dart';
 import 'package:material_ui/material_ui.dart';
@@ -24,7 +25,7 @@ Future<String?> showDownloadFolderNameDialog({
       actions: [
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(),
-          child: const Text('取消'),
+          child: Text(uiTx('取消')),
         ),
         TextButton(
           onPressed: () {
@@ -34,7 +35,7 @@ Future<String?> showDownloadFolderNameDialog({
             }
             Navigator.of(dialogContext).pop(text);
           },
-          child: const Text('确定'),
+          child: Text(uiTx('确定')),
         ),
       ],
     ),
@@ -66,9 +67,9 @@ Future<List<String>?> showDownloadFolderPickerDialog({
             child: SizedBox(
               width: double.maxFinite,
               child: folders.isEmpty
-                  ? const Padding(
+                  ? Padding(
                       padding: EdgeInsets.symmetric(vertical: 20),
-                      child: Text('还没有文件夹，先新建一个吧。'),
+                      child: Text(uiTx('还没有文件夹，先新建一个吧。')),
                     )
                   : SingleChildScrollView(
                       child: Column(
@@ -113,16 +114,16 @@ Future<List<String>?> showDownloadFolderPickerDialog({
                 selectedIds.add(folder.id);
                 setState(() {});
               },
-              child: const Text('新建文件夹'),
+              child: Text(uiTx('新建文件夹')),
             ),
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('取消'),
+              child: Text(uiTx('取消')),
             ),
             TextButton(
               onPressed: () =>
                   Navigator.of(dialogContext).pop(selectedIds.toList()),
-              child: const Text('完成'),
+              child: Text(uiTx('完成')),
             ),
           ],
         ),

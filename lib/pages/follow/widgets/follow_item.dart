@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/models_new/follow/list.dart';
 import 'package:PiliPlus/pages/share/view.dart' show UserModel;
@@ -99,8 +100,7 @@ class FollowItem extends StatelessWidget {
                       ),
                     if (!GlobalData().remarkReplaceName &&
                         remarkOf(item.mid) != null)
-                      Text(
-                        '备注：${remarkOf(item.mid)}',
+                      Text(uiTx('备注：${remarkOf(item.mid)}'),
                         maxLines: 1,
                         overflow: .ellipsis,
                         style: TextStyle(

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/skeleton/video_card_v.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -85,8 +86,7 @@ class _RcmdPageState extends State<RcmdPage>
                           child: Container(
                             alignment: Alignment.center,
                             padding: const .symmetric(horizontal: 10),
-                            child: Text(
-                              '上次看到这里\n点击刷新',
+                            child: Text(uiTx('上次看到这里\n点击刷新'),
                               textAlign: .center,
                               style: TextStyle(
                                 color: colorScheme.onSurfaceVariant,

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -66,7 +67,7 @@ class _FavCheesePageState extends State<FavCheesePage>
                     item: item,
                     onRemove: () => showConfirmDialog(
                       context: context,
-                      title: const Text('确定取消收藏该课堂？'),
+                      title: Text(uiTx('确定取消收藏该课堂？')),
                       onConfirm: () =>
                           _controller.onRemove(index, item.seasonId!),
                     ),

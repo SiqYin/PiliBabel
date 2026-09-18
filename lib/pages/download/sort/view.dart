@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/models_new/download/bili_download_entry_info.dart';
 import 'package:PiliPlus/pages/common/multi_select/base.dart';
 import 'package:PiliPlus/pages/download/detail/widgets/item.dart';
@@ -51,7 +52,7 @@ class _DownloadVideoSortPageState extends State<DownloadVideoSortPage> {
                 Get.back();
               }
             },
-            child: const Text('完成'),
+            child: Text(uiTx('完成')),
           ),
           const SizedBox(width: 16),
         ],

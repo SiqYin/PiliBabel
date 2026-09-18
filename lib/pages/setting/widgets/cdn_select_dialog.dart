@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/video.dart';
@@ -365,7 +366,7 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
     const services = CDNService.values;
     return AlertDialog(
       clipBehavior: Clip.hardEdge,
-      title: const Text('CDN 设置'),
+      title: Text(uiTx('CDN 设置')),
       constraints: const BoxConstraints.tightFor(width: 320),
       contentPadding: const EdgeInsets.fromLTRB(8, 8, 8, 12),
       content: SingleChildScrollView(
@@ -416,15 +417,15 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
             const SizedBox(height: 8),
             M3eOptionItem(
               leading: const Icon(Icons.travel_explore_outlined),
-              title: const Text('从节点列表选择'),
-              subtitle: const Text('按地区选择全国 CDN 节点'),
+              title: Text(uiTx('从节点列表选择')),
+              subtitle: Text(uiTx('按地区选择全国 CDN 节点')),
               trailing: const Icon(Icons.chevron_right),
               onTap: _pickNode,
             ),
             M3eOptionItem(
               leading: const Icon(Icons.edit_outlined),
-              title: const Text('手动输入'),
-              subtitle: const Text('输入任意节点 host 或完整 URL'),
+              title: Text(uiTx('手动输入')),
+              subtitle: Text(uiTx('输入任意节点 host 或完整 URL')),
               trailing: const Icon(Icons.chevron_right),
               onTap: _inputCustom,
             ),
@@ -468,7 +469,7 @@ class _CdnInputDialogState extends State<_CdnInputDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('自定义 CDN 节点'),
+      title: Text(uiTx('自定义 CDN 节点')),
       content: TextField(
         controller: _controller,
         autofocus: true,
@@ -487,14 +488,13 @@ class _CdnInputDialogState extends State<_CdnInputDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
         TextButton(
           onPressed: _onConfirm,
-          child: const Text('确定'),
+          child: Text(uiTx('确定')),
         ),
       ],
     );

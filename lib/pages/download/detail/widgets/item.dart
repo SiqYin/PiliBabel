@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io';
 
 import 'package:PiliPlus/common/style.dart';
@@ -457,7 +458,7 @@ class DetailItem extends StatelessWidget {
               items: [
                 CustomPopupMenuItem<void>(
                   height: 38,
-                  child: const Text('查看详情页', style: TextStyle(fontSize: 13)),
+                  child: Text(uiTx('查看详情页'), style: TextStyle(fontSize: 13)),
                   onTap: () {
                     if (entry.ep case final ep?) {
                       if (ep.from == VideoType.pugv.name) {
@@ -486,8 +487,7 @@ class DetailItem extends StatelessWidget {
                 if (PlatformUtils.isDesktop)
                   CustomPopupMenuItem<void>(
                     height: 38,
-                    child: const Text(
-                      '打开本地文件夹',
+                    child: Text(uiTx('打开本地文件夹'),
                       style: TextStyle(fontSize: 13),
                     ),
                     onTap: () async {
@@ -520,7 +520,7 @@ class DetailItem extends StatelessWidget {
                 if (canDel && Platform.isAndroid)
                   CustomPopupMenuItem<void>(
                     height: 38,
-                    child: const Text('导出', style: TextStyle(fontSize: 13)),
+                    child: Text(uiTx('导出'), style: TextStyle(fontSize: 13)),
                     onTap: () async {
                       if (!await ImageUtils.checkPermissionDependOnSdkInt()) {
                         return;
@@ -570,7 +570,7 @@ class DetailItem extends StatelessWidget {
                 if (canDel)
                   CustomPopupMenuItem<void>(
                     height: 38,
-                    child: const Text('更新弹幕', style: TextStyle(fontSize: 13)),
+                    child: Text(uiTx('更新弹幕'), style: TextStyle(fontSize: 13)),
                     onTap: () async {
                       final res = await downloadService.downloadDanmaku(
                         entry: entry,
@@ -609,8 +609,7 @@ class _ExportDialog extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                '正在导出',
+              Text(uiTx('正在导出'),
                 style: TextStyle(
                   fontSize: 14,
                   color: theme.colorScheme.onSurfaceVariant,

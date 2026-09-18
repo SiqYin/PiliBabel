@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/grpc/reply.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
@@ -50,7 +51,7 @@ class _ReplySettingState extends State<ReplySetting> {
     final theme = Theme.of(context);
     return Scaffold(
       resizeToAvoidBottomInset: false,
-      appBar: showAppBar ? AppBar(title: const Text('评论区过滤设置')) : null,
+      appBar: showAppBar ? AppBar(title: Text(uiTx('评论区过滤设置'))) : null,
       body: ListView(
         padding: EdgeInsets.only(
           left: showAppBar ? padding.left : 0,
@@ -85,7 +86,7 @@ class _ReplySettingState extends State<ReplySetting> {
       children: [
         ListTile(
           leading: const Icon(Icons.shield_outlined),
-          title: const Text('屏蔽低等级用户评论'),
+          title: Text(uiTx('屏蔽低等级用户评论')),
           subtitle: Text(
             _level == 0 ? '已关闭' : '屏蔽 Lv${_level - 1} 及以下的评论',
           ),

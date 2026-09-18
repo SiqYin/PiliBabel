@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:convert' show base64, jsonDecode, jsonEncode, utf8;
 import 'dart:io' show Platform;
 
@@ -180,21 +181,20 @@ class _GeetestWebviewDialogState extends State<GeetestWebviewDialog> {
   Widget build(BuildContext context) {
     if (Platform.isLinux) {
       return AlertDialog(
-        title: const Text('验证码'),
+        title: Text(uiTx('验证码')),
         content: SizedBox(
           width: 300,
           height: 400,
           child: Center(
             child: _linuxWebviewLoading
                 ? const CircularProgressIndicator()
-                : const Text('请在弹出的新窗口中完成验证'),
+                : Text(uiTx('请在弹出的新窗口中完成验证')),
           ),
         ),
         actions: [
           TextButton(
             onPressed: Get.back,
-            child: Text(
-              '取消',
+            child: Text(uiTx('取消'),
               style: TextStyle(color: ColorScheme.of(context).outline),
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -262,7 +263,7 @@ List<SettingsModel> get styleSettings => [
   NormalModel(
     onTap: (context, setState) => _showQualityDialog(
       context: context,
-      title: const Text('图片质量'),
+      title: Text(uiTx('图片质量')),
       initValue: Pref.picQuality,
       onChanged: (picQuality) async {
         GlobalData().imgQuality = picQuality;
@@ -281,7 +282,7 @@ List<SettingsModel> get styleSettings => [
   NormalModel(
     onTap: (context, setState) => _showQualityDialog(
       context: context,
-      title: const Text('查看大图质量'),
+      title: Text(uiTx('查看大图质量')),
       initValue: Pref.previewQ,
       onChanged: (picQuality) async {
         await GStorage.setting.put(SettingBoxKey.previewQuality, picQuality);
@@ -478,7 +479,7 @@ void _showUiScaleDialog(
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: const Text('界面缩放'),
+      title: Text(uiTx('界面缩放')),
       contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 12),
       content: StatefulBuilder(
         onDispose: textController.dispose,
@@ -535,12 +536,11 @@ void _showUiScaleDialog(
               ScaledWidgetsFlutterBinding.instance.scaleFactor = 1.0;
             });
           },
-          child: const Text('重置'),
+          child: Text(uiTx('重置')),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -555,7 +555,7 @@ void _showUiScaleDialog(
               },
             );
           },
-          child: const Text('确定'),
+          child: Text(uiTx('确定')),
         ),
       ],
     ),
@@ -603,7 +603,7 @@ void _showSpringDialog(BuildContext context, _) {
       title: Row(
         mainAxisAlignment: .spaceBetween,
         children: [
-          const Text('弹簧参数'),
+          Text(uiTx('弹簧参数')),
           TextButton(
             style: TextButton.styleFrom(
               visualDensity: .compact,
@@ -660,12 +660,11 @@ void _showSpringDialog(BuildContext context, _) {
             GStorage.setting.delete(SettingBoxKey.springDescription);
             SmartDialog.showToast('重置成功，重启生效');
           },
-          child: const Text('重置'),
+          child: Text(uiTx('重置')),
         ),
         TextButton(
           onPressed: Get.back,
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -688,7 +687,7 @@ void _showSpringDialog(BuildContext context, _) {
               SmartDialog.showToast(e.toString());
             }
           },
-          child: const Text('确定'),
+          child: Text(uiTx('确定')),
         ),
       ],
     ),
@@ -721,11 +720,11 @@ Future<void> _showCardWidthDialog(
   final res = await showDialog<(double, double)>(
     context: context,
     builder: (context) => DualSliderDialog(
-      title: const Text('列表最大列宽度（默认240dp）'),
+      title: Text(uiTx('列表最大列宽度（默认240dp）')),
       value1: Pref.recommendCardWidth,
       value2: Pref.smallCardWidth,
-      description1: const Text('主页推荐流'),
-      description2: const Text('其他'),
+      description1: Text(uiTx('主页推荐流')),
+      description2: Text(uiTx('其他')),
       min: 150.0,
       max: 500.0,
       divisions: 35,
@@ -748,16 +747,15 @@ void _showSideBarThresholdDialog(BuildContext context) {
     context: context,
     builder: (context) => StatefulBuilder(
       builder: (context, setState) => AlertDialog(
-        title: const Text('自定义侧边栏触发宽度'),
+        title: Text(uiTx('自定义侧边栏触发宽度')),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              '当前屏幕宽度: ${MediaQuery.sizeOf(context).width.toStringAsFixed(1)}dp',
+            Text(uiTx('当前屏幕宽度: ${MediaQuery.sizeOf(context).width.toStringAsFixed(1)}dp'),
             ),
             const SizedBox(height: 8),
-            const Text('当屏幕宽度大于该阈值时，会自动切换为侧边栏。'),
+            Text(uiTx('当屏幕宽度大于该阈值时，会自动切换为侧边栏。')),
             Slider(
               value: threshold,
               min: 400,
@@ -771,7 +769,7 @@ void _showSideBarThresholdDialog(BuildContext context) {
         actions: [
           TextButton(
             onPressed: () => setState(() => threshold = 600),
-            child: const Text('恢复默认'),
+            child: Text(uiTx('恢复默认')),
           ),
           TextButton(
             onPressed: () async {
@@ -781,7 +779,7 @@ void _showSideBarThresholdDialog(BuildContext context) {
               );
               Get.back();
             },
-            child: const Text('确定'),
+            child: Text(uiTx('确定')),
           ),
         ],
       ),
@@ -869,10 +867,9 @@ void _showReduceColorDialog(
               if (color.computeLuminance() < 0.2) {
                 showConfirmDialog(
                   context: context,
-                  title: Text(
-                    '确认使用#${(color.toARGB32() & 0xFFFFFF).toRadixString(16).toUpperCase().padLeft(6)}？',
+                  title: Text(uiTx('确认使用#${(color.toARGB32() & 0xFFFFFF).toRadixString(16).toUpperCase().padLeft(6)}？'),
                   ),
-                  content: const Text('所选颜色过于昏暗，可能会影响图片观看'),
+                  content: Text(uiTx('所选颜色过于昏暗，可能会影响图片观看')),
                   onConfirm: onConfirm,
                 );
               } else {
@@ -893,7 +890,7 @@ Future<void> _showToastDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('Toast不透明度'),
+      title: Text(uiTx('Toast不透明度')),
       value: CustomToast.toastOpacity,
       min: 0.0,
       max: 1.0,

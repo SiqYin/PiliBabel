@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show Directory;
 
 import 'package:PiliPlus/models_new/download/bili_download_entry_info.dart';
@@ -183,9 +184,9 @@ Future<_CacheChoice?> _showPrimaryDialog({
                   : (value) => setState(() {
                       deleteCache = value ?? false;
                     }),
-              title: const Text('同时删除本地离线缓存'),
+              title: Text(uiTx('同时删除本地离线缓存')),
               subtitle: cacheCount == 0
-                  ? const Text('当前没有已完成的本地离线缓存')
+                  ? Text(uiTx('当前没有已完成的本地离线缓存'))
                   : null,
             ),
           ],
@@ -193,8 +194,7 @@ Future<_CacheChoice?> _showPrimaryDialog({
         actions: [
           TextButton(
             onPressed: Get.back,
-            child: Text(
-              '取消',
+            child: Text(uiTx('取消'),
               style: TextStyle(
                 color: Theme.of(context).colorScheme.outline,
               ),
@@ -206,7 +206,7 @@ Future<_CacheChoice?> _showPrimaryDialog({
                   ? _CacheChoice.withCache
                   : _CacheChoice.relationOnly,
             ),
-            child: const Text('确认'),
+            child: Text(uiTx('确认')),
           ),
         ],
       ),
@@ -253,8 +253,7 @@ Future<bool> _showCacheConfirmDialog({
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(
               color: Theme.of(context).colorScheme.outline,
             ),

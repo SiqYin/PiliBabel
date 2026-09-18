@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
@@ -29,7 +30,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
   Widget build(BuildContext context) {
     final ThemeData theme = Theme.of(context);
     return SimpleScaffold(
-      appBar: AppBar(title: const Text('消息屏蔽词')),
+      appBar: AppBar(title: Text(uiTx('消息屏蔽词'))),
       body: Obx(() => _buildBody(theme, _controller.loadingState.value)),
     );
   }
@@ -50,8 +51,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '点击屏蔽词即可删除',
+                        Text(uiTx('点击屏蔽词即可删除'),
                           style: TextStyle(
                             fontSize: 13,
                             color: theme.colorScheme.outline,
@@ -83,8 +83,8 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                                 onTap: (keyword) {
                                   showConfirmDialog(
                                     context: context,
-                                    title: const Text('删除屏蔽词？'),
-                                    content: const Text('该屏蔽词将不再生效'),
+                                    title: Text(uiTx('删除屏蔽词？')),
+                                    content: Text(uiTx('该屏蔽词将不再生效')),
                                     onConfirm: () => _controller.onRemove(e),
                                   );
                                 },
@@ -102,9 +102,9 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                     ),
                     child: FilledButton.tonal(
                       onPressed: _onAdd,
-                      child: const Row(
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: [Icon(Icons.add, size: 22), Text('添加消息屏蔽词')],
+                        children: [Icon(Icons.add, size: 22), Text(uiTx('添加消息屏蔽词'))],
                       ),
                     ),
                   ),
@@ -117,24 +117,23 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SvgPicture.asset(Assets.error, height: 156),
-                    const Text(
-                      '还未添加屏蔽词',
+                    Text(uiTx('还未添加屏蔽词'),
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const Text('添加后，将不再接受包含屏蔽词的消息'),
+                    Text(uiTx('添加后，将不再接受包含屏蔽词的消息')),
                     FilledButton.tonal(
                       onPressed: _onAdd,
                       style: FilledButton.styleFrom(
                         visualDensity: VisualDensity.compact,
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.add, size: 22),
-                          Text('添加'),
+                          Text(uiTx('添加')),
                         ],
                       ),
                     ),
@@ -169,8 +168,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      '添加消息屏蔽词',
+                    Text(uiTx('添加消息屏蔽词'),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -216,9 +214,9 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                       _controller.onAdd(keyword);
                     }
                   },
-                  child: const Row(
+                  child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [Icon(Icons.add, size: 22), Text('添加消息屏蔽词')],
+                    children: [Icon(Icons.add, size: 22), Text(uiTx('添加消息屏蔽词'))],
                   ),
                 ),
               ],

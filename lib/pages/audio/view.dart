@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math' show min;
 
 import 'package:PiliPlus/common/assets.dart';
@@ -460,8 +461,7 @@ class _AudioPageState extends State<AudioPage> {
                     child: SizedBox(
                       height: 45,
                       child: Center(
-                        child: Text(
-                          '关闭',
+                        child: Text(uiTx('关闭'),
                           style: TextStyle(color: colorScheme.outline),
                         ),
                       ),
@@ -525,7 +525,7 @@ class _AudioPageState extends State<AudioPage> {
                       spacing: 12,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('播放倍速(${_controller.speed})'),
+                        Text(uiTx('播放倍速(${_controller.speed})')),
                         Slider(
                           padding: EdgeInsets.zero,
                           min: 0.5,
@@ -542,7 +542,7 @@ class _AudioPageState extends State<AudioPage> {
                       ],
                     ),
                   ),
-                  const Text('播放模式'),
+                  Text(uiTx('播放模式')),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: PlayRepeat.values
@@ -647,7 +647,7 @@ class _AudioPageState extends State<AudioPage> {
               ListTile(
                 dense: true,
                 leading: const Icon(Icons.warning_amber_rounded, size: 20),
-                title: const Text('举报', style: TextStyle(fontSize: 14)),
+                title: Text(uiTx('举报'), style: TextStyle(fontSize: 14)),
                 onTap: () {
                   Get.back();
                   PageUtils.reportVideo(_controller.oid.toInt());
@@ -657,7 +657,7 @@ class _AudioPageState extends State<AudioPage> {
                 ListTile(
                   dense: true,
                   leading: const Icon(Icons.info_outline, size: 20),
-                  title: const Text('播放信息', style: TextStyle(fontSize: 14)),
+                  title: Text(uiTx('播放信息'), style: TextStyle(fontSize: 14)),
                   onTap: () {
                     Get.back();
                     HeaderControlState.showPlayerInfo(context, player: player);

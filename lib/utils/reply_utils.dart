@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show Platform;
 
 import 'package:PiliPlus/common/widgets/selection_text.dart';
@@ -142,13 +143,12 @@ abstract final class ReplyUtils {
                     },
                   );
                 },
-                child: const Text('申诉'),
+                child: Text(uiTx('申诉')),
               ),
             if (!isManual)
               TextButton(
                 onPressed: Get.back,
-                child: Text(
-                  '关闭',
+                child: Text(uiTx('关闭'),
                   style: TextStyle(color: colorScheme.outline),
                 ),
               ),

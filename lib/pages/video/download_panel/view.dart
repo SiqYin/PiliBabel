@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
@@ -124,8 +125,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
       child: Row(
         spacing: 16,
         children: [
-          Text(
-            '目标画质',
+          Text(uiTx('目标画质'),
             style: textStyle,
           ),
           Builder(
@@ -172,7 +172,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
                   final network = data.contains(ConnectivityResult.wifi)
                       ? 'WIFI'
                       : '数据';
-                  return Text('当前网络：$network', style: textStyle);
+                  return Text(uiTx('当前网络：$network'), style: textStyle);
                 }
                 return const SizedBox.shrink();
               },
@@ -564,7 +564,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
             onTap: () {
               showConfirmDialog(
                 context: context,
-                title: const Text('确定缓存全部？'),
+                title: Text(uiTx('确定缓存全部？')),
                 onConfirm: () {
                   for (int i = 0; i < widget.episodes.length; i++) {
                     _onDownload(

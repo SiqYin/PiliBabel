@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -397,8 +398,7 @@ class LoginPageController extends GetxController
               horizontal: 16,
               vertical: 12,
             ),
-            title: const Text(
-              "本次登录需要验证您的手机号",
+            title: Text(uiTx("本次登录需要验证您的手机号"),
               textAlign: TextAlign.center,
             ),
             content: Column(
@@ -431,7 +431,7 @@ class LoginPageController extends GetxController
             ),
             actions: <Widget>[
               TextButton(
-                child: const Text("发送验证码"),
+                child: Text(uiTx("发送验证码")),
                 onPressed: () async {
                   final preCaptureRes = await LoginHttp.preCapture();
                   if (!preCaptureRes['status'] ||
@@ -481,8 +481,7 @@ class LoginPageController extends GetxController
               ),
               TextButton(
                 onPressed: Get.back,
-                child: Text(
-                  "取消",
+                child: Text(uiTx("取消"),
                   style: TextStyle(color: ThemeUtils.theme.colorScheme.outline),
                 ),
               ),
@@ -538,7 +537,7 @@ class LoginPageController extends GetxController
                     ..back()
                     ..back();
                 },
-                child: const Text("确认"),
+                child: Text(uiTx("确认")),
               ),
             ],
           ),
@@ -878,7 +877,7 @@ class LoginPageController extends GetxController
         actions: [
           TextButton(
             onPressed: Get.back,
-            child: Text('取消', style: TextStyle(color: colorScheme.outline)),
+            child: Text(uiTx('取消'), style: TextStyle(color: colorScheme.outline)),
           ),
           TextButton(
             onPressed: () {
@@ -893,7 +892,7 @@ class LoginPageController extends GetxController
                 }
               }
             },
-            child: const Text('确定'),
+            child: Text(uiTx('确定')),
           ),
         ],
       ),

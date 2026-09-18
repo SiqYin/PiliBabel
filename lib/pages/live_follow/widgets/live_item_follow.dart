@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -120,8 +121,7 @@ class LiveCardVFollow extends StatelessWidget {
             style: const TextStyle(fontSize: 11, color: Colors.white),
           ),
           if (liveItem.textSmall case final textSmall?)
-            Text(
-              '$textSmall围观',
+            Text(uiTx('$textSmall围观'),
               style: const TextStyle(fontSize: 11, color: Colors.white),
             ),
         ],
