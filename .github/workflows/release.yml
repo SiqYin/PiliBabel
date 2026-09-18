@@ -103,23 +103,6 @@ jobs:
             gh release create "$TAG" \
               --target "$GITHUB_SHA" \
               --title "PiliBabel $TAG" \
-              --notes "$(cat <<'EOF'
-### PiliBabel $TAG
-
-AI interface & content translation on top of PiliNara / PiliPlus — the whole app speaks your language.
-
-**Install (Android)**: download `PiliBabel.apk` below, allow "install unknown apps", and open it. It is signed with a **debug key for this initial 0.1.0 preview** (coexists alongside PiliNara).
-
-**What's new**
-- AI interface & content translation with **translate-once + local persistence** (never re-translated on reopen)
-- ~35 target languages via **your own** OpenAI-compatible endpoint; independent endpoint from AI video summary
-- Chinese target only translates foreign→Chinese; non-Chinese target renders the whole UI
-- Per-comment Original ⇄ Translation toggle (hyperlinks preserved & clickable)
-- Danmaku translation (independent toggle, ~15s-ahead batch pre-translation)
-- Thinking-mode switch, test-translate, and a batched/concurrent translation pipeline (≤40/batch, ≤8 concurrent)
-
-> Unofficial third-party client, not affiliated with bilibili. For learning & testing; delete within 24h. GPL-3.0.
-EOF
-)"
+              --notes-file .github/release-notes.md
           fi
           gh release upload "$TAG" output/PiliBabel.apk --clobber
