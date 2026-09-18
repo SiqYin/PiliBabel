@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
@@ -115,8 +116,7 @@ class _MemberSearchPageState extends State<MemberSearchPage> {
                   ? const SizedBox.shrink()
                   : Align(
                       alignment: const Alignment(0, -0.5),
-                      child: Text(
-                        '搜索「${_controller.uname}」的动态、视频',
+                      child: Text(uiTx('搜索「${_controller.uname}」的动态、视频'),
                         textAlign: TextAlign.center,
                       ),
                     ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 
 import 'package:PiliPlus/common/widgets/avatars.dart';
@@ -134,7 +135,7 @@ class _VotePanelState extends State<VotePanel> {
                       }
                     }
                   : null,
-              child: const Center(child: Text('投票')),
+              child: Center(child: Text(uiTx('投票'))),
             ),
           ),
         ),
@@ -162,7 +163,7 @@ class _VotePanelState extends State<VotePanel> {
                       final colorScheme = ColorScheme.of(context);
                       return SimpleDialog(
                         clipBehavior: .hardEdge,
-                        title: const Text('关注的人的投票'),
+                        title: Text(uiTx('关注的人的投票')),
                         contentPadding: const .only(bottom: 12),
                         titlePadding: const .fromLTRB(20, 20, 20, 10),
                         children: list
@@ -250,8 +251,7 @@ class _VotePanelState extends State<VotePanel> {
             spacing: 10,
             runSpacing: 5,
             children: [
-              Text(
-                '至 ${DateFormatUtils.format(_voteInfo.endTime, format: DateFormatUtils.longFormatDs)}',
+              Text(uiTx('至 ${DateFormatUtils.format(_voteInfo.endTime, format: DateFormatUtils.longFormatDs)}'),
               ),
               Text.rich(
                 TextSpan(

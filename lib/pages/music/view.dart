@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io';
 import 'dart:math';
 
@@ -465,8 +466,7 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
                               for (final artist in item.artistsList!)
                                 _buildArtist(artist, textTheme.bodySmall),
                             if (!item.musicPublish.isNullOrEmpty)
-                              Text(
-                                '发行日期：${item.musicPublish}',
+                              Text(uiTx('发行日期：${item.musicPublish}'),
                                 style: textTheme.bodySmall!.copyWith(
                                   color: theme.colorScheme.outline,
                                 ),
@@ -514,8 +514,7 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
                                               .colorScheme
                                               .onSecondaryContainer,
                                         ),
-                                        Text(
-                                          '看MV',
+                                        Text(uiTx('看MV'),
                                           style: TextStyle(
                                             color: theme
                                                 .colorScheme
@@ -557,7 +556,7 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text('热歌榜排名'),
+                  Text(uiTx('热歌榜排名')),
                   _buildRank(item.hotSongHeat?.lastHeat, '热度'),
                   _buildRank(item.listenPv, '总播放量'),
                   _buildRank(
@@ -593,7 +592,7 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
       child: Column(
         spacing: 8,
         children: [
-          Text('近${heat.length}日热度趋势', style: theme.textTheme.titleMedium),
+          Text(uiTx('近${heat.length}日热度趋势'), style: theme.textTheme.titleMedium),
           SizedBox(
             width: maxWidth,
             height: maxWidth * 0.5,

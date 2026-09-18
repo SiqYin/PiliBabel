@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -296,8 +297,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
         children: [
           ListTile(
             dense: true,
-            title: const Text(
-              '复制链接',
+            title: Text(uiTx('复制链接'),
               style: TextStyle(fontSize: 14),
             ),
             onTap: () {
@@ -317,8 +317,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
           ),
           ListTile(
             dense: true,
-            title: const Text(
-              '其它app打开',
+            title: Text(uiTx('其它app打开'),
               style: TextStyle(fontSize: 14),
             ),
             onTap: () {
@@ -328,8 +327,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
           ),
           ListTile(
             dense: true,
-            title: const Text(
-              '分享视频',
+            title: Text(uiTx('分享视频'),
               style: TextStyle(fontSize: 14),
             ),
             onTap: () {
@@ -344,8 +342,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
           if (isLogin)
             ListTile(
               dense: true,
-              title: const Text(
-                '分享至动态',
+              title: Text(uiTx('分享至动态'),
                 style: TextStyle(fontSize: 14),
               ),
               onTap: () {
@@ -367,8 +364,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
           if (isLogin)
             ListTile(
               dense: true,
-              title: const Text(
-                '分享至消息',
+              title: Text(uiTx('分享至消息'),
                 style: TextStyle(fontSize: 14),
               ),
               onTap: () {

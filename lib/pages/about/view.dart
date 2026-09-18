@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -92,7 +93,7 @@ class _AboutPageState extends State<AboutPage> {
     final showAppBar = widget.showAppBar;
     final padding = MediaQuery.viewPaddingOf(context);
     return SimpleScaffold(
-      appBar: showAppBar ? AppBar(title: const Text('关于')) : null,
+      appBar: showAppBar ? AppBar(title: Text(uiTx('关于'))) : null,
       body: ListView(
         padding: EdgeInsets.only(
           left: showAppBar ? padding.left : 0,
@@ -125,8 +126,7 @@ class _AboutPageState extends State<AboutPage> {
             subtitle: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  '基于PiliPlus做了一些自用修改',
+                Text(uiTx('基于PiliPlus做了一些自用修改'),
                   style: TextStyle(color: outline),
                   semanticsLabel: '与你一起，发现不一样的世界',
                 ),
@@ -144,7 +144,7 @@ class _AboutPageState extends State<AboutPage> {
             onSecondaryTap: PlatformUtils.isMobile
                 ? null
                 : () => Utils.copyText(currentVersion),
-            title: const Text('当前版本'),
+            title: Text(uiTx('当前版本')),
             leading: const Icon(Icons.commit_outlined),
             trailing: Text(
               currentVersion,
@@ -188,14 +188,14 @@ Commit Hash: ${BuildConfig.commitHash}''',
             ListTile(
               onTap: PiliAndroidHelper.openLinkVerifySettings,
               leading: const Icon(MdiIcons.linkBoxOutline),
-              title: const Text('打开受支持的链接'),
+              title: Text(uiTx('打开受支持的链接')),
               trailing: Icon(Icons.arrow_forward, size: 16, color: outline),
             ),
           ListTile(
             onTap: () =>
                 PageUtils.launchURL('${Constants.sourceCodeUrl}/issues'),
             leading: const Icon(Icons.feedback_outlined),
-            title: const Text('问题反馈'),
+            title: Text(uiTx('问题反馈')),
             trailing: Icon(Icons.arrow_forward, size: 16, color: outline),
           ),
           ListTile(
@@ -205,8 +205,8 @@ Commit Hash: ${BuildConfig.commitHash}''',
                 ? null
                 : LoggerUtils.clearLogs,
             leading: const Icon(Icons.bug_report_outlined),
-            title: const Text('错误日志'),
-            subtitle: Text('长按清除日志', style: subTitleStyle),
+            title: Text(uiTx('错误日志')),
+            subtitle: Text(uiTx('长按清除日志'), style: subTitleStyle),
             trailing: Icon(Icons.arrow_forward, size: 16, color: outline),
           ),
           ListTile(
@@ -214,8 +214,8 @@ Commit Hash: ${BuildConfig.commitHash}''',
               if (cacheSize.value.isNotEmpty) {
                 showConfirmDialog(
                   context: context,
-                  title: const Text('提示'),
-                  content: const Text('该操作将清除图片及网络请求缓存数据，确认清除？'),
+                  title: Text(uiTx('提示')),
+                  content: Text(uiTx('该操作将清除图片及网络请求缓存数据，确认清除？')),
                   onConfirm: () async {
                     SmartDialog.showLoading(msg: '正在清除...');
                     try {
@@ -232,16 +232,15 @@ Commit Hash: ${BuildConfig.commitHash}''',
               }
             },
             leading: const Icon(Icons.delete_outline),
-            title: const Text('清除缓存'),
+            title: Text(uiTx('清除缓存')),
             subtitle: Obx(
-              () => Text(
-                '图片及网络缓存 ${cacheSize.value}',
+              () => Text(uiTx('图片及网络缓存 ${cacheSize.value}'),
                 style: subTitleStyle,
               ),
             ),
           ),
           ListTile(
-            title: const Text('导入/导出登录信息'),
+            title: Text(uiTx('导入/导出登录信息')),
             leading: const Icon(Icons.import_export_outlined),
             onTap: () => showImportExportDialog<Map>(
               context,
@@ -263,7 +262,7 @@ Commit Hash: ${BuildConfig.commitHash}''',
             ),
           ),
           ListTile(
-            title: const Text('导入/导出设置'),
+            title: Text(uiTx('导入/导出设置')),
             dense: false,
             leading: const Icon(Icons.import_export_outlined),
             onTap: () => showImportExportDialog<Map<String, dynamic>>(
@@ -275,14 +274,14 @@ Commit Hash: ${BuildConfig.commitHash}''',
             ),
           ),
           ListTile(
-            title: const Text('重置所有设置'),
+            title: Text(uiTx('重置所有设置')),
             leading: const Icon(Icons.settings_backup_restore_outlined),
             onTap: () => showDialog(
               context: context,
               builder: (context) {
                 return SimpleDialog(
                   clipBehavior: Clip.hardEdge,
-                  title: const Text('是否重置所有设置？'),
+                  title: Text(uiTx('是否重置所有设置？')),
                   children: [
                     DialogOption(
                       onPressed: () async {
@@ -293,7 +292,7 @@ Commit Hash: ${BuildConfig.commitHash}''',
                         ]);
                         SmartDialog.showToast('重置成功');
                       },
-                      child: const Text('重置可导出的设置', style: style),
+                      child: Text(uiTx('重置可导出的设置'), style: style),
                     ),
                     DialogOption(
                       onPressed: () async {
@@ -301,7 +300,7 @@ Commit Hash: ${BuildConfig.commitHash}''',
                         await GStorage.clear();
                         SmartDialog.showToast('重置成功');
                       },
-                      child: const Text('重置所有数据（含登录信息）', style: style),
+                      child: Text(uiTx('重置所有数据（含登录信息）'), style: style),
                     ),
                   ],
                 );

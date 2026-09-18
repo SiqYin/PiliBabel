@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/skeleton/video_card_h.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
@@ -212,8 +213,7 @@ class _MemberFavoriteState extends State<MemberFavorite>
         child: Container(
           height: 40,
           alignment: .center,
-          child: Text(
-            '查看更多内容',
+          child: Text(uiTx('查看更多内容'),
             textAlign: TextAlign.center,
             style: TextStyle(color: theme.colorScheme.primary),
           ),

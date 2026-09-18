@@ -312,13 +312,12 @@ class AiSettingPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('恢复默认模板'),
-        content: const Text('将清除所有自定义模板，恢复为内置默认模板。确定继续？'),
+        title: Text(uiTx('恢复默认模板')),
+        content: Text(uiTx('将清除所有自定义模板，恢复为内置默认模板。确定继续？')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              '取消',
+            child: Text(uiTx('取消'),
               style: TextStyle(color: ColorScheme.of(context).outline),
             ),
           ),
@@ -327,7 +326,7 @@ class AiSettingPage extends StatelessWidget {
               controller.restoreDefaults();
               Navigator.pop(context);
             },
-            child: const Text('确定'),
+            child: Text(uiTx('确定')),
           ),
         ],
       ),
@@ -373,8 +372,7 @@ class AiSettingPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text(
-              '取消',
+            child: Text(uiTx('取消'),
               style: TextStyle(color: ColorScheme.of(context).outline),
             ),
           ),
@@ -390,7 +388,7 @@ class AiSettingPage extends StatelessWidget {
               }
               Navigator.pop(context);
             },
-            child: const Text('确定'),
+            child: Text(uiTx('确定')),
           ),
         ],
       ),

@@ -284,8 +284,7 @@ class _HistoryPageState extends State<HistoryPage>
                     vertical: 6,
                     horizontal: 10,
                   ),
-                  child: Text(
-                    '点击开启',
+                  child: Text(uiTx('点击开启'),
                     strutStyle: const StrutStyle(height: 1, leading: 0),
                     style: TextStyle(height: 1, color: theme.primary),
                   ),

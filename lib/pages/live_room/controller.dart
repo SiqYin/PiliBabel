@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async' show Timer, StreamSubscription;
 import 'dart:convert' show jsonDecode;
 import 'dart:math' as math;
@@ -522,8 +523,7 @@ class LiveRoomController extends GetxController {
         actions: [
           TextButton(
             onPressed: Get.back,
-            child: Text(
-              '关闭',
+            child: Text(uiTx('关闭'),
               style: TextStyle(color: ThemeUtils.theme.colorScheme.outline),
             ),
           ),
@@ -536,7 +536,7 @@ class LiveRoomController extends GetxController {
                 ..back()
                 ..back();
             },
-            child: const Text('退出'),
+            child: Text(uiTx('退出')),
           ),
         ],
       ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async' show StreamSubscription, Timer;
 import 'dart:math' as math;
 
@@ -305,21 +306,21 @@ mixin BlockMixin on GetxController {
         contentPadding: const .symmetric(vertical: 10),
         children: [
           DialogOption(
-            child: const Text('赞成票', style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('赞成票'), style: TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               _doVote(segment.uuid, 1);
             },
           ),
           DialogOption(
-            child: const Text('反对票', style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('反对票'), style: TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               _doVote(segment.uuid, 0);
             },
           ),
           DialogOption(
-            child: const Text('更改类别', style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('更改类别'), style: TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               _showCategoryDialog(segment);
@@ -424,8 +425,7 @@ mixin BlockMixin on GetxController {
                   ),
                 ),
                 contentPadding: const EdgeInsets.only(left: 16, right: 8),
-                subtitle: Text(
-                  '${DurationUtils.formatDuration(item.segment.$1 / 1000)} 至 ${DurationUtils.formatDuration(item.segment.$2 / 1000)}',
+                subtitle: Text(uiTx('${DurationUtils.formatDuration(item.segment.$1 / 1000)} 至 ${DurationUtils.formatDuration(item.segment.$2 / 1000)}'),
                   style: const TextStyle(fontSize: 13),
                 ),
                 trailing: Row(

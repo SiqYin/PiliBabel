@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/skeleton/msg_feed_top.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
@@ -34,7 +35,7 @@ class _AtMePageState extends State<AtMePage> {
     final theme = Theme.of(context);
     return SimpleScaffold(
       appBar: AppBar(
-        title: const Text('@我的'),
+        title: Text(uiTx('@我的')),
         actions: [
           IconButton(
             onPressed: () => Get.to(
@@ -100,7 +101,7 @@ class _AtMePageState extends State<AtMePage> {
               final item = response[index];
               void onLongPress() => showConfirmDialog(
                 context: context,
-                title: const Text('确定删除该通知?'),
+                title: Text(uiTx('确定删除该通知?')),
                 onConfirm: () => _atMeController.onRemove(item.id!, index),
               );
               return ListTile(

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io';
 
 import 'package:PiliPlus/common/constants.dart';
@@ -49,11 +50,10 @@ class _LoginPageState extends State<LoginPage> {
     return Column(
       children: [
         const SizedBox(height: 20),
-        const Text('使用 bilibili 官方 App 扫码登录'),
+        Text(uiTx('使用 bilibili 官方 App 扫码登录')),
         const SizedBox(height: 20),
         Obx(
-          () => Text(
-            '剩余有效时间: ${_loginPageCtr.qrCodeLeftTime} 秒',
+          () => Text(uiTx('剩余有效时间: ${_loginPageCtr.qrCodeLeftTime} 秒'),
             style: TextStyle(
               fontFeatures: const [FontFeature.tabularFigures()],
               color: theme.colorScheme.primaryFixedDim,
@@ -67,7 +67,7 @@ class _LoginPageState extends State<LoginPage> {
             TextButton.icon(
               onPressed: _loginPageCtr.refreshQRCode,
               icon: const Icon(Icons.refresh),
-              label: const Text('刷新二维码'),
+              label: Text(uiTx('刷新二维码')),
             ),
             TextButton.icon(
               onPressed: () async {
@@ -85,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
                 ImageUtils.saveByteImg(bytes: pngBytes, fileName: picName);
               },
               icon: const Icon(Icons.save),
-              label: const Text('保存至相册'),
+              label: Text(uiTx('保存至相册')),
             ),
             if (kDebugMode || PlatformUtils.isMobile)
               TextButton.icon(
@@ -94,7 +94,7 @@ class _LoginPageState extends State<LoginPage> {
                   mode: LaunchMode.externalNonBrowserApplication,
                 ),
                 icon: const Icon(Icons.open_in_browser_outlined),
-                label: const Text('其他应用打开'),
+                label: Text(uiTx('其他应用打开')),
               ),
           ],
         ),
@@ -161,8 +161,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            '请务必在 ${Constants.appName} 开源仓库等可信渠道下载安装。',
+          child: Text(uiTx('请务必在 ${Constants.appName} 开源仓库等可信渠道下载安装。'),
             style: theme.textTheme.labelSmall!.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
             ),
@@ -177,12 +176,11 @@ class _LoginPageState extends State<LoginPage> {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(height: 20),
-        const Text('使用Cookie登录'),
+        Text(uiTx('使用Cookie登录')),
         const SizedBox(height: 10),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Text(
-            '使用App端Api实现的功能将不可用',
+          child: Text(uiTx('使用App端Api实现的功能将不可用'),
             style: theme.textTheme.labelMedium!.copyWith(
               color: theme.colorScheme.primary,
             ),
@@ -210,14 +208,14 @@ class _LoginPageState extends State<LoginPage> {
         OutlinedButton.icon(
           onPressed: _loginPageCtr.loginByCookie,
           icon: const Icon(Icons.login),
-          label: const Text('登录'),
+          label: Text(uiTx('登录')),
         ),
         if (Platform.isAndroid) ...[
           const SizedBox(height: 8),
           TextButton.icon(
             onPressed: _openWebLogin,
             icon: const Icon(Icons.language_outlined),
-            label: const Text('网页登录获取 Cookie'),
+            label: Text(uiTx('网页登录获取 Cookie')),
           ),
         ],
       ],
@@ -235,7 +233,7 @@ class _LoginPageState extends State<LoginPage> {
           children: [
             ListTile(
               leading: const Icon(Icons.language_outlined),
-              title: const Text('网页登录'),
+              title: Text(uiTx('网页登录')),
               trailing: IconButton(
                 tooltip: '关闭',
                 icon: const Icon(Icons.close),
@@ -261,7 +259,7 @@ class _LoginPageState extends State<LoginPage> {
     return Column(
       children: [
         const SizedBox(height: 20),
-        const Text('使用账号密码登录'),
+        Text(uiTx('使用账号密码登录')),
         const SizedBox(height: 10),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -306,7 +304,7 @@ class _LoginPageState extends State<LoginPage> {
               value: showPassword,
               onChanged: (value) => setState(() => showPassword = value!),
             ),
-            const Text('显示密码'),
+            Text(uiTx('显示密码')),
             const Spacer(),
             TextButton(
               onPressed: () {
@@ -316,7 +314,7 @@ class _LoginPageState extends State<LoginPage> {
                   context: context,
                   builder: (context) => SimpleDialog(
                     clipBehavior: Clip.hardEdge,
-                    title: const Text('忘记密码？'),
+                    title: Text(uiTx('忘记密码？')),
                     contentPadding: const EdgeInsets.fromLTRB(
                       0.0,
                       2.0,
@@ -324,13 +322,12 @@ class _LoginPageState extends State<LoginPage> {
                       16.0,
                     ),
                     children: [
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.fromLTRB(25, 0, 25, 10),
-                        child: Text("试试扫码、手机号登录，或选择"),
+                        child: Text(uiTx("试试扫码、手机号登录，或选择")),
                       ),
                       ListTile(
-                        title: const Text(
-                          '找回密码（手机版）',
+                        title: Text(uiTx('找回密码（手机版）'),
                         ),
                         leading: const Icon(Icons.smartphone_outlined),
                         subtitle: const Text(
@@ -349,8 +346,7 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                       ),
                       ListTile(
-                        title: const Text(
-                          '找回密码（电脑版）',
+                        title: Text(uiTx('找回密码（电脑版）'),
                         ),
                         leading: const Icon(Icons.desktop_windows_outlined),
                         subtitle: const Text(
@@ -373,7 +369,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 );
               },
-              child: const Text('忘记密码'),
+              child: Text(uiTx('忘记密码')),
             ),
             const SizedBox(width: 20),
           ],
@@ -381,7 +377,7 @@ class _LoginPageState extends State<LoginPage> {
         OutlinedButton.icon(
           onPressed: _loginPageCtr.loginByPassword,
           icon: const Icon(Icons.login),
-          label: const Text('登录'),
+          label: Text(uiTx('登录')),
         ),
         const SizedBox(height: 20),
         Padding(
@@ -405,7 +401,7 @@ class _LoginPageState extends State<LoginPage> {
     return Column(
       children: [
         const SizedBox(height: 20),
-        const Text('使用手机短信验证码登录'),
+        Text(uiTx('使用手机短信验证码登录')),
         const SizedBox(height: 10),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
@@ -532,7 +528,7 @@ class _LoginPageState extends State<LoginPage> {
         OutlinedButton.icon(
           onPressed: _loginPageCtr.loginBySmsCode,
           icon: const Icon(Icons.login),
-          label: const Text('登录'),
+          label: Text(uiTx('登录')),
         ),
         const SizedBox(height: 20),
         Padding(
@@ -569,7 +565,7 @@ class _LoginPageState extends State<LoginPage> {
         ),
         title: Row(
           children: [
-            const Text('登录'),
+            Text(uiTx('登录')),
             if (isLandscape)
               Expanded(
                 child: Align(
@@ -577,23 +573,23 @@ class _LoginPageState extends State<LoginPage> {
                   child: TabBar(
                     isScrollable: true,
                     dividerHeight: 0,
-                    tabs: const [
+                    tabs: [
                       Tab(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: [Icon(Icons.password), Text(' 密码')],
+                          children: [Icon(Icons.password), Text(uiTx(' 密码'))],
                         ),
                       ),
                       Tab(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: [Icon(Icons.sms_outlined), Text(' 短信')],
+                          children: [Icon(Icons.sms_outlined), Text(uiTx(' 短信'))],
                         ),
                       ),
                       Tab(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: [Icon(Icons.qr_code), Text(' 扫码')],
+                          children: [Icon(Icons.qr_code), Text(uiTx(' 扫码'))],
                         ),
                       ),
                       Tab(

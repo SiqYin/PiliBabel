@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/common/badge_type.dart';
@@ -102,8 +103,7 @@ class MemberShopItem extends StatelessWidget {
                     ],
                   ),
                   if (item.itemSourceName?.isNotEmpty == true)
-                    Text(
-                      '来自${item.itemSourceName}',
+                    Text(uiTx('来自${item.itemSourceName}'),
                       style: TextStyle(
                         fontSize: 11,
                         color: colorScheme.freeColor,

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show Platform;
 
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
@@ -435,7 +436,7 @@ Future<void> _showAngleDegreesDialog(
   final res = await showDialog<double>(
     context: context,
     builder: (context) => SliderDialog(
-      title: const Text('倾斜角度阈值'),
+      title: Text(uiTx('倾斜角度阈值')),
       min: 10.0,
       max: 90.0,
       divisions: 90,
@@ -461,7 +462,7 @@ Future<void> showPlayerVolumeDialog(
   }
   return showVolumeDialog(
     context,
-    title: const Text('播放器音量'),
+    title: Text(uiTx('播放器音量')),
     value: Pref.playerVolume,
     onChanged: (value) => GStorage.setting
         .put(SettingBoxKey.playerVolume, value)
@@ -478,7 +479,7 @@ Future<void> _showMaxVolumeDialog(
 ) {
   return showVolumeDialog(
     context,
-    title: const Text('最高音量'),
+    title: Text(uiTx('最高音量')),
     value: Pref.maxVolume * 100,
     onChanged: (rawValue) {
       final maxVolume = (rawValue / 100).toPrecision(2);

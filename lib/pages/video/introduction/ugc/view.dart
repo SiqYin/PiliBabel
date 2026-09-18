@@ -171,7 +171,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                                   videoDetailCtr.queryVideoUrl();
                                 }
                               },
-                              label: const Text("点此重新加载"),
+                              label: Text(uiTx("点此重新加载")),
                             ),
                           ),
                   ),
@@ -615,9 +615,8 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                               if (!mounted) return;
                               final confirmed = await showConfirmDialog(
                                 context: context,
-                                title: const Text('空降助手：搬运视频同步'),
-                                content: Text(
-                                  '${hasPortVideo ? "" : "是否将"}该视频${hasPortVideo ? "已" : ""}绑定到此YouTube视频($ytbId)',
+                                title: Text(uiTx('空降助手：搬运视频同步')),
+                                content: Text(uiTx('${hasPortVideo ? "" : "是否将"}该视频${hasPortVideo ? "已" : ""}绑定到此YouTube视频($ytbId)'),
                                 ),
                               );
                               if (!hasPortVideo && confirmed) {
@@ -1003,8 +1002,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
           ),
         if (introController.isShowOnlineTotal)
           Obx(
-            () => Text(
-              '${introController.total.value}人在看',
+            () => Text(uiTx('${introController.total.value}人在看'),
               style: TextStyle(fontSize: 12, color: colorScheme.outline),
             ),
           ),

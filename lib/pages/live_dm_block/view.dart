@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
@@ -51,7 +52,7 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
     );
 
     return SimpleScaffold(
-      appBar: AppBar(title: const Text('弹幕屏蔽')),
+      appBar: AppBar(title: Text(uiTx('弹幕屏蔽'))),
       body: Padding(
         padding: .only(left: padding.left, right: padding.right),
         child: Column(
@@ -96,7 +97,7 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
               text: e is ShieldUserList ? e.uname : e as String,
               onTap: (value) => showConfirmDialog(
                 context: context,
-                title: const Text('确定删除该规则？'),
+                title: Text(uiTx('确定删除该规则？')),
                 onConfirm: () => _controller.onRemove(i, e),
               ),
             );

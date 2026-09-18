@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
@@ -137,8 +138,7 @@ abstract class BaseVideoWebState<
   Widget? buildCount() {
     final count = controller.count;
     if (count == null) return null;
-    return Text(
-      '共 $count 视频',
+    return Text(uiTx('共 $count 视频'),
       style: const TextStyle(height: 1),
       strutStyle: const StrutStyle(leading: 0, height: 1),
     );
@@ -203,7 +203,7 @@ abstract class BaseVideoWebState<
 
     showConfirmDialog(
       context: context,
-      title: const Text('跳至: '),
+      title: Text(uiTx('跳至: ')),
       content: TextFormField(
         autofocus: true,
         initialValue: pageStr,

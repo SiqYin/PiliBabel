@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/skeleton/msg_feed_sys_msg_.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
@@ -35,7 +36,7 @@ class _SysMsgPageState extends State<SysMsgPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return SimpleScaffold(
-      appBar: AppBar(title: const Text('系统通知')),
+      appBar: AppBar(title: Text(uiTx('系统通知'))),
       body: refreshIndicator(
         onRefresh: _sysMsgController.onRefresh,
         child: CustomScrollView(
@@ -89,7 +90,7 @@ class _SysMsgPageState extends State<SysMsgPage> {
               final item = response[index];
               void onLongPress() => showConfirmDialog(
                 context: context,
-                title: const Text('确定删除该通知?'),
+                title: Text(uiTx('确定删除该通知?')),
                 onConfirm: () => _sysMsgController.onRemove(item.id, index),
               );
               return ListTile(

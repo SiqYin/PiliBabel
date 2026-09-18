@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/pair.dart';
 import 'package:PiliPlus/common/widgets/reorder_mixin.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -70,10 +71,10 @@ class _BarSetPageState extends State<BarSetPage> with ReorderMixin {
   Widget build(BuildContext context) {
     return SimpleScaffold(
       appBar: AppBar(
-        title: Text('$title编辑'),
+        title: Text(uiTx('$title编辑')),
         actions: [
-          TextButton(onPressed: onReset, child: const Text('重置')),
-          TextButton(onPressed: saveEdit, child: const Text('保存')),
+          TextButton(onPressed: onReset, child: Text(uiTx('重置'))),
+          TextButton(onPressed: saveEdit, child: Text(uiTx('保存'))),
           const SizedBox(width: 12),
         ],
       ),
@@ -82,9 +83,9 @@ class _BarSetPageState extends State<BarSetPage> with ReorderMixin {
         proxyDecorator: proxyDecorator,
         footer: Padding(
           padding: padding,
-          child: const Align(
+          child: Align(
             alignment: Alignment.centerRight,
-            child: Text('*长按拖动排序'),
+            child: Text(uiTx('*长按拖动排序')),
           ),
         ),
         children: list

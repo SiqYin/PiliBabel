@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -139,14 +140,13 @@ class PostPanel extends CommonSlidePage {
                       actions: [
                         TextButton(
                           onPressed: Get.back,
-                          child: Text(
-                            '取消',
+                          child: Text(uiTx('取消'),
                             style: TextStyle(color: theme.colorScheme.outline),
                           ),
                         ),
                         TextButton(
                           onPressed: () => Get.back(result: initV),
-                          child: const Text('确定'),
+                          child: Text(uiTx('确定')),
                         ),
                       ],
                     ),
@@ -258,7 +258,7 @@ class _PostPanelState extends State<PostPanel>
         child: Row(
           children: [
             const SizedBox(width: 16),
-            const Expanded(child: Text('提交片段', style: TextStyle(fontSize: 16))),
+            Expanded(child: Text(uiTx('提交片段'), style: TextStyle(fontSize: 16))),
             iconButton(
               size: 32,
               context: context,
@@ -305,18 +305,17 @@ class _PostPanelState extends State<PostPanel>
                 onPressed: () => showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: const Text('确定无误再提交'),
+                    title: Text(uiTx('确定无误再提交')),
                     actions: [
                       TextButton(
                         onPressed: Get.back,
-                        child: Text(
-                          '取消',
+                        child: Text(uiTx('取消'),
                           style: TextStyle(color: theme.colorScheme.outline),
                         ),
                       ),
                       TextButton(
                         onPressed: _onPost,
-                        child: const Text('确定提交'),
+                        child: Text(uiTx('确定提交')),
                       ),
                     ],
                   ),

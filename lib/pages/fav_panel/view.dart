@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models_new/fav/fav_folder/list.dart';
@@ -70,8 +71,7 @@ class _FavPanelState extends State<FavPanel> {
                         : const Icon(Icons.lock_outline),
                     minLeadingWidth: 0,
                     title: Text(item.title),
-                    subtitle: Text(
-                      '${item.mediaCount}个内容 . ${BiliUtils.isPublicFavText(item.attr)}',
+                    subtitle: Text(uiTx('${item.mediaCount}个内容 . ${BiliUtils.isPublicFavText(item.attr)}'),
                     ),
                     trailing: Transform.scale(
                       scale: 0.9,
@@ -107,7 +107,7 @@ class _FavPanelState extends State<FavPanel> {
             onPressed: Get.back,
             icon: const Icon(Icons.close_outlined),
           ),
-          title: const Text('添加到收藏夹'),
+          title: Text(uiTx('添加到收藏夹')),
           actions: [
             TextButton.icon(
               onPressed: () => Get.toNamed('/createFav')?.then((data) {
@@ -122,7 +122,7 @@ class _FavPanelState extends State<FavPanel> {
                 }
               }),
               icon: Icon(Icons.add, color: theme.primary),
-              label: const Text('新建收藏夹'),
+              label: Text(uiTx('新建收藏夹')),
               style: const ButtonStyle(
                 visualDensity: .compact,
                 padding: WidgetStatePropertyAll(
@@ -156,7 +156,7 @@ class _FavPanelState extends State<FavPanel> {
                   foregroundColor: theme.outline,
                   backgroundColor: theme.onInverseSurface,
                 ),
-                child: const Text('取消'),
+                child: Text(uiTx('取消')),
               ),
               FilledButton.tonal(
                 onPressed: () {
@@ -164,7 +164,7 @@ class _FavPanelState extends State<FavPanel> {
                   widget.ctr.actionFavVideo();
                 },
                 style: const ButtonStyle(visualDensity: .compact),
-                child: const Text('完成'),
+                child: Text(uiTx('完成')),
               ),
             ],
           ),

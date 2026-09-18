@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 
 import 'package:material_ui/material_ui.dart';
@@ -75,8 +76,7 @@ class ForwardSeekIndicatorState extends State<ForwardSeekIndicator> {
                 color: Colors.white,
               ),
               const SizedBox(height: 8.0),
-              Text(
-                '快进${duration.inSeconds}秒',
+              Text(uiTx('快进${duration.inSeconds}秒'),
                 style: const TextStyle(
                   fontSize: 12.0,
                   color: Colors.white,

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
 import 'package:PiliPlus/models_new/dynamic/dyn_mention/item.dart';
@@ -34,8 +35,7 @@ class DynMentionItem extends StatelessWidget {
           item.name!,
           style: const TextStyle(fontSize: 14),
         ),
-        subtitle: Text(
-          '${NumUtils.numFormat(item.fans)}粉丝',
+        subtitle: Text(uiTx('${NumUtils.numFormat(item.fans)}粉丝'),
           style: TextStyle(color: Theme.of(context).colorScheme.outline),
         ),
         trailing: Checkbox(

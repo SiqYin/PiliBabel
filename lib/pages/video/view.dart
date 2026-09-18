@@ -1858,28 +1858,28 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     itemBuilder: (BuildContext context) => <PopupMenuEntry>[
       PopupMenuItem(
         onTap: introController.viewLater,
-        child: const Text('稍后再看'),
+        child: Text(uiTx('稍后再看')),
       ),
       if (videoDetailController.epId == null)
         PopupMenuItem(
           onTap: () => videoDetailController.showNoteList(context),
-          child: const Text('查看笔记'),
+          child: Text(uiTx('查看笔记')),
         ),
       if (!videoDetailController.isFileSource)
         PopupMenuItem(
           onTap: () => videoDetailController.onDownload(this.context),
-          child: const Text('缓存视频'),
+          child: Text(uiTx('缓存视频')),
         ),
       if (videoDetailController.cover.value.isNotEmpty)
         PopupMenuItem(
           onTap: () =>
               ImageUtils.downloadImg([videoDetailController.cover.value]),
-          child: const Text('保存封面'),
+          child: Text(uiTx('保存封面')),
         ),
       if (!videoDetailController.isFileSource && videoDetailController.isUgc)
         PopupMenuItem(
           onTap: videoDetailController.toAudioPage,
-          child: const Text('听音频'),
+          child: Text(uiTx('听音频')),
         ),
       PopupMenuItem(
         onTap: () {
@@ -1889,7 +1889,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
             PageUtils.reportVideo(videoDetailController.aid);
           }
         },
-        child: const Text('举报'),
+        child: Text(uiTx('举报')),
       ),
     ],
   );

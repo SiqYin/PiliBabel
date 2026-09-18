@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
@@ -19,7 +20,7 @@ class MedalWall extends StatelessWidget {
     final colorScheme = ColorScheme.of(context);
     return AlertDialog(
       clipBehavior: .hardEdge,
-      title: const Text('粉丝勋章墙'),
+      title: Text(uiTx('粉丝勋章墙')),
       contentPadding: const .symmetric(vertical: 16),
       constraints: const BoxConstraints.tightFor(width: 380),
       content: CustomScrollView(
@@ -126,8 +127,7 @@ class MedalWall extends StatelessWidget {
                           borderRadius: const .all(.circular(3)),
                           color: colorScheme.btnColor,
                         ),
-                        child: const Text(
-                          '佩戴中',
+                        child: Text(uiTx('佩戴中'),
                           style: TextStyle(
                             height: 1,
                             fontSize: 10,

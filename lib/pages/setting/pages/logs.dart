@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async' show Timer;
 import 'dart:convert' show jsonDecode;
 
@@ -81,8 +82,8 @@ class _LogsPageState extends State<LogsPage> {
     );
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('复制成功'),
+        SnackBar(
+          content: Text(uiTx('复制成功')),
           duration: _snackBarDisplayDuration,
         ),
       );
@@ -93,8 +94,8 @@ class _LogsPageState extends State<LogsPage> {
     if (await LoggerUtils.clearLogs()) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('已清空'),
+          SnackBar(
+            content: Text(uiTx('已清空')),
             duration: _snackBarDisplayDuration,
           ),
         );
@@ -109,7 +110,7 @@ class _LogsPageState extends State<LogsPage> {
     final padding = MediaQuery.viewPaddingOf(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('日志'),
+        title: Text(uiTx('日志')),
         actions: [
           StaticPopupMenuButton(
             itemBuilder: (_) => [
@@ -125,7 +126,7 @@ class _LogsPageState extends State<LogsPage> {
                       }
                     },
                   ),
-                  child: const Text('引发错误'),
+                  child: Text(uiTx('引发错误')),
                 ),
               PopupMenuItem(
                 onTap: () {
@@ -142,16 +143,16 @@ class _LogsPageState extends State<LogsPage> {
               ),
               PopupMenuItem(
                 onTap: copyLogs,
-                child: const Text('复制日志'),
+                child: Text(uiTx('复制日志')),
               ),
               PopupMenuItem(
                 onTap: () =>
                     PageUtils.launchURL('${Constants.sourceCodeUrl}/issues'),
-                child: const Text('错误反馈'),
+                child: Text(uiTx('错误反馈')),
               ),
               PopupMenuItem(
                 onTap: clearLogs,
-                child: const Text('清空日志'),
+                child: Text(uiTx('清空日志')),
               ),
             ],
           ),
@@ -250,9 +251,8 @@ class _InfoCard extends StatelessWidget {
             color: colorScheme.primary,
           ),
           const SizedBox(width: 8),
-          const Expanded(
-            child: Text(
-              '相关信息',
+          Expanded(
+            child: Text(uiTx('相关信息'),
               style: TextStyle(fontWeight: .bold, fontSize: 15),
               maxLines: 1,
               overflow: .ellipsis,
@@ -274,8 +274,8 @@ class _InfoCard extends StatelessWidget {
               ).formatInfo();
               Utils.copyText('```\n$report```', needToast: false);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('已将相关信息复制至剪贴板'),
+                SnackBar(
+                  content: Text(uiTx('已将相关信息复制至剪贴板')),
                   duration: _snackBarDisplayDuration,
                 ),
               );
@@ -352,7 +352,7 @@ class _ReportCard extends StatelessWidget {
               Utils.copyText('```\n$report```', needToast: false);
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('已将 $dateTime 复制至剪贴板'),
+                  content: Text(uiTx('已将 $dateTime 复制至剪贴板')),
                   duration: _snackBarDisplayDuration,
                 ),
               );
@@ -375,8 +375,7 @@ class _ReportCard extends StatelessWidget {
       ),
       if (report.isExpanded) ...[
         const SizedBox(height: 16),
-        Text(
-          '错误详情',
+        Text(uiTx('错误详情'),
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: colorScheme.error,
@@ -402,8 +401,7 @@ class _ReportCard extends StatelessWidget {
         // stackTrace may be null or String("null") or blank
         if (stackTrace != null && stackTrace.isNotEmpty) ...[
           const SizedBox(height: 16),
-          Text(
-            '堆栈跟踪',
+          Text(uiTx('堆栈跟踪'),
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: colorScheme.error,

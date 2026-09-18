@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -66,8 +67,7 @@ class _MultiSelectDialogState<T> extends State<MultiSelectDialog<T>> {
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(
               color: theme.colorScheme.outline,
             ),
@@ -75,7 +75,7 @@ class _MultiSelectDialogState<T> extends State<MultiSelectDialog<T>> {
         ),
         TextButton(
           onPressed: () => Get.back(result: _tempValues),
-          child: const Text('确定'),
+          child: Text(uiTx('确定')),
         ),
       ],
     );

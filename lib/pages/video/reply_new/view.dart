@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' show max;
@@ -214,7 +215,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
                   ),
                   visualDensity: VisualDensity.compact,
                 ),
-                child: const Text('发送'),
+                child: Text(uiTx('发送')),
               ),
             ),
           ],

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math';
 
 import 'package:PiliPlus/common/style.dart';
@@ -103,8 +104,7 @@ class _PgcPageState extends State<PgcPage> with AutomaticKeepAliveClientMixin {
                       Row(
                         children: [
                           const SizedBox(width: 16),
-                          Text(
-                            '追番时间表',
+                          Text(uiTx('追番时间表'),
                             style: theme.textTheme.titleMedium,
                           ),
                           const SizedBox(width: 16),
@@ -232,8 +232,7 @@ class _PgcPageState extends State<PgcPage> with AutomaticKeepAliveClientMixin {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            '推荐',
+          Text(uiTx('推荐'),
             style: theme.textTheme.titleMedium,
           ),
           moreTextButton(
@@ -252,7 +251,7 @@ class _PgcPageState extends State<PgcPage> with AutomaticKeepAliveClientMixin {
                 List<int> types = const [102, 2, 5, 3, 7];
                 Get.to(
                   SimpleScaffold(
-                    appBar: AppBar(title: const Text('索引')),
+                    appBar: AppBar(title: Text(uiTx('索引'))),
                     body: DefaultTabController(
                       length: types.length,
                       child: Builder(

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/avatars.dart';
@@ -331,12 +332,10 @@ class UserInfoCard extends StatelessWidget {
       child: Padding(
         padding: const .only(left: 20, top: 6, right: 20),
         child: remark.isNotEmpty
-            ? Text(
-                '备注：$remark',
+            ? Text(uiTx('备注：$remark'),
                 style: TextStyle(fontSize: 13, color: colorScheme.primary),
               )
-            : Text(
-                '添加备注',
+            : Text(uiTx('添加备注'),
                 style: TextStyle(fontSize: 13, color: colorScheme.outline),
               ),
       ),

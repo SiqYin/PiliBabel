@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
@@ -43,8 +44,7 @@ class MemberCheeseItem extends StatelessWidget {
         ],
         if (item.ctime != null) ...[
           const Spacer(),
-          Text(
-            '收藏于${DateFormatUtils.dateFormat(int.parse(item.ctime!))}',
+          Text(uiTx('收藏于${DateFormatUtils.dateFormat(int.parse(item.ctime!))}'),
             style: TextStyle(
               fontSize: 12,
               color: theme.colorScheme.outline,

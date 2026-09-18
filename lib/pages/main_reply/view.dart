@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/skeleton/video_reply.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -62,7 +63,7 @@ class _MainReplyPageState extends State<MainReplyPage>
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
     return SimpleScaffold(
-      appBar: AppBar(title: const Text('查看评论')),
+      appBar: AppBar(title: Text(uiTx('查看评论'))),
       body: fabAnimWrapper(
         child: refreshIndicator(
           onRefresh: _controller.onRefresh,
@@ -185,8 +186,7 @@ class _MainReplyPageState extends State<MainReplyPage>
             Obx(
               () {
                 final count = _controller.count.value;
-                return Text(
-                  '${count == -1 ? 0 : NumUtils.numFormat(count)}条回复',
+                return Text(uiTx('${count == -1 ? 0 : NumUtils.numFormat(count)}条回复'),
                 );
               },
             ),
@@ -219,7 +219,7 @@ class _MainReplyPageState extends State<MainReplyPage>
       Get.to(
         SimpleScaffold(
           appBar: AppBar(
-            title: const Text('评论详情'),
+            title: Text(uiTx('评论详情')),
             shape: Border(
               bottom: BorderSide(
                 color: colorScheme.outline.withValues(alpha: 0.1),

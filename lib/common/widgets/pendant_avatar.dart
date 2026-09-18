@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/extra_hittest_stack.dart';
@@ -125,8 +126,7 @@ class PendantAvatar extends StatelessWidget {
                 Icons.equalizer_rounded,
                 color: colorScheme.onSecondaryContainer,
               ),
-              Text(
-                '直播中',
+              Text(uiTx('直播中'),
                 style: TextStyle(
                   height: 1,
                   fontSize: fontSize,

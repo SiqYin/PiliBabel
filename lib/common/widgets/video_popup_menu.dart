@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/http/user.dart';
@@ -249,7 +250,7 @@ class VideoPopupMenu extends StatelessWidget {
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: const Text('取消'),
+          child: Text(uiTx('取消')),
         ),
       ],
     );
@@ -394,7 +395,7 @@ class VideoPopupMenu extends StatelessWidget {
                       );
                       Get.back();
                     },
-                    child: const Text("撤销"),
+                    child: Text(uiTx("撤销")),
                   ),
                 ],
               );
@@ -404,7 +405,7 @@ class VideoPopupMenu extends StatelessWidget {
                 builder: (context) => SimpleDialog(
                   contentPadding: const EdgeInsets.all(24),
                   children: [
-                    const Center(child: Text("web端暂不支持精细选择")),
+                    Center(child: Text(uiTx("web端暂不支持精细选择"))),
                     const SizedBox(height: 5),
                     Wrap(
                       spacing: 5.0,
@@ -430,7 +431,7 @@ class VideoPopupMenu extends StatelessWidget {
                           style: FilledButton.styleFrom(
                             visualDensity: VisualDensity.compact,
                           ),
-                          child: const Text("点踩"),
+                          child: Text(uiTx("点踩")),
                         ),
                         FilledButton.tonal(
                           onPressed: () async {
@@ -448,7 +449,7 @@ class VideoPopupMenu extends StatelessWidget {
                           style: FilledButton.styleFrom(
                             visualDensity: VisualDensity.compact,
                           ),
-                          child: const Text("撤销"),
+                          child: Text(uiTx("撤销")),
                         ),
                       ],
                     ),
@@ -470,7 +471,7 @@ class VideoPopupMenu extends StatelessWidget {
             context: context,
             builder: (context) {
               return AlertDialog(
-                title: const Text('提示'),
+                title: Text(uiTx('提示')),
                 content: Text(
                   '确定拉黑:${videoItem.owner.name}(${videoItem.owner.mid})?'
                   '\n\n注：被拉黑的Up可以在隐私设置-黑名单管理中解除',
@@ -478,8 +479,7 @@ class VideoPopupMenu extends StatelessWidget {
                 actions: [
                   TextButton(
                     onPressed: Get.back,
-                    child: Text(
-                      '点错了',
+                    child: Text(uiTx('点错了'),
                       style: TextStyle(
                         color: ColorScheme.of(context).outline,
                       ),
@@ -499,7 +499,7 @@ class VideoPopupMenu extends StatelessWidget {
                         res.toast();
                       }
                     },
-                    child: const Text('确认'),
+                    child: Text(uiTx('确认')),
                   ),
                 ],
               );

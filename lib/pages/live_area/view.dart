@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
@@ -33,7 +34,7 @@ class _LiveAreaPageState extends State<LiveAreaPage> {
     final padding = MediaQuery.viewPaddingOf(context);
     return SimpleScaffold(
       appBar: AppBar(
-        title: const Text('全部标签'),
+        title: Text(uiTx('全部标签')),
         actions: _controller.isLogin
             ? [
                 TextButton(

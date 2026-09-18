@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show File;
 
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
@@ -66,8 +67,7 @@ class _CreateVotePageState extends State<CreateVotePage> {
           bottom: padding.bottom + 100,
         ),
         children: [
-          const Text(
-            '投票类型',
+          Text(uiTx('投票类型'),
             style: TextStyle(fontSize: 14),
           ),
           const SizedBox(height: 12),
@@ -157,12 +157,11 @@ class _CreateVotePageState extends State<CreateVotePage> {
                         foregroundColor: theme.colorScheme.onSurfaceVariant,
                         backgroundColor: theme.colorScheme.onInverseSurface,
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.add, size: 16),
-                          Text(
-                            ' 添加选项',
+                          Text(uiTx(' 添加选项'),
                             style: TextStyle(fontSize: 13),
                           ),
                         ],
@@ -178,7 +177,7 @@ class _CreateVotePageState extends State<CreateVotePage> {
             children: [
               SizedBox(
                 width: 100,
-                child: Text('单选/多选', style: _leadingStyle),
+                child: Text(uiTx('单选/多选'), style: _leadingStyle),
               ),
               Obx(() {
                 final choiceCnt = _controller.choiceCnt.value;
@@ -218,7 +217,7 @@ class _CreateVotePageState extends State<CreateVotePage> {
             children: [
               SizedBox(
                 width: 100,
-                child: Text('投票截止时间', style: _leadingStyle),
+                child: Text(uiTx('投票截止时间'), style: _leadingStyle),
               ),
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
@@ -273,7 +272,7 @@ class _CreateVotePageState extends State<CreateVotePage> {
             final canCreate = _controller.canCreate.value;
             return FilledButton.tonal(
               onPressed: canCreate ? _controller.onCreate : null,
-              child: const Text('发起投票'),
+              child: Text(uiTx('发起投票')),
             );
           }),
         ],

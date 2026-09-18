@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/user.dart';
@@ -46,8 +47,8 @@ class HistorySearchController
   void onRemove() {
     showConfirmDialog(
       context: Get.context!,
-      title: const Text('提示'),
-      content: const Text('确认删除所选历史记录吗？'),
+      title: Text(uiTx('提示')),
+      content: Text(uiTx('确认删除所选历史记录吗？')),
       onConfirm: () async {
         SmartDialog.showLoading(msg: '请求中');
         final removeList = allChecked.toSet();

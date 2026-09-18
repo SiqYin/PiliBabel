@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/reorder_mixin.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/http/fav.dart';
@@ -30,7 +31,7 @@ class _FavFolderSortPageState extends State<FavFolderSortPage>
   Widget build(BuildContext context) {
     return SimpleScaffold(
       appBar: AppBar(
-        title: const Text('收藏夹排序'),
+        title: Text(uiTx('收藏夹排序')),
         actions: [
           TextButton(
             onPressed: () async {
@@ -47,7 +48,7 @@ class _FavFolderSortPageState extends State<FavFolderSortPage>
                 res.toast();
               }
             },
-            child: const Text('完成'),
+            child: Text(uiTx('完成')),
           ),
           const SizedBox(width: 16),
         ],

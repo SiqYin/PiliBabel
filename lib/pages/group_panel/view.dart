@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/member.dart';
@@ -135,13 +136,13 @@ class _GroupPanelState extends State<GroupPanel> {
             onPressed: Get.back,
             icon: const Icon(Icons.close_outlined),
           ),
-          title: const Text('设置关注分组'),
+          title: Text(uiTx('设置关注分组')),
           actions: [
             TextButton.icon(
               onPressed: () =>
                   RequestUtils.createFavTag(context, _onCreateFavTag),
               icon: Icon(Icons.add, color: theme.colorScheme.primary),
-              label: const Text('新建分组'),
+              label: Text(uiTx('新建分组')),
               style: const ButtonStyle(
                 visualDensity: .compact,
                 padding: WidgetStatePropertyAll(

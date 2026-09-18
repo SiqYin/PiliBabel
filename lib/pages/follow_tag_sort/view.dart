@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/reorder_mixin.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/http/follow.dart';
@@ -39,7 +40,7 @@ class _FollowTagSortPageState extends State<FollowTagSortPage>
   Widget build(BuildContext context) {
     return SimpleScaffold(
       appBar: AppBar(
-        title: const Text('关注分组排序'),
+        title: Text(uiTx('关注分组排序')),
         actions: _customTags.isNotEmpty
             ? [
                 TextButton(
@@ -61,7 +62,7 @@ class _FollowTagSortPageState extends State<FollowTagSortPage>
                       res.toast();
                     }
                   },
-                  child: const Text('完成'),
+                  child: Text(uiTx('完成')),
                 ),
                 const SizedBox(width: 16),
               ]

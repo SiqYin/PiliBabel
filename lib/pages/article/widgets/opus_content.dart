@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math' as math;
 
 import 'package:PiliPlus/common/assets.dart';
@@ -480,8 +481,7 @@ class OpusContent extends StatelessWidget {
                           crossAxisAlignment: .start,
                           children: [
                             Text(opus.title!),
-                            Text(
-                              '${opus.authorName} · ${opus.statView ?? 0}阅读',
+                            Text(uiTx('${opus.authorName} · ${opus.statView ?? 0}阅读'),
                               style: TextStyle(
                                 fontSize: 13,
                                 color: colorScheme.outline,
@@ -515,8 +515,7 @@ class OpusContent extends StatelessWidget {
                           crossAxisAlignment: .start,
                           children: [
                             Text(vote.desc!),
-                            Text(
-                              '${vote.joinNum}人参与',
+                            Text(uiTx('${vote.joinNum}人参与'),
                               style: TextStyle(
                                 fontSize: 13,
                                 color: colorScheme.outline,
@@ -591,8 +590,7 @@ class OpusContent extends StatelessWidget {
                                       ),
                                     ),
                                   if (e.price?.isNotEmpty == true)
-                                    Text(
-                                      '${e.price!}起',
+                                    Text(uiTx('${e.price!}起'),
                                       style: TextStyle(
                                         fontSize: 13,
                                         color: colorScheme.outline,
@@ -646,14 +644,14 @@ class OpusContent extends StatelessWidget {
                                           null,
                                         );
                                       },
-                                      child: const Text('视频'),
+                                      child: Text(uiTx('视频')),
                                     ),
                                     DialogOption(
                                       onPressed: () {
                                         Get.back();
                                         PageUtils.pushDynFromId(id: card.oid!);
                                       },
-                                      child: const Text('动态/专栏'),
+                                      child: Text(uiTx('动态/专栏')),
                                     ),
                                   ],
                                 ),
@@ -739,8 +737,7 @@ class OpusContent extends StatelessWidget {
                 );
               }
 
-              return Text(
-                '不支持的类型 (${element.paraType})',
+              return Text(uiTx('不支持的类型 (${element.paraType})'),
                 style: const TextStyle(
                   fontWeight: .bold,
                   color: Colors.red,

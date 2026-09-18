@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/animated_height.dart';
 import 'package:PiliPlus/common/widgets/draggable_sheet/dyn.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/text_field.dart';
@@ -213,8 +214,7 @@ class _RepostPanelState extends CommonRichTextPubPageState<RepostPanel>
     },
     child: SizedBox(
       width: double.infinity,
-      child: Text(
-        '说点什么吧',
+      child: Text(uiTx('说点什么吧'),
         style: TextStyle(
           height: 1.75,
           fontSize: 15,
@@ -347,8 +347,7 @@ class _RepostPanelState extends CommonRichTextPubPageState<RepostPanel>
       dense: true,
       onTap: Get.back,
       title: Center(
-        child: Text(
-          '取消',
+        child: Text(uiTx('取消'),
           style: TextStyle(color: theme.colorScheme.outline),
         ),
       ),

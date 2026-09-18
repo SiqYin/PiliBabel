@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math';
 
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
@@ -37,7 +38,7 @@ class _PopularSeriesPageState extends State<PopularSeriesPage> with GridMixin {
           if (config != null) {
             return Text(config.name!);
           }
-          return const Text('每周必看');
+          return Text(uiTx('每周必看'));
         }),
       ),
       body: refreshIndicator(

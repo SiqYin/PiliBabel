@@ -108,9 +108,9 @@ Widget videoSeasonWidget(
                           const SizedBox(width: 6),
                         ],
                         if (video.stat case final stat?) ...[
-                          Text('${NumUtils.numFormat(stat.play)}播放'),
+                          Text(uiTx('${NumUtils.numFormat(stat.play)}播放')),
                           const SizedBox(width: 6),
-                          Text('${NumUtils.numFormat(stat.danmu)}弹幕'),
+                          Text(uiTx('${NumUtils.numFormat(stat.danmu)}弹幕')),
                         ],
                         const Spacer(),
                         const PlayIcon(size: 50),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
@@ -122,16 +123,14 @@ class SubItem extends StatelessWidget {
                   ),
                 ),
               ),
-              Text(
-                'UP主: ${item.upper!.name!}',
+              Text(uiTx('UP主: ${item.upper!.name!}'),
                 textAlign: TextAlign.start,
                 style: style,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
-              Text(
-                '${item.mediaCount}个视频',
+              Text(uiTx('${item.mediaCount}个视频'),
                 textAlign: TextAlign.start,
                 style: style,
               ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math';
 
 import 'package:PiliPlus/common/widgets/badge.dart';
@@ -277,30 +278,30 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                   mainAxisSize: .min,
                   children: [
                     Icon(FontAwesomeIcons.b, size: 19, color: color),
-                    Text('投币', style: TextStyle(color: color)),
+                    Text(uiTx('投币'), style: TextStyle(color: color)),
                   ],
                 );
               }),
             ),
           PopupMenuItem(
             onTap: () => ShareUtils.shareText(controller.url),
-            child: const Row(
+            child: Row(
               spacing: 10,
               mainAxisSize: .min,
               children: [
                 Icon(Icons.share_outlined, size: 19),
-                Text('分享'),
+                Text(uiTx('分享')),
               ],
             ),
           ),
           PopupMenuItem(
             onTap: () => Utils.copyText(controller.url),
-            child: const Row(
+            child: Row(
               spacing: 10,
               mainAxisSize: .min,
               children: [
                 Icon(Icons.copy_rounded, size: 19),
-                Text('复制链接'),
+                Text(uiTx('复制链接')),
               ],
             ),
           ),
@@ -334,12 +335,12 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                   SmartDialog.showToast(e.toString());
                 }
               },
-              child: const Row(
+              child: Row(
                 spacing: 10,
                 mainAxisSize: .min,
                 children: [
                   Icon(Icons.forward_to_inbox, size: 19),
-                  Text('分享至消息'),
+                  Text(uiTx('分享至消息')),
                 ],
               ),
             ),

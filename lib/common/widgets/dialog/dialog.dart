@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -16,8 +17,7 @@ Future<bool> showConfirmDialog({
           actions: [
             TextButton(
               onPressed: Get.back,
-              child: Text(
-                '取消',
+              child: Text(uiTx('取消'),
                 style: TextStyle(color: ColorScheme.of(context).outline),
               ),
             ),
@@ -26,7 +26,7 @@ Future<bool> showConfirmDialog({
                 Get.back(result: true);
                 onConfirm?.call();
               },
-              child: const Text('确认'),
+              child: Text(uiTx('确认')),
             ),
           ],
         ),
@@ -44,8 +44,7 @@ Widget _statusItem({
     enabled: enabled,
     title: Padding(
       padding: const EdgeInsets.only(left: 10),
-      child: Text(
-        '标记为 $text',
+      child: Text(uiTx('标记为 $text'),
         style: const TextStyle(fontSize: 14),
       ),
     ),
@@ -84,8 +83,7 @@ void showPgcFollowDialog({
           dense: true,
           title: Padding(
             padding: const EdgeInsets.only(left: 10),
-            child: Text(
-              '取消$type',
+            child: Text(uiTx('取消$type'),
               style: const TextStyle(fontSize: 14),
             ),
           ),

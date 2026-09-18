@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show File;
 
 import 'package:PiliPlus/common/constants.dart';
@@ -63,7 +64,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return SimpleScaffold(
-      appBar: AppBar(title: const Text('账号资料')),
+      appBar: AppBar(title: Text(uiTx('账号资料'))),
       body: _buildBody(theme, _loadingState),
     );
   }
@@ -293,7 +294,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       builder: (BuildContext context) {
         final theme = Theme.of(context);
         return AlertDialog(
-          title: Text('修改$title'),
+          title: Text(uiTx('修改$title')),
           content: TextField(
             controller: _textController,
             minLines: lines,
@@ -319,8 +320,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           actions: [
             TextButton(
               onPressed: Get.back,
-              child: Text(
-                '取消',
+              child: Text(uiTx('取消'),
                 style: TextStyle(color: theme.colorScheme.outline),
               ),
             ),
@@ -332,7 +332,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   _update(type: type);
                 }
               },
-              child: const Text('确定'),
+              child: Text(uiTx('确定')),
             ),
           ],
         );

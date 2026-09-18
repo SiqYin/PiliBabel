@@ -519,7 +519,7 @@ SettingsModel getVideoFilterSelectModel({
           await showDialog(
             context: context,
             builder: (context) => AlertDialog(
-              title: Text('自定义$title'),
+              title: Text(uiTx('自定义$title')),
               content: TextField(
                 autofocus: true,
                 onChanged: (value) => valueStr = value,
@@ -530,8 +530,7 @@ SettingsModel getVideoFilterSelectModel({
               actions: [
                 TextButton(
                   onPressed: Get.back,
-                  child: Text(
-                    '取消',
+                  child: Text(uiTx('取消'),
                     style: TextStyle(color: ColorScheme.of(context).outline),
                   ),
                 ),
@@ -545,7 +544,7 @@ SettingsModel getVideoFilterSelectModel({
                       SmartDialog.showToast(e.toString());
                     }
                   },
-                  child: const Text('确定'),
+                  child: Text(uiTx('确定')),
                 ),
               ],
             ),

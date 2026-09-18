@@ -301,8 +301,7 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
               if (!isLandscape) ...desc(),
               const SizedBox(height: 5),
               Expanded(
-                child: Text(
-                  '简介：${item.evaluate}',
+                child: Text(uiTx('简介：${item.evaluate}'),
                   style: TextStyle(fontSize: 13, color: colorScheme.outline),
                 ),
               ),

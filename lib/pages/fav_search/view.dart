@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/models/common/fav_order_type.dart';
 import 'package:PiliPlus/models_new/fav/fav_detail/data.dart';
@@ -45,7 +46,7 @@ class _FavSearchPageState
           mediaId: controller.mediaId,
           mid: Accounts.main.mid,
         ),
-        child: Text('复制', style: textStyle),
+        child: Text(uiTx('复制'), style: textStyle),
       ),
       TextButton(
         style: btnStyle,
@@ -56,7 +57,7 @@ class _FavSearchPageState
           mediaId: controller.mediaId,
           mid: Accounts.main.mid,
         ),
-        child: Text('移动', style: textStyle),
+        child: Text(uiTx('移动'), style: textStyle),
       ),
     ];
   }

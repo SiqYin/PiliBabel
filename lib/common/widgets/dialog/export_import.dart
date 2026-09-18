@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async' show FutureOr;
 import 'dart:convert' show utf8, jsonDecode;
 
@@ -80,18 +81,18 @@ Future<void> importFromClipBoard<T>(
             result.render(renderer);
           }
           return AlertDialog(
-            title: Text('是否导入如下$title？'),
+            title: Text(uiTx('是否导入如下$title？')),
             content: SingleChildScrollView(
               child: Text.rich(renderer.span!),
             ),
             actions: [
               TextButton(
                 onPressed: Get.back,
-                child: Text('取消', style: TextStyle(color: colorScheme.outline)),
+                child: Text(uiTx('取消'), style: TextStyle(color: colorScheme.outline)),
               ),
               TextButton(
                 onPressed: () => Get.back(result: true),
-                child: const Text('确定'),
+                child: Text(uiTx('确定')),
               ),
             ],
           );
@@ -151,7 +152,7 @@ void importFromInput<T>(
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text('输入$title'),
+      title: Text(uiTx('输入$title')),
       constraints: Style.dialogFixedConstraints,
       content: TextFormField(
         key: key,
@@ -175,8 +176,7 @@ void importFromInput<T>(
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(
               color: ColorScheme.of(context).outline,
             ),
@@ -197,7 +197,7 @@ void importFromInput<T>(
               forceErrorText = null;
             }
           },
-          child: const Text('确定'),
+          child: Text(uiTx('确定')),
         ),
       ],
     ),
@@ -216,17 +216,17 @@ Future<void> showImportExportDialog<T>(
     const style = TextStyle(fontSize: 15);
     return SimpleDialog(
       clipBehavior: .hardEdge,
-      title: Text('导入/导出$title'),
+      title: Text(uiTx('导入/导出$title')),
       children: [
         DialogOption(
-          child: const Text('导出至剪贴板', style: style),
+          child: Text(uiTx('导出至剪贴板'), style: style),
           onPressed: () {
             Get.back();
             exportToClipBoard(onExport: onExport);
           },
         ),
         DialogOption(
-          child: const Text('导出文件至本地', style: style),
+          child: Text(uiTx('导出文件至本地'), style: style),
           onPressed: () {
             Get.back();
             exportToLocalFile(onExport: onExport, localFileName: localFileName);
@@ -237,14 +237,14 @@ Future<void> showImportExportDialog<T>(
           color: ColorScheme.of(context).outline.withValues(alpha: 0.1),
         ),
         DialogOption(
-          child: const Text('输入', style: style),
+          child: Text(uiTx('输入'), style: style),
           onPressed: () {
             Get.back();
             importFromInput<T>(context, title: title, onImport: onImport);
           },
         ),
         DialogOption(
-          child: const Text('从剪贴板导入', style: style),
+          child: Text(uiTx('从剪贴板导入'), style: style),
           onPressed: () {
             Get.back();
             importFromClipBoard<T>(
@@ -256,7 +256,7 @@ Future<void> showImportExportDialog<T>(
           },
         ),
         DialogOption(
-          child: const Text('从本地文件导入', style: style),
+          child: Text(uiTx('从本地文件导入'), style: style),
           onPressed: () {
             Get.back();
             importFromLocalFile<T>(onImport: onImport);

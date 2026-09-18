@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show Platform;
 import 'dart:math' as math;
 
@@ -380,12 +381,12 @@ class _MemberPageState extends State<MemberPage> {
           if (_userController.isFollowed == 1)
             PopupMenuItem(
               onTap: _userController.onRemoveFan,
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.remove_circle_outline_outlined, size: 19),
                   SizedBox(width: 10),
-                  Text('移除粉丝'),
+                  Text(uiTx('移除粉丝')),
                 ],
               ),
             ),
@@ -406,12 +407,12 @@ class _MemberPageState extends State<MemberPage> {
         if (PlatformUtils.isMobile)
           PopupMenuItem(
             onTap: _createShortcut,
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.add_box_outlined, size: 19),
                 SizedBox(width: 10),
-                Text('添加至桌面'),
+                Text(uiTx('添加至桌面')),
               ],
             ),
           ),
@@ -422,12 +423,12 @@ class _MemberPageState extends State<MemberPage> {
         //       name: _userController.username ?? '',
         //       count: _userController.chargeCount,
         //     ),
-        //     child: const Row(
+        //     child: Row(
         //       mainAxisSize: MainAxisSize.min,
         //       children: [
         //         Icon(Icons.electric_bolt, size: 19),
         //         SizedBox(width: 10),
-        //         Text('充电排行榜'),
+        //         Text(uiTx('充电排行榜')),
         //       ],
         //     ),
         //   ),
@@ -438,24 +439,24 @@ class _MemberPageState extends State<MemberPage> {
         //       name: _userController.username ?? '',
         //       count: _userController.guardCount,
         //     ),
-        //     child: const Row(
+        //     child: Row(
         //       mainAxisSize: MainAxisSize.min,
         //       children: [
         //         Icon(Icons.anchor, size: 19),
         //         SizedBox(width: 10),
-        //         Text('大航海舰队'),
+        //         Text(uiTx('大航海舰队')),
         //       ],
         //     ),
         //   ),
         if (Get.isRegistered<MemberContributeCtr>(tag: _heroTag))
           PopupMenuItem(
             onTap: _toWebArchive,
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(Icons.extension_outlined, size: 19),
                 SizedBox(width: 10),
-                Text('网页投稿'),
+                Text(uiTx('网页投稿')),
               ],
             ),
           ),
@@ -472,23 +473,23 @@ class _MemberPageState extends State<MemberPage> {
                 0)
               PopupMenuItem(
                 onTap: _userController.vipExpAdd,
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.upcoming_outlined, size: 19),
                     SizedBox(width: 10),
-                    Text('大会员经验'),
+                    Text(uiTx('大会员经验')),
                   ],
                 ),
               ),
             PopupMenuItem(
               onTap: () => Get.to(const LoginDevicesPage()),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.devices, size: 18),
                   SizedBox(width: 10),
-                  Text('登录设备'),
+                  Text(uiTx('登录设备')),
                 ],
               ),
             ),
@@ -497,12 +498,12 @@ class _MemberPageState extends State<MemberPage> {
                 const LogPage(),
                 arguments: LoginLogController(),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.login, size: 18),
                   SizedBox(width: 10),
-                  Text('登录记录'),
+                  Text(uiTx('登录记录')),
                 ],
               ),
             ),
@@ -511,12 +512,12 @@ class _MemberPageState extends State<MemberPage> {
                 const LogPage(),
                 arguments: CoinLogController(),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(FontAwesomeIcons.b, size: 16),
                   SizedBox(width: 10),
-                  Text('硬币记录'),
+                  Text(uiTx('硬币记录')),
                 ],
               ),
             ),
@@ -525,23 +526,23 @@ class _MemberPageState extends State<MemberPage> {
                 const LogPage(),
                 arguments: ExpLogController(),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.linear_scale, size: 18),
                   SizedBox(width: 10),
-                  Text('经验记录'),
+                  Text(uiTx('经验记录')),
                 ],
               ),
             ),
             PopupMenuItem(
               onTap: () => Get.toNamed('/spaceSetting'),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.settings_outlined, size: 19),
                   SizedBox(width: 10),
-                  Text('空间设置'),
+                  Text(uiTx('空间设置')),
                 ],
               ),
             ),
@@ -549,12 +550,12 @@ class _MemberPageState extends State<MemberPage> {
             if (_userController.isFollow)
               PopupMenuItem(
                 onTap: _showFollowTime,
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(Icons.more_time_outlined, size: 19),
                     SizedBox(width: 10),
-                    Text('关注时间'),
+                    Text(uiTx('关注时间')),
                   ],
                 ),
               ),
@@ -574,8 +575,7 @@ class _MemberPageState extends State<MemberPage> {
                     color: theme.error,
                   ),
                   const SizedBox(width: 10),
-                  Text(
-                    '举报',
+                  Text(uiTx('举报'),
                     style: TextStyle(color: theme.error),
                   ),
                 ],
@@ -634,8 +634,7 @@ class _MemberPageState extends State<MemberPage> {
           actions: [
             TextButton(
               onPressed: Get.back,
-              child: Text(
-                '关闭',
+              child: Text(uiTx('关闭'),
                 style: TextStyle(color: ColorScheme.of(context).outline),
               ),
             ),

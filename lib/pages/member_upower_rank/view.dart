@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -100,7 +101,7 @@ class _UpowerRankPageState extends State<UpowerRankPage>
                 },
               ),
               style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
-              child: const Text('充电'),
+              child: Text(uiTx('充电')),
             ),
             const SizedBox(width: 12),
           ],

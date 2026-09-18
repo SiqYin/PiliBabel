@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -779,8 +780,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 const PopupMenuItem<String>(
                   height: 35,
                   value: '',
-                  child: Text(
-                    "关闭翻译",
+                  child: Text(uiTx("关闭翻译"),
                     style: TextStyle(color: Colors.white, fontSize: 13),
                   ),
                 ),
@@ -832,8 +832,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                       value: 0,
                       height: 35,
                       onTap: () => videoDetailController.setSubtitle(0),
-                      child: const Text(
-                        "关闭字幕",
+                      child: Text(uiTx("关闭字幕"),
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 13,
@@ -1206,8 +1205,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 borderRadius: const .all(.circular(6)),
                 color: colorScheme.secondaryContainer,
               ),
-              child: Text(
-                '松开手指，取消进退',
+              child: Text(uiTx('松开手指，取消进退'),
                 style: TextStyle(color: colorScheme.onSecondaryContainer),
               ),
             ),
@@ -1999,7 +1997,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                           _transformationController.value = Matrix4.identity();
                         }
                       },
-                      child: const Text('还原屏幕'),
+                      child: Text(uiTx('还原屏幕')),
                     ),
                   ),
                 )
@@ -2207,8 +2205,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         Obx(() {
                           final buffered = plPlayerController.buffered.value;
                           if (buffered == 0) {
-                            return const Text(
-                              '加载中...',
+                            return Text(uiTx('加载中...'),
                               style: TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
@@ -2419,7 +2416,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('动态截图'),
+            title: Text(uiTx('动态截图')),
             content: Column(
               spacing: 12,
               mainAxisSize: MainAxisSize.min,
@@ -2462,8 +2459,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                       .toList(),
                   getSelectTitle: (i) => '${i.name}(${i.desc})',
                 ),
-                Text(
-                  '*转码使用CPU，速度可能慢于播放，请不要选择过长的时间段或过高画质',
+                Text(uiTx('*转码使用CPU，速度可能慢于播放，请不要选择过长的时间段或过高画质'),
                   style: theme.textTheme.bodySmall,
                 ),
               ],
@@ -2471,8 +2467,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             actions: [
               TextButton(
                 onPressed: Get.back,
-                child: Text(
-                  '取消',
+                child: Text(uiTx('取消'),
                   style: TextStyle(
                     color: theme.colorScheme.outline,
                   ),
@@ -2484,7 +2479,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                     Get.back(result: true);
                   }
                 },
-                child: const Text('确定'),
+                child: Text(uiTx('确定')),
               ),
             ],
           ),

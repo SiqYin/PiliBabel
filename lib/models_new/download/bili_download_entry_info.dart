@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show Platform, Process;
 
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
@@ -80,7 +81,7 @@ class BiliDownloadEntryInfo with MultiSelectData {
             items: [
               CustomPopupMenuItem<void>(
                 height: 38,
-                child: const Text('查看详情页', style: TextStyle(fontSize: 13)),
+                child: Text(uiTx('查看详情页'), style: TextStyle(fontSize: 13)),
                 onTap: () {
                   if (ep case final ep?) {
                     if (ep.from == VideoType.pugv.name) {
@@ -110,8 +111,7 @@ class BiliDownloadEntryInfo with MultiSelectData {
               if (PlatformUtils.isDesktop)
                 CustomPopupMenuItem<void>(
                   height: 38,
-                  child: const Text(
-                    '打开本地文件夹',
+                  child: Text(uiTx('打开本地文件夹'),
                     style: TextStyle(fontSize: 13),
                   ),
                   onTap: () async {
@@ -135,8 +135,7 @@ class BiliDownloadEntryInfo with MultiSelectData {
               else
                 CustomPopupMenuItem<void>(
                   height: 38,
-                  child: const Text(
-                    '复制缓存路径',
+                  child: Text(uiTx('复制缓存路径'),
                     style: TextStyle(fontSize: 13),
                   ),
                   onTap: () => Utils.copyText(entryDirPath),

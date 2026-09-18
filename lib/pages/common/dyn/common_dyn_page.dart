@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/skeleton/video_reply.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -114,8 +115,7 @@ mixin CommonDynPageMixin<T extends StatefulWidget>
             Obx(
               () {
                 final count = controller.count.value;
-                return Text(
-                  '${count == -1 ? 0 : NumUtils.numFormat(count)}条回复',
+                return Text(uiTx('${count == -1 ? 0 : NumUtils.numFormat(count)}条回复'),
                 );
               },
             ),
@@ -247,7 +247,7 @@ mixin CommonDynPageMixin<T extends StatefulWidget>
         if (showBackBtn) {
           return SimpleScaffold(
             appBar: AppBar(
-              title: const Text('评论详情'),
+              title: Text(uiTx('评论详情')),
               shape: Border(
                 bottom: BorderSide(
                   color: theme.colorScheme.outline.withValues(alpha: 0.1),

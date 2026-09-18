@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
@@ -103,8 +104,7 @@ class VideoCardHMemberVideo extends StatelessWidget {
                                     color: Colors.black54,
                                   ),
                                   child: Center(
-                                    child: Text(
-                                      '上次观看',
+                                    child: Text(uiTx('上次观看'),
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 15,

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:math' show max;
 
@@ -144,21 +145,21 @@ class PgcIntroController extends CommonIntroController {
         contentPadding: const EdgeInsets.symmetric(vertical: 12),
         children: [
           DialogOption(
-            child: const Text('复制链接', style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('复制链接'), style: TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               Utils.copyText(videoUrl);
             },
           ),
           DialogOption(
-            child: const Text('其它app打开', style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('其它app打开'), style: TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               PageUtils.launchURL(videoUrl);
             },
           ),
           DialogOption(
-            child: const Text('分享视频', style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('分享视频'), style: TextStyle(fontSize: 14)),
             onPressed: () {
               final item = pgcItem.episodes?.firstWhereOrNull(
                 (item) => item.epId == epId,
@@ -172,7 +173,7 @@ class PgcIntroController extends CommonIntroController {
           ),
           if (isLogin)
             DialogOption(
-              child: const Text('分享至动态', style: TextStyle(fontSize: 14)),
+              child: Text(uiTx('分享至动态'), style: TextStyle(fontSize: 14)),
               onPressed: () {
                 Get.back();
                 final item = pgcItem.episodes?.firstWhereOrNull(
@@ -211,8 +212,7 @@ class PgcIntroController extends CommonIntroController {
             ),
           if (isLogin)
             DialogOption(
-              child: const Text(
-                '分享至消息',
+              child: Text(uiTx('分享至消息'),
                 style: TextStyle(fontSize: 14),
               ),
               onPressed: () {

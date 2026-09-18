@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -134,8 +135,7 @@ class _MusicRecommendPageState extends State<MusicRecommendPage>
                             _controller.loadingState.value.dataOrNull?.length;
                         return count == null
                             ? const SizedBox.shrink()
-                            : Text(
-                                '共$count条视频',
+                            : Text(uiTx('共$count条视频'),
                                 style: theme.textTheme.labelMedium,
                               );
                       }),

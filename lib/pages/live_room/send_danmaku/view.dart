@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 
 import 'package:PiliPlus/common/style.dart';
@@ -212,7 +213,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<LiveSendDmPanel> {
                   visualDensity: .compact,
                   padding: const .symmetric(horizontal: 20, vertical: 10),
                 ),
-                child: const Text('发送'),
+                child: Text(uiTx('发送')),
               ),
             ),
           ],

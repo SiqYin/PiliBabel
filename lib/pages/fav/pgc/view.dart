@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/pages/fav/pgc/child_view.dart';
 import 'package:PiliPlus/pages/fav/pgc/controller.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
@@ -95,7 +96,7 @@ class _FavPgcPageState extends State<FavPgcPage>
             //     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             //   ),
             //   onPressed: () {},
-            //   child: const Text('管理'),
+            //   child: Text(uiTx('管理')),
             // ),
             // const SizedBox(width: 12),
           ],

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async' show FutureOr;
 import 'dart:io' show File, Platform;
 import 'dart:math' as math;
@@ -89,15 +90,15 @@ abstract final class ImageUtils {
         status == PermissionStatus.permanentlyDenied) {
       SmartDialog.show(
         builder: (context) => AlertDialog(
-          title: const Text('提示'),
-          content: const Text('存储权限未授权'),
+          title: Text(uiTx('提示')),
+          content: Text(uiTx('存储权限未授权')),
           actions: [
             TextButton(
               onPressed: () {
                 SmartDialog.dismiss();
                 openAppSettings();
               },
-              child: const Text('去授权'),
+              child: Text(uiTx('去授权')),
             ),
           ],
         ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -94,14 +95,13 @@ class _DualSliderDialogState extends State<DualSliderDialog> {
       actions: [
         TextButton(
           onPressed: Navigator.of(context).pop,
-          child: Text(
-            '取消',
+          child: Text(uiTx('取消'),
             style: TextStyle(color: Theme.of(context).colorScheme.outline),
           ),
         ),
         TextButton(
           onPressed: () => Navigator.pop(context, (_tempValue1, _tempValue2)),
-          child: const Text('确定'),
+          child: Text(uiTx('确定')),
         ),
       ],
     );

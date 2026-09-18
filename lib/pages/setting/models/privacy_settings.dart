@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/models/common/account_type.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
 import 'package:PiliPlus/utils/accounts.dart';
@@ -24,7 +25,7 @@ List<SettingsModel> get privacySettings => [
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('账号模式详情'),
+          title: Text(uiTx('账号模式详情')),
           content: SelectionArea(
             child: SingleChildScrollView(
               child: _getAccountDetail(context),
@@ -33,7 +34,7 @@ List<SettingsModel> get privacySettings => [
           actions: [
             TextButton(
               onPressed: Get.back,
-              child: const Text('确认'),
+              child: Text(uiTx('确认')),
             ),
           ],
         ),

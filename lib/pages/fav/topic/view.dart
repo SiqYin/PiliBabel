@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
@@ -83,7 +84,7 @@ class _FavTopicPageState extends State<FavTopicPage>
 
                   void onLongPress() => showConfirmDialog(
                     context: context,
-                    title: const Text('确定取消收藏？'),
+                    title: Text(uiTx('确定取消收藏？')),
                     onConfirm: () => _controller.onRemove(index, item.id!),
                   );
 

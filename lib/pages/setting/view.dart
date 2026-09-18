@@ -274,15 +274,13 @@ class _SettingPageState extends State<SettingPage> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('提示'),
-          content: Text(
-            "确认要退出以下账号登录吗\n\n${result.map((i) => i.mid).join('\n')}",
+          title: Text(uiTx('提示')),
+          content: Text(uiTx("确认要退出以下账号登录吗\n\n${result.map((i) => i.mid).join('\n')}"),
           ),
           actions: [
             TextButton(
               onPressed: Get.back,
-              child: Text(
-                '点错了',
+              child: Text(uiTx('点错了'),
                 style: TextStyle(color: theme.colorScheme.outline),
               ),
             ),
@@ -291,8 +289,7 @@ class _SettingPageState extends State<SettingPage> {
                 Get.back();
                 _removeAccounts(result);
               },
-              child: Text(
-                '仅登出',
+              child: Text(uiTx('仅登出'),
                 style: TextStyle(color: theme.colorScheme.error),
               ),
             ),
@@ -315,7 +312,7 @@ class _SettingPageState extends State<SettingPage> {
                   }
                 }
               },
-              child: const Text('确认'),
+              child: Text(uiTx('确认')),
             ),
           ],
         );

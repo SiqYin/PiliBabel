@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/view_insets_safe_area.dart';
 import 'package:PiliPlus/http/pgc.dart';
@@ -173,7 +174,7 @@ class _PgcReviewPostPanelState extends State<PgcReviewPostPanel> {
                             : Icons.check_box_outline_blank_outlined,
                         color: color,
                       ),
-                      Text(' 分享到动态', style: TextStyle(color: color)),
+                      Text(uiTx(' 分享到动态'), style: TextStyle(color: color)),
                     ],
                   );
                 },
@@ -208,7 +209,7 @@ class _PgcReviewPostPanelState extends State<PgcReviewPostPanel> {
                   ),
                 ),
                 onPressed: _enablePost.value ? _onPost : null,
-                child: _isMod ? const Text('编辑') : const Text('发布'),
+                child: _isMod ? Text(uiTx('编辑')) : Text(uiTx('发布')),
               ),
             ),
           ),

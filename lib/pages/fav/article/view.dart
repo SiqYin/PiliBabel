@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -64,7 +65,7 @@ class _FavArticlePageState extends State<FavArticlePage>
                     item: item,
                     onDelete: () => showConfirmDialog(
                       context: context,
-                      title: const Text('确定取消收藏？'),
+                      title: Text(uiTx('确定取消收藏？')),
                       onConfirm: () =>
                           _favArticleController.onRemove(index, item.opusId!),
                     ),

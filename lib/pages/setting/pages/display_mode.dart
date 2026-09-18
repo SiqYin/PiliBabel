@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
@@ -61,7 +62,7 @@ class _SetDisplayModeState extends State<SetDisplayMode> {
   @override
   Widget build(BuildContext context) {
     return SimpleScaffold(
-      appBar: AppBar(title: const Text('屏幕帧率设置')),
+      appBar: AppBar(title: Text(uiTx('屏幕帧率设置'))),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -69,8 +70,7 @@ class _SetDisplayModeState extends State<SetDisplayMode> {
             padding:
                 MediaQuery.viewPaddingOf(context).copyWith(top: 0, bottom: 0) +
                 const EdgeInsets.only(left: 25, top: 10, bottom: 5),
-            child: Text(
-              '没有生效？重启app试试',
+            child: Text(uiTx('没有生效？重启app试试'),
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -97,7 +97,7 @@ class _SetDisplayModeState extends State<SetDisplayMode> {
                   return RadioListTile<DisplayMode>(
                     value: mode,
                     title: mode == DisplayMode.auto
-                        ? const Text('自动')
+                        ? Text(uiTx('自动'))
                         : Text('$mode${mode == active ? '  [系统]' : ''}'),
                   );
                 },

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show Platform;
 
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
@@ -530,16 +531,14 @@ document.styleSheets[0].insertRule('#app__display-area > div.control-panel {disp
                             }
                             final url = request.url.toString();
                             return AlertDialog(
-                              title: Text(
-                                '下载文件: $suggestedFilename ?',
+                              title: Text(uiTx('下载文件: $suggestedFilename ?'),
                                 style: const TextStyle(fontSize: 18),
                               ),
                               content: SelectionText(url),
                               actions: [
                                 TextButton(
                                   onPressed: Get.back,
-                                  child: Text(
-                                    '取消',
+                                  child: Text(uiTx('取消'),
                                     style: TextStyle(
                                       color: Theme.of(context)
                                           .colorScheme
@@ -552,7 +551,7 @@ document.styleSheets[0].insertRule('#app__display-area > div.control-panel {disp
                                     Get.back();
                                     PageUtils.launchURL(url);
                                   },
-                                  child: Text('确定 ($fileSize)'),
+                                  child: Text(uiTx('确定 ($fileSize)')),
                                 ),
                               ],
                             );
@@ -602,7 +601,7 @@ document.styleSheets[0].insertRule('#app__display-area > div.control-panel {disp
                       final snackBar = SnackBar(
                         persist: false,
                         showCloseIcon: true,
-                        content: const Text('当前网页将要打开外部链接，是否打开'),
+                        content: Text(uiTx('当前网页将要打开外部链接，是否打开')),
                         action: SnackBarAction(
                           label: '打开',
                           onPressed: () => PageUtils.launchURL(url),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -443,8 +444,7 @@ Widget? addWidget(
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                      Text(
-                        '${NumUtils.numFormat(vote.joinNum)}人参与',
+                      Text(uiTx('${NumUtils.numFormat(vote.joinNum)}人参与'),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
@@ -477,7 +477,7 @@ Widget? addWidget(
                     ),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
-                  child: const Text('参与'),
+                  child: Text(uiTx('参与')),
                 ),
               ],
             ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:math' as math;
 import 'dart:math' show max;
@@ -444,8 +445,7 @@ class _PayCoinsPageState extends State<PayCoinsPage>
                 return Padding(
                   padding: const EdgeInsets.only(top: 6),
                   child: Center(
-                    child: Text(
-                      '经验值+$gainExp（今日$todayExp/50）',
+                    child: Text(uiTx('经验值+$gainExp（今日$todayExp/50）'),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.75),
                         fontSize: 12,
@@ -483,8 +483,7 @@ class _PayCoinsPageState extends State<PayCoinsPage>
                               color: Colors.white,
                             ),
                           ),
-                          const Text(
-                            ' 同时点赞',
+                          Text(uiTx(' 同时点赞'),
                             style: TextStyle(color: Colors.white),
                           ),
                         ],

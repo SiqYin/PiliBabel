@@ -183,8 +183,7 @@ class UiTranslateSettingPage extends StatelessWidget {
             if (err == null) return const SizedBox.shrink();
             return Padding(
               padding: const EdgeInsets.only(top: 6),
-              child: Text(
-                '最近错误：$err',
+              child: Text(uiTx('最近错误：$err'),
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: colorScheme.error,
                 ),

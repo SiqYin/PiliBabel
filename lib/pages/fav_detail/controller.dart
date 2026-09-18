@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/http/fav.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -52,8 +53,8 @@ mixin BaseFavController
   void onRemove() {
     showConfirmDialog(
       context: Get.context!,
-      title: const Text('提示'),
-      content: const Text('确认删除所选收藏吗？'),
+      title: Text(uiTx('提示')),
+      content: Text(uiTx('确认删除所选收藏吗？')),
       onConfirm: () async {
         final removeList = allChecked.toSet();
         final res = await FavHttp.favVideo(

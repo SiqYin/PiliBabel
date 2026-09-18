@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/danmaku_utils.dart';
 import 'package:flutter/services.dart'
     show LengthLimitingTextInputFormatter, FilteringTextInputFormatter;
@@ -152,14 +153,13 @@ class _SlideColorPickerState extends State<SlideColorPicker> {
                     Get.back();
                     widget.onChanged(null);
                   },
-                  child: const Text('重置'),
+                  child: Text(uiTx('重置')),
                 ),
               ],
               const Spacer(),
               TextButton(
                 onPressed: Get.back,
-                child: Text(
-                  '取消',
+                child: Text(uiTx('取消'),
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.outline,
                   ),
@@ -170,7 +170,7 @@ class _SlideColorPickerState extends State<SlideColorPicker> {
                   Get.back();
                   widget.onChanged(DmUtils.decimalToColor(_rgb));
                 },
-                child: const Text('确定'),
+                child: Text(uiTx('确定')),
               ),
               const SizedBox(width: 16),
             ],

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/m3e_loading_indicator.dart';
 import 'package:PiliPlus/models/video/play/url.dart';
@@ -189,9 +190,9 @@ class _CdnNodeDialogState extends State<CdnNodeDialog> {
           }
           final nodes = CdnNodeStore.nodesOrNull ?? snapshot.data;
           if (nodes == null) {
-            return const SizedBox(
+            return SizedBox(
               height: 80,
-              child: Center(child: Text('节点列表加载失败')),
+              child: Center(child: Text(uiTx('节点列表加载失败'))),
             );
           }
           final regions = CdnNodeStore.sortedRegions(nodes);
@@ -230,8 +231,7 @@ class _CdnNodeDialogState extends State<CdnNodeDialog> {
                       ),
                     ),
                     const Spacer(),
-                    Text(
-                      '${hosts.length} 个节点',
+                    Text(uiTx('${hosts.length} 个节点'),
                       style: textTheme.bodySmall!.copyWith(
                         color: colorScheme.onSurfaceVariant,
                       ),
@@ -288,7 +288,7 @@ class _CdnNodeDialogState extends State<CdnNodeDialog> {
                     else
                       TextButton(
                         onPressed: _refresh,
-                        child: const Text('更新列表'),
+                        child: Text(uiTx('更新列表')),
                       ),
                   ],
                 ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
@@ -91,10 +92,10 @@ class _FollowPageState extends State<FollowPage>
 
   PreferredSizeWidget get _buildAppBar => AppBar(
     title: _followController.isOwner
-        ? const Text('我的关注')
+        ? Text(uiTx('我的关注'))
         : Obx(() {
             final name = _followController.name.value;
-            if (name != null) return Text('$name的关注');
+            if (name != null) return Text(uiTx('$name的关注'));
             return const SizedBox.shrink();
           }),
     actions: _followController.isOwner
@@ -132,12 +133,12 @@ class _FollowPageState extends State<FollowPage>
               itemBuilder: (context) => [
                 PopupMenuItem(
                   onTap: () => Get.toNamed('/blackListPage'),
-                  child: const Row(
+                  child: Row(
                     spacing: 10,
                     mainAxisSize: .min,
                     children: [
                       Icon(Icons.block, size: 19),
-                      Text('黑名单管理'),
+                      Text(uiTx('黑名单管理')),
                     ],
                   ),
                 ),
@@ -237,7 +238,7 @@ class _FollowPageState extends State<FollowPage>
               String tagName = item.name!;
               showConfirmDialog(
                 context: context,
-                title: const Text('编辑分组名称'),
+                title: Text(uiTx('编辑分组名称')),
                 content: TextFormField(
                   autofocus: true,
                   initialValue: tagName,
@@ -254,19 +255,19 @@ class _FollowPageState extends State<FollowPage>
                 },
               );
             },
-            child: const Text('修改名称', style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('修改名称'), style: TextStyle(fontSize: 14)),
           ),
           DialogOption(
             onPressed: () {
               Get.back();
               showConfirmDialog(
                 context: context,
-                title: const Text('删除分组'),
-                content: const Text('删除后，该分组下的用户依旧保留？'),
+                title: Text(uiTx('删除分组')),
+                content: Text(uiTx('删除后，该分组下的用户依旧保留？')),
                 onConfirm: () => _followController.onDelTag(index, item.tagid!),
               );
             },
-            child: const Text('删除分组', style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('删除分组'), style: TextStyle(fontSize: 14)),
           ),
         ],
       ),

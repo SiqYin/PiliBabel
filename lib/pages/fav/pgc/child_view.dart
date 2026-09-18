@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/skeleton/fav_pgc_item.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
@@ -106,13 +107,13 @@ class _FavPgcChildPageState extends State<FavPgcChildPage>
                     checked: !_favPgcController.allSelected.value,
                     disableSelect: false,
                   ),
-                  child: const Padding(
+                  child: Padding(
                     padding: EdgeInsets.only(
                       top: 14,
                       bottom: 14,
                       right: 12,
                     ),
-                    child: Text('全选'),
+                    child: Text(uiTx('全选')),
                   ),
                 ),
                 const Spacer(),
@@ -141,8 +142,7 @@ class _FavPgcChildPageState extends State<FavPgcChildPage>
                               vertical: 14,
                               horizontal: 5,
                             ),
-                            child: Text(
-                              '标记为${item.title}',
+                            child: Text(uiTx('标记为${item.title}'),
                               style: TextStyle(
                                 color: theme.colorScheme.onSurfaceVariant,
                               ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/dynamic_sliver_app_bar/dynamic_sliver_app_bar.dart';
@@ -164,7 +165,7 @@ class _DynTopicPageState extends State<DynTopicPage>
               }
             },
             icon: const Icon(CustomIcons.topic_tag, size: 20),
-            label: const Text('参与话题'),
+            label: Text(uiTx('参与话题')),
           ),
         ),
       ),
@@ -227,8 +228,7 @@ class _DynTopicPageState extends State<DynTopicPage>
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      Text(
-                        ' 发起',
+                      Text(uiTx(' 发起'),
                         style: TextStyle(color: colorScheme.outline),
                       ),
                     ],
@@ -250,8 +250,7 @@ class _DynTopicPageState extends State<DynTopicPage>
               const SizedBox(height: 10),
               Row(
                 children: [
-                  Text(
-                    '${NumUtils.numFormat(response.topicItem!.view)}浏览 · ${NumUtils.numFormat(response.topicItem!.discuss)}讨论',
+                  Text(uiTx('${NumUtils.numFormat(response.topicItem!.view)}浏览 · ${NumUtils.numFormat(response.topicItem!.discuss)}讨论'),
                     style: TextStyle(
                       fontSize: 13,
                       color: colorScheme.outline,
@@ -332,7 +331,7 @@ class _DynTopicPageState extends State<DynTopicPage>
                   ),
                 ),
                 PopupMenuItem(
-                  child: const Text('举报'),
+                  child: Text(uiTx('举报')),
                   onTap: () {
                     if (!_controller.isLogin) {
                       SmartDialog.showToast('账号未登录');

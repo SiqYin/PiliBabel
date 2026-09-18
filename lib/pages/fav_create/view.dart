@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show File;
 
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
@@ -102,7 +103,7 @@ class _CreateFavPageState extends State<CreateFavPage> {
                 }
               });
             },
-            child: const Text('完成'),
+            child: Text(uiTx('完成')),
           ),
           const SizedBox(width: 16),
         ],
@@ -208,8 +209,7 @@ class _CreateFavPageState extends State<CreateFavPage> {
                                     Get.back();
                                     _pickImg(context, theme);
                                   },
-                                  child: const Text(
-                                    '替换封面',
+                                  child: Text(uiTx('替换封面'),
                                     style: TextStyle(fontSize: 14),
                                   ),
                                 ),
@@ -219,8 +219,7 @@ class _CreateFavPageState extends State<CreateFavPage> {
                                     _cover = null;
                                     (context as Element).markNeedsBuild();
                                   },
-                                  child: const Text(
-                                    '移除封面',
+                                  child: Text(uiTx('移除封面'),
                                     style: TextStyle(fontSize: 14),
                                   ),
                                 ),
@@ -233,8 +232,7 @@ class _CreateFavPageState extends State<CreateFavPage> {
                       },
                     );
                   },
-                  leading: Text(
-                    '封面',
+                  leading: Text(uiTx('封面'),
                     style: leadingStyle,
                   ),
                   trailing: Row(
@@ -326,8 +324,7 @@ class _CreateFavPageState extends State<CreateFavPage> {
                 children: [
                   SizedBox(
                     width: 55,
-                    child: Text(
-                      '简介',
+                    child: Text(uiTx('简介'),
                       style: TextStyle(
                         fontSize: 14,
                         color: theme.colorScheme.onSurfaceVariant,
@@ -371,8 +368,7 @@ class _CreateFavPageState extends State<CreateFavPage> {
               return ListTile(
                 onTap: onTap,
                 tileColor: theme.colorScheme.onInverseSurface,
-                leading: Text(
-                  '公开',
+                leading: Text(uiTx('公开'),
                   style: leadingStyle,
                 ),
                 trailing: Transform.scale(

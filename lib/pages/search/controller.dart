@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
@@ -221,7 +222,7 @@ class SSearchController extends GetxController
   void onClearHistory() {
     showConfirmDialog(
       context: Get.context!,
-      title: const Text('确定清空搜索历史？'),
+      title: Text(uiTx('确定清空搜索历史？')),
       onConfirm: () {
         historyList.clear();
         GStorage.historyWord.delete('cacheList');

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/time_picker.dart';
@@ -49,7 +50,7 @@ class _CreateReservePageState extends State<CreateReservePage> {
       const SizedBox(height: 10),
     ];
     return SimpleScaffold(
-      appBar: AppBar(title: const Text('添加直播预约')),
+      appBar: AppBar(title: Text(uiTx('添加直播预约'))),
       body: ListView(
         padding: EdgeInsets.only(
           top: 16,
@@ -63,7 +64,7 @@ class _CreateReservePageState extends State<CreateReservePage> {
             children: [
               SizedBox(
                 width: 65,
-                child: Text('类型', style: _leadingStyle),
+                child: Text(uiTx('类型'), style: _leadingStyle),
               ),
               Obx(
                 () => StaticPopupMenuButton(
@@ -71,14 +72,14 @@ class _CreateReservePageState extends State<CreateReservePage> {
                   initialValue: _controller.subType.value,
                   onSelected: _controller.subType.call,
                   itemBuilder: (context) {
-                    return const [
+                    return [
                       PopupMenuItem(
                         value: 0,
-                        child: Text('公开直播'),
+                        child: Text(uiTx('公开直播')),
                       ),
                       PopupMenuItem(
                         value: 1,
-                        child: Text('大航海直播'),
+                        child: Text(uiTx('大航海直播')),
                       ),
                     ];
                   },
@@ -95,7 +96,7 @@ class _CreateReservePageState extends State<CreateReservePage> {
             children: [
               SizedBox(
                 width: 65,
-                child: Text('时间', style: _leadingStyle),
+                child: Text(uiTx('时间'), style: _leadingStyle),
               ),
               Expanded(
                 child: GestureDetector(
@@ -167,7 +168,7 @@ class _CreateReservePageState extends State<CreateReservePage> {
               onPressed: _controller.canCreate.value
                   ? _controller.onCreate
                   : null,
-              child: const Text('添加预约'),
+              child: Text(uiTx('添加预约')),
             );
           }),
         ],

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math';
 
 import 'package:PiliPlus/common/assets.dart';
@@ -90,8 +91,7 @@ class _SearchTrendingPageState extends State<SearchTrendingPage> {
                 return AppBar(
                   title: Opacity(
                     opacity: scrollRatio,
-                    child: Text(
-                      'bilibili热搜',
+                    child: Text(uiTx('bilibili热搜'),
                       style: TextStyle(
                         color: flag ? null : Colors.white,
                       ),

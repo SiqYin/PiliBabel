@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
@@ -103,7 +104,7 @@ class _LaterPageState extends State<LaterPage>
                                 _baseCtr.setIsPlayAll(true);
                               }
                             },
-                            label: const Text('播放全部'),
+                            label: Text(uiTx('播放全部')),
                             icon: const Icon(Icons.playlist_play),
                           ),
                         ),
@@ -175,7 +176,7 @@ class _LaterPageState extends State<LaterPage>
               mid: ctr.mid,
             );
           },
-          child: Text('复制', style: textStyle),
+          child: Text(uiTx('复制'), style: textStyle),
         ),
         TextButton(
           style: btnStyle,
@@ -189,11 +190,11 @@ class _LaterPageState extends State<LaterPage>
               mid: ctr.mid,
             );
           },
-          child: Text('移动', style: textStyle),
+          child: Text(uiTx('移动'), style: textStyle),
         ),
       ],
       child: AppBar(
-        title: const Text('稍后再看'),
+        title: Text(uiTx('稍后再看')),
         actions: [
           IconButton(
             tooltip: '搜索',
@@ -249,13 +250,13 @@ class _LaterPageState extends State<LaterPage>
                   ),
                 ),
                 itemBuilder: (_) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: false,
-                    child: Text('最近添加'),
+                    child: Text(uiTx('最近添加')),
                   ),
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: true,
-                    child: Text('最早添加'),
+                    child: Text(uiTx('最早添加')),
                   ),
                 ],
               );
@@ -292,15 +293,15 @@ class _LaterPageState extends State<LaterPage>
             itemBuilder: (_) => [
               PopupMenuItem(
                 onTap: () => currCtr().toViewClear(context, 1),
-                child: const Text('清空失效'),
+                child: Text(uiTx('清空失效')),
               ),
               PopupMenuItem(
                 onTap: () => currCtr().toViewClear(context, 2),
-                child: const Text('清空看完'),
+                child: Text(uiTx('清空看完')),
               ),
               PopupMenuItem(
                 onTap: () => currCtr().toViewClear(context),
-                child: const Text('清空全部'),
+                child: Text(uiTx('清空全部')),
               ),
             ],
           ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io';
 
 import 'package:PiliPlus/pages/ai_chat/controller.dart';
@@ -171,8 +172,7 @@ class _AiChatPageState extends State<AiChatPage>
               children: [
                 Icon(Icons.auto_awesome, color: colorScheme.primary, size: _isCompact ? 18 : 22),
                 const SizedBox(width: 8),
-                Text(
-                  'AI 视频助手',
+                Text(uiTx('AI 视频助手'),
                   style: (_isCompact ? theme.textTheme.titleSmall : theme.textTheme.titleMedium)?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -186,7 +186,7 @@ class _AiChatPageState extends State<AiChatPage>
                           ? TextButton.styleFrom(visualDensity: VisualDensity.compact)
                           : null,
                       icon: const Icon(Icons.refresh, size: 18),
-                      label: const Text('重置'),
+                      label: Text(uiTx('重置')),
                     );
                   }
                   return const SizedBox.shrink();
@@ -209,8 +209,7 @@ class _AiChatPageState extends State<AiChatPage>
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
               color: colorScheme.errorContainer,
-              child: Text(
-                '提示：当前视频文本较长，AI 首次阅读需要几秒钟，请耐心等待',
+              child: Text(uiTx('提示：当前视频文本较长，AI 首次阅读需要几秒钟，请耐心等待'),
                 style: TextStyle(
                   fontSize: 12,
                   color: colorScheme.onErrorContainer,
@@ -245,8 +244,7 @@ class _AiChatPageState extends State<AiChatPage>
         children: [
           Expanded(
             child: _templates.isEmpty
-                ? Text(
-                    '暂无模板，请在设置中添加',
+                ? Text(uiTx('暂无模板，请在设置中添加'),
                     style: TextStyle(
                       fontSize: 13,
                       color: colorScheme.outline,
@@ -311,7 +309,7 @@ class _AiChatPageState extends State<AiChatPage>
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Icon(Icons.play_arrow, size: 20),
-                  label: const Text('分析'),
+                  label: Text(uiTx('分析')),
                 ),
               ],
             );
@@ -384,8 +382,7 @@ class _AiChatPageState extends State<AiChatPage>
           Expanded(child: Divider(color: colorScheme.outlineVariant)),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(
-              '已载入视频上下文',
+            child: Text(uiTx('已载入视频上下文'),
               style: TextStyle(
                 fontSize: 12,
                 color: colorScheme.outline,
@@ -462,8 +459,7 @@ class _AiChatPageState extends State<AiChatPage>
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Text(
-                        'AI 正在思考...',
+                      Text(uiTx('AI 正在思考...'),
                         style: TextStyle(
                           fontSize: 13,
                           color: colorScheme.outline,

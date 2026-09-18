@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math';
 
 import 'package:PiliPlus/http/loading_state.dart';
@@ -190,7 +191,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
       builder: (context) {
         final theme = Theme.of(context);
         return AlertDialog(
-          title: const Text('设置备注'),
+          title: Text(uiTx('设置备注')),
           content: TextField(
             controller: textController,
             minLines: 1,
@@ -208,8 +209,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
           actions: [
             TextButton(
               onPressed: Get.back,
-              child: Text(
-                '取消',
+              child: Text(uiTx('取消'),
                 style: TextStyle(color: theme.colorScheme.outline),
               ),
             ),
@@ -227,7 +227,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
                 GlobalData().remarkVersion.value++;
                 Get.back();
               },
-              child: const Text('确定'),
+              child: Text(uiTx('确定')),
             ),
           ],
         );
@@ -243,13 +243,12 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('提示'),
+        title: Text(uiTx('提示')),
         content: Text(relation.value != 128 ? '确定拉黑UP主?' : '从黑名单移除UP主'),
         actions: [
           TextButton(
             onPressed: Get.back,
-            child: Text(
-              '点错了',
+            child: Text(uiTx('点错了'),
               style: TextStyle(color: Theme.of(context).colorScheme.outline),
             ),
           ),
@@ -258,7 +257,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
               Get.back();
               _onBlock();
             },
-            child: const Text('确认'),
+            child: Text(uiTx('确认')),
           ),
         ],
       ),

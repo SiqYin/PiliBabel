@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/skeleton/video_reply.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -76,7 +77,7 @@ class VideoReplyReplyPanel extends CommonSlidePage {
       },
       () => SimpleScaffold(
         appBar: AppBar(
-          title: const Text('评论详情'),
+          title: Text(uiTx('评论详情')),
           actions: [
             IconButton(
               tooltip: '前往',
@@ -262,8 +263,7 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
               () {
                 final count = _controller.count.value;
                 return count != -1
-                    ? Text(
-                        '相关回复共${NumUtils.numFormat(count)}条',
+                    ? Text(uiTx('相关回复共${NumUtils.numFormat(count)}条'),
                         style: const TextStyle(fontSize: 13),
                       )
                     : const SizedBox.shrink();
