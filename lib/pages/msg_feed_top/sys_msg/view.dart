@@ -203,8 +203,7 @@ class _SysMsgPageState extends State<SysMsgPage> {
             spanChildren
               ..add(const TextSpan(text: '（'))
               ..add(
-                TextSpan(
-                  text: '查看动态',
+                TextSpan(text: uiTx('查看动态'),
                   style: TextStyle(color: theme.colorScheme.primary),
                   recognizer: NoDeadlineTapGestureRecognizer()
                     ..onTap = () {
@@ -220,8 +219,7 @@ class _SysMsgPageState extends State<SysMsgPage> {
           }
         } else {
           spanChildren.add(
-            TextSpan(
-              text: '\u{1F517}网页链接',
+            TextSpan(text: uiTx('\u{1F517}网页链接'),
               style: TextStyle(color: theme.colorScheme.primary),
               recognizer: NoDeadlineTapGestureRecognizer()
                 ..onTap = () {

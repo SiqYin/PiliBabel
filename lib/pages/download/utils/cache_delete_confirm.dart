@@ -38,7 +38,7 @@ Future<bool> confirmRemoveEntriesFromFolder({
   final choice = await _showPrimaryDialog(
     context: context,
     title: '确定移出当前文件夹？',
-    description: '只会移出文件夹分类，不会删除本地离线缓存。',
+    description: uiTx('只会移出文件夹分类，不会删除本地离线缓存。'),
     cacheCount: entryList.length,
   );
   if (choice == null) {
@@ -104,7 +104,7 @@ Future<bool> confirmDeleteFolders({
   final choice = await _showPrimaryDialog(
     context: context,
     title: folderList.length == 1 ? '确定删除该文件夹？' : '确定删除选中文件夹？',
-    description: '只会删除文件夹关联，不会删除本地离线缓存。',
+    description: uiTx('只会删除文件夹关联，不会删除本地离线缓存。'),
     cacheCount: entries.length,
   );
   if (choice == null) {

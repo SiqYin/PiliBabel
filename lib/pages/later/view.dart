@@ -276,7 +276,7 @@ class _LaterPageState extends State<LaterPage>
                 ),
                 TextSpan(
                   children: [
-                    const TextSpan(text: '清空'),
+                    TextSpan(text: uiTx('清空')),
                     WidgetSpan(
                       alignment: .middle,
                       child: Icon(

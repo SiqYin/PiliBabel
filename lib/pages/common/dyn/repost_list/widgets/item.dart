@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/image_grid/image_grid_view.dart';
@@ -234,8 +235,7 @@ List<InlineSpan> _parseSummary(
                   ),
                 )
                 ..add(
-                  TextSpan(
-                    text: '投票：${e.rawText}',
+                  TextSpan(text: uiTx('投票：${e.rawText}'),
                     style: TextStyle(color: colorScheme.primary),
                     recognizer: (NoDeadlineTapGestureRecognizer()
                       ..onTap = () => showVoteDialog(

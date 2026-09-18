@@ -175,9 +175,8 @@ class _LiveAreaPageState extends State<LiveAreaPage> {
             Text.rich(
               TextSpan(
                 children: [
-                  const TextSpan(text: '我的常用标签  '),
-                  TextSpan(
-                    text: '点击进入标签',
+                  TextSpan(text: uiTx('我的常用标签  ')),
+                  TextSpan(text: uiTx('点击进入标签'),
                     style: TextStyle(
                       fontSize: 13,
                       color: theme.colorScheme.outline,

@@ -356,8 +356,7 @@ Widget? addWidget(
                                         color: theme.colorScheme.primary,
                                       ),
                                     ),
-                                    const TextSpan(
-                                      text: ' 起',
+                                    TextSpan(text: uiTx(' 起'),
                                       style: TextStyle(fontSize: 12),
                                     ),
                                   ],

@@ -171,8 +171,7 @@ abstract final class ReplyUtils {
                             Icons.check_circle_outline_rounded,
                           ),
                   ),
-                  TextSpan(
-                    text: ' 评论检查结果',
+                  TextSpan(text: uiTx(' 评论检查结果'),
                     style: TextStyle(color: color),
                   ),
                 ],

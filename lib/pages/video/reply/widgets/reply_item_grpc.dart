@@ -307,16 +307,13 @@ class ReplyItemGrpc extends StatelessWidget {
       TextSpan(
         children: [
           switch (voteOption.labelKind) {
-            .RED => TextSpan(
-              text: '红方  ',
+            .RED => TextSpan(text: uiTx('红方  '),
               style: TextStyle(color: colorScheme.vipColor),
             ),
-            .BLUE => TextSpan(
-              text: '蓝方  ',
+            .BLUE => TextSpan(text: uiTx('蓝方  '),
               style: TextStyle(color: colorScheme.blue),
             ),
-            _ => TextSpan(
-              text: '投票  ',
+            _ => TextSpan(text: uiTx('投票  '),
               style: TextStyle(color: colorScheme.outline),
             ),
           },
@@ -897,8 +894,7 @@ class ReplyItemGrpc extends StatelessWidget {
           );
         } else if (_voteRegExp.hasMatch(matchStr)) {
           spanChildren.add(
-            TextSpan(
-              text: '投票: ${content.vote.title}',
+            TextSpan(text: uiTx('投票: ${content.vote.title}'),
               style: TextStyle(color: colorScheme.primary),
               recognizer: NoDeadlineTapGestureRecognizer()
                 ..onTap = () =>
@@ -1044,8 +1040,7 @@ class ReplyItemGrpc extends StatelessWidget {
       }
       spanChildren.insert(
         0,
-        TextSpan(
-          text: '[笔记] ',
+        TextSpan(text: uiTx('[笔记] '),
           style: TextStyle(color: color),
           recognizer: recognizer,
         ),
@@ -1154,7 +1149,7 @@ class ReplyItemGrpc extends StatelessWidget {
                       content: Text.rich(
                         TextSpan(
                           children: [
-                            const TextSpan(text: '确定删除这条评论吗？\n\n'),
+                            TextSpan(text: uiTx('确定删除这条评论吗？\n\n')),
                             if (ownerMid != item.member.mid.toInt()) ...[
                               TextSpan(
                                 text: '@${item.member.name}',

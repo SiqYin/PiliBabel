@@ -161,13 +161,12 @@ class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
                   Text.rich(
                     TextSpan(
                       children: [
-                        TextSpan(
-                          text: '${NumUtils.numFormat(item.articlesCount)}篇专栏',
+                        TextSpan(text: uiTx('${NumUtils.numFormat(item.articlesCount)}篇专栏'),
                         ),
                         divider,
-                        TextSpan(text: '${NumUtils.numFormat(item.words)}个字'),
+                        TextSpan(text: uiTx('${NumUtils.numFormat(item.words)}个字')),
                         divider,
-                        TextSpan(text: '${NumUtils.numFormat(item.read)}次阅读'),
+                        TextSpan(text: uiTx('${NumUtils.numFormat(item.read)}次阅读')),
                       ],
                       style: style,
                     ),
@@ -175,12 +174,10 @@ class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
                   Text.rich(
                     TextSpan(
                       children: [
-                        TextSpan(
-                          text:
-                              '${DateFormatUtils.dateFormat(item.updateTime)}更新',
+                        TextSpan(text: uiTx('${DateFormatUtils.dateFormat(item.updateTime)}更新'),
                         ),
                         divider,
-                        TextSpan(text: '文集号: ${item.id}'),
+                        TextSpan(text: uiTx('文集号: ${item.id}')),
                       ],
                       style: style,
                     ),

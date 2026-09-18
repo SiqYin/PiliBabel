@@ -150,8 +150,7 @@ TextSpan? richNode(
                 ),
               )
               ..add(
-                TextSpan(
-                  text: '投票：${i.text}',
+                TextSpan(text: uiTx('投票：${i.text}'),
                   style: style,
                   recognizer: NoDeadlineTapGestureRecognizer()
                     ..onTap = () => showVoteDialog(

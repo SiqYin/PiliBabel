@@ -69,7 +69,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<LiveSendDmPanel> {
         );
       }
       return Tooltip(
-        message: '粉丝勋章',
+        message: uiTx('粉丝勋章'),
         child: Material(
           type: MaterialType.transparency,
           borderRadius: Style.mdRadius,
