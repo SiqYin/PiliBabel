@@ -251,7 +251,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
   PreferredSizeWidget _buildAppBar() => AppBar(
     title: Obx(() {
       if (controller.isLoaded.value && controller.showTitle.value) {
-        return Text(controller.summary.title!);
+        return Text(uiTx(controller.summary.title!));
       }
       return const SizedBox.shrink();
     }),

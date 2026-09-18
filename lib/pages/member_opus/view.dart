@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/skeleton/space_opus.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -121,7 +122,7 @@ class _MemberOpusState extends State<MemberOpus>
                   label: Obx(
                     () {
                       final type = _controller.type.value;
-                      return Text(type.text ?? type.tabName!);
+                      return Text(uiTx(type.text) ?? type.tabName!);
                     },
                   ),
                 ),

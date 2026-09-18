@@ -2453,7 +2453,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                     return false;
                   },
                   itemBuilder: (context) => WebpPreset.values
-                      .map((i) => PopupMenuItem(value: i, child: Text(i.name)))
+                      .map((i) => PopupMenuItem(value: i, child: Text(uiTx(i.name))))
                       .toList(),
                   getSelectTitle: (i) => '${i.name}(${i.desc})',
                 ),

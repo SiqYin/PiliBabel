@@ -466,7 +466,7 @@ abstract final class RequestUtils {
                     children: list.map((item) {
                       return RadioListTile<int>(
                         dense: true,
-                        title: Text(item.title),
+                        title: Text(uiTx(item.title)),
                         value: item.id,
                       );
                     }).toList(),

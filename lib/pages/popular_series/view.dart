@@ -36,7 +36,7 @@ class _PopularSeriesPageState extends State<PopularSeriesPage> with GridMixin {
         title: Obx(() {
           final config = _controller.config.value;
           if (config != null) {
-            return Text(config.name!);
+            return Text(uiTx(config.name!));
           }
           return Text(uiTx('每周必看'));
         }),

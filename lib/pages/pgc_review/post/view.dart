@@ -67,7 +67,7 @@ class _PgcReviewPostPanelState extends State<PgcReviewPostPanel> {
             automaticallyImplyLeading: false,
             titleSpacing: 16,
             toolbarHeight: 45,
-            title: Text(widget.name),
+            title: Text(uiTx(widget.name)),
             actions: [
               IconButton(
                 icon: const Icon(Icons.clear, size: 20),

@@ -367,7 +367,7 @@ class OpusContent extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: .start,
                           children: [
-                            Text(ugc.title!),
+                            Text(uiTx(ugc.title!)),
                             Text(
                               ugc.descSecond!,
                               maxLines: 2,
@@ -402,7 +402,7 @@ class OpusContent extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: .start,
                           children: [
-                            Text(common.title!),
+                            Text(uiTx(common.title!)),
                             if (common.desc1 != null)
                               Text(
                                 common.desc1!,
@@ -441,7 +441,7 @@ class OpusContent extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: .start,
                           children: [
-                            Text(live.title!),
+                            Text(uiTx(live.title!)),
                             if (live.descFirst != null)
                               Text(
                                 live.descFirst!,
@@ -480,7 +480,7 @@ class OpusContent extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: .start,
                           children: [
-                            Text(opus.title!),
+                            Text(uiTx(opus.title!)),
                             Text(uiTx('${opus.authorName} · ${opus.statView ?? 0}阅读'),
                               style: TextStyle(
                                 fontSize: 13,
@@ -541,7 +541,7 @@ class OpusContent extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: .start,
                           children: [
-                            Text(music.title!),
+                            Text(uiTx(music.title!)),
                             if (music.label != null)
                               Text(
                                 music.label!,
@@ -580,7 +580,7 @@ class OpusContent extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: .start,
                                 children: [
-                                  Text(e.name!),
+                                  Text(uiTx(e.name!)),
                                   if (e.brief?.isNotEmpty == true)
                                     Text(
                                       e.brief!,
@@ -890,7 +890,7 @@ Widget moduleBlockedItem(
                 crossAxisAlignment: .start,
                 children: [
                   if (moduleBlocked.title?.isNotEmpty == true)
-                    Text(moduleBlocked.title!),
+                    Text(uiTx(moduleBlocked.title!)),
                   if (moduleBlocked.hintMessage?.isNotEmpty == true)
                     Text(
                       moduleBlocked.hintMessage!,
@@ -942,7 +942,7 @@ Widget opusCollection(ThemeData theme, ModuleCollection item) {
                   mainAxisSize: .min,
                   crossAxisAlignment: .start,
                   children: [
-                    Text(item.title!),
+                    Text(uiTx(item.title!)),
                     Text.rich(
                       TextSpan(
                         children: [

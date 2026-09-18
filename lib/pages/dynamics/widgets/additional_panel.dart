@@ -233,7 +233,7 @@ Widget? addWidget(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (content.title?.isNotEmpty == true)
-                        Text(content.title!),
+                        Text(uiTx(content.title!)),
                       if (content.hint?.text?.isNotEmpty == true)
                         Text(
                           content.hint!.text!,
@@ -512,7 +512,7 @@ Widget? addWidget(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (content.title?.isNotEmpty == true)
-                        Text(content.title!),
+                        Text(uiTx(content.title!)),
                       if (content.desc1?.isNotEmpty == true)
                         Text(
                           content.desc1!,

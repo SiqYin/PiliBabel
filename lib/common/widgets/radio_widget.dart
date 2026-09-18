@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -74,7 +75,7 @@ class RadioWidgetState<T> extends State<RadioWidget<T>> with RadioClient<T> {
                 : .shrinkWrap,
           ),
         ),
-        Text(widget.title),
+        Text(uiTx(widget.title)),
       ],
     );
     return InkWell(

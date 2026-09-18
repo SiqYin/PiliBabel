@@ -138,7 +138,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return AlertDialog(
-      title: Text(widget.title),
+      title: Text(uiTx(widget.title)),
       contentPadding: const EdgeInsets.fromLTRB(24, 12, 24, 0),
       content: SizedBox(
         width: double.maxFinite,

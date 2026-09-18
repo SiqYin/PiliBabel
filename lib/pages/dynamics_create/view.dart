@@ -452,7 +452,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
                     item.iconData,
                   ),
                   const SizedBox(width: 4),
-                  Text(item.title),
+                  Text(uiTx(item.title)),
                 ],
               ),
             ),

@@ -79,7 +79,7 @@ Future<List<String>?> showDownloadFolderPickerDialog({
                               (folder) => CheckboxListTile(
                                 dense: true,
                                 value: selectedIds.contains(folder.id),
-                                title: Text(folder.title),
+                                title: Text(uiTx(folder.title)),
                                 contentPadding: EdgeInsets.zero,
                                 controlAffinity:
                                     ListTileControlAffinity.leading,

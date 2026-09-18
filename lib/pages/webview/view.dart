@@ -282,7 +282,7 @@ class _WebviewPageState extends State<WebviewPage> with RouteAware {
               .map(
                 (item) => PopupMenuItem(
                   value: item,
-                  child: Text(item.title),
+                  child: Text(uiTx(item.title)),
                 ),
               ),
           const PopupMenuDivider(),

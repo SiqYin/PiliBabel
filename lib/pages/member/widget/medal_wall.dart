@@ -39,7 +39,7 @@ class MedalWall extends StatelessWidget {
           SliverToBoxAdapter(
             child: Padding(
               padding: const .only(top: 5),
-              child: Center(child: Text(response.name!)),
+              child: Center(child: Text(uiTx(response.name!))),
             ),
           ),
           SliverToBoxAdapter(

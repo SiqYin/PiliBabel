@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math';
 
 import 'package:PiliPlus/grpc/bilibili/app/im/v1.pb.dart'
@@ -47,7 +48,7 @@ class ImSettingsItem extends StatelessWidget {
           style: titleStyle,
         ),
         subtitle: item.switch_1.hasSubtitle()
-            ? Text(item.switch_1.subtitle, style: subtitleStyle)
+            ? Text(uiTx(item.switch_1.subtitle), style: subtitleStyle)
             : null,
         trailing: Transform.scale(
           alignment: Alignment.centerRight,
@@ -88,7 +89,7 @@ class ImSettingsItem extends StatelessWidget {
           style: titleStyle,
         ),
         subtitle: item.redirect.hasSubtitle()
-            ? Text(item.redirect.subtitle, style: subtitleStyle)
+            ? Text(uiTx(item.redirect.subtitle), style: subtitleStyle)
             : null,
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
@@ -154,7 +155,7 @@ class ImSettingsItem extends StatelessWidget {
                   }
                 }
               },
-              title: Text(e.text, style: titleStyle),
+              title: Text(uiTx(e.text), style: titleStyle),
               trailing: e.selected
                   ? Icon(size: 20, Icons.check, color: colorScheme.primary)
                   : null,

@@ -121,7 +121,7 @@ class _BubblePageState extends State<BubblePage>
                     ),
                   ),
                   icon: const Icon(Icons.sort, size: 20),
-                  label: Text(item.text!),
+                  label: Text(uiTx(item.text!)),
                 );
               }
               return const SizedBox.shrink();

@@ -54,7 +54,7 @@ Widget _getAccountDetail(BuildContext context) {
     if (url == null) continue;
 
     children
-      ..add(Center(child: Text(i.title, style: theme.titleMedium)))
+      ..add(Center(child: Text(uiTx(i.title), style: theme.titleMedium)))
       ..add(Text(url.join('\n')));
   }
   return Column(

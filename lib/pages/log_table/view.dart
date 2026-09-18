@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -21,7 +22,7 @@ class _LogPageState<T> extends State<LogPage<T>> {
   Widget build(BuildContext context) {
     final padding = MediaQuery.viewPaddingOf(context);
     return SimpleScaffold(
-      appBar: AppBar(title: Text(_controller.title)),
+      appBar: AppBar(title: Text(uiTx(_controller.title))),
       body: CustomScrollView(
         slivers: [
           SliverPadding(

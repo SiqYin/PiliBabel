@@ -99,7 +99,7 @@ class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
       style: TextStyle(color: theme.colorScheme.outline.withValues(alpha: 0.7)),
     );
     return SliverAppBar.medium(
-      title: Text(item.name!),
+      title: Text(uiTx(item.name!)),
       pinned: true,
       expandedHeight: kToolbarHeight + 127,
       flexibleSpace: FlexibleSpaceBar(

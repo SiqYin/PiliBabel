@@ -33,7 +33,7 @@ Widget buildVoteCard(
             child: Column(
               crossAxisAlignment: .start,
               children: [
-                Text(voteCard.title, maxLines: 1, overflow: .ellipsis),
+                Text(uiTx(voteCard.title), maxLines: 1, overflow: .ellipsis),
                 Text(uiTx('${NumUtils.numFormat(voteCard.count.toInt())}人参与'),
                   maxLines: 1,
                   overflow: .ellipsis,

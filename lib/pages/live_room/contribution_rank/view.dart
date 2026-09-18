@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -193,7 +194,7 @@ class _Item extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     late final colorScheme = ColorScheme.of(context);
-    Widget child = Text(item.name!);
+    Widget child = Text(uiTx(item.name!));
     if (item.uinfoMedal case final uinfoMedal?) {
       try {
         child = Column(

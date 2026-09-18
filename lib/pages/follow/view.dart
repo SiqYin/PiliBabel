@@ -81,7 +81,7 @@ class _FollowPageState extends State<FollowPage>
                   onPressed: _followController.toggleOrderType,
                   icon: const Icon(Icons.format_list_bulleted, size: 20),
                   label: Obx(
-                    () => Text(_followController.orderType.value.title),
+                    () => Text(uiTx(_followController.orderType.value.title)),
                   ),
                 ),
               ),

@@ -617,7 +617,7 @@ class _MemberPageState extends State<MemberPage> {
           heroTag: _heroTag,
           mid: _mid,
         ),
-        _ => Center(child: Text(item.title ?? '')),
+        _ => Center(child: Text(uiTx(item.title) ?? '')),
       };
     }).toList(),
   );
