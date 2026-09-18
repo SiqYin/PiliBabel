@@ -183,8 +183,7 @@ class _VotePanelState extends State<VotePanel> {
                                   TextSpan(
                                     children: [
                                       TextSpan(text: e.name),
-                                      TextSpan(
-                                        text: ' 投给了',
+                                      TextSpan(text: uiTx(' 投给了'),
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: colorScheme.outline,
@@ -260,7 +259,7 @@ class _VotePanelState extends State<VotePanel> {
                       text: NumUtils.numFormat(_voteInfo.joinNum),
                       style: TextStyle(color: theme.colorScheme.primary),
                     ),
-                    const TextSpan(text: '人参与'),
+                    TextSpan(text: uiTx('人参与')),
                   ],
                 ),
               ),

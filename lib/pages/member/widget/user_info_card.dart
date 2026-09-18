@@ -403,8 +403,7 @@ class UserInfoCard extends StatelessWidget {
                     : colorScheme.onError,
               ),
             ),
-            TextSpan(
-              text: ' 该账号封禁中',
+            TextSpan(text: uiTx(' 该账号封禁中'),
               style: TextStyle(
                 color: isLight
                     ? colorScheme.onErrorContainer

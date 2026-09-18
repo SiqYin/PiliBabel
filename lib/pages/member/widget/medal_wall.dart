@@ -50,7 +50,7 @@ class MedalWall extends StatelessWidget {
                   style: TextStyle(fontSize: 12, color: colorScheme.outline),
                   TextSpan(
                     children: [
-                      const TextSpan(text: '共拥有 '),
+                      TextSpan(text: uiTx('共拥有 ')),
                       TextSpan(
                         text: response.count.toString(),
                         style: TextStyle(
@@ -58,7 +58,7 @@ class MedalWall extends StatelessWidget {
                           color: colorScheme.primary,
                         ),
                       ),
-                      const TextSpan(text: ' 枚粉丝勋章'),
+                      TextSpan(text: uiTx(' 枚粉丝勋章')),
                     ],
                   ),
                 ),

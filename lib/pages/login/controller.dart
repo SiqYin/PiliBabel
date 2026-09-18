@@ -798,9 +798,8 @@ class LoginPageController extends GetxController
               style: const TextStyle(height: 1.5),
               TextSpan(
                 children: [
-                  const TextSpan(text: '账号切换'),
-                  TextSpan(
-                    text: '\nmid为0时使用匿名',
+                  TextSpan(text: uiTx('账号切换')),
+                  TextSpan(text: uiTx('\nmid为0时使用匿名'),
                     style: TextStyle(fontSize: 14, color: colorScheme.outline),
                   ),
                 ],

@@ -277,7 +277,7 @@ class _LivePageState extends State<LivePage>
               Text.rich(
                 TextSpan(
                   children: [
-                    const TextSpan(text: '我的关注  '),
+                    TextSpan(text: uiTx('我的关注  ')),
                     TextSpan(
                       text: totalCount.toString(),
                       style: TextStyle(
@@ -285,8 +285,7 @@ class _LivePageState extends State<LivePage>
                         color: theme.colorScheme.primary,
                       ),
                     ),
-                    TextSpan(
-                      text: '人正在直播',
+                    TextSpan(text: uiTx('人正在直播'),
                       style: TextStyle(
                         fontSize: 13,
                         color: theme.colorScheme.outline,

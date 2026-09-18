@@ -271,7 +271,7 @@ class _HistoryPageState extends State<HistoryPage>
                           color: theme.onSecondaryContainer,
                         ),
                       ),
-                      const TextSpan(text: ' 历史记录功能已关闭'),
+                      TextSpan(text: uiTx(' 历史记录功能已关闭')),
                     ],
                   ),
                 ),
