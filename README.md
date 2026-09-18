@@ -3,8 +3,10 @@
     <h1>PiliBabel</h1>
     <p><b>A third-party Bilibili client with AI-powered translation.</b></p>
     <p>Babel — tearing down the language barrier, so everyone can enjoy bilibili in their own language.</p>
+    <p>Includes translation for 4 languages of China's ethnic minorities and 3 Chinese dialects.</p>
     <p><b>具備 AI 翻譯功能的第三方嗶哩嗶哩（Bilibili）客戶端。</b></p>
     <p>巴別塔——打破語言的高牆，讓每個人都能用屬於自己的語言享受 Bilibili。</p>
+    <p>含 4 種中國少數民族語言與 3 種漢語方言的翻譯。</p>
 </div>
 
 <div align="center">
