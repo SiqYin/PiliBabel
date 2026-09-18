@@ -1683,6 +1683,12 @@ abstract final class Pref {
   static set uiTranslateCache(Map<String, String> value) =>
       _setting.put(SettingBoxKey.uiTranslateCache, jsonEncode(value));
 
+  static bool get uiTranslateOnboarded =>
+      _setting.get(SettingBoxKey.uiTranslateOnboarded, defaultValue: false);
+
+  static set uiTranslateOnboarded(bool value) =>
+      _setting.put(SettingBoxKey.uiTranslateOnboarded, value);
+
   static int get angleDegrees =>
       _setting.get(SettingBoxKey.angleDegrees, defaultValue: 30);
 
