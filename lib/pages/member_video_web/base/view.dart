@@ -45,7 +45,7 @@ abstract class BaseVideoWebState<
     final colorScheme = ColorScheme.of(context);
     return SimpleScaffold(
       appBar: AppBar(
-        title: Text(name),
+        title: Text(uiTx(name)),
         actions: [
           Obx(
             () {

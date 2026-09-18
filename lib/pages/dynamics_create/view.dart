@@ -614,7 +614,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
               ),
             ),
             Text(
-              title,
+              uiTx(title),
               maxLines: 1,
               style: const TextStyle(fontSize: 13),
             ),

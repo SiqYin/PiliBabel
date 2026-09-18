@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:material_ui/material_ui.dart';
 
 class SelectDialog<T> extends StatelessWidget {
@@ -21,7 +22,7 @@ class SelectDialog<T> extends StatelessWidget {
     final titleMedium = TextTheme.of(context).titleMedium!;
     return AlertDialog(
       clipBehavior: Clip.hardEdge,
-      title: Text(title),
+      title: Text(uiTx(title)),
       constraints: subtitleBuilder != null
           ? const BoxConstraints.tightFor(width: 320)
           : null,

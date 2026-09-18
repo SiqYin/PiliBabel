@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -58,7 +59,7 @@ class ActionRowLineItem extends StatelessWidget {
                 opacity: isLoading ? 0 : 1,
                 duration: const Duration(milliseconds: 200),
                 child: Text(
-                  text!,
+                  uiTx(text!),
                   style: TextStyle(
                     fontSize: 13,
                     color: selectStatus

@@ -4,6 +4,7 @@
 
 // ignore_for_file: prefer_initializing_formals
 
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math' as math;
 import 'dart:ui' show SemanticsRole, lerpDouble;
 
@@ -107,7 +108,7 @@ class VerticalTab extends StatelessWidget {
   final double? width;
 
   Widget _buildLabelText() {
-    return child ?? Text(text!, style: const TextStyle(fontSize: 15));
+    return child ?? Text(uiTx(text!), style: const TextStyle(fontSize: 15));
   }
 
   @override

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
@@ -28,7 +29,7 @@ class MarqueeText extends StatelessWidget {
       spacing: spacing,
       provider: provider,
       child: Text(
-        text,
+        uiTx(text),
         style: style,
         strutStyle: strutStyle,
         maxLines: 1,

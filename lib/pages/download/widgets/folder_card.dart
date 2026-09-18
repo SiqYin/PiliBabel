@@ -66,7 +66,7 @@ class DownloadFolderCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      uiTx(title),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(letterSpacing: 0.3),

@@ -1508,7 +1508,7 @@ class HeaderControlState extends State<HeaderControl>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title),
+              Text(uiTx(title)),
               reset,
             ],
           ),
