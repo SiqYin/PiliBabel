@@ -1312,7 +1312,7 @@ class HeaderControlState extends State<HeaderControl>
                         (e) => PopupMenuItem(
                           value: e,
                           height: 35,
-                          child: Text(e.label),
+                          child: Text(uiTx(e.label)),
                         ),
                       )
                       .toList(),

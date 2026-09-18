@@ -165,8 +165,7 @@ class _HorizontalMemberPageState extends State<HorizontalMemberPage> {
         size: 16,
         color: colorScheme.secondary,
       ),
-      label: Text(
-        _controller.order.label,
+      label: Text(uiTx(_controller.order.label),
         style: TextStyle(
           fontSize: 13,
           color: colorScheme.secondary,

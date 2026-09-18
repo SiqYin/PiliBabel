@@ -97,7 +97,7 @@ class _BarSetPageState extends State<BarSetPage> with ReorderMixin {
                   e.second = value!;
                   setState(() {});
                 },
-                title: Text(e.first.label),
+                title: Text(uiTx(e.first.label)),
                 secondary: const Icon(Icons.drag_indicator_rounded),
               ),
             )

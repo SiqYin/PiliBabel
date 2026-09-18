@@ -485,7 +485,7 @@ class _PresetDropdown extends StatelessWidget {
             .map(
               (preset) => DropdownMenuItem<int>(
                 value: preset.value,
-                child: Text(preset.label),
+                child: Text(uiTx(preset.label)),
               ),
             )
             .toList(growable: false),

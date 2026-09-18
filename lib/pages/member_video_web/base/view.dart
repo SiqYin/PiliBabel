@@ -56,7 +56,7 @@ abstract class BaseVideoWebState<
                 initialValue: order,
                 onSelected: controller.queryBySort,
                 itemBuilder: (_) => values
-                    .map((e) => PopupMenuItem(value: e, child: Text(e.label)))
+                    .map((e) => PopupMenuItem(value: e, child: Text(uiTx(e.label))))
                     .toList(),
               );
             },

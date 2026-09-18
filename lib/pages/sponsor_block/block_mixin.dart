@@ -431,8 +431,7 @@ mixin BlockMixin on GetxController {
                 trailing: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      item.skipType.label,
+                    Text(uiTx(item.skipType.label),
                       style: const TextStyle(fontSize: 13),
                     ),
                     if (item.segment.$2 != 0)
