@@ -157,15 +157,15 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
 
   @override
   bool handleError(String? errMsg) {
-    tab2 = const [
-      SpaceTab2(title: '动态', param: 'dynamic'),
+    tab2 = [
+      SpaceTab2(title: uiTx('动态'), param: 'dynamic'),
       SpaceTab2(
-        title: '投稿',
+        title: uiTx('投稿'),
         param: 'contribute',
-        items: [SpaceTab2Item(title: '视频', param: 'video')],
+        items: [SpaceTab2Item(title: uiTx('视频'), param: 'video')],
       ),
-      SpaceTab2(title: '收藏', param: 'favorite'),
-      SpaceTab2(title: '追番', param: 'bangumi'),
+      SpaceTab2(title: uiTx('收藏'), param: 'favorite'),
+      SpaceTab2(title: uiTx('追番'), param: 'bangumi'),
     ];
     tabs = tab2!.map((item) => Tab(text: item.title)).toList();
     tabController?.dispose();

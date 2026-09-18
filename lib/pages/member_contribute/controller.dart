@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math';
 
 import 'package:PiliPlus/models_new/space/space/tab2.dart';
@@ -32,9 +33,9 @@ class MemberContributeCtr extends GetxController
         // show if exist
         if (_ctr.hasSeasonOrSeries == true) {
           items!.add(
-            const SpaceTab2Item(
+            SpaceTab2Item(
               param: 'ugcSeason',
-              title: '全部合集/列表',
+              title: uiTx('全部合集/列表'),
             ),
           );
         }

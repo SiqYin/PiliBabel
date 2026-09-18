@@ -117,10 +117,10 @@ class _FavPgcChildPageState extends State<FavPgcChildPage>
                   ),
                 ),
                 const Spacer(),
-                ...const [
-                      (followStatus: 1, title: '想看'),
-                      (followStatus: 2, title: '在看'),
-                      (followStatus: 3, title: '看过'),
+                ...[
+                      (followStatus: 1, title: uiTx('想看')),
+                      (followStatus: 2, title: uiTx('在看')),
+                      (followStatus: 3, title: uiTx('看过')),
                     ]
                     .where(
                       (item) => item.followStatus != widget.followStatus,

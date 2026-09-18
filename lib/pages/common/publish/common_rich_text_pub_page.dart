@@ -210,7 +210,7 @@ abstract class CommonRichTextPubPageState<T extends CommonRichTextPubPage>
           toolbarWidgetColor: colorScheme.onSecondaryContainer,
           statusBarLight: colorScheme.isLight,
         ),
-        IOSUiSettings(title: '裁剪'),
+        IOSUiSettings(title: uiTx('裁剪')),
       ],
     );
     if (croppedFile != null) {

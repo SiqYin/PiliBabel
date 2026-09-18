@@ -196,10 +196,10 @@ class VideoPopupMenu extends StatelessWidget {
     final zoneName = _getZoneName()?.trim();
     _showReasonDialog(
       context: context,
-      title: '本地屏蔽',
+      title: uiTx('本地屏蔽'),
       sections: [
         _DialogSection(
-          title: '屏蔽原因',
+          title: uiTx('屏蔽原因'),
           actions: [
             _DialogChipAction(
               label: 'UP主:$ownerName',
@@ -352,7 +352,7 @@ class VideoPopupMenu extends StatelessWidget {
 
               _showReasonDialog(
                 context: context,
-                title: '我不想看',
+                title: uiTx('我不想看'),
                 sections: [
                   if (tp.dislikeReasons != null)
                     _DialogSection(
@@ -367,7 +367,7 @@ class VideoPopupMenu extends StatelessWidget {
                     ),
                   if (tp.feedbacks != null)
                     _DialogSection(
-                      title: '反馈',
+                      title: uiTx('反馈'),
                       actions: tp.feedbacks!
                           .map(
                             (feedback) => _DialogChipAction(

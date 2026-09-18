@@ -409,7 +409,7 @@ class _SearchPageState extends State<SearchPage> {
     ),
     onPressed: () => showImportExportDialog<List>(
       context,
-      title: '历史记录',
+      title: uiTx('历史记录'),
       localFileName: () => 'search',
       onExport: () => jsonEncode(_searchController.historyList),
       onImport: (json) {

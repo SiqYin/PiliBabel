@@ -107,10 +107,10 @@ class _GeetestWebviewDialogState extends State<GeetestWebviewDialog> {
     }
 
     final webview = await WebviewWindow.create(
-      configuration: const CreateConfiguration(
+      configuration: CreateConfiguration(
         windowWidth: 300,
         windowHeight: 400,
-        title: "验证码",
+        title: uiTx("验证码"),
       ),
     );
 

@@ -2426,7 +2426,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                   videoDuration: duration,
                 ),
                 PopupMenuText(
-                  title: '选择画质',
+                  title: uiTx('选择画质'),
                   value: () => qa.code,
                   onSelected: (value) {
                     final video = videoDetailController.findVideoByQa(value);
@@ -2446,7 +2446,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                   getSelectTitle: (_) => qa.shortDesc,
                 ),
                 PopupMenuText(
-                  title: 'webp预设',
+                  title: uiTx('webp预设'),
                   value: () => preset,
                   onSelected: (value) {
                     preset = value;
@@ -2825,7 +2825,7 @@ class _SubtitleSelectPanel extends StatelessWidget {
               children: [
                 Expanded(
                   child: _column(
-                    title: '主字幕',
+                    title: uiTx('主字幕'),
                     selectedIndex: primary,
                     disabledIndex: secondary,
                     onSelect: controller.setSubtitle,
@@ -2838,7 +2838,7 @@ class _SubtitleSelectPanel extends StatelessWidget {
                 ),
                 Expanded(
                   child: _column(
-                    title: '副字幕',
+                    title: uiTx('副字幕'),
                     selectedIndex: secondary,
                     disabledIndex: primary,
                     onSelect: controller.setSecondarySubtitle,

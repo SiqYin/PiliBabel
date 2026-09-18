@@ -103,7 +103,7 @@ Future<List<String>?> showDownloadFolderPickerDialog({
               onPressed: () async {
                 final name = await showDownloadFolderNameDialog(
                   context: dialogContext,
-                  title: '新建文件夹',
+                  title: uiTx('新建文件夹'),
                   initialValue: collectionService.buildDefaultFolderTitle(),
                 );
                 if (name == null) {

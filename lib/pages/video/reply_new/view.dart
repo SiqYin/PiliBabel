@@ -298,7 +298,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
               }
             },
             icon: Icon(Icons.post_add, size: 28, color: color),
-            title: '插入内容',
+            title: uiTx('插入内容'),
           ),
           if (heroTag != null) ...[
             // if (isRoot)
@@ -330,7 +330,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
                 }
               },
               icon: Icon(Icons.my_location, size: 28, color: color),
-              title: '视频进度',
+              title: uiTx('视频进度'),
             ),
             if (isRoot && widget.canUploadPic)
               item(
@@ -368,7 +368,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
                   size: 28,
                   color: color,
                 ),
-                title: '视频截图',
+                title: uiTx('视频截图'),
               ),
           ],
         ],

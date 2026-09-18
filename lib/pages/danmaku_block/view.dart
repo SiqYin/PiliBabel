@@ -62,7 +62,7 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
             icon: const Icon(Icons.import_export),
             onPressed: () => showImportExportDialog<List<dynamic>>(
               context,
-              title: '弹幕屏蔽规则',
+              title: uiTx('弹幕屏蔽规则'),
               onExport: () => Utils.jsonEncoder.convert(_controller.exportRules()),
               onImport: _controller.importDanmakuFilter,
               localFileName: () => 'danmaku_block',

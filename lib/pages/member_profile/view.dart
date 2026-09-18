@@ -158,7 +158,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           divider,
           _item(
             theme: theme,
-            title: '昵称',
+            title: uiTx('昵称'),
             text: response.name,
             onTap: () {
               if (response.coins! < 6) {
@@ -166,7 +166,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               } else {
                 _editDialog(
                   type: ProfileType.uname,
-                  title: '昵称',
+                  title: uiTx('昵称'),
                   text: response.name!,
                 );
               }
@@ -175,7 +175,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           divider,
           _item(
             theme: theme,
-            title: '性别',
+            title: uiTx('性别'),
             text: _sex(response.sex!),
             onTap: () => showDialog(
               context: context,
@@ -185,7 +185,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           divider,
           _item(
             theme: theme,
-            title: '出生年月',
+            title: uiTx('出生年月'),
             text: response.birthday,
             onTap: () =>
                 showDatePicker(
@@ -205,18 +205,18 @@ class _EditProfilePageState extends State<EditProfilePage> {
           divider,
           _item(
             theme: theme,
-            title: '个性签名',
+            title: uiTx('个性签名'),
             text: response.sign,
             onTap: () => _editDialog(
               type: ProfileType.sign,
-              title: '个性签名',
+              title: uiTx('个性签名'),
               text: response.sign ?? '',
             ),
           ),
           divider1,
           _item(
             theme: theme,
-            title: '头像挂件',
+            title: uiTx('头像挂件'),
             onTap: () => PageUtils.inAppWebview(
               'https://www.bilibili.com/h5/mall/pendant/home',
             ),
@@ -232,7 +232,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           divider1,
           _item(
             theme: theme,
-            title: '哔哩哔哩认证',
+            title: uiTx('哔哩哔哩认证'),
             onTap: () => PageUtils.inAppWebview(
               'https://account.bilibili.com/official/mobile/home',
             ),
@@ -502,7 +502,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 initAspectRatio: const CropAspectRatioPresetCustom(),
               ),
               IOSUiSettings(
-                title: '裁剪',
+                title: uiTx('裁剪'),
                 aspectRatioPresets: const [CropAspectRatioPresetCustom()],
                 cropStyle: CropStyle.circle,
                 aspectRatioLockEnabled: true,
