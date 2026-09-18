@@ -72,7 +72,7 @@ class _BatchExportDialog extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                title,
+                uiTx(title),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,

@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -239,7 +240,7 @@ class FloatingNavigationDestination extends StatelessWidget {
               padding: labelPadding,
               child: MediaQuery.withClampedTextScaling(
                 maxScaleFactor: _kMaxLabelTextScaleFactor,
-                child: Text(label, style: textStyle),
+                child: Text(uiTx(label), style: textStyle),
               ),
             );
           },

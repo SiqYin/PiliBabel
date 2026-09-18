@@ -156,7 +156,7 @@ class VideoPopupMenu extends StatelessWidget {
       builder: (context) {
         final theme = Theme.of(context);
         return AlertDialog(
-          title: Text(title),
+          title: Text(uiTx(title)),
           content: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -506,7 +506,7 @@ class PercentageChip extends StatelessWidget {
                     mainAxisSize: .min,
                     children: [
                       Flexible(
-                        child: Text(label, maxLines: 1, overflow: .ellipsis),
+                        child: Text(uiTx(label), maxLines: 1, overflow: .ellipsis),
                       ),
                       if (selected)
                         Icon(
