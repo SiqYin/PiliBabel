@@ -3,8 +3,8 @@
     <h1>PiliBabel</h1>
     <p><b>A third-party Bilibili client with AI-powered translation.</b></p>
     <p>Babel — tearing down the language barrier, so everyone can enjoy bilibili in their own language.</p>
-    <p><b>具備 AI 翻譯功能的第三方哔哩哔哩（Bilibili）客戶端。</b></p>
-    <p>巴別塔——打破語言的高牆，讓每個人都能用屬於自己的語言享用 bilibili。</p>
+    <p><b>具備 AI 翻譯功能的第三方嗶哩嗶哩（Bilibili）客戶端。</b></p>
+    <p>巴別塔——打破語言的高牆，讓每個人都能用屬於自己的語言享受 Bilibili。</p>
 </div>
 
 <div align="center">
@@ -15,7 +15,7 @@
 
 > **Disclaimer.** PiliBabel is an **unofficial, open-source, third-party** client. It is **not affiliated with, endorsed by, or sponsored by** bilibili / bilibili Inc. Every API is gathered from the official public endpoints; **no paid content is unlocked or cracked**. Please read the full [Disclaimer](#disclaimer) and [License](#license) sections.
 >
-> **免責聲明。** PiliBabel 是一款**非官方、開源、第三方**客戶端，與 bilibili / 噠哩噠哩（上海）網路技術有限公司**無任何隸屬、授權或贊助關係**。所有 API 均取自官方公開介面，**不解鎖、不破解任何付費內容**。請完整閱讀下方的[免責聲明](#免責聲明-disclaimer)與[授權條款](#授權條款-license)章節。
+> **免責聲明。** PiliBabel 是一款**非官方、開源、第三方**客戶端，與 Bilibili / 嗶哩嗶哩**無任何隸屬、授權或贊助關係**。所有 API 均取自官方公開介面，**不解鎖、不破解任何付費內容**。請完整閱讀下方的[免責聲明](#免責聲明-disclaimer)與[授權條款](#授權條款-license)章節。
 
 ## What is PiliBabel? / PiliBabel 是什麼？
 
