@@ -278,7 +278,7 @@ class _LikeMePageState extends State<LikeMePage> {
             ),
             if (item.counts! > 1)
               TextSpan(
-                text: ' 等${item.counts}人',
+                text: uiTxP(' 等{0}人', [item.counts]),
                 style: theme.textTheme.titleSmall!.copyWith(
                   fontSize: 12,
                   height: 1.5,

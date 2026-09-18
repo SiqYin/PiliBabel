@@ -90,7 +90,12 @@ class _UpowerRankPageState extends State<UpowerRankPage>
     if (widget.privilegeType == null) {
       return SimpleScaffold(
         appBar: AppBar(
-          title: Text('$_name的充电排行榜${_count == null ? '' : '($_count)'}'),
+          title: Text(
+            uiTxP('{0}的充电排行榜{1}', [
+              _name,
+              _count == null ? '' : '($_count)',
+            ]),
+          ),
           actions: [
             TextButton(
               onPressed: () => Get.toNamed(

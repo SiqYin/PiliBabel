@@ -402,7 +402,10 @@ class AuthorPanel extends StatelessWidget {
                       moduleAuthor.mid!,
                     );
                     SmartDialog.showToast(
-                      '已临时屏蔽${moduleAuthor.name}(${moduleAuthor.mid!})，重启恢复',
+                      uiTxP('已临时屏蔽{0}({1})，重启恢复', [
+                        moduleAuthor.name,
+                        moduleAuthor.mid!,
+                      ]),
                     );
                   } catch (_) {}
                 },
@@ -424,7 +427,10 @@ class AuthorPanel extends StatelessWidget {
                     GlobalData().dynamicsBlockedMids = blockedMids;
                     DynamicsDataModel.dynamicsBlockedMids = blockedMids;
                     SmartDialog.showToast(
-                      '已永久屏蔽${moduleAuthor.name}(${mid})，可在动态流设置中管理',
+                      uiTxP('已永久屏蔽{0}({1})，可在动态流设置中管理', [
+                        moduleAuthor.name,
+                        mid,
+                      ]),
                     );
                   } catch (_) {}
                 },
@@ -457,7 +463,7 @@ class AuthorPanel extends StatelessWidget {
                       Get.find<DynamicsController>().tempBannedList.remove(mid);
                     } catch (_) {}
                     SmartDialog.showToast(
-                      '已将${moduleAuthor.name}(${mid})加入白名单',
+                      uiTxP('已将{0}({1})加入白名单', [moduleAuthor.name, mid]),
                     );
                   } catch (_) {}
                 },
