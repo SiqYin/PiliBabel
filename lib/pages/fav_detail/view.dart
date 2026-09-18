@@ -467,7 +467,7 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
                             const SizedBox(height: 4),
                           ],
                           Text(
-                            '共${folderInfo.mediaCount}条视频 · '
+                            '${uiTxP('共{0}条视频 · ', [folderInfo.mediaCount])}'
                             '${BiliUtils.isPublicFavText(folderInfo.attr)}',
                             style: style,
                           ),

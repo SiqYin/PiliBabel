@@ -307,7 +307,9 @@ class _SettingPageState extends State<SettingPage> {
                   if (logoutAccounts.length != result.length) {
                     result.removeWhere(logoutAccounts.contains);
                     SmartDialog.showToast(
-                      '账号 ${result.map((i) => i.mid).join(",")} 退出登录失败',
+                      uiTxP('账号 {0} 退出登录失败', [
+                        result.map((i) => i.mid).join(","),
+                      ]),
                     );
                   }
                 }

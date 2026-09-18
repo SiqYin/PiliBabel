@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -57,7 +58,9 @@ class _MemberGuardState extends State<MemberGuard> {
   Widget build(BuildContext context) {
     return SimpleScaffold(
       appBar: AppBar(
-        title: Text('$_userName的舰队${_count == null ? '' : '($_count)'}'),
+        title: Text(
+          uiTxP('{0}的舰队{1}', [_userName, _count == null ? '' : '($_count)']),
+        ),
       ),
       body: refreshIndicator(
         onRefresh: _controller.onRefresh,

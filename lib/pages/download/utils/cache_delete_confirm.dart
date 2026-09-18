@@ -79,7 +79,7 @@ Future<bool> confirmRemoveEntriesFromFolder({
   SmartDialog.dismiss();
   if (result.failed.isNotEmpty) {
     SmartDialog.showToast(
-      '${result.failed.length} 个本地离线缓存删除失败，已保留在文件夹中',
+      uiTxP('{0} 个本地离线缓存删除失败，已保留在文件夹中', [result.failed.length]),
     );
   }
   return true;
@@ -150,7 +150,7 @@ Future<bool> confirmDeleteFolders({
   SmartDialog.dismiss();
   if (result.failed.isNotEmpty) {
     SmartDialog.showToast(
-      '${result.failed.length} 个本地离线缓存删除失败，已保留在文件夹中',
+      uiTxP('{0} 个本地离线缓存删除失败，已保留在文件夹中', [result.failed.length]),
     );
   }
   return true;

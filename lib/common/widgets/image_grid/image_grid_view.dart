@@ -262,7 +262,7 @@ class ImageGridView extends StatelessWidget {
               child = Hero(tag: '${item.url}$hashCode', child: child);
             }
             child = Semantics(
-              label: '图片，第 ${index + 1} 张，共 ${picArr.length} 张',
+              label: uiTxP('图片，第 {0} 张，共 {1} 张', [index + 1, picArr.length]),
               button: true,
               onTap: onTap,
               child: child,

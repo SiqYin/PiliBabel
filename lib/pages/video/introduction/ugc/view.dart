@@ -627,7 +627,11 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
                                   videoDuration: (duration / 1000).round(),
                                 );
                                 SmartDialog.showToast(
-                                  '提交搬运视频${res.isSuccess ? "成功" : "失败: $res"}',
+                                  uiTxP('提交搬运视频{0}', [
+                                    res.isSuccess
+                                        ? uiTx('成功')
+                                        : '${uiTx('失败')}: $res',
+                                  ]),
                                 );
                                 return;
                               }

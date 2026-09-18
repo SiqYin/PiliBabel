@@ -1593,7 +1593,7 @@ class HeaderControlState extends State<HeaderControl>
                     onChanged: updateFontScaleFS,
                   ),
                   ...sliderRow(
-                    title: '字体粗细 ${fontWeight + 1}（可能无法精确调节）',
+                    title: uiTxP('字体粗细 {0}（可能无法精确调节）', [fontWeight + 1]),
                     reset: resetBtn(theme, 6, () => updateFontWeight(5)),
                     min: 0,
                     max: 8,

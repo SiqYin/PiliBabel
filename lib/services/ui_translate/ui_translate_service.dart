@@ -348,6 +348,19 @@ class UiTranslateService extends GetxService {
 /// 才能在异步译文回来后自动刷新；否则仅在界面重建时取到缓存译文。
 String uiTx(String src) => UiTranslateService.tx(src);
 
+/// 带占位符的模板翻译：把含 `{0}`/`{1}`… 的整句模板作为一个稳定 key 送翻译，
+/// 再把参数回填（提示词已要求模型保留 `{n}` 占位符）。用于 `'共 {0} 条'` 这类句子。
+String uiTxP(String template, List<Object?> args) {
+  var out = UiTranslateService.tx(template);
+  for (var i = 0; i < args.length; i++) {
+    final token = '{$i}';
+    if (out.contains(token)) {
+      out = out.replaceAll(token, '${args[i]}');
+    }
+  }
+  return out;
+}
+
 /// 评论/动态正文取词：按条目 id 遵循各自的“显示原文”开关。
 String uiTxComment(String src, String id) =>
     Get.isRegistered<UiTranslateService>()

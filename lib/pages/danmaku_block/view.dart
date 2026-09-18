@@ -228,7 +228,9 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
                 );
               } else {
                 SmartDialog.showToast(
-                  '输入内容${filter.isEmpty ? "不能为空" : "与上次相同"}',
+                  uiTxP('输入内容{0}', [
+                    uiTx(filter.isEmpty ? '不能为空' : '与上次相同'),
+                  ]),
                 );
               }
             },

@@ -59,7 +59,10 @@ class MemberFavItem extends StatelessWidget {
                     ),
                     const Spacer(),
                     Text(
-                      '${item.count}个内容 · ${item.isPublic == 1 ? '私密' : '公开'}',
+                      uiTxP('{0}个内容 · {1}', [
+                        item.count,
+                        uiTx(item.isPublic == 1 ? '私密' : '公开'),
+                      ]),
                       style: TextStyle(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.outline,
