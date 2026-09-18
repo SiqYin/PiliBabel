@@ -78,7 +78,7 @@ class _FavSearchPageState
               .map(
                 (e) => PopupMenuItem(
                   value: e,
-                  child: Text(e.label),
+                  child: Text(uiTx(e.label)),
                 ),
               )
               .toList(),

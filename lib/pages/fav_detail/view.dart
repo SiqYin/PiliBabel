@@ -235,7 +235,7 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
                 .map(
                   (e) => PopupMenuItem(
                     value: e,
-                    child: Text(e.label),
+                    child: Text(uiTx(e.label)),
                   ),
                 )
                 .toList(),

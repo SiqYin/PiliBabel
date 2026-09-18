@@ -599,8 +599,7 @@ class _AudioPageState extends State<AudioPage> {
               ),
             ),
           ),
-          Text(
-            playMode.label,
+          Text(uiTx(playMode.label),
             style: TextStyle(fontSize: 13, color: color),
           ),
         ],

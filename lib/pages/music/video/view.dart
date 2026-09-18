@@ -161,7 +161,7 @@ class _MusicRecommendPageState extends State<MusicRecommendPage>
                   .map(
                     (e) => PopupMenuItem(
                       value: e,
-                      child: Text(e.label),
+                      child: Text(uiTx(e.label)),
                     ),
                   )
                   .toList(),

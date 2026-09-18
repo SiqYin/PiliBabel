@@ -622,7 +622,7 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
                         .map(
                           (item) => PopupMenuItem<SkipType>(
                             value: item,
-                            child: Text(item.label),
+                            child: Text(uiTx(item.label)),
                           ),
                         )
                         .toList(),

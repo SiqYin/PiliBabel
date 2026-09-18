@@ -395,8 +395,7 @@ class _WebviewPageState extends State<WebviewPage> with RouteAware {
       ),
       body: Center(
         child: Obx(
-          () => Text(
-            _dwwState.value.label,
+          () => Text(uiTx(_dwwState.value.label),
             style: TextStyle(
               fontSize: 13,
               color: Theme.of(context).colorScheme.onSurfaceVariant,

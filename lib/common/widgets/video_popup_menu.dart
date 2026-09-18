@@ -137,8 +137,7 @@ class VideoPopupMenu extends StatelessWidget {
         onTap: action.onPressed,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
-          child: Text(
-            action.label,
+          child: Text(uiTx(action.label),
             style: TextStyle(color: colorScheme.onSurfaceVariant),
           ),
         ),

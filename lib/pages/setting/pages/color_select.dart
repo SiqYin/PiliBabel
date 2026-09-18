@@ -171,8 +171,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
                               ),
                               selected: ctr.currentColor.value == i,
                             ),
-                            Text(
-                              e.label,
+                            Text(uiTx(e.label),
                               style: TextStyle(
                                 fontSize: 12,
                                 color: ctr.currentColor.value != i

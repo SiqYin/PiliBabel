@@ -407,8 +407,7 @@ class _PgcReviewChildPageState extends State<PgcReviewChildPage>
               color: theme.colorScheme.secondary,
             ),
             label: Obx(
-              () => Text(
-                _controller.sortType.value.label,
+              () => Text(uiTx(_controller.sortType.value.label),
                 style: TextStyle(
                   fontSize: 13,
                   color: theme.colorScheme.secondary,
