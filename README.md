@@ -63,12 +63,12 @@ The idea mirrors bilibili's official "AI interface translation", but it runs ent
 - **Thinking-mode switch** (`enable_thinking`) for quality-vs-speed, plus **"test translation"** and **clear-cache** buttons in settings.
 - **Fast language switching**: batched requests (≤ 40 strings per batch) with limited concurrency (≤ 8) against a persistent cache; switching language force-rebuilds the current screen once, so you are not left staring at untranslated text.
 
-**繁中**
+**中文**
 - **全面 AI 翻譯。** 導覽分頁、影片卡片、詳情頁、留言、動態，以及「我的／收藏／歷史／訊息／搜尋」等介面——全域掃描涵蓋**約 1,650+ 條介面字串**，並含動態內容（標題、作者名稱、互動計數）。
 - **模型自備。** 填入你自己的 OpenAI 相容端點（`/chat/completions`）的網址／API 金鑰／模型即可。AI 影片摘要與 AI 翻譯兩者擁有**完全獨立**的端點與設定，統一收在一個「**AI 功能**」頁面下。
-- **只翻一次，翻完即固定。** 每條原文**僅翻譯一次**，結果落地快取、重開畫面**絕不重翻**——與官方客户端同原理，翻譯穩定且可預期。
-- **選擇 App 語言。** 預設為簡體中文。可從約 35 種語言中挑選——English、日本語、한국어、Français、Deutsch、Español、Italiano、Русский、ไทย、Tiếng Việt、Bahasa Melayu / Bahasa Indonesia、Filipino、Türkçe、العربية、עברית，以及中文variants（簡體／繁體粵語、吳語、大陸／臺灣閩南語、藏語、蒙古語、維吾爾語……）。
-  - 選擇**中文**variant 時，**只翻外文→中文**，你原有的中文內容不動（取代並延伸原生「留言外文→中文」行為）。
+- **只翻一次，翻完即固定。** 每條原文**僅翻譯一次**，結果落地快取、重開畫面**絕不重翻**——與官方客戶端同原理，翻譯穩定且可預期。
+- **選擇 App 語言。** 預設為簡體中文。可從約 35 種語言中挑選——English、日本語、한국어、Français、Deutsch、Español、Italiano、Русский、ไทย、Tiếng Việt、Bahasa Melayu / Bahasa Indonesia、Filipino、Türkçe、العربية、עברית，以及中文變體（簡體／繁體粵語、吳語、大陸／臺灣閩南語、藏語、蒙古語、維吾爾語……）。
+  - 選擇**中文變體**時，**只翻外文→中文**，你原有的中文內容不動（取代並延伸原生「留言外文→中文」行為）。
   - 選擇**非中文**語言時，**整個介面**都會以該語言呈現。
   - 各語言的書寫規範（簡／繁體、臺灣教育部國字標準字體、地域用詞）只寫進**送給模型的提示詞**，不佔用介面。
 - **逐則留言的「原文 ⇄ 譯文」切換**（一個小圖示，不用中文詞）。`@提及 / [表情] / #話題# / 連結` 會作為 token 保留，**含超連結的留言也能翻譯且連結維持可點擊**。
@@ -95,14 +95,14 @@ The repository has **no i18n / ARB resource layer** — UI strings are hard-code
 
 **Design trade-offs / known limits.** Because strings are wrapped in place rather than extracted into resources, a few non-`Text` string parameters and some rich-text spans are still being filled in incrementally. Strings that double as **logic keys** (compared with `==`, used as tab names such as `简介`, or enum labels used in switches) are deliberately **not** blanket-wrapped, to avoid breaking behaviour. Danmaku translation is best-effort on a scrolling canvas — under extremely dense danmaku you may briefly see the original before the translation arrives. Translation needs network plus a configured model; without a translation endpoint, non-Chinese targets simply do not take effect.
 
-**繁中**
+**中文**
 
 本倉庫**沒有 i18n / ARB 資源層**——介面字串都是硬編碼的中文。PiliBabel 不去重寫每個元件，而是在其上疊加一層薄薄的翻譯層：
 
 1. **全域查詞包裝。** `lib/services/ui_translate/` 暴露頂層函式 `uiTx(String src)`。原本 `Text('中文')` 變成 `Text(uiTx('中文'))`。透過腳本 **codemod**（`tool/ui_translate_*.py`）對全專案套用——約 **223 個檔案 / 1,650+ 條字串**——並在必要處自動移除因而失效的 `const`（含泛型 `const X<T>(...)`、點號名 `const Positioned.fill(...)`，以及把 `static const` 的清單／映射宣告改成 `static final`）。
 2. **`GetxService` 核心**（`ui_translate_service.dart`）：
    - 持久的**原文 → 譯文**快取（以 GetStorage 支撐），每條字串只翻一次並永久複用；
-   - `tx()` 先讀 `RxInt revision`，再決定：未啟用→回傳原文；若目標為中文variant **且** 字串本身就像中文（`_looksChinese()` 比對 CJK 表意字與拉丁／假名／諺文／西里爾／阿拉伯／希伯來／泰文字母，外文字母比例低於約 25% 即跳過）→回傳原文；否則走快取或**入佇列**；
+   - `tx()` 先讀 `RxInt revision`，再決定：未啟用→回傳原文；若目標為中文變體 **且** 字串本身就像中文（`_looksChinese()` 比對 CJK 表意字與拉丁／假名／諺文／西里爾／阿拉伯／希伯來／泰文字母，外文字母比例低於約 25% 即跳過）→回傳原文；否則走快取或**入佇列**；
    - 佇列內容以**批次（≤ 40）**、**有限併發（≤ 8）**送出；譯文回傳時提升 `revision` / `contentRev`，外圍的 `Obx(...)` 元件就地重建。
 3. **傳輸通道**沿用與 AI 影片摘要同一條已驗證的**串流**通道——`AiChatService.streamChat` → `{base}/chat/completions`（`stream: true`，相容僅支援串流的閘道）——並擴充讓翻譯能用**自己**的 `apiUrl` / `apiKey` / `model` 與 `enable_thinking` 旗標。此改動**向後相容**，影片摘要照常運作。
 4. **語言表**（`app_language.dart`）：每個 `AppLanguage` 帶有顯示用的自稱名，以及編入書寫／地域規範的 `toModel` 提示字串——這些規範只透過提示詞送達模型。
@@ -116,7 +116,7 @@ The repository has **no i18n / ARB resource layer** — UI strings are hard-code
 
 **EN.** The app is built with a patched Flutter SDK plus patched `material_ui` / `cupertino_ui` packages via `lib/scripts/patch.ps1` and `lib/scripts/build.ps1` (exactly like PiliNara / PiliPlus). This repo ships a GitHub Actions workflow (`.github/workflows/ui-translate-debug.yml`) that produces a **debug APK** on every push, so the translation layer and the rebrand are continuously compile-verified.
 
-**繁中。** 本 App 以「打了補丁的 Flutter SDK」加上補丁版 `material_ui` / `cupertino_ui` 套件建置，透過 `lib/scripts/patch.ps1` 與 `lib/scripts/build.ps1` 完成（與 PiliNara / PiliPlus 完全相同）。本倉庫附帶 GitHub Actions 工作流（`.github/workflows/ui-translate-debug.yml`），每次 push 即產出 **debug APK**，讓翻譯層與品牌改造持續通過編譯驗證。
+**中文。** 本 App 以「打了補丁的 Flutter SDK」加上補丁版 `material_ui` / `cupertino_ui` 套件建置，透過 `lib/scripts/patch.ps1` 與 `lib/scripts/build.ps1` 完成（與 PiliNara / PiliPlus 完全相同）。本倉庫附帶 GitHub Actions 工作流（`.github/workflows/ui-translate-debug.yml`），每次 push 即產出 **debug APK**，讓翻譯層與品牌改造持續通過編譯驗證。
 
 <br/>
 
@@ -133,13 +133,13 @@ The repository has **no i18n / ARB resource layer** — UI strings are hard-code
 
 **EN.** Grab a build from **Releases**, or clone the repo and build it locally.
 
-**繁中。** 於 **Releases** 頁面下載建置产物，或将倉庫 clone 到本地自行編譯。
+**中文。** 於 **Releases** 頁面下載建置產物，或將倉庫 clone 到本地自行編譯。
 
 ### Arch Linux
 
 **EN.** Thanks to [@nlsdt](https://github.com/nlsdt) for packaging (the PiliNara recipe carries over to PiliBabel).
 
-**繁中。** 感謝 [@nlsdt](https://github.com/nlsdt) 打包（PiliNara 的打包配方同樣適用於 PiliBabel）。
+**中文。** 感謝 [@nlsdt](https://github.com/nlsdt) 打包（PiliNara 的打包配方同樣適用於 PiliBabel）。
 
 ```bash
 sudo pacman -S pilinara      # via the Arch Linux CN repository / 經 Arch Linux 中文（CN）倉庫
@@ -152,7 +152,7 @@ paru -S pilinara-bin         # or via AUR: pilinara-bin (prebuilt) / pilinara (s
 
 **EN.** Everything below is carried over from PiliNara (and, transitively, PiliPlus); PiliBabel adds the AI translation layer on top.
 
-**繁中。** 以下皆繼承自 PiliNara（並追溯繼承自 PiliPlus）；PiliBabel 在其上疊加了 AI 翻譯層。
+**中文。** 以下皆繼承自 PiliNara（並追溯繼承自 PiliPlus）；PiliBabel 在其上疊加了 AI 翻譯層。
 
 **UI & platform adaptation / 基礎適配與介面**
 - [x] App renamed per platform so multiple clients can coexist (PiliBabel installs alongside PiliNara) ／ 各平台更名以實現多客戶端共存（PiliBabel 可與 PiliNara 並存安裝）
@@ -199,7 +199,7 @@ paru -S pilinara-bin         # or via AUR: pilinara-bin (prebuilt) / pilinara (s
 
 **EN.** PiliBabel is a personal, interest-driven project, provided **for learning and testing only**; please delete it within **24 hours** of download.
 
-**繁中。** 本專案（PiliBabel）為個人興趣開發，**僅供學習與測試**；請在下載後 **24 小時內**刪除。
+**中文。** 本專案（PiliBabel）為個人興趣開發，**僅供學習與測試**；請在下載後 **24 小時內**刪除。
 
 **EN**
 - PiliBabel is an **unofficial third-party** client and is **not affiliated with, endorsed by, or sponsored by bilibili**.
@@ -207,21 +207,21 @@ paru -S pilinara-bin         # or via AUR: pilinara-bin (prebuilt) / pilinara (s
 - **AI translation runs entirely on the user's own third-party model endpoint.** Translation quality and compliance are the responsibility of the user and their chosen model provider; this project hosts **no model and no API key**.
 - Respect copyright and bilibili's Terms of Service. Use responsibly.
 
-**繁中**
+**中文**
 - PiliBabel 為**非官方第三方**客戶端，與 bilibili **無任何隸屬、授權或贊助關係**。
 - 所有 API 均取自官方公開介面，**不提供任何破解、越權或繞過付費限制的內容**。
 - **AI 翻譯完全由使用者自備的第三方模型端點驅動。** 翻譯品質與合規由使用者及其選用的模型服務商負責；本專案**不託管任何模型或 API 金鑰**。
 - 請尊重智慧財產權與 bilibili 的服務條款，合理使用。
 
 **EN.** With respect to the original and upstream authors for their open-source dedication:
-**繁中.** 謹此致敬原作者與上游作者對開源的無私奉獻：
+**中文.** 謹此致敬原作者與上游作者對開源的無私奉獻：
 - [guozhigq/pilipala](https://github.com/guozhigq/pilipala)
 - [orz12/PiliPalaX](https://github.com/orz12/PiliPalaX)
 - [bggRGjQaUbCoE/PiliPlus](https://github.com/bggRGjQaUbCoE/PiliPlus)
 - [Starfallan/PiliNara](https://github.com/Starfallan/PiliNara) — the direct parent project of PiliBabel / PiliBabel 的直接父專案
 
 **EN.** If any content infringes your rights, please contact us for takedown.
-**繁中.** 若任何內容侵犯了您的權益，請聯繫我們下架處理。
+**中文.** 若任何內容侵犯了您的權益，請聯繫我們下架處理。
 
 <br/>
 
@@ -229,11 +229,11 @@ paru -S pilinara-bin         # or via AUR: pilinara-bin (prebuilt) / pilinara (s
 
 **EN.** PiliBabel is licensed under the **GNU General Public License v3.0 (GPL-3.0)** — the same license as PiliNara, PiliPlus and PiliPala. Because it is a derivative work, **PiliBabel must also be distributed under GPL-3.0**: you are free to use, study, share and modify it, provided you keep the same license, the copyright notices, and this license text. See [`LICENSE`](./LICENSE).
 
-**繁中.** PiliBabel 以 **GNU 通用公共授權條款 v3.0（GPL-3.0）** 授權——與 PiliNara、PiliPlus、PiliPala 相同。因其為衍生作品，**PiliBabel 亦須以 GPL-3.0 分發**：你可自由使用、研究、分享與修改，前提是保留相同授權、版權聲明與本授權全文。見 [`LICENSE`](./LICENSE)。
+**中文.** PiliBabel 以 **GNU 通用公共授權條款 v3.0（GPL-3.0）** 授權——與 PiliNara、PiliPlus、PiliPala 相同。因其為衍生作品，**PiliBabel 亦須以 GPL-3.0 分發**：你可自由使用、研究、分享與修改，前提是保留相同授權、版權聲明與本授權全文。見 [`LICENSE`](./LICENSE)。
 
 **EN.** Third-party components (Flutter packages, [`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect), [`media-kit`](https://github.com/media-kit/media-kit), [`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer), [`dio`](https://pub.dev/packages/dio), etc.) remain under their own licenses.
 
-**繁中.** 第三方元件（Flutter 套件、[`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect)、[`media-kit`](https://github.com/media-kit/media-kit)、[`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer)、[`dio`](https://pub.dev/packages/dio) 等）仍適用其各自授權條款。
+**中文.** 第三方元件（Flutter 套件、[`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect)、[`media-kit`](https://github.com/media-kit/media-kit)、[`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer)、[`dio`](https://pub.dev/packages/dio) 等）仍適用其各自授權條款。
 
 <br/>
 
