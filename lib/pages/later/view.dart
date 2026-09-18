@@ -197,7 +197,7 @@ class _LaterPageState extends State<LaterPage>
         title: Text(uiTx('稍后再看')),
         actions: [
           IconButton(
-            tooltip: '搜索',
+            tooltip: uiTx('搜索'),
             onPressed: () {
               final mid = Accounts.main.mid;
               Get.toNamed(
@@ -219,7 +219,7 @@ class _LaterPageState extends State<LaterPage>
               final value = currCtr().asc.value;
               return StaticPopupMenuButton(
                 initialValue: value,
-                tooltip: '排序',
+                tooltip: uiTx('排序'),
                 onSelected: (value) => currCtr()
                   ..asc.value = value
                   ..onReload(),
@@ -263,7 +263,7 @@ class _LaterPageState extends State<LaterPage>
             },
           ),
           StaticPopupMenuButton(
-            tooltip: '清空',
+            tooltip: uiTx('清空'),
             borderRadius: const .all(.circular(20)),
             child: Padding(
               padding: const .symmetric(horizontal: 12, vertical: 6),

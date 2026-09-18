@@ -132,7 +132,7 @@ class _GroupPanelState extends State<GroupPanel> {
         AppBar(
           backgroundColor: Colors.transparent,
           leading: IconButton(
-            tooltip: '关闭',
+            tooltip: uiTx('关闭'),
             onPressed: Get.back,
             icon: const Icon(Icons.close_outlined),
           ),

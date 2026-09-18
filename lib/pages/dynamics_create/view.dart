@@ -228,7 +228,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
                   controller: _titleEditCtr,
                   style: const TextStyle(fontWeight: FontWeight.bold),
                   decoration: InputDecoration(
-                    hintText: '标题，选填20字',
+                    hintText: uiTx('标题，选填20字'),
                     isDense: true,
                     visualDensity: .standard,
                     contentPadding: EdgeInsets.zero,
@@ -333,7 +333,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
             width: 34,
             height: 34,
             child: IconButton(
-              tooltip: '返回',
+              tooltip: uiTx('返回'),
               style: ButtonStyle(
                 padding: const WidgetStatePropertyAll(EdgeInsets.zero),
                 backgroundColor: WidgetStatePropertyAll(
@@ -695,7 +695,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
       }
     },
     icon: const Icon(Icons.bar_chart_rounded, size: 24),
-    tooltip: '投票',
+    tooltip: uiTx('投票'),
     selected: false,
   );
 
@@ -710,7 +710,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
       onChanged: onChanged,
       onSubmitted: onSubmitted,
       decoration: InputDecoration(
-        hintText: '说点什么吧',
+        hintText: uiTx('说点什么吧'),
         visualDensity: .standard,
         hintStyle: TextStyle(color: theme.colorScheme.outline),
         border: const OutlineInputBorder(

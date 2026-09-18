@@ -72,7 +72,7 @@ class _SearchUserPanelState
               width: 32,
               height: 32,
               child: IconButton(
-                tooltip: '筛选',
+                tooltip: uiTx('筛选'),
                 style: const ButtonStyle(
                   padding: WidgetStatePropertyAll(EdgeInsets.zero),
                 ),

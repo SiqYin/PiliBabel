@@ -131,7 +131,7 @@ class _SeasonPanelState extends State<SeasonPanel> {
                   color: theme.colorScheme.primary,
                   height: 12,
                   cacheHeight: 12.cacheSize(context),
-                  semanticLabel: "正在播放：",
+                  semanticLabel: uiTx("正在播放："),
                 ),
                 const SizedBox(width: 10),
                 Obx(
@@ -143,10 +143,10 @@ class _SeasonPanelState extends State<SeasonPanel> {
                   ),
                 ),
                 const SizedBox(width: 6),
-                const Icon(
+                Icon(
                   Icons.arrow_forward_ios_outlined,
                   size: 13,
-                  semanticLabel: '查看',
+                  semanticLabel: uiTx('查看'),
                 ),
               ],
             ),

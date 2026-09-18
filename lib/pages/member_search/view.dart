@@ -27,7 +27,7 @@ class _MemberSearchPageState extends State<MemberSearchPage> {
       appBar: AppBar(
         actions: [
           IconButton(
-            tooltip: '搜索',
+            tooltip: uiTx('搜索'),
             onPressed: _controller.submit,
             icon: const Icon(Icons.search, size: 22),
           ),
@@ -40,11 +40,11 @@ class _MemberSearchPageState extends State<MemberSearchPage> {
           textInputAction: TextInputAction.search,
           textAlignVertical: TextAlignVertical.center,
           decoration: InputDecoration(
-            hintText: '搜索',
+            hintText: uiTx('搜索'),
             visualDensity: .standard,
             border: InputBorder.none,
             suffixIcon: IconButton(
-              tooltip: '清空',
+              tooltip: uiTx('清空'),
               icon: const Icon(Icons.clear, size: 22),
               onPressed: _controller.onClear,
             ),

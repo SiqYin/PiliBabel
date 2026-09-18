@@ -235,7 +235,7 @@ class _LoginPageState extends State<LoginPage> {
               leading: const Icon(Icons.language_outlined),
               title: Text(uiTx('网页登录')),
               trailing: IconButton(
-                tooltip: '关闭',
+                tooltip: uiTx('关闭'),
                 icon: const Icon(Icons.close),
                 onPressed: () => Navigator.of(context).pop(false),
               ),
@@ -269,8 +269,8 @@ class _LoginPageState extends State<LoginPage> {
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.account_box),
               border: const UnderlineInputBorder(),
-              labelText: '账号',
-              hintText: '邮箱/手机号',
+              labelText: uiTx('账号'),
+              hintText: uiTx('邮箱/手机号'),
               suffixIcon: IconButton(
                 onPressed: _loginPageCtr.usernameTextController.clear,
                 icon: const Icon(Icons.clear),
@@ -289,7 +289,7 @@ class _LoginPageState extends State<LoginPage> {
             decoration: InputDecoration(
               prefixIcon: const Icon(Icons.password),
               border: const UnderlineInputBorder(),
-              labelText: '密码',
+              labelText: uiTx('密码'),
               suffixIcon: IconButton(
                 onPressed: _loginPageCtr.passwordTextController.clear,
                 icon: const Icon(Icons.clear),
@@ -471,7 +471,7 @@ class _LoginPageState extends State<LoginPage> {
                     ],
                     decoration: InputDecoration(
                       border: InputBorder.none,
-                      labelText: '手机号',
+                      labelText: uiTx('手机号'),
                       suffixIcon: IconButton(
                         onPressed: _loginPageCtr.telTextController.clear,
                         icon: const Icon(Icons.clear),
@@ -496,10 +496,10 @@ class _LoginPageState extends State<LoginPage> {
                 Expanded(
                   child: TextField(
                     controller: _loginPageCtr.smsCodeTextController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       prefixIcon: Icon(Icons.sms_outlined),
                       border: InputBorder.none,
-                      labelText: '验证码',
+                      labelText: uiTx('验证码'),
                     ),
                     keyboardType: TextInputType.number,
                     inputFormatters: <TextInputFormatter>[
@@ -559,7 +559,7 @@ class _LoginPageState extends State<LoginPage> {
     return SimpleScaffold(
       appBar: AppBar(
         leading: IconButton(
-          tooltip: '关闭',
+          tooltip: uiTx('关闭'),
           icon: const Icon(Icons.close_outlined),
           onPressed: Get.back,
         ),

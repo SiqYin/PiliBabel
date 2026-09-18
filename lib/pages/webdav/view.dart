@@ -54,16 +54,16 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
           children: [
             TextField(
               controller: _uriCtr,
-              decoration: const InputDecoration(
-                labelText: '地址',
+              decoration: InputDecoration(
+                labelText: uiTx('地址'),
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 20),
             TextField(
               controller: _usernameCtr,
-              decoration: const InputDecoration(
-                labelText: '用户',
+              decoration: InputDecoration(
+                labelText: uiTx('用户'),
                 border: OutlineInputBorder(),
               ),
             ),
@@ -72,7 +72,7 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
               controller: _passwordCtr,
               autofillHints: const [AutofillHints.password],
               decoration: InputDecoration(
-                labelText: '密码',
+                labelText: uiTx('密码'),
                 border: const OutlineInputBorder(),
                 suffixIcon: IconButton(
                   onPressed: () => setState(() => _obscureText = !_obscureText),
@@ -86,8 +86,8 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
             const SizedBox(height: 20),
             TextField(
               controller: _directoryCtr,
-              decoration: const InputDecoration(
-                labelText: '路径',
+              decoration: InputDecoration(
+                labelText: uiTx('路径'),
                 border: OutlineInputBorder(),
               ),
             ),

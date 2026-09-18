@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
@@ -26,7 +27,7 @@ class _LiveSearchPageState extends State<LiveSearchPage> {
       appBar: AppBar(
         actions: [
           IconButton(
-            tooltip: '搜索',
+            tooltip: uiTx('搜索'),
             onPressed: _controller.submit,
             icon: const Icon(Icons.search, size: 22),
           ),
@@ -39,11 +40,11 @@ class _LiveSearchPageState extends State<LiveSearchPage> {
           textInputAction: TextInputAction.search,
           textAlignVertical: TextAlignVertical.center,
           decoration: InputDecoration(
-            hintText: '搜索房间或主播',
+            hintText: uiTx('搜索房间或主播'),
             visualDensity: .standard,
             border: InputBorder.none,
             suffixIcon: IconButton(
-              tooltip: '清空',
+              tooltip: uiTx('清空'),
               icon: const Icon(Icons.clear, size: 22),
               onPressed: _controller.onClear,
             ),

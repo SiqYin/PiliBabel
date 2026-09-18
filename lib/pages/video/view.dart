@@ -1327,7 +1327,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                       width: 42,
                       height: 34,
                       child: IconButton(
-                        tooltip: '返回',
+                        tooltip: uiTx('返回'),
                         icon: Icon(
                           FontAwesomeIcons.arrowLeft,
                           size: 15,
@@ -1340,7 +1340,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                       width: 42,
                       height: 34,
                       child: IconButton(
-                        tooltip: '返回主页',
+                        tooltip: uiTx('返回主页'),
                         icon: Icon(
                           FontAwesomeIcons.house,
                           size: 15,
@@ -1362,7 +1362,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                         width: 42,
                         height: 34,
                         child: IconButton(
-                          tooltip: "更多设置",
+                          tooltip: uiTx("更多设置"),
                           style: const ButtonStyle(
                             padding: WidgetStatePropertyAll(EdgeInsets.zero),
                           ),
@@ -1788,7 +1788,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                   width: 42,
                   height: 34,
                   child: IconButton(
-                    tooltip: '返回',
+                    tooltip: uiTx('返回'),
                     icon: const Icon(
                       FontAwesomeIcons.arrowLeft,
                       size: 15,
@@ -1807,7 +1807,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
                   width: 42,
                   height: 34,
                   child: IconButton(
-                    tooltip: '返回主页',
+                    tooltip: uiTx('返回主页'),
                     icon: const Icon(
                       FontAwesomeIcons.house,
                       size: 15,

@@ -1164,9 +1164,9 @@ void _showProxyDialog(BuildContext context) {
           const SizedBox(height: 6),
           TextFormField(
             initialValue: systemProxyHost,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               isDense: true,
-              labelText: '请输入Host，使用 . 分割',
+              labelText: uiTx('请输入Host，使用 . 分割'),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(6)),
               ),
@@ -1177,9 +1177,9 @@ void _showProxyDialog(BuildContext context) {
           TextFormField(
             initialValue: systemProxyPort,
             keyboardType: TextInputType.number,
-            decoration: const InputDecoration(
+            decoration: InputDecoration(
               isDense: true,
-              labelText: '请输入Port',
+              labelText: uiTx('请输入Port'),
               border: OutlineInputBorder(borderRadius: .all(.circular(6))),
             ),
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],

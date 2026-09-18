@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/skeleton/video_reply.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -136,7 +137,7 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
                     replyType: _videoReplyController.videoType.replyType,
                   );
                 },
-                tooltip: '发表评论',
+                tooltip: uiTx('发表评论'),
                 child: const Icon(Icons.reply),
               ),
             ),

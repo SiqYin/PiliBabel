@@ -244,7 +244,7 @@ class _PagesPanelState extends State<PagesPanel> {
                                           cacheHeight: 12.cacheSize(
                                             context,
                                           ),
-                                          semanticLabel: "正在播放：",
+                                          semanticLabel: uiTx("正在播放："),
                                         ),
                                       ),
                                     )

@@ -106,7 +106,7 @@ class _FollowPageState extends State<FollowPage>
                 _followController.onCreateFavTag,
               ),
               icon: const Icon(Icons.add),
-              tooltip: '新建分组',
+              tooltip: uiTx('新建分组'),
             ),
             IconButton(
               onPressed: () {
@@ -116,7 +116,7 @@ class _FollowPageState extends State<FollowPage>
                 Get.to(FollowTagSortPage(controller: _followController));
               },
               icon: const Icon(Icons.sort),
-              tooltip: '分组排序',
+              tooltip: uiTx('分组排序'),
             ),
             IconButton(
               onPressed: () => Get.toNamed(
@@ -126,7 +126,7 @@ class _FollowPageState extends State<FollowPage>
                 },
               ),
               icon: const Icon(Icons.search_outlined),
-              tooltip: '搜索',
+              tooltip: uiTx('搜索'),
             ),
             StaticPopupMenuButton(
               icon: const Icon(Icons.more_vert),

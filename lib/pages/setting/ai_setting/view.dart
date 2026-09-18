@@ -352,8 +352,8 @@ class AiSettingPage extends StatelessWidget {
           children: [
             TextField(
               controller: nameCtl,
-              decoration: const InputDecoration(
-                labelText: '模板名称',
+              decoration: InputDecoration(
+                labelText: uiTx('模板名称'),
                 border: OutlineInputBorder(),
               ),
             ),
@@ -361,8 +361,8 @@ class AiSettingPage extends StatelessWidget {
             TextField(
               controller: promptCtl,
               maxLines: 5,
-              decoration: const InputDecoration(
-                labelText: '提示词内容',
+              decoration: InputDecoration(
+                labelText: uiTx('提示词内容'),
                 border: OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),

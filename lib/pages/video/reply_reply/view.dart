@@ -80,7 +80,7 @@ class VideoReplyReplyPanel extends CommonSlidePage {
           title: Text(uiTx('评论详情')),
           actions: [
             IconButton(
-              tooltip: '前往',
+              tooltip: uiTx('前往'),
               onPressed: uri == null
                   ? null
                   : () => PiliScheme.routePush(uri, businessId: type),
@@ -172,7 +172,7 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
                       children: <Widget>[
                         Text(isDialogue ? '对话列表' : '评论详情'),
                         IconButton(
-                          tooltip: '关闭',
+                          tooltip: uiTx('关闭'),
                           icon: const Icon(Icons.close, size: 20),
                           onPressed: Get.back,
                         ),

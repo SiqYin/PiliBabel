@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/pages/live_room/controller.dart';
@@ -58,7 +59,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
             PlayOrPauseButton(plPlayerController: plPlayerController),
             ComBtn(
               height: 30,
-              tooltip: '刷新',
+              tooltip: uiTx('刷新'),
               icon: const Icon(
                 Icons.refresh,
                 size: 18,
@@ -69,7 +70,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
             const Spacer(),
             ComBtn(
               height: 30,
-              tooltip: '屏蔽',
+              tooltip: uiTx('屏蔽'),
               icon: const Icon(
                 size: 18,
                 Icons.block,
@@ -96,7 +97,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
                     plPlayerController.enableShowLiveDanmaku.value;
                 return ComBtn(
                   height: 30,
-                  tooltip: "${enableShowLiveDanmaku ? '关闭' : '开启'}弹幕",
+                  tooltip: uiTx("${enableShowLiveDanmaku ? '关闭' : '开启'}弹幕"),
                   icon: enableShowLiveDanmaku
                       ? const Icon(
                           size: 18,
@@ -123,7 +124,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
             ),
             ComBtn(
               height: 30,
-              tooltip: '弹幕设置',
+              tooltip: uiTx('弹幕设置'),
               icon: const Icon(
                 size: 18,
                 CustomIcons.dm_settings,
@@ -133,7 +134,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
             ),
             Obx(
               () => StaticPopupMenuButton<VideoFitType>(
-                tooltip: '画面比例',
+                tooltip: uiTx('画面比例'),
                 initialValue: plPlayerController.videoFit.value,
                 color: Colors.black.withValues(alpha: 0.8),
                 menuPadding: EdgeInsets.zero,
@@ -170,7 +171,7 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
             ),
             Obx(
               () => StaticPopupMenuButton<int>(
-                tooltip: '画质',
+                tooltip: uiTx('画质'),
                 padding: EdgeInsets.zero,
                 initialValue: liveRoomCtr.currentQn,
                 color: Colors.black.withValues(alpha: 0.8),

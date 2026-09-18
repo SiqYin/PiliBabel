@@ -414,7 +414,7 @@ class LoginPageController extends GetxController
                   controller: textFieldController,
                   textAlign: TextAlign.center,
                   decoration: InputDecoration(
-                    hintText: "请输入短信验证码",
+                    hintText: uiTx("请输入短信验证码"),
                     hintStyle: const TextStyle(fontSize: 15),
                     suffixIcon: iconButton(
                       icon: const Icon(Icons.clear),

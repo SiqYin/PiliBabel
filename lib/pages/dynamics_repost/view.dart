@@ -235,7 +235,7 @@ class _RepostPanelState extends CommonRichTextPubPageState<RepostPanel>
       onSubmitted: onSubmitted,
       readOnly: readOnly.value,
       decoration: InputDecoration(
-        hintText: '说点什么吧',
+        hintText: uiTx('说点什么吧'),
         hintStyle: TextStyle(color: theme.colorScheme.outline),
         border: const OutlineInputBorder(
           borderSide: BorderSide.none,
@@ -282,7 +282,7 @@ class _RepostPanelState extends CommonRichTextPubPageState<RepostPanel>
                   width: 34,
                   height: 34,
                   child: IconButton(
-                    tooltip: '返回',
+                    tooltip: uiTx('返回'),
                     style: ButtonStyle(
                       padding: const WidgetStatePropertyAll(EdgeInsets.zero),
                       backgroundColor: WidgetStatePropertyAll(

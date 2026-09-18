@@ -170,7 +170,7 @@ class _HistoryPageState extends State<HistoryPage>
     title: Text(uiTx('观看记录')),
     actions: [
       IconButton(
-        tooltip: '搜索',
+        tooltip: uiTx('搜索'),
         onPressed: () => Get.toNamed('/historySearch'),
         icon: const Icon(Icons.search_outlined),
       ),

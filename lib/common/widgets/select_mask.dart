@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -29,7 +30,7 @@ Widget selectMask(
           child: Icon(
             Icons.done_all_outlined,
             color: colorScheme.primary,
-            semanticLabel: '取消选择',
+            semanticLabel: uiTx('取消选择'),
           ),
         ),
       ),

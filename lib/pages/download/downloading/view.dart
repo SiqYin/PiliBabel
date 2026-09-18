@@ -50,7 +50,7 @@ class _DownloadingPageState extends State<DownloadingPage>
               title: Text(uiTx('正在缓存')),
               actions: [
                 IconButton(
-                  tooltip: '多选',
+                  tooltip: uiTx('多选'),
                   onPressed: () {
                     if (enableMultiSelect) {
                       handleSelect();

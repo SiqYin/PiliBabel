@@ -177,7 +177,7 @@ class _MemberPageState extends State<MemberPage> {
 
   Widget _reserveBtn(List<ReservationCardItem> list, ColorScheme theme) {
     return IconButton(
-      tooltip: '预约',
+      tooltip: uiTx('预约'),
       onPressed: () => _showReserveList(list),
       icon: ReserveButton(
         count: list.length,
@@ -263,7 +263,7 @@ class _MemberPageState extends State<MemberPage> {
                         mainAxisSize: .min,
                         children: [
                           iconButton(
-                            tooltip: '预约动态',
+                            tooltip: uiTx('预约动态'),
                             size: 32,
                             iconSize: 20,
                             iconColor: scheme.outline,
@@ -341,7 +341,7 @@ class _MemberPageState extends State<MemberPage> {
     if (_userController.reserves?.isNotEmpty ?? false)
       _reserveBtn(_userController.reserves!, theme),
     IconButton(
-      tooltip: '搜索',
+      tooltip: uiTx('搜索'),
       onPressed: () => Get.toNamed(
         '/memberSearch?mid=$_mid&uname=${_userController.username}',
       ),

@@ -63,12 +63,12 @@ class _MyReplyState extends State<MyReply> with DynMixin {
               icon: const Icon(Icons.clear_all),
             ),
           IconButton(
-            tooltip: '导出',
+            tooltip: uiTx('导出'),
             onPressed: _showExportDialog,
             icon: const Icon(Icons.file_upload_outlined),
           ),
           IconButton(
-            tooltip: '导入',
+            tooltip: uiTx('导入'),
             onPressed: _showImportDialog,
             icon: const Icon(Icons.file_download_outlined),
           ),

@@ -78,7 +78,7 @@ class _IntroDetailState extends State<PgcIntroPanel>
                 ),
               ),
               IconButton(
-                tooltip: '关闭',
+                tooltip: uiTx('关闭'),
                 icon: const Icon(Icons.close, size: 20),
                 onPressed: Get.back,
               ),

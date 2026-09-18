@@ -205,7 +205,7 @@ class HistoryItem extends StatelessWidget {
               height: 29,
               child: StaticPopupMenuButton(
                 padding: EdgeInsets.zero,
-                tooltip: '功能菜单',
+                tooltip: uiTx('功能菜单'),
                 icon: Icon(
                   Icons.more_vert_outlined,
                   color: theme.colorScheme.outline,

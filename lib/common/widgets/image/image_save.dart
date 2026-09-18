@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -64,7 +65,7 @@ void imageSaveDialog({
                       if (aid != null || bvid != null)
                         iconButton(
                           iconSize: _iconSize,
-                          tooltip: '稍后再看',
+                          tooltip: uiTx('稍后再看'),
                           onPressed: () => {
                             SmartDialog.dismiss(),
                             UserHttp.toViewLater(aid: aid, bvid: bvid),
@@ -75,7 +76,7 @@ void imageSaveDialog({
                         if (PlatformUtils.isMobile)
                           iconButton(
                             iconSize: _iconSize,
-                            tooltip: '分享',
+                            tooltip: uiTx('分享'),
                             onPressed: () {
                               SmartDialog.dismiss();
                               ImageUtils.onShareImg(cover);
@@ -85,7 +86,7 @@ void imageSaveDialog({
                         else
                           iconButton(
                             iconSize: 18,
-                            tooltip: '复制链接',
+                            tooltip: uiTx('复制链接'),
                             onPressed: () {
                               SmartDialog.dismiss();
                               Utils.copyText(cover);
@@ -94,7 +95,7 @@ void imageSaveDialog({
                           ),
                         iconButton(
                           iconSize: _iconSize,
-                          tooltip: '保存封面图',
+                          tooltip: uiTx('保存封面图'),
                           onPressed: () async {
                             bool saveStatus = await ImageUtils.downloadImg([
                               cover,

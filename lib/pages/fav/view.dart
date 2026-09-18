@@ -75,7 +75,7 @@ class _FavPageState extends State<FavPage> with SingleTickerProviderStateMixin {
                       },
                     ),
                     icon: const Icon(Icons.add),
-                    tooltip: '新建收藏夹',
+                    tooltip: uiTx('新建收藏夹'),
                   )
                 : const SizedBox.shrink(),
           ),
@@ -94,7 +94,7 @@ class _FavPageState extends State<FavPage> with SingleTickerProviderStateMixin {
                       }
                     },
                     icon: const Icon(Icons.sort),
-                    tooltip: '收藏夹排序',
+                    tooltip: uiTx('收藏夹排序'),
                   )
                 : const SizedBox.shrink(),
           ),
@@ -121,7 +121,7 @@ class _FavPageState extends State<FavPage> with SingleTickerProviderStateMixin {
                       }
                     },
                     icon: const Icon(Icons.search_outlined),
-                    tooltip: '搜索',
+                    tooltip: uiTx('搜索'),
                   )
                 : const SizedBox.shrink(),
           ),

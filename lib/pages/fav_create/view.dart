@@ -300,7 +300,7 @@ class _CreateFavPageState extends State<CreateFavPage> {
                     ],
                     decoration: InputDecoration(
                       isDense: true,
-                      hintText: '名称',
+                      hintText: uiTx('名称'),
                       hintStyle: TextStyle(
                         fontSize: 14,
                         color: theme.colorScheme.outline,
@@ -342,7 +342,7 @@ class _CreateFavPageState extends State<CreateFavPage> {
                       ],
                       decoration: InputDecoration(
                         isDense: true,
-                        hintText: '可填写简介',
+                        hintText: uiTx('可填写简介'),
                         hintStyle: TextStyle(
                           fontSize: 14,
                           color: theme.colorScheme.outline,

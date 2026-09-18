@@ -998,7 +998,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
             MdiIcons.incognito,
             size: 15,
             color: colorScheme.outline,
-            semanticLabel: '无痕',
+            semanticLabel: uiTx('无痕'),
           ),
         if (introController.isShowOnlineTotal)
           Obx(
@@ -1031,7 +1031,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
           }
         },
         child: Image.asset(
-          semanticLabel: 'AI总结',
+          semanticLabel: uiTx('AI总结'),
           Assets.ai,
           height: 18,
           width: 18,

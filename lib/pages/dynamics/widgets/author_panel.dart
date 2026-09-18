@@ -169,7 +169,7 @@ class AuthorPanel extends StatelessWidget {
             width: 32,
             height: 32,
             child: IconButton(
-              tooltip: '更多',
+              tooltip: uiTx('更多'),
               style: const ButtonStyle(
                 padding: WidgetStatePropertyAll(EdgeInsets.zero),
               ),

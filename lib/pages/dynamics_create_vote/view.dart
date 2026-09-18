@@ -82,7 +82,7 @@ class _CreateVotePageState extends State<CreateVotePage> {
                 ..title.value = value
                 ..updateCanCreate(),
               desc: '投票标题',
-              hintText: '请填写标题',
+              hintText: uiTx('请填写标题'),
               inputFormatters: [LengthLimitingTextInputFormatter(32)],
             ),
           ),
@@ -128,7 +128,7 @@ class _CreateVotePageState extends State<CreateVotePage> {
                         ..options[i].optDesc = value
                         ..updateCanCreate(),
                       desc: '选项${i + 1}',
-                      hintText: '选项内容，最多20字',
+                      hintText: uiTx('选项内容，最多20字'),
                       inputFormatters: [LengthLimitingTextInputFormatter(20)],
                     ),
                   )
@@ -338,7 +338,7 @@ class _CreateVotePageState extends State<CreateVotePage> {
           iconButton(
             size: 26,
             iconSize: 18,
-            tooltip: '移除',
+            tooltip: uiTx('移除'),
             icon: const Icon(Icons.clear),
             onPressed: onDel,
             iconColor: theme.colorScheme.onSurfaceVariant,

@@ -128,7 +128,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
           if (isFullScreen || plPlayerController.isDesktopPip)
             ComBtn(
               height: btnHeight,
-              tooltip: '返回',
+              tooltip: uiTx('返回'),
               icon: const Icon(FontAwesomeIcons.arrowLeft, size: 15),
               onTap: () {
                 if (plPlayerController.isDesktopPip) {
@@ -164,7 +164,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
           if (isFullScreen || PlatformUtils.isDesktop)
             ComBtn(
               height: btnHeight,
-              tooltip: '发弹幕',
+              tooltip: uiTx('发弹幕'),
               icon: const Icon(
                 size: 18,
                 Icons.comment_outlined,
@@ -175,7 +175,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
           if (Platform.isAndroid || (PlatformUtils.isDesktop && !isFullScreen))
             ComBtn(
               height: btnHeight,
-              tooltip: '画中画',
+              tooltip: uiTx('画中画'),
               onTap: () {
                 if (PlatformUtils.isDesktop) {
                   plPlayerController.toggleDesktopPip();
@@ -194,7 +194,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
           if (showCastButton)
             ComBtn(
               height: 30,
-              tooltip: '投屏',
+              tooltip: uiTx('投屏'),
               onTap: liveController.onCast,
               icon: const Icon(
                 size: 18,
@@ -205,7 +205,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
           Obx(
             () => ComBtn(
               height: btnHeight,
-              tooltip: '仅播放音频',
+              tooltip: uiTx('仅播放音频'),
               onTap: () {
                 plPlayerController.onlyPlayAudio.toggle();
                 plPlayerController.markManualOnlyPlayAudio(
@@ -248,7 +248,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
             }),
           ComBtn(
             height: btnHeight,
-            tooltip: '定时关闭',
+            tooltip: uiTx('定时关闭'),
             onTap: () => shutdownTimerService.showScheduleExitDialog(
               context,
               isFullScreen: isFullScreen,

@@ -26,7 +26,7 @@ class MultiSelectAppBarWidget extends StatelessWidget
       return AppBar(
         bottom: child.bottom,
         leading: IconButton(
-          tooltip: '取消',
+          tooltip: uiTx('取消'),
           onPressed: ctr.handleSelect,
           icon: const Icon(Icons.close_outlined),
         ),

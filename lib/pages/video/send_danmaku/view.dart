@@ -339,7 +339,7 @@ class _SendDanmakuPanelState extends CommonTextPubPageState<SendDanmakuPanel> {
             () {
               final isEmoji = panelType.value == PanelType.emoji;
               return iconButton(
-                tooltip: '弹幕样式',
+                tooltip: uiTx('弹幕样式'),
                 iconSize: 24,
                 onPressed: () => updatePanelType(isEmoji ? .keyboard : .emoji),
                 icon: const Icon(Icons.text_format),
@@ -364,7 +364,7 @@ class _SendDanmakuPanelState extends CommonTextPubPageState<SendDanmakuPanel> {
                 onSubmitted: onSubmitted,
                 focusNode: focusNode,
                 decoration: InputDecoration(
-                  hintText: "输入弹幕内容",
+                  hintText: uiTx("输入弹幕内容"),
                   border: InputBorder.none,
                   hintStyle: TextStyle(
                     fontSize: 15,
@@ -391,7 +391,7 @@ class _SendDanmakuPanelState extends CommonTextPubPageState<SendDanmakuPanel> {
           const SizedBox(width: 12),
           Obx(
             () => iconButton(
-              tooltip: '发送',
+              tooltip: uiTx('发送'),
               iconSize: 22,
               iconColor: enablePublish.value
                   ? theme.colorScheme.primary

@@ -41,7 +41,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
 
   Widget resetBtn(ThemeData theme, Object def, VoidCallback onPressed) {
     return iconButton(
-      tooltip: '默认值: $def',
+      tooltip: uiTx('默认值: $def'),
       icon: const Icon(Icons.refresh),
       onPressed: onPressed,
       iconColor: theme.colorScheme.outline,
@@ -595,7 +595,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                             ),
                           ),
                           iconButton(
-                            tooltip: '全部重置',
+                            tooltip: uiTx('全部重置'),
                             icon: const Icon(Icons.refresh),
                             onPressed: allDefault
                                 ? null

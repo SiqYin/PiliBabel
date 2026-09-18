@@ -103,7 +103,7 @@ class _MediaListPanelState extends State<MediaListPanel>
                 ),
                 iconButton(
                   iconSize: 20,
-                  tooltip: '关闭',
+                  tooltip: uiTx('关闭'),
                   icon: const Icon(Icons.close),
                   onPressed: Get.back,
                 ),

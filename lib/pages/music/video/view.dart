@@ -98,11 +98,11 @@ class _MusicRecommendPageState extends State<MusicRecommendPage>
                 textInputAction: TextInputAction.search,
                 textAlignVertical: TextAlignVertical.center,
                 decoration: InputDecoration(
-                  hintText: '搜索',
+                  hintText: uiTx('搜索'),
                   visualDensity: VisualDensity.standard,
                   border: InputBorder.none,
                   suffixIcon: IconButton(
-                    tooltip: '清空',
+                    tooltip: uiTx('清空'),
                     icon: const Icon(Icons.clear, size: 22),
                     onPressed: () {
                       _controller.searchController.clear();
@@ -146,14 +146,14 @@ class _MusicRecommendPageState extends State<MusicRecommendPage>
         actions: [
           if (!isSearch) ...[
             IconButton(
-              tooltip: '搜索',
+              tooltip: uiTx('搜索'),
               onPressed: () => _controller.isSearchMode.value = true,
               icon: const Icon(Icons.search_outlined),
             ),
             StaticPopupMenuButton<MusicRecommendOrderType>(
               icon: const Icon(Icons.sort),
               initialValue: _controller.order.value,
-              tooltip: '排序方式',
+              tooltip: uiTx('排序方式'),
               onSelected: (value) => _controller
                 ..order.value = value
                 ..applySortAndFilter(),

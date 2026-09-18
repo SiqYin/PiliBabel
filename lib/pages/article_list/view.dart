@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -192,7 +193,7 @@ class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
       ),
       actions: [
         IconButton(
-          tooltip: '浏览器打开',
+          tooltip: uiTx('浏览器打开'),
           onPressed: () => PageUtils.inAppWebview(
             '${HttpString.baseUrl}/read/mobile-readlist/rl${_controller.id}',
           ),

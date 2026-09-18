@@ -106,7 +106,7 @@ class _TitleBar extends StatelessWidget {
                 onPressed: liveRoomController.fansMedalLoading.value
                     ? null
                     : () => liveRoomController.loadFansMedal(force: true),
-                tooltip: '刷新',
+                tooltip: uiTx('刷新'),
               ),
             ),
           ],

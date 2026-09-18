@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/sliver/sliver_floating_header.dart';
 import 'package:PiliPlus/common/widgets/video_card/video_card_h.dart';
 import 'package:PiliPlus/models/common/search/video_search_type.dart';
@@ -86,7 +87,7 @@ class _SearchVideoPanelState
               width: 32,
               height: 32,
               child: IconButton(
-                tooltip: '筛选',
+                tooltip: uiTx('筛选'),
                 style: const ButtonStyle(
                   padding: WidgetStatePropertyAll(EdgeInsets.zero),
                 ),

@@ -194,7 +194,7 @@ class _PgcPanelState extends State<PgcPanel> {
                                     color: theme.primary,
                                     height: 12,
                                     cacheHeight: 12.cacheSize(context),
-                                    semanticLabel: "正在播放：",
+                                    semanticLabel: uiTx("正在播放："),
                                   ),
                                 ),
                               ),

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/skeleton/video_card_v.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -150,7 +151,7 @@ class _LivePageState extends State<LivePage>
                       size: 26,
                       iconSize: 16,
                       context: context,
-                      tooltip: '游戏赛事',
+                      tooltip: uiTx('游戏赛事'),
                       icon: const Icon(Icons.gamepad),
                       onPressed: () => Get.toNamed(
                         '/webview',
@@ -166,7 +167,7 @@ class _LivePageState extends State<LivePage>
                       size: 26,
                       iconSize: 16,
                       context: context,
-                      tooltip: '全部标签',
+                      tooltip: uiTx('全部标签'),
                       icon: const Icon(Icons.widgets),
                       onPressed: () => Get.to(const LiveAreaPage()),
                     ),

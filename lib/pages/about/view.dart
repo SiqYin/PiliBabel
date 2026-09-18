@@ -130,9 +130,9 @@ class _AboutPageState extends State<AboutPage> {
                   style: TextStyle(color: outline),
                   semanticsLabel: '与你一起，发现不一样的世界',
                 ),
-                const Icon(
+                Icon(
                   Icons.accessibility_new,
-                  semanticLabel: "无障碍适配",
+                  semanticLabel: uiTx("无障碍适配"),
                   size: 18,
                 ),
               ],

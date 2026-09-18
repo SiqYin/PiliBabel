@@ -204,7 +204,7 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
               title: Obx(() => Text(_controller.title.value)),
               actions: [
                 IconButton(
-                  tooltip: '多选',
+                  tooltip: uiTx('多选'),
                   onPressed: () {
                     if (enableMultiSelect) {
                       _controller.handleSelect();
@@ -216,7 +216,7 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
                 ),
                 Builder(
                   builder: (context) => IconButton(
-                    tooltip: '排序',
+                    tooltip: uiTx('排序'),
                     icon: const Icon(Icons.sort),
                     onPressed: () {
                       showStaticPositionMenu<_FolderSortAction>(

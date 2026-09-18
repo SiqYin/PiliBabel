@@ -77,7 +77,7 @@ class _FavNoteChildPageState extends State<FavNoteChildPage>
                 const SizedBox(width: 16),
                 iconButton(
                   size: 32,
-                  tooltip: '取消',
+                  tooltip: uiTx('取消'),
                   context: context,
                   icon: const Icon(Icons.clear),
                   onPressed: _favNoteController.onDisable,

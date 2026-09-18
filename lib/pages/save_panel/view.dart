@@ -552,7 +552,7 @@ class _SavePanelState extends State<SavePanel> {
                 children: [
                   iconButton(
                     size: 42,
-                    tooltip: '关闭',
+                    tooltip: uiTx('关闭'),
                     icon: const Icon(Icons.clear),
                     onPressed: Get.back,
                     bgColor: colorScheme.onInverseSurface,
@@ -572,14 +572,14 @@ class _SavePanelState extends State<SavePanel> {
                   if (PlatformUtils.isMobile)
                     iconButton(
                       size: 42,
-                      tooltip: '分享',
+                      tooltip: uiTx('分享'),
                       context: context,
                       icon: const Icon(Icons.share),
                       onPressed: () => _onSaveOrSharePic(true),
                     ),
                   iconButton(
                     size: 42,
-                    tooltip: '保存',
+                    tooltip: uiTx('保存'),
                     context: context,
                     icon: const Icon(Icons.save_alt),
                     onPressed: _onSaveOrSharePic,

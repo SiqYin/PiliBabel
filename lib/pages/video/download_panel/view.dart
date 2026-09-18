@@ -468,7 +468,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
                           color: primary,
                           height: 12,
                           cacheHeight: 12.cacheSize(context),
-                          semanticLabel: '正在播放：',
+                          semanticLabel: uiTx('正在播放：'),
                         ),
                       Expanded(
                         child: Stack(

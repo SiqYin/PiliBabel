@@ -68,7 +68,7 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
           bottom: kFloatingActionButtonMargin + padding.bottom,
         ),
         child: FloatingActionButton(
-          tooltip: '添加',
+          tooltip: uiTx('添加'),
           onPressed: _addShieldKeyword,
           child: const Icon(Icons.add),
         ),

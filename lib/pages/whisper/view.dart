@@ -35,7 +35,7 @@ class _WhisperPageState extends State<WhisperPage> {
         title: Text(uiTx('消息')),
         actions: [
           IconButton(
-            tooltip: '新增粉丝',
+            tooltip: uiTx('新增粉丝'),
             onPressed: () => Get.toNamed(
               '/webview',
               parameters: {

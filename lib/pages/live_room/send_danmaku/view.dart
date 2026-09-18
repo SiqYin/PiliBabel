@@ -62,7 +62,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<LiveSendDmPanel> {
       final medal = liveRoomController.wearingMedal.value;
       if (medal == null) {
         return ToolbarIconButton(
-          tooltip: '粉丝勋章',
+          tooltip: uiTx('粉丝勋章'),
           selected: false,
           icon: const Icon(Icons.workspace_premium_outlined, size: 22),
           onPressed: _showFansMedalPanel,
@@ -179,8 +179,8 @@ class _ReplyPageState extends CommonRichTextPubPageState<LiveSendDmPanel> {
               onChanged: onChanged,
               onSubmitted: onSubmitted,
               focusNode: focusNode,
-              decoration: const InputDecoration(
-                hintText: "输入弹幕内容",
+              decoration: InputDecoration(
+                hintText: uiTx("输入弹幕内容"),
                 border: InputBorder.none,
                 hintStyle: TextStyle(fontSize: 14),
               ),

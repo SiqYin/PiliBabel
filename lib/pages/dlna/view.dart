@@ -77,7 +77,7 @@ class _DLNAPageState extends State<DLNAPage> {
         title: Text(uiTx('投屏')),
         actions: [
           IconButton(
-            tooltip: '搜索',
+            tooltip: uiTx('搜索'),
             onPressed: _onSearch,
             icon: const Icon(Icons.refresh),
           ),

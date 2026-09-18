@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/pages/dynamics_repost/view.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
@@ -53,7 +54,7 @@ class ActionPanel extends StatelessWidget {
                   FontAwesomeIcons.shareFromSquare,
                   size: 16,
                   color: outline,
-                  semanticLabel: "转发",
+                  semanticLabel: uiTx("转发"),
                 ),
                 style: btnStyle,
                 label: Text(
@@ -76,7 +77,7 @@ class ActionPanel extends StatelessWidget {
               FontAwesomeIcons.comment,
               size: 16,
               color: outline,
-              semanticLabel: "评论",
+              semanticLabel: uiTx("评论"),
             ),
             style: btnStyle,
             label: Text(

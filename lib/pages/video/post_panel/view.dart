@@ -76,7 +76,7 @@ class PostPanel extends CommonSlidePage {
             iconButton(
               context: context,
               size: 26,
-              tooltip: '设为当前',
+              tooltip: uiTx('设为当前'),
               icon: const Icon(Icons.my_location),
               onPressed: () {
                 updateSegment(
@@ -106,7 +106,7 @@ class PostPanel extends CommonSlidePage {
             iconButton(
               context: context,
               size: 26,
-              tooltip: '编辑',
+              tooltip: uiTx('编辑'),
               icon: const Icon(Icons.edit),
               onPressed: () async {
                 String initV = value;
@@ -173,7 +173,7 @@ class PostPanel extends CommonSlidePage {
                                 iconButton(
                                   size: 34,
                                   iconSize: 19,
-                                  tooltip: '取消',
+                                  tooltip: uiTx('取消'),
                                   onPressed: Get.back,
                                   iconColor: colorScheme.outline,
                                   bgColor: colorScheme.onInverseSurface,
@@ -182,7 +182,7 @@ class PostPanel extends CommonSlidePage {
                                 iconButton(
                                   size: 34,
                                   iconSize: 19,
-                                  tooltip: '确定',
+                                  tooltip: uiTx('确定'),
                                   onPressed: () => Get.back(result: initV),
                                   iconColor: colorScheme.onSecondaryContainer,
                                   bgColor: colorScheme.secondaryContainer,
@@ -262,7 +262,7 @@ class _PostPanelState extends State<PostPanel>
             iconButton(
               size: 32,
               context: context,
-              tooltip: '添加片段',
+              tooltip: uiTx('添加片段'),
               onPressed: () {
                 setState(() {
                   list.insert(
@@ -284,7 +284,7 @@ class _PostPanelState extends State<PostPanel>
             iconButton(
               size: 32,
               context: context,
-              tooltip: '关闭',
+              tooltip: uiTx('关闭'),
               onPressed: Get.back,
               icon: const Icon(Icons.close),
             ),
@@ -301,7 +301,7 @@ class _PostPanelState extends State<PostPanel>
                 bottom: kFloatingActionButtonMargin + bottom,
               ),
               child: FloatingActionButton(
-                tooltip: '提交',
+                tooltip: uiTx('提交'),
                 onPressed: () => showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
@@ -496,7 +496,7 @@ class _PostPanelState extends State<PostPanel>
           child: iconButton(
             context: context,
             size: 26,
-            tooltip: '移除',
+            tooltip: uiTx('移除'),
             icon: const Icon(Icons.clear),
             onPressed: () {
               setState(() {
@@ -511,7 +511,7 @@ class _PostPanelState extends State<PostPanel>
           child: iconButton(
             context: context,
             size: 26,
-            tooltip: '预览',
+            tooltip: uiTx('预览'),
             icon: const Icon(Icons.preview_outlined),
             onPressed: () async {
               final player = plPlayerController.videoPlayerController;
