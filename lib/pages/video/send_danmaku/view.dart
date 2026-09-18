@@ -289,7 +289,7 @@ class _SendDanmakuPanelState extends CommonTextPubPageState<SendDanmakuPanel> {
             ),
             padding: const EdgeInsets.symmetric(vertical: 5),
             child: Text(
-              title,
+              uiTx(title),
               style: TextStyle(
                 color: _mode.value == mode
                     ? theme.colorScheme.onSecondaryContainer
@@ -317,7 +317,7 @@ class _SendDanmakuPanelState extends CommonTextPubPageState<SendDanmakuPanel> {
             ),
             padding: const EdgeInsets.symmetric(vertical: 5),
             child: Text(
-              title,
+              uiTx(title),
               style: TextStyle(
                 color: _fontSize.value == fontSize
                     ? theme.colorScheme.onSecondaryContainer
