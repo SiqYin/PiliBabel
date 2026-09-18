@@ -48,15 +48,15 @@ import 'package:path/path.dart' as path;
 
 List<SettingsModel> get styleSettings => [
   if (PlatformUtils.isDesktop) ...[
-    const SwitchModel(
-      title: '显示窗口标题栏',
+    SwitchModel(
+      title: uiTx('显示窗口标题栏'),
       leading: Icon(Icons.window),
       setKey: SettingBoxKey.showWindowTitleBar,
       defaultVal: true,
       needReboot: true,
     ),
-    const SwitchModel(
-      title: '显示托盘图标',
+    SwitchModel(
+      title: uiTx('显示托盘图标'),
       leading: Icon(Icons.donut_large_rounded),
       setKey: SettingBoxKey.showTrayIcon,
       defaultVal: true,
@@ -65,7 +65,7 @@ List<SettingsModel> get styleSettings => [
   ],
   if (Platform.isLinux) _useSSDModel(),
   SwitchModel(
-    title: '横屏适配',
+    title: uiTx('横屏适配'),
     subtitle: uiTx('启用横屏布局与逻辑，平板、折叠屏等可开启；建议全屏方向设为【不改变当前方向】'),
     leading: const Icon(Icons.phonelink_outlined),
     setKey: SettingBoxKey.horizontalScreen,
@@ -79,7 +79,7 @@ List<SettingsModel> get styleSettings => [
     },
   ),
   SwitchModel(
-    title: '改用侧边栏',
+    title: uiTx('改用侧边栏'),
     subtitle: uiTx('开启后底栏与顶栏被替换，且相关设置失效'),
     leading: Icon(Icons.chrome_reader_mode_outlined),
     setKey: SettingBoxKey.useSideBar,
@@ -87,7 +87,7 @@ List<SettingsModel> get styleSettings => [
     needReboot: true,
   ),
   SwitchModel(
-    title: '自动侧边栏切换',
+    title: uiTx('自动侧边栏切换'),
     subtitle: uiTx('屏幕较宽时（如折叠屏展开）自动改用侧边栏。点击自定义触发宽度。'),
     leading: const Icon(Icons.vertical_split_outlined),
     setKey: SettingBoxKey.autoSideBar,
@@ -95,41 +95,41 @@ List<SettingsModel> get styleSettings => [
     onTap: _showSideBarThresholdDialog,
   ),
   NormalModel(
-    title: 'App字体设置',
+    title: uiTx('App字体设置'),
     subtitle: uiTx('点击设置'),
     leading: const Icon(Icons.text_fields),
     onTap: (context, setState) => Get.toNamed('/fontSetting'),
   ),
   NormalModel(
-    title: '界面缩放',
+    title: uiTx('界面缩放'),
     getSubtitle: () => '当前缩放比例：${Pref.uiScale.toStringAsFixed(2)}',
     leading: const Icon(Icons.zoom_in_outlined),
     onTap: _showUiScaleDialog,
   ),
   NormalModel(
-    title: '页面过渡动画',
+    title: uiTx('页面过渡动画'),
     leading: const Icon(Icons.animation),
     getSubtitle: () => '当前：${Pref.pageTransition.name}',
     onTap: _showTransitionDialog,
   ),
   if (Platform.isAndroid)
     SwitchModel(
-      title: '预测性返回动画',
+      title: uiTx('预测性返回动画'),
       subtitle: uiTx('开启后侧滑返回可原生预览上一页及桌面，需将页面过渡动画设为Native'),
       leading: Icon(Icons.swipe_left_outlined),
       setKey: SettingBoxKey.enablePredictiveBack,
       defaultVal: true,
       needReboot: true,
     ),
-  const SwitchModel(
-    title: '优化平板导航栏',
+  SwitchModel(
+    title: uiTx('优化平板导航栏'),
     leading: Icon(Icons.auto_fix_high),
     setKey: SettingBoxKey.optTabletNav,
     defaultVal: true,
     needReboot: true,
   ),
   SwitchModel(
-    title: 'MD3样式底栏',
+    title: uiTx('MD3样式底栏'),
     subtitle: uiTx('Material You设计规范底栏，关闭可变窄'),
     leading: Icon(Icons.design_services_outlined),
     setKey: SettingBoxKey.enableMYBar,
@@ -137,15 +137,15 @@ List<SettingsModel> get styleSettings => [
     needReboot: true,
   ),
   SwitchModel(
-    title: '首页背景渐变',
+    title: uiTx('首页背景渐变'),
     subtitle: uiTx('主框架背景由纯色改为渐变色'),
     leading: Icon(Icons.gradient_outlined),
     setKey: SettingBoxKey.enableGradientBg,
     defaultVal: false,
     needReboot: true,
   ),
-  const SwitchModel(
-    title: '悬浮底栏',
+  SwitchModel(
+    title: uiTx('悬浮底栏'),
     leading: Icon(MdiIcons.soundbar),
     setKey: SettingBoxKey.floatingNavBar,
     defaultVal: false,
@@ -153,25 +153,25 @@ List<SettingsModel> get styleSettings => [
   ),
   NormalModel(
     leading: const Icon(Icons.calendar_view_week_outlined),
-    title: '列表宽度（dp）限制',
+    title: uiTx('列表宽度（dp）限制'),
     getSubtitle: () =>
         '当前: 主页${Pref.recommendCardWidth.toInt()}dp 其他${Pref.smallCardWidth.toInt()}dp，屏幕宽度:${MediaQuery.widthOf(Get.context!).toPrecision(2)}dp。宽度越小列数越多。',
     onTap: _showCardWidthDialog,
   ),
-  const SwitchModel(
-    title: '播放页移除安全边距',
+  SwitchModel(
+    title: uiTx('播放页移除安全边距'),
     leading: Icon(Icons.fit_screen_outlined),
     setKey: SettingBoxKey.removeSafeArea,
     defaultVal: false,
   ),
-  const SwitchModel(
-    title: '视频播放页使用深色主题',
+  SwitchModel(
+    title: uiTx('视频播放页使用深色主题'),
     leading: Icon(Icons.dark_mode_outlined),
     setKey: SettingBoxKey.darkVideoPage,
     defaultVal: false,
   ),
   SwitchModel(
-    title: '动态页启用瀑布流',
+    title: uiTx('动态页启用瀑布流'),
     subtitle: uiTx('关闭会显示为单列'),
     leading: const Icon(Icons.view_array_outlined),
     setKey: SettingBoxKey.dynamicsWaterfallFlow,
@@ -179,7 +179,7 @@ List<SettingsModel> get styleSettings => [
     needReboot: true,
   ),
   PopupModel(
-    title: '动态页UP主显示位置',
+    title: uiTx('动态页UP主显示位置'),
     leading: const Icon(Icons.person_outlined),
     value: () => Pref.upPanelPosition,
     items: UpPanelPosition.values,
@@ -191,35 +191,35 @@ List<SettingsModel> get styleSettings => [
     },
   ),
   SwitchModel(
-    title: '动态页UP主列表显示“我”置顶',
+    title: uiTx('动态页UP主列表显示“我”置顶'),
     subtitle: uiTx('用于快速查看个人的动态'),
     leading: Icon(Icons.push_pin_outlined),
     setKey: SettingBoxKey.dynamicsShowSelfUp,
     defaultVal: true,
   ),
-  const SwitchModel(
-    title: '动态页显示所有已关注UP主',
+  SwitchModel(
+    title: uiTx('动态页显示所有已关注UP主'),
     leading: Icon(Icons.people_alt_outlined),
     setKey: SettingBoxKey.dynamicsShowAllFollowedUp,
     defaultVal: false,
     needReboot: true,
   ),
-  const SwitchModel(
-    title: '动态页展开正在直播UP列表',
+  SwitchModel(
+    title: uiTx('动态页展开正在直播UP列表'),
     leading: Icon(Icons.live_tv),
     setKey: SettingBoxKey.expandDynLivePanel,
     defaultVal: false,
     needReboot: true,
   ),
   PopupModel(
-    title: '动态未读标记',
+    title: uiTx('动态未读标记'),
     leading: const Icon(Icons.motion_photos_on_outlined),
     value: () => Pref.dynamicBadgeType,
     items: DynamicBadgeMode.values,
     onSelected: _setDynBadge,
   ),
   PopupModel(
-    title: '消息未读标记',
+    title: uiTx('消息未读标记'),
     leading: const Icon(MdiIcons.bellBadgeOutline),
     value: () => Pref.msgBadgeMode,
     items: DynamicBadgeMode.values,
@@ -227,13 +227,13 @@ List<SettingsModel> get styleSettings => [
   ),
   NormalModel(
     onTap: _showMsgUnReadDialog,
-    title: '消息未读类型',
+    title: uiTx('消息未读类型'),
     leading: const Icon(MdiIcons.bellCogOutline),
     getSubtitle: () =>
         '当前消息类型：${Pref.msgUnReadTypeV2.map((item) => item.title).join('、')}',
   ),
   PopupModel(
-    title: '顶/底栏收起类型',
+    title: uiTx('顶/底栏收起类型'),
     leading: const Icon(MdiIcons.arrowExpandVertical),
     value: () => Pref.barHideType,
     items: BarHideType.values,
@@ -245,7 +245,7 @@ List<SettingsModel> get styleSettings => [
     },
   ),
   SwitchModel(
-    title: '首页顶栏收起',
+    title: uiTx('首页顶栏收起'),
     subtitle: uiTx('首页列表滑动时，收起顶栏'),
     leading: const Icon(Icons.vertical_align_top_outlined),
     setKey: SettingBoxKey.hideTopBar,
@@ -253,7 +253,7 @@ List<SettingsModel> get styleSettings => [
     needReboot: true,
   ),
   SwitchModel(
-    title: '首页底栏收起',
+    title: uiTx('首页底栏收起'),
     subtitle: uiTx('首页列表滑动时，收起底栏'),
     leading: const Icon(Icons.vertical_align_bottom_outlined),
     setKey: SettingBoxKey.hideBottomBar,
@@ -271,7 +271,7 @@ List<SettingsModel> get styleSettings => [
         setState();
       },
     ),
-    title: '图片质量',
+    title: uiTx('图片质量'),
     subtitle: uiTx('选择合适的图片清晰度，上限100%'),
     leading: const Icon(Icons.image_outlined),
     getTrailing: (theme) => Text(
@@ -289,7 +289,7 @@ List<SettingsModel> get styleSettings => [
         setState();
       },
     ),
-    title: '查看大图质量',
+    title: uiTx('查看大图质量'),
     subtitle: uiTx('选择合适的图片清晰度，上限100%'),
     leading: const Icon(Icons.image_outlined),
     getTrailing: (theme) => Text(
@@ -299,7 +299,7 @@ List<SettingsModel> get styleSettings => [
   ),
   NormalModel(
     onTap: _showReduceColorDialog,
-    title: '深色下图片颜色叠加',
+    title: uiTx('深色下图片颜色叠加'),
     subtitle: uiTx('显示颜色=图片原色x所选颜色，大图查看不受影响'),
     leading: const Icon(Icons.format_color_fill_outlined),
     getTrailing: (theme) => Container(
@@ -313,7 +313,7 @@ List<SettingsModel> get styleSettings => [
   ),
   NormalModel(
     leading: const Icon(Icons.opacity_outlined),
-    title: '气泡提示不透明度',
+    title: uiTx('气泡提示不透明度'),
     subtitle: uiTx('自定义气泡提示(Toast)不透明度'),
     getTrailing: (theme) => Text(
       CustomToast.toastOpacity.toStringAsFixed(1),
@@ -323,14 +323,14 @@ List<SettingsModel> get styleSettings => [
   ),
   PopupModel(
     leading: const Icon(Icons.flashlight_on_outlined),
-    title: '主题模式',
+    title: uiTx('主题模式'),
     value: () => Pref.themeType,
     items: ThemeType.values,
     onSelected: _setThemeType,
   ),
   SwitchModel(
     leading: const Icon(Icons.invert_colors),
-    title: '纯黑主题',
+    title: uiTx('纯黑主题'),
     setKey: SettingBoxKey.isPureBlackTheme,
     defaultVal: false,
     onChanged: (value) {
@@ -342,7 +342,7 @@ List<SettingsModel> get styleSettings => [
   NormalModel(
     onTap: (context, setState) => Get.toNamed('/colorSetting'),
     leading: const Icon(Icons.color_lens_outlined),
-    title: '应用主题',
+    title: uiTx('应用主题'),
     getSubtitle: () => '当前主题：${Pref.dynamicColor ? '动态取色' : '指定颜色'}',
     getTrailing: (theme) => Pref.dynamicColor
         ? Icon(Icons.color_lens_rounded, color: theme.colorScheme.primary)
@@ -358,7 +358,7 @@ List<SettingsModel> get styleSettings => [
   ),
   PopupModel(
     leading: const Icon(Icons.home_outlined),
-    title: '默认启动页',
+    title: uiTx('默认启动页'),
     value: () => Pref.defaultHomePage,
     items: NavigationBarType.values,
     onSelected: (value, setState) {
@@ -368,8 +368,8 @@ List<SettingsModel> get styleSettings => [
       SmartDialog.showToast(uiTx('重启生效'));
     },
   ),
-  const NormalModel(
-    title: '滑动动画弹簧参数',
+  NormalModel(
+    title: uiTx('滑动动画弹簧参数'),
     leading: Icon(Icons.chrome_reader_mode_outlined),
     onTap: _showSpringDialog,
   ),
@@ -382,7 +382,7 @@ List<SettingsModel> get styleSettings => [
         'title': '首页标签页',
       },
     ),
-    title: '首页标签页',
+    title: uiTx('首页标签页'),
     subtitle: uiTx('删除或调换首页标签页'),
     leading: const Icon(Icons.toc_outlined),
   ),
@@ -395,7 +395,7 @@ List<SettingsModel> get styleSettings => [
         'title': 'Navbar',
       },
     ),
-    title: 'Navbar编辑',
+    title: uiTx('Navbar编辑'),
     subtitle: uiTx('删除或调换Navbar'),
     leading: const Icon(Icons.toc_outlined),
   ),
@@ -408,12 +408,12 @@ List<SettingsModel> get styleSettings => [
         'title': '我的页卡片',
       },
     ),
-    title: '我的页卡片编辑',
+    title: uiTx('我的页卡片编辑'),
     subtitle: uiTx('选择并排列「我的」页面显示的卡片板块'),
     leading: const Icon(Icons.person_outline),
   ),
   SwitchModel(
-    title: '备注替换昵称',
+    title: uiTx('备注替换昵称'),
     subtitle: uiTx('开启后备注首行将替换原昵称，建议首行填写为称呼；余下行仅在主页可见'),
     leading: const Icon(Icons.badge_outlined),
     setKey: SettingBoxKey.remarkReplaceName,
@@ -424,7 +424,7 @@ List<SettingsModel> get styleSettings => [
     },
   ),
   SwitchModel(
-    title: '返回时直接退出',
+    title: uiTx('返回时直接退出'),
     subtitle: uiTx('开启后在主页任意tab按返回键都直接退出，关闭则先回到Navbar的第一个tab'),
     leading: const Icon(Icons.exit_to_app_outlined),
     setKey: SettingBoxKey.directExitOnBack,
@@ -434,7 +434,7 @@ List<SettingsModel> get styleSettings => [
   if (Platform.isAndroid)
     NormalModel(
       onTap: (context, setState) => Get.toNamed('/displayModeSetting'),
-      title: '屏幕帧率',
+      title: uiTx('屏幕帧率'),
       leading: const Icon(Icons.autofps_select_outlined),
     ),
 ];
@@ -701,7 +701,7 @@ Future<void> _showTransitionDialog(
   final res = await showDialog<Transition>(
     context: context,
     builder: (context) => SelectDialog<Transition>(
-      title: '页面过渡动画',
+      title: uiTx('页面过渡动画'),
       value: Pref.pageTransition,
       values: Transition.values.map((e) => (e, e.name)).toList(),
     ),
@@ -814,7 +814,7 @@ Future<void> _showMsgUnReadDialog(
   final res = await showDialog<Set<MsgUnReadType>>(
     context: context,
     builder: (context) => MultiSelectDialog<MsgUnReadType>(
-      title: '消息未读类型',
+      title: uiTx('消息未读类型'),
       initValues: Pref.msgUnReadTypeV2,
       values: {for (final i in MsgUnReadType.values) i: i.title},
     ),
@@ -921,7 +921,7 @@ NormalModel _useSSDModel() {
   }
 
   return NormalModel(
-    title: '使用SSD（Server-Side Decoration）',
+    title: uiTx('使用SSD（Server-Side Decoration）'),
     leading: const Icon(Icons.web_asset),
     onTap: onChanged,
     getTrailing: (theme) => Builder(
