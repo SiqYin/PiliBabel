@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
@@ -95,7 +96,7 @@ class PBadge extends StatelessWidget {
         border: .all(color: borderColor),
       ),
       child: Text(
-        text!,
+        uiTx(text!),
         textScaler: textScaleFactor != null ? .linear(textScaleFactor!) : null,
         style: TextStyle(
           height: 1,
