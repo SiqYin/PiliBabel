@@ -54,7 +54,7 @@ The idea mirrors bilibili's official "AI interface translation", but it runs ent
 - **AI translation, everywhere.** Navigation tabs, video cards, detail pages, comments, dynamics, and the Mine / Favorites / History / Messages / Search surfaces — a global sweep covers **~1,650+ UI strings**, plus dynamic content (titles, author names, action counts).
 - **You bring the model.** Point it at any OpenAI-compatible endpoint (`/chat/completions`) with your own base URL / API key / model. The AI video-summary feature and the AI translation feature have **completely independent** endpoints and settings, both living under one **"AI features"** page.
 - **Translate once, then it's fixed.** Each source string is translated **exactly once**; the result is persisted locally and **never re-translated** when you reopen a screen — the same principle as the official client, for stable, predictable translations.
-- **Pick your app language.** Defaults to 简体中文. Choose from ~35 languages — English, 日本語, 한국어, Français, Deutsch, Español, Italiano, Русский, ไทย, Tiếng Việt, Bahasa Melayu / Bahasa Indonesia, Filipino, Türkçe, العربية, עברית, plus Chinese varieties (简体/繁体粤语, 吴语, 大陆/台湾闽南语, 藏语, 蒙古语, 维吾尔语, …).
+- **Pick your app language.** Defaults to Simplified Chinese. Roughly 35 languages across three groups — **world languages** (English, 日本語, 한국어, Français, Deutsch, Español, Italiano, Русский, ไทย, Tiếng Việt, Bahasa Melayu / Bahasa Indonesia, Filipino, Türkçe, العربية, עברית); **Chinese varieties** by region & script (Cantonese, and Shanghainese / Wu — each available in Simplified or Traditional; Min Nan — Hokkien on the mainland, Taiwanese in Taiwan); and **languages of China's ethnic minorities**, listed separately and *not* treated as Chinese varieties (Tibetan, Mongolian, Uyghur, Zhuang, …).
   - With a **Chinese** variety selected, only **foreign → Chinese** is translated; your existing Chinese text is left untouched (this replaces and extends the native "comment foreign→Chinese" behaviour).
   - With a **non-Chinese** language selected, the **entire interface** is rendered in that language.
   - Language-specific writing rules (Simplified/Traditional script, Taiwan's Ministry-of-Education standard, regional wording) are encoded **only in the prompt sent to the model**, never cluttering the UI.
@@ -67,7 +67,7 @@ The idea mirrors bilibili's official "AI interface translation", but it runs ent
 - **全面 AI 翻譯。** 導覽分頁、影片卡片、詳情頁、留言、動態，以及「我的／收藏／歷史／訊息／搜尋」等介面——全域掃描涵蓋**約 1,650+ 條介面字串**，並含動態內容（標題、作者名稱、互動計數）。
 - **模型自備。** 填入你自己的 OpenAI 相容端點（`/chat/completions`）的網址／API 金鑰／模型即可。AI 影片摘要與 AI 翻譯兩者擁有**完全獨立**的端點與設定，統一收在一個「**AI 功能**」頁面下。
 - **只翻一次，翻完即固定。** 每條原文**僅翻譯一次**，結果落地快取、重開畫面**絕不重翻**——與官方客戶端同原理，翻譯穩定且可預期。
-- **選擇 App 語言。** 預設為簡體中文。可從約 35 種語言中挑選——English、日本語、한국어、Français、Deutsch、Español、Italiano、Русский、ไทย、Tiếng Việt、Bahasa Melayu / Bahasa Indonesia、Filipino、Türkçe、العربية、עברית，以及中文變體（簡體／繁體粵語、吳語、大陸／臺灣閩南語、藏語、蒙古語、維吾爾語……）。
+- **選擇 App 語言。** 預設為簡體中文。約 35 種語言，分為三類——**國際語言**（English、日本語、한국어、Français、Deutsch、Español、Italiano、Русский、ไทย、Tiếng Việt、Bahasa Melayu／Bahasa Indonesia、Filipino、Türkçe、العربية、עברית）；**漢語／中文變體**，按地區與書寫（粵語、吳語／上海話——各分簡體與繁體；閩南語——大陸作 Hokkien、臺灣作 Taiwanese）；以及**中國少數民族語言**，單獨列示、**並非**中文變體（藏語、蒙古語、維吾爾語、壯語……）。
   - 選擇**中文變體**時，**只翻外文→中文**，你原有的中文內容不動（取代並延伸原生「留言外文→中文」行為）。
   - 選擇**非中文**語言時，**整個介面**都會以該語言呈現。
   - 各語言的書寫規範（簡／繁體、臺灣教育部國字標準字體、地域用詞）只寫進**送給模型的提示詞**，不佔用介面。
