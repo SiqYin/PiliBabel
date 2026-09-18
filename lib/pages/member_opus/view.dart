@@ -122,7 +122,7 @@ class _MemberOpusState extends State<MemberOpus>
                   label: Obx(
                     () {
                       final type = _controller.type.value;
-                      return Text(uiTx(type.text) ?? type.tabName!);
+                      return Text(uiTx(type.text ?? type.tabName!));
                     },
                   ),
                 ),
