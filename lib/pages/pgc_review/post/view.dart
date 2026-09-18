@@ -228,14 +228,14 @@ class _PgcReviewPostPanelState extends State<PgcReviewPostPanel> {
       );
       if (res.isSuccess) {
         Get.back();
-        SmartDialog.showToast('编辑成功');
+        SmartDialog.showToast(uiTx('编辑成功'));
       } else {
         res.toast();
       }
       return;
     }
     if (!Accounts.main.isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast(uiTx('账号未登录'));
       return;
     }
     final res = await PgcHttp.pgcReviewPost(
@@ -246,7 +246,7 @@ class _PgcReviewPostPanelState extends State<PgcReviewPostPanel> {
     );
     if (res.isSuccess) {
       Get.back();
-      SmartDialog.showToast('点评成功');
+      SmartDialog.showToast(uiTx('点评成功'));
     } else {
       res.toast();
     }

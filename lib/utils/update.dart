@@ -33,7 +33,7 @@ abstract final class Update {
       );
       if (res.data is Map || res.data.isEmpty) {
         if (!isAuto) {
-          SmartDialog.showToast('检查更新失败，GitHub接口未返回数据，请检查网络');
+          SmartDialog.showToast(uiTx('检查更新失败，GitHub接口未返回数据，请检查网络'));
         }
         return;
       }
@@ -44,7 +44,7 @@ abstract final class Update {
       );
       if (data == null) {
         if (!isAuto) {
-          SmartDialog.showToast('已是最新版本');
+          SmartDialog.showToast(uiTx('已是最新版本'));
         }
         return;
       }
@@ -52,7 +52,7 @@ abstract final class Update {
           DateTime.parse(data['created_at']).millisecondsSinceEpoch ~/ 1000;
       if (BuildConfig.buildTime >= latest) {
         if (!isAuto) {
-          SmartDialog.showToast('已是最新版本');
+          SmartDialog.showToast(uiTx('已是最新版本'));
         }
       } else if (isAuto && Pref.skipVersion == data['tag_name']) {
         // 用户已选择跳过此版本，静默忽略

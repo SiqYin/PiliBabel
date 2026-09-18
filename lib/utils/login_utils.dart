@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async' show FutureOr;
 import 'dart:io' show Platform;
 
@@ -58,7 +59,7 @@ abstract final class LoginUtils {
           accountService.isLogin.value = true;
         }
 
-        SmartDialog.showToast('main登录成功');
+        SmartDialog.showToast(uiTx('main登录成功'));
         if (response != Pref.userInfoCache) {
           await GStorage.userInfo.put('userInfoCache', response);
         }

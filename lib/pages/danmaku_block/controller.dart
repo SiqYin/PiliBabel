@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:convert';
 
 import 'package:PiliPlus/http/danmaku_block.dart';
@@ -53,7 +54,7 @@ class DanmakuBlockController extends GetxController
     SmartDialog.dismiss();
     if (res.isSuccess) {
       rules[tabIndex].removeAt(itemIndex);
-      SmartDialog.showToast('删除成功');
+      SmartDialog.showToast(uiTx('删除成功'));
     } else {
       res.toast();
     }
@@ -74,7 +75,7 @@ class DanmakuBlockController extends GetxController
     SmartDialog.dismiss();
     if (res case Success(:final response)) {
       rules[type].add(response);
-      SmartDialog.showToast('添加成功');
+      SmartDialog.showToast(uiTx('添加成功'));
     } else {
       res.toast();
     }
@@ -106,7 +107,7 @@ class DanmakuBlockController extends GetxController
     final toAdd = incomingRules.where((r) => !existingMap.containsKey((r.type, r.filter))).toList();
 
     if (toDelete.isEmpty && toAdd.isEmpty) {
-      SmartDialog.showToast('规则已是最新，无需同步');
+      SmartDialog.showToast(uiTx('规则已是最新，无需同步'));
       return;
     }
 
@@ -137,6 +138,6 @@ class DanmakuBlockController extends GetxController
     }
 
     SmartDialog.dismiss();
-    SmartDialog.showToast('同步完成：新增 $added 条，删除 $deleted 条');
+    SmartDialog.showToast(uiTx('同步完成：新增 $added 条，删除 $deleted 条'));
   }
 }

@@ -38,7 +38,7 @@ Future<void> exportDownloadEntries(
       SmartDialog.dismiss(tag: _batchExportDialogTag);
     }
   }
-  SmartDialog.showToast('导出完成 ($total)');
+  SmartDialog.showToast(uiTx('导出完成 ($total)'));
 }
 
 class _BatchExportDialog extends StatelessWidget {

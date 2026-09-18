@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -102,7 +103,7 @@ class WhisperDetailController extends CommonListController<RspSessionMsg, Msg> {
     // }
     // onClearText();
     // scrollController.jumpToTop();
-    // SmartDialog.showToast('发送成功');
+    // SmartDialog.showToast(uiTx('发送成功'));
     // return;
     assert((message != null) ^ (picMsg != null));
     if (_isSending) return;
@@ -110,7 +111,7 @@ class WhisperDetailController extends CommonListController<RspSessionMsg, Msg> {
     feedBack();
     SmartDialog.dismiss();
     if (!account.isLogin) {
-      SmartDialog.showToast('请先登录');
+      SmartDialog.showToast(uiTx('请先登录'));
       return;
     }
     final res = await ImGrpc.sendMsg(
@@ -128,11 +129,11 @@ class WhisperDetailController extends CommonListController<RspSessionMsg, Msg> {
         loadingState
           ..value.data![index!].msgStatus = 1
           ..refresh();
-        SmartDialog.showToast('撤回成功');
+        SmartDialog.showToast(uiTx('撤回成功'));
       } else {
         onRefresh();
         onClearText();
-        SmartDialog.showToast('发送成功');
+        SmartDialog.showToast(uiTx('发送成功'));
       }
     } else {
       res.toast();

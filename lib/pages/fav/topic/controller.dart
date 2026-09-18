@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/http/fav.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models_new/fav/fav_topic/data.dart';
@@ -44,7 +45,7 @@ class FavTopicController
       loadingState
         ..value.data!.removeAt(index)
         ..refresh();
-      SmartDialog.showToast('已取消收藏');
+      SmartDialog.showToast(uiTx('已取消收藏'));
     } else {
       res.toast();
     }

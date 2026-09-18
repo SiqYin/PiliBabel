@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/models/common/rcmd_mode.dart';
 import 'package:PiliPlus/pages/rcmd/controller.dart';
@@ -232,7 +233,7 @@ Future<void> _showRcmdModeDialog(
   );
   if (res != null) {
     await GStorage.setting.put(SettingBoxKey.rcmdMode, res.index);
-    SmartDialog.showToast('重启生效');
+    SmartDialog.showToast(uiTx('重启生效'));
     setState();
   }
 }

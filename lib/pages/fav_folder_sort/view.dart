@@ -39,7 +39,7 @@ class _FavFolderSortPageState extends State<FavFolderSortPage>
                 sort: sortList.map((item) => item.id).join(','),
               );
               if (res.isSuccess) {
-                SmartDialog.showToast('排序完成');
+                SmartDialog.showToast(uiTx('排序完成'));
                 _favController.loadingState.value = Success(sortList);
                 if (mounted) {
                   Get.back();
@@ -59,7 +59,7 @@ class _FavFolderSortPageState extends State<FavFolderSortPage>
 
   void onReorderItem(int oldIndex, int newIndex) {
     if (oldIndex == 0 || newIndex == 0) {
-      SmartDialog.showToast('默认收藏夹不支持排序');
+      SmartDialog.showToast(uiTx('默认收藏夹不支持排序'));
       return;
     }
 
@@ -87,7 +87,7 @@ class _FavFolderSortPageState extends State<FavFolderSortPage>
             heroTag: key,
             item: item,
             onLongPress: index == 0
-                ? () => SmartDialog.showToast('默认收藏夹不支持排序')
+                ? () => SmartDialog.showToast(uiTx('默认收藏夹不支持排序'))
                 : null,
           ),
         );

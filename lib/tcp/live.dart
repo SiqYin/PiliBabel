@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -208,7 +209,7 @@ class LiveMessageStream {
       );
       _channel?.sink.add(authPackage.marshal());
     } catch (e) {
-      SmartDialog.showToast("弹幕地址链接失败: $e");
+      SmartDialog.showToast(uiTx("弹幕地址链接失败: $e"));
     }
   }
 

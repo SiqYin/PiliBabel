@@ -271,7 +271,7 @@ class _SharePanelState extends State<SharePanel> {
   Future<void> _onSend() async {
     final list = _userList.where((user) => user.selected);
     if (list.isEmpty) {
-      SmartDialog.showToast('请选择分享的用户');
+      SmartDialog.showToast(uiTx('请选择分享的用户'));
       return;
     }
     SmartDialog.showLoading();
@@ -287,11 +287,11 @@ class _SharePanelState extends State<SharePanel> {
     SmartDialog.dismiss();
     if (res.every((e) => e)) {
       Get.back();
-      SmartDialog.showToast('分享成功');
+      SmartDialog.showToast(uiTx('分享成功'));
     } else if (res.every((e) => !e)) {
-      SmartDialog.showToast('分享失败');
+      SmartDialog.showToast(uiTx('分享失败'));
     } else {
-      SmartDialog.showToast('部分分享失败');
+      SmartDialog.showToast(uiTx('部分分享失败'));
     }
   }
 }

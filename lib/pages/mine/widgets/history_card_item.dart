@@ -47,7 +47,7 @@ class HistoryCardItem extends StatelessWidget {
       if (item.liveStatus == 1) {
         PageUtils.toLiveRoom(item.history.oid);
       } else {
-        SmartDialog.showToast('直播未开播');
+        SmartDialog.showToast(uiTx('直播未开播'));
       }
     } else if (_isPgc) {
       PageUtils.viewPgc(epId: item.history.epid);

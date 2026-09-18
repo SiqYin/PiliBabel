@@ -1062,7 +1062,7 @@ Future<void> _showFavDialog(BuildContext context) async {
               onChanged: (value) {
                 Get.back();
                 GStorage.setting.put(SettingBoxKey.quickFavId, value);
-                SmartDialog.showToast('设置成功');
+                SmartDialog.showToast(uiTx('设置成功'));
               },
               groupValue: quickFavId,
               child: Column(
@@ -1105,7 +1105,7 @@ Future<void> _showReplyCountDialog(
   if (res != null) {
     await GStorage.setting.put(SettingBoxKey.retryCount, res.toInt());
     setState();
-    SmartDialog.showToast('重启生效');
+    SmartDialog.showToast(uiTx('重启生效'));
   }
 }
 
@@ -1128,7 +1128,7 @@ Future<void> _showReplyDelayDialog(
   if (res != null) {
     await GStorage.setting.put(SettingBoxKey.retryDelay, res.toInt());
     setState();
-    SmartDialog.showToast('重启生效');
+    SmartDialog.showToast(uiTx('重启生效'));
   }
 }
 

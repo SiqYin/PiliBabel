@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io';
 
 import 'package:PiliPlus/common/constants.dart';
@@ -55,9 +56,9 @@ abstract final class MemberHttp {
       options: Options(contentType: Headers.formUrlEncodedContentType),
     );
     if (res.data['status'] == true) {
-      SmartDialog.showToast('举报成功');
+      SmartDialog.showToast(uiTx('举报成功'));
     } else {
-      SmartDialog.showToast('举报失败');
+      SmartDialog.showToast(uiTx('举报失败'));
     }
   }
 

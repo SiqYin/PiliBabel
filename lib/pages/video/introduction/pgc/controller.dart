@@ -116,7 +116,7 @@ class PgcIntroController extends CommonIntroController {
   @override
   Future<void> actionLikeVideo() async {
     if (!isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast(uiTx('账号未登录'));
       return;
     }
     final newVal = !hasLike.value;
@@ -407,12 +407,12 @@ class PgcIntroController extends CommonIntroController {
   Future<void> actionTriple() async {
     feedBack();
     if (!isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast(uiTx('账号未登录'));
       return;
     }
     if (hasLike.value && hasCoin && hasFav.value) {
       // 已点赞、投币、收藏
-      SmartDialog.showToast('已三连');
+      SmartDialog.showToast(uiTx('已三连'));
       return;
     }
     final result = await VideoHttp.pgcTriple(epId: epId!, seasonId: seasonId);
@@ -432,9 +432,9 @@ class PgcIntroController extends CommonIntroController {
         hasFav.value = true;
       }
       if (!hasCoin) {
-        SmartDialog.showToast('投币失败');
+        SmartDialog.showToast(uiTx('投币失败'));
       } else {
-        SmartDialog.showToast('三连成功');
+        SmartDialog.showToast(uiTx('三连成功'));
       }
     } else {
       result.toast();

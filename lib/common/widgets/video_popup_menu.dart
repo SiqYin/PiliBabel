@@ -59,7 +59,7 @@ class VideoPopupMenu extends StatelessWidget {
   void _addBlockedUser() {
     final mid = videoItem.owner.mid;
     if (mid == null) {
-      SmartDialog.showToast('无法获取用户ID');
+      SmartDialog.showToast(uiTx('无法获取用户ID'));
       return;
     }
     final blockedMids = Pref.recommendBlockedMids;
@@ -68,19 +68,19 @@ class VideoPopupMenu extends StatelessWidget {
     Pref.recommendBlockedMids = blockedMids;
     GlobalData().recommendBlockedMids = blockedMids;
     RecommendFilter.recommendBlockedMids = blockedMids;
-    SmartDialog.showToast('已屏蔽$name($mid)，可在推荐流设置中管理');
+    SmartDialog.showToast(uiTx('已屏蔽$name($mid)，可在推荐流设置中管理'));
     onRemove?.call();
   }
 
   void _addWhitelistedUser() {
     final mid = videoItem.owner.mid;
     if (mid == null) {
-      SmartDialog.showToast('无法获取用户ID');
+      SmartDialog.showToast(uiTx('无法获取用户ID'));
       return;
     }
     final name = videoItem.owner.name ?? 'UID:$mid';
     UserWhitelist.add(mid: mid, name: name);
-    SmartDialog.showToast('已将$name($mid)加入白名单');
+    SmartDialog.showToast(uiTx('已将$name($mid)加入白名单'));
   }
 
   void _appendKeyword({
@@ -91,7 +91,7 @@ class VideoPopupMenu extends StatelessWidget {
   }) {
     final keyword = value.trim();
     if (keyword.isEmpty) {
-      SmartDialog.showToast('关键词为空');
+      SmartDialog.showToast(uiTx('关键词为空'));
       return;
     }
     final escapedKeyword = RegExp.escape(keyword);
@@ -112,7 +112,7 @@ class VideoPopupMenu extends StatelessWidget {
       onRemove?.call();
       return;
     }
-    SmartDialog.showToast('已存在该屏蔽关键词');
+    SmartDialog.showToast(uiTx('已存在该屏蔽关键词'));
     onRemove?.call();
   }
 
@@ -229,7 +229,7 @@ class VideoPopupMenu extends StatelessWidget {
               label: zoneName?.isNotEmpty == true ? '频道:$zoneName' : '频道:无法获取',
               onPressed: () {
                 if (zoneName?.isNotEmpty != true) {
-                  SmartDialog.showToast('当前视频无法获取频道信息');
+                  SmartDialog.showToast(uiTx('当前视频无法获取频道信息'));
                   return;
                 }
                 Get.back();
@@ -324,7 +324,7 @@ class VideoPopupMenu extends StatelessWidget {
             if (videoItem case final RcmdVideoItemAppModel item) {
               ThreePoint? tp = item.threePoint;
               if (tp == null) {
-                SmartDialog.showToast("未能获取threePoint");
+                SmartDialog.showToast(uiTx("未能获取threePoint"));
                 return;
               }
               if (tp.dislikeReasons == null && tp.feedbacks == null) {
@@ -422,7 +422,7 @@ class VideoPopupMenu extends StatelessWidget {
                             );
                             SmartDialog.dismiss();
                             if (res.isSuccess) {
-                              SmartDialog.showToast('点踩成功');
+                              SmartDialog.showToast(uiTx('点踩成功'));
                               onRemove?.call();
                             } else {
                               res.toast();

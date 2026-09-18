@@ -442,10 +442,10 @@ class EpisodePanelState extends State<EpisodePanel>
               if (episode.badge == "会员" &&
                   Accounts.mainEqVideo &&
                   vipStatus != 1) {
-                SmartDialog.showToast('需要大会员');
+                SmartDialog.showToast(uiTx('需要大会员'));
                 // return;
               }
-              SmartDialog.showToast('切换到：$title');
+              SmartDialog.showToast(uiTx('切换到：$title'));
               widget.onClose?.call();
 
               widget.onChangeEpisode(episode, manual: true).then((res) {

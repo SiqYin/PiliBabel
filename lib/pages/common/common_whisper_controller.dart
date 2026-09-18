@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/grpc/bilibili/app/im/v1.pb.dart'
     show SessionPageType, SessionId, Session;
 import 'package:PiliPlus/grpc/im.dart';
@@ -18,7 +19,7 @@ abstract class CommonWhisperController<R>
       loadingState
         ..value.data!.removeAt(index)
         ..refresh();
-      SmartDialog.showToast('删除成功');
+      SmartDialog.showToast(uiTx('删除成功'));
     } else {
       res.toast();
     }
@@ -56,7 +57,7 @@ abstract class CommonWhisperController<R>
     if (res.isSuccess) {
       item.isMuted = !isMuted;
       loadingState.refresh();
-      SmartDialog.showToast('设置成功');
+      SmartDialog.showToast(uiTx('设置成功'));
     } else {
       res.toast();
     }
@@ -75,7 +76,7 @@ abstract class CommonWhisperController<R>
           loadingState.refresh();
         }
       }
-      SmartDialog.showToast('已标记为已读');
+      SmartDialog.showToast(uiTx('已标记为已读'));
     } else {
       res.toast();
     }

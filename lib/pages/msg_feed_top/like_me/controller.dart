@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/pair.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/msg.dart';
@@ -76,7 +77,7 @@ class LikeMeController
           pair.second.removeAt(index);
         }
         loadingState.refresh();
-        SmartDialog.showToast('删除成功');
+        SmartDialog.showToast(uiTx('删除成功'));
       } else {
         res.toast();
       }
@@ -92,7 +93,7 @@ class LikeMeController
     if (res.isSuccess) {
       item.noticeState = noticeState;
       loadingState.refresh();
-      SmartDialog.showToast('设置成功');
+      SmartDialog.showToast(uiTx('设置成功'));
     } else {
       res.toast();
     }

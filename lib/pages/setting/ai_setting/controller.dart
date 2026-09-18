@@ -82,10 +82,10 @@ class AiSettingController extends GetxController {
       Pref.aiModelListCache = models;
       Pref.aiModelListCacheTime = DateTime.now().millisecondsSinceEpoch;
       if (models.isEmpty) {
-        SmartDialog.showToast('未获取到模型列表，请检查 API 配置');
+        SmartDialog.showToast(uiTx('未获取到模型列表，请检查 API 配置'));
       }
     } catch (e) {
-      SmartDialog.showToast('获取模型列表失败: $e');
+      SmartDialog.showToast(uiTx('获取模型列表失败: $e'));
     } finally {
       isLoadingModels.value = false;
     }
@@ -137,7 +137,7 @@ class AiSettingController extends GetxController {
 
   Future<void> fetchTranslateModels() async {
     if (translateApiUrl.value.trim().isEmpty) {
-      SmartDialog.showToast('请先填写翻译接口地址');
+      SmartDialog.showToast(uiTx('请先填写翻译接口地址'));
       return;
     }
     isLoadingTranslateModels.value = true;
@@ -147,9 +147,9 @@ class AiSettingController extends GetxController {
         apiKey: translateApiKey.value,
       );
       translateModelList.value = models;
-      if (models.isEmpty) SmartDialog.showToast('未获取到模型列表，请检查地址/Key');
+      if (models.isEmpty) SmartDialog.showToast(uiTx('未获取到模型列表，请检查地址/Key'));
     } catch (e) {
-      SmartDialog.showToast('获取翻译模型失败: $e');
+      SmartDialog.showToast(uiTx('获取翻译模型失败: $e'));
     } finally {
       isLoadingTranslateModels.value = false;
     }
@@ -172,18 +172,18 @@ class AiSettingController extends GetxController {
     } else {
       Pref.uiTranslateCache = {};
     }
-    SmartDialog.showToast('已清空界面翻译缓存');
+    SmartDialog.showToast(uiTx('已清空界面翻译缓存'));
   }
 
   final isTesting = false.obs;
 
   Future<void> testTranslate() async {
     if (!Get.isRegistered<UiTranslateService>()) {
-      SmartDialog.showToast('翻译服务未就绪');
+      SmartDialog.showToast(uiTx('翻译服务未就绪'));
       return;
     }
     if (Pref.uiTranslateApiUrl.isEmpty || Pref.uiTranslateModel.isEmpty) {
-      SmartDialog.showToast('请先配置「界面翻译」的接口地址并选择翻译模型');
+      SmartDialog.showToast(uiTx('请先配置「界面翻译」的接口地址并选择翻译模型'));
       return;
     }
     isTesting.value = true;
@@ -191,9 +191,9 @@ class AiSettingController extends GetxController {
       final chineseTarget = UiTranslateService.to.isChineseTarget;
       final sample = chineseTarget ? 'Hello world' : '直播';
       final out = await UiTranslateService.to.debugTranslate(sample);
-      SmartDialog.showToast('测试成功：$sample → $out');
+      SmartDialog.showToast(uiTx('测试成功：$sample → $out'));
     } catch (e) {
-      SmartDialog.showToast('测试失败：$e');
+      SmartDialog.showToast(uiTx('测试失败：$e'));
     } finally {
       isTesting.value = false;
     }

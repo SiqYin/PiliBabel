@@ -117,7 +117,7 @@ class _DownloadPageState extends State<DownloadPage>
       return;
     }
     await _collectionService.createFolder(title);
-    SmartDialog.showToast('创建成功');
+    SmartDialog.showToast(uiTx('创建成功'));
   }
 
   Future<void> _renameFolder(DownloadFolder folder) async {
@@ -130,7 +130,7 @@ class _DownloadPageState extends State<DownloadPage>
       return;
     }
     await _collectionService.renameFolder(folder.id, title);
-    SmartDialog.showToast('重命名成功');
+    SmartDialog.showToast(uiTx('重命名成功'));
   }
 
   Future<void> _deleteFolder(DownloadFolder folder) async {
@@ -156,7 +156,7 @@ class _DownloadPageState extends State<DownloadPage>
       folderIds,
     );
     _controller.handleSelect();
-    SmartDialog.showToast('已添加到文件夹');
+    SmartDialog.showToast(uiTx('已添加到文件夹'));
   }
 
   Future<void> _exportSelected() async {
@@ -174,7 +174,7 @@ class _DownloadPageState extends State<DownloadPage>
         .toList();
     _folderSelectController.handleSelect();
     if (entries.isEmpty) {
-      SmartDialog.showToast('选中的文件夹里没有可导出的缓存');
+      SmartDialog.showToast(uiTx('选中的文件夹里没有可导出的缓存'));
       return;
     }
     await exportDownloadEntries(entries);
@@ -222,7 +222,7 @@ class _DownloadPageState extends State<DownloadPage>
 
   Future<void> _resetAllSort() async {
     await _collectionService.resetAllVideoOrder();
-    SmartDialog.showToast('已按缓存时间显示');
+    SmartDialog.showToast(uiTx('已按缓存时间显示'));
   }
 
   void _onAllSortSelected(_DownloadSortAction action) {
@@ -267,7 +267,7 @@ class _DownloadPageState extends State<DownloadPage>
               [entry.cid],
               selectedIds,
             );
-            SmartDialog.showToast('已添加到文件夹');
+            SmartDialog.showToast(uiTx('已添加到文件夹'));
           },
         ),
       ];
@@ -285,7 +285,7 @@ class _DownloadPageState extends State<DownloadPage>
               [entry.cid],
               [folder.id],
             );
-            SmartDialog.showToast('已添加到「${folder.title}」');
+            SmartDialog.showToast(uiTx('已添加到「${folder.title}」'));
           },
         ),
       ),
@@ -305,7 +305,7 @@ class _DownloadPageState extends State<DownloadPage>
             [entry.cid],
             selectedIds,
           );
-          SmartDialog.showToast('已添加到文件夹');
+          SmartDialog.showToast(uiTx('已添加到文件夹'));
         },
       ),
     ];

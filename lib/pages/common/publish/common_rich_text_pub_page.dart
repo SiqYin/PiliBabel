@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show File, HttpException;
 
 import 'package:PiliPlus/common/style.dart';
@@ -234,7 +235,7 @@ abstract class CommonRichTextPubPageState<T extends CommonRichTextPubPage>
           if (pickedFiles.isNotEmpty) {
             for (int i = 0; i < pickedFiles.length; i++) {
               if (imageList.length == limit) {
-                SmartDialog.showToast('最多选择$limit张图片');
+                SmartDialog.showToast(uiTx('最多选择$limit张图片'));
                 break;
               } else {
                 imageList.add(FilePicModel(path: pickedFiles[i].path));

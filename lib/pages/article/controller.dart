@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/http/dynamics.dart';
 import 'package:PiliPlus/http/fav.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -233,11 +234,11 @@ class ArticleController extends CommonDynController {
   // 投币（专栏 avtype: 2）
   void actionCoin() {
     if (!Accounts.main.isLogin) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast(uiTx('账号未登录'));
       return;
     }
     if (coinNum.value >= 2) {
-      SmartDialog.showToast('达到投币上限啦~');
+      SmartDialog.showToast(uiTx('达到投币上限啦~'));
       return;
     }
     PayCoinsPage.toPayCoinsPage(
@@ -259,7 +260,7 @@ class ArticleController extends CommonDynController {
       referer: url,
     );
     if (res.isSuccess) {
-      SmartDialog.showToast('投币成功');
+      SmartDialog.showToast(uiTx('投币成功'));
       coinNum.value += coin;
       GlobalData().afterCoin(coin);
       final like = stats.value?.like;

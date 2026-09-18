@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:io' show exit, Platform;
 import 'dart:math' as math;
@@ -159,7 +160,7 @@ class PlayerFocus extends StatelessWidget {
           final speed = isDigit1 ? 1.0 : 2.0;
           // 无条件走手动调速：锁定态下即使速度相同也需要解除锁定
           plPlayerController.setManualPlaybackSpeed(speed);
-          SmartDialog.showToast('${speed}x播放');
+          SmartDialog.showToast(uiTx('${speed}x播放'));
         }
         return true;
       }
@@ -275,7 +276,7 @@ class PlayerFocus extends StatelessWidget {
           case LogicalKeyboardKey.bracketLeft:
             if (introController case final introController?) {
               if (!introController.prevPlay(manual: true)) {
-                SmartDialog.showToast('已经是第一集了');
+                SmartDialog.showToast(uiTx('已经是第一集了'));
               }
             }
             return true;
@@ -283,7 +284,7 @@ class PlayerFocus extends StatelessWidget {
           case LogicalKeyboardKey.bracketRight:
             if (introController case final introController?) {
               if (!introController.nextPlay(manual: true)) {
-                SmartDialog.showToast('已经是最后一集了');
+                SmartDialog.showToast(uiTx('已经是最后一集了'));
               }
             }
             return true;

@@ -407,7 +407,7 @@ abstract final class PiliScheme {
           default:
             if (!selfHandle) {
               // if (kDebugMode) debugPrint('$uri');
-              SmartDialog.showToast('未知路径:$uri，请截图反馈给开发者');
+              SmartDialog.showToast(uiTx('未知路径:$uri，请截图反馈给开发者'));
             }
             return false;
         }
@@ -431,7 +431,7 @@ abstract final class PiliScheme {
         }
         if (!selfHandle) {
           // if (kDebugMode) debugPrint('$uri');
-          SmartDialog.showToast('未知路径:$uri，请截图反馈给开发者');
+          SmartDialog.showToast(uiTx('未知路径:$uri，请截图反馈给开发者'));
         }
         return false;
     }
@@ -916,7 +916,7 @@ abstract final class PiliScheme {
       }
     } catch (e) {
       SmartDialog.dismiss();
-      SmartDialog.showToast('video获取失败: $e');
+      SmartDialog.showToast(uiTx('video获取失败: $e'));
     }
   }
 }

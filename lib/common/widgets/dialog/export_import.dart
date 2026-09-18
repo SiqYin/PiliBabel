@@ -55,7 +55,7 @@ Future<void> importFromClipBoard<T>(
       json = jsonDecode(text);
       formatText = Utils.jsonEncoder.convert(json);
     } catch (e) {
-      SmartDialog.showToast('解析json失败：$e');
+      SmartDialog.showToast(uiTx('解析json失败：$e'));
       return;
     }
     bool? executeImport;
@@ -104,13 +104,13 @@ Future<void> importFromClipBoard<T>(
     if (executeImport ?? false) {
       try {
         await onImport(json);
-        SmartDialog.showToast('导入成功');
+        SmartDialog.showToast(uiTx('导入成功'));
       } catch (e) {
-        SmartDialog.showToast('导入失败：$e');
+        SmartDialog.showToast(uiTx('导入失败：$e'));
       }
     }
   } else {
-    SmartDialog.showToast('剪贴板无数据');
+    SmartDialog.showToast(uiTx('剪贴板无数据'));
     return;
   }
 }
@@ -128,14 +128,14 @@ Future<void> importFromLocalFile<T>({
     try {
       json = jsonDecode(data);
     } catch (e) {
-      SmartDialog.showToast('解析json失败：$e');
+      SmartDialog.showToast(uiTx('解析json失败：$e'));
       return;
     }
     try {
       await onImport(json);
-      SmartDialog.showToast('导入成功');
+      SmartDialog.showToast(uiTx('导入成功'));
     } catch (e) {
-      SmartDialog.showToast('导入失败：$e');
+      SmartDialog.showToast(uiTx('导入失败：$e'));
     }
   }
 }
@@ -188,7 +188,7 @@ void importFromInput<T>(
               try {
                 await onImport(json);
                 Get.back();
-                SmartDialog.showToast('导入成功');
+                SmartDialog.showToast(uiTx('导入成功'));
                 return;
               } catch (e) {
                 forceErrorText = '导入失败：$e';

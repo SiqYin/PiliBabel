@@ -167,7 +167,7 @@ class _PgcPanelState extends State<PgcPanel> {
           borderRadius: const BorderRadius.all(Radius.circular(6)),
           onTap: () {
             if (item.badge == '会员' && Accounts.mainEqVideo && vipStatus) {
-              SmartDialog.showToast('需要大会员');
+              SmartDialog.showToast(uiTx('需要大会员'));
             }
             widget.onChangeEpisode(item, manual: true);
           },

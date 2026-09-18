@@ -175,7 +175,7 @@ document.addEventListener('click', function(e) {
       return webview;
     } catch (e) {
       if (kDebugMode) debugPrint('Linux Webview open error: $e');
-      SmartDialog.showToast('无法启动网页窗口: $e');
+      SmartDialog.showToast(uiTx('无法启动网页窗口: $e'));
       return null;
     }
   }
@@ -335,14 +335,14 @@ class _WebviewPageState extends State<WebviewPage> with RouteAware {
           if (Platform.isLinux) {
             await LinuxCookieManager.deleteAllCookies();
             _closeLinuxWebview();
-            SmartDialog.showToast('已清理缓存并关闭窗口');
+            SmartDialog.showToast(uiTx('已清理缓存并关闭窗口'));
             if (mounted) {
               Get.back();
             }
           } else {
             await InAppWebViewController.clearAllCache();
             await _webViewController?.clearHistory();
-            SmartDialog.showToast('已清理');
+            SmartDialog.showToast(uiTx('已清理'));
           }
         } catch (e) {
           SmartDialog.showToast(e.toString());
@@ -371,7 +371,7 @@ class _WebviewPageState extends State<WebviewPage> with RouteAware {
         } else {
           await LoginUtils.setWebCookie();
         }
-        SmartDialog.showToast('设置成功，刷新或重新打开网页');
+        SmartDialog.showToast(uiTx('设置成功，刷新或重新打开网页'));
         break;
     }
   }

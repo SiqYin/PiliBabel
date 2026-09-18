@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:ffi';
 import 'dart:io' show Directory, File;
 import 'dart:ui' show loadFontFromList;
@@ -173,7 +174,7 @@ abstract final class FontUtils {
     } catch (_) {
       SmartDialog.dismiss(status: SmartStatus.loading);
       if (kDebugMode) rethrow;
-      SmartDialog.showToast('字体导入失败');
+      SmartDialog.showToast(uiTx('字体导入失败'));
     }
     return null;
   }
@@ -444,7 +445,7 @@ abstract final class FontUtils {
       _ => true,
     }) {
       // TODO: ios/macos CTFontManagerCopyAvailableFontFamilyNames
-      SmartDialog.showToast('加载系统字体失败');
+      SmartDialog.showToast(uiTx('加载系统字体失败'));
     }
     return _fonts;
   }

@@ -314,7 +314,7 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
                       status: item.wishListen ?? false,
                       onPressed: () async {
                         if (!Accounts.main.isLogin) {
-                          SmartDialog.showToast('请先登录');
+                          SmartDialog.showToast(uiTx('请先登录'));
                           return;
                         }
                         final hasLike = item.wishListen ?? false;

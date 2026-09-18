@@ -148,7 +148,7 @@ class LaterController extends MultiSelectController<LaterData, LaterItemModel>
               Get.find<LaterController>(tag: item.type.toString()).onReload();
             } catch (_) {}
           }
-          SmartDialog.showToast('已清空');
+          SmartDialog.showToast(uiTx('已清空'));
         } else {
           res.toast();
         }

@@ -258,7 +258,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<LiveSendDmPanel> {
         ..savedDanmaku?.clear()
         ..savedDanmaku = null
         ..markFansMedalStale();
-      SmartDialog.showToast('发送成功');
+      SmartDialog.showToast(uiTx('发送成功'));
     } else {
       res.toast();
     }

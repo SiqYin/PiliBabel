@@ -170,7 +170,7 @@ Future<void> showMemberReportDialog(
           TextButton(
             onPressed: () {
               if (reason.isEmpty) {
-                SmartDialog.showToast('至少选择一项作为举报内容');
+                SmartDialog.showToast(uiTx('至少选择一项作为举报内容'));
               } else {
                 Get.back();
                 MemberHttp.reportMember(

@@ -52,7 +52,7 @@ class SubController extends CommonListController<SubData, SubItemModel> {
                 loadingState
                   ..value.data!.remove(subFolderItem)
                   ..refresh();
-                SmartDialog.showToast('取消订阅成功');
+                SmartDialog.showToast(uiTx('取消订阅成功'));
               } else {
                 res.toast();
               }

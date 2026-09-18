@@ -318,12 +318,12 @@ class _NoteListPageState extends State<NoteListPage>
   Future<void> _onTakeNoteLinux(String url) async {
     if (_activeNoteWebview != null) {
       await _activeNoteWebview?.bringToForeground();
-      SmartDialog.showToast('已置顶笔记窗口');
+      SmartDialog.showToast(uiTx('已置顶笔记窗口'));
       return;
     }
     if (_isOpeningNote) return;
     _isOpeningNote = true;
-    SmartDialog.showToast('已在新窗口打开');
+    SmartDialog.showToast(uiTx('已在新窗口打开'));
     try {
       var webview = await WebviewPage.openLinux(
         oid: widget.oid,

@@ -161,7 +161,7 @@ class _DynTopicPageState extends State<DynTopicPage>
                   ),
                 );
               } else {
-                SmartDialog.showToast('账号未登录');
+                SmartDialog.showToast(uiTx('账号未登录'));
               }
             },
             icon: const Icon(CustomIcons.topic_tag, size: 20),
@@ -334,7 +334,7 @@ class _DynTopicPageState extends State<DynTopicPage>
                   child: Text(uiTx('举报')),
                   onTap: () {
                     if (!_controller.isLogin) {
-                      SmartDialog.showToast('账号未登录');
+                      SmartDialog.showToast(uiTx('账号未登录'));
                       return;
                     }
                     PageUtils.inAppWebview(

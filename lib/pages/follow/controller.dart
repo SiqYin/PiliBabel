@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/member.dart';
 import 'package:PiliPlus/models/common/follow_order_type.dart';
@@ -103,7 +104,7 @@ class FollowController extends GetxController with GetTickerProviderStateMixin {
     if (res.isSuccess) {
       item.name = tagName;
       tabs.refresh();
-      SmartDialog.showToast('修改成功');
+      SmartDialog.showToast(uiTx('修改成功'));
     } else {
       res.toast();
     }
@@ -115,7 +116,7 @@ class FollowController extends GetxController with GetTickerProviderStateMixin {
       tabs.removeAt(index);
       onInitTab();
       followState.refresh();
-      SmartDialog.showToast('删除成功');
+      SmartDialog.showToast(uiTx('删除成功'));
     } else {
       res.toast();
     }

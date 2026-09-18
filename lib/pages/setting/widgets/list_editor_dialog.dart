@@ -122,7 +122,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
   }
 
   void _showDuplicateToast() {
-    SmartDialog.showToast('该${widget.itemLabel}已存在');
+    SmartDialog.showToast(uiTx('该${widget.itemLabel}已存在'));
   }
 
   void _removeItem(int index) {
@@ -252,7 +252,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
           onPressed: () {
             // A focus-loss validation may run before this button callback.
             if (_invalidEditIndexes.isNotEmpty) {
-              SmartDialog.showToast('存在未修正的编辑项');
+              SmartDialog.showToast(uiTx('存在未修正的编辑项'));
               return;
             }
             // Commit any in-progress edits before saving

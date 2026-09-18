@@ -73,11 +73,11 @@ abstract final class ImageUtils {
       final bytes = await (file ?? tempFile!).readAsBytes();
       await FlutterClipboard.copyImage(bytes);
       SmartDialog.dismiss(status: SmartStatus.loading);
-      SmartDialog.showToast('已复制');
+      SmartDialog.showToast(uiTx('已复制'));
       tempFile?.tryDel();
     } catch (e) {
       SmartDialog.dismiss(status: SmartStatus.loading);
-      SmartDialog.showToast('复制失败: $e');
+      SmartDialog.showToast(uiTx('复制失败: $e'));
     }
   }
 
@@ -151,9 +151,9 @@ abstract final class ImageUtils {
           height: height,
         ).whenComplete(File(videoPath).tryDel);
         if (success) {
-          SmartDialog.showToast(' 已保存 ');
+          SmartDialog.showToast(uiTx(' 已保存 '));
         } else {
-          SmartDialog.showToast('保存失败');
+          SmartDialog.showToast(uiTx('保存失败'));
           return false;
         }
       } else {
@@ -224,7 +224,7 @@ abstract final class ImageUtils {
         }
       }
       if (cancelToken?.isCancelled == true) {
-        SmartDialog.showToast('已取消下载');
+        SmartDialog.showToast(uiTx('已取消下载'));
         return false;
       } else {
         SmartDialog.showToast(success ? ' 已保存 ' : '保存失败');
@@ -232,7 +232,7 @@ abstract final class ImageUtils {
       return success;
     } catch (e) {
       if (cancelToken?.isCancelled == true) {
-        SmartDialog.showToast('已取消下载');
+        SmartDialog.showToast(uiTx('已取消下载'));
       } else {
         SmartDialog.showToast(e.toString());
       }
@@ -296,9 +296,9 @@ abstract final class ImageUtils {
       );
       SmartDialog.dismiss();
       if (res.isSuccess) {
-        SmartDialog.showToast(' 已保存 ');
+        SmartDialog.showToast(uiTx(' 已保存 '));
       } else {
-        SmartDialog.showToast('保存失败，${res.errorMessage}');
+        SmartDialog.showToast(uiTx('保存失败，${res.errorMessage}'));
       }
     } else {
       SmartDialog.dismiss();
@@ -308,11 +308,11 @@ abstract final class ImageUtils {
         bytes: Uint8List(0),
       );
       if (savePath == null) {
-        SmartDialog.showToast("取消保存");
+        SmartDialog.showToast(uiTx("取消保存"));
         return null;
       }
       await File(savePath.toFilePath()).writeAsBytes(bytes);
-      SmartDialog.showToast(' 已保存 ');
+      SmartDialog.showToast(uiTx(' 已保存 '));
       res = SaveResult(true, null);
     }
     return res;
@@ -326,7 +326,7 @@ abstract final class ImageUtils {
   }) async {
     final file = File(filePath);
     if (!file.existsSync()) {
-      SmartDialog.showToast("文件不存在");
+      SmartDialog.showToast(uiTx("文件不存在"));
       return;
     }
     SaveResult? res;
@@ -344,7 +344,7 @@ abstract final class ImageUtils {
         bytes: Uint8List(0),
       );
       if (savePath == null) {
-        SmartDialog.showToast("取消保存");
+        SmartDialog.showToast(uiTx("取消保存"));
         return;
       }
       await file.copy(savePath.toFilePath());
@@ -352,9 +352,9 @@ abstract final class ImageUtils {
     }
     if (needToast) {
       if (res.isSuccess) {
-        SmartDialog.showToast(' 已保存 ');
+        SmartDialog.showToast(uiTx(' 已保存 '));
       } else {
-        SmartDialog.showToast('保存失败，${res.errorMessage}');
+        SmartDialog.showToast(uiTx('保存失败，${res.errorMessage}'));
       }
     }
   }

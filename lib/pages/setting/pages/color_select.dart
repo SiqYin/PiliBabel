@@ -51,7 +51,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
   Future<void> _onChanged([bool? val]) async {
     val ??= !ctr.dynamicColor.value;
     if (val && !await MyApp.initPlatformState()) {
-      SmartDialog.showToast('设备可能不支持动态取色');
+      SmartDialog.showToast(uiTx('设备可能不支持动态取色'));
       if (kReleaseMode) {
         return;
       }

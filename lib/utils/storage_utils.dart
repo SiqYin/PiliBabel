@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show File;
 import 'dart:typed_data' show Uint8List;
 
@@ -20,15 +21,15 @@ abstract final class StorageUtils {
         bytes: PlatformUtils.isDesktop ? Uint8List(0) : bytes,
       );
       if (path == null) {
-        SmartDialog.showToast("取消保存");
+        SmartDialog.showToast(uiTx("取消保存"));
         return;
       }
       if (PlatformUtils.isDesktop) {
         await File(path.toFilePath()).writeAsBytes(bytes);
       }
-      SmartDialog.showToast("已保存");
+      SmartDialog.showToast(uiTx("已保存"));
     } catch (e) {
-      SmartDialog.showToast("保存失败: $e");
+      SmartDialog.showToast(uiTx("保存失败: $e"));
     }
   }
 }

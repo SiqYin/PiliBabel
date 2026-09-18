@@ -1026,7 +1026,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
             if (summary?.isNotEmpty == true || outline?.isNotEmpty == true) {
               widget.showAiBottomSheet();
             } else {
-              SmartDialog.showToast("当前视频不支持AI视频总结");
+              SmartDialog.showToast(uiTx("当前视频不支持AI视频总结"));
             }
           }
         },

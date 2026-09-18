@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/grpc/bilibili/app/im/v1.pb.dart';
 import 'package:PiliPlus/grpc/im.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -38,7 +39,7 @@ class WhisperBlockController
         ..value.data!.add(KeywordBlockingItem(keyword: keyword))
         ..refresh();
       count.value += 1;
-      SmartDialog.showToast('添加成功');
+      SmartDialog.showToast(uiTx('添加成功'));
     } else {
       res.toast();
     }
@@ -51,7 +52,7 @@ class WhisperBlockController
         ..value.data!.remove(item)
         ..refresh();
       count.value -= 1;
-      SmartDialog.showToast('删除成功');
+      SmartDialog.showToast(uiTx('删除成功'));
     } else {
       res.toast();
     }

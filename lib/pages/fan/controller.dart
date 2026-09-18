@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/http/fan.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/video.dart';
@@ -46,7 +47,7 @@ class FansController extends FollowTypeController {
       loadingState
         ..value.data!.removeAt(index)
         ..refresh();
-      SmartDialog.showToast('移除成功');
+      SmartDialog.showToast(uiTx('移除成功'));
     } else {
       res.toast();
     }

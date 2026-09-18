@@ -128,7 +128,7 @@ class _CreateReservePageState extends State<CreateReservePage> {
                             const Duration(minutes: 5)) {
                           _controller.date.value = newEndtime;
                         } else {
-                          SmartDialog.showToast('至少选择5分钟之后');
+                          SmartDialog.showToast(uiTx('至少选择5分钟之后'));
                         }
                       }
                     }

@@ -694,7 +694,7 @@ class VideoDetailController extends GetxController
                   );
                   if (res.isSuccess) {
                     mediaList.removeAt(index);
-                    SmartDialog.showToast('取消收藏');
+                    SmartDialog.showToast(uiTx('取消收藏'));
                   } else {
                     res.toast();
                   }
@@ -787,10 +787,10 @@ class VideoDetailController extends GetxController
                     Part part =
                         ugcIntroController.videoDetail.value.pages![item];
                     ugcIntroController.onChangeEpisode(part);
-                    SmartDialog.showToast('已跳至第${item + 1}P');
+                    SmartDialog.showToast(uiTx('已跳至第${item + 1}P'));
                   } catch (e) {
                     if (kDebugMode) debugPrint('$e');
-                    SmartDialog.showToast('跳转失败');
+                    SmartDialog.showToast(uiTx('跳转失败'));
                   }
                   onRemoveItem(listData.indexOf(item), item);
                 } else if (item is SegmentModel) {
@@ -811,7 +811,7 @@ class VideoDetailController extends GetxController
   /// 发送弹幕
   Future<void> showShootDanmakuSheet() async {
     if (plPlayerController.dmState.contains(cid.value)) {
-      SmartDialog.showToast('UP主已关闭弹幕');
+      SmartDialog.showToast(uiTx('UP主已关闭弹幕'));
       return;
     }
     final isPlaying =
@@ -1017,7 +1017,7 @@ class VideoDetailController extends GetxController
   void setLanguage(String language) {
     if (currLang.value == language) return;
     if (!isLoginVideo) {
-      SmartDialog.showToast('账号未登录');
+      SmartDialog.showToast(uiTx('账号未登录'));
       return;
     }
     currLang.value = language;
@@ -1185,7 +1185,7 @@ class VideoDetailController extends GetxController
           }
           return;
         } else {
-          SmartDialog.showToast('视频资源不存在');
+          SmartDialog.showToast(uiTx('视频资源不存在'));
           _autoPlay.value = false;
           videoState.value = false;
           if (plPlayerController.isFullScreen.value) {
@@ -1582,7 +1582,7 @@ class VideoDetailController extends GetxController
             plPlayerController.seekTo(
               Duration(milliseconds: response.lastPlayTime!),
             );
-            SmartDialog.showToast('已跳转至上次观看位置');
+            SmartDialog.showToast(uiTx('已跳转至上次观看位置'));
           }
         }
       }
@@ -2120,7 +2120,7 @@ class VideoDetailController extends GetxController
     if (res case Success(:final response)) {
       final first = response.durl?.firstOrNull;
       if (first == null || first.playUrls.isEmpty) {
-        SmartDialog.showToast('不支持投屏');
+        SmartDialog.showToast(uiTx('不支持投屏'));
         return;
       }
       final url = VideoUtils.getCdnUrl(first.playUrls);

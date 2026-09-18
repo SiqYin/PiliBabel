@@ -278,7 +278,7 @@ class HeaderControl extends StatefulWidget {
 
   static Future<bool> likeDanmaku(VideoDanmaku extra, int cid) async {
     if (!Accounts.main.isLogin) {
-      SmartDialog.showToast('请先登录');
+      SmartDialog.showToast(uiTx('请先登录'));
       return false;
     }
     final isLike = !extra.isLike;
@@ -318,7 +318,7 @@ class HeaderControl extends StatefulWidget {
       id: id,
     );
     if (res.isSuccess) {
-      SmartDialog.showToast('删除成功');
+      SmartDialog.showToast(uiTx('删除成功'));
       return true;
     } else {
       res.toast();
@@ -355,7 +355,7 @@ class HeaderControl extends StatefulWidget {
         },
       );
     } else {
-      return SmartDialog.showToast('请先登录');
+      return SmartDialog.showToast(uiTx('请先登录'));
     }
   }
 
@@ -401,7 +401,7 @@ class HeaderControl extends StatefulWidget {
         },
       );
     } else {
-      return SmartDialog.showToast('请先登录');
+      return SmartDialog.showToast(uiTx('请先登录'));
     }
   }
 }
@@ -841,7 +841,7 @@ class HeaderControlState extends State<HeaderControl>
                         await videoDetailCtr.setSubtitle(length + 1);
                       }
                     } catch (e) {
-                      SmartDialog.showToast('加载失败: $e');
+                      SmartDialog.showToast(uiTx('加载失败: $e'));
                     }
                   },
                   leading: const Icon(Icons.file_open_outlined, size: 20),
@@ -880,7 +880,7 @@ class HeaderControlState extends State<HeaderControl>
                   dense: true,
                   onTap: () {
                     if (!Accounts.main.isLogin) {
-                      SmartDialog.showToast('账号未登录');
+                      SmartDialog.showToast(uiTx('账号未登录'));
                       return;
                     }
                     Get.back();
@@ -1007,7 +1007,7 @@ class HeaderControlState extends State<HeaderControl>
   /// 选择画质
   void showSetVideoQa() {
     if (videoInfo.dash == null) {
-      SmartDialog.showToast('当前视频不支持选择画质');
+      SmartDialog.showToast(uiTx('当前视频不支持选择画质'));
       return;
     }
     final VideoQuality? currentVideoQa = videoDetailCtr.currentVideoQa.value;
@@ -1068,7 +1068,7 @@ class HeaderControlState extends State<HeaderControl>
                           ..currentVideoQa.value = newQa
                           ..updatePlayer();
 
-                        SmartDialog.showToast("画质已变为：${newQa.desc}");
+                        SmartDialog.showToast(uiTx("画质已变为：${newQa.desc}"));
 
                         // update
                         videoDetailCtr.persistVideoQa(quality);
@@ -1141,7 +1141,7 @@ class HeaderControlState extends State<HeaderControl>
                           ..currentAudioQa = newQa
                           ..updatePlayer();
 
-                        SmartDialog.showToast("音质已变为：${newQa.desc}");
+                        SmartDialog.showToast(uiTx("音质已变为：${newQa.desc}"));
 
                         // update
                         if (!plPlayerController.tempPlayerConf) {
@@ -1186,7 +1186,7 @@ class HeaderControlState extends State<HeaderControl>
 
     final list = videoFormat.firstWhere((e) => e.quality == firstCode).codecs;
     if (list == null) {
-      SmartDialog.showToast('当前视频不支持选择解码格式');
+      SmartDialog.showToast(uiTx('当前视频不支持选择解码格式'));
       return;
     }
 
@@ -1226,7 +1226,7 @@ class HeaderControlState extends State<HeaderControl>
                               videoDetailCtr
                                 ..currentDecodeFormats = format
                                 ..updatePlayer();
-                              SmartDialog.showToast("解码已变为：${format.name}");
+                              SmartDialog.showToast(uiTx("解码已变为：${format.name}"));
                             },
                             contentPadding: const .symmetric(horizontal: 20),
                             title: Text(format.description),

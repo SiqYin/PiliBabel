@@ -363,14 +363,14 @@ class _PostPanelState extends State<PostPanel>
 
     if (res case Success(:final response)) {
       Get.back();
-      SmartDialog.showToast('提交成功');
+      SmartDialog.showToast(uiTx('提交成功'));
       list.clear();
       videoDetailController.handleSBData(response);
       if (videoDetailController.blockListener == null) {
         videoDetailController.initSkip();
       }
     } else {
-      SmartDialog.showToast('提交失败: $res');
+      SmartDialog.showToast(uiTx('提交失败: $res'));
     }
   }
 

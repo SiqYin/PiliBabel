@@ -207,7 +207,7 @@ class _WhisperPageState extends State<WhisperPage> {
               ),
               onTap: () {
                 if (!item.enabled) {
-                  SmartDialog.showToast('已禁用');
+                  SmartDialog.showToast(uiTx('已禁用'));
                   return;
                 }
                 _controller.unreadCounts[index] = 0;

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async' show Completer, StreamSubscription, Timer, unawaited;
 import 'dart:convert' show ascii, utf8;
 import 'dart:io' show Platform;
@@ -1353,7 +1354,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
             },
           );
         } else if (event.startsWith('Could not open codec')) {
-          SmartDialog.showToast('无法加载解码器, $event，可能会切换至软解');
+          SmartDialog.showToast(uiTx('无法加载解码器, $event，可能会切换至软解'));
         } else if (!onlyPlayAudio.value) {
           if (event.startsWith("error running") ||
               event.startsWith("Failed to open .") ||
@@ -1364,7 +1365,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
           if (!kDebugMode) {
             Utils.reportError('$event\n${player.state.playlist}');
           }
-          // SmartDialog.showToast('视频加载错误, $event');
+          // SmartDialog.showToast(uiTx('视频加载错误, $event'));
         }
       }),
     ];
@@ -1625,7 +1626,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       _videoPlayerController?.setVolume(appVolume * 100);
 
       // 显示提示
-      SmartDialog.showToast('已切换到应用内音量模式');
+      SmartDialog.showToast(uiTx('已切换到应用内音量模式'));
     } else {
       // 切换到同步系统音量模式
       // 恢复上游播放器音量设置，并按增益折算系统音量
@@ -1645,7 +1646,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       systemVolume.value = newSystemVolume;
       volume.value = newSystemVolume;
 
-      SmartDialog.showToast('已切换到同步系统音量模式');
+      SmartDialog.showToast(uiTx('已切换到同步系统音量模式'));
     }
   }
 
@@ -2746,10 +2747,10 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   }
 
   Future<void> takeScreenshot() async {
-    SmartDialog.showToast('截图中');
+    SmartDialog.showToast(uiTx('截图中'));
     final image = await videoPlayerController?.screenshot();
     if (image != null) {
-      SmartDialog.showToast('点击弹窗保存截图');
+      SmartDialog.showToast(uiTx('点击弹窗保存截图'));
       showDialog(
         context: Get.context!,
         builder: (context) => GestureDetector(
@@ -2764,7 +2765,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
                 fileName: 'screenshot_${cid}_$time',
               );
             } else {
-              SmartDialog.showToast('保存失败');
+              SmartDialog.showToast(uiTx('保存失败'));
             }
             Get.back();
           },
@@ -2794,7 +2795,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         ),
       ).whenComplete(image.dispose);
     } else {
-      SmartDialog.showToast('截图失败');
+      SmartDialog.showToast(uiTx('截图失败'));
     }
   }
 

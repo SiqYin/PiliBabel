@@ -525,12 +525,12 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
                     if (selectedTime != null) {
                       if (selectedDate.day == nowDate.day) {
                         if (selectedTime.hour < nowTime.hour) {
-                          SmartDialog.showToast('时间设置错误，至少选择6分钟之后');
+                          SmartDialog.showToast(uiTx('时间设置错误，至少选择6分钟之后'));
                           return;
                         } else if (selectedTime.hour == nowTime.hour) {
                           if (selectedTime.minute < nowTime.minute + 6) {
                             if (selectedDate.day == nowDate.day) {
-                              SmartDialog.showToast('时间设置错误，至少选择6分钟之后');
+                              SmartDialog.showToast(uiTx('时间设置错误，至少选择6分钟之后'));
                             }
                             return;
                           }
@@ -749,7 +749,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
       if (res.isSuccess) {
         hasPub = true;
         Get.back();
-        SmartDialog.showToast('发布成功');
+        SmartDialog.showToast(uiTx('发布成功'));
         widget.onSuccess?.call();
       } else {
         res.toast();
@@ -785,7 +785,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
     if (res case Success(:final response)) {
       hasPub = true;
       Get.back();
-      SmartDialog.showToast('发布成功');
+      SmartDialog.showToast(uiTx('发布成功'));
       final id = response?['dyn_id'];
       RequestUtils.insertCreatedDyn(id);
       if (!_isPrivate.value && _publishTime.value == null) {

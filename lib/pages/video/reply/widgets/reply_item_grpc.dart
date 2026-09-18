@@ -452,10 +452,10 @@ class ReplyItemGrpc extends StatelessWidget {
                   (context as Element).markNeedsBuild();
                 }
               } else {
-                SmartDialog.showToast('翻译结果为空');
+                SmartDialog.showToast(uiTx('翻译结果为空'));
               }
             } else if (res case Error(:final errMsg)) {
-              SmartDialog.showToast('翻译失败: $errMsg');
+              SmartDialog.showToast(uiTx('翻译失败: $errMsg'));
             }
             isProcessing = false;
           }
@@ -939,7 +939,7 @@ class ReplyItemGrpc extends StatelessWidget {
                           final duration = Duration(
                             seconds: DurationUtils.parseDuration(matchStr),
                           );
-                          SmartDialog.showToast('跳转至：$matchStr');
+                          SmartDialog.showToast(uiTx('跳转至：$matchStr'));
                           if (kDebugMode) {
                             debugPrint('Seeking to $duration with tag: $heroTag');
                           }
@@ -959,7 +959,7 @@ class ReplyItemGrpc extends StatelessWidget {
                             );
                           }
                         } catch (e) {
-                          SmartDialog.showToast('跳转失败: $e');
+                          SmartDialog.showToast(uiTx('跳转失败: $e'));
                           if (kDebugMode) debugPrint('Seek error: $e');
                         }
                       })
@@ -1191,10 +1191,10 @@ class ReplyItemGrpc extends StatelessWidget {
                 );
                 SmartDialog.dismiss();
                 if (res.isSuccess) {
-                  SmartDialog.showToast('删除成功');
+                  SmartDialog.showToast(uiTx('删除成功'));
                   onDelete();
                 } else {
-                  SmartDialog.showToast('删除失败, $res');
+                  SmartDialog.showToast(uiTx('删除失败, $res'));
                 }
               },
               minLeadingWidth: 0,
@@ -1246,7 +1246,7 @@ class ReplyItemGrpc extends StatelessWidget {
                 Pref.replyBlockedMids = mids;
                 ReplyGrpc.replyBlockedMids = mids;
                 Get.back();
-                SmartDialog.showToast('已屏蔽 $name');
+                SmartDialog.showToast(uiTx('已屏蔽 $name'));
               },
               minLeadingWidth: 0,
               leading: const Icon(Icons.person_off_outlined, size: 19),

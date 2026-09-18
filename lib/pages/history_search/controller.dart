@@ -37,7 +37,7 @@ class HistorySearchController
       loadingState
         ..value.data!.removeAt(index)
         ..refresh();
-      SmartDialog.showToast('已删除');
+      SmartDialog.showToast(uiTx('已删除'));
     } else {
       res.toast();
     }
@@ -60,7 +60,7 @@ class HistorySearchController
         );
         if (response.isSuccess) {
           afterDelete(removeList);
-          SmartDialog.showToast('已删除');
+          SmartDialog.showToast(uiTx('已删除'));
         } else {
           response.toast();
         }

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math';
 
 import 'package:PiliPlus/common/widgets/fractionally_sized_box.dart';
@@ -318,7 +319,7 @@ abstract final class PageUtils {
 
       case 'DYNAMIC_TYPE_PGC':
         // if (kDebugMode) debugPrint('番剧');
-        SmartDialog.showToast('暂未支持的类型，请联系开发者');
+        SmartDialog.showToast(uiTx('暂未支持的类型，请联系开发者'));
         break;
 
       case 'DYNAMIC_TYPE_LIVE':
@@ -690,7 +691,7 @@ abstract final class PageUtils {
           }
         }
 
-        SmartDialog.showToast('资源加载失败');
+        SmartDialog.showToast(uiTx('资源加载失败'));
       } else {
         res.toast();
       }
@@ -738,7 +739,7 @@ abstract final class PageUtils {
             off: off,
           );
         } else {
-          SmartDialog.showToast('资源加载失败');
+          SmartDialog.showToast(uiTx('资源加载失败'));
         }
       } else {
         res.toast();

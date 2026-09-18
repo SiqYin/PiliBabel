@@ -364,7 +364,7 @@ class LiveRoomChatPanel extends StatelessWidget {
                 type: 1,
               );
               if (res.isSuccess) {
-                SmartDialog.showToast('屏蔽成功');
+                SmartDialog.showToast(uiTx('屏蔽成功'));
               } else {
                 res.toast();
               }

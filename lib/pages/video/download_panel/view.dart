@@ -272,7 +272,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
     if (kReleaseMode && episode.badge == '会员' && Accounts.mainEqVideo) {
       if (vipStatus != 1) {
         if (!isDownloadAll) {
-          SmartDialog.showToast('需要大会员');
+          SmartDialog.showToast(uiTx('需要大会员'));
         }
         return false;
       }
