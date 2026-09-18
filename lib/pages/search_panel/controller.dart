@@ -151,7 +151,7 @@ class SearchPanelController<R extends SearchNumData<T>, T>
                 onPressed: () => _editKeywords(
                   context,
                   setState,
-                  title: '包含关键词',
+                  title: uiTx('包含关键词'),
                   keywords: includeKeywords,
                   theme: theme,
                   isInclude: true,
@@ -169,7 +169,7 @@ class SearchPanelController<R extends SearchNumData<T>, T>
                 onPressed: () => _editKeywords(
                   context,
                   setState,
-                  title: '排除关键词',
+                  title: uiTx('排除关键词'),
                   keywords: excludeKeywords,
                   theme: theme,
                   isInclude: false,

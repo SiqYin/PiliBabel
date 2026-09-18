@@ -315,7 +315,7 @@ Commit Hash: ${BuildConfig.commitHash}''',
             leading: const Icon(Icons.import_export_outlined),
             onTap: () => showImportExportDialog<Map>(
               context,
-              title: '登录信息',
+              title: uiTx('登录信息'),
               localFileName: () => 'account',
               onExport: () =>
                   Utils.jsonEncoder.convert(Accounts.account.toMap()),
@@ -338,7 +338,7 @@ Commit Hash: ${BuildConfig.commitHash}''',
             leading: const Icon(Icons.import_export_outlined),
             onTap: () => showImportExportDialog<Map<String, dynamic>>(
               context,
-              title: '设置',
+              title: uiTx('设置'),
               localFileName: () => 'setting_${DeviceUtils.platformName}',
               onExport: GStorage.exportAllSettings,
               onImport: GStorage.importAllJsonSettings,

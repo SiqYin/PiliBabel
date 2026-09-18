@@ -1603,7 +1603,7 @@ class HeaderControlState extends State<HeaderControl>
                     onChanged: updateFontWeight,
                   ),
                   ...sliderRow(
-                    title: '描边粗细 $strokeWidth',
+                    title: uiTx('描边粗细 $strokeWidth'),
                     reset: resetBtn(theme, 2.0, () => updateStrokeWidth(2.0)),
                     min: 0,
                     max: 5,
@@ -1614,7 +1614,7 @@ class HeaderControlState extends State<HeaderControl>
                   ),
                   if (isPrimary) ...[
                     ...sliderRow(
-                      title: '左右边距 $subtitlePaddingH',
+                      title: uiTx('左右边距 $subtitlePaddingH'),
                       reset: resetBtn(
                         theme,
                         24,
@@ -1628,7 +1628,7 @@ class HeaderControlState extends State<HeaderControl>
                       onChanged: updateHorizontalPadding,
                     ),
                     ...sliderRow(
-                      title: '底部边距 $subtitlePaddingB',
+                      title: uiTx('底部边距 $subtitlePaddingB'),
                       reset: resetBtn(theme, 24, () => updateBottomPadding(24)),
                       min: 0,
                       max: 200,

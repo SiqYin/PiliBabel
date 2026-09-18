@@ -42,7 +42,7 @@ class _DownloadFolderManagePageState extends State<DownloadFolderManagePage> {
   Future<void> _renameFolder(DownloadFolder folder) async {
     final name = await showDownloadFolderNameDialog(
       context: context,
-      title: '重命名文件夹',
+      title: uiTx('重命名文件夹'),
       initialValue: folder.title,
     );
     if (name == null || name == folder.title) {

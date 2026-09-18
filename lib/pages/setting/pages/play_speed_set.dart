@@ -30,7 +30,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
   List<({int id, String title, Icon icon})> sheetMenu = [
     (
       id: 1,
-      title: '设置为默认倍速',
+      title: uiTx('设置为默认倍速'),
       icon: const Icon(
         Icons.speed,
         size: 21,
@@ -38,7 +38,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
     ),
     (
       id: 2,
-      title: '设置为默认长按倍速',
+      title: uiTx('设置为默认长按倍速'),
       icon: const Icon(
         Icons.speed_sharp,
         size: 21,
@@ -46,7 +46,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
     ),
     (
       id: -1,
-      title: '删除该项',
+      title: uiTx('删除该项'),
       icon: const Icon(
         Icons.delete_outline,
         size: 21,
@@ -219,7 +219,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
               subtitle: Text(playSpeedDefault.toString()),
             ),
             SetSwitchItem(
-              title: '动态长按倍速',
+              title: uiTx('动态长按倍速'),
               subtitle: uiTx('根据默认倍速长按时自动双倍'),
               setKey: SettingBoxKey.enableAutoLongPressSpeed,
               defaultVal: enableAutoLongPressSpeed,

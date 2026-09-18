@@ -407,7 +407,7 @@ class _PostPanelState extends State<PostPanel>
                   spacing: 16,
                   children: [
                     PopupMenuText(
-                      title: '分类',
+                      title: uiTx('分类'),
                       value: () => item.category,
                       onSelected: (e) {
                         bool flag = false;
@@ -452,7 +452,7 @@ class _PostPanelState extends State<PostPanel>
                       getSelectTitle: (category) => category.title,
                     ),
                     PopupMenuText(
-                      title: '行为类别',
+                      title: uiTx('行为类别'),
                       value: () => item.actionType,
                       onSelected: (e) {
                         bool flag = false;

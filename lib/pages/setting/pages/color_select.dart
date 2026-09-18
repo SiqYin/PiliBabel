@@ -84,7 +84,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
               final result = await showDialog<ThemeType>(
                 context: context,
                 builder: (context) => SelectDialog<ThemeType>(
-                  title: '主题模式',
+                  title: uiTx('主题模式'),
                   value: ctr.themeType.value,
                   values: ThemeType.values.map((e) => (e, e.label)).toList(),
                 ),

@@ -101,7 +101,7 @@ class AiChatController extends GetxController {
       if (!hasSubtitles) {
         messages.add(ChatMessage(
           role: 'assistant',
-          content: '⚠️ 已载入视频标题与简介。由于未获取到字幕，AI 分析深度可能受限，请提问。',
+          content: uiTx('⚠️ 已载入视频标题与简介。由于未获取到字幕，AI 分析深度可能受限，请提问。'),
         ));
       }
     } finally {
