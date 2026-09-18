@@ -262,7 +262,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
                             _importedFontItem(font),
                           const CustomPopupMenuDivider(height: 8),
                         ],
-                        const CustomPopupMenuItem<String>(
+                        CustomPopupMenuItem<String>(
                           value: _systemFontSentinel,
                           height: 40,
                           child: Text(uiTx('系统默认')),
@@ -417,12 +417,12 @@ class _FontSettingPageState extends State<FontSettingPage> {
                             ),
                           const CustomPopupMenuDivider(height: 8),
                         ],
-                        const CustomPopupMenuItem<Object>(
+                        CustomPopupMenuItem<Object>(
                           value: DanmakuFontSource.global,
                           height: 40,
                           child: Text(uiTx('跟随应用字体')),
                         ),
-                        const CustomPopupMenuItem<Object>(
+                        CustomPopupMenuItem<Object>(
                           value: DanmakuFontSource.system,
                           height: 40,
                           child: Text(uiTx('系统默认弹幕字体')),

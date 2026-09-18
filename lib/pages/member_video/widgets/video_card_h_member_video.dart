@@ -97,7 +97,7 @@ class VideoCardHMemberVideo extends StatelessWidget {
                               height: maxHeight,
                             ),
                             if (fromViewAid == videoItem.param)
-                              const Positioned.fill(
+                              Positioned.fill(
                                 child: DecoratedBox(
                                   decoration: BoxDecoration(
                                     borderRadius: Style.mdRadius,

@@ -777,7 +777,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               menuItemOuterPadding: EdgeInsets.zero,
               menuItemStateLayerColor: Colors.white,
               itemBuilder: (context) => [
-                const PopupMenuItem<String>(
+                PopupMenuItem<String>(
                   height: 35,
                   value: '',
                   child: Text(uiTx("关闭翻译"),
