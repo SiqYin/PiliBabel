@@ -230,7 +230,7 @@ mixin FavMixin on TripleMixin {
     final (rid, type) = getFavRidType;
     // 收藏至默认文件夹
     if (isQuick) {
-      SmartDialog.showLoading(msg: '请求中');
+      SmartDialog.showLoading(msg: uiTx('请求中'));
       queryVideoInFolder().then((res) async {
         if (res.isSuccess) {
           final hasFav = this.hasFav.value;
@@ -273,7 +273,7 @@ mixin FavMixin on TripleMixin {
     } catch (e) {
       if (kDebugMode) debugPrint(e.toString());
     }
-    SmartDialog.showLoading(msg: '请求中');
+    SmartDialog.showLoading(msg: uiTx('请求中'));
     final result = await FavHttp.favVideo(
       resources: '$rid:$type',
       addIds: addMediaIdsNew.join(','),

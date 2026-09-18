@@ -215,7 +215,7 @@ class _PgcPanelState extends State<PgcPanel> {
                         SvgPicture.asset(
                           Assets.vipIcon,
                           height: 16,
-                          semanticsLabel: "大会员",
+                          semanticsLabel: uiTx("大会员"),
                         )
                       else
                         Text(

@@ -26,17 +26,17 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:material_ui/material_ui.dart';
 
 List<SettingsModel> get playSettings => [
-  const SwitchModel(
+  SwitchModel(
     title: '弹幕开关',
-    subtitle: '是否展示弹幕',
+    subtitle: uiTx('是否展示弹幕'),
     leading: Icon(CustomIcons.dm_settings),
     setKey: SettingBoxKey.enableShowDanmaku,
     defaultVal: true,
   ),
   if (PlatformUtils.isMobile)
-    const SwitchModel(
+    SwitchModel(
       title: '启用点击弹幕',
-      subtitle: '点击弹幕悬停，支持点赞、复制、举报操作',
+      subtitle: uiTx('点击弹幕悬停，支持点赞、复制、举报操作'),
       leading: Icon(Icons.touch_app_outlined),
       setKey: SettingBoxKey.enableTapDm,
       defaultVal: true,
@@ -45,7 +45,7 @@ List<SettingsModel> get playSettings => [
     onTap: (context, setState) => Get.toNamed('/playSpeedSet'),
     leading: const Icon(Icons.speed_outlined),
     title: '倍速设置',
-    subtitle: '设置视频播放速度',
+    subtitle: uiTx('设置视频播放速度'),
   ),
   if (Platform.isAndroid)
     NormalModel(
@@ -54,9 +54,9 @@ List<SettingsModel> get playSettings => [
       title: '倾斜角度阈值',
       getSubtitle: () => '当前:「${Pref.angleDegrees}°」',
     ),
-  const SwitchModel(
+  SwitchModel(
     title: '自动播放',
-    subtitle: '进入详情页自动播放',
+    subtitle: uiTx('进入详情页自动播放'),
     leading: Icon(Icons.motion_photos_auto_outlined),
     setKey: SettingBoxKey.autoPlayEnable,
     defaultVal: false,
@@ -67,9 +67,9 @@ List<SettingsModel> get playSettings => [
     setKey: SettingBoxKey.showFsLockBtn,
     defaultVal: true,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '锁定按钮显示在右侧',
-    subtitle: '开启后锁定按钮移至右侧，与截图按钮一同垂直居中排列',
+    subtitle: uiTx('开启后锁定按钮移至右侧，与截图按钮一同垂直居中排列'),
     leading: Icon(Icons.keyboard_double_arrow_right),
     setKey: SettingBoxKey.showFsLockBtnRight,
     defaultVal: false,
@@ -86,9 +86,9 @@ List<SettingsModel> get playSettings => [
     setKey: SettingBoxKey.showBatteryLevel,
     defaultVal: PlatformUtils.isMobile,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '双击快退/快进',
-    subtitle: '左侧双击快退/右侧双击快进，关闭则双击均为暂停/播放',
+    subtitle: uiTx('左侧双击快退/右侧双击快进，关闭则双击均为暂停/播放'),
     leading: Icon(Icons.touch_app_outlined),
     setKey: SettingBoxKey.enableQuickDouble,
     defaultVal: true,
@@ -109,7 +109,7 @@ List<SettingsModel> get playSettings => [
   if (PlatformUtils.isMobile)
     SwitchModel(
       title: '应用内音量',
-      subtitle: '开启后在应用内调节音量不会改变系统音量',
+      subtitle: uiTx('开启后在应用内调节音量不会改变系统音量'),
       leading: const Icon(Icons.volume_up_outlined),
       setKey: SettingBoxKey.enableAppVolume,
       defaultVal: false,
@@ -118,9 +118,9 @@ List<SettingsModel> get playSettings => [
       },
     ),
   if (PlatformUtils.isMobile && Pref.enableAppVolume)
-    const SwitchModel(
+    SwitchModel(
       title: '音量增强',
-      subtitle: '在应用内音量模式下允许放大至 200%',
+      subtitle: uiTx('在应用内音量模式下允许放大至 200%'),
       leading: Icon(Icons.volume_up_outlined),
       setKey: SettingBoxKey.enableVolumeBoost,
       defaultVal: false,
@@ -163,7 +163,7 @@ List<SettingsModel> get playSettings => [
   ),
   getVideoFilterSelectModel(
     title: '滑动快进/快退时长',
-    subtitle: '从播放器一端滑到另一端的快进/快退时长',
+    subtitle: uiTx('从播放器一端滑到另一端的快进/快退时长'),
     suffix: Pref.useRelativeSlide ? '%' : 's',
     key: SettingBoxKey.sliderDuration,
     values: [25, 50, 90, 100],
@@ -211,41 +211,41 @@ List<SettingsModel> get playSettings => [
   ),
   NormalModel(
     title: '全屏 SC 大小',
-    subtitle: 'SuperChat (醒目留言) 大小设置',
+    subtitle: uiTx('SuperChat (醒目留言) 大小设置'),
     leading: const Icon(Icons.open_in_full),
     onTap: (_, _) => Get.to(const FullScreenScSize()),
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '竖屏扩大展示',
-    subtitle: '小屏竖屏视频宽高比由16:9扩大至1:1（不支持收起）；横屏适配时，扩大至9:16',
+    subtitle: uiTx('小屏竖屏视频宽高比由16:9扩大至1:1（不支持收起）；横屏适配时，扩大至9:16'),
     leading: Icon(Icons.expand_outlined),
     setKey: SettingBoxKey.enableVerticalExpand,
     defaultVal: false,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '自动全屏',
-    subtitle: '视频开始播放时进入全屏',
+    subtitle: uiTx('视频开始播放时进入全屏'),
     leading: Icon(Icons.fullscreen_outlined),
     setKey: SettingBoxKey.enableAutoEnter,
     defaultVal: false,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '自动退出全屏',
-    subtitle: '视频结束播放时退出全屏',
+    subtitle: uiTx('视频结束播放时退出全屏'),
     leading: Icon(Icons.fullscreen_exit_outlined),
     setKey: SettingBoxKey.enableAutoExit,
     defaultVal: true,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '延长播放控件显示时间',
-    subtitle: '开启后延长至30秒，便于屏幕阅读器滑动切换控件焦点',
+    subtitle: uiTx('开启后延长至30秒，便于屏幕阅读器滑动切换控件焦点'),
     leading: Icon(Icons.timer_outlined),
     setKey: SettingBoxKey.enableLongShowControl,
     defaultVal: false,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '手动切集后显示播放控件',
-    subtitle: '点击上一集、下一集或分集列表切换后保持控件显示',
+    subtitle: uiTx('点击上一集、下一集或分集列表切换后保持控件显示'),
     leading: Icon(Icons.touch_app_outlined),
     setKey: SettingBoxKey.showControlsOnManualEpisodeChange,
     defaultVal: false,
@@ -253,7 +253,7 @@ List<SettingsModel> get playSettings => [
   if (PlatformUtils.isMobile)
     SwitchModel(
       title: '后台播放',
-      subtitle: '进入后台时继续播放',
+      subtitle: uiTx('进入后台时继续播放'),
       leading: const Icon(Icons.motion_photos_pause_outlined),
       setKey: SettingBoxKey.continuePlayInBackground,
       defaultVal: false,
@@ -266,7 +266,7 @@ List<SettingsModel> get playSettings => [
   if (PlatformUtils.isMobile)
     SwitchModel(
       title: '后台只听音频（实验性）',
-      subtitle: '需开启「后台播放」后才生效\n进入后台或息屏一段时间后停止视频流，只保留声音；回到前台恢复画面',
+      subtitle: uiTx('需开启「后台播放」后才生效\n进入后台或息屏一段时间后停止视频流，只保留声音；回到前台恢复画面'),
       leading: const Icon(Icons.headphones_outlined),
       setKey: SettingBoxKey.autoAudioOnlyInBackground,
       defaultVal: false,
@@ -274,9 +274,9 @@ List<SettingsModel> get playSettings => [
         PlPlayerController.instance?.onAutoAudioOnlySettingChanged();
       },
     ),
-  const SwitchModel(
+  SwitchModel(
     title: '应用内画中画',
-    subtitle: '支持在应用内以小窗形式播放视频',
+    subtitle: uiTx('支持在应用内以小窗形式播放视频'),
     leading: Icon(Icons.picture_in_picture_alt_outlined),
     setKey: SettingBoxKey.enableInAppPip,
     defaultVal: true,
@@ -284,7 +284,7 @@ List<SettingsModel> get playSettings => [
   if (Platform.isAndroid) ...[
     SwitchModel(
       title: '后台画中画',
-      subtitle: '进入后台时以小窗形式（PiP）播放',
+      subtitle: uiTx('进入后台时以小窗形式（PiP）播放'),
       leading: const Icon(Icons.picture_in_picture_outlined),
       setKey: SettingBoxKey.autoPiP,
       defaultVal: false,
@@ -294,24 +294,24 @@ List<SettingsModel> get playSettings => [
         }
       },
     ),
-    const SwitchModel(
+    SwitchModel(
       title: '应用内小窗转后台画中画（实验性）',
-      subtitle: '实验性功能：应用内小窗存在时，退到后台自动切换为系统 PiP；可能因系统差异出现异常',
+      subtitle: uiTx('实验性功能：应用内小窗存在时，退到后台自动切换为系统 PiP；可能因系统差异出现异常'),
       leading: Icon(Icons.science_outlined),
       setKey: SettingBoxKey.enableInAppPipToSystemPip,
       defaultVal: true,
     ),
-    const SwitchModel(
+    SwitchModel(
       title: '画中画不加载弹幕',
-      subtitle: '当弹幕开关开启时，小窗屏蔽弹幕以获得较好的体验',
+      subtitle: uiTx('当弹幕开关开启时，小窗屏蔽弹幕以获得较好的体验'),
       leading: Icon(CustomIcons.dm_off),
       setKey: SettingBoxKey.pipNoDanmaku,
       defaultVal: false,
     ),
   ],
-  const SwitchModel(
+  SwitchModel(
     title: '全屏手势反向',
-    subtitle: '默认播放器中部向上滑动进入全屏，向下退出\n开启后向下全屏，向上退出',
+    subtitle: uiTx('默认播放器中部向上滑动进入全屏，向下退出\n开启后向下全屏，向上退出'),
     leading: Icon(Icons.swap_vert),
     setKey: SettingBoxKey.fullScreenGestureReverse,
     defaultVal: false,
@@ -322,9 +322,9 @@ List<SettingsModel> get playSettings => [
     setKey: SettingBoxKey.showFSActionItem,
     defaultVal: true,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '观看人数',
-    subtitle: '展示同时在看人数',
+    subtitle: uiTx('展示同时在看人数'),
     leading: Icon(Icons.people_outlined),
     setKey: SettingBoxKey.enableOnlineTotal,
     defaultVal: false,
@@ -347,7 +347,7 @@ List<SettingsModel> get playSettings => [
   if (PlatformUtils.isMobile)
     SwitchModel(
       title: '后台音频服务',
-      subtitle: '避免画中画没有播放暂停功能',
+      subtitle: uiTx('避免画中画没有播放暂停功能'),
       leading: const Icon(Icons.volume_up_outlined),
       setKey: SettingBoxKey.enableBackgroundPlay,
       defaultVal: true,
@@ -363,9 +363,9 @@ List<SettingsModel> get playSettings => [
         .put(VideoBoxKey.playRepeat, value.index)
         .whenComplete(setState),
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '播放器设置仅对当前生效',
-    subtitle: '弹幕、字幕及部分设置中没有的设置除外',
+    subtitle: uiTx('弹幕、字幕及部分设置中没有的设置除外'),
     leading: Icon(Icons.video_settings_outlined),
     setKey: SettingBoxKey.tempPlayerConf,
     defaultVal: false,

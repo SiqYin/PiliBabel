@@ -71,7 +71,7 @@ class _LoginPageState extends State<LoginPage> {
             ),
             TextButton.icon(
               onPressed: () async {
-                SmartDialog.showLoading(msg: '正在生成截图');
+                SmartDialog.showLoading(msg: uiTx('正在生成截图'));
                 final boundary =
                     globalKey.currentContext!.findRenderObject()
                         as RenderRepaintBoundary;

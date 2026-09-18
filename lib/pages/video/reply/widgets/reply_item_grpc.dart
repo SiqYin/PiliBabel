@@ -1183,7 +1183,7 @@ class ReplyItemGrpc extends StatelessWidget {
                 if (isDelete == null || !isDelete) {
                   return;
                 }
-                SmartDialog.showLoading(msg: '删除中...');
+                SmartDialog.showLoading(msg: uiTx('删除中...'));
                 final res = await VideoHttp.replyDel(
                   type: item.type.toInt(),
                   oid: item.oid.toInt(),

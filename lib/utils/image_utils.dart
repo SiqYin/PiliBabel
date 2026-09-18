@@ -54,7 +54,7 @@ abstract final class ImageUtils {
   // 复制图片到剪贴板
   static Future<void> copyImg(String url) async {
     try {
-      SmartDialog.showLoading(msg: '正在复制');
+      SmartDialog.showLoading(msg: uiTx('正在复制'));
       final file = (await CacheManager.manager.getFileFromCache(
         url.http2https,
       ))?.file;
@@ -130,7 +130,7 @@ abstract final class ImageUtils {
       if (PlatformUtils.isMobile && !await checkPermissionDependOnSdkInt()) {
         return false;
       }
-      if (!silentDownImg) SmartDialog.showLoading(msg: '正在下载');
+      if (!silentDownImg) SmartDialog.showLoading(msg: uiTx('正在下载'));
 
       String videoName = "video_${Utils.getFileName(liveUrl)}";
       String videoPath = '$tmpDirPath/$videoName';
@@ -142,7 +142,7 @@ abstract final class ImageUtils {
         final imageFile = await CacheManager.manager.getSingleFile(
           url.http2https,
         );
-        if (!silentDownImg) SmartDialog.showLoading(msg: '正在保存');
+        if (!silentDownImg) SmartDialog.showLoading(msg: uiTx('正在保存'));
         bool success = await LivePhotoMaker.create(
           coverImage: imageFile.path,
           imagePath: null,
@@ -157,7 +157,7 @@ abstract final class ImageUtils {
           return false;
         }
       } else {
-        if (!silentDownImg) SmartDialog.showLoading(msg: '正在保存');
+        if (!silentDownImg) SmartDialog.showLoading(msg: uiTx('正在保存'));
         await saveFileImg(
           filePath: videoPath,
           fileName: videoName,
@@ -182,7 +182,7 @@ abstract final class ImageUtils {
     if (!silentDownImg) {
       cancelToken = CancelToken();
       SmartDialog.showLoading(
-        msg: '正在下载原图',
+        msg: uiTx('正在下载原图'),
         clickMaskDismiss: true,
         onDismiss: cancelToken.cancel,
       );
@@ -287,7 +287,7 @@ abstract final class ImageUtils {
     SaveResult? res;
     fileName += '.$ext';
     if (PlatformUtils.isMobile) {
-      SmartDialog.showLoading(msg: '正在保存');
+      SmartDialog.showLoading(msg: uiTx('正在保存'));
       res = await SaverGallery.saveImage(
         bytes,
         fileName: fileName,

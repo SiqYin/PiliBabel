@@ -225,7 +225,7 @@ abstract final class UserHttp {
   //       Request().get(res.data['data']['confirm_uri']);
   //     }
   //   } catch (err) {
-  //     SmartDialog.showNotify(msg: '获取用户凭证: $err', notifyType: NotifyType.error);
+  //     SmartDialog.showNotify(msg: uiTx('获取用户凭证: $err'), notifyType: NotifyType.error);
   //   }
   // }
 

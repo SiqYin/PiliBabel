@@ -205,7 +205,7 @@ abstract class CommonRichTextPubPageState<T extends CommonRichTextPubPage>
       sourcePath: path,
       uiSettings: [
         AndroidUiSettings(
-          toolbarTitle: '裁剪',
+          toolbarTitle: uiTx('裁剪'),
           toolbarColor: colorScheme.secondaryContainer,
           toolbarWidgetColor: colorScheme.onSecondaryContainer,
           statusBarLight: colorScheme.isLight,
@@ -501,7 +501,7 @@ abstract class CommonRichTextPubPageState<T extends CommonRichTextPubPage>
     feedBack();
     List<Map<String, dynamic>>? pictures;
     if (imageList.isNotEmpty) {
-      SmartDialog.showLoading(msg: '正在上传图片...');
+      SmartDialog.showLoading(msg: uiTx('正在上传图片...'));
       final cancelToken = CancelToken();
       try {
         pictures = await Future.wait<Map<String, dynamic>>(

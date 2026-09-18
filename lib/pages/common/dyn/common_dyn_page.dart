@@ -202,7 +202,7 @@ mixin CommonDynPageMixin<T extends StatefulWidget>
         }
 
         final child = HttpError(
-          errMsg: '还没有评论',
+          errMsg: uiTx('还没有评论'),
           onReload: controller.onReload,
         );
         if (controller.voteCard case final voteCard?) {

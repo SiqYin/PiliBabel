@@ -17,7 +17,7 @@ List<SettingsModel> get privacySettings => [
       Get.toNamed('/blackListPage');
     },
     title: '黑名单管理',
-    subtitle: '已拉黑用户',
+    subtitle: uiTx('已拉黑用户'),
     leading: const Icon(Icons.block),
   ),
   NormalModel(
@@ -42,7 +42,7 @@ List<SettingsModel> get privacySettings => [
     },
     leading: const Icon(Icons.flag_outlined),
     title: '了解账号模式',
-    subtitle: '查看各个账号模式作用的API列表',
+    subtitle: uiTx('查看各个账号模式作用的API列表'),
   ),
 ];
 

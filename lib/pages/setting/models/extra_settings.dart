@@ -78,16 +78,16 @@ List<SettingsModel> get extraSettings => [
   ] else if (Platform.isAndroid)
     SwitchModel(
       title: '允许三方APP访问私有存储',
-      subtitle: '允许三方APP（例如MT管理器）通过访问外部存储的方式访问私有存储下的文件',
+      subtitle: uiTx('允许三方APP（例如MT管理器）通过访问外部存储的方式访问私有存储下的文件'),
       leading: const Icon(Icons.storage),
       setKey: SettingBoxKey.enableDocProvider,
       defaultVal: Pref.enableDocProvider,
       onChanged: AndroidHelper.updateDocProvider,
     ),
   SplitModel(
-    normalModel: const NormalModel.split(
+    normalModel: NormalModel.split(
       title: '空降助手',
-      subtitle: '点击配置',
+      subtitle: uiTx('点击配置'),
       leading: Icon(CustomIcons.shield_play_arrow),
     ),
     switchModel: SwitchModel.split(
@@ -106,9 +106,9 @@ List<SettingsModel> get extraSettings => [
         .whenComplete(setState),
   ),
   SplitModel(
-    normalModel: const NormalModel.split(
+    normalModel: NormalModel.split(
       title: '检查未读动态',
-      subtitle: '点击设置检查周期(min)',
+      subtitle: uiTx('点击设置检查周期(min)'),
       leading: Icon(Icons.notifications_none),
     ),
     switchModel: SwitchModel.split(
@@ -175,23 +175,23 @@ List<SettingsModel> get extraSettings => [
   ),
   NormalModel(
     title: '评论折叠行数',
-    subtitle: '0行为不折叠',
+    subtitle: uiTx('0行为不折叠'),
     leading: const Icon(Icons.compress),
     getTrailing: (theme) => Text(uiTx('${ReplyItemGrpc.replyLengthLimit}行'),
       style: theme.textTheme.titleSmall,
     ),
     onTap: _showReplyLengthDialog,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '评论点赞/点踩按钮交换位置',
-    subtitle: '交换后：点赞在左，点踩在右（与官方客户端一致）',
+    subtitle: uiTx('交换后：点赞在左，点踩在右（与官方客户端一致）'),
     leading: Icon(Icons.swap_horiz),
     setKey: SettingBoxKey.swapReplyLikeDislike,
     defaultVal: false,
   ),
   NormalModel(
     title: '弹幕行高',
-    subtitle: '默认1.6',
+    subtitle: uiTx('默认1.6'),
     leading: const Icon(CustomIcons.dm_settings),
     getTrailing: (theme) => Text(
       Pref.danmakuLineHeight.toString(),
@@ -212,16 +212,16 @@ List<SettingsModel> get extraSettings => [
     defaultVal: false,
     onChanged: (val) => ItemModulesModel.showDynDispute = val,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '分P/合集：倒序播放从首集开始播放',
-    subtitle: '开启则自动切换为倒序首集，否则保持当前集',
+    subtitle: uiTx('开启则自动切换为倒序首集，否则保持当前集'),
     leading: Icon(MdiIcons.sort),
     setKey: SettingBoxKey.reverseFromFirst,
     defaultVal: true,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '禁用 SSL 证书验证',
-    subtitle: '谨慎开启，禁用容易受到中间人攻击',
+    subtitle: uiTx('谨慎开启，禁用容易受到中间人攻击'),
     leading: Icon(Icons.security),
     needReboot: true,
     setKey: SettingBoxKey.badCertificateCallback,
@@ -244,9 +244,9 @@ List<SettingsModel> get extraSettings => [
     setKey: SettingBoxKey.openInBrowser,
     defaultVal: false,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '点击当前页时回顶并刷新',
-    subtitle: '关闭后保持原有回顶/重复点击刷新行为',
+    subtitle: uiTx('关闭后保持原有回顶/重复点击刷新行为'),
     leading: Icon(Icons.vertical_align_top),
     setKey: SettingBoxKey.enableCurrentPageRefresh,
     defaultVal: false,
@@ -292,9 +292,9 @@ List<SettingsModel> get extraSettings => [
       setState();
     },
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '显示热门推荐',
-    subtitle: '热门页面显示每周必看等推荐内容入口',
+    subtitle: uiTx('热门页面显示每周必看等推荐内容入口'),
     leading: Icon(Icons.local_fire_department_outlined),
     setKey: SettingBoxKey.showHotRcmd,
     defaultVal: false,
@@ -326,9 +326,9 @@ List<SettingsModel> get extraSettings => [
         '当前:「${Pref.superResolutionType.label}」\n默认设置对番剧生效, 其他视频默认关闭\n超分辨率需要启用硬件解码, 若启用硬件解码后仍然不生效, 尝试切换硬件解码器为 auto-copy',
     onTap: _showSuperResolutionDialog,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '提前初始化播放器',
-    subtitle: '相对减少手动播放加载时间',
+    subtitle: uiTx('相对减少手动播放加载时间'),
     leading: Icon(Icons.play_circle_outlined),
     setKey: SettingBoxKey.preInitPlayer,
     defaultVal: false,
@@ -366,16 +366,16 @@ List<SettingsModel> get extraSettings => [
     defaultVal: true,
     onChanged: (value) => GlobalData().showMedal = value,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '显示视频推荐理由',
-    subtitle: '显示首页视频卡片下方的已关注，x万点赞的标签',
+    subtitle: uiTx('显示首页视频卡片下方的已关注，x万点赞的标签'),
     leading: Icon(Icons.label_outline),
     setKey: SettingBoxKey.showRcmdReason,
     defaultVal: true,
   ),
   SwitchModel(
     title: '预览 Live Photo',
-    subtitle: '开启则以视频形式预览 Live Photo，否则预览静态图片',
+    subtitle: uiTx('开启则以视频形式预览 Live Photo，否则预览静态图片'),
     leading: const Icon(Icons.image_outlined),
     setKey: SettingBoxKey.enableLivePhoto,
     defaultVal: true,
@@ -401,9 +401,9 @@ List<SettingsModel> get extraSettings => [
     defaultVal: true,
     needReboot: true,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '发评反诈',
-    subtitle: '发送评论后检查评论是否可见',
+    subtitle: uiTx('发送评论后检查评论是否可见'),
     leading: Icon(CustomIcons.shield_reply),
     setKey: SettingBoxKey.enableCommAntifraud,
     defaultVal: false,
@@ -418,9 +418,9 @@ List<SettingsModel> get extraSettings => [
       setKey: SettingBoxKey.biliSendCommAntifraud,
       defaultVal: false,
     ),
-  const SwitchModel(
+  SwitchModel(
     title: '发布/转发动态反诈',
-    subtitle: '发布/转发动态后检查动态是否可见',
+    subtitle: uiTx('发布/转发动态后检查动态是否可见'),
     leading: Icon(CustomIcons.shield_published),
     setKey: SettingBoxKey.enableCreateDynAntifraud,
     defaultVal: false,
@@ -445,9 +445,9 @@ List<SettingsModel> get extraSettings => [
     setKey: SettingBoxKey.enableShrinkVideoSize,
     defaultVal: true,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '启用双指旋转画面',
-    subtitle: '双指缩放时可旋转画面，松手自动吸附到直角',
+    subtitle: uiTx('双指缩放时可旋转画面，松手自动吸附到直角'),
     leading: Icon(Icons.rotate_90_degrees_ccw),
     setKey: SettingBoxKey.enablePinchRotate,
     defaultVal: true,
@@ -473,7 +473,7 @@ List<SettingsModel> get extraSettings => [
   ),
   SwitchModel(
     title: '静默下载图片',
-    subtitle: '不显示下载 Loading 弹窗',
+    subtitle: uiTx('不显示下载 Loading 弹窗'),
     leading: const Icon(Icons.download_for_offline_outlined),
     setKey: SettingBoxKey.silentDownImg,
     defaultVal: false,
@@ -494,25 +494,25 @@ List<SettingsModel> get extraSettings => [
     },
     leading: const Icon(Icons.vibration_outlined),
     title: '震动反馈',
-    subtitle: '请确定手机设置中已开启震动反馈',
+    subtitle: uiTx('请确定手机设置中已开启震动反馈'),
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '大家都在搜',
-    subtitle: '是否展示「大家都在搜」',
+    subtitle: uiTx('是否展示「大家都在搜」'),
     leading: Icon(Icons.data_thresholding_outlined),
     setKey: SettingBoxKey.enableHotKey,
     defaultVal: true,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '搜索发现',
-    subtitle: '是否展示「搜索发现」',
+    subtitle: uiTx('是否展示「搜索发现」'),
     leading: Icon(Icons.search_outlined),
     setKey: SettingBoxKey.enableSearchRcmd,
     defaultVal: true,
   ),
   SwitchModel(
     title: '搜索默认词',
-    subtitle: '是否展示搜索框默认词',
+    subtitle: uiTx('是否展示搜索框默认词'),
     leading: const Icon(Icons.whatshot_outlined),
     setKey: SettingBoxKey.enableSearchWord,
     defaultVal: false,
@@ -527,9 +527,9 @@ List<SettingsModel> get extraSettings => [
       } catch (_) {}
     },
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '快速收藏',
-    subtitle: '点击设置默认收藏夹\n点按收藏至默认，长按选择文件夹',
+    subtitle: uiTx('点击设置默认收藏夹\n点按收藏至默认，长按选择文件夹'),
     leading: Icon(Icons.bookmark_add_outlined),
     setKey: SettingBoxKey.enableQuickFav,
     onTap: _showFavDialog,
@@ -537,29 +537,29 @@ List<SettingsModel> get extraSettings => [
   ),
   SwitchModel(
     title: '评论区搜索关键词',
-    subtitle: '展示评论区搜索关键词',
+    subtitle: uiTx('展示评论区搜索关键词'),
     leading: const Icon(Icons.search_outlined),
     setKey: SettingBoxKey.enableWordRe,
     defaultVal: false,
     onChanged: (value) => ReplyItemGrpc.enableWordRe = value,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '启用AI总结',
-    subtitle: '视频详情页开启AI总结',
+    subtitle: uiTx('视频详情页开启AI总结'),
     leading: Icon(Icons.engineering_outlined),
     setKey: SettingBoxKey.enableAi,
     defaultVal: false,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '消息页禁用"收到的赞"功能',
-    subtitle: '禁止打开入口，降低网络社交依赖',
+    subtitle: uiTx('禁止打开入口，降低网络社交依赖'),
     leading: Icon(Icons.beach_access_outlined),
     setKey: SettingBoxKey.disableLikeMsg,
     defaultVal: false,
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '默认展示评论区',
-    subtitle: '在视频详情页默认切换至评论区页（仅Tab型布局）',
+    subtitle: uiTx('在视频详情页默认切换至评论区页（仅Tab型布局）'),
     leading: Icon(Icons.mode_comment_outlined),
     setKey: SettingBoxKey.defaultShowComment,
     defaultVal: false,
@@ -571,15 +571,15 @@ List<SettingsModel> get extraSettings => [
     defaultVal: false,
     needReboot: true,
   ),
-  const NormalModel(
+  NormalModel(
     title: '连接重试次数',
-    subtitle: '为0时禁用',
+    subtitle: uiTx('为0时禁用'),
     leading: Icon(Icons.repeat),
     onTap: _showReplyCountDialog,
   ),
-  const NormalModel(
+  NormalModel(
     title: '连接重试间隔',
-    subtitle: '实际间隔 = 间隔 * 第x次重试',
+    subtitle: uiTx('实际间隔 = 间隔 * 第x次重试'),
     leading: Icon(Icons.more_time_outlined),
     onTap: _showReplyDelayDialog,
   ),
@@ -612,7 +612,7 @@ List<SettingsModel> get extraSettings => [
   ),
   SwitchModel(
     title: '显示动态互动内容',
-    subtitle: '开启后则在动态卡片底部显示互动内容（如关注的人点赞、热评等）',
+    subtitle: uiTx('开启后则在动态卡片底部显示互动内容（如关注的人点赞、热评等）'),
     leading: const Icon(Icons.quickreply_outlined),
     setKey: SettingBoxKey.showDynInteraction,
     defaultVal: true,
@@ -631,10 +631,10 @@ List<SettingsModel> get extraSettings => [
     defaultVal: false,
     onChanged: (value) => MemberTabType.showMemberShop = value,
   ),
-  const SplitModel(
+  SplitModel(
     normalModel: NormalModel.split(
       title: '设置代理',
-      subtitle: '设置代理 host:port',
+      subtitle: uiTx('设置代理 host:port'),
       leading: Icon(Icons.airplane_ticket_outlined),
     ),
     switchModel: SwitchModel.split(
@@ -652,7 +652,7 @@ List<SettingsModel> get extraSettings => [
   ),
   SwitchModel(
     title: '检查更新',
-    subtitle: '每次启动时检查是否需要更新',
+    subtitle: uiTx('每次启动时检查是否需要更新'),
     leading: const Icon(Icons.system_update_alt),
     setKey: SettingBoxKey.autoUpdate,
     defaultVal: true,
@@ -662,9 +662,9 @@ List<SettingsModel> get extraSettings => [
       }
     },
   ),
-  const SwitchModel(
+  SwitchModel(
     title: '检测预发布版本更新',
-    subtitle: '检查更新时同时包含 pre-release 版本',
+    subtitle: uiTx('检查更新时同时包含 pre-release 版本'),
     leading: Icon(Icons.preview_outlined),
     setKey: SettingBoxKey.preReleaseUpdate,
     defaultVal: false,

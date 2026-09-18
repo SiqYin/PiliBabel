@@ -318,7 +318,7 @@ class _MediaPageState extends CommonPageState<MinePage>
                               child: SvgPicture.asset(
                                 Assets.vipIcon,
                                 height: 19,
-                                semanticsLabel: "大会员",
+                                semanticsLabel: uiTx("大会员"),
                               ),
                             ),
                         ],

@@ -128,7 +128,7 @@ class _AboutPageState extends State<AboutPage> {
               children: [
                 Text(uiTx('基于PiliPlus做了一些自用修改'),
                   style: TextStyle(color: outline),
-                  semanticsLabel: '与你一起，发现不一样的世界',
+                  semanticsLabel: uiTx('与你一起，发现不一样的世界'),
                 ),
                 Icon(
                   Icons.accessibility_new,
@@ -217,7 +217,7 @@ Commit Hash: ${BuildConfig.commitHash}''',
                   title: Text(uiTx('提示')),
                   content: Text(uiTx('该操作将清除图片及网络请求缓存数据，确认清除？')),
                   onConfirm: () async {
-                    SmartDialog.showLoading(msg: '正在清除...');
+                    SmartDialog.showLoading(msg: uiTx('正在清除...'));
                     try {
                       await CacheManager.clearLibraryCache();
                       SmartDialog.showToast(uiTx('清除成功'));

@@ -138,8 +138,7 @@ class _SeasonPanelState extends State<SeasonPanel> {
                   () => Text(
                     '${currentIndex.value + 1}/${episodes.length}',
                     style: theme.textTheme.labelMedium,
-                    semanticsLabel:
-                        '第${currentIndex.value + 1}集，共${episodes.length}集',
+                    semanticsLabel: uiTx('第${currentIndex.value + 1}集，共${episodes.length}集'),
                   ),
                 ),
                 const SizedBox(width: 6),

@@ -491,7 +491,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             sourcePath: imagePath,
             uiSettings: [
               AndroidUiSettings(
-                toolbarTitle: '裁剪',
+                toolbarTitle: uiTx('裁剪'),
                 toolbarColor: theme.colorScheme.secondaryContainer,
                 toolbarWidgetColor: theme.colorScheme.onSecondaryContainer,
                 statusBarLight: theme.isLight,

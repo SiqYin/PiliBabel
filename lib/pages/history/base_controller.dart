@@ -32,7 +32,7 @@ class HistoryBaseController extends GetxController {
           TextButton(
             onPressed: () async {
               Get.back();
-              SmartDialog.showLoading(msg: '请求中');
+              SmartDialog.showLoading(msg: uiTx('请求中'));
               final res = await UserHttp.clearHistory(account: account);
               SmartDialog.dismiss();
               if (res.isSuccess) {
@@ -66,7 +66,7 @@ class HistoryBaseController extends GetxController {
           ),
           TextButton(
             onPressed: () async {
-              SmartDialog.showLoading(msg: '请求中');
+              SmartDialog.showLoading(msg: uiTx('请求中'));
               final res = await UserHttp.pauseHistory(
                 pauseStatus,
                 account: account,

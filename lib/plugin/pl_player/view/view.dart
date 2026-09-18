@@ -906,7 +906,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                     child: Text(
                       "${speed}X",
                       style: const TextStyle(color: Colors.white, fontSize: 13),
-                      semanticsLabel: "$speed倍速",
+                      semanticsLabel: uiTx("$speed倍速"),
                     ),
                   ),
                 )
@@ -917,7 +917,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             child: Text(
               "${plPlayerController.playbackSpeed}X",
               style: const TextStyle(color: Colors.white, fontSize: 13),
-              semanticsLabel: "${plPlayerController.playbackSpeed}倍速",
+              semanticsLabel: uiTx("${plPlayerController.playbackSpeed}倍速"),
             ),
           ),
         ),
@@ -2504,7 +2504,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
     SmartDialog.showLoading(
       backType: SmartBackType.normal,
-      builder: (_) => LoadingWidget(progress: progress, msg: '正在保存，可能需要较长时间'),
+      builder: (_) => LoadingWidget(progress: progress, msg: uiTx('正在保存，可能需要较长时间')),
       onDismiss: () async {
         if (progress.value < 1.0) {
           mpv.dispose();

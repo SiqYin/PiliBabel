@@ -728,7 +728,7 @@ class _CreateDynPanelState extends CommonRichTextPubPageState<CreateDynPanel> {
 
   @override
   Future<void> onCustomPublish({List? pictures}) async {
-    SmartDialog.showLoading(msg: '正在发布');
+    SmartDialog.showLoading(msg: uiTx('正在发布'));
     List<Map<String, dynamic>>? extraContent = getRichContent();
     final hasRichText = extraContent != null;
 

@@ -126,7 +126,7 @@ class AiChatController extends GetxController {
   /// Auto-load video context if not already loaded.
   Future<void> _ensureVideoContext() async {
     if (!hasVideoContext.value) {
-      SmartDialog.showLoading(msg: '正在载入视频上下文...');
+      SmartDialog.showLoading(msg: uiTx('正在载入视频上下文...'));
       try {
         await loadVideoContext();
       } finally {

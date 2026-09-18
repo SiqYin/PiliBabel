@@ -211,7 +211,7 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
         }
 
         final child = HttpError(
-          errMsg: '还没有评论',
+          errMsg: uiTx('还没有评论'),
           onReload: _videoReplyController.onReload,
         );
         if (_videoReplyController.voteCard case final voteCard?) {

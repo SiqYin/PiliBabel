@@ -220,7 +220,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
             ),
             SetSwitchItem(
               title: '动态长按倍速',
-              subtitle: '根据默认倍速长按时自动双倍',
+              subtitle: uiTx('根据默认倍速长按时自动双倍'),
               setKey: SettingBoxKey.enableAutoLongPressSpeed,
               defaultVal: enableAutoLongPressSpeed,
               onChanged: (val) =>
