@@ -507,8 +507,8 @@ void _showUiScaleDialog(
                 LengthLimitingTextInputFormatter(4),
                 FilteringTextInputFormatter.allow(RegExp(r'[\d.]+')),
               ],
-              decoration: const InputDecoration(
-                labelText: '缩放比例',
+              decoration: InputDecoration(
+                labelText: uiTx('缩放比例'),
                 hintText: '0.50 - 2.00',
                 border: OutlineInputBorder(),
               ),

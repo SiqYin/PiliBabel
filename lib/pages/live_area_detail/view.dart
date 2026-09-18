@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -116,7 +117,7 @@ class _LiveAreaDetailPageState extends State<LiveAreaDetailPage> {
                       ),
                       iconButton(
                         iconSize: 20,
-                        tooltip: '显示菜单',
+                        tooltip: uiTx('显示菜单'),
                         icon: const Icon(Icons.menu),
                         onPressed: () =>
                             _showTags(context, theme, bottom, response),

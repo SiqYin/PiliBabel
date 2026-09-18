@@ -138,7 +138,7 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
               mainAxisSize: .min,
               children: [
                 IconButton(
-                  tooltip: '取消',
+                  tooltip: uiTx('取消'),
                   onPressed: _favDetailController.handleSelect,
                   icon: const Icon(Icons.close_outlined),
                 ),
@@ -176,7 +176,7 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
   List<Widget> _actions(ThemeData theme) {
     return [
       IconButton(
-        tooltip: '搜索',
+        tooltip: uiTx('搜索'),
         onPressed: () {
           final folderInfo = _favDetailController.folderInfo.value;
           Get.toNamed(
@@ -198,7 +198,7 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
             ? const SizedBox.shrink()
             : IconButton(
                 iconSize: 22,
-                tooltip: '分享',
+                tooltip: uiTx('分享'),
                 onPressed: () => ShareUtils.shareText(
                   'https://www.bilibili.com/medialist/detail/ml${_favDetailController.mediaId}',
                 ),
@@ -211,7 +211,7 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
               ? const Icon(MdiIcons.sortNumericDescending)
               : const Icon(MdiIcons.sortNumericAscending),
           initialValue: _favDetailController.pageDesc,
-          tooltip: '页码顺序',
+          tooltip: uiTx('页码顺序'),
           onSelected: (value) {
             _favDetailController.updatePageOrder(value);
             (context as Element).markNeedsBuild();
@@ -227,7 +227,7 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
           return StaticPopupMenuButton<FavOrderType>(
             icon: const Icon(Icons.sort),
             initialValue: _favDetailController.order.value,
-            tooltip: '排序方式',
+            tooltip: uiTx('排序方式'),
             onSelected: (value) => _favDetailController
               ..order.value = value
               ..onReload(),

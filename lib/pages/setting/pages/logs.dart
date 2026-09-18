@@ -261,7 +261,7 @@ class _InfoCard extends StatelessWidget {
           iconButton(
             size: 34,
             iconSize: 22,
-            tooltip: '复制',
+            tooltip: uiTx('复制'),
             onPressed: () {
               final report = Report(
                 '',
@@ -347,7 +347,7 @@ class _ReportCard extends StatelessWidget {
           iconButton(
             size: 34,
             iconSize: 22,
-            tooltip: '复制',
+            tooltip: uiTx('复制'),
             onPressed: () {
               Utils.copyText('```\n$report```', needToast: false);
               ScaffoldMessenger.of(context).showSnackBar(

@@ -384,7 +384,7 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 trailing: IconButton(
-                  tooltip: '清除自定义 CDN',
+                  tooltip: uiTx('清除自定义 CDN'),
                   visualDensity: VisualDensity.compact,
                   icon: const Icon(Icons.close),
                   onPressed: () =>
@@ -475,7 +475,7 @@ class _CdnInputDialogState extends State<_CdnInputDialog> {
         autofocus: true,
         decoration: InputDecoration(
           hintText: 'upos-sz-mirrorali.bilivideo.com',
-          helperText: '支持输入完整 URL，自动提取 host',
+          helperText: uiTx('支持输入完整 URL，自动提取 host'),
           errorText: _errorText,
         ),
         onChanged: (_) {

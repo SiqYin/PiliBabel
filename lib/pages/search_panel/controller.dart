@@ -209,7 +209,7 @@ class SearchPanelController<R extends SearchNumData<T>, T>
       builder: (context) => ListEditorDialog(
         title: title,
         initialItems: List.from(keywords),
-        hintText: '输入关键词或正则表达式',
+        hintText: uiTx('输入关键词或正则表达式'),
         itemLabel: isInclude ? '包含词' : '排除词',
         validator: (value) {
           if (value.isEmpty) return '请输入关键词';

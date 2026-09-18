@@ -103,7 +103,7 @@ class _MainReplyPageState extends State<MainReplyPage>
                 );
               } catch (_) {}
             },
-            tooltip: '评论',
+            tooltip: uiTx('评论'),
             child: const Icon(Icons.reply),
           ),
         ),

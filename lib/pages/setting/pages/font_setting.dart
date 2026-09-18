@@ -288,13 +288,13 @@ class _FontSettingPageState extends State<FontSettingPage> {
                   ),
                   const SizedBox(width: 4),
                   _actionIcon(
-                    tooltip: '导入字体文件（TTF/OTF）',
+                    tooltip: uiTx('导入字体文件（TTF/OTF）'),
                     icon: Icons.file_open_outlined,
                     onPressed: () => _importFont(forDanmaku: false),
                   ),
                   if (customFonts.isNotEmpty)
                     _actionIcon(
-                      tooltip: '清空已导入字体',
+                      tooltip: uiTx('清空已导入字体'),
                       icon: Icons.delete_sweep_outlined,
                       onPressed: _clearFonts,
                     ),
@@ -434,7 +434,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
                   ),
                   const SizedBox(width: 4),
                   _actionIcon(
-                    tooltip: '导入字体文件（TTF/OTF）',
+                    tooltip: uiTx('导入字体文件（TTF/OTF）'),
                     icon: Icons.file_open_outlined,
                     onPressed: () => _importFont(forDanmaku: true),
                   ),
@@ -464,7 +464,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
             ),
           ),
           IconButton(
-            tooltip: '移除',
+            tooltip: uiTx('移除'),
             icon: const Icon(Icons.close, size: 18),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints.tightFor(width: 32, height: 32),

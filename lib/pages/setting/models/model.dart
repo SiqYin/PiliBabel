@@ -309,7 +309,7 @@ SettingsModel getListBanWordModel({
           return ListEditorDialog(
             title: title,
             initialItems: items,
-            hintText: '输入关键词或正则表达式',
+            hintText: uiTx('输入关键词或正则表达式'),
             itemLabel: '关键词',
           );
         },
@@ -372,7 +372,7 @@ SettingsModel getListUidWithNameModel({
           return ListEditorDialog(
             title: title,
             initialItems: items,
-            hintText: '输入用户UID',
+            hintText: uiTx('输入用户UID'),
             itemLabel: 'UID',
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -446,7 +446,7 @@ SettingsModel getListUidModel({
           return ListEditorDialog(
             title: title,
             initialItems: items,
-            hintText: '输入用户UID',
+            hintText: uiTx('输入用户UID'),
             itemLabel: 'UID',
             keyboardType: TextInputType.number,
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],

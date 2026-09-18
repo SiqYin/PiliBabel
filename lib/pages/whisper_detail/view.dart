@@ -108,7 +108,7 @@ class _WhisperDetailPageState
         ),
         actions: [
           IconButton(
-            tooltip: '设置',
+            tooltip: uiTx('设置'),
             onPressed: () => Get.to(
               WhisperLinkSettingPage(
                 talkerUid: _whisperDetailController.talkerId,
@@ -281,7 +281,7 @@ class _WhisperDetailPageState
             onPressed: () =>
                 updatePanelType(panelType.value == .emoji ? .keyboard : .emoji),
             icon: const Icon(Icons.emoji_emotions),
-            tooltip: '表情',
+            tooltip: uiTx('表情'),
           ),
           Expanded(
             child: Obx(
@@ -297,7 +297,7 @@ class _WhisperDetailPageState
                 textInputAction: TextInputAction.newline,
                 decoration: InputDecoration(
                   filled: true,
-                  hintText: '发个消息聊聊呗~',
+                  hintText: uiTx('发个消息聊聊呗~'),
                   fillColor: theme.colorScheme.surface,
                   border: const OutlineInputBorder(
                     borderSide: BorderSide.none,

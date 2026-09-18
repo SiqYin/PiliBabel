@@ -18,8 +18,8 @@ Future<String?> showDownloadFolderNameDialog({
         autofocus: true,
         maxLines: 1,
         maxLength: 30,
-        decoration: const InputDecoration(
-          hintText: '请输入文件夹名称',
+        decoration: InputDecoration(
+          hintText: uiTx('请输入文件夹名称'),
         ),
       ),
       actions: [

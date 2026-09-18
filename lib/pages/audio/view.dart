@@ -132,7 +132,7 @@ class _AudioPageState extends State<AudioPage> {
             Obx(() {
               if (_controller.segmentProgressList.isNotEmpty) {
                 return IconButton(
-                  tooltip: '片段信息',
+                  tooltip: uiTx('片段信息'),
                   onPressed: _controller.showSBDetail,
                   icon: const Icon(MdiIcons.advertisements, size: 22),
                 );
@@ -142,7 +142,7 @@ class _AudioPageState extends State<AudioPage> {
           Builder(
             builder: (context) {
               return StaticPopupMenuButton<ListOrder>(
-                tooltip: '排序',
+                tooltip: uiTx('排序'),
                 icon: const Icon(Icons.sort, size: 22),
                 initialValue: _controller.order,
                 onSelected: (value) {
@@ -156,7 +156,7 @@ class _AudioPageState extends State<AudioPage> {
             },
           ),
           IconButton(
-            tooltip: '定时关闭',
+            tooltip: uiTx('定时关闭'),
             onPressed: () => shutdownTimerService
               ..onPause ??= _controller.onPause
               ..isPlaying ??= _controller.isPlaying
@@ -168,7 +168,7 @@ class _AudioPageState extends State<AudioPage> {
           ),
           if (_controller.isUgc)
             IconButton(
-              tooltip: '更多',
+              tooltip: uiTx('更多'),
               onPressed: _showMore,
               icon: const Icon(Icons.more_vert, size: 22),
             ),

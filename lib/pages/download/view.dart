@@ -352,7 +352,7 @@ class _DownloadPageState extends State<DownloadPage>
   Widget _buildAllSortBtn() {
     return Builder(
       builder: (context) => IconButton(
-        tooltip: '排序',
+        tooltip: uiTx('排序'),
         icon: const Icon(Icons.sort),
         onPressed: () {
           showStaticPositionMenu<_DownloadSortAction>(
@@ -499,7 +499,7 @@ class _DownloadPageState extends State<DownloadPage>
               actions: [
                 if (isVideoTab) ...[
                   IconButton(
-                    tooltip: '搜索',
+                    tooltip: uiTx('搜索'),
                     onPressed: () async {
                       await _downloadService.waitForInitialization;
                       if (!mounted) {
@@ -513,7 +513,7 @@ class _DownloadPageState extends State<DownloadPage>
                     icon: const Icon(Icons.search),
                   ),
                   IconButton(
-                    tooltip: '多选',
+                    tooltip: uiTx('多选'),
                     onPressed: () {
                       if (_controller.enableMultiSelect.value) {
                         _controller.handleSelect();
@@ -526,12 +526,12 @@ class _DownloadPageState extends State<DownloadPage>
                   _buildAllSortBtn(),
                 ] else ...[
                   IconButton(
-                    tooltip: '新建文件夹',
+                    tooltip: uiTx('新建文件夹'),
                     onPressed: _createFolder,
                     icon: const Icon(Icons.create_new_folder_outlined),
                   ),
                   IconButton(
-                    tooltip: '多选',
+                    tooltip: uiTx('多选'),
                     onPressed: () {
                       if (_folderSelectController.enableMultiSelect.value) {
                         _folderSelectController.handleSelect();
@@ -542,7 +542,7 @@ class _DownloadPageState extends State<DownloadPage>
                     icon: const Icon(Icons.edit_note),
                   ),
                   IconButton(
-                    tooltip: '排序',
+                    tooltip: uiTx('排序'),
                     onPressed: _openFolderManagePage,
                     icon: const Icon(Icons.sort),
                   ),

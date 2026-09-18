@@ -93,7 +93,7 @@ class _SharePanelState extends State<SharePanel> {
                 iconButton(
                   size: 32,
                   iconSize: 18,
-                  tooltip: '关闭',
+                  tooltip: uiTx('关闭'),
                   icon: const Icon(Icons.clear),
                   onPressed: Get.back,
                 ),
@@ -230,7 +230,7 @@ class _SharePanelState extends State<SharePanel> {
                     maxLines: 2,
                     textInputAction: TextInputAction.newline,
                     decoration: InputDecoration(
-                      hintText: '说说你的想法吧...',
+                      hintText: uiTx('说说你的想法吧...'),
                       visualDensity: .standard,
                       hintStyle: const TextStyle(fontSize: 14),
                       border: const OutlineInputBorder(

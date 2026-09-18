@@ -198,7 +198,7 @@ class _MediaPageState extends CommonPageState<MinePage>
             iconSize: iconSize,
             padding: padding,
             style: style,
-            tooltip: '搜索',
+            tooltip: uiTx('搜索'),
             onPressed: () => Get.toNamed('/search'),
             icon: const Icon(Icons.search),
           ),
@@ -209,7 +209,7 @@ class _MediaPageState extends CommonPageState<MinePage>
             iconSize: iconSize,
             padding: padding,
             style: style,
-            tooltip: '评论记录',
+            tooltip: uiTx('评论记录'),
             onPressed: () => Get.toNamed('/myReply'),
             icon: const Icon(Icons.message_outlined),
           ),
@@ -220,7 +220,7 @@ class _MediaPageState extends CommonPageState<MinePage>
               iconSize: iconSize,
               padding: padding,
               style: style,
-              tooltip: "${anonymity ? '退出' : '进入'}无痕模式",
+              tooltip: uiTx("${anonymity ? '退出' : '进入'}无痕模式"),
               onPressed: MineController.onChangeAnonymity,
               icon: anonymity
                   ? const Icon(MdiIcons.incognito)
@@ -232,7 +232,7 @@ class _MediaPageState extends CommonPageState<MinePage>
           iconSize: iconSize,
           padding: padding,
           style: style,
-          tooltip: '切换账号',
+          tooltip: uiTx('切换账号'),
           onPressed: () => LoginPageController.switchAccountDialog(context),
           icon: const Icon(Icons.switch_account_outlined),
         ),
@@ -242,7 +242,7 @@ class _MediaPageState extends CommonPageState<MinePage>
               iconSize: iconSize,
               padding: padding,
               style: style,
-              tooltip: '切换至${controller.nextThemeType.label}主题',
+              tooltip: uiTx('切换至${controller.nextThemeType.label}主题'),
               onPressed: controller.onChangeTheme,
               icon: controller.themeType.value.icon,
             );
@@ -252,7 +252,7 @@ class _MediaPageState extends CommonPageState<MinePage>
           iconSize: iconSize,
           padding: padding,
           style: style,
-          tooltip: '设置',
+          tooltip: uiTx('设置'),
           onPressed: () => Get.toNamed('/setting', preventDuplicates: false),
           icon: const Icon(Icons.settings_outlined),
         ),
@@ -329,7 +329,7 @@ class _MediaPageState extends CommonPageState<MinePage>
                           height: 55,
                           cacheHeight: 55.cacheSize(context),
                           Assets.avatarPlaceHolder,
-                          semanticLabel: "默认头像",
+                          semanticLabel: uiTx("默认头像"),
                         ),
                       ),
                 const SizedBox(width: 16),
@@ -520,7 +520,7 @@ class _MediaPageState extends CommonPageState<MinePage>
             ),
           ),
           trailing: IconButton(
-            tooltip: '刷新',
+            tooltip: uiTx('刷新'),
             onPressed: controller.queryToView,
             icon: const Icon(Icons.refresh, size: 20),
           ),
@@ -555,7 +555,7 @@ class _MediaPageState extends CommonPageState<MinePage>
                     padding: const EdgeInsets.only(bottom: 46),
                     child: Center(
                       child: IconButton(
-                        tooltip: '查看更多',
+                        tooltip: uiTx('查看更多'),
                         style: ButtonStyle(
                           padding: const WidgetStatePropertyAll(EdgeInsets.zero),
                           backgroundColor: WidgetStatePropertyAll(
@@ -627,7 +627,7 @@ class _MediaPageState extends CommonPageState<MinePage>
             ),
           ),
           trailing: IconButton(
-            tooltip: '刷新',
+            tooltip: uiTx('刷新'),
             onPressed: controller.queryHistory,
             icon: const Icon(Icons.refresh, size: 20),
           ),
@@ -666,7 +666,7 @@ class _MediaPageState extends CommonPageState<MinePage>
                     padding: const EdgeInsets.only(bottom: 46),
                     child: Center(
                       child: IconButton(
-                        tooltip: '查看更多',
+                        tooltip: uiTx('查看更多'),
                         style: ButtonStyle(
                           padding: const WidgetStatePropertyAll(
                             EdgeInsets.zero,
@@ -748,7 +748,7 @@ class _MediaPageState extends CommonPageState<MinePage>
             ),
           ),
           trailing: IconButton(
-            tooltip: '刷新',
+            tooltip: uiTx('刷新'),
             onPressed: controller.onRefresh,
             icon: const Icon(Icons.refresh, size: 20),
           ),
@@ -784,7 +784,7 @@ class _MediaPageState extends CommonPageState<MinePage>
                     padding: const .only(bottom: 46),
                     child: Center(
                       child: IconButton(
-                        tooltip: '查看更多',
+                        tooltip: uiTx('查看更多'),
                         style: ButtonStyle(
                           padding: const WidgetStatePropertyAll(.zero),
                           backgroundColor: WidgetStatePropertyAll(

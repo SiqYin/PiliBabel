@@ -45,7 +45,7 @@ Future<void> showMemberReportDialog(
             ),
             iconButton(
               iconSize: 21,
-              tooltip: '网页举报',
+              tooltip: uiTx('网页举报'),
               onPressed: () => Get.toNamed(
                 '/webview',
                 parameters: {

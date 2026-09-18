@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -117,7 +118,7 @@ class _DynMentionPanelState
               isDense: true,
               filled: true,
               fillColor: theme.colorScheme.onInverseSurface,
-              hintText: '输入你想@的人',
+              hintText: uiTx('输入你想@的人'),
               hintStyle: const TextStyle(fontSize: 14),
               prefixIcon: const Padding(
                 padding: EdgeInsets.only(left: 12, right: 4),

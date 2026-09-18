@@ -1895,7 +1895,7 @@ class HeaderControlState extends State<HeaderControl>
               width: btnWidth,
               height: btnHeight,
               child: IconButton(
-                tooltip: '返回',
+                tooltip: uiTx('返回'),
                 style: btnStyle,
                 icon: const Icon(
                   FontAwesomeIcons.arrowLeft,
@@ -1912,7 +1912,7 @@ class HeaderControlState extends State<HeaderControl>
                 width: btnWidth,
                 height: btnHeight,
                 child: IconButton(
-                  tooltip: '返回主页',
+                  tooltip: uiTx('返回主页'),
                   style: btnStyle,
                   icon: const Icon(
                     FontAwesomeIcons.house,
@@ -1957,7 +1957,7 @@ class HeaderControlState extends State<HeaderControl>
                     width: btnWidth,
                     height: btnHeight,
                     child: IconButton(
-                      tooltip: '听音频',
+                      tooltip: uiTx('听音频'),
                       style: btnStyle,
                       onPressed: videoDetailCtr.toAudioPage,
                       icon: const Icon(
@@ -1971,7 +1971,7 @@ class HeaderControlState extends State<HeaderControl>
                   width: btnWidth,
                   height: btnHeight,
                   child: IconButton(
-                    tooltip: '投屏',
+                    tooltip: uiTx('投屏'),
                     style: btnStyle,
                     onPressed: videoDetailCtr.onCast,
                     icon: const Icon(
@@ -1987,7 +1987,7 @@ class HeaderControlState extends State<HeaderControl>
                   width: btnWidth,
                   height: btnHeight,
                   child: IconButton(
-                    tooltip: '提交片段',
+                    tooltip: uiTx('提交片段'),
                     style: btnStyle,
                     onPressed: () => videoDetailCtr.onBlock(context),
                     icon: const Icon(
@@ -2004,7 +2004,7 @@ class HeaderControlState extends State<HeaderControl>
                       width: btnWidth,
                       height: btnHeight,
                       child: IconButton(
-                        tooltip: '片段信息',
+                        tooltip: uiTx('片段信息'),
                         style: btnStyle,
                         onPressed: videoDetailCtr.showSBDetail,
                         icon: const Icon(
@@ -2021,7 +2021,7 @@ class HeaderControlState extends State<HeaderControl>
                 width: btnWidth,
                 height: btnHeight,
                 child: IconButton(
-                  tooltip: '发弹幕',
+                  tooltip: uiTx('发弹幕'),
                   style: btnStyle,
                   onPressed: videoDetailCtr.showShootDanmakuSheet,
                   icon: const Icon(
@@ -2038,7 +2038,7 @@ class HeaderControlState extends State<HeaderControl>
                   () {
                     final enableShowDanmaku = plPlayerController.enableShowDanmaku.value;
                     return IconButton(
-                      tooltip: "${enableShowDanmaku ? '关闭' : '开启'}弹幕",
+                      tooltip: uiTx("${enableShowDanmaku ? '关闭' : '开启'}弹幕"),
                       style: btnStyle,
                       onPressed: () {
                         final newVal = !enableShowDanmaku;
@@ -2067,7 +2067,7 @@ class HeaderControlState extends State<HeaderControl>
               width: btnWidth,
               height: btnHeight,
               child: IconButton(
-                tooltip: '弹幕设置',
+                tooltip: uiTx('弹幕设置'),
                 style: btnStyle,
                 onPressed: showSetDanmaku,
                 icon: const Icon(
@@ -2134,7 +2134,7 @@ class HeaderControlState extends State<HeaderControl>
                 width: btnWidth,
                 height: btnHeight,
                 child: IconButton(
-                  tooltip: '画中画',
+                  tooltip: uiTx('画中画'),
                   style: btnStyle,
                   onPressed: () {
                     if (PlatformUtils.isDesktop) {
@@ -2156,7 +2156,7 @@ class HeaderControlState extends State<HeaderControl>
               width: btnWidth,
               height: btnHeight,
               child: IconButton(
-                tooltip: "更多设置",
+                tooltip: uiTx("更多设置"),
                 style: btnStyle,
                 onPressed: showSettingSheet,
                 icon: const Icon(

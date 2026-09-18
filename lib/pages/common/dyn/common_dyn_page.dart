@@ -286,7 +286,7 @@ mixin CommonDynPageMixin<T extends StatefulWidget>
   }
 
   Widget ratioWidget(double maxWidth) => IconButton(
-    tooltip: '页面比例调节',
+    tooltip: uiTx('页面比例调节'),
     onPressed: () => showDialog(
       context: context,
       builder: (context) => Align(
@@ -348,7 +348,7 @@ mixin CommonDynPageMixin<T extends StatefulWidget>
         );
       } catch (_) {}
     },
-    tooltip: '评论',
+    tooltip: uiTx('评论'),
     child: const Icon(Icons.reply),
   );
 }

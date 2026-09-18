@@ -114,7 +114,7 @@ class _CdnNodeDialogState extends State<CdnNodeDialog> {
       builder: (context, value, _) {
         if (value == null) {
           return IconButton(
-            tooltip: '测速',
+            tooltip: uiTx('测速'),
             visualDensity: VisualDensity.compact,
             icon: const Icon(Icons.speed),
             onPressed: () => _testNode(host),

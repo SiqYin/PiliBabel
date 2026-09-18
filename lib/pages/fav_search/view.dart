@@ -70,7 +70,7 @@ class _FavSearchPageState
           icon: const Icon(Icons.sort),
           requestFocus: false,
           initialValue: controller.order.value,
-          tooltip: '排序方式',
+          tooltip: uiTx('排序方式'),
           onSelected: (value) => controller
             ..order.value = value
             ..onReload(),

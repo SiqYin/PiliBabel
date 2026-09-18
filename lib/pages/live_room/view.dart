@@ -927,7 +927,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
             ),
       actions: [
         // IconButton(
-        //   tooltip: '刷新',
+        //   tooltip: uiTx('刷新'),
         //   onPressed: _liveRoomController.queryLiveUrl,
         //   icon: const Icon(Icons.refresh, size: 20),
         // ),

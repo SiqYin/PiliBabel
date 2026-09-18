@@ -71,8 +71,8 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
               autofocus: true,
               initialValue: initialValue,
               keyboardType: const .numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: '自定义倍速',
+              decoration: InputDecoration(
+                labelText: uiTx('自定义倍速'),
                 border: OutlineInputBorder(borderRadius: .all(.circular(6))),
               ),
               onChanged: (value) => initialValue = value,

@@ -58,7 +58,7 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
         title: Text(uiTx('弹幕屏蔽')),
         actions: [
           IconButton(
-            tooltip: '导入/导出',
+            tooltip: uiTx('导入/导出'),
             icon: const Icon(Icons.import_export),
             onPressed: () => showImportExportDialog<List<dynamic>>(
               context,
@@ -107,7 +107,7 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
           bottom: kFloatingActionButtonMargin + padding.bottom,
         ),
         child: FloatingActionButton(
-          tooltip: '添加',
+          tooltip: uiTx('添加'),
           onPressed: () => _showAddDialog(
             DmBlockType.values[_controller.tabController.index],
           ),
@@ -128,7 +128,7 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
         final SimpleRule item = list[itemIndex];
         final child = iconButton(
           iconSize: 20,
-          tooltip: '删除',
+          tooltip: uiTx('删除'),
           icon: const Icon(Icons.delete_outlined),
           onPressed: () => showConfirmDialog(
             context: context,
@@ -152,7 +152,7 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
                   children: [
                     iconButton(
                       iconSize: 20,
-                      tooltip: '编辑',
+                      tooltip: uiTx('编辑'),
                       icon: const Icon(Icons.edit_outlined),
                       onPressed: () => _showAddDialog(
                         DmBlockType.values[_controller.tabController.index],

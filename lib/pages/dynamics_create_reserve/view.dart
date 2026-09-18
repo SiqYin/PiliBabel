@@ -157,7 +157,7 @@ class _CreateReservePageState extends State<CreateReservePage> {
                 ..title.value = value
                 ..updateCanCreate(),
               desc: '标题',
-              hintText: '请填写标题，最多14字',
+              hintText: uiTx('请填写标题，最多14字'),
               inputFormatters: [LengthLimitingTextInputFormatter(14)],
             ),
           ),

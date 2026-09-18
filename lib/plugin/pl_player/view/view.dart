@@ -460,7 +460,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       BottomControlType.pre => ComBtn(
         width: widgetWidth,
         height: 30,
-        tooltip: '上一集',
+        tooltip: uiTx('上一集'),
         icon: const Icon(
           Icons.skip_previous,
           size: 22,
@@ -477,7 +477,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       BottomControlType.next => ComBtn(
         width: widgetWidth,
         height: 30,
-        tooltip: '下一集',
+        tooltip: uiTx('下一集'),
         icon: const Icon(
           Icons.skip_next,
           size: 22,
@@ -511,7 +511,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             return ComBtn(
               width: widgetWidth,
               height: 30,
-              tooltip: '高能进度条',
+              tooltip: uiTx('高能进度条'),
               icon: DisabledIcon(
                 disable: !show,
                 child: const Icon(
@@ -532,7 +532,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         () {
           final type = plPlayerController.superResolutionType.value;
           return StaticPopupMenuButton<SuperResolutionType>(
-            tooltip: '超分辨率',
+            tooltip: uiTx('超分辨率'),
             requestFocus: false,
             initialValue: type,
             color: Colors.black.withValues(alpha: 0.8),
@@ -650,7 +650,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             return ComBtn(
               width: widgetWidth,
               height: 30,
-              tooltip: '分段信息',
+              tooltip: uiTx('分段信息'),
               icon: DisabledIcon(
                 disable: !videoDetailController.showVP.value,
                 child: const Icon(
@@ -670,7 +670,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       BottomControlType.episode => ComBtn(
         width: widgetWidth,
         height: 30,
-        tooltip: '选集',
+        tooltip: uiTx('选集'),
         icon: const Icon(
           Icons.list,
           size: 22,
@@ -726,7 +726,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         () {
           final fit = plPlayerController.videoFit.value;
           return StaticPopupMenuButton<VideoFitType>(
-            tooltip: '画面比例',
+            tooltip: uiTx('画面比例'),
             requestFocus: false,
             initialValue: fit,
             color: Colors.black.withValues(alpha: 0.8),
@@ -768,7 +768,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           final list = videoDetailController.languages.value;
           if (list != null && list.isNotEmpty) {
             return StaticPopupMenuButton<String>(
-              tooltip: '翻译',
+              tooltip: uiTx('翻译'),
               requestFocus: false,
               initialValue: videoDetailController.currLang.value,
               onSelected: videoDetailController.setLanguage,
@@ -816,7 +816,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           if (videoDetailController.subtitles.isNotEmpty) {
             final val = videoDetailController.vttSubtitlesIndex.value;
             return StaticPopupMenuButton<int>(
-              tooltip: '字幕',
+              tooltip: uiTx('字幕'),
               requestFocus: false,
               initialValue: val,
               color: Colors.black.withValues(alpha: 0.8),
@@ -889,7 +889,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       /// 播放速度
       BottomControlType.speed => Obx(
         () => StaticPopupMenuButton<double>(
-          tooltip: '倍速',
+          tooltip: uiTx('倍速'),
           requestFocus: false,
           initialValue: plPlayerController.playbackSpeed,
           color: Colors.black.withValues(alpha: 0.8),
@@ -939,7 +939,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           final videoFormat = videoInfo.supportFormats!;
           final availableQa = videoInfo.dash!.video!.availableVideoQualities;
           return StaticPopupMenuButton<int>(
-            tooltip: '画质',
+            tooltip: uiTx('画质'),
             requestFocus: false,
             initialValue: currentVideoQa.code,
             color: Colors.black.withValues(alpha: 0.8),
@@ -1538,7 +1538,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         borderRadius: BorderRadius.all(Radius.circular(8)),
       ),
       child: ComBtn(
-        tooltip: '截图',
+        tooltip: uiTx('截图'),
         icon: const Icon(
           Icons.photo_camera,
           size: 20,
@@ -2198,7 +2198,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         Assets.buffering,
                         height: 25,
                         cacheHeight: 25.cacheSize(context),
-                        semanticLabel: "加载中",
+                        semanticLabel: uiTx("加载中"),
                         color: Colors.white,
                       ),
                       if (plPlayerController.isBuffering.value)

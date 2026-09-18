@@ -51,7 +51,7 @@ abstract class BaseVideoWebState<
             () {
               final order = controller.order.value;
               return StaticPopupMenuButton<V>(
-                tooltip: '排序',
+                tooltip: uiTx('排序'),
                 icon: const Icon(Icons.sort),
                 initialValue: order,
                 onSelected: controller.queryBySort,
@@ -208,8 +208,8 @@ abstract class BaseVideoWebState<
         autofocus: true,
         initialValue: pageStr,
         onChanged: (value) => pageStr = value,
-        decoration: const InputDecoration(
-          labelText: '页数',
+        decoration: InputDecoration(
+          labelText: uiTx('页数'),
           border: OutlineInputBorder(),
         ),
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],

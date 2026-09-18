@@ -53,7 +53,7 @@ Future<void> autoWrapReportDialog(
         title,
         iconButton(
           iconSize: 21,
-          tooltip: '网页举报',
+          tooltip: uiTx('网页举报'),
           onPressed: () =>
               Get.toNamed('/webview', parameters: {'url': reportUrl}),
           icon: const Icon(MdiIcons.web, size: 22),
@@ -110,8 +110,8 @@ Future<void> autoWrapReportDialog(
                             maxLines: 4,
                             initialValue: reasonDesc,
                             autofocus: isContentRequired,
-                            decoration: const InputDecoration(
-                              labelText: '为帮助审核人员更快处理，请补充问题类型和出现位置等详细信息',
+                            decoration: InputDecoration(
+                              labelText: uiTx('为帮助审核人员更快处理，请补充问题类型和出现位置等详细信息'),
                               border: OutlineInputBorder(),
                               contentPadding: .all(10),
                               labelStyle: TextStyle(fontSize: 14),

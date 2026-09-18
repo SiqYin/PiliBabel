@@ -166,7 +166,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
                 IconButton(
                   icon: const Icon(Icons.add_circle_outline),
                   onPressed: _addItem,
-                  tooltip: '添加',
+                  tooltip: uiTx('添加'),
                 ),
               ],
             ),
@@ -224,7 +224,7 @@ class _ListEditorDialogState extends State<ListEditorDialog> {
                           trailing: IconButton(
                             icon: const Icon(Icons.delete_outline, size: 20),
                             onPressed: () => _removeItem(index),
-                            tooltip: '删除',
+                            tooltip: uiTx('删除'),
                             padding: EdgeInsets.zero,
                             constraints: const BoxConstraints(
                               minWidth: 32,

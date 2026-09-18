@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
@@ -253,7 +254,7 @@ class VideoCardHLater extends StatelessWidget {
             right: 0,
             bottom: -8,
             child: iconButton(
-              tooltip: '移除',
+              tooltip: uiTx('移除'),
               onPressed: () => ctr.toViewDel(context, index, videoItem.aid),
               icon: const Icon(Icons.clear),
               iconColor: theme.colorScheme.outline,

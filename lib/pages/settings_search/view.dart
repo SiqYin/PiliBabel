@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/view_insets_safe_area.dart';
@@ -84,9 +85,9 @@ class _SettingsSearchPageState
           controller: _textEditingController,
           textAlignVertical: TextAlignVertical.center,
           onChanged: ctr!.add,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             isDense: true,
-            hintText: '搜索',
+            hintText: uiTx('搜索'),
             visualDensity: .standard,
             border: InputBorder.none,
           ),

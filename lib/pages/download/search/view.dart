@@ -40,7 +40,7 @@ class _DownloadSearchPageState
   @override
   List<Widget>? get extraActions => [
     IconButton(
-      tooltip: '多选',
+      tooltip: uiTx('多选'),
       onPressed: () {
         if (controller.loadingState.value is! Success) {
           return;

@@ -259,7 +259,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
       const SizedBox(width: 4),
       if (!isPortrait) ratioWidget(maxWidth),
       IconButton(
-        tooltip: '浏览器打开',
+        tooltip: uiTx('浏览器打开'),
         onPressed: () => PageUtils.inAppWebview(controller.url),
         icon: const Icon(Icons.open_in_browser_outlined, size: 19),
       ),

@@ -284,7 +284,7 @@ class _GeetestWebviewDialogState extends State<GeetestWebviewDialog> {
           child: IconButton(
             icon: const Icon(Icons.close),
             onPressed: Get.back,
-            tooltip: '关闭',
+            tooltip: uiTx('关闭'),
           ),
         ),
       ],

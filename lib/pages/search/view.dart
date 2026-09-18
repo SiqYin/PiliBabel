@@ -97,7 +97,7 @@ class _SearchPageState extends State<SearchPage> {
       Obx(
         () => _searchController.showUidBtn.value
             ? IconButton(
-                tooltip: 'UID搜索用户',
+                tooltip: uiTx('UID搜索用户'),
                 icon: const Icon(Icons.person_outline, size: 22),
                 onPressed: () => Get.toNamed(
                   '/member?mid=${_searchController.controller.text}',
@@ -106,12 +106,12 @@ class _SearchPageState extends State<SearchPage> {
             : const SizedBox.shrink(),
       ),
       IconButton(
-        tooltip: '清空',
+        tooltip: uiTx('清空'),
         icon: const Icon(Icons.clear, size: 22),
         onPressed: _searchController.onClear,
       ),
       IconButton(
-        tooltip: '搜索',
+        tooltip: uiTx('搜索'),
         onPressed: _searchController.submit,
         icon: const Icon(Icons.search, size: 22),
       ),
@@ -397,7 +397,7 @@ class _SearchPageState extends State<SearchPage> {
 
   Widget get _exportBtn => IconButton(
     iconSize: 22,
-    tooltip: '导入/导出历史记录',
+    tooltip: uiTx('导入/导出历史记录'),
     icon: Icon(
       Icons.import_export_outlined,
       color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.8),

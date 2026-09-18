@@ -364,7 +364,7 @@ class _PgcPageState extends State<PgcPage> with AutomaticKeepAliveClientMixin {
         ),
         const Spacer(),
         IconButton(
-          tooltip: '刷新',
+          tooltip: uiTx('刷新'),
           onPressed: () => controller
             ..followPage = 1
             ..followEnd = false

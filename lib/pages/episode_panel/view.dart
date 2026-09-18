@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math';
 
 import 'package:PiliPlus/common/assets.dart';
@@ -539,7 +540,7 @@ class EpisodePanelState extends State<EpisodePanel>
                       color: primary,
                       height: 12,
                       cacheHeight: 12.cacheSize(context),
-                      semanticLabel: "正在播放：",
+                      semanticLabel: uiTx("正在播放："),
                     ),
                   Expanded(
                     child: Column(
@@ -674,19 +675,19 @@ class EpisodePanelState extends State<EpisodePanel>
         if (_favState != null) Obx(() => _buildFavBtn(_favState!.value)),
         iconButton(
           iconSize: 22,
-          tooltip: '跳至顶部',
+          tooltip: uiTx('跳至顶部'),
           icon: const Icon(Icons.vertical_align_top),
           onPressed: _animToTopOrBottom,
         ),
         iconButton(
           iconSize: 22,
-          tooltip: '跳至底部',
+          tooltip: uiTx('跳至底部'),
           icon: const Icon(Icons.vertical_align_bottom),
           onPressed: () => _animToTopOrBottom(top: false),
         ),
         iconButton(
           iconSize: 22,
-          tooltip: '跳至当前',
+          tooltip: uiTx('跳至当前'),
           icon: const Icon(Icons.my_location),
           onPressed: () async {
             final currentTabIndex = _currentTabIndex.value;
@@ -727,7 +728,7 @@ class EpisodePanelState extends State<EpisodePanel>
         if (widget.onClose != null)
           iconButton(
             iconSize: 22,
-            tooltip: '关闭',
+            tooltip: uiTx('关闭'),
             icon: const Icon(Icons.close),
             onPressed: widget.onClose,
           ),

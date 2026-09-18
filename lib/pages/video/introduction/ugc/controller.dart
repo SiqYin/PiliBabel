@@ -306,7 +306,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
             },
             trailing: playedTimePos.isNotEmpty
                 ? iconButton(
-                    tooltip: '精确分享',
+                    tooltip: uiTx('精确分享'),
                     icon: const Icon(Icons.timer_outlined),
                     onPressed: () {
                       Get.back();

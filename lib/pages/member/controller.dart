@@ -199,7 +199,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
             autofocus: true,
             style: const TextStyle(fontSize: 14),
             decoration: InputDecoration(
-              hintText: '留空则删除备注',
+              hintText: uiTx('留空则删除备注'),
               hintStyle: TextStyle(
                 fontSize: 14,
                 color: theme.colorScheme.outline,

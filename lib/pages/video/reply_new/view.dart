@@ -175,7 +175,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
             if (widget.root == 0) ...[
               const SizedBox(width: 8),
               ToolbarIconButton(
-                tooltip: '图片',
+                tooltip: uiTx('图片'),
                 selected: false,
                 icon: widget.canUploadPic
                     ? const Icon(Icons.image, size: 22)
@@ -194,7 +194,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
             const SizedBox(width: 8),
             Obx(
               () => ToolbarIconButton(
-                tooltip: '转到动态',
+                tooltip: uiTx('转到动态'),
                 onPressed: _syncToDynamic.toggle,
                 icon: const Icon(
                   CustomIcons.repeat_rounded_rotate_90,
@@ -411,7 +411,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
     return ToolbarIconButton(
       onPressed: latexOn ? _unlatexify : _latexify,
       icon: const Icon(Icons.functions, size: 22),
-      tooltip: '公式',
+      tooltip: uiTx('公式'),
       selected: latexOn,
     );
   });

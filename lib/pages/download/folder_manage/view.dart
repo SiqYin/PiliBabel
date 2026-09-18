@@ -112,12 +112,12 @@ class _DownloadFolderManagePageState extends State<DownloadFolderManagePage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    tooltip: '重命名',
+                    tooltip: uiTx('重命名'),
                     onPressed: () => _renameFolder(folder),
                     icon: const Icon(Icons.drive_file_rename_outline),
                   ),
                   IconButton(
-                    tooltip: '删除',
+                    tooltip: uiTx('删除'),
                     onPressed: () => _deleteFolder(folder),
                     icon: const Icon(Icons.delete_outline),
                   ),

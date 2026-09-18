@@ -295,7 +295,7 @@ class _AiChatPageState extends State<AiChatPage>
                     child: IconButton(
                       onPressed: (analyzing || hasContext) ? null : () => chatCtl.loadVideoContext(),
                       icon: Icon(Icons.post_add, size: _isCompact ? 18 : 22),
-                      tooltip: '载入上下文',
+                      tooltip: uiTx('载入上下文'),
                     ),
                   ),
                 FilledButton.icon(
@@ -678,7 +678,7 @@ class _AiChatPageState extends State<AiChatPage>
               keyboardType: TextInputType.multiline,
               textInputAction: TextInputAction.newline,
               decoration: InputDecoration(
-                hintText: '输入问题继续对话...',
+                hintText: uiTx('输入问题继续对话...'),
                 hintStyle: TextStyle(color: colorScheme.outline),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),

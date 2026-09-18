@@ -190,7 +190,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                   maxLength: _controller.charLimit,
                   decoration: InputDecoration(
                     isDense: true,
-                    hintText: '请输入',
+                    hintText: uiTx('请输入'),
                     visualDensity: .standard,
                     hintStyle: const TextStyle(fontSize: 14),
                     contentPadding: const EdgeInsets.symmetric(
