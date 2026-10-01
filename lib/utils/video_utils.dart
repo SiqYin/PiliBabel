@@ -106,11 +106,19 @@ abstract final class VideoUtils {
           if (customHost != null) {
             return uri.replace(host: customHost).toString();
           }
-          if (defaultCDNService == CDNService.backupUrl ||
-              (isAudio && disableAudioCDN)) {
+          if (isAudio && disableAudioCDN) {
             return url;
           }
-          return uri.replace(host: defaultCDNService.host).toString();
+          if (defaultCDNService == CDNService.backupUrl) {
+            // 默认线路（未显式选 CDN）：把国内 upos/estg 镜像改写到 Akamai 全球
+            // 边缘，对齐 B 站海外的通行做法。android_hd 的 playurl 从海外常返回
+            // 国内 upos-sz-* 镜像，直接沿用会让海外 4K 卡顿、下载变慢/偶发失败；
+            // 播放与下载都走这里，一处修复两端受益。仍可在设置里手选国内 CDN。
+            return uri.replace(host: CDNService.akamai.host!).toString();
+          }
+          return uri
+              .replace(host: defaultCDNService.host ?? CDNService.ali.host)
+              .toString();
         }
       }
 
