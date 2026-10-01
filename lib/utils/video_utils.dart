@@ -149,10 +149,11 @@ abstract final class VideoUtils {
       }
       final host = defaultCDNService.host;
       if (host == null) {
-        // 用户未显式指定 CDN 线路（base/backupUrl）：沿用 B 站按当前 IP 返回的
-        // 就近 host（海外多为 Akamai/海外节点）。此前会回退硬编码成国内 ali，
-        // 导致海外网络被强制走深圳线路而卡帧，故不再改写。
-        return mcdnUpgcxcode;
+        // 未显式指定线路（base/backupUrl）：列表里若只剩 mcdn/PCDN(P2P) 源，
+        // 说明 B 站按国内视角给了 P2P 线路。海外用 P2P 会因节点在国内而卡帧，
+        // 这里对齐 B 站海外的通行做法——改写到 Akamai 全局边缘、绕开国内 PCDN，
+        // 让全球用户都能拿到就近可播地址（此前会回退硬编码成国内 ali）。
+        return uri.replace(host: CDNService.akamai.host!).toString();
       }
       return uri.replace(host: host).toString();
     }
