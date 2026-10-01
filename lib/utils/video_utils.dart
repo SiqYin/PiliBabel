@@ -147,9 +147,14 @@ abstract final class VideoUtils {
       if (customHost != null && _isReplaceableMediaHost(uri.host)) {
         return uri.replace(host: customHost).toString();
       }
-      return uri
-          .replace(host: defaultCDNService.host ?? CDNService.ali.host)
-          .toString();
+      final host = defaultCDNService.host;
+      if (host == null) {
+        // 用户未显式指定 CDN 线路（base/backupUrl）：沿用 B 站按当前 IP 返回的
+        // 就近 host（海外多为 Akamai/海外节点）。此前会回退硬编码成国内 ali，
+        // 导致海外网络被强制走深圳线路而卡帧，故不再改写。
+        return mcdnUpgcxcode;
+      }
+      return uri.replace(host: host).toString();
     }
     return mcdnTf == null
         ? last
