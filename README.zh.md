@@ -5,7 +5,7 @@
     <p>巴別塔——打破語言的高牆，讓每個人都能用屬於自己的語言享受 Bilibili。</p>
     <p>含 4 種中國少數民族語言與 3 種漢語方言的翻譯。</p>
     <p>
-      <a href="README.md">English</a> · <b>中文</b>
+      <a href="README.md">English</a> · <b>中文</b> · <a href="README.ja.md">日本語</a>
     </p>
 </div>
 

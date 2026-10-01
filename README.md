@@ -5,7 +5,7 @@
     <p>Babel — tearing down the language barrier, so everyone can enjoy bilibili in their own language.</p>
     <p>Includes translation for 4 languages of China's ethnic minorities and 3 Chinese dialects.</p>
     <p>
-      <b>English</b> · <a href="README.zh.md">中文</a>
+      <b>English</b> · <a href="README.zh.md">中文</a> · <a href="README.ja.md">日本語</a>
     </p>
 </div>
 
