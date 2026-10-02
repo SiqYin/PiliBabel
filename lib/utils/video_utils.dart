@@ -32,6 +32,30 @@ abstract final class VideoUtils {
   // host 首段为 API/上报类前缀的域名不参与自定义节点替换
   static final _blockedHostPrefix = RegExp(r'^(?:bvc|data|pbp|api)\w*\.');
 
+  /// B 站海外/Akamai 直链主机：akamaized.net、*mirror(cos|ali|hw)ov*（海外）、
+  /// cn-hk-eq-bcache*（HK）。这些地址由 B 站自己下发、签名有效，海外可直接用。
+  static final _overseasHostRegex = RegExp(
+    r'(?:^|\.)(?:akamaized\.net|bilivideo\.tv)$'
+    r'|mirror(?:cos|ali|hw)ov\.'
+    r'|^cn-hk-eq-bcache',
+    caseSensitive: false,
+  );
+
+  /// 从候选直链中挑第一个"海外可用"的现成地址（不改写主机，避免签名失效）
+  static String? _firstOverseasUrl(Iterable<String> urls) {
+    for (final url in urls) {
+      final uri = Uri.tryParse(url);
+      final host = uri?.host;
+      if (host == null || host.isEmpty) {
+        continue;
+      }
+      if (_overseasHostRegex.hasMatch(host)) {
+        return url;
+      }
+    }
+    return null;
+  }
+
   static bool _isReplaceableMediaHost(String host) {
     final lower = host.toLowerCase();
     if (_blockedHostPrefix.hasMatch(lower)) {
@@ -86,6 +110,17 @@ abstract final class VideoUtils {
     customHost ??= applyCustomCDN ? customCDNUrl : null;
     if (isAudio && disableAudioCDN) {
       customHost = null;
+    }
+
+    if (customHost == null && !(isAudio && disableAudioCDN)) {
+      // 海外可用性优先：B 站的候选列表里通常自带 Akamai/海外镜像直链
+      // （其签名有效，可直接使用）。此前"视频链接打开失败→重试"多因主线路
+      // 是国内 upos 镜像；注意不可把国内直链"改写"成 Akamai 主机（签名不
+      // 匹配会 403，v0.1.8 即栽在此），这里只做"挑选现成的海外地址"。
+      final overseas = _firstOverseasUrl(urls);
+      if (overseas != null) {
+        return overseas;
+      }
     }
 
     if (customHost == null && defaultCDNService == CDNService.baseUrl) {
