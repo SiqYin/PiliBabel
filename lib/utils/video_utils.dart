@@ -106,19 +106,15 @@ abstract final class VideoUtils {
           if (customHost != null) {
             return uri.replace(host: customHost).toString();
           }
-          if (isAudio && disableAudioCDN) {
+          if (defaultCDNService == CDNService.backupUrl ||
+              (isAudio && disableAudioCDN)) {
+            // 沿用 B 站按 IP 就近返回的镜像。
+            // 注：曾尝试默认改写 Akamai，但部分视频直链签名与 Akamai 主机
+            // 不匹配会 403 → 播放卡"加载中"，故回退；待实现"失败自动回退
+            // 备用线路"后再评估默认 Akamai。
             return url;
           }
-          if (defaultCDNService == CDNService.backupUrl) {
-            // 默认线路（未显式选 CDN）：把国内 upos/estg 镜像改写到 Akamai 全球
-            // 边缘，对齐 B 站海外的通行做法。android_hd 的 playurl 从海外常返回
-            // 国内 upos-sz-* 镜像，直接沿用会让海外 4K 卡顿、下载变慢/偶发失败；
-            // 播放与下载都走这里，一处修复两端受益。仍可在设置里手选国内 CDN。
-            return uri.replace(host: CDNService.akamai.host!).toString();
-          }
-          return uri
-              .replace(host: defaultCDNService.host ?? CDNService.ali.host)
-              .toString();
+          return uri.replace(host: defaultCDNService.host).toString();
         }
       }
 
@@ -160,8 +156,10 @@ abstract final class VideoUtils {
         // 未显式指定线路（base/backupUrl）：列表里若只剩 mcdn/PCDN(P2P) 源，
         // 说明 B 站按国内视角给了 P2P 线路。海外用 P2P 会因节点在国内而卡帧，
         // 这里对齐 B 站海外的通行做法——改写到 Akamai 全局边缘、绕开国内 PCDN，
-        // 让全球用户都能拿到就近可播地址（此前会回退硬编码成国内 ali）。
-        return uri.replace(host: CDNService.akamai.host!).toString();
+        // 让全球用户拿到可播地址（此前会回退硬编码成国内 ali）。
+        // 回退说明：部分直链签名与 Akamai 主机不匹配会 403 → 播放卡"加载中"，
+        // 故恢复沿用 B 站就近地址；待实现"播放失败自动回退备用线路"后再评估。
+        return mcdnUpgcxcode;
       }
       return uri.replace(host: host).toString();
     }

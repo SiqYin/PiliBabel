@@ -1345,7 +1345,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
                         ? '视频链接打开失败，重试中'
                         : '视频链接打开失败，重试中\n当前自定义CDN节点：$customHost，持续失败可尝试更换或清除',
                     displayTime: customHost == null
-                        ? const Duration(milliseconds: 500)
+                        ? const Duration(milliseconds: 2500)
                         : const Duration(milliseconds: 3000),
                   );
                   refreshPlayer();
