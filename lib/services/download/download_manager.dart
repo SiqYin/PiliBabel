@@ -8,6 +8,7 @@ import 'package:PiliPlus/models_new/download/bili_download_entry_info.dart';
 import 'package:PiliPlus/utils/extension/file_ext.dart';
 import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show kDebugMode;
 
 /// 触发"换下一条线路"的内部信号（当前线路速度过低）
 class _RotateSignal implements Exception {
@@ -112,7 +113,7 @@ class DownloadManager {
       file.createSync(recursive: true);
     }
     if (urls.isEmpty) {
-      await _fail('no download url');
+      await _fail('没有可用的下载直链');
       return;
     }
 
@@ -134,6 +135,13 @@ class DownloadManager {
     });
     try {
       await _runUrls(file);
+    } catch (e) {
+      // 兜底：非 Dio 异常（磁盘写满、文件系统/权限异常、sink 抛错等）也必须
+      // 落到 onDone。否则 task 以错误结束而没人 await 它 → 状态永远停在
+      // 「正在下载」、进度字节一动不动，也不报失败——正是最难查的那种卡死。
+      if (!_cancelRequested && _status == DownloadStatus.downloading) {
+        await _fail(e);
+      }
     } finally {
       globalWatchdog.cancel();
     }
@@ -176,7 +184,7 @@ class DownloadManager {
           _status = DownloadStatus.pause;
           onDone(const StallDeferred());
         } else {
-          await _fail('all lines too slow');
+          await _fail('线路太慢，已停止本次缓存');
         }
         return;
       } on DioException catch (e) {
@@ -216,7 +224,7 @@ class DownloadManager {
     if (_cancelRequested) {
       return;
     }
-    await _fail('all ${urls.length} candidates failed');
+    await _fail('所有下载线路均失败');
   }
 
   /// 从 [url] 的断点处续传；完成/失败/换线都先关 sink。
@@ -353,11 +361,14 @@ class DownloadManager {
     }
   }
 
-  Future<void> _fail(String message) async {
+  Future<void> _fail(Object reason) async {
+    if (kDebugMode) {
+      debugPrint('download failed: $reason (candidates=${urls.length} index=$_urlIndex rot=$_rotations)');
+    }
     if (_status == DownloadStatus.downloading) {
       _status = DownloadStatus.failDownload;
     }
-    onDone(message);
+    onDone(reason);
   }
 
   Future<void> cancel({required bool isDelete}) {

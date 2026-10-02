@@ -313,9 +313,31 @@ class DownloadService extends GetxService {
     if (manager == null) {
       return;
     }
-    await manager
-        .cancel(isDelete: isDelete)
-        .timeout(const Duration(seconds: 10), onTimeout: () {});
+    try {
+      await manager
+          .cancel(isDelete: isDelete)
+          .timeout(const Duration(seconds: 10), onTimeout: () {});
+    } catch (e) {
+      // 旧任务自己以异常结束（含写盘失败）：这里只负责别把下载锁带崩，
+      // 具体失败原因由该任务的 onDone/_onDone 负责提示。
+      if (kDebugMode) {
+        debugPrint('cancel previous download task error: $e');
+      }
+    }
+  }
+
+  /// 失败原因提示（同类原因 20s 内只提示一次），便于用户/我们定位
+  /// 「停在某个字节数不动」到底是线路、磁盘还是接口问题。
+  int _lastFailToastMs = 0;
+  void _failToast(Object reason) {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - _lastFailToastMs < 20000) {
+      return;
+    }
+    _lastFailToastMs = now;
+    // 我们自己给的固定原因可以送去翻译；异常对象是动态文本，不翻译（省 token）
+    final text = reason is String ? uiTx(reason) : '$reason';
+    SmartDialog.showToast('${uiTx('缓存失败：')}$text');
   }
 
   /// 建立下载流程（取消旧任务 → 取弹幕 → 取播放地址 → 写元数据 → 起下载器）
@@ -354,6 +376,14 @@ class DownloadService extends GetxService {
         curDownload.value = entry;
         waitDownloadQueue.refresh();
         await _startDownload(entry);
+      } catch (e) {
+        // 建立下载过程中任何未预期异常都要落到明确状态，
+        // 不能让这条项停在「正在下载」上不动也不报错
+        _updateCurStatus(DownloadStatus.failDownload);
+        _failToast('$e');
+        if (kDebugMode) {
+          debugPrint('startDownload error: $e');
+        }
       } finally {
         _setupDepth--;
       }
@@ -667,6 +697,7 @@ class DownloadService extends GetxService {
       if (!await downloadDanmaku(
         entry: entry,
       ).timeout(_danmakuCallBudget, onTimeout: () => true)) {
+        _ensureQueueRunning();
         return;
       }
 
@@ -715,6 +746,11 @@ class DownloadService extends GetxService {
       ]);
 
       if (curDownload.value?.cid != entry.cid) {
+        // 建立过程中被别的项接管：这条要退回「等待中」并保证队列还有人驱动，
+        // 否则会留下一行停在旧状态（看着像「正在下载」却永远不动、也不报错）
+        entry.status = DownloadStatus.wait;
+        waitDownloadQueue.refresh();
+        _ensureQueueRunning();
         return;
       }
 
@@ -794,6 +830,8 @@ class DownloadService extends GetxService {
       }
     } catch (e) {
       _updateCurStatus(DownloadStatus.failPlayUrl);
+      _failToast(e);
+      _ensureQueueRunning();
       if (kDebugMode) {
         debugPrint('get download url error: $e');
       }
@@ -824,7 +862,12 @@ class DownloadService extends GetxService {
       return;
     }
     if (error != null) {
-      _updateCurStatus(_downloadManager?.status ?? DownloadStatus.pause);
+      final status = _downloadManager?.status ?? DownloadStatus.pause;
+      _updateCurStatus(status);
+      if (status == DownloadStatus.failDownload) {
+        _failToast(error);
+        _ensureQueueRunning();
+      }
       return;
     }
 
@@ -859,7 +902,7 @@ class DownloadService extends GetxService {
     }
     if (error != null) {
       // 音频失败：自动重试（重取 playurl + 断点续传），不推倒视频进度。
-      _onAudioFailed();
+      _onAudioFailed(error);
       return;
     }
     if (_downloadManager?.status == DownloadStatus.completed) {
@@ -928,7 +971,7 @@ class DownloadService extends GetxService {
     );
   }
 
-  void _onAudioFailed() {
+  void _onAudioFailed([Object? reason]) {
     final entry = curDownload.value;
     if (entry == null || _audioRetrying) {
       return;
@@ -941,6 +984,8 @@ class DownloadService extends GetxService {
             ? DownloadStatus.failDownloadAudio
             : status,
       );
+      _failToast(reason ?? '音频下载失败');
+      _ensureQueueRunning();
       return;
     }
     _audioRetryLeft--;
@@ -1022,6 +1067,51 @@ class DownloadService extends GetxService {
     if (waitDownloadQueue.isNotEmpty) {
       startDownload(waitDownloadQueue.first);
     }
+  }
+
+  /// 队列驱动兜底：已经没有在跑的下载器、却还有未完成项时，继续往下推进。
+  /// 覆盖两种「整条队列死在第一项」的情况：
+  /// ① 当前项已经处于终态失败（获取地址失败/下载失败/弹幕失败/音频失败），
+  ///    旧逻辑只是把状态改成失败就返回，后面的排队项永远不会开始；
+  /// ② 建立过程中被别的项接管后遗留的空档。
+  /// 失败项仍留在列表里（状态照常显示），只是不再占住「当前」。
+  void _ensureQueueRunning() {
+    if (_downloadManager != null || _audioDownloadManager != null) {
+      return;
+    }
+    if (waitDownloadQueue.isEmpty) {
+      return;
+    }
+    final cur = curDownload.value;
+    if (cur == null) {
+      nextDownload();
+      return;
+    }
+    final failed = switch (cur.status) {
+      DownloadStatus.failPlayUrl() ||
+      DownloadStatus.failDownload() ||
+      DownloadStatus.failDownloadAudio() ||
+      DownloadStatus.failDanmaku() => true,
+      _ => false,
+    };
+    if (!failed) {
+      return;
+    }
+    if (!waitDownloadQueue.any((e) => e.cid != cur.cid && !e.isCompleted)) {
+      return;
+    }
+    // 稍等一下再切，让失败提示有机会被看到
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (curDownload.value?.cid != cur.cid) {
+        return;
+      }
+      if (_downloadManager != null || _audioDownloadManager != null) {
+        return;
+      }
+      _curCid = null;
+      curDownload.value = null;
+      nextDownload();
+    });
   }
 
   Future<void> deleteDownload({
