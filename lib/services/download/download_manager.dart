@@ -38,9 +38,15 @@ class DownloadManager {
   /// 首个线路至少跑满该时长才允许因慢速切换（排除冷启动抖动）
   static const int _minRunBeforeRotateMs = 8000;
 
-  /// 完全停摆(0 字节)看门狗：超过该时长无进度即换线；已是最后一条则报错失败。
-  /// 若提供了 [shouldDefer] 且返回 true，则优先"让位"给队列中的其它下载项。
-  static const int _stallMs = 5000;
+  /// 停摆(0 字节)看门狗——两级阈值（与需求一致）：
+  /// * 满 5s 无字节且队列里还有其它等待项 → 先「让位」，回去排到队尾，让别人先下；
+  /// * 满 10s 无字节 → 强制换下一条线路；已是最后一条则循环耗尽走 [_fail] 报下载失败，
+  ///   绝不静默卡住不动。
+  static const int _deferStallMs = 5000;
+  static const int _rotateStallMs = 10000;
+
+  /// 看门狗轮询间隔（1s：让两级阈值尽量贴准时）
+  static const Duration _watchdogTick = Duration(seconds: 1);
 
   DownloadStatus _status = DownloadStatus.downloading;
 
@@ -190,11 +196,13 @@ class DownloadManager {
     int? last;
 
     // 停摆看门狗：连接 0 字节长期无进度（HTTP/2 适配器对流式响应可能
-    // 不执行 receiveTimeout）时强制取消——外层据此换下一条线路；
-    // 若已是最后一条，循环耗尽后统一走 _fail 报下载失败，绝不静默卡死。
+    // 不执行 receiveTimeout）时强制收尾——
+    // 5s 无字节 + 队列里有其它等待项 → 让位给别人先下；
+    // 10s 无字节 → 换下一条线路；最后一条也挂满 10s → 循环耗尽走 _fail
+    // 报下载失败，绝不静默卡住不动。
     int lastProgressMs = DateTime.now().millisecondsSinceEpoch;
     int progressMark = received;
-    final watchdog = Timer.periodic(const Duration(seconds: 3), (t) {
+    final watchdog = Timer.periodic(_watchdogTick, (t) {
       if (_cancelRequested) {
         t.cancel();
         return;
@@ -205,14 +213,17 @@ class DownloadManager {
         lastProgressMs = now;
         return;
       }
-      if (now - lastProgressMs >= _stallMs) {
+      final stalled = now - lastProgressMs;
+      if (stalled >= _rotateStallMs) {
         t.cancel();
-        if (shouldDefer?.call() ?? false) {
-          // 队列里还有其它等待项：让位，之后回来自动重取直链+续传
-          _deferred = true;
-        } else {
-          _stallRotate = true;
-        }
+        _stallRotate = true;
+        _cancelToken?.cancel();
+        return;
+      }
+      if (stalled >= _deferStallMs && (shouldDefer?.call() ?? false)) {
+        // 队列里还有其它等待项：让位，之后轮到它时自动重取直链+断点续传
+        t.cancel();
+        _deferred = true;
         _cancelToken?.cancel();
       }
     });
