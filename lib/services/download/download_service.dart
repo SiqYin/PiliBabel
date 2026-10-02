@@ -873,14 +873,18 @@ class DownloadService extends GetxService {
   /// 同一下载项最多让位次数（防乒乓），超出后由 DownloadManager 明确报失败。
   static const int _maxDefersPerEntry = 3;
 
-  /// 停摆/龟速时是否让位：
-  /// * 队列里还有其它未完成项 → 先让别人下；
-  /// * 只剩自己 → 也退回队尾：下一轮会重新取一次 playurl（拿到一批全新的
-  ///   已签名候选地址）再从断点续传。否则会出现「最后一条线路几十K慢慢爬，
-  ///   既不报错也不见进度」的永久卡死。
+  /// 停摆/龟速时是否「让位」：仅当队列里**还有其它未完成项**时才让位
+  /// （断点保留、退回队尾，先下别的；轮到它时重取直链拿到一批新线路）。
+  /// 只剩它自己时无处可让 —— 直接由 DownloadManager 报「下载失败」。
   bool _shouldDeferCurrent() {
     final entry = curDownload.value;
     if (entry == null) {
+      return false;
+    }
+    final hasOthers = waitDownloadQueue.any(
+      (e) => e.cid != entry.cid && !e.isCompleted,
+    );
+    if (!hasOthers) {
       return false;
     }
     final count = _deferCounts[entry.cid] ?? 0;

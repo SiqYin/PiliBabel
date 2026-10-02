@@ -53,12 +53,16 @@ class DownloadManager {
   /// 首个线路至少跑满该时长才允许因慢速切换（排除冷启动抖动）
   static const int _minRunBeforeRotateMs = 8000;
 
-  /// 完全停摆(0 字节)看门狗——两级阈值（与需求一致）：
-  /// * 满 5s 无字节且队列里还有其它等待项 → 先「让位」，回去排到队尾，让别人先下；
-  /// * 满 10s 无字节 → 强制换下一条线路；已是最后一条则循环耗尽走 [_fail] 报下载失败，
-  ///   绝不静默卡住不动。
-  static const int _deferStallMs = 5000;
-  static const int _rotateStallMs = 10000;
+  /// 停摆规则（与需求一致）：**5 秒零字节即换下一条候选线路，最多换 2 次
+  /// （即一条任务最多用 3 条线路）**；换无可换就结束这一项：
+  /// 队列里还有其它等待项 → 自动让位（断点保留、退回队尾，先下别的，
+  /// 轮到它时重取直链拿到一批新线路）；只剩它自己 → 明确报「下载失败」，
+  /// 绝不出现停在某个字节数不动也不报错的情况。
+  static const int _stallMs = 5000;
+  static const int _maxRotations = 2;
+
+  /// 本次任务已经换过几次线路
+  int _rotations = 0;
 
   /// 全局兜底看门狗：连续这么久没有任何一个新字节，就强制取消当前请求。
   /// 线路内看门狗只在「已经在收流」时起作用，管不到「请求发出去了但响应头
@@ -73,7 +77,7 @@ class DownloadManager {
   /// 最近一次「有新字节」的时刻
   int _lastByteMs = DateTime.now().millisecondsSinceEpoch;
 
-  /// 看门狗轮询间隔（1s：让两级阈值尽量贴准时）
+  /// 看门狗轮询间隔（1s：让 5 秒阈值尽量贴准时）
   static const Duration _watchdogTick = Duration(seconds: 1);
 
   DownloadStatus _status = DownloadStatus.downloading;
@@ -114,7 +118,7 @@ class DownloadManager {
 
     // 全局兜底看门狗：任何阶段连续 [_noProgressMs] 没有新字节，就强制取消当前
     // 请求（含「响应头一直不来」——那时线路内看门狗还没上岗），
-    // 外层据此换线或让位；候选耗尽由 [_fail] 明确报错，绝不静默卡死。
+    // 之后按同一套停摆规则换线 / 让位 / 报错，绝不静默卡死。
     final globalWatchdog = Timer.periodic(_globalWatchdogTick, (t) {
       if (_cancelRequested || _status != DownloadStatus.downloading) {
         t.cancel();
@@ -125,17 +129,30 @@ class DownloadManager {
         return;
       }
       _lastByteMs = now; // 再给一轮预算，避免同一位置反复触发
-      if (shouldDefer?.call() ?? false) {
-        _deferred = true;
-      } else {
-        _stallRotate = true;
-      }
+      _escalateStall();
       _cancelToken?.cancel();
     });
     try {
       await _runUrls(file);
     } finally {
       globalWatchdog.cancel();
+    }
+  }
+
+  /// 停摆升级（线路内看门狗与全局兜底看门狗共用一套判定）：
+  /// 先换下一条候选线路，最多换 [_maxRotations] 次；换无可换时——
+  /// 队列里还有其它未完成项就让位（pass），只剩自己就报下载失败。
+  void _escalateStall() {
+    if (_urlIndex < urls.length - 1 && _rotations < _maxRotations) {
+      _rotations++;
+      _stallRotate = true;
+      return;
+    }
+    if (shouldDefer?.call() ?? false) {
+      _deferred = true;
+    } else {
+      // 没有其它排队项（或让位额度用尽）：继续换到候选耗尽，由 _fail 明确报错
+      _stallRotate = true;
     }
   }
 
@@ -263,11 +280,10 @@ class DownloadManager {
     int slowWindows = 0;
     int? last;
 
-    // 停摆看门狗：连接 0 字节长期无进度（HTTP/2 适配器对流式响应可能
-    // 不执行 receiveTimeout）时强制收尾——
-    // 5s 无字节 + 队列里有其它等待项 → 让位给别人先下；
-    // 10s 无字节 → 换下一条线路；最后一条也挂满 10s → 循环耗尽走 _fail
-    // 报下载失败，绝不静默卡住不动。
+    // 线路内停摆看门狗：收流阶段 0 字节满 5 秒（HTTP/1.1 与 HTTP/2 适配器都
+    // 可能不执行 receiveTimeout）即按 [_escalateStall] 处理——
+    // 换下一条线路（一条任务最多换 2 次、共 3 条线路）；换无可换时，
+    // 队列里还有其它等待项就让位（pass，断点保留），只剩自己就报「下载失败」。
     int lastProgressMs = DateTime.now().millisecondsSinceEpoch;
     int progressMark = _received;
     final watchdog = Timer.periodic(_watchdogTick, (t) {
@@ -282,16 +298,10 @@ class DownloadManager {
         return;
       }
       final stalled = now - lastProgressMs;
-      if (stalled >= _rotateStallMs) {
+      if (stalled >= _stallMs) {
+        // 5 秒零字节：换下一条线路（最多换 2 次）；换无可换就让位或报错
         t.cancel();
-        _stallRotate = true;
-        _cancelToken?.cancel();
-        return;
-      }
-      if (stalled >= _deferStallMs && (shouldDefer?.call() ?? false)) {
-        // 队列里还有其它等待项：让位，之后轮到它时自动重取直链+断点续传
-        t.cancel();
-        _deferred = true;
+        _escalateStall();
         _cancelToken?.cancel();
       }
     });
