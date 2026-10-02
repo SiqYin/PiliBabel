@@ -30,11 +30,16 @@ class DownloadManager {
   /// 首个线路至少跑满该时长才允许因慢速切换（排除冷启动抖动）
   static const int _minRunBeforeRotateMs = 8000;
 
+  /// 完全停摆(0 字节)看门狗：超过该时长无进度即强制换线/失败
+  static const int _stallRotateMs = 15000;
+  static const int _stallFailMs = 60000;
+
   DownloadStatus _status = DownloadStatus.downloading;
 
   DownloadStatus get status => _status;
   CancelToken? _cancelToken;
   int _urlIndex = 0;
+  bool _stallRotate = false;
   late final Future<void> task;
 
   DownloadManager({
@@ -63,6 +68,11 @@ class DownloadManager {
       } on _RotateSignal {
         // 慢速/校验失败：换下一条线路，断点保留
       } on DioException {
+        // 看门狗判定停摆而取消：视为换线，不算用户取消
+        if (_stallRotate) {
+          _stallRotate = false;
+          continue;
+        }
         // 网络异常：换下一条线路，断点保留；
         // 用户主动取消(pause/delete)时不轮转，直接结束。
         if (_cancelToken?.isCancelled ?? false) {
@@ -99,6 +109,7 @@ class DownloadManager {
               'user-agent': BrowserUa.pc,
             },
             responseType: ResponseType.stream,
+            receiveTimeout: const Duration(seconds: 20),
             validateStatus: (status) =>
                 status != null &&
                 (status == 416 || (status >= 200 && status < 300)),
@@ -124,6 +135,30 @@ class DownloadManager {
     int winStartMs = DateTime.now().millisecondsSinceEpoch;
     int winBytes = 0;
     int? last;
+
+    // 停摆看门狗：连接 0 字节长期无进度（HTTP/2 适配器对流式响应可能
+    // 不执行 receiveTimeout）时强制取消——避免"卡住不动也不报失败"。
+    int lastProgressMs = DateTime.now().millisecondsSinceEpoch;
+    int progressMark = received;
+    final watchdog = Timer.periodic(const Duration(seconds: 3), (t) {
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (received != progressMark) {
+        progressMark = received;
+        lastProgressMs = now;
+        return;
+      }
+      final stalled = now - lastProgressMs;
+      final canRotate = _urlIndex < urls.length - 1;
+      if ((canRotate && stalled >= _stallRotateMs) ||
+          stalled >= _stallFailMs) {
+        t.cancel();
+        if (canRotate) {
+          _stallRotate = true;
+        }
+        _cancelToken?.cancel();
+      }
+    });
+
     try {
       await for (final chunk in data.stream) {
         sink.add(chunk);
@@ -141,8 +176,6 @@ class DownloadManager {
           if (speed < _minSpeedBytes &&
               runMs >= _minRunBeforeRotateMs &&
               _urlIndex < urls.length - 1) {
-            await closeSink();
-            _cancelToken?.cancel();
             throw _RotateSignal('slow: $speed B/s');
           }
           winStartMs = DateTime.now().millisecondsSinceEpoch;
@@ -153,9 +186,11 @@ class DownloadManager {
       _status = DownloadStatus.completed;
       onDone();
     } catch (e) {
-      // 中途异常：保留断点，交由外层决定换线或失败
+      // 中途异常（含看门狗取消/慢速换线）：保留断点，交由外层换线或失败
       await closeSink();
       rethrow;
+    } finally {
+      watchdog.cancel();
     }
   }
 
