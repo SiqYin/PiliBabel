@@ -15,7 +15,7 @@ AI interface & content translation layered on top of **PiliNara / PiliPlus** —
 - **First-launch onboarding** dialog pointing to *Settings → AI → AI interface translation*, with a one-tap shortcut to that page.
 - **Toggle semantics are now explicit**: turning AI translation **off** falls back to the original text everywhere and issues **zero** API requests (your token/quota is never touched); turning it **on** translates foreign-language content — e.g. comments — into your selected language.
 - **Worldwide playback**: outside mainland China the player now picks bilibili's own **overseas edges** (Akamai / `mirror*ov`) straight from the geo-routed stream URLs instead of forcing a China-only mirror, which is what caused “audio plays, video freezes” and endless retry toasts.
-- **Downloads**: stall watchdog (no bytes for 5s → hand the slot to another queued item; 10s → rotate to the next signed edge; last edge also stalls 10s → fail loudly instead of hanging), candidate-edge rotation with resume, and audio no longer gets corrupted by rejected Range requests.
+- **Downloads**: stall watchdog (no bytes for 5s → hand the slot to another queued item; 10s → rotate to the next signed edge; last edge also stalls 10s → fail loudly instead of hanging), candidate-edge rotation with resume, audio no longer gets corrupted by rejected Range requests, and a line that trickles below ~32 KB/s on the last edge now re-requests fresh stream URLs (or fails) instead of showing “downloading” forever. Fetching danmaku can no longer wedge the queue: it is time-boxed and optional, so a slow overseas `dm` endpoint doesn't block the video.
 
 **Fork lineage**: PiliBabel → PiliNara → PiliPlus → PiliPala. GPL-3.0, same as upstream.
 

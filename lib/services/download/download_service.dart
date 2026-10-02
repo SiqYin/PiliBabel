@@ -357,22 +357,19 @@ class DownloadService extends GetxService {
           throw StateError('Invalid danmaku segment count: $seg');
         }
 
-        final danmaku = (await DmGrpc.dmSegMobile(
-          cid: cid,
-          segmentIndex: 1,
-        )).data;
-        for (var start = 2; start <= seg; start += _maxDanmakuConcurrency) {
-          final end = start + _maxDanmakuConcurrency - 1;
-          final responses = await Future.wait([
-            for (var index = start; index <= seg && index <= end; index++)
-              DmGrpc.dmSegMobile(cid: cid, segmentIndex: index),
-          ]);
-          for (final response in responses) {
-            danmaku.elems.addAll(response.data.elems);
-          }
-          responses.clear();
+        // 弹幕不是播放必需，而海外 grpc 有可能整段挂死：这里给一个总时限。
+        // 挂在这一步会连带占住 startDownload 的下载锁——表现就是
+        // 「正在下载」长期不动、点队列里其它等待项也没反应。
+        final bytes = await _fetchDanmakuBytes(
+          cid,
+          seg,
+        ).timeout(_danmakuBudget, onTimeout: () => null);
+        if (bytes == null) {
+          // 超时/风控/分段不全：不落盘（文件存在即代表完整，之后可再更新）。
+          // 首次缓存不因此中断视频下载；手动「更新弹幕」则如实返回失败。
+          return !isUpdate;
         }
-        await danmakuFile.writeAsBytes(danmaku.writeToBuffer());
+        await danmakuFile.writeAsBytes(bytes);
 
         return true;
       } catch (e) {
@@ -385,6 +382,43 @@ class DownloadService extends GetxService {
     }
     return true;
     });
+  }
+
+  /// 弹幕分段拉取的总时限
+  static const Duration _danmakuBudget = Duration(seconds: 60);
+
+  /// 逐段拉取弹幕（并发 [_maxDanmakuConcurrency]）。
+  /// 返回序列化结果；任一段失败/首段无数据则返回 null，调用方据此**不落盘**，
+  /// 保证「文件存在即完整」，之后仍可用「更新弹幕」补齐。
+  Future<Uint8List?> _fetchDanmakuBytes(int cid, int seg) async {
+    final first = (await DmGrpc.dmSegMobile(
+      cid: cid,
+      segmentIndex: 1,
+    )).dataOrNull;
+    if (first == null) {
+      return null;
+    }
+    var complete = true;
+    for (var start = 2; start <= seg; start += _maxDanmakuConcurrency) {
+      final end = start + _maxDanmakuConcurrency - 1;
+      final responses = await Future.wait([
+        for (var index = start; index <= seg && index <= end; index++)
+          DmGrpc.dmSegMobile(cid: cid, segmentIndex: index),
+      ]);
+      for (final response in responses) {
+        final data = response.dataOrNull;
+        if (data == null) {
+          complete = false;
+          continue;
+        }
+        first.elems.addAll(data.elems);
+      }
+      responses.clear();
+    }
+    if (!complete) {
+      return null;
+    }
+    return first.writeToBuffer();
   }
 
   Future<void> _downloadSubtitles({
@@ -803,20 +837,21 @@ class DownloadService extends GetxService {
   final Map<int, int> _deferCounts = {};
   bool _deferHandling = false;
 
-  /// 停摆时是否让位：队列中还有其它未完成项，且当前项让位次数未超限（防乒乓）
+  /// 同一下载项最多让位次数（防乒乓），超出后由 DownloadManager 明确报失败。
+  static const int _maxDefersPerEntry = 3;
+
+  /// 停摆/龟速时是否让位：
+  /// * 队列里还有其它未完成项 → 先让别人下；
+  /// * 只剩自己 → 也退回队尾：下一轮会重新取一次 playurl（拿到一批全新的
+  ///   已签名候选地址）再从断点续传。否则会出现「最后一条线路几十K慢慢爬，
+  ///   既不报错也不见进度」的永久卡死。
   bool _shouldDeferCurrent() {
     final entry = curDownload.value;
     if (entry == null) {
       return false;
     }
-    final hasOthers = waitDownloadQueue.any(
-      (e) => e.cid != entry.cid && !e.isCompleted,
-    );
-    if (!hasOthers) {
-      return false;
-    }
     final count = _deferCounts[entry.cid] ?? 0;
-    if (count >= 3) {
+    if (count >= _maxDefersPerEntry) {
       return false;
     }
     _deferCounts[entry.cid] = count + 1;
