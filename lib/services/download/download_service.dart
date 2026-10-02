@@ -41,7 +41,6 @@ class DownloadService extends GetxService {
   static const _indexFile = 'index.json';
   static const _maxDanmakuConcurrency = 4;
 
-  final _lock = Lock();
 
   /// 弹幕下载锁：批量更新时外层 Future.wait 会并发调用多次 downloadDanmaku，
   /// 此锁确保同一时间只有一个视频在下载弹幕，避免总并发超过 _maxDanmakuConcurrency。
@@ -302,9 +301,7 @@ class DownloadService extends GetxService {
     return dir.path;
   }
 
-  /// 等待某个下载器收尾，最多 10s。
-  /// 兜底：万一旧任务因异常路径没返回，也不能把 [_lock] 永久占住——
-  /// 那会让「切换到队列里的其它项」彻底失效（点别的没反应）。
+  /// 等待某个下载器收尾，最多 10s（仅用于暂停/删除这种必须等落定的场景）。
   /// 超时后旧实例的回调由 mgr 身份校验丢弃，不会污染新任务。
   Future<void> _cancelAndWait(
     DownloadManager? manager, {
@@ -350,42 +347,90 @@ class DownloadService extends GetxService {
   /// 调用 downloadDanmaku 的最长等待（含排队等弹幕锁）
   static const Duration _danmakuCallBudget = Duration(seconds: 75);
 
-  Future<void> startDownload(BiliDownloadEntryInfo entry) async {
-    if (_setupDepth > 0) {
-      Timer(const Duration(seconds: 8), () {
-        if (_setupDepth > 0) {
-          SmartDialog.showToast('${uiTx('下载队列正忙，卡在阶段：')}${_phase}');
-        }
-      });
-    }
-    await _lock.synchronized(() async {
-      _setupDepth++;
-      try {
-        _phase = 'cancel-previous';
-        await _cancelAndWait(_downloadManager, isDelete: false);
-        await _cancelAndWait(_audioDownloadManager, isDelete: false);
-        _downloadManager = null;
-        _audioDownloadManager = null;
-        if (curDownload.value case final curEntry?) {
-          if (curEntry.status.isDownloading) {
-            curEntry.status = DownloadStatus.pause;
-          }
-        }
+  /// 建立流程的代号：每次开始/切换都自增，旧的流程靠它自我作废。
+  /// 有了它就**不再需要下载锁**——锁会被卡住的网络请求长期占死，
+  /// 表现正是「正在下载却卡住时，点其它等待中的视频毫无反应」。
+  int _setupGen = 0;
 
-        _curCid = entry.cid;
-        curDownload.value = entry;
-        waitDownloadQueue.refresh();
-        await _startDownload(entry);
-      } catch (e) {
-        // 建立下载过程中任何未预期异常都要落到明确状态，
-        // 不能让这条项停在「正在下载」上不动也不报错
+  /// 点击「等待中」的项：**立刻**开始下载它，原先正在下的退回「等待中」。
+  /// 全程不排队等任何锁：旧下载器只在后台取消（它的回调由身份校验丢弃），
+  /// 所以无论旧任务是不是卡住，这次点击都会马上生效。
+  void startDownload(BiliDownloadEntryInfo entry) {
+    final gen = ++_setupGen;
+    _warnIfSetupSlow(gen);
+
+    final prev = curDownload.value;
+    if (prev != null && prev.cid != entry.cid) {
+      if (prev.status.isDownloading) {
+        prev.status = DownloadStatus.wait;
+      }
+      waitDownloadQueue
+        ..removeWhere((e) => e.cid == prev.cid)
+        ..add(prev);
+    }
+    waitDownloadQueue.removeWhere((e) => e.cid == entry.cid);
+    if (!entry.isCompleted) {
+      waitDownloadQueue.insert(0, entry);
+    }
+
+    _cancelInBackground(_downloadManager);
+    _cancelInBackground(_audioDownloadManager);
+    _downloadManager = null;
+    _audioDownloadManager = null;
+
+    _curCid = entry.cid;
+    curDownload.value = entry;
+    waitDownloadQueue.refresh();
+    flagNotifier.refresh();
+    unawaited(_runSetup(entry, gen));
+  }
+
+  /// 后台取消旧下载器：绝不 await（卡住的任务会把这里拖死），
+  /// 10 秒收不到尾就丢掉；其后续回调由 identical 身份校验拦截。
+  void _cancelInBackground(DownloadManager? manager) {
+    if (manager == null) {
+      return;
+    }
+    unawaited(
+      manager
+          .cancel(isDelete: false)
+          .timeout(const Duration(seconds: 10), onTimeout: () {})
+          .catchError((Object e) {
+            if (kDebugMode) {
+              debugPrint('cancel previous download task error: $e');
+            }
+          }),
+    );
+  }
+
+  /// 建立下载（取弹幕 → 取播放地址 → 写元数据 → 起下载器）
+  Future<void> _runSetup(BiliDownloadEntryInfo entry, int gen) async {
+    _setupDepth++;
+    try {
+      await _startDownload(entry);
+    } catch (e) {
+      // 未预期异常也要落到明确状态，不能停在「正在下载」不动也不报错
+      if (_isCurrentSetup(entry, gen)) {
         _updateCurStatus(DownloadStatus.failDownload);
-        _failToast('$e');
-        if (kDebugMode) {
-          debugPrint('startDownload error: $e');
-        }
-      } finally {
-        _setupDepth--;
+        _failToast(e);
+      }
+      if (kDebugMode) {
+        debugPrint('startDownload error: $e');
+      }
+    } finally {
+      _setupDepth--;
+      _ensureQueueRunning();
+    }
+  }
+
+  bool _isCurrentSetup(BiliDownloadEntryInfo entry, int gen) =>
+      gen == _setupGen && curDownload.value?.cid == entry.cid;
+
+  /// 建立过程偏慢时把当前阶段提示出来（便于区分是网络还是磁盘）
+  void _warnIfSetupSlow(int gen) {
+    Timer(const Duration(seconds: 12), () {
+      if (gen == _setupGen && _setupDepth > 0) {
+        SmartDialog.showToast('${uiTx('缓存建立中，阶段：')}${_phase}');
       }
     });
   }
@@ -405,7 +450,7 @@ class DownloadService extends GetxService {
     );
     if (isUpdate || !danmakuFile.existsSync()) {
       try {
-        if (!isUpdate) {
+        if (!isUpdate && _setupOwns(entry)) {
           _updateCurStatus(DownloadStatus.getDanmaku);
         }
         final seg = (entry.totalTimeMilli / DmUtils.segLength).ceil();
@@ -414,8 +459,8 @@ class DownloadService extends GetxService {
         }
 
         // 弹幕不是播放必需，而海外 grpc 有可能整段挂死：这里给一个总时限。
-        // 挂在这一步会连带占住 startDownload 的下载锁——表现就是
-        // 「正在下载」长期不动、点队列里其它等待项也没反应。
+        // 以前它挂住会连带把整条下载流程占死——表现就是「正在下载」长期不动、
+        // 点队列里其它等待项也没反应。
         final bytes = await _fetchDanmakuBytes(
           cid,
           seg,
@@ -430,7 +475,10 @@ class DownloadService extends GetxService {
         return true;
       } catch (e) {
         if (!isUpdate) {
-          _updateCurStatus(DownloadStatus.failDanmaku);
+          if (_setupOwns(entry)) {
+            _updateCurStatus(DownloadStatus.failDanmaku);
+            _ensureQueueRunning();
+          }
         }
         if (kDebugMode) SmartDialog.showToast(e.toString());
         return false;
@@ -688,6 +736,11 @@ class DownloadService extends GetxService {
     }
   }
 
+  /// 这条项是否仍是「当前该由我推进」的那一条：被别的点击接管、或已让位时
+  /// 返回 false，旧流程就此作废（不改状态、不起下载器），避免把新项写坏。
+  bool _setupOwns(BiliDownloadEntryInfo entry) =>
+      curDownload.value?.cid == entry.cid;
+
   Future<void> _startDownload(BiliDownloadEntryInfo entry) async {
     _audioRetryLeft = _maxAudioRetries;
     _audioRetrying = false;
@@ -726,6 +779,12 @@ class DownloadService extends GetxService {
           }
           await Future.delayed(Duration(seconds: 2 * playUrlAttempt));
         }
+        if (!_setupOwns(entry)) {
+          return;
+        }
+      }
+      if (!_setupOwns(entry)) {
+        return;
       }
       final mediaFileInfo = downloadResult.mediaFileInfo;
 
@@ -735,6 +794,9 @@ class DownloadService extends GetxService {
       }
 
       final mediaJsonFile = File(path.join(videoDir.path, _indexFile));
+      if (!_setupOwns(entry)) {
+        return;
+      }
       _phase = 'write-meta+cover';
       await Future.wait([
         mediaJsonFile.writeAsString(jsonEncode(mediaFileInfo.toJson())),
@@ -756,6 +818,9 @@ class DownloadService extends GetxService {
 
       unawaited(_downloadSubtitles(entry: entry));
 
+      if (!_setupOwns(entry)) {
+        return;
+      }
       _phase = 'create-managers';
       switch (mediaFileInfo) {
         case Type1 mediaFileInfo:
@@ -829,9 +894,10 @@ class DownloadService extends GetxService {
           break;
       }
     } catch (e) {
-      _updateCurStatus(DownloadStatus.failPlayUrl);
-      _failToast(e);
-      _ensureQueueRunning();
+      if (_setupOwns(entry)) {
+        _updateCurStatus(DownloadStatus.failPlayUrl);
+        _failToast(e);
+      }
       if (kDebugMode) {
         debugPrint('get download url error: $e');
       }
@@ -949,26 +1015,24 @@ class DownloadService extends GetxService {
       return;
     }
     _deferHandling = true;
-    unawaited(
-      _lock
-          .synchronized(() async {
-            await _cancelAndWait(_downloadManager, isDelete: false);
-            await _cancelAndWait(_audioDownloadManager, isDelete: false);
-            _downloadManager = null;
-            _audioDownloadManager = null;
-            entry.status = DownloadStatus.wait;
-            waitDownloadQueue.removeWhere((e) => e.cid == entry.cid);
-            waitDownloadQueue.add(entry);
-            _curCid = null;
-            curDownload.value = null;
-            waitDownloadQueue.refresh();
-            flagNotifier.refresh();
-          })
-          .whenComplete(() {
-            _deferHandling = false;
-            nextDownload();
-          }),
-    );
+    // 同样不排队等锁：作废本项建立流程 → 后台取消旧下载器 → 退回队尾 → 继续队列。
+    _setupGen++;
+    _cancelInBackground(_downloadManager);
+    _cancelInBackground(_audioDownloadManager);
+    _downloadManager = null;
+    _audioDownloadManager = null;
+    entry.status = DownloadStatus.wait;
+    waitDownloadQueue
+      ..removeWhere((e) => e.cid == entry.cid)
+      ..add(entry);
+    _curCid = null;
+    curDownload.value = null;
+    waitDownloadQueue.refresh();
+    flagNotifier.refresh();
+    Future.delayed(const Duration(milliseconds: 300), () {
+      _deferHandling = false;
+      nextDownload();
+    });
   }
 
   void _onAudioFailed([Object? reason]) {
@@ -1088,10 +1152,10 @@ class DownloadService extends GetxService {
       return;
     }
     final failed = switch (cur.status) {
-      DownloadStatus.failPlayUrl() ||
-      DownloadStatus.failDownload() ||
-      DownloadStatus.failDownloadAudio() ||
-      DownloadStatus.failDanmaku() => true,
+      DownloadStatus.failPlayUrl ||
+      DownloadStatus.failDownload ||
+      DownloadStatus.failDownloadAudio ||
+      DownloadStatus.failDanmaku => true,
       _ => false,
     };
     if (!failed) {
