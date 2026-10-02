@@ -21,6 +21,7 @@ import 'package:PiliPlus/models_new/video/video_detail/page.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
 import 'package:PiliPlus/pages/danmaku/controller.dart';
 import 'package:PiliPlus/services/download/download_manager.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:PiliPlus/utils/danmaku_utils.dart';
 import 'package:PiliPlus/utils/extension/file_ext.dart';
@@ -55,6 +56,7 @@ class DownloadService extends GetxService {
   int? get curCid => _curCid;
   final curDownload = Rxn<BiliDownloadEntryInfo>();
   void _updateCurStatus(DownloadStatus status) {
+    _phase = status.name;
     if (curDownload.value != null) {
       curDownload
         ..value!.status = status
@@ -316,22 +318,45 @@ class DownloadService extends GetxService {
         .timeout(const Duration(seconds: 10), onTimeout: () {});
   }
 
-  Future<void> startDownload(BiliDownloadEntryInfo entry) {
-    return _lock.synchronized(() async {
-      await _cancelAndWait(_downloadManager, isDelete: false);
-      await _cancelAndWait(_audioDownloadManager, isDelete: false);
-      _downloadManager = null;
-      _audioDownloadManager = null;
-      if (curDownload.value case final curEntry?) {
-        if (curEntry.status.isDownloading) {
-          curEntry.status = DownloadStatus.pause;
-        }
-      }
+  /// 建立下载流程（取消旧任务 → 取弹幕 → 取播放地址 → 写元数据 → 起下载器）
+  /// 的阶段标记与占锁计数，只用于诊断。曾经出现过「正在下载 3.04MB」永不推进、
+  /// 点队列里其它项也没反应的情况——就是某个 await 把下载锁长期占住了，
+  /// 却又看不出来卡在哪一步。现在超过 8s 就把卡住的阶段提示出来。
+  String _phase = 'idle';
+  int _setupDepth = 0;
 
-      _curCid = entry.cid;
-      curDownload.value = entry;
-      waitDownloadQueue.refresh();
-      await _startDownload(entry);
+  /// 调用 downloadDanmaku 的最长等待（含排队等弹幕锁）
+  static const Duration _danmakuCallBudget = Duration(seconds: 75);
+
+  Future<void> startDownload(BiliDownloadEntryInfo entry) async {
+    if (_setupDepth > 0) {
+      Timer(const Duration(seconds: 8), () {
+        if (_setupDepth > 0) {
+          SmartDialog.showToast('${uiTx('下载队列正忙，卡在阶段：')}${_phase}');
+        }
+      });
+    }
+    await _lock.synchronized(() async {
+      _setupDepth++;
+      try {
+        _phase = 'cancel-previous';
+        await _cancelAndWait(_downloadManager, isDelete: false);
+        await _cancelAndWait(_audioDownloadManager, isDelete: false);
+        _downloadManager = null;
+        _audioDownloadManager = null;
+        if (curDownload.value case final curEntry?) {
+          if (curEntry.status.isDownloading) {
+            curEntry.status = DownloadStatus.pause;
+          }
+        }
+
+        _curCid = entry.cid;
+        curDownload.value = entry;
+        waitDownloadQueue.refresh();
+        await _startDownload(entry);
+      } finally {
+        _setupDepth--;
+      }
     });
   }
 
@@ -343,6 +368,7 @@ class DownloadService extends GetxService {
     if (cid == null) {
       return false;
     }
+    _phase = 'danmaku-wait-lock';
     return _danmakuLock.synchronized<bool>(() async {
     final danmakuFile = File(
       path.join(entry.entryDirPath, PathUtils.danmakuName),
@@ -636,10 +662,15 @@ class DownloadService extends GetxService {
     _audioRetryLeft = _maxAudioRetries;
     _audioRetrying = false;
     try {
-      if (!await downloadDanmaku(entry: entry)) {
+      // 连「排队等弹幕锁」一起限时：万一弹幕环节被别的流程占住（旧版本正是这样
+      // 把整条下载锁连带卡死），超时后照常往下缓存，缺的弹幕之后仍可「更新弹幕」。
+      if (!await downloadDanmaku(
+        entry: entry,
+      ).timeout(_danmakuCallBudget, onTimeout: () => true)) {
         return;
       }
 
+      _phase = 'getPlayUrl';
       _updateCurStatus(DownloadStatus.getPlayUrl);
 
       // playurl 响应体大、海外易超时，且偶发风控(code!=0)：
@@ -673,6 +704,7 @@ class DownloadService extends GetxService {
       }
 
       final mediaJsonFile = File(path.join(videoDir.path, _indexFile));
+      _phase = 'write-meta+cover';
       await Future.wait([
         mediaJsonFile.writeAsString(jsonEncode(mediaFileInfo.toJson())),
         _downloadCover(entry: entry),
@@ -688,6 +720,7 @@ class DownloadService extends GetxService {
 
       unawaited(_downloadSubtitles(entry: entry));
 
+      _phase = 'create-managers';
       switch (mediaFileInfo) {
         case Type1 mediaFileInfo:
           final first = mediaFileInfo.segmentList.first;
