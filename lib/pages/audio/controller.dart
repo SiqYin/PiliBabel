@@ -201,6 +201,24 @@ class AudioController extends GetxController
     return player?.play();
   }
 
+  /// 单曲循环/单元素列表循环用到：media_kit 播放结束后 [Player.play] 往往
+  /// 是个空操作（playing 仍为 true、位置停在片尾），于是表现为
+  /// 「进度条归零到 00:00 却不再自动播放」。与视频端 play(repeat: true)
+  /// 一致，先显式回到起点再起播。
+  Future<void> _restartFromBeginning() async {
+    final p = player;
+    if (p == null) {
+      return;
+    }
+    position.value = 0;
+    try {
+      await p.seek(Duration.zero);
+    } catch (_) {}
+    try {
+      await p.play();
+    } catch (_) {}
+  }
+
   Future<void>? onPause() {
     return player?.pause();
   }
@@ -419,14 +437,14 @@ class AudioController extends GetxController
                 playNext(nextPart: true);
                 break;
               case PlayRepeat.singleCycle:
-                onPlay();
+                _restartFromBeginning();
                 break;
               case PlayRepeat.listCycle:
                 if (!playNext(nextPart: true)) {
                   if (index != null && index != 0 && playlist != null) {
                     playIndex(0);
                   } else {
-                    onPlay();
+                    _restartFromBeginning();
                   }
                 }
                 break;
