@@ -20,6 +20,14 @@ class StallDeferred implements Exception {
   const StallDeferred();
 }
 
+/// 龟速升级信号：最后一条线路也已经持续低速——
+/// [defer] = true 交回 service 重取直链/让位给别人先下；false 则明确报下载失败。
+/// 专治「一直显示正在下载、速度几十K、永远不动也不报错」。
+class _GiveUpSignal implements Exception {
+  final bool defer;
+  _GiveUpSignal(this.defer);
+}
+
 class DownloadManager {
   /// 候选直链：首个为按当前 CDN 策略选出的主线路，其余为备用/其它镜像。
   /// 当前线路速度过低或请求失败时，自动切换到下一条并断点续传。
@@ -34,6 +42,13 @@ class DownloadManager {
   /// 低于该速度(B/s)持续一个窗口即换下一条线路
   static const int _minSpeedBytes = 64 * 1024;
   static const int _speedWindowMs = 5000;
+
+  /// 已经是最后一条线路时，连续这么多个低速窗口(≈15s)仍爬不动，
+  /// 就不再"无限慢速下载"：交回 service 重取直链（会拿到一批新的已签名
+  /// 候选地址、并按断点续传），额度用尽则明确报下载失败。
+  /// 中速(32~64KB/s)不触发，避免误伤本来就慢的网络。
+  static const int _crawlSpeedBytes = 32 * 1024;
+  static const int _maxSlowWindows = 3;
 
   /// 首个线路至少跑满该时长才允许因慢速切换（排除冷启动抖动）
   static const int _minRunBeforeRotateMs = 8000;
@@ -96,6 +111,15 @@ class DownloadManager {
         if (_cancelRequested) {
           return;
         }
+      } on _GiveUpSignal catch (g) {
+        // 最后一条线路仍持续龟速：让位重取直链，额度用尽则明确失败
+        if (g.defer) {
+          _status = DownloadStatus.pause;
+          onDone(const StallDeferred());
+        } else {
+          await _fail('all lines too slow');
+        }
+        return;
       } on DioException catch (e) {
         // 用户/服务侧已取消：静默收尾，不再让位或换线
         if (_cancelRequested) {
@@ -193,6 +217,7 @@ class DownloadManager {
 
     int winStartMs = DateTime.now().millisecondsSinceEpoch;
     int winBytes = 0;
+    int slowWindows = 0;
     int? last;
 
     // 停摆看门狗：连接 0 字节长期无进度（HTTP/2 适配器对流式响应可能
@@ -242,10 +267,21 @@ class DownloadManager {
         if (elapsed >= _speedWindowMs) {
           final speed = winBytes * 1000 / elapsed;
           final runMs = DateTime.now().millisecondsSinceEpoch - urlStartMs;
-          if (speed < _minSpeedBytes &&
-              runMs >= _minRunBeforeRotateMs &&
-              _urlIndex < urls.length - 1) {
-            throw _RotateSignal('slow: $speed B/s');
+          if (speed < _minSpeedBytes && runMs >= _minRunBeforeRotateMs) {
+            if (_urlIndex < urls.length - 1) {
+              throw _RotateSignal('slow: $speed B/s');
+            }
+            // 已是最后一条：低速到明显没救才累计升级；中速继续下，不误伤慢网络
+            if (speed < _crawlSpeedBytes) {
+              slowWindows++;
+              if (slowWindows >= _maxSlowWindows) {
+                final defer = shouldDefer?.call() ?? false;
+                _cancelToken?.cancel();
+                throw _GiveUpSignal(defer);
+              }
+            }
+          } else {
+            slowWindows = 0;
           }
           winStartMs = DateTime.now().millisecondsSinceEpoch;
           winBytes = 0;
