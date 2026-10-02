@@ -646,6 +646,7 @@ class DownloadService extends GetxService {
             path: path.join(videoDir.path, PathUtils.videoNameType1),
             onReceiveProgress: _onReceive,
             onDone: _onDone,
+            shouldDefer: _shouldDeferCurrent,
           );
           break;
         case Type2 mediaFileInfo:
@@ -655,6 +656,7 @@ class DownloadService extends GetxService {
             path: path.join(videoDir.path, PathUtils.videoNameType2),
             onReceiveProgress: _onReceive,
             onDone: _onDone,
+            shouldDefer: _shouldDeferCurrent,
           );
           final audio = mediaFileInfo.audio;
           if (audio != null && audio.isNotEmpty) {
@@ -664,6 +666,7 @@ class DownloadService extends GetxService {
               path: path.join(videoDir.path, PathUtils.audioNameType2),
               onReceiveProgress: null,
               onDone: _onAudioDone,
+              shouldDefer: _shouldDeferCurrent,
             );
           }
           late final first = mediaFileInfo.video.first;
@@ -704,6 +707,11 @@ class DownloadService extends GetxService {
   }
 
   void _onDone([Object? error]) {
+    if (error is StallDeferred) {
+      // 停摆且队列还有其它项：让位，先下别的
+      _deferCurrentToQueue();
+      return;
+    }
     if (error != null) {
       _updateCurStatus(_downloadManager?.status ?? DownloadStatus.pause);
       return;
@@ -734,6 +742,10 @@ class DownloadService extends GetxService {
   }
 
   void _onAudioDone([Object? error]) {
+    if (error is StallDeferred) {
+      _deferCurrentToQueue();
+      return;
+    }
     if (error != null) {
       // 音频失败：自动重试（重取 playurl + 断点续传），不推倒视频进度。
       _onAudioFailed();
@@ -742,6 +754,62 @@ class DownloadService extends GetxService {
     if (_downloadManager?.status == DownloadStatus.completed) {
       _completeDownload();
     }
+  }
+
+  final Map<int, int> _deferCounts = {};
+  bool _deferHandling = false;
+
+  /// 停摆时是否让位：队列中还有其它未完成项，且当前项让位次数未超限（防乒乓）
+  bool _shouldDeferCurrent() {
+    final entry = curDownload.value;
+    if (entry == null) {
+      return false;
+    }
+    final hasOthers = waitDownloadQueue.any(
+      (e) => e.cid != entry.cid && !e.isCompleted,
+    );
+    if (!hasOthers) {
+      return false;
+    }
+    final count = _deferCounts[entry.cid] ?? 0;
+    if (count >= 3) {
+      return false;
+    }
+    _deferCounts[entry.cid] = count + 1;
+    return true;
+  }
+
+  /// 停摆让位：当前条退回队尾（保留断点），先下队列中的其它项；
+  /// 之后再轮到它时会自动重取直链并从断点续传。
+  void _deferCurrentToQueue() {
+    if (_deferHandling) {
+      return;
+    }
+    final entry = curDownload.value;
+    if (entry == null) {
+      return;
+    }
+    _deferHandling = true;
+    unawaited(
+      _lock
+          .synchronized(() async {
+            await _downloadManager?.cancel(isDelete: false);
+            await _audioDownloadManager?.cancel(isDelete: false);
+            _downloadManager = null;
+            _audioDownloadManager = null;
+            entry.status = DownloadStatus.wait;
+            waitDownloadQueue.removeWhere((e) => e.cid == entry.cid);
+            waitDownloadQueue.add(entry);
+            _curCid = null;
+            curDownload.value = null;
+            waitDownloadQueue.refresh();
+            flagNotifier.refresh();
+          })
+          .whenComplete(() {
+            _deferHandling = false;
+            nextDownload();
+          }),
+    );
   }
 
   void _onAudioFailed() {
@@ -792,6 +860,7 @@ class DownloadService extends GetxService {
           ),
           onReceiveProgress: null,
           onDone: _onAudioDone,
+          shouldDefer: _shouldDeferCurrent,
         );
         _audioRetrying = false;
         return;
@@ -813,6 +882,7 @@ class DownloadService extends GetxService {
     entry
       ..downloadedBytes = entry.totalBytes
       ..isCompleted = true;
+    _deferCounts.remove(entry.cid);
     await _updateBiliDownloadEntryJson(entry);
     waitDownloadQueue.remove(entry);
     downloadList.insert(0, entry);
