@@ -49,6 +49,13 @@ class DownloadManager {
   int _urlIndex = 0;
   bool _stallRotate = false;
   bool _deferred = false;
+
+  /// 取消标记（粘滞）：换线窗口内 _cancelToken 会被替换，只靠 token 判断
+  /// 会漏掉「恰好发生在两条线路之间」的取消，导致本任务继续跑下去；
+  /// service 侧 await task 就永远不返回 → 下载锁被卡死 → 表现为
+  /// 「正在下载音频时无法切换到其它等待项」。
+  bool _cancelRequested = false;
+
   late final Future<void> task;
 
   DownloadManager({
@@ -71,13 +78,23 @@ class DownloadManager {
       return;
     }
     for (_urlIndex = 0; _urlIndex < urls.length; _urlIndex++) {
+      if (_cancelRequested) {
+        return;
+      }
       _cancelToken = CancelToken();
       try {
         await _downloadFrom(file, urls[_urlIndex]);
         return; // completed（或用户取消等终态，已在内部处理）
       } on _RotateSignal {
         // 慢速/校验失败：换下一条线路，断点保留
+        if (_cancelRequested) {
+          return;
+        }
       } on DioException catch (e) {
+        // 用户/服务侧已取消：静默收尾，不再让位或换线
+        if (_cancelRequested) {
+          return;
+        }
         // 看门狗判定停摆且应"让位"：交回 service 排到队尾，先下其它项
         if (_deferred) {
           _deferred = false;
@@ -106,6 +123,9 @@ class DownloadManager {
           continue;
         }
       }
+    }
+    if (_cancelRequested) {
+      return;
     }
     await _fail('all ${urls.length} candidates failed');
   }
@@ -153,6 +173,11 @@ class DownloadManager {
       await closeSink();
       rethrow;
     }
+    if (_cancelRequested) {
+      // 响应回来的瞬间已被取消：不再写入/轮转
+      await closeSink();
+      return;
+    }
 
     final data = response.data!;
     final contentLength = data.contentLength + received;
@@ -170,6 +195,10 @@ class DownloadManager {
     int lastProgressMs = DateTime.now().millisecondsSinceEpoch;
     int progressMark = received;
     final watchdog = Timer.periodic(const Duration(seconds: 3), (t) {
+      if (_cancelRequested) {
+        t.cancel();
+        return;
+      }
       final now = DateTime.now().millisecondsSinceEpoch;
       if (received != progressMark) {
         progressMark = received;
@@ -234,6 +263,7 @@ class DownloadManager {
     if (!isDelete && _status == DownloadStatus.downloading) {
       _status = DownloadStatus.pause;
     }
+    _cancelRequested = true;
     _cancelToken?.cancel();
     return task;
   }

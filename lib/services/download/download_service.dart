@@ -300,10 +300,26 @@ class DownloadService extends GetxService {
     return dir.path;
   }
 
+  /// 等待某个下载器收尾，最多 10s。
+  /// 兜底：万一旧任务因异常路径没返回，也不能把 [_lock] 永久占住——
+  /// 那会让「切换到队列里的其它项」彻底失效（点别的没反应）。
+  /// 超时后旧实例的回调由 mgr 身份校验丢弃，不会污染新任务。
+  Future<void> _cancelAndWait(
+    DownloadManager? manager, {
+    required bool isDelete,
+  }) async {
+    if (manager == null) {
+      return;
+    }
+    await manager
+        .cancel(isDelete: isDelete)
+        .timeout(const Duration(seconds: 10), onTimeout: () {});
+  }
+
   Future<void> startDownload(BiliDownloadEntryInfo entry) {
     return _lock.synchronized(() async {
-      await _downloadManager?.cancel(isDelete: false);
-      await _audioDownloadManager?.cancel(isDelete: false);
+      await _cancelAndWait(_downloadManager, isDelete: false);
+      await _cancelAndWait(_audioDownloadManager, isDelete: false);
       _downloadManager = null;
       _audioDownloadManager = null;
       if (curDownload.value case final curEntry?) {
@@ -641,33 +657,61 @@ class DownloadService extends GetxService {
       switch (mediaFileInfo) {
         case Type1 mediaFileInfo:
           final first = mediaFileInfo.segmentList.first;
-          _downloadManager = DownloadManager(
+          // 回调只认「当前在用的下载器」：_cancelAndWait 超时兜底或切换队列项后，
+          // 旧实例的进度/完成回调一律丢弃，避免污染新任务的状态与进度。
+          late final DownloadManager videoMgr;
+          videoMgr = DownloadManager(
             urls: [first.url],
             path: path.join(videoDir.path, PathUtils.videoNameType1),
-            onReceiveProgress: _onReceive,
-            onDone: _onDone,
+            onReceiveProgress: (p, t) {
+              if (identical(_downloadManager, videoMgr)) {
+                _onReceive(p, t);
+              }
+            },
+            onDone: ([e]) {
+              if (identical(_downloadManager, videoMgr)) {
+                _onDone(e);
+              }
+            },
             shouldDefer: _shouldDeferCurrent,
           );
+          _downloadManager = videoMgr;
           break;
         case Type2 mediaFileInfo:
-          _downloadManager = DownloadManager(
+          late final DownloadManager videoMgr;
+          videoMgr = DownloadManager(
             urls: downloadResult.videoUrls ??
                 <String>[mediaFileInfo.video.first.baseUrl],
             path: path.join(videoDir.path, PathUtils.videoNameType2),
-            onReceiveProgress: _onReceive,
-            onDone: _onDone,
+            onReceiveProgress: (p, t) {
+              if (identical(_downloadManager, videoMgr)) {
+                _onReceive(p, t);
+              }
+            },
+            onDone: ([e]) {
+              if (identical(_downloadManager, videoMgr)) {
+                _onDone(e);
+              }
+            },
             shouldDefer: _shouldDeferCurrent,
           );
+          _downloadManager = videoMgr;
           final audio = mediaFileInfo.audio;
           if (audio != null && audio.isNotEmpty) {
-            _audioDownloadManager = DownloadManager(
+            late final DownloadManager audioMgr;
+            audioMgr = DownloadManager(
               urls: downloadResult.audioUrls ??
                   <String>[audio.first.baseUrl],
               path: path.join(videoDir.path, PathUtils.audioNameType2),
               onReceiveProgress: null,
-              onDone: _onAudioDone,
+              onDone: ([e]) {
+                if (identical(_audioDownloadManager, audioMgr)) {
+                  _onAudioDone(e);
+                }
+              },
               shouldDefer: _shouldDeferCurrent,
             );
+            _audioDownloadManager = audioMgr;
           }
           late final first = mediaFileInfo.video.first;
           entry.pageData
@@ -793,8 +837,8 @@ class DownloadService extends GetxService {
     unawaited(
       _lock
           .synchronized(() async {
-            await _downloadManager?.cancel(isDelete: false);
-            await _audioDownloadManager?.cancel(isDelete: false);
+            await _cancelAndWait(_downloadManager, isDelete: false);
+            await _cancelAndWait(_audioDownloadManager, isDelete: false);
             _downloadManager = null;
             _audioDownloadManager = null;
             entry.status = DownloadStatus.wait;
@@ -859,7 +903,7 @@ class DownloadService extends GetxService {
             PathUtils.audioNameType2,
           ),
           onReceiveProgress: null,
-          onDone: _onAudioDone,
+          onDone: ([e]) => _onAudioDone(e),
           shouldDefer: _shouldDeferCurrent,
         );
         _audioRetrying = false;
@@ -951,8 +995,8 @@ class DownloadService extends GetxService {
     required bool isDelete,
     bool downloadNext = true,
   }) async {
-    await _downloadManager?.cancel(isDelete: isDelete);
-    await _audioDownloadManager?.cancel(isDelete: isDelete);
+    await _cancelAndWait(_downloadManager, isDelete: isDelete);
+    await _cancelAndWait(_audioDownloadManager, isDelete: isDelete);
     _downloadManager = null;
     _audioDownloadManager = null;
     if (!isDelete) {
