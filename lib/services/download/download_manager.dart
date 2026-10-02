@@ -64,12 +64,12 @@ class DownloadManager {
   /// 本次任务已经换过几次线路
   int _rotations = 0;
 
-  /// 全局兜底看门狗：连续这么久没有任何一个新字节，就强制取消当前请求。
-  /// 线路内看门狗只在「已经在收流」时起作用，管不到「请求发出去了但响应头
-  /// 一直不来」「换线间隙」这类阶段——曾经就卡在这里：进度停在 3.04MB 二十分钟
-  /// 不动、不报错，还把下载锁占死导致无法切换其它队列项。
-  static const int _noProgressMs = 15000;
-  static const Duration _globalWatchdogTick = Duration(seconds: 3);
+  /// 全局兜底看门狗：连续这么久没有任何一个新字节，就按同一套停摆规则处理。
+  /// 阈值与线路内看门狗一致（5 秒），因为线路内那只「已经在收流」才上岗，
+  /// 管不到「换线后请求已发出、响应头一直不来」和断点重开的间隙——
+  /// 曾经就卡在这里：进度停在某个 MB 几十分钟不动、不报错，还把下载锁占死。
+  static const int _noProgressMs = _stallMs;
+  static const Duration _globalWatchdogTick = Duration(seconds: 1);
 
   /// 已收字节（跨线路累计，供全局看门狗判断是否有进展）
   int _received = 0;
