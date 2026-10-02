@@ -9,58 +9,86 @@ import 'package:PiliPlus/utils/extension/file_ext.dart';
 import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:dio/dio.dart';
 
+/// 触发"换下一条线路"的内部信号（当前线路速度过低）
+class _RotateSignal implements Exception {
+  final String reason;
+  _RotateSignal(this.reason);
+}
+
 class DownloadManager {
-  final String url;
+  /// 候选直链：首个为按当前 CDN 策略选出的主线路，其余为备用/其它镜像。
+  /// 当前线路速度过低或请求失败时，自动切换到下一条并断点续传。
+  final List<String> urls;
   final String path;
   final void Function(int, int)? onReceiveProgress;
   final void Function([Object? error]) onDone;
 
+  /// 低于该速度(B/s)持续一个窗口即换下一条线路
+  static const int _minSpeedBytes = 64 * 1024;
+  static const int _speedWindowMs = 5000;
+
+  /// 首个线路至少跑满该时长才允许因慢速切换（排除冷启动抖动）
+  static const int _minRunBeforeRotateMs = 8000;
+
   DownloadStatus _status = DownloadStatus.downloading;
 
   DownloadStatus get status => _status;
-  final _cancelToken = CancelToken();
-  late Future<void> task;
+  CancelToken? _cancelToken;
+  int _urlIndex = 0;
+  late final Future<void> task;
 
   DownloadManager({
-    required this.url,
+    required List<String> urls,
     required this.path,
     required this.onReceiveProgress,
     required this.onDone,
-  }) {
+  }) : urls = urls.isEmpty ? const [''] : urls {
     task = _start();
   }
 
   Future<void> _start() async {
-    int received;
-
     final file = File(path);
-    if (file.existsSync()) {
-      received = await file.length();
-    } else {
+    if (!file.existsSync()) {
       file.createSync(recursive: true);
-      received = 0;
     }
+    if (urls.isEmpty) {
+      await _fail('no download url');
+      return;
+    }
+    for (_urlIndex = 0; _urlIndex < urls.length; _urlIndex++) {
+      _cancelToken = CancelToken();
+      try {
+        await _downloadFrom(file, urls[_urlIndex]);
+        return; // completed（或用户取消等终态，已在内部处理）
+      } on _RotateSignal {
+        // 慢速/校验失败：换下一条线路，断点保留
+      } on DioException {
+        // 网络异常：换下一条线路，断点保留；
+        // 用户主动取消(pause/delete)时不轮转，直接结束。
+        if (_cancelToken?.isCancelled ?? false) {
+          return;
+        }
+      }
+    }
+    await _fail('all ${urls.length} candidates failed');
+  }
 
-    var sink = file.openWrite(
+  /// 从 [url] 的 [offset] 字节处续传；完成/失败/换线都先关 sink。
+  Future<void> _downloadFrom(File file, String url) async {
+    int received = file.existsSync() ? await file.length() : 0;
+    IOSink sink = file.openWrite(
       mode: received == 0 ? FileMode.writeOnly : FileMode.writeOnlyAppend,
     );
+    final urlStartMs = DateTime.now().millisecondsSinceEpoch;
 
-    Future<void> onError(Object e, {bool delete = false}) async {
+    Future<void> closeSink() async {
       try {
         await sink.close();
       } catch (_) {}
-      if (_status == DownloadStatus.downloading) {
-        _status = DownloadStatus.failDownload;
-        if (delete && file.existsSync()) {
-          await file.tryDel();
-        }
-      }
-      onDone(e);
     }
 
     // Akamai 等海外 CDN 会校验 Referer/UA：缺省 UA(Dart/3.6) 且无 Referer
-    // 会被 403（国内 upos 镜像较宽容，所以换 Akamai 后才暴露）。
-    // 与播放器 setMediaHeader 的 referer/UA 保持一致。
+    // 会被 403。与播放器 setMediaHeader 的 referer/UA 保持一致。
     Future<Response<ResponseBody>> getStream(int offset) =>
         Request.http11Dio.get<ResponseBody>(
           url.http2https,
@@ -80,68 +108,69 @@ class DownloadManager {
 
     Response<ResponseBody> response;
     try {
-      try {
-        response = await getStream(received);
-      } on DioException catch (e) {
-        final code = e.response?.statusCode ?? 0;
-        // 403/410/412：多为断点失效(直链过期)或 CDN 校验失败——
-        // 清掉断点从头重试一次；再失败则走原有失败流程。
-        if ((code == 403 || code == 410 || code == 412) && received > 0) {
-          try {
-            await sink.close();
-          } catch (_) {}
-          try {
-            if (file.existsSync()) {
-              await file.tryDel();
-            }
-          } catch (_) {}
-          received = 0;
-          sink = file.openWrite(mode: FileMode.writeOnly);
-          response = await getStream(0);
-        } else {
-          rethrow;
-        }
-      }
-    } on DioException catch (e) {
-      // 保留断点文件以便续传（此前 delete:true 会删掉已下载内容导致从头再来；
-      // Range 失效的场景已由上方 403/410/412 清断点重试处理）。
-      await onError(e);
-      return;
+      response = await getStream(received);
+    } on DioException {
+      // 403/410/412/超时等：断点保留，交由外层换下一条线路
+      await closeSink();
+      rethrow;
     }
+
     final data = response.data!;
     final contentLength = data.contentLength + received;
-
     if (received == 0) {
       onReceiveProgress?.call(0, contentLength);
     }
 
+    int winStartMs = DateTime.now().millisecondsSinceEpoch;
+    int winBytes = 0;
     int? last;
     try {
       await for (final chunk in data.stream) {
         sink.add(chunk);
         received += chunk.length;
+        winBytes += chunk.length;
         final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
         if (last != now) {
           last = now;
           onReceiveProgress?.call(received, contentLength);
+        }
+        final elapsed = DateTime.now().millisecondsSinceEpoch - winStartMs;
+        if (elapsed >= _speedWindowMs) {
+          final speed = winBytes * 1000 / elapsed;
+          final runMs = DateTime.now().millisecondsSinceEpoch - urlStartMs;
+          if (speed < _minSpeedBytes &&
+              runMs >= _minRunBeforeRotateMs &&
+              _urlIndex < urls.length - 1) {
+            await closeSink();
+            _cancelToken?.cancel();
+            throw _RotateSignal('slow: $speed B/s');
+          }
+          winStartMs = DateTime.now().millisecondsSinceEpoch;
+          winBytes = 0;
         }
       }
       await sink.close();
       _status = DownloadStatus.completed;
       onDone();
     } catch (e) {
-      await onError(e);
-      return;
+      // 中途异常：保留断点，交由外层决定换线或失败
+      await closeSink();
+      rethrow;
     }
+  }
+
+  Future<void> _fail(String message) async {
+    if (_status == DownloadStatus.downloading) {
+      _status = DownloadStatus.failDownload;
+    }
+    onDone(message);
   }
 
   Future<void> cancel({required bool isDelete}) {
     if (!isDelete && _status == DownloadStatus.downloading) {
       _status = DownloadStatus.pause;
     }
-    if (!_cancelToken.isCancelled) {
-      _cancelToken.cancel();
-    }
+    _cancelToken?.cancel();
     return task;
   }
 }
