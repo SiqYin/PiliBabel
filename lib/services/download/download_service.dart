@@ -929,7 +929,8 @@ class DownloadService extends GetxService {
           _audioRetrying = false;
           return;
         }
-        _audioDownloadManager = DownloadManager(
+        late final DownloadManager audioMgr;
+        audioMgr = DownloadManager(
           urls: result.audioUrls ??
               <String>[mediaFileInfo.audio!.first.baseUrl],
           path: path.join(
@@ -938,9 +939,15 @@ class DownloadService extends GetxService {
             PathUtils.audioNameType2,
           ),
           onReceiveProgress: null,
-          onDone: ([e]) => _onAudioDone(e),
+          onDone: ([e]) {
+            // 只认当前在用的音频下载器（与 _startDownload 一致）
+            if (identical(_audioDownloadManager, audioMgr)) {
+              _onAudioDone(e);
+            }
+          },
           shouldDefer: _shouldDeferCurrent,
         );
+        _audioDownloadManager = audioMgr;
         _audioRetrying = false;
         return;
       }
