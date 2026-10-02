@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:PiliPlus/http/browser_ua.dart';
+import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/models_new/download/bili_download_entry_info.dart';
 import 'package:PiliPlus/utils/extension/file_ext.dart';
@@ -39,7 +41,7 @@ class DownloadManager {
       received = 0;
     }
 
-    final sink = file.openWrite(
+    var sink = file.openWrite(
       mode: received == 0 ? FileMode.writeOnly : FileMode.writeOnlyAppend,
     );
 
@@ -56,19 +58,50 @@ class DownloadManager {
       onDone(e);
     }
 
+    // Akamai 等海外 CDN 会校验 Referer/UA：缺省 UA(Dart/3.6) 且无 Referer
+    // 会被 403（国内 upos 镜像较宽容，所以换 Akamai 后才暴露）。
+    // 与播放器 setMediaHeader 的 referer/UA 保持一致。
+    Future<Response<ResponseBody>> getStream(int offset) =>
+        Request.http11Dio.get<ResponseBody>(
+          url.http2https,
+          options: Options(
+            headers: {
+              'range': 'bytes=$offset-',
+              'referer': HttpString.baseUrl,
+              'user-agent': BrowserUa.pc,
+            },
+            responseType: ResponseType.stream,
+            validateStatus: (status) =>
+                status != null &&
+                (status == 416 || (status >= 200 && status < 300)),
+          ),
+          cancelToken: _cancelToken,
+        );
+
     Response<ResponseBody> response;
     try {
-      response = await Request.http11Dio.get<ResponseBody>(
-        url.http2https,
-        options: Options(
-          headers: {'range': 'bytes=$received-'},
-          responseType: ResponseType.stream,
-          validateStatus: (status) =>
-              status != null &&
-              (status == 416 || (status >= 200 && status < 300)),
-        ),
-        cancelToken: _cancelToken,
-      );
+      try {
+        response = await getStream(received);
+      } on DioException catch (e) {
+        final code = e.response?.statusCode ?? 0;
+        // 403/410/412：多为断点失效(直链过期)或 CDN 校验失败——
+        // 清掉断点从头重试一次；再失败则走原有失败流程。
+        if ((code == 403 || code == 410 || code == 412) && received > 0) {
+          try {
+            await sink.close();
+          } catch (_) {}
+          try {
+            if (file.existsSync()) {
+              await file.tryDel();
+            }
+          } catch (_) {}
+          received = 0;
+          sink = file.openWrite(mode: FileMode.writeOnly);
+          response = await getStream(0);
+        } else {
+          rethrow;
+        }
+      }
     } on DioException catch (e) {
       await onError(e, delete: true);
       return;
