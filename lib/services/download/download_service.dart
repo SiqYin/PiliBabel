@@ -642,7 +642,7 @@ class DownloadService extends GetxService {
         case Type1 mediaFileInfo:
           final first = mediaFileInfo.segmentList.first;
           _downloadManager = DownloadManager(
-            url: first.url,
+            urls: [first.url],
             path: path.join(videoDir.path, PathUtils.videoNameType1),
             onReceiveProgress: _onReceive,
             onDone: _onDone,
@@ -650,7 +650,8 @@ class DownloadService extends GetxService {
           break;
         case Type2 mediaFileInfo:
           _downloadManager = DownloadManager(
-            url: mediaFileInfo.video.first.baseUrl,
+            urls: downloadResult.videoUrls ??
+                <String>[mediaFileInfo.video.first.baseUrl],
             path: path.join(videoDir.path, PathUtils.videoNameType2),
             onReceiveProgress: _onReceive,
             onDone: _onDone,
@@ -658,7 +659,8 @@ class DownloadService extends GetxService {
           final audio = mediaFileInfo.audio;
           if (audio != null && audio.isNotEmpty) {
             _audioDownloadManager = DownloadManager(
-              url: audio.first.baseUrl,
+              urls: downloadResult.audioUrls ??
+                  <String>[audio.first.baseUrl],
               path: path.join(videoDir.path, PathUtils.audioNameType2),
               onReceiveProgress: null,
               onDone: _onAudioDone,
@@ -781,7 +783,8 @@ class DownloadService extends GetxService {
           return;
         }
         _audioDownloadManager = DownloadManager(
-          url: mediaFileInfo.audio!.first.baseUrl,
+          urls: result.audioUrls ??
+              <String>[mediaFileInfo.audio!.first.baseUrl],
           path: path.join(
             entry.entryDirPath,
             entry.typeTag,

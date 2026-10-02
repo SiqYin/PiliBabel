@@ -78,7 +78,7 @@ abstract final class DownloadHttp {
           orElse: () => videosList.first,
         );
 
-        final videoUrl = VideoUtils.getCdnUrl(videoDash.playUrls);
+        final videoUrl = VideoUtils.getCdnUrl(videoDash.playUrls, preferAkamai: true);
 
         final Type2File videoFile = Type2File(
           id: videoDash.id,
@@ -94,6 +94,7 @@ abstract final class DownloadHttp {
           dashDrmType: 0,
         );
         List<Type2File>? audioFileList;
+        List<String>? audioUrls;
         final List<AudioItem>? audioDashList = dash.audio;
         if (audioDashList != null && audioDashList.isNotEmpty) {
           final preferAudioQa = Pref.defaultAudioQa;
@@ -115,6 +116,7 @@ abstract final class DownloadHttp {
           final audioUrl = VideoUtils.getCdnUrl(
             audioDash.playUrls,
             isAudio: true,
+            preferAkamai: true,
           );
           audioFileList = [
             Type2File(
@@ -132,6 +134,7 @@ abstract final class DownloadHttp {
             ),
           ];
           entry.hasDashAudio = true;
+          audioUrls = [audioUrl, ...audioDash.playUrls.where((u) => u != audioUrl)];
         }
         return DownloadVideoUrlResult(
           mediaFileInfo: Type2(
@@ -142,6 +145,11 @@ abstract final class DownloadHttp {
             userAgent: userAgent,
           ),
           clipInfoList: response.clipInfoList,
+          videoUrls: [
+            videoUrl,
+            ...videoDash.playUrls.where((u) => u != videoUrl),
+          ],
+          audioUrls: audioUrls,
         );
       } else {
         final first = response.durl!.first;
@@ -153,7 +161,7 @@ abstract final class DownloadHttp {
             md5: '',
             metaUrl: '',
             order: first.order!,
-            url: VideoUtils.getCdnUrl(first.playUrls),
+            url: VideoUtils.getCdnUrl(first.playUrls, preferAkamai: true),
           ),
         ];
         final FormatItem? formatItem = response.supportFormats
@@ -218,8 +226,14 @@ class DownloadVideoUrlResult {
   final BiliDownloadMediaInfo mediaFileInfo;
   final List<SegmentItemModel>? clipInfoList;
 
+  /// 主线路 + 备用线路的候选直链（供下载器慢速/失败时自动换线）
+  final List<String>? videoUrls;
+  final List<String>? audioUrls;
+
   const DownloadVideoUrlResult({
     required this.mediaFileInfo,
     this.clipInfoList,
+    this.videoUrls,
+    this.audioUrls,
   });
 }

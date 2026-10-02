@@ -80,6 +80,7 @@ abstract final class VideoUtils {
     String? customHost,
     bool applyCustomCDN = true,
     bool isAudio = false,
+    bool preferAkamai = false,
   }) {
     defaultCDNService ??= cdnService;
     customHost ??= applyCustomCDN ? customCDNUrl : null;
@@ -108,10 +109,12 @@ abstract final class VideoUtils {
           }
           if (defaultCDNService == CDNService.backupUrl ||
               (isAudio && disableAudioCDN)) {
-            // 沿用 B 站按 IP 就近返回的镜像。
-            // 注：曾尝试默认改写 Akamai，但部分视频直链签名与 Akamai 主机
-            // 不匹配会 403 → 播放卡"加载中"，故回退；待实现"失败自动回退
-            // 备用线路"后再评估默认 Akamai。
+            // 下载（preferAkamai）：国内镜像海外慢/易限速，改写 Akamai 全球边缘；
+            // 播放默认沿用 B 站按 IP 就近返回的镜像（部分直链签名与 Akamai
+            // 主机不匹配会 403 → 卡"加载中"，故播放不强改，见下方回退说明）。
+            if (preferAkamai) {
+              return uri.replace(host: CDNService.akamai.host!).toString();
+            }
             return url;
           }
           return uri.replace(host: defaultCDNService.host).toString();
@@ -159,6 +162,10 @@ abstract final class VideoUtils {
         // 让全球用户拿到可播地址（此前会回退硬编码成国内 ali）。
         // 回退说明：部分直链签名与 Akamai 主机不匹配会 403 → 播放卡"加载中"，
         // 故恢复沿用 B 站就近地址；待实现"播放失败自动回退备用线路"后再评估。
+        if (preferAkamai) {
+          // 下载走 Akamai 海外（国内 P2P 节点对海外无效且慢）
+          return uri.replace(host: CDNService.akamai.host!).toString();
+        }
         return mcdnUpgcxcode;
       }
       return uri.replace(host: host).toString();
