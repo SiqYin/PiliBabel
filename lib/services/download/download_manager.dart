@@ -30,9 +30,8 @@ class DownloadManager {
   /// 首个线路至少跑满该时长才允许因慢速切换（排除冷启动抖动）
   static const int _minRunBeforeRotateMs = 8000;
 
-  /// 完全停摆(0 字节)看门狗：超过该时长无进度即强制换线/失败
-  static const int _stallRotateMs = 15000;
-  static const int _stallFailMs = 60000;
+  /// 完全停摆(0 字节)看门狗：超过该时长无进度即换线；已是最后一条则报错失败
+  static const int _stallMs = 10000;
 
   DownloadStatus _status = DownloadStatus.downloading;
 
@@ -137,7 +136,8 @@ class DownloadManager {
     int? last;
 
     // 停摆看门狗：连接 0 字节长期无进度（HTTP/2 适配器对流式响应可能
-    // 不执行 receiveTimeout）时强制取消——避免"卡住不动也不报失败"。
+    // 不执行 receiveTimeout）时强制取消——外层据此换下一条线路；
+    // 若已是最后一条，循环耗尽后统一走 _fail 报下载失败，绝不静默卡死。
     int lastProgressMs = DateTime.now().millisecondsSinceEpoch;
     int progressMark = received;
     final watchdog = Timer.periodic(const Duration(seconds: 3), (t) {
@@ -147,14 +147,9 @@ class DownloadManager {
         lastProgressMs = now;
         return;
       }
-      final stalled = now - lastProgressMs;
-      final canRotate = _urlIndex < urls.length - 1;
-      if ((canRotate && stalled >= _stallRotateMs) ||
-          stalled >= _stallFailMs) {
+      if (now - lastProgressMs >= _stallMs) {
         t.cancel();
-        if (canRotate) {
-          _stallRotate = true;
-        }
+        _stallRotate = true;
         _cancelToken?.cancel();
       }
     });
