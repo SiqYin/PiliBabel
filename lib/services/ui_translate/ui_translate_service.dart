@@ -260,6 +260,12 @@ class UiTranslateService extends GetxService {
   static String get translateModel => Pref.uiTranslateModel;
 
   Future<List<String>> _translateChunk(List<String> sources) async {
+    // 最后一道防线（token 保护）：真正发请求前再确认一次开关，
+    // 任何入队/换语言/关闭时序问题都不可能导致关闭状态下产生 API 调用。
+    if (!enabled) {
+      _pending.clear();
+      return const [];
+    }
     final lang = targetLang;
     final numbered = StringBuffer();
     for (var i = 0; i < sources.length; i++) {
