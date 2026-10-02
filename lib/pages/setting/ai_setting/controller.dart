@@ -107,12 +107,20 @@ class AiSettingController extends GetxController {
   }
 
   void saveUiTranslateEnabled(bool value) {
+    if (uiTranslateEnabled.value == value) return;
     uiTranslateEnabled.value = value;
     Pref.uiTranslateEnabled = value;
-    if (value && Get.isRegistered<UiTranslateService>()) {
-      UiTranslateService.to.prewarm();
-      Get.forceAppUpdate();
+    if (Get.isRegistered<UiTranslateService>()) {
+      final service = UiTranslateService.to;
+      if (value) {
+        service.prewarm();
+      } else {
+        // 关闭时立即刷新：所有 Obx 重新求值 → uiTx 直接返回原文，
+        // 界面马上回到简体中文（否则旧译文会留在已渲染的组件上）。
+        service.revision.value++;
+      }
     }
+    Get.forceAppUpdate();
   }
 
   void saveTranslateModel(String value) {
