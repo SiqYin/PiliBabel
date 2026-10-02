@@ -12,6 +12,7 @@ AI interface & content translation layered on top of **PiliNara / PiliPlus** —
 - Per-comment **Original ⇄ Translation** toggle; hyperlinks are preserved and stay clickable.
 - **Danmaku translation** — an independent player toggle that pre-translates ahead of the playhead in ~15-second batches.
 - **Thinking-mode** switch, **test-translate**, and a batched/concurrent pipeline (progressive per-chunk apply for faster first load).
+- **Tap-to-switch caching, always responsive.** Tapping any queued item starts it **immediately** and sends the item that was downloading back to the queue — there is no download lock any more, so a stalled edge or a hung metadata request can never make the list ignore your taps. A hard failure now names its reason, and the queue moves on to the next item instead of dying on the first one.
 - **First-launch onboarding** dialog pointing to *Settings → AI → AI interface translation*, with a one-tap shortcut to that page.
 - **Toggle semantics are now explicit**: turning AI translation **off** falls back to the original text everywhere and issues **zero** API requests (your token/quota is never touched); turning it **on** translates foreign-language content — e.g. comments — into your selected language.
 - **Worldwide playback**: outside mainland China the player now picks bilibili's own **overseas edges** (Akamai / `mirror*ov`) straight from the geo-routed stream URLs instead of forcing a China-only mirror, which is what caused “audio plays, video freezes” and endless retry toasts.
