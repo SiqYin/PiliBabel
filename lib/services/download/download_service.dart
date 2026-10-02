@@ -65,6 +65,12 @@ class DownloadService extends GetxService {
   DownloadManager? _downloadManager;
   DownloadManager? _audioDownloadManager;
 
+  /// 音频失败自动重试：直链有 deadline/偶发 403，失败后重取 playurl 并
+  /// 从已有断点续传（不清空视频进度）；重试耗尽才标记失败。
+  static const int _maxAudioRetries = 2;
+  int _audioRetryLeft = 0;
+  bool _audioRetrying = false;
+
   late Future<void> waitForInitialization;
 
   @override
@@ -577,6 +583,8 @@ class DownloadService extends GetxService {
   }
 
   Future<void> _startDownload(BiliDownloadEntryInfo entry) async {
+    _audioRetryLeft = _maxAudioRetries;
+    _audioRetrying = false;
     try {
       if (!await downloadDanmaku(entry: entry)) {
         return;
@@ -584,12 +592,29 @@ class DownloadService extends GetxService {
 
       _updateCurStatus(DownloadStatus.getPlayUrl);
 
-      final downloadResult = await DownloadHttp.getVideoUrl(
-        entry: entry,
-        ep: entry.ep,
-        source: entry.source,
-        pageData: entry.pageData,
-      );
+      // playurl 响应体大、海外易超时，且偶发风控(code!=0)：
+      // 失败自动重试（“不存在”类永久错误除外），耗尽才标 failPlayUrl。
+      const maxPlayUrlAttempts = 3;
+      var playUrlAttempt = 0;
+      late final DownloadVideoUrlResult downloadResult;
+      while (true) {
+        playUrlAttempt++;
+        try {
+          downloadResult = await DownloadHttp.getVideoUrl(
+            entry: entry,
+            ep: entry.ep,
+            source: entry.source,
+            pageData: entry.pageData,
+          );
+          break;
+        } catch (e) {
+          final msg = e.toString();
+          if (playUrlAttempt >= maxPlayUrlAttempts || msg.contains('不存在')) {
+            rethrow;
+          }
+          await Future.delayed(Duration(seconds: 2 * playUrlAttempt));
+        }
+      }
       final mediaFileInfo = downloadResult.mediaFileInfo;
 
       final videoDir = Directory(path.join(entry.entryDirPath, entry.typeTag));
@@ -682,9 +707,16 @@ class DownloadService extends GetxService {
       return;
     }
 
-    final status = switch (_audioDownloadManager?.status) {
+    final audioStatus = _audioDownloadManager?.status;
+    if (audioStatus == DownloadStatus.failDownload) {
+      // 视频已完成但音频失败：只补音频（带重试+断点续传），不重下视频。
+      _updateCurStatus(DownloadStatus.audioDownloading);
+      _onAudioFailed();
+      return;
+    }
+
+    final status = switch (audioStatus) {
       DownloadStatus.downloading => DownloadStatus.audioDownloading,
-      DownloadStatus.failDownload => DownloadStatus.failDownloadAudio,
       _ => _downloadManager?.status ?? DownloadStatus.pause,
     };
     _updateCurStatus(status);
@@ -700,18 +732,74 @@ class DownloadService extends GetxService {
   }
 
   void _onAudioDone([Object? error]) {
+    if (error != null) {
+      // 音频失败：自动重试（重取 playurl + 断点续传），不推倒视频进度。
+      _onAudioFailed();
+      return;
+    }
     if (_downloadManager?.status == DownloadStatus.completed) {
-      if (error == null) {
-        _completeDownload();
-      } else {
-        final status = _audioDownloadManager?.status ?? DownloadStatus.pause;
-        _updateCurStatus(
-          status == DownloadStatus.failDownload
-              ? DownloadStatus.failDownloadAudio
-              : status,
+      _completeDownload();
+    }
+  }
+
+  void _onAudioFailed() {
+    final entry = curDownload.value;
+    if (entry == null || _audioRetrying) {
+      return;
+    }
+    if (_audioRetryLeft <= 0) {
+      final status =
+          _audioDownloadManager?.status ?? DownloadStatus.failDownloadAudio;
+      _updateCurStatus(
+        status == DownloadStatus.failDownload
+            ? DownloadStatus.failDownloadAudio
+            : status,
+      );
+      return;
+    }
+    _audioRetryLeft--;
+    _audioRetrying = true;
+    _updateCurStatus(DownloadStatus.audioDownloading);
+    unawaited(_retryAudioDownload(entry));
+  }
+
+  /// 重取一份新的 playurl（直链带 deadline，失败重试时旧链可能已过期），
+  /// 然后仅重建音频下载器——DownloadManager 会对已有音频断点做 Range 续传，
+  /// 因此重试不会从头下载音频，更不会影响已完成的视频。
+  Future<void> _retryAudioDownload(BiliDownloadEntryInfo entry) async {
+    try {
+      final result = await DownloadHttp.getVideoUrl(
+        entry: entry,
+        ep: entry.ep,
+        source: entry.source,
+        pageData: entry.pageData,
+      );
+      final mediaFileInfo = result.mediaFileInfo;
+      if (mediaFileInfo is Type2 && mediaFileInfo.audio?.isNotEmpty == true) {
+        if (curDownload.value?.cid != entry.cid) {
+          _audioRetrying = false;
+          return;
+        }
+        _audioDownloadManager = DownloadManager(
+          url: mediaFileInfo.audio!.first.baseUrl,
+          path: path.join(
+            entry.entryDirPath,
+            entry.typeTag,
+            PathUtils.audioNameType2,
+          ),
+          onReceiveProgress: null,
+          onDone: _onAudioDone,
         );
+        _audioRetrying = false;
+        return;
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('retry audio download failed: $e');
       }
     }
+    _audioRetrying = false;
+    _onAudioFailed(); // 剩余次数内继续重试
   }
 
   Future<void> _completeDownload() async {

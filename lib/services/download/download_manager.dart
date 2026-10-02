@@ -103,7 +103,9 @@ class DownloadManager {
         }
       }
     } on DioException catch (e) {
-      await onError(e, delete: true);
+      // 保留断点文件以便续传（此前 delete:true 会删掉已下载内容导致从头再来；
+      // Range 失效的场景已由上方 403/410/412 清断点重试处理）。
+      await onError(e);
       return;
     }
     final data = response.data!;
