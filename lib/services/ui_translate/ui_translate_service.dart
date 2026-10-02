@@ -117,6 +117,7 @@ class UiTranslateService extends GetxService {
   void onClose() {
     _debounce?.cancel();
     _persistTimer?.cancel();
+    _revisionTimer?.cancel();
     _persist();
     super.onClose();
   }
@@ -200,7 +201,7 @@ class UiTranslateService extends GetxService {
             }
           }
           if (changed) {
-            revision.value++;
+            _bumpRevisionSoon();
             _schedulePersist();
             lastError.value = null;
           }
@@ -229,6 +230,17 @@ class UiTranslateService extends GetxService {
   void _schedulePersist() {
     _persistTimer?.cancel();
     _persistTimer = Timer(const Duration(milliseconds: 1200), _persist);
+  }
+
+  Timer? _revisionTimer;
+
+  /// 节流刷新：worker 每块都会产生译文，若逐块立即 revision++ 会在打开
+  /// 视频等场景造成重建风暴（干扰播放器初始化）。合并为最多每 300ms 一次。
+  void _bumpRevisionSoon() {
+    _revisionTimer?.cancel();
+    _revisionTimer = Timer(const Duration(milliseconds: 300), () {
+      revision.value++;
+    });
   }
 
   /// 翻译使用独立的接口地址 / 密钥 / 模型（与视频总结完全分离，各配各的）。
