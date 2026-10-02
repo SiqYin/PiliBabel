@@ -68,6 +68,25 @@ jobs:
         shell: pwsh
         run: ./lib/scripts/build.ps1
 
+      - name: Setup release signing (stable key)
+        if: ${{ secrets.KEYSTORE_B64 != '' }}
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          # 用固定的 release keystore 签名（存于仓库 Secrets），
+          # 使各版本签名一致 → 用户可平滑覆盖升级，不再出现"安装包损坏"。
+          printf '%s' "$KEYSTORE_B64" | base64 -d > android/app/pilibabel-release.jks
+          cat > android/key.properties <<EOF
+storeFile=pilibabel-release.jks
+storePassword=$KEYSTORE_PASSWORD
+keyAlias=$KEY_ALIAS
+keyPassword=$KEY_PASSWORD
+EOF
+          echo "release signing key installed"
+
       - name: Build Release APK
         run: |
           set +e
