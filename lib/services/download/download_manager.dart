@@ -15,6 +15,11 @@ class _RotateSignal implements Exception {
   _RotateSignal(this.reason);
 }
 
+/// 停摆时让位给队列中的其他下载项（由 DownloadService 处理善后）
+class StallDeferred implements Exception {
+  const StallDeferred();
+}
+
 class DownloadManager {
   /// 候选直链：首个为按当前 CDN 策略选出的主线路，其余为备用/其它镜像。
   /// 当前线路速度过低或请求失败时，自动切换到下一条并断点续传。
@@ -23,6 +28,9 @@ class DownloadManager {
   final void Function(int, int)? onReceiveProgress;
   final void Function([Object? error]) onDone;
 
+  /// 停摆时是否应"让位"给队列中的其它下载项（有排队项则让位、否则换线）
+  final bool Function()? shouldDefer;
+
   /// 低于该速度(B/s)持续一个窗口即换下一条线路
   static const int _minSpeedBytes = 64 * 1024;
   static const int _speedWindowMs = 5000;
@@ -30,8 +38,9 @@ class DownloadManager {
   /// 首个线路至少跑满该时长才允许因慢速切换（排除冷启动抖动）
   static const int _minRunBeforeRotateMs = 8000;
 
-  /// 完全停摆(0 字节)看门狗：超过该时长无进度即换线；已是最后一条则报错失败
-  static const int _stallMs = 10000;
+  /// 完全停摆(0 字节)看门狗：超过该时长无进度即换线；已是最后一条则报错失败。
+  /// 若提供了 [shouldDefer] 且返回 true，则优先"让位"给队列中的其它下载项。
+  static const int _stallMs = 5000;
 
   DownloadStatus _status = DownloadStatus.downloading;
 
@@ -39,6 +48,7 @@ class DownloadManager {
   CancelToken? _cancelToken;
   int _urlIndex = 0;
   bool _stallRotate = false;
+  bool _deferred = false;
   late final Future<void> task;
 
   DownloadManager({
@@ -46,6 +56,7 @@ class DownloadManager {
     required this.path,
     required this.onReceiveProgress,
     required this.onDone,
+    this.shouldDefer,
   }) : urls = urls.isEmpty ? const [''] : urls {
     task = _start();
   }
@@ -66,16 +77,33 @@ class DownloadManager {
         return; // completed（或用户取消等终态，已在内部处理）
       } on _RotateSignal {
         // 慢速/校验失败：换下一条线路，断点保留
-      } on DioException {
+      } on DioException catch (e) {
+        // 看门狗判定停摆且应"让位"：交回 service 排到队尾，先下其它项
+        if (_deferred) {
+          _deferred = false;
+          _status = DownloadStatus.pause;
+          onDone(const StallDeferred());
+          return;
+        }
         // 看门狗判定停摆而取消：视为换线，不算用户取消
         if (_stallRotate) {
           _stallRotate = false;
           continue;
         }
-        // 网络异常：换下一条线路，断点保留；
         // 用户主动取消(pause/delete)时不轮转，直接结束。
         if (_cancelToken?.isCancelled ?? false) {
           return;
+        }
+        final code = e.response?.statusCode ?? 0;
+        if (code == 403 || code == 410 || code == 412 || code == 416) {
+          // 续传 Range 被拒 / 直链签名失效 / 断点被污染：丢弃可疑断点，
+          // 换下一条线路从 0 重下（否则表现为反复"断连"）。
+          try {
+            if (file.existsSync()) {
+              await file.tryDel();
+            }
+          } catch (_) {}
+          continue;
         }
       }
     }
@@ -109,9 +137,10 @@ class DownloadManager {
             },
             responseType: ResponseType.stream,
             receiveTimeout: const Duration(seconds: 20),
+            // 注意：不能把 416 当成功——它的响应体是错误文本，会被写进文件
+            // 污染断点（音频小而常续传，最易中招 → 表现为"一直断连"）。
             validateStatus: (status) =>
-                status != null &&
-                (status == 416 || (status >= 200 && status < 300)),
+                status != null && status >= 200 && status < 300,
           ),
           cancelToken: _cancelToken,
         );
@@ -149,7 +178,12 @@ class DownloadManager {
       }
       if (now - lastProgressMs >= _stallMs) {
         t.cancel();
-        _stallRotate = true;
+        if (shouldDefer?.call() ?? false) {
+          // 队列里还有其它等待项：让位，之后回来自动重取直链+续传
+          _deferred = true;
+        } else {
+          _stallRotate = true;
+        }
         _cancelToken?.cancel();
       }
     });
