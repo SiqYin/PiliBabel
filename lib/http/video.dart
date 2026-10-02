@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:dio/dio.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show ReplyInfo;
@@ -257,7 +258,16 @@ abstract final class VideoHttp {
     });
 
     try {
-      final res = await Request().get(videoType.api, queryParameters: params);
+      final res = await Request().get(
+      videoType.api,
+      queryParameters: params,
+      // playurl 响应体大（全清晰度+全部备用线路），海外拉取慢，
+      // 全局 10s receiveTimeout 极易超时 → “获取播放地址失败”，故单独放宽。
+      options: Options(
+        receiveTimeout: const Duration(milliseconds: 30000),
+        sendTimeout: const Duration(milliseconds: 15000),
+      ),
+    );
 
       if (res.data['code'] == 0) {
         late PlayUrlModel data;
