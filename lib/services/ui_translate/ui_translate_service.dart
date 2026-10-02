@@ -31,10 +31,6 @@ class UiTranslateService extends GetxService {
   /// 目标是否中文家族：中文家族下，本身已是中文的内容不再翻译，仅译外文。
   bool get isChineseTarget => currentLanguage.chineseFamily;
 
-  /// 规则：选择「简体中文」时一律显示原文，完全不做翻译（与开关是否开启无关）。
-  bool get isSimplifiedChineseTarget =>
-      Pref.uiTranslateLang == defaultAppLanguage.code;
-
   /// 持久化缓存的内存副本。
   final Map<String, String> _cache = {};
 
@@ -101,7 +97,7 @@ class UiTranslateService extends GetxService {
 
   /// 预热常用文案：开启翻译后调用，使这些串尽早进入缓存。
   void prewarm() {
-    if (!enabled || isSimplifiedChineseTarget) return;
+    if (!enabled) return;
     var queued = false;
     for (final s in _commonPrewarm) {
       if (_cache.containsKey(s)) continue;
@@ -141,9 +137,8 @@ class UiTranslateService extends GetxService {
     // 避免 GetX “空 Obx” 运行时报错；开启时则据此在译文回来后刷新。
     revision.value;
     if (!enabled) return src;
-    // 简体中文：完全不做翻译，直接显示原文（规则优先于其他判断）。
-    if (isSimplifiedChineseTarget) return src;
-    // 中文家族目标：本身已是中文的内容不翻译，只有外文才译成中文。
+    // 中文家族目标（含简体中文）：本身已是中文的内容不翻译，
+    // 只有外文才译成中文——即"开启 AI 翻译时，评论等外文自动译成中文"。
     if (isChineseTarget && _looksChinese(src)) return src;
     final hit = _cache[src];
     if (hit != null) return hit;
@@ -153,6 +148,11 @@ class UiTranslateService extends GetxService {
   }
 
   void _scheduleFlush() {
+    // 关闭状态：清空待翻队列，绝不发起请求（保护用户的 API 额度/token）
+    if (!enabled) {
+      _pending.clear();
+      return;
+    }
     // 攒满一批立即开翻，避免大批量（如切换语言）时干等防抖窗口
     if (_pending.length >= _batchSize) {
       _debounce?.cancel();
@@ -166,6 +166,11 @@ class UiTranslateService extends GetxService {
 
   Future<void> _flush() async {
     if (_busy || _pending.isEmpty) return;
+    // 关闭时（含已排队未触发的防抖）绝不再发请求，保护用户 API 额度
+    if (!enabled) {
+      _pending.clear();
+      return;
+    }
     _busy = true;
     try {
       final batch = _pending.toList(growable: false);
