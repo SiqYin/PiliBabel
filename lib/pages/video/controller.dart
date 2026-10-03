@@ -155,6 +155,10 @@ class VideoDetailController extends GetxController
   late VideoItem firstVideo;
   String? videoUrl;
   String? audioUrl;
+
+  /// B 站下发的全部已签名候选线路（播放停摆时按序换线；不改写主机）
+  List<String> videoUrlCandidates = const [];
+  List<String> audioUrlCandidates = const [];
   Duration? defaultST;
   Duration? playedTime;
   String get playedTimePos {
@@ -900,6 +904,7 @@ class VideoDetailController extends GetxController
 
     firstVideo = findVideoByQa(currentVideoQa.code, setCodecs: true);
     videoUrl = VideoUtils.getCdnUrl(firstVideo.playUrls);
+    videoUrlCandidates = firstVideo.playUrls.toList();
 
     /// 根据currentAudioQa 重新设置audioUrl
     if (currentAudioQa != null) {
@@ -908,6 +913,7 @@ class VideoDetailController extends GetxController
         orElse: () => data.dash!.audio!.first,
       );
       audioUrl = VideoUtils.getCdnUrl(firstAudio.playUrls, isAudio: true);
+      audioUrlCandidates = firstAudio.playUrls.toList();
     }
 
     playerInit();
@@ -951,6 +957,8 @@ class VideoDetailController extends GetxController
           : NetworkSource(
               videoSource: videoUrl!,
               audioSource: audioUrl,
+              videoUrls: videoUrlCandidates,
+              audioUrls: audioUrlCandidates,
             ),
       seekTo: seek,
       duration: data.timeLength == null
@@ -1155,11 +1163,14 @@ class VideoDetailController extends GetxController
               sb.write('%${video.length}%$video,length=${i.length! / 1000};');
             }
             videoUrl = sb.toString();
+            videoUrlCandidates = const [];
           } else {
             videoUrl = VideoUtils.getCdnUrl(durl.single.playUrls);
+            videoUrlCandidates = durl.single.playUrls.toList();
           }
 
           audioUrl = '';
+          audioUrlCandidates = const [];
 
           // 实际为FLV/MP4格式，但已被淘汰，这里仅做兜底处理
           final videoQuality = VideoQuality.fromCode(data.quality!);
@@ -1227,6 +1238,7 @@ class VideoDetailController extends GetxController
       _setVideoHeight();
 
       videoUrl = VideoUtils.getCdnUrl(firstVideo.playUrls);
+      videoUrlCandidates = firstVideo.playUrls.toList();
 
       /// 优先顺序 设置中指定质量 -> 当前可选的最高质量
       AudioItem? firstAudio;
@@ -1246,9 +1258,11 @@ class VideoDetailController extends GetxController
           orElse: () => audioList.first,
         );
         audioUrl = VideoUtils.getCdnUrl(firstAudio.playUrls, isAudio: true);
+        audioUrlCandidates = firstAudio.playUrls.toList();
         currentAudioQa = AudioQuality.fromCode(firstAudio.id);
       } else {
         audioUrl = '';
+        audioUrlCandidates = const [];
       }
       if (reinitializePlayer) {
         await _initPlayerIfNeeded(autoFullScreenFlag);

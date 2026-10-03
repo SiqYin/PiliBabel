@@ -177,6 +177,35 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   late DataSource dataSource;
 
+  /// 播放停摆看门狗状态。DASH 的视频流与音频流是两条独立直链，海外限速时常见
+  /// 「音频照常走、画面停住」：mpv 不会产生 error 事件，只是一直在缓冲，
+  /// 所以旧代码完全不会恢复。这里按「正在播放 + 位置连续不动 + 没有缓冲」判定，
+  /// 先换 B 站已下发的另一条线路，换无可换再让页面重取 playurl。
+  Timer? _stallTimer;
+  int _stallLastPos = -1;
+  int _stallStrikes = 0;
+  int _stallRecoveries = 0;
+  int _stallWindowStartMs = 0;
+  bool _switchingLine = false;
+  int _lineIndex = 0;
+
+  /// 视频+音频合成一条 mpv EDL（与打开时的格式保持一致）
+  String dashEdl(String video, String? audio, {required bool fileSource}) {
+    if (audio == null || audio.isEmpty) {
+      return video;
+    }
+    if (onlyPlayAudio.value) {
+      return audio;
+    }
+    final vLen = fileSource ? utf8.encode(video).length : video.length;
+    final aLen = fileSource ? utf8.encode(audio).length : audio.length;
+    return 'edl://'
+        '!no_chapters;'
+        '%$vLen%$video;'
+        '!new_stream;!no_chapters;'
+        '%$aLen%$audio';
+  }
+
   Timer? _timer;
   StreamSubscription? _subForSeek;
 
@@ -1144,21 +1173,19 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         ...buffer,
     };
 
+    if (dataSource case NetworkSource(:final videoUrls) when videoUrls.length > 1) {
+      _lineIndex = videoUrls.indexOf(dataSource.videoSource);
+      if (_lineIndex < 0) {
+        _lineIndex = 0;
+      }
+    } else {
+      _lineIndex = 0;
+    }
+    _startStallWatchdog();
+
     String video = dataSource.videoSource;
     if (dataSource.audioSource case final audio? when (audio.isNotEmpty)) {
-      if (onlyPlayAudio.value) {
-        video = audio;
-      } else {
-        // dely_open need provide length
-        video =
-            ('edl://'
-            '!no_chapters;'
-            // '!delay_open,media_type=video;'
-            '%${isFileSource ? utf8.encode(video).length : video.length}%$video;'
-            '!new_stream;!no_chapters;'
-            // '!delay_open,media_type=audio;'
-            '%${isFileSource ? utf8.encode(audio).length : audio.length}%$audio');
-      }
+      video = dashEdl(video, audio, fileSource: isFileSource);
       audioFilterExtras(volume, map: extras);
     }
 
@@ -1172,6 +1199,113 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       play: false,
     );
     applyVideoPictureParameters(player);
+  }
+
+  void _startStallWatchdog() {
+    _stallTimer?.cancel();
+    _stallLastPos = -1;
+    _stallStrikes = 0;
+    _stallTimer = Timer.periodic(
+      const Duration(seconds: 2),
+      (_) => _checkPlaybackStall(),
+    );
+  }
+
+  void _checkPlaybackStall() {
+    final player = _videoPlayerController;
+    if (player == null || _switchingLine) {
+      return;
+    }
+    if (isLive ||
+        onlyPlayAudio.value ||
+        isSeeking.value ||
+        dataSource is! NetworkSource ||
+        !playerStatus.value.isPlaying) {
+      _stallLastPos = -1;
+      _stallStrikes = 0;
+      return;
+    }
+    final pos = position.value;
+    if (pos != _stallLastPos) {
+      _stallLastPos = pos;
+      _stallStrikes = 0;
+      return;
+    }
+    // 位置没动，但还有缓冲：不是饿死（可能刚好播完/在解码），别乱切
+    if (!isBuffering.value && buffered.value > 0) {
+      _stallStrikes = 0;
+      return;
+    }
+    _stallStrikes++;
+    if (_stallStrikes < 4) {
+      return; // 连续 8 秒位置不动才算停摆
+    }
+    _stallStrikes = 0;
+    unawaited(_recoverPlaybackStall());
+  }
+
+  Future<void> _recoverPlaybackStall() async {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - _stallWindowStartMs > 120000) {
+      _stallWindowStartMs = now;
+      _stallRecoveries = 0;
+    }
+    if (_stallRecoveries >= 6) {
+      // 两分钟内已经恢复过 6 次还没用，交给用户手动重试，避免无限重开
+      return;
+    }
+    _stallRecoveries++;
+    _switchingLine = true;
+    try {
+      final switched = await _switchToNextLine();
+      if (!switched) {
+        SmartDialog.showToast(uiTx('视频缓冲中断，正在重新获取播放地址'));
+        await onNeedsPlayerInit?.call();
+      }
+    } finally {
+      await Future.delayed(const Duration(seconds: 6));
+      _switchingLine = false;
+      _stallLastPos = -1;
+    }
+  }
+
+  /// 换到 B 站已下发的另一条已签名线路，从当前位置继续播
+  Future<bool> _switchToNextLine() async {
+    final src = dataSource;
+    if (src is! NetworkSource) {
+      return false;
+    }
+    final lines = src.videoUrls;
+    if (lines.length < 2) {
+      return false;
+    }
+    final player = _videoPlayerController;
+    if (player == null) {
+      return false;
+    }
+    final next = (_lineIndex + 1) % lines.length;
+    _lineIndex = next;
+    final audio = src.audioSource;
+    final newAudio = (src.audioUrls.length > 1 &&
+            audio != null &&
+            audio.isNotEmpty)
+        ? src.audioUrls[next % src.audioUrls.length]
+        : audio;
+    final at = player.state.position ?? Duration.zero;
+    try {
+      await player.open(
+        Media(
+          dashEdl(lines[next], newAudio, fileSource: false),
+          start: at,
+          extras: buffer.isEmpty ? null : buffer,
+        ),
+        play: true,
+      );
+      SmartDialog.showToast(uiTx('视频缓冲中断，已切换到备用线路'));
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<void>? refreshPlayer() {
@@ -1373,6 +1507,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   /// 移除事件监听
   void _removeListeners() {
+    _stallTimer?.cancel();
+    _stallTimer = null;
     _subscriptions?.forEach((e) => e.cancel());
     _subscriptions?.clear();
     _subscriptions = null;
