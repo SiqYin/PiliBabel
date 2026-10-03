@@ -928,47 +928,62 @@ class DownloadService extends GetxService {
     _audioTotal = 0;
   }
 
+  /// 两路各自的 Content-Length 都拿到后才能相加：任一方总量未知时只显示已知的那一方，
+  /// 否则会出现「23.95MB / 20.68MB」这种分子大于分母（v0.2.8 的显示 bug）。
+  ({int done, int total}) get _mergedProgress {
+    var done = 0, total = 0;
+    if (_videoTotal > 0) {
+      done += _videoBytes;
+      total += _videoTotal;
+    }
+    if (_audioTotal > 0) {
+      done += _audioBytes;
+      total += _audioTotal;
+    }
+    if (total == 0) {
+      return (done: _videoBytes + _audioBytes, total: 0);
+    }
+    return (done: done > total ? total : done, total: total);
+  }
+
+  bool get _videoDone => _videoTotal > 0 && _videoBytes >= _videoTotal;
+
   /// 把两路字节合并写回当前项（界面读 downloadedBytes / totalBytes）
   void _applyProgress() {
     if (curDownload.value case final entry?) {
-      if (_videoBytes == 0 && _videoTotal != 0 && entry.totalBytes == 0) {
-        _updateBiliDownloadEntryJson(entry..totalBytes = _totalShown);
+      final (:done, :total) = _mergedProgress;
+      if (total > 0) {
+        entry.totalBytes = total;
       }
-      entry.downloadedBytes = _videoBytes + _audioBytes;
+      entry.downloadedBytes = done;
       curDownload.refresh();
     }
   }
 
-  int get _totalShown => _videoTotal + _audioTotal;
-
   void _onReceive(int progress, int total) {
-    final first = progress == 0 && total != 0;
     _videoBytes = progress;
     if (total != 0) {
       _videoTotal = total;
     }
-    if (curDownload.value case final entry?) {
-      if (first) {
-        _updateBiliDownloadEntryJson(entry..totalBytes = _totalShown);
-      }
-      entry.status = DownloadStatus.downloading;
-    }
     _applyProgress();
+    if (curDownload.value case final entry?) {
+      entry.status = DownloadStatus.downloading;
+      if (progress == 0 && total != 0) {
+        _updateBiliDownloadEntryJson(entry);
+      }
+    }
   }
 
-  /// 音频流进度：与视频合并显示；状态何时变「正在下载音频」仍由 _onDone 决定
+  /// 音频流进度：与视频合并显示；视频已收完时状态显示「正在下载音频」
   void _onAudioReceive(int progress, int total) {
     _audioBytes = progress;
     if (total != 0) {
       _audioTotal = total;
     }
-    if (_videoBytes < _videoTotal) {
-      // 视频还在下，界面正显示「正在下载」，无需额外刷新状态
-      _applyProgress();
-    } else {
+    if (_videoDone) {
       _updateCurStatus(DownloadStatus.audioDownloading);
-      _applyProgress();
     }
+    _applyProgress();
   }
 
   /// 终态失败后释放下载器引用（后台取消残留的另一路）。
