@@ -201,10 +201,15 @@ class AudioController extends GetxController
     return player?.play();
   }
 
-  /// 单曲循环/单元素列表循环用到：media_kit 播放结束后 [Player.play] 往往
-  /// 是个空操作（playing 仍为 true、位置停在片尾），于是表现为
-  /// 「进度条归零到 00:00 却不再自动播放」。与视频端 play(repeat: true)
-  /// 一致，先显式回到起点再起播。
+  /// 单曲循环/单元素列表循环用到。
+  ///
+  /// 顺序很关键：media_kit 的 [Player.play] **只有在 `state.completed` 仍为 true**
+  /// 时才会做真正的重播三步（seek(0) → playlist-pos=0 → 取消暂停）；而
+  /// [Player.seek] 会把 `state.completed` 置为 false。所以"先 seek 再 play"会让
+  /// play 退化成只把 pause 置 false 的空操作——EOF 时播放器本来就停在非暂停的
+  /// idle 上（pause 已是 false），于是界面显示"正在播放"、进度条 00:00，声音却
+  /// 永远不来，这就是「播完归零却不自动播」的成因。
+  /// 因此这里直接 play()，让库自己走完成态重播；再用一次校验兜底。
   Future<void> _restartFromBeginning() async {
     final p = player;
     if (p == null) {
@@ -212,9 +217,18 @@ class AudioController extends GetxController
     }
     position.value = 0;
     try {
-      await p.seek(Duration.zero);
+      await p.play();
     } catch (_) {}
+    await Future.delayed(const Duration(milliseconds: 250));
+    if (p.state.playing &&
+        p.state.position <= const Duration(milliseconds: 600)) {
+      return; // 已经真的从头播起来了
+    }
+    // 兜底：completed 已被别的路径清掉时 play() 仍可能是空操作；先把 pause 置
+    // true（保证随后的 play() 一定有实际动作），再回到起点起播。
     try {
+      await p.pause();
+      await p.seek(Duration.zero);
       await p.play();
     } catch (_) {}
   }
@@ -420,37 +434,40 @@ class AudioController extends GetxController
         videoPlayerServiceHandler?.onStatusChange(playerStatus, false, false);
       }),
       stream.completed.listen((completed) {
+        // completed:false 是 seek 之后库主动发出的"离开完成态"事件，不能当作
+        // "本集播完"去上报状态，否则每次循环/拖动都会把媒体会话刷成已完成。
+        if (!completed) {
+          return;
+        }
         _videoDetailController?.playedTime = player!.state.duration;
         videoPlayerServiceHandler?.onStatusChange(
           PlayerStatus.completed,
           false,
           false,
         );
-        if (completed) {
-          if (shutdownTimerService.isWaiting) {
-            shutdownTimerService.handleWaiting();
-          } else {
-            switch (playMode.value) {
-              case PlayRepeat.pause:
-                break;
-              case PlayRepeat.listOrder:
-                playNext(nextPart: true);
-                break;
-              case PlayRepeat.singleCycle:
-                _restartFromBeginning();
-                break;
-              case PlayRepeat.listCycle:
-                if (!playNext(nextPart: true)) {
-                  if (index != null && index != 0 && playlist != null) {
-                    playIndex(0);
-                  } else {
-                    _restartFromBeginning();
-                  }
+        if (shutdownTimerService.isWaiting) {
+          shutdownTimerService.handleWaiting();
+        } else {
+          switch (playMode.value) {
+            case PlayRepeat.pause:
+              break;
+            case PlayRepeat.listOrder:
+              playNext(nextPart: true);
+              break;
+            case PlayRepeat.singleCycle:
+              _restartFromBeginning();
+              break;
+            case PlayRepeat.listCycle:
+              if (!playNext(nextPart: true)) {
+                if (index != null && index != 0 && playlist != null) {
+                  playIndex(0);
+                } else {
+                  _restartFromBeginning();
                 }
-                break;
-              case PlayRepeat.autoPlayRelated:
-                break;
-            }
+              }
+              break;
+            case PlayRepeat.autoPlayRelated:
+              break;
           }
         }
       }),
