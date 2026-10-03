@@ -457,6 +457,7 @@ class VideoDetailController extends GetxController
       playedTime = plPlayerController.videoPlayerController?.state.position;
       await playerInit();
     };
+    plPlayerController.onNeedLowerQuality = tryLowerQuality;
 
     // 开启新视频时，如果存在前代播放器的应用内小窗，则按播放上下文决定是否重置旧状态
     // 避免不同视频/分P之间 SponsorBlock 片段状态污染，同时保留同上下文无缝恢复能力
@@ -917,6 +918,41 @@ class VideoDetailController extends GetxController
     }
 
     playerInit();
+  }
+
+  /// 线路带宽撑不住当前码率时（播放器侧按吞吐比判定）自动降一档画质，并从当前
+  /// 进度重新打开。返回 false 表示已是最低档，交给播放器走下一级兜底。
+  /// 只降不升；用户手动选回更高画质后若线路依旧撑不住会再次降档（播放器侧有
+  /// 60 秒冷却 + 10 分钟 4 次上限）。
+  Future<bool> tryLowerQuality() async {
+    if (isFileSource) {
+      return false;
+    }
+    final videos = data.dash?.video;
+    final cur = currentVideoQa.value;
+    if (videos == null || videos.isEmpty || cur == null) {
+      return false;
+    }
+    final codes = videos.map((i) => i.id).whereType<int>().toSet().toList()
+      ..sort();
+    int? next;
+    for (final c in codes) {
+      if (c < cur.code) {
+        next = c;
+      }
+    }
+    if (next == null) {
+      return false;
+    }
+    if (kDebugMode) {
+      debugPrint(
+        '[VideoDetail] line too slow -> lower quality ${cur.code} -> $next',
+      );
+    }
+    plPlayerController.cacheVideoQa = next;
+    currentVideoQa.value = VideoQuality.fromCode(next);
+    updatePlayer();
+    return true;
   }
 
   Future<void>? _initPlayerIfNeeded(bool autoFullScreenFlag) {
@@ -1731,6 +1767,7 @@ class VideoDetailController extends GetxController
   @override
   void onClose() {
     plPlayerController.onNeedsPlayerInit = null;
+    plPlayerController.onNeedLowerQuality = null;
     if (isEnteringPip) {
       // 正在进入小窗，保留资源
       return;
