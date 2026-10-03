@@ -177,17 +177,23 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   late DataSource dataSource;
 
-  /// 播放停摆看门狗状态。DASH 的视频流与音频流是两条独立直链，海外限速时常见
-  /// 「音频照常走、画面停住」：mpv 不会产生 error 事件，只是一直在缓冲，
-  /// 所以旧代码完全不会恢复。这里按「正在播放 + 位置连续不动 + 没有缓冲」判定，
-  /// 先换 B 站已下发的另一条线路，换无可换再让页面重取 playurl。
+  /// 播放饿死看门狗状态。DASH 的视频流与音频流是两条独立已签名直链，海外被限速时
+  /// 常见「音频照常走、画面停住」或「每隔几秒卡一下」：mpv 不会产生任何 error 事件，
+  /// 只是一直处于缓冲状态。判据**不能用 position**——音频是 A/V 同步的主时钟，音频还在
+  /// 走时 position 照常推进，那正是「画面停住」的形态，用 position 判定等于永远不触发。
+  /// 能用的只有缓冲本身：`buffering` 持续为真、或前向缓冲已被抽干 == 视频流跟不上。
+  /// 恢复分三级并带冷却：先忍着（短抖动会自愈）→ 换 B 站已下发的另一条线路 →
+  /// 重取 playurl；避免「用重开去治卡顿，反而自己制造更多卡顿」。
   Timer? _stallTimer;
-  int _stallLastPos = -1;
-  int _stallStrikes = 0;
-  int _stallRecoveries = 0;
-  int _stallWindowStartMs = 0;
+  int _stallTicks = 0; // 连续饿死 tick 数（每 tick 2 秒）
+  int _healthyTicks = 0; // 连续健康 tick 数，用于解除窗口冷却
+  int _recoveriesInWindow = 0; // 当前窗口内已恢复次数
+  int _recoverWindowStartMs = 0; // 当前统计窗口起点
+  int _lastRecoveryMs = 0; // 上次恢复时刻（单次冷却）
   bool _switchingLine = false;
   int _lineIndex = 0;
+  int _startPos = -1; // 本次打开媒体时的起始位置
+  bool _startedPlaying = false; // 位置真正推进过才启用判定，避免开播缓冲被误判
 
   /// 视频+音频合成一条 mpv EDL（与打开时的格式保持一致）
   String dashEdl(String video, String? audio, {required bool fileSource}) {
@@ -1201,14 +1207,42 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     applyVideoPictureParameters(player);
   }
 
+  /// 看门狗轮询间隔
+  static const int _stallTickSec = 2;
+
+  /// 连续饿死多少秒才动手恢复：2~5 秒的短抖动交给缓冲自己缓过来（旧版本"卡一下
+  /// 就好了"的正常表现），重开只会把它放大成一次真正的卡顿。
+  static const int _recoverAfterSec = 20;
+
+  /// 两次恢复之间的单次冷却，以及窗口内总次数上限，防止连环重开。
+  static const int _recoverCooldownSec = 180;
+  static const int _recoverWindowSec = 600;
+  static const int _recoverWindowMax = 3;
+
   void _startStallWatchdog() {
     _stallTimer?.cancel();
-    _stallLastPos = -1;
-    _stallStrikes = 0;
+    _stallTicks = 0;
+    _healthyTicks = 0;
+    _startedPlaying = false;
+    _startPos = position.value; // 开播前先记下起始位置
     _stallTimer = Timer.periodic(
-      const Duration(seconds: 2),
+      const Duration(seconds: _stallTickSec),
       (_) => _checkPlaybackStall(),
     );
+  }
+
+  /// 是否到了可以动手恢复的时机（单次冷却 + 窗口上限）
+  bool _canRecoverNow() {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (_recoverWindowStartMs == 0 ||
+        now - _recoverWindowStartMs > _recoverWindowSec * 1000) {
+      _recoverWindowStartMs = now;
+      _recoveriesInWindow = 0;
+    }
+    if (_recoveriesInWindow >= _recoverWindowMax) {
+      return false;
+    }
+    return now - _lastRecoveryMs >= _recoverCooldownSec * 1000;
   }
 
   void _checkPlaybackStall() {
@@ -1221,40 +1255,44 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         isSeeking.value ||
         dataSource is! NetworkSource ||
         !playerStatus.value.isPlaying) {
-      _stallLastPos = -1;
-      _stallStrikes = 0;
+      _stallTicks = 0;
+      _healthyTicks = 0;
       return;
     }
-    final pos = position.value;
-    if (pos != _stallLastPos) {
-      _stallLastPos = pos;
-      _stallStrikes = 0;
+    // 只有位置真正推进过（即确实开始播了）才启用判定：开播时的首次缓冲不是饿死，
+    // 否则一进视频就会被误判成停摆、白白重开一次。
+    if (!_startedPlaying && position.value > _startPos) {
+      _startedPlaying = true;
+    }
+    if (!_startedPlaying) {
       return;
     }
-    // 位置没动，但还有缓冲：不是饿死（可能刚好播完/在解码），别乱切
-    if (!isBuffering.value && buffered.value > 0) {
-      _stallStrikes = 0;
+    // 饿死判据：mpv 报缓冲中，或前向缓冲已被抽干。position 不作判据——音频还在走时
+    // position 照常推进，那恰恰是"画面停住、音频继续"的形态。
+    final starving = isBuffering.value || buffered.value <= 0;
+    if (!starving) {
+      _stallTicks = 0;
+      if (++_healthyTicks >= 30) {
+        _healthyTicks = 0;
+        _recoveriesInWindow = 0; // 已稳定 60 秒：之后的新问题可以重新处理
+      }
       return;
     }
-    _stallStrikes++;
-    if (_stallStrikes < 4) {
-      return; // 连续 8 秒位置不动才算停摆
+    _healthyTicks = 0;
+    _stallTicks++;
+    if (_stallTicks * _stallTickSec < _recoverAfterSec) {
+      return; // 前 20 秒只等不重开
     }
-    _stallStrikes = 0;
+    if (!_canRecoverNow()) {
+      return;
+    }
     unawaited(_recoverPlaybackStall());
   }
 
   Future<void> _recoverPlaybackStall() async {
-    final now = DateTime.now().millisecondsSinceEpoch;
-    if (now - _stallWindowStartMs > 120000) {
-      _stallWindowStartMs = now;
-      _stallRecoveries = 0;
-    }
-    if (_stallRecoveries >= 6) {
-      // 两分钟内已经恢复过 6 次还没用，交给用户手动重试，避免无限重开
-      return;
-    }
-    _stallRecoveries++;
+    _lastRecoveryMs = DateTime.now().millisecondsSinceEpoch;
+    _recoveriesInWindow++;
+    _stallTicks = 0;
     _switchingLine = true;
     try {
       final switched = await _switchToNextLine();
@@ -1263,9 +1301,12 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         await onNeedsPlayerInit?.call();
       }
     } finally {
-      await Future.delayed(const Duration(seconds: 6));
+      // 给新连接 10 秒预热：这段时间不再判定，避免刚重开就被再次判饿死而连环重开；
+      // 冷却窗口（3 分钟 / 10 分钟 3 次）才是防循环的主力。
+      await Future.delayed(const Duration(seconds: 10));
       _switchingLine = false;
-      _stallLastPos = -1;
+      _stallTicks = 0;
+      _startedPlaying = true;
     }
   }
 

@@ -1334,14 +1334,18 @@ abstract final class Pref {
     defaultValue: false,
   );
 
+  /// 点播前向缓冲上限（MB）。4MB 对 8Mbps 只有约 4 秒，海外线路一抖动就被抽干
+  /// → 每隔几秒卡一下；默认提到 32MB（约 16 秒，仍受 bufferSec 夹紧）。
+  /// 已显式改过此设置的用户保留自己的值，不会被覆盖。
   static double get bufferSize =>
-      _setting.get(SettingBoxKey.bufferSize, defaultValue: 4.0);
+      _setting.get(SettingBoxKey.bufferSize, defaultValue: 32.0);
 
   static double get bufferSec =>
       _setting.get(SettingBoxKey.bufferSec, defaultValue: 16.0);
 
   static Map<String, String> initBuffer([double playbackSpeed = 1.0]) {
     final bufSec = Pref.bufferSec * playbackSpeed;
+    // 前向缓冲直接决定能不能扛住限速抖动：太小 → 缓存被抽干 → 周期性卡顿。
     final bufSiz = (Pref.bufferSize * 0x100000).toStringAsFixed(0);
     return {
       'cache': 'yes',
@@ -1353,9 +1357,12 @@ abstract final class Pref {
   }
 
   static Map<String, String> initLiveBuffer() {
+    // 直播没有回看窗口，前向缓冲越大只会让画面越落后于直播；这里单独夹紧在
+    // 2~8MB 档（4~16MB），不跟随点播那个更大的缓冲默认值。
     return {
       'cache': 'yes',
-      'demuxer-max-bytes': (Pref.bufferSize * 0x200000).toStringAsFixed(0),
+      'demuxer-max-bytes': (Pref.bufferSize.clamp(2.0, 8.0) * 0x200000)
+          .toStringAsFixed(0),
       'demuxer-max-back-bytes': '0',
     };
   }
