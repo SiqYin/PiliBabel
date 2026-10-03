@@ -407,7 +407,7 @@ class DownloadService extends GetxService {
   Future<void> _runSetup(BiliDownloadEntryInfo entry, int gen) async {
     _setupDepth++;
     try {
-      await _startDownload(entry);
+      await _startDownload(entry, gen);
     } catch (e) {
       // 未预期异常也要落到明确状态，不能停在「正在下载」不动也不报错
       if (_isCurrentSetup(entry, gen)) {
@@ -741,7 +741,7 @@ class DownloadService extends GetxService {
   bool _setupOwns(BiliDownloadEntryInfo entry) =>
       curDownload.value?.cid == entry.cid;
 
-  Future<void> _startDownload(BiliDownloadEntryInfo entry) async {
+  Future<void> _startDownload(BiliDownloadEntryInfo entry, int gen) async {
     _audioRetryLeft = _maxAudioRetries;
     _audioRetrying = false;
     _resetProgressCounters();
@@ -780,11 +780,11 @@ class DownloadService extends GetxService {
           }
           await Future.delayed(Duration(seconds: 2 * playUrlAttempt));
         }
-        if (!_setupOwns(entry)) {
+        if (!_isCurrentSetup(entry, gen)) {
           return;
         }
       }
-      if (!_setupOwns(entry)) {
+      if (!_isCurrentSetup(entry, gen)) {
         return;
       }
       final mediaFileInfo = downloadResult.mediaFileInfo;
@@ -795,7 +795,7 @@ class DownloadService extends GetxService {
       }
 
       final mediaJsonFile = File(path.join(videoDir.path, _indexFile));
-      if (!_setupOwns(entry)) {
+      if (!_isCurrentSetup(entry, gen)) {
         return;
       }
       _phase = 'write-meta+cover';
@@ -819,7 +819,7 @@ class DownloadService extends GetxService {
 
       unawaited(_downloadSubtitles(entry: entry));
 
-      if (!_setupOwns(entry)) {
+      if (!_isCurrentSetup(entry, gen)) {
         return;
       }
       _phase = 'create-managers';
@@ -899,7 +899,7 @@ class DownloadService extends GetxService {
           break;
       }
     } catch (e) {
-      if (_setupOwns(entry)) {
+      if (_isCurrentSetup(entry, gen)) {
         _updateCurStatus(DownloadStatus.failPlayUrl);
         _failToast(e);
       }
@@ -971,6 +971,16 @@ class DownloadService extends GetxService {
     }
   }
 
+  /// 终态失败后释放下载器引用（后台取消残留的另一路）。
+  /// 不释放的话 _ensureQueueRunning 会误判「仍有下载在跑」而直接返回，
+  /// 表现就是：队列里明明还有等待中的项，却停在失败项上不动。
+  void _releaseFailedManagers() {
+    _cancelInBackground(_downloadManager);
+    _cancelInBackground(_audioDownloadManager);
+    _downloadManager = null;
+    _audioDownloadManager = null;
+  }
+
   void _onDone([Object? error]) {
     if (error is StallDeferred) {
       // 停摆且队列还有其它项：让位，先下别的
@@ -982,6 +992,7 @@ class DownloadService extends GetxService {
       _updateCurStatus(status);
       if (status == DownloadStatus.failDownload) {
         _failToast(error);
+        _releaseFailedManagers();
         _ensureQueueRunning();
       }
       return;
@@ -1057,11 +1068,14 @@ class DownloadService extends GetxService {
   /// 停摆让位：当前条退回队尾（保留断点），先下队列中的其它项；
   /// 之后再轮到它时会自动重取直链并从断点续传。
   void _deferCurrentToQueue() {
-    if (_deferHandling) {
-      return;
-    }
     final entry = curDownload.value;
     if (entry == null) {
+      _ensureQueueRunning();
+      return;
+    }
+    if (_deferHandling) {
+      // 已有一次让位在进行中：这次别吞掉，稍后重新检查队列是否停摆
+      Future.delayed(const Duration(milliseconds: 600), _ensureQueueRunning);
       return;
     }
     _deferHandling = true;
@@ -1099,6 +1113,7 @@ class DownloadService extends GetxService {
             : status,
       );
       _failToast(reason ?? '音频下载失败');
+      _releaseFailedManagers();
       _ensureQueueRunning();
       return;
     }
@@ -1216,7 +1231,13 @@ class DownloadService extends GetxService {
       DownloadStatus.failDanmaku => true,
       _ => false,
     };
-    if (!failed) {
+    // 孤儿状态：只有 downloading/audioDownloading 是下载器回报的（见 _onReceive），
+    // 所以它们出现而下载器却已不在，说明任务消失/静默死亡，需要重新驱动队列。
+    // 注意不含 getDanmaku/getPlayUrl —— 那两个是建立过程中的正常状态，此时
+    // 本来就没有下载器，误判会把正在建立的项重启一遍。
+    final orphan = cur.status == DownloadStatus.downloading ||
+        cur.status == DownloadStatus.audioDownloading;
+    if (!failed && !orphan) {
       return;
     }
     if (!waitDownloadQueue.any((e) => e.cid != cur.cid && !e.isCompleted)) {
@@ -1229,6 +1250,9 @@ class DownloadService extends GetxService {
       }
       if (_downloadManager != null || _audioDownloadManager != null) {
         return;
+      }
+      if (!failed) {
+        cur.status = DownloadStatus.wait;
       }
       _curCid = null;
       curDownload.value = null;
