@@ -15,6 +15,25 @@ import 'package:PiliPlus/utils/video_utils.dart';
 import 'package:collection/collection.dart';
 
 abstract final class DownloadHttp {
+  /// 在候选直链里插入一条 Akamai 全球边缘变体，放在主线路之后的第二位：
+  /// 境外网络从 B 站大陆镜像取流常被限速到 100KB/s 左右，下载器的测速换线
+  /// 因此能在几秒内轮到海外边缘。候选不足或本就有海外节点时原样返回。
+  static List<String> withOverseasCandidate(
+    List<String> candidates,
+    Iterable<String> sourceUrls,
+  ) {
+    if (candidates.isEmpty) {
+      return candidates;
+    }
+    for (final url in sourceUrls) {
+      final akamai = VideoUtils.akamaiVariant(url);
+      if (akamai != null && !candidates.contains(akamai)) {
+        return [candidates.first, akamai, ...candidates.skip(1)];
+      }
+    }
+    return candidates;
+  }
+
   static const String referer = "https://www.bilibili.com/";
   static const String userAgent = "Bilibili Freedoooooom/MarkII";
 
@@ -134,7 +153,10 @@ abstract final class DownloadHttp {
             ),
           ];
           entry.hasDashAudio = true;
-          audioUrls = [audioUrl, ...audioDash.playUrls.where((u) => u != audioUrl)];
+          audioUrls = withOverseasCandidate(
+            [audioUrl, ...audioDash.playUrls.where((u) => u != audioUrl)],
+            audioDash.playUrls,
+          );
         }
         return DownloadVideoUrlResult(
           mediaFileInfo: Type2(
@@ -145,10 +167,10 @@ abstract final class DownloadHttp {
             userAgent: userAgent,
           ),
           clipInfoList: response.clipInfoList,
-          videoUrls: [
-            videoUrl,
-            ...videoDash.playUrls.where((u) => u != videoUrl),
-          ],
+          videoUrls: withOverseasCandidate(
+            [videoUrl, ...videoDash.playUrls.where((u) => u != videoUrl)],
+            videoDash.playUrls,
+          ),
           audioUrls: audioUrls,
         );
       } else {

@@ -56,6 +56,30 @@ abstract final class VideoUtils {
     return null;
   }
 
+  /// 下载专用：把 B 站**大陆** upos 镜像直链改写成 Akamai 全球边缘，作为额外候选线路。
+  /// 大陆镜像对境外访问常被限速到 100KB/s 上下，而这条主机改写对下载是安全的
+  /// （上游「自定义 CDN 节点」也是同理会改写主机）；**播放侧绝不可这样改写**
+  /// ——部分直链签名与主机绑定，改写会 403 卡“加载中”（v0.1.8 教训）。
+  /// 返回 null 表示这条不适合改写（不是 upos 镜像、或本来就是海外节点）。
+  static String? akamaiVariant(String url) {
+    if (!_mirrorRegex.hasMatch(url)) {
+      return null;
+    }
+    final uri = Uri.tryParse(url);
+    final host = uri?.host;
+    if (host == null || host.isEmpty) {
+      return null;
+    }
+    if (_overseasHostRegex.hasMatch(host) || host == CDNService.akamai.host) {
+      return null;
+    }
+    final akamai = CDNService.akamai.host;
+    if (akamai == null) {
+      return null;
+    }
+    return uri!.replace(host: akamai).toString();
+  }
+
   static bool _isReplaceableMediaHost(String host) {
     final lower = host.toLowerCase();
     if (_blockedHostPrefix.hasMatch(lower)) {
