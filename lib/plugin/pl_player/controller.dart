@@ -1756,8 +1756,25 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     controls = !hideControls || showControlsOnNextPlay;
     // repeat为true，将从头播放
     if (repeat) {
-      // await seekTo(Duration.zero);
+      // 不能"先 seek 再 play"：seek 会清掉 media_kit 的 state.completed，随后
+      // play() 就不再走完成态重播（seek(0) + playlist-pos=0 + 取消暂停），只剩
+      // 把 pause 置 false 的空操作——EOF 时 mpv 本就停在非暂停的 idle 上，于是
+      // 停在片尾不动、UI 却显示正在播放（与音频页单曲循环同一个根因）。
+      // 先 play() 让库自己回到片头；250ms 后没真的从片头播起来（例如"下一集"
+      // 是手动点的、还没到完成态），再退回显式 seek 到 0（先 pause 保证随后的
+      // play() 一定有实际动作）。
+      await _rawPlay();
+      await Future.delayed(const Duration(milliseconds: 250));
+      final ctr = _videoPlayerController;
+      if (ctr != null &&
+          ctr.state.playing &&
+          ctr.state.position <= const Duration(milliseconds: 800)) {
+        return; // 已经从片头播起来了
+      }
+      await ctr?.pause();
       await seekTo(Duration.zero, isSeek: false);
+      await _rawPlay();
+      return;
     }
 
     await _rawPlay();
