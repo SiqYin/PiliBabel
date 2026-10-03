@@ -245,11 +245,12 @@ class UiTranslateService extends GetxService {
 
   Timer? _revisionTimer;
 
-  /// 节流刷新：worker 每块都会产生译文，若逐块立即 revision++ 会在打开
-  /// 视频等场景造成重建风暴（干扰播放器初始化）。合并为最多每 300ms 一次。
+  /// 节流刷新：worker 每块都会产生译文，而 revision 是全 App 级依赖（播放器界面
+  /// 就有 ~39 处 uiTx），逐块或多个 300ms 周期刷新都会在播放时形成重建风暴。
+  /// 合并为最多每 700ms 一次：译文出现略微变慢，换播放时的平稳。
   void _bumpRevisionSoon() {
     _revisionTimer?.cancel();
-    _revisionTimer = Timer(const Duration(milliseconds: 300), () {
+    _revisionTimer = Timer(const Duration(milliseconds: 700), () {
       revision.value++;
     });
   }
