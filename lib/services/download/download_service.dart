@@ -744,6 +744,7 @@ class DownloadService extends GetxService {
   Future<void> _startDownload(BiliDownloadEntryInfo entry) async {
     _audioRetryLeft = _maxAudioRetries;
     _audioRetrying = false;
+    _resetProgressCounters();
     try {
       // 连「排队等弹幕锁」一起限时：万一弹幕环节被别的流程占住（旧版本正是这样
       // 把整条下载锁连带卡死），超时后照常往下缓存，缺的弹幕之后仍可「更新弹幕」。
@@ -871,7 +872,11 @@ class DownloadService extends GetxService {
               urls: downloadResult.audioUrls ??
                   <String>[audio.first.baseUrl],
               path: path.join(videoDir.path, PathUtils.audioNameType2),
-              onReceiveProgress: null,
+              onReceiveProgress: (p, t) {
+                if (identical(_audioDownloadManager, audioMgr)) {
+                  _onAudioReceive(p, t);
+                }
+              },
               onDone: ([e]) {
                 if (identical(_audioDownloadManager, audioMgr)) {
                   _onAudioDone(e);
@@ -909,15 +914,60 @@ class DownloadService extends GetxService {
     return entryJsonFile.writeAsString(jsonEncode(entry.toJson()));
   }
 
-  void _onReceive(int progress, int total) {
+  /// DASH 下载时视频/音频是两条独立流，分别记账后按「合计」显示进度，
+  /// 这样「正在下载音频」阶段也能看到 X / Y MB（以前音频根本不回报进度）。
+  int _videoBytes = 0;
+  int _videoTotal = 0;
+  int _audioBytes = 0;
+  int _audioTotal = 0;
+
+  void _resetProgressCounters() {
+    _videoBytes = 0;
+    _videoTotal = 0;
+    _audioBytes = 0;
+    _audioTotal = 0;
+  }
+
+  /// 把两路字节合并写回当前项（界面读 downloadedBytes / totalBytes）
+  void _applyProgress() {
     if (curDownload.value case final entry?) {
-      if (progress == 0 && total != 0) {
-        _updateBiliDownloadEntryJson(entry..totalBytes = total);
+      if (_videoBytes == 0 && _videoTotal != 0 && entry.totalBytes == 0) {
+        _updateBiliDownloadEntryJson(entry..totalBytes = _totalShown);
       }
-      entry
-        ..downloadedBytes = progress
-        ..status = DownloadStatus.downloading;
+      entry.downloadedBytes = _videoBytes + _audioBytes;
       curDownload.refresh();
+    }
+  }
+
+  int get _totalShown => _videoTotal + _audioTotal;
+
+  void _onReceive(int progress, int total) {
+    final first = progress == 0 && total != 0;
+    _videoBytes = progress;
+    if (total != 0) {
+      _videoTotal = total;
+    }
+    if (curDownload.value case final entry?) {
+      if (first) {
+        _updateBiliDownloadEntryJson(entry..totalBytes = _totalShown);
+      }
+      entry.status = DownloadStatus.downloading;
+    }
+    _applyProgress();
+  }
+
+  /// 音频流进度：与视频合并显示；状态何时变「正在下载音频」仍由 _onDone 决定
+  void _onAudioReceive(int progress, int total) {
+    _audioBytes = progress;
+    if (total != 0) {
+      _audioTotal = total;
+    }
+    if (_videoBytes < _videoTotal) {
+      // 视频还在下，界面正显示「正在下载」，无需额外刷新状态
+      _applyProgress();
+    } else {
+      _updateCurStatus(DownloadStatus.audioDownloading);
+      _applyProgress();
     }
   }
 
@@ -1084,7 +1134,15 @@ class DownloadService extends GetxService {
             entry.typeTag,
             PathUtils.audioNameType2,
           ),
-          onReceiveProgress: null,
+          onReceiveProgress: (p, t) {
+            if (identical(_audioDownloadManager, audioMgr)) {
+              if (p == 0 && t != 0) {
+                // 重取直链后音频从头计数：清掉上一轮的音频字节，避免合计虚高
+                _audioBytes = 0;
+              }
+              _onAudioReceive(p, t);
+            }
+          },
           onDone: ([e]) {
             // 只认当前在用的音频下载器（与 _startDownload 一致）
             if (identical(_audioDownloadManager, audioMgr)) {

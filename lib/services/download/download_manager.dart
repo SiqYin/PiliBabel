@@ -40,8 +40,11 @@ class DownloadManager {
   /// 停摆时是否应"让位"给队列中的其它下载项（有排队项则让位、否则换线）
   final bool Function()? shouldDefer;
 
-  /// 低于该速度(B/s)持续一个窗口即换下一条线路
-  static const int _minSpeedBytes = 64 * 1024;
+  /// 低于该速度(B/s)持续一个窗口即换下一条线路。
+  /// 以前是 64KB/s：海外用户从大陆镜像被限速到 100KB/s 上下时，
+  /// 刚好高于阈值 → 永远不换线、就那么慢速爬完，这正是“下载一直 100K”的原因。
+  /// 提高到 512KB/s：慢于它就换下一条（含新加的 Akamai 候选），最多换 2 次。
+  static const int _minSpeedBytes = 512 * 1024;
   static const int _speedWindowMs = 5000;
 
   /// 已经是最后一条线路时，连续这么多个低速窗口(≈15s)仍爬不动，

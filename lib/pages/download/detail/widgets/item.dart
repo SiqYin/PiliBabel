@@ -353,6 +353,9 @@ class DetailItem extends StatelessWidget {
                                             status ==
                                                     DownloadStatus
                                                         .downloading ||
+                                                status ==
+                                                    DownloadStatus
+                                                        .audioDownloading ||
                                                 status == DownloadStatus.pause
                                             ? '${CacheManager.formatSize(curDownload.downloadedBytes)}/${CacheManager.formatSize(curDownload.totalBytes)}'
                                             : '',
