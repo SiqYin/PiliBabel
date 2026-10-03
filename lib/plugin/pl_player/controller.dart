@@ -194,6 +194,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   int _lineIndex = 0;
   int _startPos = -1; // 本次打开媒体时的起始位置
   bool _startedPlaying = false; // 位置真正推进过才启用判定，避免开播缓冲被误判
+  int _effWindowStartMs = 0; // 吞吐统计窗口起点（0 = 下一拍重新起算）
+  int _effWindowStartPos = 0; // 窗口起点时的播放位置
+  int _effBadWindows = 0; // 连续几个窗口"带不动"
+  int _switchesSinceQuality = 0; // 本轮已连续换线几次（决定何时该降码率）
+  bool _escalationExhausted = false; // 线路换遍且已到最低画质：不再自动动作
 
   /// 视频+音频合成一条 mpv EDL（与打开时的格式保持一致）
   String dashEdl(String video, String? audio, {required bool fileSource}) {
@@ -260,6 +265,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   /// 自动恢复需要重初始化的回调（视频→playerInit，直播→queryLiveUrl）
   PlayerInitCallback? onNeedsPlayerInit;
+
+  /// 线路吞吐不足以支撑当前码率时的「降一档画质」回调（由视频页实现）。
+  /// 返回 true 表示已降档并重新打开媒体。播放器只负责发现"这条线带不动"，
+  /// 不关心画质细节。
+  Future<bool> Function()? onNeedLowerQuality;
 
   /// 镜像
   late final RxBool flipX = false.obs;
@@ -1214,16 +1224,31 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 就好了"的正常表现），重开只会把它放大成一次真正的卡顿。
   static const int _recoverAfterSec = 20;
 
-  /// 两次恢复之间的单次冷却，以及窗口内总次数上限，防止连环重开。
-  static const int _recoverCooldownSec = 180;
+  /// 吞吐自检窗口：窗口内「内容推进秒数 / 实际经过秒数」低于 [_effBadRatio] 即判
+  /// 这条线带不动（带宽 < 码率）。连续 [_effBadWindowsLimit] 个窗口不行才动手。
+  /// "播 1~2 秒、卡好几秒"这种断续抖动只能靠吞吐比识别——连续饿死计数每播 2 秒
+  /// 就被清零，永远攒不满。
+  static const int _effWindowSec = 15;
+  static const int _effBadWindowsLimit = 2;
+  static const double _effBadRatio = 0.6;
+  static const double _effGoodRatio = 0.9;
+
+  /// 两次自动动作之间的单次冷却，以及窗口内总次数上限。动作是"换线 / 降一档画质"
+  /// 这种分级手段（而不是无脑重开），所以间距可以比纯重开短；梯子用尽后会置
+  /// [_escalationExhausted] 彻底停下，不会无限循环。
+  static const int _recoverCooldownSec = 60;
   static const int _recoverWindowSec = 600;
-  static const int _recoverWindowMax = 3;
+  static const int _recoverWindowMax = 4;
 
   void _startStallWatchdog() {
     _stallTimer?.cancel();
     _stallTicks = 0;
     _healthyTicks = 0;
     _startedPlaying = false;
+    _effWindowStartMs = 0;
+    _effBadWindows = 0;
+    _switchesSinceQuality = 0;
+    _escalationExhausted = false;
     _startPos = position.value; // 开播前先记下起始位置
     _stallTimer = Timer.periodic(
       const Duration(seconds: _stallTickSec),
@@ -1248,6 +1273,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   void _checkPlaybackStall() {
     final player = _videoPlayerController;
     if (player == null || _switchingLine) {
+      _effWindowStartMs = 0; // 自动动作进行中：不计吞吐，重启窗口
       return;
     }
     if (isLive ||
@@ -1257,6 +1283,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         !playerStatus.value.isPlaying) {
       _stallTicks = 0;
       _healthyTicks = 0;
+      _effWindowStartMs = 0; // 暂停/拖动期间不计吞吐，避免被算成"线路慢"
       return;
     }
     // 只有位置真正推进过（即确实开始播了）才启用判定：开播时的首次缓冲不是饿死，
@@ -1267,7 +1294,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     if (!_startedPlaying) {
       return;
     }
-    // 饿死判据：mpv 报缓冲中，或前向缓冲已被抽干。position 不作判据——音频还在走时
+    // ①「这条线带得动吗」：断续抖动（播 1~2 秒卡好几秒）只能靠吞吐比识别
+    _checkLineThroughput();
+    // ② 连续饿死判据：mpv 报缓冲中，或前向缓冲已被抽干。position 不作判据——音频还在走时
     // position 照常推进，那恰恰是"画面停住、音频继续"的形态。
     final starving = isBuffering.value || buffered.value <= 0;
     if (!starving) {
@@ -1289,29 +1318,98 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     unawaited(_recoverPlaybackStall());
   }
 
+  /// 线路吞吐自检：窗口内「内容推进秒数 / 实际经过秒数」过低 = 这条线的带宽低于
+  /// 码率，表现就是"播 1~2 秒、卡好几秒"并循环。连续两个窗口都不行才动手。
+  void _checkLineThroughput() {
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (_effWindowStartMs == 0) {
+      _effWindowStartMs = now;
+      _effWindowStartPos = position.value;
+      return;
+    }
+    final elapsedMs = now - _effWindowStartMs;
+    if (elapsedMs < _effWindowSec * 1000) {
+      return;
+    }
+    final played = position.value - _effWindowStartPos;
+    _effWindowStartMs = now;
+    _effWindowStartPos = position.value;
+    if (played < 0) {
+      return; // 往回跳了，重新起算
+    }
+    // 归一到 1 倍速：0.5 倍速时内容天然只推进一半，别把它误判成线路慢
+    final speed = playbackSpeed <= 0 ? 1.0 : playbackSpeed;
+    final ratio = played / (elapsedMs / 1000.0 * speed);
+    if (ratio >= _effGoodRatio) {
+      // 线路恢复正常：清空连续计数，允许之后重新尝试换线
+      _effBadWindows = 0;
+      _switchesSinceQuality = 0;
+      return;
+    }
+    if (ratio >= _effBadRatio) {
+      return; // 偏慢但还能看，不折腾
+    }
+    _effBadWindows++;
+    if (_effBadWindows < _effBadWindowsLimit) {
+      return;
+    }
+    _effBadWindows = 0;
+    if (!_canRecoverNow()) {
+      return;
+    }
+    unawaited(_recoverPlaybackStall());
+  }
+
+  /// 分级自救：① 换 B 站已下发的下一条线路 → ② 降一档画质（真正解决"带宽 < 码率"）
+  /// → ③ 无线路可换且已到最低画质时重取一次 playurl，然后彻底停止自动动作。
   Future<void> _recoverPlaybackStall() async {
+    if (_escalationExhausted) {
+      return;
+    }
     _lastRecoveryMs = DateTime.now().millisecondsSinceEpoch;
     _recoveriesInWindow++;
     _stallTicks = 0;
+    _effBadWindows = 0;
     _switchingLine = true;
     try {
-      final switched = await _switchToNextLine();
-      if (!switched) {
-        SmartDialog.showToast(uiTx('视频缓冲中断，正在重新获取播放地址'));
-        await onNeedsPlayerInit?.call();
+      // ① 先换线路（换遍为止）
+      final src = dataSource;
+      final candidates = src is NetworkSource ? src.videoUrls.length : 0;
+      if (candidates > 1 && _switchesSinceQuality < candidates - 1) {
+        if (await _switchToNextLine(toast: '当前线路过慢，已切换到备用线路')) {
+          _switchesSinceQuality++;
+          return;
+        }
       }
+      // ② 线路都带不动 → 降一档码率
+      final lower = onNeedLowerQuality;
+      var lowered = false;
+      if (lower != null) {
+        lowered = await lower();
+      }
+      if (lowered) {
+        _switchesSinceQuality = 0;
+        SmartDialog.showToast(uiTx('当前线路带宽不足，已自动降低画质'));
+        return;
+      }
+      // ③ 无线路可换且已到最低画质：重取一次 playurl（可能拿到另一批地址）后停手
+      SmartDialog.showToast(uiTx('视频缓冲中断，正在重新获取播放地址'));
+      await onNeedsPlayerInit?.call();
+      _escalationExhausted = true;
+    } catch (_) {
+      // 自动恢复失败不向外抛：本方法由 unawaited 调用，抛出会变成未捕获异步异常
     } finally {
-      // 给新连接 10 秒预热：这段时间不再判定，避免刚重开就被再次判饿死而连环重开；
-      // 冷却窗口（3 分钟 / 10 分钟 3 次）才是防循环的主力。
+      // 给新连接 10 秒预热：这段时间不再判定，避免刚重开就被再次判饿死而连环重开。
       await Future.delayed(const Duration(seconds: 10));
       _switchingLine = false;
       _stallTicks = 0;
       _startedPlaying = true;
+      _effWindowStartMs = 0;
     }
   }
 
   /// 换到 B 站已下发的另一条已签名线路，从当前位置继续播
-  Future<bool> _switchToNextLine() async {
+  Future<bool> _switchToNextLine({String? toast}) async {
     final src = dataSource;
     if (src is! NetworkSource) {
       return false;
@@ -1342,7 +1440,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         ),
         play: true,
       );
-      SmartDialog.showToast(uiTx('视频缓冲中断，已切换到备用线路'));
+      SmartDialog.showToast(uiTx(toast ?? '视频缓冲中断，已切换到备用线路'));
       return true;
     } catch (_) {
       return false;
