@@ -10,7 +10,9 @@
 </div>
 
 <div align="center">
-    <img src="assets/screenshots/main_screen.png" width="96%" alt="home" />
+    <img src="assets/screenshots/readme_en_home.jpg" width="32%" alt="Home" />
+    <img src="assets/screenshots/readme_en_dynamics.jpg" width="32%" alt="Dynamics" />
+    <img src="assets/screenshots/readme_en_mine.jpg" width="32%" alt="Me" />
 </div>
 
 <br/>
@@ -44,7 +46,7 @@ The idea mirrors bilibili's official "AI interface translation", but it runs ent
 - **AI translation, everywhere.** Navigation tabs, video cards, detail pages, comments, dynamics, and the Mine / Favorites / History / Messages / Search surfaces — a global sweep covers **~1,650+ UI strings**, plus dynamic content (titles, author names, action counts).
 - **You bring the model.** Point it at any OpenAI-compatible endpoint (`/chat/completions`) with your own base URL / API key / model. The AI video-summary feature and the AI translation feature have **completely independent** endpoints and settings, both living under one **"AI features"** page.
 - **Translate once, then it's fixed.** Each source string is translated **exactly once**; the result is persisted locally and **never re-translated** when you reopen a screen — the same principle as the official client, for stable, predictable translations.
-- **Pick your app language.** Defaults to Simplified Chinese. About 35 languages, including English, 日本語, 한국어, Français, Deutsch, Español, Italiano, Русский, ไทย, Tiếng Việt, Bahasa Melayu / Bahasa Indonesia, Filipino, Türkçe, العربية, עברית, བོད་སྐད་, Монгол хэл, ئۇيغۇرچە, Vahcuengh, Simplified Cantonese, Traditional Cantonese, Shanghainese/Wu language, Hokkien, Taiwanese, etc.
+- **Pick your app language.** Defaults to Simplified Chinese. About 35 languages, including English, 日本語, 한국어, Français, Deutsch, Español, Italiano, Русский, ไทย, Tiếng Việt, Bahasa Melayu / Bahasa Indonesia, Filipino, Türkçe, العربية, עברית, བོད་སྐད་, Монгол хэл, ئۇيغۇرچە, Vahcuengh, Cantonese (Hong Kong usage), Shanghai-based Wu (with Suzhou as a reference), and Hokkien. Only Simplified Chinese skips the API as the source-language target; every other target (including Traditional Chinese and Chinese dialects) is translated normally.
 - **Per-comment Original ⇄ Translation toggle** (a small icon, not a Chinese word). `@mentions / [emoji] / #topics# / links` are preserved as tokens, and **comments containing hyperlinks still translate while keeping the link clickable**.
 - **Danmaku (弹幕) translation** — an independent toggle in the player's top-right control row, **off by default** and gated behind a confirmation whose own text is translated. Once enabled, danmaku ahead of the playhead are pre-translated in **~15-second batches** (seeking to the middle is handled correctly, not from the start), so the translation is usually ready by the time it scrolls in.
 - **Thinking-mode switch** (`enable_thinking`) for quality-vs-speed, plus **"test translation"** and **clear-cache** buttons in settings.
@@ -59,7 +61,7 @@ The repository has **no i18n / ARB resource layer** — UI strings are hard-code
 1. **A global lookup wrapper.** `lib/services/ui_translate/` exposes a top-level `uiTx(String src)`. Widget text that used to be `Text('中文')` becomes `Text(uiTx('中文'))`. A scripted **codemod** applied this across the project (`tool/ui_translate_*.py`) — about **223 files / ~1,650+ strings** — automatically dropping the now-invalid `const` keyword where required (including generics such as `const X<T>(...)` and dotted names such as `const Positioned.fill(...)`, and converting `static const` list/map declarations to `static final`).
 2. **A `GetxService` core** (`ui_translate_service.dart`):
    - a persistent **source → translation** cache (backed by GetStorage), so every string is translated once and reused forever;
-   - `tx()` reads an `RxInt revision` first, then decides: if disabled → return the original; if the target is a Chinese variety **and** the string already looks Chinese (`_looksChinese()` compares CJK ideographs against Latin / kana / hangul / Cyrillic / Arabic / Hebrew / Thai letters and skips when foreign letters are under ~25%) → return the original; otherwise serve from cache or **enqueue**;
+   - `tx()` reads an `RxInt revision` first, then decides: if disabled → return the original; if the target is **Simplified Chinese (`zh-CN`)**, return the original without an API request (Bilibili's source content is overwhelmingly Simplified Chinese). Every other target — including Traditional Chinese, Cantonese, Wu/Shanghainese, and Hokkien/Min Nan — goes through the configured API; Chinese-family membership alone does not skip translation. Then serve from cache or **enqueue**;
    - enqueued strings are flushed by a **worker pool** with **per-chunk incremental apply** (each returned chunk bumps `revision` so text updates progressively, batch ≤ 16, concurrency ≤ 10), and results are **persisted** (throttled).
 3. **The transport** reuses the same verified **streaming** channel as AI video summary — `AiChatService.streamChat` → `{base}/chat/completions` with `stream: true` (compatible with gateways that only support streaming) — extended so translation can use its **own** `apiUrl` / `apiKey` / `model` and an `enable_thinking` flag. The change is **backward-compatible**, so video summary keeps working unchanged.
 4. **Interpolated sentences** use `uiTxP(template, args)`: a whole sentence with `{0}`/`{1}` placeholders is translated as one stable key (the prompt asks the model to keep the placeholders), then the values are substituted back — so `"共 {0} 条"`-style strings translate without mangling the dynamic parts.

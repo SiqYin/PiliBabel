@@ -316,7 +316,10 @@ class UiTranslateService extends GetxService {
         '每个元素是该条的译文纯文本；'
         '2) 不要输出任何解释、说明或 Markdown 代码块围栏；'
         '3) 保留原文中的数字、占位符、标点、换行与专有名词，'
-        '界面词尽量简短、术语一致。';
+        '界面词尽量简短、术语一致；'
+        '4) 严格遵守目标语言说明中的方言、地区与文字规范。每条译文必须完整使用'
+        '同一个目标语言/方言，不得混用其他汉语方言，不得把不同方言拼成一句；'
+        '原文含其他方言词时，也要统一转换为指定目标方言。';
     final user = '待翻译列表：\n$numbered';
 
     // 思考模式：开=启用推理(更准但慢)；关=显式关闭推理以求更快。
@@ -427,5 +430,5 @@ String uiTxP(String template, List<Object?> args) {
 /// 评论/动态正文取词：按条目 id 遵循各自的“显示原文”开关。
 String uiTxComment(String src, String id) =>
     Get.isRegistered<UiTranslateService>()
-        ? UiTranslateService.to.commentText(src, id)
-        : src;
+    ? UiTranslateService.to.commentText(src, id)
+    : src;
