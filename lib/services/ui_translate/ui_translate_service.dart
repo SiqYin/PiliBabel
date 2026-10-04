@@ -31,6 +31,16 @@ class UiTranslateService extends GetxService {
   /// 目标是否中文家族：中文家族下，本身已是中文的内容不再翻译，仅译外文。
   bool get isChineseTarget => currentLanguage.chineseFamily;
 
+  /// 目标语言是否就是**原文语言**——只有简体中文。
+  ///
+  /// 只有这一种情况才不调我们自己的 API：B 站是大陆平台，绝大多数内容本来就是
+  /// 简体中文，所以"简体中文 → 简体中文"不需要翻译，也就不用花 token。
+  ///
+  /// **繁体中文 / 简体粤语 / 繁体粤语 / 简体吴语 / 繁体吴语 / 大陆闽南语 /
+  /// 台湾闽南语都不是原文**，虽然同属中文家族，但仍要正常调用 API 翻译
+  /// （简体原文 → 繁体/粤语/吴语/闽南语 是实打实的转换）。
+  bool get isSourceLanguage => currentLanguage.code == 'zh-CN';
+
   /// 持久化缓存的内存副本。
   final Map<String, String> _cache = {};
 
@@ -112,8 +122,8 @@ class UiTranslateService extends GetxService {
   /// 预热常用文案：开启翻译后调用，使这些串尽早进入缓存。
   void prewarm() {
     if (!enabled) return;
-    // 中文家族目标下 `_tx` 根本不会请求我们的 API（见 _tx），没有可预热的东西
-    if (isChineseTarget) return;
+    // 原文语言（简体中文）下 `_tx` 根本不会请求我们的 API（见 _tx），没有可预热的东西
+    if (isSourceLanguage) return;
     var queued = false;
     for (final s in _commonPrewarm) {
       if (_cache.containsKey(s)) continue;
@@ -152,17 +162,19 @@ class UiTranslateService extends GetxService {
     // 避免 GetX “空 Obx” 运行时报错；开启时则据此在译文回来后刷新。
     revision.value;
     if (!enabled) return src;
-    // 目标语言是中文家族时：**完全不调我们自己配置的 API**。
+    // 目标语言就是原文语言（简体中文）时：**完全不调我们自己配置的 API**。
     //
-    // 与 PiliNara / PiliPlus 原版对齐——原版没有任何"自动翻译"，中文环境下的
-    // 外文内容（评论区）用的是 B 站自带的**免费**翻译：每条评论下面那个「翻译」
-    // 按钮走 `ReplyGrpc.translateReply`（`bilibili.main.community.reply.v1.Reply/
-    // TranslateReply`），那套按钮在本仓库里也一直在（见 reply_item_grpc.dart）。
-    // 原版没翻译的地方我们也不翻，所以这里直接返回原文：
-    //   * 不再拿用户自己配的 API key 去翻评论/弹幕；
-    //   * 界面文案本来就是中文，返回原文即正确；
-    //   * 想看中文译文就点评论的「翻译」，走 B 站免费接口。
-    if (isChineseTarget) return src;
+    // B 站是大陆平台，绝大多数内容本来就是简体中文，"简体中文 → 简体中文"没有
+    // 可翻的东西，所以直接返回原文：既不花用户自己配的 API token，界面也不会
+    // 因为多一次请求而闪。
+    //
+    // 评论区外文另有 B 站自带的**免费**翻译兜底：每条评论下面那个「翻译」按钮走
+    // `ReplyGrpc.translateReply`（`bilibili.main.community.reply.v1.Reply/
+    // TranslateReply`），与 PiliNara / PiliPlus 原版一致。
+    //
+    // 注意：**只有简体中文**走这条捷径。繁体中文 / 粤语 / 吴语 / 闽南语等虽然
+    // 同属中文家族，但对简体原文来说并不是原文，仍然要正常调用 API 翻译。
+    if (isSourceLanguage) return src;
     final hit = _cache[src];
     if (hit != null) return hit;
     // 尚未翻译：先显示原文，排进待翻队列。

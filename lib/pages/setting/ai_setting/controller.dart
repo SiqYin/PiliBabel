@@ -196,8 +196,10 @@ class AiSettingController extends GetxController {
     }
     isTesting.value = true;
     try {
-      final chineseTarget = UiTranslateService.to.isChineseTarget;
-      final sample = chineseTarget ? 'Hello world' : '直播';
+      // 只有简体中文是"原文语言"（不翻译）；其它语言（含繁體中文/粤语/吴语/
+      // 闽南语）都要真翻，所以样例用中文，才能验证 简体原文 → 目标语言 这条链路
+      final isSource = UiTranslateService.to.isSourceLanguage;
+      final sample = isSource ? 'Hello world' : '直播';
       final out = await UiTranslateService.to.debugTranslate(sample);
       SmartDialog.showToast(uiTx('测试成功：$sample → $out'));
     } catch (e) {

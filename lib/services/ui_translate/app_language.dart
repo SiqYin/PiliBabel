@@ -2,8 +2,12 @@
 ///
 /// [name] 用该语言的“自称/原语写法”显示在界面上（如 English、日本語、繁體粵語）；
 /// [toModel] 是发给翻译模型的提示词（含书写系统、地区用字规范等“只让 AI 知道、
-/// 不显示给用户”的说明）；[chineseFamily] 为 true 时按“中文家族”处理：本身已是
-/// 中文的内容不再翻译，只有外文才译成中文。
+/// 不显示给用户”的说明）；[chineseFamily] 标记该语言属于中文家族（简繁、粤、吴、
+/// 闽南等），仅用于分组/展示。
+///
+/// **注意**：是否跳过翻译只看 `UiTranslateService.isSourceLanguage`，也就是
+/// **只有简体中文**（B 站原文语言）跳过；繁体中文、粤语、吴语、闽南语虽然
+/// chineseFamily 也是 true，但它们不是原文，仍然要调用 API 翻译。
 class AppLanguage {
   const AppLanguage(
     this.code,
