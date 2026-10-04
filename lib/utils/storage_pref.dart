@@ -334,10 +334,8 @@ abstract final class Pref {
     }
     return SegmentType.values
         .map(
-          (item) => Pair(
-            first: item,
-            second: SkipType.values[list[item.index]],
-          ),
+          (item) =>
+              Pair(first: item, second: SkipType.values[list[item.index]]),
         )
         .toList();
   }
@@ -347,13 +345,11 @@ abstract final class Pref {
     if (list == null || list.length != SegmentType.values.length) {
       return SegmentType.values.map((i) => i.color).toList();
     }
-    return SegmentType.values.map(
-      (item) {
-        final String e = list[item.index];
-        final color = e.isNotEmpty ? int.tryParse('FF$e', radix: 16) : null;
-        return color != null ? Color(color) : item.color;
-      },
-    ).toList();
+    return SegmentType.values.map((item) {
+      final String e = list[item.index];
+      final color = e.isNotEmpty ? int.tryParse('FF$e', radix: 16) : null;
+      return color != null ? Color(color) : item.color;
+    }).toList();
   }
 
   static bool get feedBackEnable =>
@@ -559,9 +555,8 @@ abstract final class Pref {
   static String get blockUserID {
     String? blockUserID = _setting.get(SettingBoxKey.blockUserID);
     if (blockUserID == null || blockUserID.isEmpty) {
-      blockUserID = Digest(
-        List.generate(16, (_) => Utils.random.nextInt(256)),
-      ).toString();
+      blockUserID = Digest(List.generate(16, (_) => Utils.random.nextInt(256)))
+          .toString();
       _setting.put(SettingBoxKey.blockUserID, blockUserID);
     }
     return blockUserID;
@@ -703,10 +698,8 @@ abstract final class Pref {
   static int get subtitleSecondaryFontWeight =>
       _setting.get(SettingBoxKey.subtitleSecondaryFontWeight, defaultValue: 5);
 
-  static double get subtitleSecondarySpacing => _setting.get(
-    SettingBoxKey.subtitleSecondarySpacing,
-    defaultValue: 4.0,
-  );
+  static double get subtitleSecondarySpacing =>
+      _setting.get(SettingBoxKey.subtitleSecondarySpacing, defaultValue: 4.0);
 
   static bool get badCertificateCallback =>
       _setting.get(SettingBoxKey.badCertificateCallback, defaultValue: false);
@@ -1130,20 +1123,14 @@ abstract final class Pref {
     defaultValue: true,
   );
 
-  static bool get applyFilterToHotVideos => _setting.get(
-    SettingBoxKey.applyFilterToHotVideos,
-    defaultValue: false,
-  );
+  static bool get applyFilterToHotVideos =>
+      _setting.get(SettingBoxKey.applyFilterToHotVideos, defaultValue: false);
 
-  static bool get applyFilterToRankVideos => _setting.get(
-    SettingBoxKey.applyFilterToRankVideos,
-    defaultValue: false,
-  );
+  static bool get applyFilterToRankVideos =>
+      _setting.get(SettingBoxKey.applyFilterToRankVideos, defaultValue: false);
 
-  static bool get applyFilterToSearch => _setting.get(
-    SettingBoxKey.applyFilterToSearch,
-    defaultValue: false,
-  );
+  static bool get applyFilterToSearch =>
+      _setting.get(SettingBoxKey.applyFilterToSearch, defaultValue: false);
 
   static bool get enableBackgroundPlay =>
       _setting.get(SettingBoxKey.enableBackgroundPlay, defaultValue: true);
@@ -1211,10 +1198,8 @@ abstract final class Pref {
     defaultValue: false,
   );
 
-  static bool get dynamicsShowSelfUp => _setting.get(
-    SettingBoxKey.dynamicsShowSelfUp,
-    defaultValue: true,
-  );
+  static bool get dynamicsShowSelfUp =>
+      _setting.get(SettingBoxKey.dynamicsShowSelfUp, defaultValue: true);
 
   static bool get enableShowDanmaku =>
       _setting.get(SettingBoxKey.enableShowDanmaku, defaultValue: true);
@@ -1462,8 +1447,10 @@ abstract final class Pref {
   static bool get continuePlayInBackground =>
       _setting.get(SettingBoxKey.continuePlayInBackground, defaultValue: false);
 
-  static bool get autoAudioOnlyInBackground =>
-      _setting.get(SettingBoxKey.autoAudioOnlyInBackground, defaultValue: false);
+  static bool get autoAudioOnlyInBackground => _setting.get(
+    SettingBoxKey.autoAudioOnlyInBackground,
+    defaultValue: false,
+  );
 
   static bool get directExitOnBack =>
       _setting.get(SettingBoxKey.directExitOnBack, defaultValue: false);
@@ -1616,10 +1603,8 @@ abstract final class Pref {
   static bool get floatingNavBar =>
       _setting.get(SettingBoxKey.floatingNavBar, defaultValue: false);
 
-  static bool get enableCurrentPageRefresh => _setting.get(
-    SettingBoxKey.enableCurrentPageRefresh,
-    defaultValue: false,
-  );
+  static bool get enableCurrentPageRefresh =>
+      _setting.get(SettingBoxKey.enableCurrentPageRefresh, defaultValue: false);
 
   static bool get removeSafeArea =>
       _setting.get(SettingBoxKey.removeSafeArea, defaultValue: false);
@@ -1715,9 +1700,7 @@ abstract final class Pref {
     try {
       final decoded = jsonDecode(raw);
       if (decoded is Map) {
-        return decoded.map(
-          (k, v) => MapEntry(k.toString(), v.toString()),
-        );
+        return decoded.map((k, v) => MapEntry(k.toString(), v.toString()));
       }
     } catch (_) {}
     return {};
@@ -1725,6 +1708,12 @@ abstract final class Pref {
 
   static set uiTranslateCache(Map<String, String> value) =>
       _setting.put(SettingBoxKey.uiTranslateCache, jsonEncode(value));
+
+  static int get uiTranslatePromptRevision =>
+      _setting.get(SettingBoxKey.uiTranslatePromptRevision, defaultValue: 0);
+
+  static set uiTranslatePromptRevision(int value) =>
+      _setting.put(SettingBoxKey.uiTranslatePromptRevision, value);
 
   static bool get uiTranslateOnboarded =>
       _setting.get(SettingBoxKey.uiTranslateOnboarded, defaultValue: false);
@@ -1756,8 +1745,7 @@ abstract final class Pref {
   static int get videoSaturation =>
       _videoPictureParameter(SettingBoxKey.videoSaturation);
 
-  static int get videoGamma =>
-      _videoPictureParameter(SettingBoxKey.videoGamma);
+  static int get videoGamma => _videoPictureParameter(SettingBoxKey.videoGamma);
 
   static int get videoHue => _videoPictureParameter(SettingBoxKey.videoHue);
 
@@ -1782,11 +1770,10 @@ abstract final class Pref {
   );
 
   /// 已导入字体的显示名：字体族名 → 从字体文件解析出的名字
-  static Map<String, String> get customAppFontNames =>
-      Map<String, String>.from(
-        _setting.get(
-          SettingBoxKey.customAppFontNames,
-          defaultValue: const <String, String>{},
-        ),
-      );
+  static Map<String, String> get customAppFontNames => Map<String, String>.from(
+    _setting.get(
+      SettingBoxKey.customAppFontNames,
+      defaultValue: const <String, String>{},
+    ),
+  );
 }
