@@ -2083,7 +2083,7 @@ class HeaderControlState extends State<HeaderControl>
                 height: btnHeight,
                 child: Obx(() {
                   // 预热确认文案与按钮文字的翻译，确保弹窗出现时已是目标语言
-                  uiTx('弹幕 AI 翻译需要消耗较多 token，请确认是否打开');
+                  uiTx(UiTranslateService.danmakuTranslateWarning);
                   uiTx('取消');
                   uiTx('确定');
                   final on = UiTranslateService.to.danmakuTranslate.value;
@@ -2095,29 +2095,64 @@ class HeaderControlState extends State<HeaderControl>
                         UiTranslateService.to.danmakuTranslate.value = false;
                         return;
                       }
-                      showDialog(
+                      // 两处刻意为之：
+                      // ① 包一层 Obx——弹窗是一次性构建的，译文晚到时没有响应式依赖
+                      //    就不会重建，用户会一直看到源文案（这正是"选了日语但弹窗
+                      //    还是原文"的原因）。包上之后译文一到就换成目标语言。
+                      // ② 用 showGeneralDialog 而不是 showDialog——默认弹窗是"啪"
+                      //    地直接出现（连遮罩一起硬闪），这里给 220ms 的淡入 +
+                      //    轻微上浮 + 放大，遮罩也跟着淡入，出场更柔和。
+                      showGeneralDialog(
                         context: context,
-                        builder: (ctx) => AlertDialog(
-                          content: Text(
-                            uiTx(
-                              '弹幕 AI 翻译需要消耗较多 token，请确认是否打开',
+                        barrierDismissible: true,
+                        barrierLabel: 'dismiss',
+                        barrierColor: Colors.black54,
+                        transitionDuration: const Duration(milliseconds: 220),
+                        pageBuilder: (ctx, _, __) => Obx(
+                          () => AlertDialog(
+                            content: Text(
+                              uiTx(UiTranslateService.danmakuTranslateWarning),
                             ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(ctx),
+                                child: Text(uiTx('取消')),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  UiTranslateService.to.danmakuTranslate.value =
+                                      true;
+                                  Navigator.pop(ctx);
+                                },
+                                child: Text(uiTx('确定')),
+                              ),
+                            ],
                           ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: Text(uiTx('取消')),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                UiTranslateService.to.danmakuTranslate.value =
-                                    true;
-                                Navigator.pop(ctx);
-                              },
-                              child: Text(uiTx('确定')),
-                            ),
-                          ],
                         ),
+                        transitionBuilder: (ctx, animation, _, child) {
+                          final curved = CurvedAnimation(
+                            parent: animation,
+                            curve: Curves.easeOutCubic,
+                            reverseCurve: Curves.easeInCubic,
+                          );
+                          // 淡入 + 轻微上浮 + 从 0.94 放大到 1.0，出场不再突兀
+                          return FadeTransition(
+                            opacity: curved,
+                            child: SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(0, 0.04),
+                                end: Offset.zero,
+                              ).animate(curved),
+                              child: ScaleTransition(
+                                scale: Tween<double>(
+                                  begin: 0.94,
+                                  end: 1.0,
+                                ).animate(curved),
+                                child: child,
+                              ),
+                            ),
+                          );
+                        },
                       );
                     },
                     icon: Icon(

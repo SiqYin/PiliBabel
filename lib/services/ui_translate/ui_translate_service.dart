@@ -87,9 +87,22 @@ class UiTranslateService extends GetxService {
     return _tx(src);
   }
 
+  /// 弹幕翻译确认弹窗的提示文案。
+  ///
+  /// **源文案用英文**，两个作用：
+  /// 1. 兜底可读性——界面翻译没开、接口没配好或译文还没回来时，英文对非中文
+  ///    用户总比中文可读；
+  /// 2. 开启翻译后它照常按目标语言自动翻译（英文 → 目标语言；目标语言是中文时
+  ///    也会翻，因为 `_looksChinese` 对英文为假）。
+  ///
+  /// 三处引用（[prewarm] 列表、播放器按钮预热、弹窗正文）共用这一个常量，
+  /// 避免抄成不同字符串导致"预热了 A、渲染的是 B"，预热永远不生效。
+  static const String danmakuTranslateWarning =
+      'Danmaku AI translation consumes a lot of tokens. Continue?';
+
   /// 需要“提前翻好”的高频交互文案（弹窗/按钮），避免首次出现时来不及译。
   static const List<String> _commonPrewarm = [
-    '弹幕 AI 翻译需要消耗较多 token，请确认是否打开',
+    danmakuTranslateWarning,
     '取消',
     '确定',
     '弹幕翻译',
