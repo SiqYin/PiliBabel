@@ -1352,6 +1352,22 @@ abstract final class Pref {
   static set autoPlayAdjust(bool value) =>
       _setting.put(SettingBoxKey.autoPlayAdjust, value);
 
+  /// 带宽撑不住当前码率时自动降低画质。默认**开启**。
+  ///
+  /// 「播 1~2 秒、卡 3~4 秒」这种循环的唯一根因是**实测吞吐 < 码率**——再大的缓冲
+  /// 也只能把卡顿推迟，不能消除。官方 APP 的做法就是自适应降码率，这里对齐它：
+  /// 播放器用 15 秒窗口测「内容推进秒数 ÷ 实际经过秒数」，连续两个窗口低于 60%
+  /// 就按实测吞吐**一步跳到撑得住的那一档**（不是一档一档挪，否则从 8K 降到 1080P
+  /// 要好几轮、好几分钟），并从原进度继续播。
+  ///
+  /// 只降不升；动作之间有冷却与次数上限，且**不换线路**（换线由下面那个实验开关
+  /// 单独控制——历史上"视频轨死掉+重载黑屏"就是盲目换线换到一条 403 的地址）。
+  static bool get autoLowerQuality =>
+      _setting.get(SettingBoxKey.autoLowerQuality, defaultValue: true);
+
+  static set autoLowerQuality(bool value) =>
+      _setting.put(SettingBoxKey.autoLowerQuality, value);
+
   /// 视频/音频直链是否走**官方 APP 同源**（gRPC `PlayView`）。
   ///
   /// 默认开启。开启后取流接口、直链令牌类型、媒体请求指纹（UA / Referer）、
