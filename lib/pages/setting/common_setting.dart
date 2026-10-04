@@ -1,6 +1,7 @@
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/models/common/setting_type.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 class CommonSetting extends StatefulWidget {
