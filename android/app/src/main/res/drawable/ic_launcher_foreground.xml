@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- PiliBabel T1 enlarged Babel Tower foreground.
+<!-- PiliBabel T1 Babel Tower foreground - intermediate size (v0.3.3).
+     Same three tiers, central arch and split crown as 0.3.0, scaled about the
+     canvas centre to about 33% width / 42% height: 0.3.0 read slightly large and
+     0.3.1 read too small, so this lands in between.
      Keep @color/ic_launcher_foreground: Android 12+ colors.xml supplies the
      Material You wallpaper palette, while older Android uses the green/white
      fallback. -->
@@ -11,10 +14,5 @@
     <path
         android:fillColor="@color/ic_launcher_foreground"
         android:fillType="evenOdd"
-        android:pathData="M34 75H74V81H34Z
-M38 55H70V75H38Z
-M43 35H65V55H43Z
-M39 29H49V35H39Z
-M59 29H69V35H59Z
-M45 75V63C45 58.58 48.58 55 54 55C59.42 55 63 58.58 63 63V75Z" />
+        android:pathData="M36.4 72.48 H71.6 V77.76 H36.4 Z M39.92 54.88 H68.08 V72.48 H39.92 Z M44.32 37.28 H63.68 V54.88 H44.32 Z M40.8 32 H49.6 V37.28 H40.8 Z M58.4 32 H67.2 V37.28 H58.4 Z M46.08 72.48 V61.92 C46.08 58.03 49.23 54.88 54 54.88 C58.77 54.88 61.92 58.03 61.92 61.92 V72.48 Z" />
 </vector>
