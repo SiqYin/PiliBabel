@@ -140,7 +140,7 @@ class UiTranslateService extends GetxService {
     // rules. The cache is scoped to the currently selected language (language
     // changes clear it), so invalidate it once only when that current target is
     // one of the revised prompt families.
-    const promptRevision = 2;
+    const promptRevision = 3;
     const revisedTargets = {
       'zh-TW',
       'yue-Hans',
