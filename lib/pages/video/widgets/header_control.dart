@@ -2077,10 +2077,11 @@ class HeaderControlState extends State<HeaderControl>
                 ),
               ),
             ),
-            // 目标语言是中文家族时 `_tx` 不调我们的 API（对齐 PiliNara 原版），
-            // 弹幕翻译就没有任何可用通道了——直接不显示这个按钮，免得按了没反应。
+            // 只有目标语言是原文语言（简体中文）时 `_tx` 才不调我们的 API，
+            // 那种情况下弹幕翻译没有任何可用通道——直接不显示这个按钮，免得按了
+            // 没反应。繁体中文/粤语/吴语/闽南语等仍要翻译，按钮照常显示。
             if (UiTranslateService.to.canTranslate &&
-                !UiTranslateService.to.isChineseTarget)
+                !UiTranslateService.to.isSourceLanguage)
               SizedBox(
                 width: btnWidth,
                 height: btnHeight,
