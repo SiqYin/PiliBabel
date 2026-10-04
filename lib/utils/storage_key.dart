@@ -18,6 +18,7 @@ abstract final class SettingBoxKey {
       bufferSize = 'bufferSize',
       bufferSec = 'bufferSec',
       autoPlayAdjust = 'autoPlayAdjust',
+      autoLowerQuality = 'autoLowerQuality',
       useAppPlayUrl = 'useAppPlayUrl',
       hardwareDecoding = 'hardwareDecoding',
       videoSync = 'videoSync',

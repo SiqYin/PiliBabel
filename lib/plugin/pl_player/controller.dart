@@ -270,7 +270,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 线路吞吐不足以支撑当前码率时的「降一档画质」回调（由视频页实现）。
   /// 返回 true 表示已降档并重新打开媒体。播放器只负责发现"这条线带不动"，
   /// 不关心画质细节。
-  Future<bool> Function()? onNeedLowerQuality;
+  /// 参数 ≈ 实测吞吐 ÷ 当前码率，供实现方直接算出目标档位
+  Future<bool> Function(double ratio)? onNeedLowerQuality;
 
   /// 镜像
   late final RxBool flipX = false.obs;
@@ -1271,6 +1272,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     _startedPlaying = false;
     _effWindowStartMs = 0;
     _effBadWindows = 0;
+    _lastEffRatio = 1.0;
     _switchesSinceQuality = 0;
     _escalationExhausted = false;
     _startPos = position.value; // 开播前先记下起始位置
@@ -1295,10 +1297,12 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   }
 
   void _checkPlaybackStall() {
-    // 实验特性，默认关闭：关闭时播放器不做任何自动换线/自动降画质/自动重开，
-    // 行为与上游一致（只保留既有的错误提示与重试）。打开设置里的
-    // 「卡顿时自动换线/降画质（实验）」后才启用下面这套自愈。
-    if (!Pref.autoPlayAdjust) {
+    // 两件事分开控制：
+    //  * 「带宽不足时自动降画质」默认**开**——它是"播 1~2 秒卡 3~4 秒"唯一真正的
+    //    解法（吞吐 < 码率），也是官方 APP 的行为；
+    //  * 「卡顿时自动换线」（实验）默认关——历史上"视频轨死掉 + 重载黑屏"就是
+    //    盲目换线换到一条被 403 的地址，保持默认关闭。
+    if (!Pref.autoLowerQuality && !Pref.autoPlayAdjust) {
       _stallTicks = 0;
       _healthyTicks = 0;
       _effWindowStartMs = 0;
@@ -1349,8 +1353,12 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     if (!_canRecoverNow()) {
       return;
     }
-    unawaited(_recoverPlaybackStall());
+    unawaited(_recoverPlaybackStall(_lastEffRatio));
   }
+
+  /// 最近一个吞吐窗口测得的「内容推进 ÷ 实际经过」，1.0 = 完全跟得上。
+  /// 硬饿死分支没有自己的窗口数据，就用这个最近值来算目标档位。
+  double _lastEffRatio = 1.0;
 
   /// 线路吞吐自检：窗口内「内容推进秒数 / 实际经过秒数」过低 = 这条线的带宽低于
   /// 码率，表现就是"播 1~2 秒、卡好几秒"并循环。连续两个窗口都不行才动手。
@@ -1374,6 +1382,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     // 归一到 1 倍速：0.5 倍速时内容天然只推进一半，别把它误判成线路慢
     final speed = playbackSpeed <= 0 ? 1.0 : playbackSpeed;
     final ratio = played / (elapsedMs / 1000.0 * speed);
+    _lastEffRatio = ratio;
     if (ratio >= _effGoodRatio) {
       // 线路恢复正常：清空连续计数，允许之后重新尝试换线
       _effBadWindows = 0;
@@ -1391,12 +1400,17 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     if (!_canRecoverNow()) {
       return;
     }
-    unawaited(_recoverPlaybackStall());
+    // ratio ≈ 实测吞吐 ÷ 当前码率，正是"该降到哪一档"的依据
+    unawaited(_recoverPlaybackStall(ratio));
   }
 
-  /// 分级自救：① 换 B 站已下发的下一条线路 → ② 降一档画质（真正解决"带宽 < 码率"）
-  /// → ③ 无线路可换且已到最低画质时重取一次 playurl，然后彻底停止自动动作。
-  Future<void> _recoverPlaybackStall() async {
+  /// 分级自救：
+  /// ① （仅实验开关打开时）换 B 站已下发的下一条线路；
+  /// ② 按实测吞吐把画质**一步降到撑得住的那一档**（真正解决"带宽 < 码率"）；
+  /// ③ 已到最低档时重取一次 playurl，然后彻底停止自动动作。
+  ///
+  /// [ratio] ≈ 实测吞吐 ÷ 当前码率，用来直接算出目标档位；缺省 1.0（退化成降一档）。
+  Future<void> _recoverPlaybackStall([double ratio = 1.0]) async {
     if (_escalationExhausted) {
       return;
     }
@@ -1406,24 +1420,26 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     _effBadWindows = 0;
     _switchingLine = true;
     try {
-      // ① 先换线路（换遍为止）
+      // ① 先换线路（换遍为止）——只在实验开关打开时做
       final src = dataSource;
       final candidates = src is NetworkSource ? src.videoUrls.length : 0;
-      if (candidates > 1 && _switchesSinceQuality < candidates - 1) {
+      if (Pref.autoPlayAdjust &&
+          candidates > 1 &&
+          _switchesSinceQuality < candidates - 1) {
         if (await _switchToNextLine(toast: '当前线路过慢，已切换到备用线路')) {
           _switchesSinceQuality++;
           return;
         }
       }
-      // ② 线路都带不动 → 降一档码率
+      // ② 线路都带不动（或不允许换线）→ 按实测吞吐降码率
       final lower = onNeedLowerQuality;
       var lowered = false;
       if (lower != null) {
-        lowered = await lower();
+        lowered = await lower(ratio);
       }
       if (lowered) {
         _switchesSinceQuality = 0;
-        SmartDialog.showToast(uiTx('当前线路带宽不足，已自动降低画质'));
+        SmartDialog.showToast(uiTx('当前网速带不动该画质，已自动降低画质'));
         return;
       }
       // ③ 无线路可换且已到最低画质：重取一次 playurl（可能拿到另一批地址）后停手

@@ -935,11 +935,14 @@ class VideoDetailController extends GetxController
     playerInit();
   }
 
-  /// 线路带宽撑不住当前码率时（播放器侧按吞吐比判定）自动降一档画质，并从当前
-  /// 进度重新打开。返回 false 表示已是最低档，交给播放器走下一级兜底。
-  /// 只降不升；用户手动选回更高画质后若线路依旧撑不住会再次降档（播放器侧有
-  /// 60 秒冷却 + 10 分钟 4 次上限）。
-  Future<bool> tryLowerQuality() async {
+  /// 网速撑不住当前码率时自动降画质，并从当前进度重新打开。返回 false 表示已是
+  /// 最低档，交给播放器走下一级兜底。
+  ///
+  /// [ratio] ≈ 实测吞吐 ÷ 当前码率（播放器侧按「内容推进 ÷ 实际经过」测得），
+  /// 用它**一步算出**目标档位：可持续码率 ≈ 当前码率 × ratio。一档一档挪的话，
+  /// 从 8K 降到 1080P 要 6 轮、每轮还有冷却，用户得先卡好几分钟——这里直接跳。
+  /// 只降不升；留 0.8 安全系数（宁低勿高，免得刚降完还是卡）。
+  Future<bool> tryLowerQuality([double ratio = 1.0]) async {
     if (isFileSource) {
       return false;
     }
@@ -948,20 +951,41 @@ class VideoDetailController extends GetxController
     if (videos == null || videos.isEmpty || cur == null) {
       return false;
     }
-    final codes = videos.map((i) => i.id).whereType<int>().toSet().toList()
-      ..sort();
-    int? next;
-    for (final c in codes) {
-      if (c < cur.code) {
-        next = c;
+    // 同一档位可能有多种编码格式（AVC/HEVC/AV1），按该档最大码率估算最坏情况
+    final bandwidthOf = <int, int>{};
+    for (final v in videos) {
+      final bw = v.bandWidth ?? 0;
+      if (bw > (bandwidthOf[v.id] ?? 0)) {
+        bandwidthOf[v.id] = bw;
       }
     }
-    if (next == null) {
+    final lowerCodes = bandwidthOf.keys.where((c) => c < cur.code).toList()
+      ..sort();
+    if (lowerCodes.isEmpty) {
       return false;
     }
+
+    int next = lowerCodes.first; // 兜底：最低档
+    final curBandwidth = bandwidthOf[cur.code] ?? 0;
+    if (curBandwidth > 0) {
+      final sustainable =
+          curBandwidth * ratio.clamp(0.05, 1.0) * 0.8;
+      int? best;
+      for (final c in lowerCodes) {
+        // lowerCodes 升序，一路取到最后一个满足的 = 撑得住的最高档
+        if ((bandwidthOf[c] ?? 0) <= sustainable) {
+          best = c;
+        }
+      }
+      if (best != null) {
+        next = best;
+      }
+    }
+
     if (kDebugMode) {
       debugPrint(
-        '[VideoDetail] line too slow -> lower quality ${cur.code} -> $next',
+        '[VideoDetail] throughput ratio=$ratio -> lower quality '
+        '${cur.code} -> $next',
       );
     }
     plPlayerController.cacheVideoQa = next;
