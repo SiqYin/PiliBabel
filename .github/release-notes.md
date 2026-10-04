@@ -1,3 +1,10 @@
+### PiliBabel v0.3.1
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+**What's new in 0.3.1**
+- **Adjusted the Babel Tower icon to the approved reference size.** The 0.3.0 tower was too large; Android, Windows, Linux, README, Play Store, and legacy Android raster assets now use the more compact T1 proportions shown in the design preview. Android Material You dynamic colouring is unchanged.
+
 ### PiliBabel v0.3.0
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
