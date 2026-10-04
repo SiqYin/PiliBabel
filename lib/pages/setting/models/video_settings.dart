@@ -86,6 +86,16 @@ List<SettingsModel> get videoSettings => [
     defaultVal: false,
     onChanged: (value) => VideoUtils.disableAudioCDN = value,
   ),
+  SwitchModel(
+    title: uiTx('卡顿时自动换线/降画质（实验）'),
+    subtitle: uiTx(
+      '默认关闭。打开后：线路带宽不足时自动换用 B 站下发的其它线路，'
+      '仍带不动则自动降一档画质。关闭时播放器不做任何自动换线/重开，行为与上游一致',
+    ),
+    leading: const Icon(Icons.autorenew),
+    setKey: SettingBoxKey.autoPlayAdjust,
+    defaultVal: false,
+  ),
   if (Platform.isAndroid || Platform.isIOS)
     NormalModel(
       title: uiTx('半屏默认画质'),

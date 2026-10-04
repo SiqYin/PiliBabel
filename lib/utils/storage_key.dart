@@ -17,6 +17,7 @@ abstract final class SettingBoxKey {
       audioOutput = 'audioOutput',
       bufferSize = 'bufferSize',
       bufferSec = 'bufferSec',
+      autoPlayAdjust = 'autoPlayAdjust',
       hardwareDecoding = 'hardwareDecoding',
       videoSync = 'videoSync',
       autosync = 'autosync',

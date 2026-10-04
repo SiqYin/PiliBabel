@@ -1343,6 +1343,15 @@ abstract final class Pref {
   static double get bufferSec =>
       _setting.get(SettingBoxKey.bufferSec, defaultValue: 16.0);
 
+  /// 播放受阻时是否允许播放器自动换线 / 自动降画质 / 自动重开（实验特性）。
+  /// 默认关闭：关闭时播放器不做任何自动动作，行为与上游一致，
+  /// 只有既有的错误提示与重试，便于稳定播放和定位问题。
+  static bool get autoPlayAdjust =>
+      _setting.get(SettingBoxKey.autoPlayAdjust, defaultValue: false);
+
+  static set autoPlayAdjust(bool value) =>
+      _setting.put(SettingBoxKey.autoPlayAdjust, value);
+
   static Map<String, String> initBuffer([double playbackSpeed = 1.0]) {
     final bufSec = Pref.bufferSec * playbackSpeed;
     // 前向缓冲直接决定能不能扛住限速抖动：太小 → 缓存被抽干 → 周期性卡顿。
