@@ -364,6 +364,29 @@ List<SettingsModel> get playSettings => [
         .whenComplete(setState),
   ),
   SwitchModel(
+    title: uiTx('带宽不足时自动降低画质'),
+    subtitle: uiTx(
+      '默认关闭。开启后：按"内容实际推进秒数 ÷ 经过秒数"判断网速够不够，'
+      '连续两个 15 秒窗口都低于 60%（也就是"播 1~2 秒、卡 3~4 秒"那种循环）时，'
+      '按实测网速一步降到撑得住的最高画质，并从当前进度接着播。'
+      '再大的缓冲也只能把卡顿推迟，降码率才是这种循环真正的解法',
+    ),
+    leading: const Icon(Icons.speed_outlined),
+    setKey: SettingBoxKey.autoLowerQuality,
+    defaultVal: false,
+  ),
+  SwitchModel(
+    title: uiTx('卡顿时自动换线（实验）'),
+    subtitle: uiTx(
+      '默认关闭。打开后：带宽不足时先换用 B 站下发的其它线路，仍带不动再降画质。'
+      '历史上"视频轨死掉 + 重载黑屏"就是盲目换线换到一条被 403 的地址，'
+      '所以保持默认关闭——降画质那条路不换线路，没有这个风险',
+    ),
+    leading: const Icon(Icons.autorenew),
+    setKey: SettingBoxKey.autoPlayAdjust,
+    defaultVal: false,
+  ),
+  SwitchModel(
     title: uiTx('播放器设置仅对当前生效'),
     subtitle: uiTx('弹幕、字幕及部分设置中没有的设置除外'),
     leading: Icon(Icons.video_settings_outlined),
