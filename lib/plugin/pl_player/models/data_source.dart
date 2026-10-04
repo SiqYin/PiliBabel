@@ -18,11 +18,19 @@ class NetworkSource extends DataSource {
   final List<String> videoUrls;
   final List<String> audioUrls;
 
+  /// 直链是否来自官方 APP 的取流接口（gRPC `PlayView`）。
+  ///
+  /// CDN 会按直链令牌的签发方校验请求指纹：APP 令牌要求**不带** `Referer`，
+  /// Web 令牌要求带 `Referer`（且部分海外主机只认 Safari 的 UA）。指纹不对
+  /// 一律 403，所以媒体请求头必须跟着这个标记走。
+  final bool appSource;
+
   NetworkSource({
     required super.videoSource,
     required super.audioSource,
     this.videoUrls = const [],
     this.audioUrls = const [],
+    this.appSource = false,
   });
 }
 

@@ -1352,6 +1352,17 @@ abstract final class Pref {
   static set autoPlayAdjust(bool value) =>
       _setting.put(SettingBoxKey.autoPlayAdjust, value);
 
+  /// 视频/音频直链是否走**官方 APP 同源**（gRPC `PlayView`）。
+  ///
+  /// 默认开启。开启后取流接口、直链令牌类型、媒体请求指纹（UA / Referer）、
+  /// 候选线路顺序全部与官方 APP 一致；关闭则退回 Web 端
+  /// `/x/player/wbi/playurl`（令牌只接受「Safari UA + Referer」这一种组合）。
+  static bool get useAppPlayUrl =>
+      _setting.get(SettingBoxKey.useAppPlayUrl, defaultValue: true);
+
+  static set useAppPlayUrl(bool value) =>
+      _setting.put(SettingBoxKey.useAppPlayUrl, value);
+
   static Map<String, String> initBuffer([double playbackSpeed = 1.0]) {
     final bufSec = Pref.bufferSec * playbackSpeed;
     // 前向缓冲直接决定能不能扛住限速抖动：太小 → 缓存被抽干 → 周期性卡顿。

@@ -4,6 +4,7 @@ import 'package:dio/dio.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show ReplyInfo;
+import 'package:PiliPlus/grpc/video.dart';
 import 'package:PiliPlus/http/api.dart';
 import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/http/init.dart';
@@ -231,6 +232,139 @@ abstract final class VideoHttp {
     String? language,
     bool voiceBalance = false,
   }) async {
+    // 直链改走**官方 APP 同源**（gRPC PlayView）。
+    //
+    // 为什么要两个请求并行：PlayView 只给直链，**不带**字幕语言列表、上次播放
+    // 进度（继续播放）、试看标记、clip 信息；这些只有 Web 端 playurl 有。所以
+    // 直链用 APP 的、元数据用 Web 的——两边同时发，延迟取较大者，不比原来慢。
+    //
+    // 触发条件：UGC + 开关打开 + 拿得到 aid。另外「免登录 1080P」是靠 Web 端
+    // 的 try_look 实现的，未登录时保持原样走 Web。
+    final canUseAppSource =
+        Pref.useAppPlayUrl &&
+        videoType == .ugc &&
+        (avid != null || bvid != null) &&
+        !(tryLook && !Accounts.main.isLogin);
+
+    if (canUseAppSource) {
+      int? aid = avid;
+      if (aid == null && bvid != null) {
+        try {
+          aid = IdUtils.bv2av(bvid);
+        } catch (_) {
+          aid = null;
+        }
+      }
+      if (aid != null) {
+        final appFuture = _appVideoUrl(
+          aid: aid,
+          cid: cid,
+          qn: qn,
+          voiceBalance: voiceBalance,
+        );
+        final webFuture = _webVideoUrl(
+          avid: avid,
+          bvid: bvid,
+          cid: cid,
+          qn: qn,
+          epid: epid,
+          seasonId: seasonId,
+          tryLook: tryLook,
+          videoType: videoType,
+          language: language,
+          voiceBalance: voiceBalance,
+        );
+        final webRes = await webFuture;
+        final appRes = await appFuture;
+
+        PlayUrlModel? webModel;
+        if (webRes case Success(:final response)) {
+          webModel = response;
+        }
+        if (appRes case Success(:final response)
+            when response.dash?.video?.isNotEmpty == true) {
+          return Success(_mergeAppSource(app: response, web: webModel));
+        }
+        // APP 直链拿不到（未登录 / 无权限 / 接口异常 / 只有试看）→ 完全退回原有
+        // Web 行为；Web 也失败的话，把 Web 的错误原样交给上层，和以前一样。
+        return webRes;
+      }
+    }
+
+    return _webVideoUrl(
+      avid: avid,
+      bvid: bvid,
+      cid: cid,
+      qn: qn,
+      epid: epid,
+      seasonId: seasonId,
+      tryLook: tryLook,
+      videoType: videoType,
+      language: language,
+      voiceBalance: voiceBalance,
+    );
+  }
+
+  /// 官方 APP 取流（gRPC `PlayView`）。失败或无可用直链时返回 [Error]，
+  /// 由 [videoUrl] 回退到 Web 取流。
+  static Future<LoadingState<PlayUrlModel>> _appVideoUrl({
+    required int aid,
+    required int cid,
+    required int qn,
+    required bool voiceBalance,
+  }) async {
+    final res = await VideoGrpc.playView(
+      aid: aid,
+      cid: cid,
+      qn: qn,
+      voiceBalance: voiceBalance,
+    );
+    if (res case Success(:final response)) {
+      return Success(PlayUrlModel.fromPlayViewReply(response));
+    }
+    // 失败分支只可能是 Error / Loading（都是 LoadingState<Never>），与 T 无关
+    return res is Error ? res : LoadingState.loading();
+  }
+
+  /// 直链用 APP 的，元数据用 Web 的。
+  ///
+  /// 注意**不能混用两边的直链**：Web 直链的令牌要求带 Referer，APP 直链要求不带
+  /// （见 `PlayUrlModel.isAppSource`），混在一起播必然有一半 403。所以这里只搬
+  /// 元数据字段，`dash`/`supportFormats`/`acceptQuality` 全部保持 APP 的那一份。
+  static PlayUrlModel _mergeAppSource({
+    required PlayUrlModel app,
+    PlayUrlModel? web,
+  }) {
+    if (web == null) {
+      return app;
+    }
+    // 总时长在多处被直接解引用（`data.timeLength!`），APP 端万一没给就补 Web 的
+    final appTimeLength = app.timeLength;
+    if (appTimeLength == null || appTimeLength <= 0) {
+      app.timeLength = web.timeLength;
+    }
+    return app
+      ..language = web.language
+      ..curLanguage = web.curLanguage
+      ..acceptDesc = web.acceptDesc
+      ..clipInfoList = web.clipInfoList
+      ..lastPlayCid = web.lastPlayCid
+      ..lastPlayTime = web.lastPlayTime
+      ..volume ??= web.volume;
+  }
+
+  static Future<LoadingState<PlayUrlModel>> _webVideoUrl({
+    int? avid,
+    String? bvid,
+    required int cid,
+    required int qn,
+    dynamic epid,
+    dynamic seasonId,
+    required bool tryLook,
+    required VideoType videoType,
+    String? language,
+    bool voiceBalance = false,
+  }) async {
     final dmImgStr = Utils.base64EncodeRandomString(16, 64);
     final dmCoverImgStr = Utils.base64EncodeRandomString(32, 128);
     final params = await WbiSign.makSign({
@@ -289,7 +423,7 @@ abstract final class VideoHttp {
         }
         return Success(data);
       } else if (epid != null && videoType == .ugc) {
-        return await videoUrl(
+        return await _webVideoUrl(
           avid: avid,
           bvid: bvid,
           cid: cid,
@@ -298,6 +432,8 @@ abstract final class VideoHttp {
           seasonId: seasonId,
           tryLook: tryLook,
           videoType: .pgc,
+          language: language,
+          voiceBalance: voiceBalance,
         );
       }
       return Error(_parseVideoErr(res.data['code'], res.data['message']));
