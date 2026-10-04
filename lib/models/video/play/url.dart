@@ -83,7 +83,10 @@ class PlayUrlModel {
   /// 这个标记决定**两件事**，缺一不可（实测：只换取流接口、不换请求指纹会全线 403）：
   /// 1. 媒体请求指纹：APP 令牌必须不带 `Referer`；
   /// 2. 候选地址顺序：官方 APP 直接播 B 站下发的第一条，不做任何挑选/改写。
-  bool isAppSource;
+  ///
+  /// 必须带默认值：`PlayUrlModel.fromJson` 是普通命名构造函数，不会初始化它，
+  /// 非空类型不给默认值会直接编译不过。
+  bool isAppSource = false;
 
   int findAvailableVideoQuality(int preferredQuality) {
     final curHighestVideoQa = dash!.video!.first.quality.code;
