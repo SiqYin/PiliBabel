@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- PiliBabel T1 compact Babel Tower foreground.
-     Proportions match the approved preview_tower_platforms.png reference.
-     Keep @color/ic_launcher_foreground so Android 12+ retains the Material You
-     wallpaper palette and older Android keeps the green/white fallback. -->
+<!-- PiliBabel T1 enlarged Babel Tower foreground.
+     Keep @color/ic_launcher_foreground: Android 12+ colors.xml supplies the
+     Material You wallpaper palette, while older Android uses the green/white
+     fallback. -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:height="108dp"
     android:width="108dp"
@@ -11,10 +11,10 @@
     <path
         android:fillColor="@color/ic_launcher_foreground"
         android:fillType="evenOdd"
-        android:pathData="M39 69H69V75H39Z
-M43 53H65V69H43Z
-M47 39H61V53H47Z
-M44 35H50V39H44Z
-M58 35H64V39H58Z
-M49 69V59C49 55.69 51.24 53 54 53C56.76 53 59 55.69 59 59V69Z" />
+        android:pathData="M34 75H74V81H34Z
+M38 55H70V75H38Z
+M43 35H65V55H43Z
+M39 29H49V35H39Z
+M59 29H69V35H59Z
+M45 75V63C45 58.58 48.58 55 54 55C59.42 55 63 58.58 63 63V75Z" />
 </vector>
