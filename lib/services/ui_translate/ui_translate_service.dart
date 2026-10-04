@@ -135,6 +135,26 @@ class UiTranslateService extends GetxService {
   @override
   void onInit() {
     super.onInit();
+    // Target definitions are part of the translation contract. When Wu/Hokkien/
+    // region-standard prompts change, old translations must not mask the new
+    // rules. The cache is scoped to the currently selected language (language
+    // changes clear it), so invalidate it once only when that current target is
+    // one of the revised prompt families.
+    const promptRevision = 2;
+    const revisedTargets = {
+      'zh-TW',
+      'yue-Hans',
+      'yue-Hant',
+      'wuu-Hans',
+      'wuu-Hant',
+      'nan-TW',
+    };
+    if (Pref.uiTranslatePromptRevision < promptRevision) {
+      if (revisedTargets.contains(currentLanguage.code)) {
+        Pref.uiTranslateCache = {};
+      }
+      Pref.uiTranslatePromptRevision = promptRevision;
+    }
     _cache.addAll(Pref.uiTranslateCache);
   }
 
