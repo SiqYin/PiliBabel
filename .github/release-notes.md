@@ -1,4 +1,12 @@
-### PiliBabel
+### PiliBabel v0.3.0
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+**What's new in the 0.3 series**
+- **New PiliBabel icon:** the old P-shaped placeholder is replaced by a letter-free, minimalist Babel Tower symbol. The enlarged T1 mark uses three stepped tower levels, a central arch entrance, and a split crown to suggest layered languages and the Babel story.
+- **The icon is applied across Android, Windows, Linux, and README:** Android keeps PiliNara/PiliPlus's Material You dynamic-colour resources on Android 12+ (`system_accent1_100`, `system_neutral2_700`, and dark-mode counterparts), while Android 11 and desktop builds use the brand green/white fallback. The README now uses the circular Babel Tower mark.
+
+### Previous release notes
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
 
