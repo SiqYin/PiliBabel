@@ -1,3 +1,10 @@
+### PiliBabel v0.3.3
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+**What's new in 0.3.3**
+- **The Babel Tower icon now sits between the two previous sizes.** 0.3.0's mark was slightly too large and 0.3.1 over-corrected to something too small, so the tower has been re-scaled to a middle ground — roughly 32 % of the canvas width instead of 37 % (0.3.0) or 28 % (0.3.1). The three tiers, central arch and split crown keep exactly the same proportions as 0.3.0; only the overall size changed. Applied to the Android adaptive icon, all legacy Android mipmaps, the Play Store icon, the Windows `.ico`, the Linux desktop icon and the circular README mark. Android Material You dynamic colouring is unchanged.
+
 ### PiliBabel v0.3.2
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
