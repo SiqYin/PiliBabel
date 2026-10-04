@@ -723,6 +723,12 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       BottomControlType.fit => Obx(
         () {
           final fit = plPlayerController.videoFit.value;
+          // 预热全部画幅名称：菜单是弹出时才构建的一次性路由，等它弹出来再翻就
+          // 来不及了（和弹幕确认弹窗同一个坑）。这里在播放器界面渲染时就先把
+          // 拉伸/自动/裁剪/等宽/等高/原始/限制/4:3/16:9 排进翻译队列。
+          for (final e in VideoFitType.values) {
+            uiTx(e.desc);
+          }
           return StaticPopupMenuButton<VideoFitType>(
             tooltip: uiTx('画面比例'),
             requestFocus: false,
@@ -739,11 +745,14 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                       padding: const EdgeInsets.only(left: 30),
                       value: boxFit,
                       onTap: () => plPlayerController.toggleVideoFit(boxFit),
-                      child: Text(
-                        boxFit.desc,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
+                      // 再包一层 Obx：万一译文比弹窗晚到，也能原地换成目标语言
+                      child: Obx(
+                        () => Text(
+                          uiTx(boxFit.desc),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
                         ),
                       ),
                     ),
@@ -753,7 +762,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(
-                fit.desc,
+                uiTx(fit.desc),
                 style: const TextStyle(color: Colors.white, fontSize: 13),
               ),
             ),

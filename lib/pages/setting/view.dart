@@ -44,45 +44,51 @@ class _SettingPageState extends State<SettingPage> {
   late bool _isPortrait;
   late ThemeData theme;
 
-  static final List<_SettingsModel> _items =[
+  /// 这里**只存原文**，不要在这里调 `uiTx()`。
+  ///
+  /// 这是 `static final`，初始化只发生一次；一旦在这里求值，译文就被冻进
+  /// 这个列表里了——渲染处（下面那些 `Obx`）再 `uiTx()` 时输入已经是译文，
+  /// 于是关闭 AI 翻译后**永远回不到原文**。译文统一留给渲染时那层 `Obx`
+  /// 去取，那里会跟着 `revision` 刷新，开关翻译都能立刻跟上。
+  static final List<_SettingsModel> _items = [
     _SettingsModel(
       type: SettingType.privacySetting,
-      subtitle: uiTx('黑名单'),
+      subtitle: '黑名单',
       icon: Icon(Icons.privacy_tip_outlined),
     ),
     _SettingsModel(
       type: SettingType.recommendSetting,
-      subtitle: uiTx('推荐来源（web/app）、刷新保留内容、过滤器'),
+      subtitle: '推荐来源（web/app）、刷新保留内容、过滤器',
       icon: Icon(Icons.explore_outlined),
     ),
     _SettingsModel(
       type: SettingType.dynamicsSetting,
-      subtitle: uiTx('关键词过滤、屏蔽用户、带货动态屏蔽'),
+      subtitle: '关键词过滤、屏蔽用户、带货动态屏蔽',
       icon: Icon(Icons.dynamic_feed_outlined),
     ),
     _SettingsModel(
       type: SettingType.aiTranslateSetting,
-      subtitle: uiTx('AI 接入、视频总结与界面翻译的集中配置入口'),
+      subtitle: 'AI 接入、视频总结与界面翻译的集中配置入口',
       icon: Icon(Icons.auto_awesome),
     ),
     _SettingsModel(
       type: SettingType.videoSetting,
-      subtitle: uiTx('画质、音质、解码、缓冲、音频输出等'),
+      subtitle: '画质、音质、解码、缓冲、音频输出等',
       icon: Icon(Icons.video_settings_outlined),
     ),
     _SettingsModel(
       type: SettingType.playSetting,
-      subtitle: uiTx('双击/长按、全屏、后台播放、弹幕、字幕、底部进度条等'),
+      subtitle: '双击/长按、全屏、后台播放、弹幕、字幕、底部进度条等',
       icon: Icon(Icons.touch_app_outlined),
     ),
     _SettingsModel(
       type: SettingType.styleSetting,
-      subtitle: uiTx('横屏适配（平板）、侧栏、列宽、首页、动态红点、主题、字号、图片、帧率等'),
+      subtitle: '横屏适配（平板）、侧栏、列宽、首页、动态红点、主题、字号、图片、帧率等',
       icon: Icon(Icons.style_outlined),
     ),
     _SettingsModel(
       type: SettingType.extraSetting,
-      subtitle: uiTx('震动、搜索、收藏、ai、评论、代理、更新检查等'),
+      subtitle: '震动、搜索、收藏、ai、评论、代理、更新检查等',
       icon: Icon(Icons.extension_outlined),
     ),
     _SettingsModel(

@@ -133,41 +133,54 @@ class _BottomControlState extends State<BottomControl> with HeaderMixin {
               onTap: () => showSetDanmaku(isLive: true),
             ),
             Obx(
-              () => StaticPopupMenuButton<VideoFitType>(
-                tooltip: uiTx('画面比例'),
-                initialValue: plPlayerController.videoFit.value,
-                color: Colors.black.withValues(alpha: 0.8),
-                menuPadding: EdgeInsets.zero,
-                menuItemOuterPadding: EdgeInsets.zero,
-                menuItemStateLayerColor: Colors.white,
-                itemBuilder: (context) {
-                  return VideoFitType.values
-                      .map(
-                        (boxFit) => PopupMenuItem<VideoFitType>(
-                          height: 35,
-                          padding: const EdgeInsets.only(left: 30),
-                          value: boxFit,
-                          onTap: () =>
-                              plPlayerController.toggleVideoFit(boxFit),
-                          child: Text(
-                            boxFit.desc,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 13,
+              () {
+                // 预热全部画幅名称：菜单是弹出时才构建的一次性路由，
+                // 等它弹出来再翻就来不及了
+                for (final e in VideoFitType.values) {
+                  uiTx(e.desc);
+                }
+                return StaticPopupMenuButton<VideoFitType>(
+                  tooltip: uiTx('画面比例'),
+                  initialValue: plPlayerController.videoFit.value,
+                  color: Colors.black.withValues(alpha: 0.8),
+                  menuPadding: EdgeInsets.zero,
+                  menuItemOuterPadding: EdgeInsets.zero,
+                  menuItemStateLayerColor: Colors.white,
+                  itemBuilder: (context) {
+                    return VideoFitType.values
+                        .map(
+                          (boxFit) => PopupMenuItem<VideoFitType>(
+                            height: 35,
+                            padding: const EdgeInsets.only(left: 30),
+                            value: boxFit,
+                            onTap: () =>
+                                plPlayerController.toggleVideoFit(boxFit),
+                            // 再包一层 Obx：译文比弹窗晚到时也能原地替换
+                            child: Obx(
+                              () => Text(
+                                uiTx(boxFit.desc),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                ),
+                              ),
                             ),
                           ),
-                        ),
-                      )
-                      .toList();
-                },
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    plPlayerController.videoFit.value.desc,
-                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                        )
+                        .toList();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(
+                      uiTx(plPlayerController.videoFit.value.desc),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                      ),
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
             Obx(
               () => StaticPopupMenuButton<int>(

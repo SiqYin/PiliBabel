@@ -92,8 +92,9 @@ class UiTranslateService extends GetxService {
   /// **源文案用英文**，两个作用：
   /// 1. 兜底可读性——界面翻译没开、接口没配好或译文还没回来时，英文对非中文
   ///    用户总比中文可读；
-  /// 2. 开启翻译后它照常按目标语言自动翻译（英文 → 目标语言；目标语言是中文时
-  ///    也会翻，因为 `_looksChinese` 对英文为假）。
+  /// 2. 开启翻译后它照常按目标语言自动翻译（英文 → 目标语言）。目标语言是中文
+  ///    家族时 `_tx` 不调我们的 API（见 _tx），所以那时它保持英文——这也正是
+  ///    "英文兜底"要解决的场景。
   ///
   /// 三处引用（[prewarm] 列表、播放器按钮预热、弹窗正文）共用这一个常量，
   /// 避免抄成不同字符串导致"预热了 A、渲染的是 B"，预热永远不生效。
@@ -111,10 +112,11 @@ class UiTranslateService extends GetxService {
   /// 预热常用文案：开启翻译后调用，使这些串尽早进入缓存。
   void prewarm() {
     if (!enabled) return;
+    // 中文家族目标下 `_tx` 根本不会请求我们的 API（见 _tx），没有可预热的东西
+    if (isChineseTarget) return;
     var queued = false;
     for (final s in _commonPrewarm) {
       if (_cache.containsKey(s)) continue;
-      if (isChineseTarget && _looksChinese(s)) continue;
       if (_pending.add(s)) queued = true;
     }
     if (queued) _scheduleFlush();
@@ -150,9 +152,17 @@ class UiTranslateService extends GetxService {
     // 避免 GetX “空 Obx” 运行时报错；开启时则据此在译文回来后刷新。
     revision.value;
     if (!enabled) return src;
-    // 中文家族目标（含简体中文）：本身已是中文的内容不翻译，
-    // 只有外文才译成中文——即"开启 AI 翻译时，评论等外文自动译成中文"。
-    if (isChineseTarget && _looksChinese(src)) return src;
+    // 目标语言是中文家族时：**完全不调我们自己配置的 API**。
+    //
+    // 与 PiliNara / PiliPlus 原版对齐——原版没有任何"自动翻译"，中文环境下的
+    // 外文内容（评论区）用的是 B 站自带的**免费**翻译：每条评论下面那个「翻译」
+    // 按钮走 `ReplyGrpc.translateReply`（`bilibili.main.community.reply.v1.Reply/
+    // TranslateReply`），那套按钮在本仓库里也一直在（见 reply_item_grpc.dart）。
+    // 原版没翻译的地方我们也不翻，所以这里直接返回原文：
+    //   * 不再拿用户自己配的 API key 去翻评论/弹幕；
+    //   * 界面文案本来就是中文，返回原文即正确；
+    //   * 想看中文译文就点评论的「翻译」，走 B 站免费接口。
+    if (isChineseTarget) return src;
     final hit = _cache[src];
     if (hit != null) return hit;
     // 尚未翻译：先显示原文，排进待翻队列。
@@ -316,31 +326,6 @@ class UiTranslateService extends GetxService {
       buf.write(chunk);
     }
     return _parseArray(buf.toString(), sources.length);
-  }
-
-  /// 判断一段文本是否“本身基本就是中文”：外文字符占比低于阈值即视为中文。
-  /// 用于中文家族目标下跳过对本就中文内容的翻译，只把外文译成中文。
-  static bool _looksChinese(String s) {
-    int han = 0;
-    int foreign = 0;
-    for (final rune in s.runes) {
-      if (rune >= 0x4E00 && rune <= 0x9FFF) {
-        han++;
-      } else if ((rune >= 0x3041 && rune <= 0x30FF) || // 日文假名
-          (rune >= 0xAC00 && rune <= 0xD7AF) || // 谚文
-          (rune >= 0x0400 && rune <= 0x04FF) || // 西里尔
-          (rune >= 0x0600 && rune <= 0x06FF) || // 阿拉伯
-          (rune >= 0x0590 && rune <= 0x05FF) || // 希伯来
-          (rune >= 0x0E00 && rune <= 0x0E7F) || // 泰文
-          (rune >= 0x41 && rune <= 0x5A) || // 拉丁大写
-          (rune >= 0x61 && rune <= 0x7A)) {
-        // 拉丁小写
-        foreign++;
-      }
-    }
-    final total = han + foreign;
-    if (total == 0) return true;
-    return foreign * 100 < total * 25;
   }
 
   /// 从模型输出里稳健地解析出 JSON 数组；解析失败退化为按行切分。

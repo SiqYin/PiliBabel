@@ -30,7 +30,9 @@ class _SettingsSearchPageState
     extends DebounceStreamState<SettingsSearchPage, String> {
   final _textEditingController = TextEditingController();
   final RxList<SettingsModel> _list = <SettingsModel>[].obs;
-  late final _settings = [
+  /// 必须是 getter：这些 `xxxSettings` 里的 `uiTx(...)` 是**求值时**取译文的，
+  /// 用 `late final` 缓存下来的话，关闭 AI 翻译后搜索索引里仍是旧译文。
+  List<SettingsModel> get _settings => [
     ...extraSettings,
     ...privacySettings,
     ...recommendSettings,

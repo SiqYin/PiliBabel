@@ -107,8 +107,11 @@ class UiTranslateSettingPage extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   lang.chineseFamily
-                      ? uiTx('当前为中文：外文内容会被翻译成该中文，本身是中文的内容保持不变。')
-                      : uiTx('若选择非简体中文，需要在下方配置 API 才能实现 AI 翻译。'),
+                      ? uiTx(
+                          '当前为中文：不调用你配置的 API。评论区外文由 B 站自带的免费翻译处理'
+                          '（点每条评论下的「翻译」），与 PiliNara 原版一致。',
+                        )
+                      : uiTx('若选择中文以外的语言，需要在下方配置 API 才能实现 AI 翻译。'),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.outline,
                   ),
