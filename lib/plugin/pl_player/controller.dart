@@ -1271,6 +1271,16 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   }
 
   void _checkPlaybackStall() {
+    // 实验特性，默认关闭：关闭时播放器不做任何自动换线/自动降画质/自动重开，
+    // 行为与上游一致（只保留既有的错误提示与重试）。打开设置里的
+    // 「卡顿时自动换线/降画质（实验）」后才启用下面这套自愈。
+    if (!Pref.autoPlayAdjust) {
+      _stallTicks = 0;
+      _healthyTicks = 0;
+      _effWindowStartMs = 0;
+      _effBadWindows = 0;
+      return;
+    }
     final player = _videoPlayerController;
     if (player == null || _switchingLine) {
       _effWindowStartMs = 0; // 自动动作进行中：不计吞吐，重启窗口
@@ -1440,6 +1450,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         ),
         play: true,
       );
+      // 重开等于新建一次播放会话：亮度/对比度/音画延迟等要重新下发，
+      // 否则会出现「换了线路但画面参数丢失」的观感问题。
+      applyVideoPictureParameters(player);
       SmartDialog.showToast(uiTx(toast ?? '视频缓冲中断，已切换到备用线路'));
       return true;
     } catch (_) {
