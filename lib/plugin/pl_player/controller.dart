@@ -6,6 +6,7 @@ import 'dart:math' show max, min;
 import 'dart:ui' as ui;
 
 import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -1141,11 +1142,31 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       ),
     );
 
-    player.setMediaHeader(userAgent: BrowserUa.pc, referer: HttpString.baseUrl);
+    // 默认（Web 令牌）的指纹，随每次 open 按数据源再校正一次，见 _applyMediaHeader
+    _applyMediaHeader(player, null);
 
     _startListeners(player);
 
     return player;
+  }
+
+  /// 媒体请求指纹必须与直链令牌的签发方一致，否则 CDN 直接 403（实测）：
+  ///
+  /// * Web 令牌（`/x/player/wbi/playurl`）：要 `Referer: https://www.bilibili.com`；
+  ///   且 `upos-*-mirror*ov` 这类海外主机只接受 Safari/macOS 的 UA（Chrome/APP
+  ///   UA 都 403）。
+  /// * APP 令牌（gRPC `PlayView`）：要**不带** Referer（带非空 Referer 必 403），
+  ///   UA 不限。所以这里用官方 APP 的 UA，并把 referrer 置空（等于 mpv 的默认
+  ///   「不发送 Referer」）。
+  static void _applyMediaHeader(Player player, DataSource? dataSource) {
+    if (dataSource case NetworkSource(appSource: true)) {
+      player.setMediaHeader(userAgent: Constants.userAgent, referer: '');
+    } else {
+      player.setMediaHeader(
+        userAgent: BrowserUa.pc,
+        referer: HttpString.baseUrl,
+      );
+    }
   }
 
   late final buffer = Pref.initBuffer(_playbackSpeed.value);
@@ -1204,6 +1225,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       video = dashEdl(video, audio, fileSource: isFileSource);
       audioFilterExtras(volume, map: extras);
     }
+
+    // 直播/本地文件沿用原指纹，只有点播的 APP 同源直链需要换（见 _applyMediaHeader）
+    _applyMediaHeader(player, dataSource);
 
     assert(!isLive || seekTo == null);
     await player.open(

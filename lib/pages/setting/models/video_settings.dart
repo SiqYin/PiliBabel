@@ -62,7 +62,8 @@ List<SettingsModel> get videoSettings => [
     title: uiTx('CDN 设置'),
     leading: const Icon(MdiIcons.cloudPlusOutline),
     getSubtitle: () =>
-        '当前使用：${VideoUtils.effectiveCdnDesc()}，部分 CDN 可能失效，如无法播放请尝试切换',
+        '当前使用：${VideoUtils.effectiveCdnDesc()}，部分 CDN 可能失效，如无法播放请尝试切换'
+        '${Pref.useAppPlayUrl ? '（已开启「直链取流与官方 APP 一致」：点播直链按 B 站下发顺序直接使用，此处设置对点播不生效，仍对直播/下载生效）' : ''}',
     onTap: _showCDNDialog,
   ),
   NormalModel(
@@ -85,6 +86,18 @@ List<SettingsModel> get videoSettings => [
     setKey: SettingBoxKey.disableAudioCDN,
     defaultVal: false,
     onChanged: (value) => VideoUtils.disableAudioCDN = value,
+  ),
+  SwitchModel(
+    title: uiTx('直链取流与官方 APP 一致'),
+    subtitle: uiTx(
+      '默认开启：视频/音频直链改用官方 APP 的取流接口（gRPC PlayView），'
+      '并按 APP 的方式请求（APP UA、不带 Referer、直接用 B 站下发的第一条线路）。'
+      '关闭则退回网页端取流（网页端直链只认「Safari UA + Referer」这一种组合，'
+      '部分海外线路会因此 403 或限速）',
+    ),
+    leading: const Icon(Icons.app_shortcut_outlined),
+    setKey: SettingBoxKey.useAppPlayUrl,
+    defaultVal: true,
   ),
   SwitchModel(
     title: uiTx('卡顿时自动换线/降画质（实验）'),

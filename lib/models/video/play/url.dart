@@ -1,10 +1,28 @@
 import 'dart:math' show max, min;
 
+import 'package:PiliPlus/grpc/bilibili/app/playurl/v1.pb.dart';
 import 'package:PiliPlus/models/common/video/audio_quality.dart';
 import 'package:PiliPlus/models/common/video/video_quality.dart';
 import 'package:PiliPlus/models_new/sponsor_block/segment_item.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
+
+/// bilibili `codecid` → `codecs` 前缀。上层（`VideoUtils.selectCodec` /
+/// `findVideoByQa`）都按前缀匹配首选解码格式，所以这里只给前缀即可。
+/// 杜比视界是独立解码格式（`dvh1`），B 站不用 codecid 区分，只能看清晰度档位。
+String _codecsFromCodecid(int codecid, int quality) {
+  if (quality == 126) {
+    return 'dvh1';
+  }
+  return switch (codecid) {
+    12 => 'hev1',
+    13 => 'av01',
+    _ => 'avc1',
+  };
+}
+
+final _videoQualityMap = {for (final i in VideoQuality.values) i.code: i};
+final _audioQualityMap = {for (final i in AudioQuality.values) i.code: i};
 
 class PlayUrlModel {
   PlayUrlModel({
@@ -22,8 +40,10 @@ class PlayUrlModel {
     this.seekType,
     this.dash,
     this.supportFormats,
+    this.volume,
     this._lastPlayTime = 0,
     this.lastPlayCid,
+    this.isAppSource = false,
   });
 
   String? from;
@@ -58,6 +78,13 @@ class PlayUrlModel {
   Language? language;
   List<SegmentItemModel>? clipInfoList;
 
+  /// 直链是否来自官方 APP 的取流接口（gRPC `PlayView`）。
+  ///
+  /// 这个标记决定**两件事**，缺一不可（实测：只换取流接口、不换请求指纹会全线 403）：
+  /// 1. 媒体请求指纹：APP 令牌必须不带 `Referer`；
+  /// 2. 候选地址顺序：官方 APP 直接播 B 站下发的第一条，不做任何挑选/改写。
+  bool isAppSource;
+
   int findAvailableVideoQuality(int preferredQuality) {
     final curHighestVideoQa = dash!.video!.first.quality.code;
     if (acceptQuality case final qualitys?
@@ -87,6 +114,155 @@ class PlayUrlModel {
       }
     } catch (_) {}
     return best;
+  }
+
+  /// 官方 APP（gRPC `PlayView`）取流结果 → 播放模型。
+  ///
+  /// 字段是一一对应的：`stream_list[].stream_info` ↔ Web 的 `support_formats`，
+  /// `stream_list[].dash_video` ↔ `dash.video`，`video_info.dash_audio` ↔
+  /// `dash.audio`。所以转换后上层的画质/音质选择、菜单渲染逻辑完全不用改。
+  ///
+  /// 无权限的档位只会出现在 `stream_info` 里而没有 `dash_video`（与 Web 端
+  /// `accept_quality` 列出全部、`dash.video` 只给有权限的一致）。
+  factory PlayUrlModel.fromPlayViewReply(PlayViewReply reply) {
+    final info = reply.videoInfo;
+
+    final videos = <VideoItem>[];
+    final formats = <FormatItem>[];
+    final qualities = <int>[];
+    // 同一清晰度会有多条 stream（AVC / HEVC / AV1 各一条），必须把 codecs 合并，
+    // 否则画质菜单里的解码格式提示只会显示"先到的那条"。
+    final codecsOfQuality = <int, Set<String>>{};
+    final infoOfQuality = <int, StreamInfo>{};
+
+    for (final stream in info.streamList) {
+      if (!stream.hasStreamInfo()) {
+        continue;
+      }
+      final si = stream.streamInfo;
+      final quality = si.quality;
+      // 枚举里没有的档位无法展示、也无法被画质选择命中（`VideoQuality.fromCode`
+      // 对未知档位会抛异常），所以只保留认得的档位
+      final videoQuality = _videoQualityMap[quality];
+      if (videoQuality == null) {
+        continue;
+      }
+      if (!qualities.contains(quality)) {
+        qualities.add(quality);
+      }
+      infoOfQuality[quality] = si;
+
+      if (!stream.hasDashVideo()) {
+        continue;
+      }
+      final dv = stream.dashVideo;
+      if (dv.baseUrl.isEmpty) {
+        continue;
+      }
+      final codec = _codecsFromCodecid(dv.codecid, quality);
+      (codecsOfQuality[quality] ??= <String>{}).add(codec);
+      videos.add(
+        VideoItem(
+          id: quality,
+          baseUrl: dv.baseUrl,
+          backupUrl: dv.backupUrl.isEmpty ? null : dv.backupUrl.toList(),
+          bandWidth: dv.bandwidth,
+          mimeType: 'video/mp4',
+          codecs: codec,
+          codecid: dv.codecid,
+          width: dv.width,
+          height: dv.height,
+          frameRate: dv.frameRate.isEmpty ? null : dv.frameRate,
+          quality: videoQuality,
+        ),
+      );
+    }
+
+    for (final quality in qualities) {
+      final si = infoOfQuality[quality]!;
+      final fallbackDesc = _videoQualityMap[quality]?.desc ?? '$quality';
+      formats.add(
+        FormatItem(
+          quality: quality,
+          format: si.format,
+          newDesc: si.newDescription.isNotEmpty
+              ? si.newDescription
+              : (si.description.isNotEmpty ? si.description : fallbackDesc),
+          displayDesc: si.displayDesc,
+          // 无权限档位一条 dash_video 都没有，也要给个占位：
+          // 上层 `supportFormats[x].codecs!` 是直接解引用的
+          codecs: (codecsOfQuality[quality] ?? const {'avc1'}).toList(),
+        ),
+      );
+    }
+
+    // dash.video.first 必须是"当前可用的最高档"（上层靠它夹持画质上限）
+    videos.sort((a, b) => b.id.compareTo(a.id));
+    qualities.sort((a, b) => b - a);
+
+    final audios = <AudioItem>[];
+    void addAudio(DashItem item) {
+      if (item.baseUrl.isEmpty || _audioQualityMap[item.id] == null) {
+        return;
+      }
+      audios.add(
+        AudioItem(
+          id: item.id,
+          baseUrl: item.baseUrl,
+          backupUrl: item.backupUrl.isEmpty ? null : item.backupUrl.toList(),
+          bandWidth: item.bandwidth,
+          mimeType: 'audio/mp4',
+          codecid: item.codecid,
+        ),
+      );
+    }
+
+    // 与 Dash.fromJson 的拼接顺序保持一致：无损 → 杜比 → 常规
+    if (info.hasLossLessItem() && info.lossLessItem.isLosslessAudio) {
+      addAudio(info.lossLessItem.audio);
+    }
+    if (info.hasDolby()) {
+      for (final item in info.dolby.audio) {
+        addAudio(item);
+      }
+    }
+    for (final item in info.dashAudio) {
+      addAudio(item);
+    }
+
+    Volume? volume;
+    if (info.hasVolume()) {
+      final v = info.volume;
+      volume = Volume(
+        measuredI: v.measuredI,
+        measuredLra: v.measuredLra,
+        measuredTp: v.measuredTp,
+        measuredThreshold: v.measuredThreshold,
+        targetOffset: v.targetOffset,
+        targetI: v.targetI,
+        targetTp: v.targetTp,
+      );
+    }
+
+    final hasVideo = videos.isNotEmpty;
+    return PlayUrlModel(
+      from: 'app',
+      quality: info.quality,
+      format: info.format,
+      timeLength: info.hasTimelength() ? info.timelength.toInt() : null,
+      videoCodecid: info.videoCodecid,
+      acceptQuality: qualities,
+      supportFormats: formats,
+      volume: volume,
+      isAppSource: true,
+      dash: hasVideo
+          ? Dash(
+              duration: info.hasTimelength() ? info.timelength.toInt() : null,
+              video: videos,
+              audio: audios.isEmpty ? null : audios,
+            )
+          : null,
+    );
   }
 
   PlayUrlModel.fromJson(Map<String, dynamic> json) {
@@ -334,6 +510,18 @@ class VideoItem extends BaseItem {
 
 class AudioItem extends BaseItem {
   late String quality;
+
+  AudioItem({
+    required super.id,
+    super.baseUrl,
+    super.backupUrl,
+    super.bandWidth,
+    super.mimeType,
+    super.codecs,
+    super.codecid,
+  }) {
+    quality = _audioQualityMap[id]?.desc ?? '$id';
+  }
 
   AudioItem.fromJson(Map<String, dynamic> json) : super.fromJson(json) {
     quality = AudioQuality.fromCode(json['id']).desc;

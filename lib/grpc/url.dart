@@ -52,6 +52,10 @@ abstract final class GrpcUrl {
   static const viewunite = '/bilibili.app.viewunite.v1.View';
   static const view = '$viewunite/View';
 
+  // playurl (UGC) —— 官方 APP 的取流接口（不是 Web 的 /x/player/wbi/playurl）
+  static const playurlV1 = '/bilibili.app.playurl.v1.PlayURL';
+  static const playView = '$playurlV1/PlayView';
+
   // audio
   static const audio = '/bilibili.app.listener.v1.Listener';
   static const audioPlayUrl = '$audio/PlayURL';

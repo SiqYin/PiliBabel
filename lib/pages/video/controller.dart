@@ -852,6 +852,21 @@ class VideoDetailController extends GetxController
     }
   }
 
+  /// 直链取用方式。
+  ///
+  /// 官方 APP 同源直链（gRPC `PlayView`）按 B 站下发顺序**直接用第一条**，与官方
+  /// APP 完全一致——既不挑「海外候选」，也不套用 CDN 设置改写主机。这里必须这样：
+  /// 直链签名与主机、请求指纹三者绑定，改写主机必被 403（v0.1.8 教训），
+  /// 所以 CDN 设置对点播直链不生效（仍对直播、下载生效）。
+  /// Web 直链沿用原有的线路挑选逻辑。
+  String _pickUrl(Iterable<String> urls, {bool isAudio = false}) {
+    return VideoUtils.getCdnUrl(
+      urls,
+      isAudio: isAudio,
+      nativeOrder: data.isAppSource,
+    );
+  }
+
   VideoItem findVideoByQa(int qa, {bool setCodecs = false}) {
     /// 根据currentVideoQa和currentDecodeFormats 重新设置videoUrl
     final allVideos = data.dash!.video!;
@@ -904,7 +919,7 @@ class VideoDetailController extends GetxController
       ..buffered.value = 0;
 
     firstVideo = findVideoByQa(currentVideoQa.code, setCodecs: true);
-    videoUrl = VideoUtils.getCdnUrl(firstVideo.playUrls);
+    videoUrl = _pickUrl(firstVideo.playUrls);
     videoUrlCandidates = firstVideo.playUrls.toList();
 
     /// 根据currentAudioQa 重新设置audioUrl
@@ -913,7 +928,7 @@ class VideoDetailController extends GetxController
         (i) => i.id == currentAudioQa!.code,
         orElse: () => data.dash!.audio!.first,
       );
-      audioUrl = VideoUtils.getCdnUrl(firstAudio.playUrls, isAudio: true);
+      audioUrl = _pickUrl(firstAudio.playUrls, isAudio: true);
       audioUrlCandidates = firstAudio.playUrls.toList();
     }
 
@@ -995,6 +1010,8 @@ class VideoDetailController extends GetxController
               audioSource: audioUrl,
               videoUrls: videoUrlCandidates,
               audioUrls: audioUrlCandidates,
+              // 决定媒体请求指纹（UA / Referer），必须与直链令牌的签发方一致
+              appSource: data.isAppSource,
             ),
       seekTo: seek,
       duration: data.timeLength == null
@@ -1083,6 +1100,10 @@ class VideoDetailController extends GetxController
   }
 
   Future<void> _supplementVideoQualities() async {
+    // APP 同源直链绝不能再补 Web 直链：两边令牌要求的请求指纹相反
+    // （APP 要「不带 Referer」、Web 要「带 Referer」），混进列表里必然有一半
+    // 403。PlayView 本身就会把有权限的档位全部下发，所以这里不需要补。
+    if (data.isAppSource) return;
     final quality = data.missingVideoQualityBelowHighest;
     if (quality == -1) return;
     final result = await _getVideoUrl(quality);
@@ -1195,13 +1216,13 @@ class VideoDetailController extends GetxController
             // TODO: refa
             final sb = StringBuffer('edl://!no_chapters;');
             for (var i in durl) {
-              final video = VideoUtils.getCdnUrl(i.playUrls);
+              final video = _pickUrl(i.playUrls);
               sb.write('%${video.length}%$video,length=${i.length! / 1000};');
             }
             videoUrl = sb.toString();
             videoUrlCandidates = const [];
           } else {
-            videoUrl = VideoUtils.getCdnUrl(durl.single.playUrls);
+            videoUrl = _pickUrl(durl.single.playUrls);
             videoUrlCandidates = durl.single.playUrls.toList();
           }
 
@@ -1273,7 +1294,7 @@ class VideoDetailController extends GetxController
       );
       _setVideoHeight();
 
-      videoUrl = VideoUtils.getCdnUrl(firstVideo.playUrls);
+      videoUrl = _pickUrl(firstVideo.playUrls);
       videoUrlCandidates = firstVideo.playUrls.toList();
 
       /// 优先顺序 设置中指定质量 -> 当前可选的最高质量
@@ -1293,7 +1314,7 @@ class VideoDetailController extends GetxController
           (e) => e.id == closestNumber,
           orElse: () => audioList.first,
         );
-        audioUrl = VideoUtils.getCdnUrl(firstAudio.playUrls, isAudio: true);
+        audioUrl = _pickUrl(firstAudio.playUrls, isAudio: true);
         audioUrlCandidates = firstAudio.playUrls.toList();
         currentAudioQa = AudioQuality.fromCode(firstAudio.id);
       } else {

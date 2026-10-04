@@ -122,6 +122,12 @@ abstract final class VideoUtils {
 
   /// [customHost] 显式指定自定义节点（节点测速用）；未传时按 [applyCustomCDN]
   /// 决定是否采用全局自定义节点。全局自定义生效时完全旁路枚举语义。
+  /// [nativeOrder] 为真时直接返回 B 站下发的第一条，不做任何挑选/改写。
+  ///
+  /// 用于**官方 APP 同源直链**（gRPC `PlayView`）：这类令牌的媒体指纹是「不带
+  /// Referer」，两条海外主机都能正常回源，所以按官方 APP 的做法直接用第一条即可；
+  /// 反而不能套用下面那套「挑海外候选 / 改写主机」的逻辑——令牌与主机、指纹绑定，
+  /// 乱换会 403（v0.1.8 教训）。
   static String getCdnUrl(
     Iterable<String> urls, {
     CDNService? defaultCDNService,
@@ -129,7 +135,11 @@ abstract final class VideoUtils {
     bool applyCustomCDN = true,
     bool isAudio = false,
     bool preferAkamai = false,
+    bool nativeOrder = false,
   }) {
+    if (nativeOrder && urls.isNotEmpty) {
+      return urls.first;
+    }
     defaultCDNService ??= cdnService;
     customHost ??= applyCustomCDN ? customCDNUrl : null;
     if (isAudio && disableAudioCDN) {
