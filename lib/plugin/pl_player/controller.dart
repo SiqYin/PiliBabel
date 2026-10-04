@@ -1317,11 +1317,24 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     if (isLive ||
         onlyPlayAudio.value ||
         isSeeking.value ||
-        dataSource is! NetworkSource ||
-        !playerStatus.value.isPlaying) {
+        dataSource is! NetworkSource) {
       _stallTicks = 0;
       _healthyTicks = 0;
-      _effWindowStartMs = 0; // 暂停/拖动期间不计吞吐，避免被算成"线路慢"
+      _effWindowStartMs = 0; // 直播/拖动期间不计吞吐，避免被算成"线路慢"
+      return;
+    }
+    // mpv 的 cache-pause 在缓存被抽干时会把 `pause` 置真，media_kit 的 `playing`
+    // 直接由 `pause` 推导 → 此刻 playing=false，而 `buffering`（paused-for-cache）
+    // 同时为真。**这正是要测的"播 2 秒卡 4 秒"，绝不能因此重置窗口**：一重置，
+    // 每个 15 秒窗口都会被切碎，吞吐比永远算不出来，自动降画质永远不触发
+    // （v0.2.12 起那套自愈一直不生效，根因就在这里）。
+    // 判据只认 mpv 的 paused-for-cache（media_kit 把它喂给 `isBuffering`）：用户
+    // 主动暂停不会置这一位，所以不会把"暂停"误当成"线路慢"。反过来若用户关掉了
+    // cache-pause，饿死时 playing 仍为 true，上面的分支也不会拦。
+    if (!playerStatus.value.isPlaying && !isBuffering.value) {
+      _stallTicks = 0;
+      _healthyTicks = 0;
+      _effWindowStartMs = 0;
       return;
     }
     // 只有位置真正推进过（即确实开始播了）才启用判定：开播时的首次缓冲不是饿死，
