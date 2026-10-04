@@ -10,7 +10,9 @@
 </div>
 
 <div align="center">
-    <img src="assets/screenshots/main_screen.png" width="96%" alt="home" />
+    <img src="assets/screenshots/readme_zh_home.jpg" width="32%" alt="首页" />
+    <img src="assets/screenshots/readme_zh_dynamics.jpg" width="32%" alt="动态" />
+    <img src="assets/screenshots/readme_zh_mine.jpg" width="32%" alt="我的" />
 </div>
 
 <br/>
@@ -44,7 +46,7 @@ PiliBabel 保留了 **PiliNara / PiliPlus 的全部功能**（見下方[繼承�
 - **全面 AI 翻譯。** 導覽分頁、影片卡片、詳情頁、留言、動態，以及「我的／收藏／歷史／訊息／搜尋」等介面——全域掃描涵蓋**約 1,650+ 條介面字串**，並含動態內容（標題、作者名稱、互動計數）。
 - **模型自備。** 填入你自己的 OpenAI 相容端點（`/chat/completions`）的網址／API 金鑰／模型即可。AI 影片摘要與 AI 翻譯兩者擁有**完全獨立**的端點與設定，統一收在一個「**AI 功能**」頁面下。
 - **只翻一次，翻完即固定。** 每條原文**僅翻譯一次**，結果落地快取、重開畫面**絕不重翻**——與官方客戶端同原理，翻譯穩定且可預期。
-- **選擇 App 語言。** 預設為簡體中文。約 35 種語言，包含English、日本語、한국어、Français、Deutsch、Español、Italiano、Русский、ไทย、Tiếng Việt、Bahasa Melayu／Bahasa Indonesia、Filipino、Türkçe、العربية、עברית、བོད་སྐད་、Монгол хэл、ئۇيغۇرچە、Vahcuengh、简体粤语、繁體粵語、吳語、大陆闽南语、臺灣閩南語等。
+- **選擇 App 語言。** 預設為簡體中文。約 35 種語言，包含 English、日本語、한국어、Français、Deutsch、Español、Italiano、Русский、ไทย、Tiếng Việt、Bahasa Melayu／Bahasa Indonesia、Filipino、Türkçe、العربية、עברית、བོད་སྐད་、Монгол хэл、ئۇيغۇرچە、Vahcuengh、粵語、以上海話為基底並參考蘇州話的吳語、閩南語等。只有簡體中文作為原文語言時不呼叫 API；繁體中文及所有方言目標都正常翻譯。
 - **逐則留言的「原文 ⇄ 譯文」切換**（一個小圖示，不用中文詞）。`@提及 / [表情] / #話題# / 連結` 會作為 token 保留，**含超連結的留言也能翻譯且連結維持可點擊**。
 - **彈幕翻譯**——播放器右上角控制列的獨立開關，**預設關閉**，開啟前需確認（確認文案本身也會翻譯）。開啟後，播放頭之後約 **15 秒**視窗內的彈幕會**分批預先翻譯**（拖曳到影片中段也能正確處理，而非從頭算起），滑入時譯文多半已就緒。
 - **思考模式開關**（`enable_thinking`）供品質／速度取捨，設定裡並有**「測試翻譯」**與**清空快取**按鈕。
@@ -59,7 +61,7 @@ PiliBabel 保留了 **PiliNara / PiliPlus 的全部功能**（見下方[繼承�
 1. **全域查詞包裝。** `lib/services/ui_translate/` 暴露頂層函式 `uiTx(String src)`。原本 `Text('中文')` 變成 `Text(uiTx('中文'))`。透過腳本 **codemod**（`tool/ui_translate_*.py`）對全專案套用——約 **223 個檔案 / 1,650+ 條字串**——並在必要處自動移除因而失效的 `const`（含泛型 `const X<T>(...)`、點號名 `const Positioned.fill(...)`，以及把 `static const` 的清單／映射宣告改成 `static final`）。
 2. **`GetxService` 核心**（`ui_translate_service.dart`）：
    - 持久的**原文 → 譯文**快取（以 GetStorage 支撐），每條字串只翻一次並永久複用；
-   - `tx()` 先讀 `RxInt revision`，再決定：未啟用→回傳原文；若目標為中文變體 **且** 字串本身就像中文（`_looksChinese()` 比對 CJK 表意字與拉丁／假名／諺文／西里爾／阿拉伯／希伯來／泰文字母，外文字母比例低於約 25% 即跳過）→回傳原文；否則走快取或**入佇列**；
+   - `tx()` 先讀 `RxInt revision`，再決定：未啟用→回傳原文；目標為**簡體中文（`zh-CN`）**時，直接回傳原文且不呼叫 API（Bilibili 原文絕大多數是簡體中文）；其餘目標語言——包括繁體中文、粵語、吳語／上海話、閩南語——都照常呼叫已設定的 API。是否屬於「中文家族」不再作為跳過翻譯的判斷；否則走快取或**入佇列**；
    - 佇列由 **worker 執行池**處理，**逐塊遞迴套用**（每塊一返回即提升 `revision`，讓譯文漸進出現；批次 ≤ 16、併發 ≤ 10），結果**節流持久化**。
 3. **傳輸通道**沿用與 AI 影片摘要同一條已驗證的**串流**通道——`AiChatService.streamChat` → `{base}/chat/completions`（`stream: true`，相容僅支援串流的閘道）——並擴充讓翻譯能用**自己**的 `apiUrl` / `apiKey` / `model` 與 `enable_thinking` 旗標。此改動**向後相容**，影片摘要照常運作。
 4. **含變數的句子**走 `uiTxP(template, args)`：把帶 `{0}`/`{1}` 佔位符的整句作為一個穩定 key 送翻譯（提示詞要求保留佔位符），再把值回填——像 `共 {0} 條` 這種句子也能翻，且不動變數部分。

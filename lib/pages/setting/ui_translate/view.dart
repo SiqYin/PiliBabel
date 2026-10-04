@@ -7,6 +7,8 @@ import 'package:get/get.dart';
 
 /// 统一「AI 功能」一级设置页。
 /// 「AI 视频总结」与「AI 界面翻译」各自使用独立的接口地址 / 密钥 / 模型。
+/// 目标语言选择器使用不透明、可滚动的对话框，避免长语言列表覆盖下面的 API Key 输入框；
+/// 语言名称以各自原名显示，不送入模型翻译，防止编号批次提示词污染选项标签。
 class UiTranslateSettingPage extends StatelessWidget {
   const UiTranslateSettingPage({super.key, this.showAppBar = true});
 
@@ -25,209 +27,218 @@ class UiTranslateSettingPage extends StatelessWidget {
       body: Obx(() {
         UiTranslateService.to.revision.value;
         return ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        children: [
-          // ================= AI 视频总结 =================
-          _sectionTitle(theme, 'AI 视频总结'),
-          Obx(
-            () => SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(uiTx('启用视频总结助手')),
-              subtitle: Text(uiTx('在视频详情页用 AI 生成字幕分析/总结')),
-              value: controller.enableAiChat.value,
-              onChanged: (v) {
-                controller.enableAiChat.value = v;
-                Pref.enableAiChat = v;
-              },
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          children: [
+            // ================= AI 视频总结 =================
+            _sectionTitle(theme, 'AI 视频总结'),
+            Obx(
+              () => SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(uiTx('启用视频总结助手')),
+                subtitle: Text(uiTx('在视频详情页用 AI 生成字幕分析/总结')),
+                value: controller.enableAiChat.value,
+                onChanged: (v) {
+                  controller.enableAiChat.value = v;
+                  Pref.enableAiChat = v;
+                },
+              ),
             ),
-          ),
-          _ApiFields(
-            urlCtl: controller.apiUrlCtl,
-            keyCtl: controller.apiKeyCtl,
-            onUrl: controller.saveApiUrl,
-            onKey: controller.saveApiKey,
-          ),
-          _ModelPicker(
-            label: '视频总结模型',
-            list: controller.modelList,
-            current: controller.model,
-            manualCtl: controller.modelCtl,
-            loading: controller.isLoadingModels,
-            onSelect: controller.saveModel,
-            onFetch: controller.fetchModels,
-          ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.tune),
-            title: Text(uiTx('提示词模板')),
-            subtitle: Text(uiTx('管理视频总结的提示词模板')),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => Get.toNamed('/aiSetting'),
-          ),
-          const SizedBox(height: 24),
+            _ApiFields(
+              urlCtl: controller.apiUrlCtl,
+              keyCtl: controller.apiKeyCtl,
+              onUrl: controller.saveApiUrl,
+              onKey: controller.saveApiKey,
+            ),
+            _ModelPicker(
+              label: '视频总结模型',
+              list: controller.modelList,
+              current: controller.model,
+              manualCtl: controller.modelCtl,
+              loading: controller.isLoadingModels,
+              onSelect: controller.saveModel,
+              onFetch: controller.fetchModels,
+            ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.tune),
+              title: Text(uiTx('提示词模板')),
+              subtitle: Text(uiTx('管理视频总结的提示词模板')),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Get.toNamed('/aiSetting'),
+            ),
+            const SizedBox(height: 24),
 
-          // ================= AI 界面翻译 =================
-          _sectionTitle(theme, 'AI 界面翻译'),
-          Obx(
-            () => SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(uiTx('启用 AI 翻译')),
-              subtitle: Text(uiTx('将界面与外文内容翻译为所选应用语言')),
-              value: controller.uiTranslateEnabled.value,
-              onChanged: controller.saveUiTranslateEnabled,
+            // ================= AI 界面翻译 =================
+            _sectionTitle(theme, 'AI 界面翻译'),
+            Obx(
+              () => SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(uiTx('启用 AI 翻译')),
+                subtitle: Text(uiTx('将界面与外文内容翻译为所选应用语言')),
+                value: controller.uiTranslateEnabled.value,
+                onChanged: controller.saveUiTranslateEnabled,
+              ),
             ),
-          ),
-          Obx(() {
-            final lang = appLanguageByCode(controller.uiTranslateLang.value);
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                DropdownButtonFormField<String>(
-                  // ignore: deprecated_member_use
-                  value: lang.code,
-                  isExpanded: true,
-                  items: appLanguages
-                      .map(
-                        (e) => DropdownMenuItem(
-                          value: e.code,
-                          child: Text(uiTx(e.name)),
-                        ),
-                      )
-                      .toList(),
-                  decoration: InputDecoration(
-                    labelText: uiTx('选择应用语言'),
-                    border: const OutlineInputBorder(),
-                    isDense: true,
-                    prefixIcon: const Icon(Icons.translate),
+            Obx(() {
+              final lang = appLanguageByCode(controller.uiTranslateLang.value);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // 用独立的滚动对话框而不是 DropdownButtonFormField：语言选项很多，
+                  // 原生 dropdown 在屏幕底部会透出/压住下方 API Key 输入框（用户截图
+                  // 中看到的重叠问题）。AlertDialog 自带不透明 Material 面板和独立滚动区。
+                  InputDecorator(
+                    decoration: InputDecoration(
+                      labelText: uiTx('选择应用语言'),
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                      prefixIcon: const Icon(Icons.translate),
+                      suffixIcon: const Icon(Icons.arrow_drop_down),
+                    ),
+                    child: InkWell(
+                      onTap: () async {
+                        final selected = await _showAppLanguagePicker(
+                          context,
+                          lang.code,
+                        );
+                        if (selected != null) {
+                          controller.saveUiTranslateLang(selected);
+                        }
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        // Language names are autonyms/identifiers, not UI copy.
+                        // Do not send them through AI translation: numbered batch
+                        // prompts can leak list indices into the rendered labels.
+                        child: Text(lang.name),
+                      ),
+                    ),
                   ),
-                  onChanged: (v) {
-                    if (v != null) controller.saveUiTranslateLang(v);
-                  },
+                  const SizedBox(height: 6),
+                  Text(
+                    lang.code == 'zh-CN'
+                        ? uiTx(
+                            '当前是原文语言（简体中文）：不调用你配置的 API。'
+                            '评论区外文可点每条评论下的「翻译」，走 B 站自带的免费翻译。',
+                          )
+                        : uiTx(
+                            '简体中文以外的语言（含繁體中文、粤语、吴语、闽南语等）'
+                            '都会调用下方配置的 API 翻译。',
+                          ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.outline,
+                    ),
+                  ),
+                ],
+              );
+            }),
+            const SizedBox(height: 12),
+            _ApiFields(
+              urlCtl: controller.translateApiUrlCtl,
+              keyCtl: controller.translateApiKeyCtl,
+              onUrl: controller.saveTranslateApiUrl,
+              onKey: controller.saveTranslateApiKey,
+            ),
+            _ModelPicker(
+              label: '翻译模型',
+              list: controller.translateModelList,
+              current: controller.translateModel,
+              manualCtl: controller.translateModelCtl,
+              loading: controller.isLoadingTranslateModels,
+              onSelect: controller.saveTranslateModel,
+              onFetch: controller.fetchTranslateModels,
+            ),
+            const SizedBox(height: 4),
+            Obx(
+              () => SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(uiTx('思考模式')),
+                subtitle: Text(
+                  controller.thinking.value
+                      ? uiTx('启用推理，翻译更准但可能更慢')
+                      : uiTx('关闭推理，出结果更快（推荐）'),
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  lang.code == 'zh-CN'
-                      ? uiTx(
-                          '当前是原文语言（简体中文）：不调用你配置的 API。'
-                          '评论区外文可点每条评论下的「翻译」，走 B 站自带的免费翻译。',
-                        )
-                      : uiTx(
-                          '简体中文以外的语言（含繁體中文、粤语、吴语、闽南语等）'
-                          '都会调用下方配置的 API 翻译。',
-                        ),
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: colorScheme.outline,
+                value: controller.thinking.value,
+                onChanged: controller.saveThinking,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(
+                  child: Obx(
+                    () => FilledButton.tonalIcon(
+                      icon: controller.isTesting.value
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.bolt, size: 18),
+                      label: Text(uiTx('测试翻译')),
+                      onPressed: controller.isTesting.value
+                          ? null
+                          : controller.testTranslate,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.delete_sweep, size: 18),
+                    label: Text(uiTx('清空缓存')),
+                    onPressed: controller.clearTranslateCache,
                   ),
                 ),
               ],
-            );
-          }),
-          const SizedBox(height: 12),
-          _ApiFields(
-            urlCtl: controller.translateApiUrlCtl,
-            keyCtl: controller.translateApiKeyCtl,
-            onUrl: controller.saveTranslateApiUrl,
-            onKey: controller.saveTranslateApiKey,
-          ),
-          _ModelPicker(
-            label: '翻译模型',
-            list: controller.translateModelList,
-            current: controller.translateModel,
-            manualCtl: controller.translateModelCtl,
-            loading: controller.isLoadingTranslateModels,
-            onSelect: controller.saveTranslateModel,
-            onFetch: controller.fetchTranslateModels,
-          ),
-          const SizedBox(height: 4),
-          Obx(
-            () => SwitchListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(uiTx('思考模式')),
-              subtitle: Text(
-                controller.thinking.value
-                    ? uiTx('启用推理，翻译更准但可能更慢')
-                    : uiTx('关闭推理，出结果更快（推荐）'),
-              ),
-              value: controller.thinking.value,
-              onChanged: controller.saveThinking,
             ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: Obx(
-                  () => FilledButton.tonalIcon(
-                    icon: controller.isTesting.value
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.bolt, size: 18),
-                    label: Text(uiTx('测试翻译')),
-                    onPressed: controller.isTesting.value
-                        ? null
-                        : controller.testTranslate,
+            Obx(() {
+              final err = Get.isRegistered<UiTranslateService>()
+                  ? UiTranslateService.to.lastError.value
+                  : null;
+              if (err == null) return const SizedBox.shrink();
+              return Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  uiTx('最近错误：$err'),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.error,
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.delete_sweep, size: 18),
-                  label: Text(uiTx('清空缓存')),
-                  onPressed: controller.clearTranslateCache,
-                ),
-              ),
-            ],
-          ),
-          Obx(() {
-            final err = Get.isRegistered<UiTranslateService>()
-                ? UiTranslateService.to.lastError.value
-                : null;
-            if (err == null) return const SizedBox.shrink();
-            return Padding(
-              padding: const EdgeInsets.only(top: 6),
-              child: Text(uiTx('最近错误：$err'),
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: colorScheme.error,
-                ),
-              ),
-            );
-          }),
-          const SizedBox(height: 24),
+              );
+            }),
+            const SizedBox(height: 24),
 
-          Card(
-            color: colorScheme.surfaceContainerHighest,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    uiTx('使用说明'),
-                    style: theme.textTheme.titleSmall?.copyWith(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.bold,
+            Card(
+              color: colorScheme.surfaceContainerHighest,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      uiTx('使用说明'),
+                      style: theme.textTheme.titleSmall?.copyWith(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    uiTx(
-                      '• 视频总结与界面翻译各自配置独立的接口地址/Key/模型，互不影响\n'
-                      '• 应用语言默认简体中文：只把外文自动译成中文，中文内容不动\n'
-                      '• 选择其它语言即把界面与内容整体翻译为该语言（需配置翻译 API）\n'
-                      '• 每条只翻译一次并本地持久固定，切换语言会清缓存重翻',
+                    const SizedBox(height: 8),
+                    Text(
+                      uiTx(
+                        '• 视频总结与界面翻译各自配置独立的接口地址/Key/模型，互不影响\n'
+                        '• 应用语言默认简体中文：只把外文自动译成中文，中文内容不动\n'
+                        '• 选择其它语言即把界面与内容整体翻译为该语言（需配置翻译 API）\n'
+                        '• 每条只翻译一次并本地持久固定，切换语言会清缓存重翻',
+                      ),
+                      style: theme.textTheme.bodySmall,
                     ),
-                    style: theme.textTheme.bodySmall,
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          const SizedBox(height: 100),
-        ],
+            const SizedBox(height: 100),
+          ],
         );
       }),
     );
@@ -236,6 +247,50 @@ class UiTranslateSettingPage extends StatelessWidget {
   Widget _sectionTitle(ThemeData theme, String text) => Padding(
     padding: const EdgeInsets.only(bottom: 8, top: 2),
     child: Text(uiTx(text), style: theme.textTheme.titleMedium),
+  );
+}
+
+Future<String?> _showAppLanguagePicker(
+  BuildContext context,
+  String selectedCode,
+) {
+  return showDialog<String>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: Obx(() {
+        UiTranslateService.to.revision.value;
+        return Text(uiTx('选择应用语言'));
+      }),
+      content: SizedBox(
+        width: double.maxFinite,
+        height: MediaQuery.sizeOf(dialogContext).height * 0.62,
+        child: ListView.builder(
+          itemCount: appLanguages.length,
+          itemBuilder: (context, index) {
+            final language = appLanguages[index];
+            final selected = language.code == selectedCode;
+            // Language names are autonyms; keep them literal instead of asking
+            // the selected target language to translate the language selector.
+            return ListTile(
+              dense: true,
+              selected: selected,
+              title: Text(language.name),
+              trailing: selected ? const Icon(Icons.check) : null,
+              onTap: () => Navigator.pop(dialogContext, language.code),
+            );
+          },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: Obx(() {
+            UiTranslateService.to.revision.value;
+            return Text(uiTx('取消'));
+          }),
+        ),
+      ],
+    ),
   );
 }
 
