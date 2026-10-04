@@ -231,6 +231,10 @@ abstract final class VideoHttp {
     required VideoType videoType,
     String? language,
     bool voiceBalance = false,
+    // 调用方必须确认自己的媒体请求指纹与 APP 令牌匹配（APP 令牌要求**不带**
+    // Referer）。下载器与 CDN 测速都固定用「Safari UA + Referer」发请求、
+    // 而且都会改写主机，只能吃 Web 令牌，所以它们传 false。
+    bool allowAppSource = true,
   }) async {
     // 直链改走**官方 APP 同源**（gRPC PlayView）。
     //
@@ -241,6 +245,7 @@ abstract final class VideoHttp {
     // 触发条件：UGC + 开关打开 + 拿得到 aid。另外「免登录 1080P」是靠 Web 端
     // 的 try_look 实现的，未登录时保持原样走 Web。
     final canUseAppSource =
+        allowAppSource &&
         Pref.useAppPlayUrl &&
         videoType == .ugc &&
         (avid != null || bvid != null) &&

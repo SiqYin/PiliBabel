@@ -89,6 +89,9 @@ class CdnSpeedTester {
       qn: VideoQuality.high1080.code,
       tryLook: false,
       videoType: VideoType.ugc,
+      // 测速要按节点改写主机、且固定用「Safari UA + Referer」请求，
+      // 只能吃 Web 令牌（APP 令牌不允许改写主机、也不允许带 Referer）
+      allowAppSource: false,
     );
     final item = result.dataOrNull?.dash?.video?.first;
     if (item == null) throw Exception('无法获取视频流');

@@ -57,6 +57,9 @@ abstract final class DownloadHttp {
         != null when isLogin => VideoType.pgc,
         _ => VideoType.ugc,
       },
+      // 下载器固定用「Safari UA + Referer」发媒体请求（见 download_manager），
+      // 而且会改写主机做海外候选 —— 只能吃 Web 令牌，APP 令牌会 403。
+      allowAppSource: false,
     );
     if (res case Success(:final response)) {
       final dash = response.dash;
