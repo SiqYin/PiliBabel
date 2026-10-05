@@ -632,35 +632,6 @@ class _MediaPageState extends CommonPageState<MinePage>
             icon: const Icon(Icons.refresh, size: 20),
           ),
         ),
-        // 专栏投稿：B站 APP 端没有创建文章的接口，只能跳官方创作后台
-        // （详见 ArticlePublishPage 的说明）。
-        ListTile(
-          onTap: () => Get.toNamed('/articlePublish'),
-          dense: true,
-          title: Padding(
-            padding: const EdgeInsets.only(left: 10),
-            child: Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(
-                    text: uiTx('专栏投稿  '),
-                    style: TextStyle(
-                      fontSize: theme.textTheme.titleMedium!.fontSize,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  WidgetSpan(
-                    child: Icon(
-                      Icons.arrow_forward_ios,
-                      size: 18,
-                      color: secondary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
         _buildHistoryBody(
           theme,
           secondary,

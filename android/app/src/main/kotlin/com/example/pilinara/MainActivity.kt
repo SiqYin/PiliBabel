@@ -1,5 +1,6 @@
 package com.example.pilinara
 
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.net.wifi.WifiManager
@@ -26,14 +27,19 @@ class MainActivity : AudioServiceActivity() {
     private fun acquireMulticastLock(): Boolean {
         if (multicastLock?.isHeld == true) return true
         return try {
-            val wifiManager =
-                applicationContext.getSystemService(WIFI_SERVICE) as? WifiManager
-                    ?: return false
-            multicastLock = wifiManager.createMulticastLock("pili-dlna").apply {
-                setReferenceCounted(false)
-                acquire()
+            // 用 Context.WIFI_SERVICE 常量而不是裸 WIFI_SERVICE：Kotlin 不继承
+            // Java 的静态成员，未限定名能否解析取决于编译器，限定写法一定成立。
+            val wifiManager = applicationContext
+                .getSystemService(Context.WIFI_SERVICE) as? WifiManager
+            if (wifiManager == null) {
+                false
+            } else {
+                multicastLock = wifiManager.createMulticastLock("pili-dlna").apply {
+                    setReferenceCounted(false)
+                    acquire()
+                }
+                true
             }
-            true
         } catch (_: Throwable) {
             // 拿不到锁不应让应用崩溃；投屏会搜不到设备，但其余功能正常。
             multicastLock = null
