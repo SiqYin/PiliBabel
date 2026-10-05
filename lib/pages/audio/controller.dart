@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+
 import 'dart:async';
 import 'dart:io' show Platform;
 
@@ -19,6 +20,7 @@ import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/audio_normalization.dart';
+import 'package:PiliPlus/models/common/video/audio_quality.dart';
 import 'package:PiliPlus/models/video/play/url.dart' as http_model show Volume;
 import 'package:PiliPlus/pages/common/common_intro_controller.dart'
     show FavMixin;
@@ -79,6 +81,31 @@ class AudioController extends GetxController
   @override
   Player? player;
   late int cacheAudioQa;
+
+  /// 当前播放 URL 的令牌来源，决定媒体请求指纹。
+  ///
+  /// 音频 URL 有两个来源，指纹要求正好相反（实测，弄错必 403）：
+  ///
+  /// * [TokenOrigin.app]——由本页 gRPC `bilibili.app.listener.v1.Listener/PlayURL`
+  ///   自取流，或从视频页跳转时透传的视频页 `audioUrl`（视频页自己也是 gRPC
+  ///   `PlayView` 的 APP 同源直链）。要**不带** Referer，UA 用官方 APP 的。
+  /// * [TokenOrigin.web]——`/x/player/wbi/playurl` 的 Web 令牌。要
+  ///   `Referer: https://www.bilibili.com`，且 `upos-*-mirror*ov` 这类海外主机
+  ///   只认 Safari/macOS 的 UA。
+  ///
+  /// 之前这里无论来源一律用 Web 指纹，导致 APP 令牌被带上非空 Referer，
+  /// CDN 直接 403 ——表现就是听视频加载不出来、进度条时长恒为 00:00。
+  _TokenOrigin _tokenOrigin = _TokenOrigin.app;
+
+  /// 本次取流拿到的全部音频轨道。音质切换靠它在同一批轨道里换 id 重新起播，
+  /// 不必重新取流——与官方听视频的音质切换行为一致。
+  ///
+  /// 包成 Rx 是为了让音质面板能在取流完成后自动出现：durl 源下这里会被清空，
+  /// 面板随即消失。取流不是每次都发生，但 UI 必须跟着变。
+  final RxList<AudioQuality> availableAudioQualities = <AudioQuality>[].obs;
+
+  /// 当前选中的音质。
+  final Rx<AudioQuality> currentAudioQa = Pref.defaultAudioQuality.obs;
 
   late bool isDragging = false;
   final RxInt position = RxInt(0);
@@ -163,10 +190,19 @@ class AudioController extends GetxController
     final hasAudioUrl = audioUrl != null;
     if (hasAudioUrl) {
       _querySponsorBlock();
+      // 视频页已按它选好轨道并传了音质码，这里对齐显示，否则面板会显示
+      // 默认音质而实际播的是另一档。
+      if (args['audioQa'] case final int qaCode) {
+        currentAudioQa.value = AudioQuality.values.firstWhere(
+          (e) => e.code == qaCode,
+          orElse: () => Pref.defaultAudioQuality,
+        );
+      }
+      // 视频页透传过来的 audioUrl 来自 gRPC PlayView 的 APP 同源直链，
+      // 必须按 APP 指纹请求（APP UA + 不发 Referer），不能用 Web 指纹。
       _onOpenMedia(
         audioUrl,
-        ua: BrowserUa.pc,
-        referer: HttpString.baseUrl,
+        tokenOrigin: _TokenOrigin.app,
         volume: _videoDetailController?.volume,
       );
     }
@@ -320,68 +356,161 @@ class AudioController extends GetxController
       subId: subId,
     );
     if (res case Success(:final response)) {
-      _onPlay(response);
-      return true;
+      // 必须回传解析结果：之前这里无条件 return true，导致取流失败被上层
+      // playIndex/playNext 当成成功，继续跑后续状态更新。
+      return _onPlay(response);
     } else {
       res.toast();
       return false;
     }
   }
 
-  void _onPlay(PlayURLResp data) {
+  /// 解析取流响应并起播。返回是否真的拿到了可播放的地址。
+  ///
+  /// 原来这里对 playInfo 为空 / audios 为空 / durls 为空三种情况都是静默
+  /// `return`，而 [_queryPlayUrl] 无论解析成败都 `return true`，于是失败被
+  /// 完全吞掉：界面 player 已建但 duration 永远是 0，显示 00:00，用户看不到
+  /// 任何错误。现在逐个分支都明确反馈。
+  bool _onPlay(PlayURLResp data) {
     final PlayInfo? playInfo = data.playerInfo.values.firstOrNull;
-    if (playInfo != null) {
-      http_model.Volume? volume;
-      if (playInfo.hasVolume()) {
-        final volumeInfo = playInfo.volume;
-        volume = http_model.Volume(
-          measuredI: volumeInfo.measuredI,
-          measuredLra: volumeInfo.measuredLra,
-          measuredTp: volumeInfo.measuredTp,
-          measuredThreshold: volumeInfo.measuredThreshold,
-          targetOffset: volumeInfo.targetOffset,
-          targetI: volumeInfo.targetI,
-          targetTp: volumeInfo.targetTp,
-        );
+    if (playInfo == null) {
+      SmartDialog.showToast(uiTx('音频取流失败：未返回可播放信息'));
+      return false;
+    }
+    http_model.Volume? volume;
+    if (playInfo.hasVolume()) {
+      final volumeInfo = playInfo.volume;
+      volume = http_model.Volume(
+        measuredI: volumeInfo.measuredI,
+        measuredLra: volumeInfo.measuredLra,
+        measuredTp: volumeInfo.measuredTp,
+        measuredThreshold: volumeInfo.measuredThreshold,
+        targetOffset: volumeInfo.targetOffset,
+        targetI: volumeInfo.targetI,
+        targetTp: volumeInfo.targetTp,
+      );
+    }
+    if (playInfo.hasPlayDash()) {
+      final playDash = playInfo.playDash;
+      final audios = playDash.audio;
+      if (audios.isEmpty) {
+        SmartDialog.showToast(uiTx('音频取流失败：未返回音频轨道'));
+        return false;
       }
-      if (playInfo.hasPlayDash()) {
-        final playDash = playInfo.playDash;
-        final audios = playDash.audio;
-        if (audios.isEmpty) {
-          return;
-        }
-        position.value = 0;
-        final audio = audios.findClosestTarget(
-          (e) => e.id <= cacheAudioQa,
-          (a, b) => a.id > b.id ? a : b,
-        );
-        _onOpenMedia(VideoUtils.getCdnUrl(audio.playUrls), volume: volume);
-      } else if (playInfo.hasPlayUrl()) {
-        final playUrl = playInfo.playUrl;
-        final durls = playUrl.durl;
-        if (durls.isEmpty) {
-          return;
-        }
-        final durl = durls.first;
-        position.value = 0;
-        _onOpenMedia(VideoUtils.getCdnUrl(durl.playUrls), volume: volume);
+      // 服务端直接给了总时长，先填上。这样即使后续起播失败，界面也能显示真实
+      // 时长而不是 00:00 —— 之前 duration 只等mpv 的 stream.duration 事件，
+      // 一旦CDN 403 就永远是 0。
+      if (playDash.duration > 0) {
+        duration.value = playDash.duration;
       }
+      // 记下整批轨道，供音质切换时直接换轨道重播，不再二次取流。
+      _audios = List.of(audios);
+      _refreshAvailableQualities();
+      final audio = _pickAudioTrack(cacheAudioQa);
+      // listener gRPC 与视频 PlayView 同为 APP 同源直链，令牌与主机、指纹绑定，
+      // 必须按官方下发顺序直接用第一条，不能挑海外候选或改写主机（v0.1.8 教训）。
+      _onOpenMedia(
+        VideoUtils.getCdnUrl(audio.playUrls, nativeOrder: true),
+        tokenOrigin: _TokenOrigin.app,
+        volume: volume,
+      );
+      return true;
+    } else if (playInfo.hasPlayUrl()) {
+      final playUrl = playInfo.playUrl;
+      final durls = playUrl.durl;
+      if (durls.isEmpty) {
+        SmartDialog.showToast(uiTx('音频取流失败：未返回音频地址'));
+        return false;
+      }
+      final durl = durls.first;
+      position.value = 0;
+      // durl 是单文件、不可再切音质，清空轨道列表让面板回到不可选状态。
+      _audios = const [];
+      availableAudioQualities.clear();
+      _onOpenMedia(
+        VideoUtils.getCdnUrl(durl.playUrls, nativeOrder: true),
+        tokenOrigin: _TokenOrigin.app,
+        volume: volume,
+      );
+      return true;
+    }
+    SmartDialog.showToast(uiTx('音频取流失败：返回格式不受支持'));
+    return false;
+  }
+
+  /// 在可用轨道里挑不高于 [target] 的最高音质；全都高于 [target] 时退到全局兜底
+  /// （[IterableExt.findClosestTarget] 内部 `?? reduce`），不会返回空。
+  DashItem _pickAudioTrack(int target) {
+    return _audios.findClosestTarget(
+      (e) => e.id <= target,
+      (a, b) => a.id > b.id ? a : b,
+    );
+  }
+
+  /// 依据当前这批轨道刷新可切换的音质列表（UI 读它决定显示哪几档）。
+  void _refreshAvailableQualities() {
+    final ids = _audios.map((e) => e.id).toSet();
+    final list = AudioQuality.values.where((e) => ids.contains(e.code)).toList()
+      ..sort((a, b) => b.code.compareTo(a.code));
+    availableAudioQualities.assignAll(list);
+    // 预设为最高可用档，与官方「进页面即给最好音质」一致；用户改过则沿用。
+    if (list.isNotEmpty) {
+      final want = Pref.defaultAudioQa;
+      currentAudioQa.value = list.firstWhere(
+        (e) => e.code == want,
+        orElse: () => list.first,
+      );
+    }
+  }
+
+  bool get canSwitchAudioQa => availableAudioQualities.length > 1;
+
+  /// 切换音质：在同一批 DASH 轨道里换一条重播，保持播放位置。
+  ///
+  /// 官方听视频的音质切换同样只换轨道、不重新取流。切换后保留当前进度，
+  /// 避免每次切音质都从头开始。
+  Future<void> setAudioQa(AudioQuality qa) async {
+    if (qa == currentAudioQa.value) return;
+    if (_audios.isEmpty) {
+      SmartDialog.showToast(uiTx('当前音源不支持切换音质'));
+      return;
+    }
+    final track = _audios.where((e) => e.id == qa.code).firstOrNull;
+    if (track == null) {
+      SmartDialog.showToast(uiTx('该音质不可用'));
+      return;
+    }
+    final resumeAt = position.value;
+    currentAudioQa.value = qa;
+    Pref.setDefaultAudioQuality(qa);
+    await _onOpenMedia(
+      VideoUtils.getCdnUrl(track.playUrls, nativeOrder: true),
+      tokenOrigin: _tokenOrigin,
+    );
+    if (resumeAt > 0) {
+      // 不同音质轨的时长可能有微小差异，seek 前确认媒体已就绪
+      await Future.delayed(const Duration(milliseconds: 200));
+      onSeek(Duration(seconds: resumeAt));
     }
   }
 
   Future<void> _onOpenMedia(
     String url, {
-    String ua = Constants.userAgentApp,
-    String? referer,
+    _TokenOrigin tokenOrigin = _TokenOrigin.app,
     http_model.Volume? volume,
   }) async {
     await _initPlayerIfNeeded();
     final extras = audioFilterExtras(volume);
+    _tokenOrigin = tokenOrigin;
+    final isApp = tokenOrigin == _TokenOrigin.app;
     player
       ?..setMediaHeader(
-        userAgent: ua,
-        // mpv cannot clear referer option
-        headers: {'Referer': ?referer},
+        // APP 令牌用官方 APP 的 UA；Web 令牌用 Safari UA——upos 的海外主机
+        // （upos-*-mirror*ov）只认 Safari/macOS，其他 UA 一律 403。
+        userAgent: isApp ? Constants.userAgent : BrowserUa.pc,
+        // mpv 无法清除 referer 选项，所以 APP 令牌这里传空字符串而不是 null：
+        // 空值等于「不发 Referer」，正是 APP 同源直链要求的指纹。
+        referer: isApp ? '' : HttpString.baseUrl,
       )
       ..open(Media(url, start: _start, extras: extras));
     _start = null;
@@ -625,10 +754,7 @@ class AudioController extends GetxController
             child: Text(uiTx('分享视频'), style: TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
-              if (audioItem.value case DetailItem(
-                :final arc,
-                :final owner,
-              )) {
+              if (audioItem.value case DetailItem(:final arc, :final owner)) {
                 ShareUtils.shareText(
                   '${arc.title} '
                   'UP主: ${owner.name}'
@@ -642,10 +768,7 @@ class AudioController extends GetxController
               child: Text(uiTx('分享至动态'), style: TextStyle(fontSize: 14)),
               onPressed: () {
                 Get.back();
-                if (audioItem.value case DetailItem(
-                  :final arc,
-                  :final owner,
-                )) {
+                if (audioItem.value case DetailItem(:final arc, :final owner)) {
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
@@ -666,10 +789,7 @@ class AudioController extends GetxController
               child: Text(uiTx('分享至消息'), style: TextStyle(fontSize: 14)),
               onPressed: () {
                 Get.back();
-                if (audioItem.value case DetailItem(
-                  :final arc,
-                  :final owner,
-                )) {
+                if (audioItem.value case DetailItem(:final arc, :final owner)) {
                   try {
                     PageUtils.pmShare(
                       context,
@@ -843,6 +963,15 @@ class AudioController extends GetxController
     animController.dispose();
     super.onClose();
   }
+}
+
+/// 直链令牌的签发来源，决定媒体请求指纹。见 [_TokenOrigin] 的说明。
+enum _TokenOrigin {
+  /// 官方 APP 同源直链（gRPC `Listener/PlayURL` 或 `PlayView`）。
+  app,
+
+  /// Web 令牌（`/x/player/wbi/playurl`）。
+  web,
 }
 
 extension on DashItem {

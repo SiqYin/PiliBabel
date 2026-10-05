@@ -451,6 +451,20 @@ abstract final class Pref {
     defaultValue: AudioQuality.hiRes.code,
   );
 
+  /// 听视频的默认音质（枚举形式）。存档里的码率若已不是合法档位，回退到无损。
+  static AudioQuality get defaultAudioQuality {
+    final code = defaultAudioQa;
+    return AudioQuality.values.firstWhere(
+      (e) => e.code == code,
+      orElse: () => AudioQuality.hiRes,
+    );
+  }
+
+  /// 记住用户在听视频里手动选的音质，下次进入沿用。
+  static Future<void> setDefaultAudioQuality(AudioQuality qa) async {
+    await _setting.put(SettingBoxKey.defaultAudioQa, qa.code);
+  }
+
   static int get defaultAudioQaCellular => _setting.get(
     SettingBoxKey.defaultAudioQaCellular,
     defaultValue: AudioQuality.k192.code,
