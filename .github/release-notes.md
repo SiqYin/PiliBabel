@@ -1,3 +1,13 @@
+### PiliBabel v0.3.5
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+**What's new in 0.3.5**
+- **投屏 (Cast) can now find devices on Android.** Tapping cast used to spin for 20 seconds and then report «no devices», every time. Since Android 7.0 the Wi-Fi driver discards all multicast and broadcast frames unless the app holds a `MulticastLock` — and PiliBabel neither declared `CHANGE_WIFI_MULTICAST_STATE` nor took the lock, so the SSDP search never even left the phone. The lock is now held for the whole time the app is in the foreground. If your network still shows nothing, the message now tells you to check that the TV has casting enabled and that both devices share one Wi-Fi — router client isolation is a common culprit.
+- **The cast screen can no longer get stuck.** A failure while starting the search used to leave the page spinning forever, with no way to retry: the search state was set before the part that could fail and was only cleared on the success path. Failures are now handled, the retry button always comes back, and a real error is reported separately from simply finding nothing. Retrying also reuses the network port, so a socket the system has not released yet can no longer make the retry itself fail.
+- **New: 专栏投稿 (publish a column article).** Available from *Me*. bilibili has no app-side interface for creating articles and its publishing API requires an account we cannot obtain, so this opens the official editor in-app with your existing login carried over, exactly like the video-note feature already does. The security check is yours to pass in the page; submitted articles go through review as usual.
+- Every new string is routed through interface translation, so the new cast messages and the whole publishing page are translated along with the rest of the app when you enable it.
+
 ### PiliBabel v0.3.4
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
