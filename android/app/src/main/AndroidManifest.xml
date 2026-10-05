@@ -250,6 +250,10 @@
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- 投屏（DLNA/SSDP）必需：Android 7.0 起 Wi-Fi 省电模式会丢弃所有组播/广播帧，
+         必须先申请这个权限（acquireMulticastLock 的前置条件），否则搜不到任何设备。
+         见 MainActivity 里持有的 MulticastLock。 -->
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />

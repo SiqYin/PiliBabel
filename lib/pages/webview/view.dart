@@ -43,6 +43,7 @@ class WebviewPage extends StatefulWidget {
     this.url,
     this.oid,
     this.title,
+    this.onArticlePublished,
   });
 
   final String? url;
@@ -50,6 +51,12 @@ class WebviewPage extends StatefulWidget {
   // note
   final int? oid;
   final String? title;
+
+  /// 专栏投稿提交成功后回调，参数是新文章的 cvid。
+  ///
+  /// 由「专栏投稿」页传入：它需要知道新文章的 id 才能回列表刷新。
+  /// 视频笔记等既有场景不传，保持原行为。
+  final void Function(int cvid)? onArticlePublished;
 
   static Future<dww.Webview?> openLinux({
     required String url,
@@ -469,6 +476,18 @@ class _WebviewPageState extends State<WebviewPage> with RouteAware {
                           }
                         }
                       },
+                    )
+                    // 专栏投稿成功：把新文章的 cvid 交回给投稿页去刷新列表。
+                    ..addJavaScriptHandler(
+                      handlerName: 'articlePublished',
+                      callback: (args) {
+                        final cvid = int.tryParse(
+                          args.isNotEmpty ? args.first.toString() : '',
+                        );
+                        if (cvid != null) {
+                          widget.onArticlePublished?.call(cvid);
+                        }
+                      },
                     );
                 },
                 onProgressChanged: (controller, progress) {
@@ -480,6 +499,42 @@ class _WebviewPageState extends State<WebviewPage> with RouteAware {
                 onCloseWindow: (controller) => Get.back(),
                 onLoadStop: (controller, uri) {
                   final url = uri.toString();
+                  // 专栏投稿：hook fetch/XHR，从提交接口的响应里取回新文章的 cvid。
+                  // B站的投稿接口是 POST /x/article/add，成功响应里带 cvid。
+                  if (widget.onArticlePublished != null &&
+                      (url.contains('member.bilibili.com/article') ||
+                          url.contains('member.bilibili.com/read'))) {
+                    controller.evaluateJavascript(
+                      source: r"""
+(function(){
+  if (window.__pilipublishHooked) return;
+  window.__pilipublishHooked = true;
+  function notify(cvid){
+    if (cvid) {
+      window.flutter_inappwebview.callHandler(
+        'articlePublished', String(cvid));
+    }
+  }
+  var origFetch = window.fetch;
+  window.fetch = function(input, init){
+    var url = typeof input === 'string' ? input : (input && input.url) || '';
+    return origFetch.apply(this, arguments).then(function(resp){
+      if (url.indexOf('/x/article/add') >= 0) {
+        try {
+          resp.clone().json().then(function(j){
+            var d = j && j.data ? j.data : {};
+            // 成功时 data.cvid 是新文章 id
+            if (j && j.code === 0 && d && d.cvid) notify(d.cvid);
+          }).catch(function(){});
+        } catch(e) {}
+      }
+      return resp;
+    });
+  };
+})();
+""",
+                    );
+                  }
                   if (url.startsWith('https://www.bilibili.com/h5/note-app')) {
                     controller
                       ..evaluateJavascript(
