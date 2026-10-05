@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
 import 'dart:ui';
 
 import 'package:PiliPlus/utils/android/bindings.g.dart';
 import 'package:PiliPlus/utils/utils.dart';
+import 'package:flutter/services.dart';
 import 'package:jni/jni.dart';
 
 abstract final class PiliAndroidHelper {
@@ -116,6 +118,34 @@ abstract final class PiliAndroidHelper {
       jUri.release();
       jLabel.release();
       jPath.release();
+    }
+  }
+
+  /// 与 MainActivity 的 MethodChannel 同名。用于那些不适合走 jnigen 生成代码的
+  /// 原生调用（jnigen 需要单独跑代码生成，CI 不会自动执行）。
+  static const MethodChannel _channel = MethodChannel('PiliNara');
+
+  /// 申请 Wi-Fi 组播锁。
+  ///
+  /// Android 7.0 起 Wi-Fi 省电模式会丢弃所有组播/广播帧，投屏（SSDP 发现）因此
+  /// 完全搜不到设备。非 Android 平台直接返回 true，因为没有这层限制。
+  static Future<bool> acquireMulticastLock() async {
+    if (!Platform.isAndroid) return true;
+    try {
+      return await _channel.invokeMethod<bool>('acquireMulticastLock') ?? false;
+    } catch (_) {
+      // 拿不到锁不应让功能崩溃，只是搜不到设备。
+      return false;
+    }
+  }
+
+  /// 释放组播锁。与 [acquireMulticastLock] 成对使用。
+  static Future<void> releaseMulticastLock() async {
+    if (!Platform.isAndroid) return;
+    try {
+      await _channel.invokeMethod<bool>('releaseMulticastLock');
+    } catch (_) {
+      // 忽略。
     }
   }
 }
