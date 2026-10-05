@@ -5,7 +5,7 @@ import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/pages/webview/view.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:desktop_webview_window/desktop_webview_window.dart' as dww;
-import 'package:get/get.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:material_ui/material_ui.dart';
 
 /// 专栏（文章）投稿。
@@ -29,20 +29,6 @@ class ArticlePublishPage extends StatefulWidget {
   static const String publishUrl =
       'https://member.bilibili.com/article/publish';
 
-  /// 打开投稿页。
-  ///
-  /// [onPublished] 在检测到提交成功时回调，参数是新文章的 cvid。
-  static Future<void> toArticlePublishPage({
-    void Function(int cvid)? onPublished,
-  }) {
-    return Get.to(
-      () => ArticlePublishPage(onPublished: onPublished),
-      routeName: '/articlePublish',
-    );
-  }
-
-  final void Function(int cvid)? onPublished;
-
   @override
   State<ArticlePublishPage> createState() => _ArticlePublishPageState();
 }
@@ -51,11 +37,23 @@ class _ArticlePublishPageState extends State<ArticlePublishPage> {
   dww.Webview? _linuxWebview;
   bool _isOpening = false;
 
+  /// 投稿提交成功（WebviewPage 从 `x/article/add` 的响应里取到了 cvid）。
+  ///
+  /// B站编辑器自己会切到成功态，这里再给一次应用内的确认，用户不必盯着网页看。
+  void _onPublished(int cvid) {
+    SmartDialog.showToast(uiTx('稿件已提交，可在创作中心查看审核进度'));
+  }
+
   Future<void> _open() async {
     if (_isOpening) return;
     // Linux 桌面端走多窗口 webview（Cookie 注入 + 独立窗口），
     // 其余平台用应用内 bottom sheet，与视频笔记完全一致。
     if (Platform.isLinux) {
+      // 已经开过就把窗口提到前面，避免点几次开出几个投稿窗口。
+      if (_linuxWebview != null) {
+        await _linuxWebview?.bringToForeground();
+        return;
+      }
       _isOpening = true;
       try {
         final webview = await WebviewPage.openLinux(
@@ -78,7 +76,7 @@ class _ArticlePublishPageState extends State<ArticlePublishPage> {
       (context) => WebviewPage(
         url: ArticlePublishPage.publishUrl,
         title: uiTx('专栏投稿'),
-        onArticlePublished: widget.onPublished,
+        onArticlePublished: _onPublished,
       ),
     );
   }

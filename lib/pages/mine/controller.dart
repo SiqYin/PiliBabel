@@ -83,6 +83,17 @@ class MineController extends CommonDataController<FavFolderData, FavFolderData>
         }
       },
     ),
+    // 专栏投稿。B站 APP 端没有创建文章的接口，只能跳官方创作后台，
+    // 详见 ArticlePublishPage 的说明。
+    (
+      icon: Icons.edit_note,
+      title: '专栏投稿',
+      onTap: () {
+        if (isLogin) {
+          Get.toNamed('/articlePublish');
+        }
+      },
+    ),
   ];
 
   @override
