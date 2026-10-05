@@ -86,10 +86,10 @@ class AudioController extends GetxController
   ///
   /// 音频 URL 有两个来源，指纹要求正好相反（实测，弄错必 403）：
   ///
-  /// * [TokenOrigin.app]——由本页 gRPC `bilibili.app.listener.v1.Listener/PlayURL`
+  /// * [_TokenOrigin.app]——由本页 gRPC `bilibili.app.listener.v1.Listener/PlayURL`
   ///   自取流，或从视频页跳转时透传的视频页 `audioUrl`（视频页自己也是 gRPC
   ///   `PlayView` 的 APP 同源直链）。要**不带** Referer，UA 用官方 APP 的。
-  /// * [TokenOrigin.web]——`/x/player/wbi/playurl` 的 Web 令牌。要
+  /// * [_TokenOrigin.web]——`/x/player/wbi/playurl` 的 Web 令牌。要
   ///   `Referer: https://www.bilibili.com`，且 `upos-*-mirror*ov` 这类海外主机
   ///   只认 Safari/macOS 的 UA。
   ///
@@ -97,12 +97,15 @@ class AudioController extends GetxController
   /// CDN 直接 403 ——表现就是听视频加载不出来、进度条时长恒为 00:00。
   _TokenOrigin _tokenOrigin = _TokenOrigin.app;
 
-  /// 本次取流拿到的全部音频轨道。音质切换靠它在同一批轨道里换 id 重新起播，
+  /// 本次取流拿到的全部音频轨道。音质切换靠它在同一批轨道里换id 重新起播，
   /// 不必重新取流——与官方听视频的音质切换行为一致。
-  ///
-  /// 包成 Rx 是为了让音质面板能在取流完成后自动出现：durl 源下这里会被清空，
-  /// 面板随即消失。取流不是每次都发生，但 UI 必须跟着变。
-  final RxList<AudioQuality> availableAudioQualities = <AudioQuality>[].obs;
+  List<DashItem> _audios = const [];
+
+  /// 当前这批轨道里实际可用的音质，供UI 显示切换面板。
+  /// durl 源下没有多轨，这里会被清空、面板随即消失；用 Rx 是因为取流不是
+  /// 每次都发生，但 UI 必须跟着变。
+  final RxList<AudioQuality> availableAudioQualities =
+      RxList<AudioQuality>();
 
   /// 当前选中的音质。
   final Rx<AudioQuality> currentAudioQa = Pref.defaultAudioQuality.obs;
@@ -452,7 +455,7 @@ class AudioController extends GetxController
     final ids = _audios.map((e) => e.id).toSet();
     final list = AudioQuality.values.where((e) => ids.contains(e.code)).toList()
       ..sort((a, b) => b.code.compareTo(a.code));
-    availableAudioQualities.assignAll(list);
+    availableAudioQualities.value = list;
     // 预设为最高可用档，与官方「进页面即给最好音质」一致；用户改过则沿用。
     if (list.isNotEmpty) {
       final want = Pref.defaultAudioQa;

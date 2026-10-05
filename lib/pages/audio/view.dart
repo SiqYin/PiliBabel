@@ -19,6 +19,7 @@ import 'package:PiliPlus/grpc/bilibili/app/listener/v1.pb.dart';
 import 'package:PiliPlus/models/common/image_preview_type.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
 import 'package:PiliPlus/models/common/video/audio_quality.dart';
+import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/pages/audio/controller.dart';
 import 'package:PiliPlus/pages/audio/volume_button.dart';
 import 'package:PiliPlus/pages/setting/models/play_settings.dart'
@@ -481,6 +482,36 @@ class _AudioPageState extends State<AudioPage> {
     }
   }
 
+  /// 音质选择弹窗。用项目既有的 [SelectDialog]，与设置页的音质选择同一套交互。
+  ///
+  /// 只列出**本次取流真实含有**的档位——服务端没下发的档位选了也播不了，
+  /// 官方同样只显示可选项。切换只换 DASH 轨道，不重新取流。
+  Future<void> _showAudioQaDialog() async {
+    final qualities = _controller.availableAudioQualities;
+    // 只有一档时没什么可选的，直接提示当前档位。
+    if (qualities.length < 2) {
+      Get.snackbar(
+        uiTx('音质'),
+        '${uiTx('当前音质')}：${uiTx(_controller.currentAudioQa.value.desc)}',
+      );
+      return;
+    }
+    final res = await showDialog<int>(
+      context: context,
+      builder: (context) => SelectDialog<int>(
+        title: uiTx('音质'),
+        value: _controller.currentAudioQa.value.code,
+        values: qualities.map((e) => (e.code, e.desc)).toList(),
+      ),
+    );
+    if (res != null) {
+      final target = qualities.where((e) => e.code == res).firstOrNull;
+      if (target != null) {
+        await _controller.setAudioQa(target);
+      }
+    }
+  }
+
   void _showPlaySettings() {
     showModalBottomSheet(
       context: context,
@@ -560,32 +591,29 @@ class _AudioPageState extends State<AudioPage> {
                         )
                         .toList(),
                   ),
-                  // 音质选择：与官方听视频一致，切音质只换DASH 轨道、不重新
-                  // 取流，并保留当前播放进度。少于两档时不显示。
+                  // 音质选择：与官方听视频一致，切音质只换 DASH 轨道、不重新
+                  // 取流，并保留当前播放进度。用项目既有的 SelectDialog
+                  // （单选 + 滚动），与设置页的音质选择同一套交互。
                   Obx(() {
                     final qualities = _controller.availableAudioQualities;
                     if (qualities.length < 2) {
-                      return const SizedBox.shrink();
-                    }
-                    return Column(
-                      spacing: 12,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(uiTx('音质')),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: qualities
-                              .map(
-                                (e) => ChoiceChip(
-                                  label: Text(uiTx(e.desc)),
-                                  selected: _controller.currentAudioQa.value == e,
-                                  onSelected: (_) => _controller.setAudioQa(e),
-                                ),
-                              )
-                              .toList(),
+                      return ListTile(
+                        leading: const Icon(Icons.music_video_outlined),
+                        title: Text(uiTx('音质')),
+                        subtitle: Text(
+                          uiTx(_controller.currentAudioQa.value.desc),
                         ),
-                      ],
+                        onTap: _showAudioQaDialog,
+                      );
+                    }
+                    return ListTile(
+                      leading: const Icon(Icons.music_video_outlined),
+                      title: Text(uiTx('音质')),
+                      subtitle: Text(
+                        uiTx(_controller.currentAudioQa.value.desc),
+                      ),
+                      trailing: const Icon(Icons.arrow_forward_ios),
+                      onTap: _showAudioQaDialog,
                     );
                   }),
                 ],
