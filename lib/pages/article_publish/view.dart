@@ -60,7 +60,7 @@ class _ArticlePublishPageState extends State<ArticlePublishPage> {
       try {
         final webview = await WebviewPage.openLinux(
           url: ArticlePublishPage.publishUrl,
-          title: '专栏投稿',
+          title: uiTx('专栏投稿'),
           // 投稿页没有 oid；传 0 只是为了满足签名，非 note 场景不会用到。
           oid: 0,
           onClose: () => _linuxWebview = null,
@@ -77,7 +77,7 @@ class _ArticlePublishPageState extends State<ArticlePublishPage> {
       constraints: const BoxConstraints(),
       (context) => WebviewPage(
         url: ArticlePublishPage.publishUrl,
-        title: '专栏投稿',
+        title: uiTx('专栏投稿'),
         onArticlePublished: widget.onPublished,
       ),
     );
