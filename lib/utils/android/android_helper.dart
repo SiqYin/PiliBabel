@@ -129,6 +129,9 @@ abstract final class PiliAndroidHelper {
   ///
   /// Android 7.0 起 Wi-Fi 省电模式会丢弃所有组播/广播帧，投屏（SSDP 发现）因此
   /// 完全搜不到设备。非 Android 平台直接返回 true，因为没有这层限制。
+  ///
+  /// 锁的生命周期由原生 `MainActivity` 在 `onStart`/`onStop` 之间管理，Dart 侧
+  /// 只在进入投屏时确保它已被持有，不负责释放。
   static Future<bool> acquireMulticastLock() async {
     if (!Platform.isAndroid) return true;
     try {
@@ -136,16 +139,6 @@ abstract final class PiliAndroidHelper {
     } catch (_) {
       // 拿不到锁不应让功能崩溃，只是搜不到设备。
       return false;
-    }
-  }
-
-  /// 释放组播锁。与 [acquireMulticastLock] 成对使用。
-  static Future<void> releaseMulticastLock() async {
-    if (!Platform.isAndroid) return;
-    try {
-      await _channel.invokeMethod<bool>('releaseMulticastLock');
-    } catch (_) {
-      // 忽略。
     }
   }
 }

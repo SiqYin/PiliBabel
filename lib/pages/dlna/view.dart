@@ -50,8 +50,9 @@ class _DLNAPageState extends State<DLNAPage> {
       setState(() {});
     }
 
-    // 始终持锁：Android 7+ 不持有组播锁时，SSDP 的组播帧会被系统丢弃，
-    // 结果就是「一直转圈然后没有设备」。onStop/onDestroy 时释放。
+    // 组播锁由原生侧持有：MainActivity 在 onStart/onStop 之间持锁，覆盖整个前台
+    // 生命周期。这里只在搜索开始时确认一次，失败也不阻断——搜索不到设备时
+    // 错误提示里会给出排查线索。
     unawaited(PiliAndroidHelper.acquireMulticastLock());
 
     try {
@@ -89,7 +90,6 @@ class _DLNAPageState extends State<DLNAPage> {
 
   void _stopSearch() {
     _searcher.stop();
-    unawaited(PiliAndroidHelper.releaseMulticastLock());
   }
 
   @override
@@ -97,7 +97,8 @@ class _DLNAPageState extends State<DLNAPage> {
     _timer?.cancel();
     _timer = null;
     _searcher.stop();
-    unawaited(PiliAndroidHelper.releaseMulticastLock());
+    // 组播锁由原生侧管理，退出页面不释放：锁要覆盖整个前台生命周期，
+    // 在这里释放会让「离开投屏页后再次进入」失去组播。
     _lastDevice = null;
     _lastDeviceKey = null;
     super.dispose();
