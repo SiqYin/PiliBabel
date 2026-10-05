@@ -51,6 +51,7 @@ abstract final class SettingBoxKey {
       horizontalScreen = 'horizontalScreen',
       CDNService = 'CDNService',
       customCDNUrl = 'customCDNUrl',
+      cdnRegion = 'cdnRegion',
       disableAudioCDN = 'disableAudioCDN',
       autoPiP = 'autoPiP',
       enableInAppPip = 'enableInAppPip',
@@ -355,7 +356,9 @@ abstract final class LocalCacheKey {
       remarkMids = 'remarkMids',
       cdnNodeList = 'cdnNodeList',
       cdnNodeListTime = 'cdnNodeListTime',
-      cdnNodeRegion = 'cdnNodeRegion';
+      cdnNodeRegion = 'cdnNodeRegion',
+      detectedCdnRegion = 'detectedCdnRegion',
+      detectedCdnRegionTime = 'detectedCdnRegionTime';
 }
 
 abstract final class VideoBoxKey {

@@ -15,6 +15,10 @@ abstract final class Api {
   // 热门视频
   static const String hotList = '/x/web-interface/popular';
 
+  // 请求方 IP 归属地（用于自动识别线路地区）
+  // 返回 country / province / city / country_code(ISO 3166 数字码)
+  static const String zone = '/x/web-interface/zone';
+
   // 视频流
   // https://github.com/SocialSisterYi/bilibili-API-collect/blob/master/docs/video/videostream_url.md
   static const String ugcUrl = '/x/player/wbi/playurl';

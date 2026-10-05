@@ -100,7 +100,10 @@ abstract final class DownloadHttp {
           orElse: () => videosList.first,
         );
 
-        final videoUrl = VideoUtils.getCdnUrl(videoDash.playUrls, preferAkamai: true);
+        final videoUrl = VideoUtils.getCdnUrl(
+          videoDash.playUrls,
+          preferAkamai: VideoUtils.downloadPreferAkamai,
+        );
 
         final Type2File videoFile = Type2File(
           id: videoDash.id,
@@ -138,7 +141,7 @@ abstract final class DownloadHttp {
           final audioUrl = VideoUtils.getCdnUrl(
             audioDash.playUrls,
             isAudio: true,
-            preferAkamai: true,
+            preferAkamai: VideoUtils.downloadPreferAkamai,
           );
           audioFileList = [
             Type2File(
@@ -186,7 +189,7 @@ abstract final class DownloadHttp {
             md5: '',
             metaUrl: '',
             order: first.order!,
-            url: VideoUtils.getCdnUrl(first.playUrls, preferAkamai: true),
+            url: VideoUtils.getCdnUrl(first.playUrls, preferAkamai: VideoUtils.downloadPreferAkamai),
           ),
         ];
         final FormatItem? formatItem = response.supportFormats

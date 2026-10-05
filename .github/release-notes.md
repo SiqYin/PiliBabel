@@ -1,3 +1,13 @@
+### PiliBabel v0.3.6
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+**What's new in 0.3.6**
+- **线路地区 (line region) — a new setting that fixes stuttering when you are outside mainland China.** bilibili hands out both mainland mirrors and overseas hosts (Akamai / `*ov` / `hk_bcache`) for the same video, and which one is fast depends entirely on where you are: mainland mirrors get throttled to roughly 100 KB/s from abroad, while Akamai is slower than a nearby mainland mirror if you are in China. The app now detects your region from your IP on first launch and picks accordingly — 中国大陆 / 日本 / 港澳台 / 其他地区, with a manual override in 设置 → 音视频设置 → 线路地区.
+- **On-demand video now honours your region.** Previously, with「直链取流与官方 APP 一致」on (the default), playback always took the *first* URL bilibili offered and ignored everything else — including the CDN setting. That first URL is often a mainland mirror, so from abroad the video stream starved while audio (a far smaller stream) kept playing: the picture would freeze and stutter while the sound and progress bar carried on. The app still never rewrites the host (direct-link signatures are bound to it, and rewriting returns 403), but it now picks a signed overseas URL from the same list when you are abroad.
+- **Downloads follow the region too.** Rewriting mainland mirrors to Akamai was added for overseas users but applied to everyone; it is now only done when you are actually abroad. In mainland China downloads stay on the domestic mirror, which is faster.
+- The CDN picker is grouped by region, with the group recommended for your location listed first.
+
 ### PiliBabel v0.3.5
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.

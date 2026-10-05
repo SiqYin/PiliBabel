@@ -513,6 +513,18 @@ abstract final class Pref {
     return value is String && value.isNotEmpty ? value : null;
   }
 
+  /// 线路地区（用户手动指定的那份）。[CdnRegion.auto] 表示交给自动识别。
+  ///
+  /// 这个值决定取流时**要不要优先挑海外直链**：大陆用户走 B 站按 IP 的就近
+  /// 结果最快，海外用户则必须走海外节点（大陆镜像对境外常被限速到 100KB/s
+  /// 上下）。默认自动识别，识别结果见 `CdnRegionResolver.detected`。
+  static CdnRegion get cdnRegion =>
+      CdnRegion.fromName(_setting.get(SettingBoxKey.cdnRegion)) ??
+      CdnRegion.auto;
+
+  static set cdnRegion(CdnRegion value) =>
+      _setting.put(SettingBoxKey.cdnRegion, value.name);
+
   static String get banWordForRecommend =>
       _setting.get(SettingBoxKey.banWordForRecommend, defaultValue: '');
 

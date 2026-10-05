@@ -2,6 +2,7 @@ import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io';
 
 import 'package:PiliPlus/models/common/video/audio_quality.dart';
+import 'package:PiliPlus/models/common/video/cdn_type.dart';
 import 'package:PiliPlus/models/common/video/live_quality.dart';
 import 'package:PiliPlus/models/common/video/video_decode_type.dart';
 import 'package:PiliPlus/models/common/video/video_quality.dart';
@@ -13,6 +14,7 @@ import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/plugin/pl_player/models/audio_output_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/hwdec_type.dart';
 import 'package:PiliPlus/services/service_locator.dart';
+import 'package:PiliPlus/utils/cdn_region.dart';
 import 'package:PiliPlus/utils/filtering_text.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
@@ -65,12 +67,29 @@ List<SettingsModel> get videoSettings => [
       VideoUtils.effectiveCdnDesc(),
       Pref.useAppPlayUrl
           ? uiTx(
-              '（已开启「直链取流与官方 APP 一致」：点播直链按 B 站下发顺序直接使用，'
-              '此处设置对点播不生效，仍对直播/下载生效）',
+              '（已开启「直链取流与官方 APP 一致」：点播直链不改写主机，'
+              '此处指定的节点对点播不生效，仍对直播/下载生效；'
+              '点播改用下面的「线路地区」挑选线路）',
             )
           : '',
     ]),
     onTap: _showCDNDialog,
+  ),
+  NormalModel(
+    title: uiTx('线路地区'),
+    leading: const Icon(Icons.public),
+    getSubtitle: () {
+      final detected = CdnRegionResolver.detected;
+      if (CdnRegionResolver.isManual) {
+        return '手动指定：${uiTx(Pref.cdnRegion.desc)}';
+      }
+      // 海外用户必须优先海外线路，否则视频流会被大陆镜像饿死
+      // （画面卡住、丢帧而声音照常）。识别结果直接决定这件事，所以展示出来。
+      return detected == null
+          ? uiTx('自动识别（尚未识别，将按其他地区处理）')
+          : '自动识别：${uiTx(detected.desc)}';
+    },
+    onTap: _showCdnRegionDialog,
   ),
   NormalModel(
     title: uiTx('直播 CDN 设置'),
@@ -97,7 +116,8 @@ List<SettingsModel> get videoSettings => [
     title: uiTx('直链取流与官方 APP 一致'),
     subtitle: uiTx(
       '默认开启：视频/音频直链改用官方 APP 的取流接口（gRPC PlayView），'
-      '并按 APP 的方式请求（APP UA、不带 Referer、直接用 B 站下发的第一条线路）。'
+      '并按 APP 的方式请求（APP UA、不带 Referer、不改写主机）。'
+      '线路按「线路地区」在 B 站下发的候选里挑选。'
       '关闭则退回网页端取流（网页端直链只认「Safari UA + Referer」这一种组合，'
       '部分海外线路会因此 403 或限速）',
     ),
@@ -237,6 +257,35 @@ List<SettingsModel> get videoSettings => [
     onTap: _showHwDecDialog,
   ),
 ];
+
+Future<void> _showCdnRegionDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<CdnRegion>(
+    context: context,
+    builder: (context) => SelectDialog<CdnRegion>(
+      title: uiTx('线路地区'),
+      value: Pref.cdnRegion,
+      // SelectDialog 只对 title 做翻译，选项文本要自己过一遍 uiTx
+      values: CdnRegion.values.map((e) => (e, uiTx(e.desc))).toList(),
+    ),
+  );
+  if (res == null) {
+    return;
+  }
+  Pref.cdnRegion = res;
+  if (res == CdnRegion.auto) {
+    // 选「自动识别」时立刻重识别一次，让用户马上看到识别结果
+    final detected = await CdnRegionResolver.ensureDetected(force: true);
+    SmartDialog.showToast(
+      detected == null
+          ? uiTx('识别失败，将按其他地区处理')
+          : '${uiTx('已识别为')}：${uiTx(detected.desc)}',
+    );
+  }
+  setState();
+}
 
 Future<void> _showCDNDialog(BuildContext context, VoidCallback setState) async {
   final res = await showDialog<CdnSelectResult>(
