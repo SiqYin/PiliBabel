@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:PiliPlus/build_config.dart';
@@ -19,6 +20,7 @@ import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:PiliPlus/utils/calc_window_position.dart';
+import 'package:PiliPlus/utils/cdn_region.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/extension/core_palettes_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
@@ -149,6 +151,11 @@ void main() async {
   Request();
   Request.setCookie();
   RequestUtils.syncHistoryStatus();
+
+  // 线路地区识别：按本机 IP 判断该优先走大陆镜像还是海外节点，直接决定点播
+  // 取流会不会被对境外限速的大陆镜像饿死（表现为画面卡住而声音照常）。
+  // 首次启动识别一次、7 天后自动重识；不阻塞启动，失败静默退回默认策略。
+  unawaited(CdnRegionResolver.ensureDetected());
 
   SmartDialog.config.toast = SmartConfigToast(displayType: .onlyRefresh);
 

@@ -2,6 +2,7 @@ import 'package:PiliPlus/models/common/video/cdn_type.dart';
 import 'package:PiliPlus/models/common/video/video_decode_type.dart';
 import 'package:PiliPlus/models_new/live/live_room_play_info/codec.dart';
 import 'package:PiliPlus/utils/cdn_node_store.dart';
+import 'package:PiliPlus/utils/cdn_region.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
@@ -120,14 +121,26 @@ abstract final class VideoUtils {
     return CdnNodeStore.labelOf(host) ?? '自定义：$host';
   }
 
+  /// 下载时是否把大陆 upos 镜像改写成 Akamai 全球边缘。
+  ///
+  /// 只有海外用户需要：大陆镜像对境外访问常被限速到 100KB/s 上下。大陆用户
+  /// 反过来 —— 大陆镜像本来就是最快的，绕到 Akamai 全球边缘更慢。所以这里跟随
+  /// [CdnRegionResolver] 的识别结果，而不是无条件改写。
+  ///
+  /// （下载侧改写主机是安全的：直链签名与主机绑定这条约束只影响**播放**，
+  /// 上游「自定义 CDN 节点」同样走改写。）
+  static bool get downloadPreferAkamai =>
+      CdnRegionResolver.effective.preferOverseas;
+
   /// [customHost] 显式指定自定义节点（节点测速用）；未传时按 [applyCustomCDN]
   /// 决定是否采用全局自定义节点。全局自定义生效时完全旁路枚举语义。
-  /// [nativeOrder] 为真时直接返回 B 站下发的第一条，不做任何挑选/改写。
+  /// [nativeOrder] 为真时**不改写主机**，只在 B 站已下发的候选里挑：
+  /// 海外地区（见 [CdnRegionResolver]）优先挑一条海外/Akamai 地址，否则取第一条。
   ///
   /// 用于**官方 APP 同源直链**（gRPC `PlayView`）：这类令牌的媒体指纹是「不带
-  /// Referer」，两条海外主机都能正常回源，所以按官方 APP 的做法直接用第一条即可；
-  /// 反而不能套用下面那套「挑海外候选 / 改写主机」的逻辑——令牌与主机、指纹绑定，
-  /// 乱换会 403（v0.1.8 教训）。
+  /// Referer」。令牌与主机绑定，所以**绝不能改写主机**（乱换会 403，v0.1.8 教训）；
+  /// 但候选列表里每一条都是 B 站针对各自主机单独签发的，换用其中一条不影响签名
+  /// 有效性 —— 海外用户必须挑，否则会拿到对境外限速的大陆镜像。
   static String getCdnUrl(
     Iterable<String> urls, {
     CDNService? defaultCDNService,
@@ -138,6 +151,23 @@ abstract final class VideoUtils {
     bool nativeOrder = false,
   }) {
     if (nativeOrder && urls.isNotEmpty) {
+      // 官方 APP 同源直链：**绝不改写主机**（直链签名与主机、请求指纹绑定，
+      // 改写必 403，v0.1.8 教训）。
+      //
+      // 但"挑一条 B 站已经签好的候选"是另一回事 —— 列表里每条地址都是 B 站
+      // 针对这台主机单独签发的，换用其中一条不会让签名失效。海外用户必须这么做：
+      // B 站 APP 接口下发的第一条常是**大陆镜像**，对境外访问被限速（实测约
+      // 100KB/s），于是视频流被饿死、而码率小得多的音频流还活着 —— 表现就是
+      // 「画面卡住/丢帧、声音和进度条照走」。这正是只按第一条取流时看海外视频
+      // 会周期性卡顿的成因。
+      //
+      // 大陆用户保持原样（第一条就是 B 站按 IP 就近的结果），行为不变。
+      if (CdnRegionResolver.effective.preferOverseas) {
+        final overseas = _firstOverseasUrl(urls);
+        if (overseas != null) {
+          return overseas;
+        }
+      }
       return urls.first;
     }
     defaultCDNService ??= cdnService;
@@ -146,11 +176,17 @@ abstract final class VideoUtils {
       customHost = null;
     }
 
-    if (customHost == null && !(isAudio && disableAudioCDN)) {
+    if (customHost == null &&
+        !(isAudio && disableAudioCDN) &&
+        CdnRegionResolver.effective.preferOverseas) {
       // 海外可用性优先：B 站的候选列表里通常自带 Akamai/海外镜像直链
       // （其签名有效，可直接使用）。此前"视频链接打开失败→重试"多因主线路
       // 是国内 upos 镜像；注意不可把国内直链"改写"成 Akamai 主机（签名不
       // 匹配会 403，v0.1.8 即栽在此），这里只做"挑选现成的海外地址"。
+      //
+      // **只在用户确实位于海外时才这样挑**：大陆镜像对大陆用户最快，
+      // 强挑海外地址反而会落到更远的边缘节点 —— 那正是「每隔几秒卡一下」
+      // 的成因之一。地区由 `CdnRegionResolver` 自动识别（可手动指定）。
       final overseas = _firstOverseasUrl(urls);
       if (overseas != null) {
         return overseas;

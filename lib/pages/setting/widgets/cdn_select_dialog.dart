@@ -8,6 +8,7 @@ import 'package:PiliPlus/models/common/video/video_type.dart';
 import 'package:PiliPlus/models/video/play/url.dart';
 import 'package:PiliPlus/pages/setting/widgets/cdn_node_dialog.dart';
 import 'package:PiliPlus/utils/cdn_node_store.dart';
+import 'package:PiliPlus/utils/cdn_region.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -363,10 +364,29 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
     }
   }
 
+  /// 分组标题。第一组就是当前所在地区推荐的线路，标注出来。
+  static String _regionGroupLabel(CdnRegion region, bool recommended) {
+    final name = switch (region) {
+      CdnRegion.mainland => uiTx('中国大陆线路'),
+      CdnRegion.japan => uiTx('日本线路'),
+      CdnRegion.hkMoTw => uiTx('港澳台线路'),
+      CdnRegion.other => uiTx('海外线路'),
+      CdnRegion.auto => uiTx('跟随 B 站就近'),
+    };
+    return recommended ? '$name（${uiTx('推荐')}）' : name;
+  }
+
   @override
   Widget build(BuildContext context) {
     final customHost = VideoUtils.customCDNUrl;
-    const services = CDNService.values;
+    // 按地区分组：用户**所在地区**推荐的线路排在最前，其余跟在后面。
+    // 海外用户选大陆镜像会被限速到难以播放，大陆用户反过来 —— 分组是为了让
+    // 「该选哪条」一眼可见，而不是让用户对着二十个域名猜。
+    final grouped = <CdnRegion, List<CDNService>>{};
+    for (final s in CDNService.recommendFor(CdnRegionResolver.effective)) {
+      grouped.putIfAbsent(s.region, () => <CDNService>[]).add(s);
+    }
+    final recommendedGroup = grouped.isEmpty ? null : grouped.keys.first;
     return AlertDialog(
       clipBehavior: Clip.hardEdge,
       title: Text(uiTx('CDN 设置')),
@@ -396,25 +416,37 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
               ),
               const SizedBox(height: 8),
             ],
-            for (final service in services)
-              M3eOptionItem(
-                selected:
-                    customHost == null && service == VideoUtils.cdnService,
-                selectionControl: true,
-                title: Text(service.desc),
-                subtitle: _cdnSpeedTest
-                    ? ValueListenableBuilder(
-                        valueListenable: _speedResults[service.index],
-                        builder: (context, value, _) => Text(
-                          value ?? '测速中',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      )
-                    : null,
-                onTap: () =>
-                    Navigator.pop(context, CdnBuiltinResult(service)),
+            for (final entry in grouped.entries) ...[
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 10, 16, 2),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    _regionGroupLabel(entry.key, entry.key == recommendedGroup),
+                    style: Theme.of(context).textTheme.labelLarge,
+                  ),
+                ),
               ),
+              for (final service in entry.value)
+                M3eOptionItem(
+                  selected:
+                      customHost == null && service == VideoUtils.cdnService,
+                  selectionControl: true,
+                  title: Text(service.desc),
+                  subtitle: _cdnSpeedTest
+                      ? ValueListenableBuilder(
+                          valueListenable: _speedResults[service.index],
+                          builder: (context, value, _) => Text(
+                            value ?? '测速中',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        )
+                      : null,
+                  onTap: () =>
+                      Navigator.pop(context, CdnBuiltinResult(service)),
+                ),
+            ],
             const SizedBox(height: 8),
             const Divider(height: 1, indent: 8, endIndent: 8),
             const SizedBox(height: 8),
