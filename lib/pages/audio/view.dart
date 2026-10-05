@@ -18,6 +18,7 @@ import 'package:PiliPlus/common/widgets/selection_text.dart';
 import 'package:PiliPlus/grpc/bilibili/app/listener/v1.pb.dart';
 import 'package:PiliPlus/models/common/image_preview_type.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
+import 'package:PiliPlus/models/common/video/audio_quality.dart';
 import 'package:PiliPlus/pages/audio/controller.dart';
 import 'package:PiliPlus/pages/audio/volume_button.dart';
 import 'package:PiliPlus/pages/setting/models/play_settings.dart'
@@ -65,6 +66,7 @@ class AudioPage extends StatefulWidget {
     Duration? start,
     String? audioUrl,
     int? extraId,
+    AudioQuality? audioQa,
   }) {
     heroTag ??= Utils.makeHeroTag(oid);
     return Get.toNamed(
@@ -79,6 +81,9 @@ class AudioPage extends StatefulWidget {
         'start': ?start,
         'audioUrl': ?audioUrl,
         'extraId': ?extraId,
+        // 视频页已按它选好 audioUrl 的轨道，音质必须一并带过来，
+        // 否则听视频页显示的音质会和实际播放的轨道不一致。
+        'audioQa': ?audioQa?.code,
       },
     );
   }
@@ -555,6 +560,34 @@ class _AudioPageState extends State<AudioPage> {
                         )
                         .toList(),
                   ),
+                  // 音质选择：与官方听视频一致，切音质只换DASH 轨道、不重新
+                  // 取流，并保留当前播放进度。少于两档时不显示。
+                  Obx(() {
+                    final qualities = _controller.availableAudioQualities;
+                    if (qualities.length < 2) {
+                      return const SizedBox.shrink();
+                    }
+                    return Column(
+                      spacing: 12,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(uiTx('音质')),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: qualities
+                              .map(
+                                (e) => ChoiceChip(
+                                  label: Text(uiTx(e.desc)),
+                                  selected: _controller.currentAudioQa.value == e,
+                                  onSelected: (_) => _controller.setAudioQa(e),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ],
+                    );
+                  }),
                 ],
               ),
             ),

@@ -2060,6 +2060,9 @@ class VideoDetailController extends GetxController
       start: playedTime,
       audioUrl: audioUrl,
       extraId: extraId,
+      // audioUrl 已按 currentAudioQa 选好轨道，音质一并传给听视频页，
+      // 否则那边显示的音质会和实际播放的不一致。
+      audioQa: currentAudioQa,
     );
   }
 
