@@ -46,6 +46,7 @@ import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -488,10 +489,9 @@ class _AudioPageState extends State<AudioPage> {
   /// 官方同样只显示可选项。切换只换 DASH 轨道，不重新取流。
   Future<void> _showAudioQaDialog() async {
     final qualities = _controller.availableAudioQualities;
-    // 只有一档时没什么可选的，直接提示当前档位。
+    // 只有一档时没什么可选的，直接按项目惯用的 toast 提示当前档位。
     if (qualities.length < 2) {
-      Get.snackbar(
-        uiTx('音质'),
+      SmartDialog.showToast(
         '${uiTx('当前音质')}：${uiTx(_controller.currentAudioQa.value.desc)}',
       );
       return;
@@ -499,7 +499,8 @@ class _AudioPageState extends State<AudioPage> {
     final res = await showDialog<int>(
       context: context,
       builder: (context) => SelectDialog<int>(
-        title: uiTx('音质'),
+        // SelectDialog 内部会对 title 再做一次 uiTx，这里传原文即可。
+        title: '音质',
         value: _controller.currentAudioQa.value.code,
         values: qualities.map((e) => (e.code, e.desc)).toList(),
       ),
@@ -595,24 +596,17 @@ class _AudioPageState extends State<AudioPage> {
                   // 取流，并保留当前播放进度。用项目既有的 SelectDialog
                   // （单选 + 滚动），与设置页的音质选择同一套交互。
                   Obx(() {
-                    final qualities = _controller.availableAudioQualities;
-                    if (qualities.length < 2) {
-                      return ListTile(
-                        leading: const Icon(Icons.music_video_outlined),
-                        title: Text(uiTx('音质')),
-                        subtitle: Text(
-                          uiTx(_controller.currentAudioQa.value.desc),
-                        ),
-                        onTap: _showAudioQaDialog,
-                      );
-                    }
+                    final canSwitch =
+                        _controller.availableAudioQualities.length > 1;
                     return ListTile(
                       leading: const Icon(Icons.music_video_outlined),
                       title: Text(uiTx('音质')),
                       subtitle: Text(
                         uiTx(_controller.currentAudioQa.value.desc),
                       ),
-                      trailing: const Icon(Icons.arrow_forward_ios),
+                      trailing: canSwitch
+                          ? const Icon(Icons.arrow_forward_ios)
+                          : null,
                       onTap: _showAudioQaDialog,
                     );
                   }),
