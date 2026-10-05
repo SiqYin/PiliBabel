@@ -1,4 +1,15 @@
-### PiliBabel v0.3.3
+### PiliBabel v0.3.4
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+**What's new in 0.3.4**
+- **听视频 (Listen) actually loads audio now.** Tapping the audio button at the top of a video opened the player but never started playback, with the elapsed time stuck at `00:00`. The audio page was requesting the video page's direct link with the wrong request fingerprint: that link is an APP-origin direct stream, which the CDN only serves when **no** `Referer` header is sent, but the audio page was sending a Safari user agent *and* a `bilibili.com` referrer. The CDN refused the stream, so the player never knew the track length. The audio page now picks the fingerprint that matches where the link came from, and stops rewriting the CDN host for these APP-origin links.
+- **Failures are no longer silent.** If the server returns no playable information, no audio track, or an unsupported format, the audio page now says so instead of leaving you at `00:00` with no explanation. The real track length is also filled in from the server response up front, so the duration shows even if playback itself later fails.
+- **Audio quality selection, matching the official app.** The audio page had no way to change quality at all. It now offers the qualities the current stream actually contains (Hi-Res, Dolby, 192K, 132K, 64K), switches track in place without re-fetching, and keeps your current position — the same behaviour as the official player. The panel hides itself when the current source offers only one quality. Your choice is remembered for next time.
+- **The quality shown now matches what plays.** When you jump from a video into 听视频, the video page has already picked a track for the audio it hands over, so it now passes that choice along — previously the audio page displayed the default quality while playing a different one.
+
+Loop modes, play order (normal / reverse / random) and the speed panel already matched the official app and are unchanged.
+
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
 
