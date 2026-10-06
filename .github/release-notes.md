@@ -1,3 +1,12 @@
+### PiliBabel v0.3.8
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+**What's new in 0.3.8**
+- **Playback no longer freezes every few seconds and skips ahead.** The reported shape was: a few seconds in, the picture stalls for a few seconds, then moves again — and once, the picture stopped for good while the sound and the progress bar carried on. The progress bar would also creep forward *during* the stall (00:03 → 00:05) and playback would resume at 00:05, so part of the video was never shown. The cause was the video-synchronisation mode. The `display-*` family of modes works by predicting when each frame will reach the screen from the display's refresh rate, which only works if buffer swaps actually block on vertical sync. On a phone they do not: the picture is drawn into a `SurfaceTexture` that the Flutter texture pipeline then consumes asynchronously, so there is no vsync-locked presentation to measure against and the prediction is guesswork — mpv corrects by dropping and repeating frames, and the audio clock, which is what drives playback, keeps advancing. Android now uses mpv's own default (`audio`), which is the robust mode because it assumes nothing about the display. Desktop is unchanged. If you preferred the old behaviour, 设置 → 播放器设置 → 视频同步 still offers every mode.
+- **Opening a video no longer shows a black, frozen picture first.** On some videos the player would sit on a black screen for a moment before the picture appeared. The app was attaching the video surface before the decoder had reported the frame size, and at that point the surface is still 1×1 — so the first frame was drawn as one solid colour, and the picture only reappeared once the real size was applied. The surface is now attached at the point the media library expects, after the output size is known. If a short wait remains with a loading indicator, that is the network fetching the stream, not this issue.
+- **Hardware decoding is picked more sensibly by default.** The preferred-decode list was `AVC → AV1` and did not contain HEVC at all, so any quality bilibili serves without an AVC track — 1080P high bitrate, 1080P60, 4K — landed on AV1. The order is now `AVC → HEVC → AV1`, matching bilibili's own ordering, so a format your device can decode in hardware always outranks one it cannot. AV1 can still be put first in 设置 → 音视频设置 → 首选解码格式.
+
 ### PiliBabel v0.3.7
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
