@@ -1134,11 +1134,36 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
     assert(_videoController == null);
 
+    // 这里**不要**再传 androidAttachSurfaceAfterVideoParameters: false。
+    //
+    // media_kit 的 AndroidVideoController 对该参数的默认值是
+    // `configuration.androidAttachSurfaceAfterVideoParameters ?? vo == 'gpu'`，
+    // 本项目没有自定义 vo（走默认的 vo=gpu），所以默认就是 true —— 也就是
+    // 「等解码器报出 videoParams、先 SurfaceTexture.setDefaultBufferSize(w,h)
+    // 与 --android-surface-size 之后，再挂 --wid / --vo」。
+    //
+    // 传 false 会走它 `onLoadHooks` 里的早 attach 分支，而那一段的原注释写得很
+    // 明确（media_kit issue #339）：
+    //   "By default, android.view.Surface has a size of 1x1. If we assign --wid
+    //    here, libmpv will internally start rendering & the first frame will be
+    //    drawn as a solid color."
+    // 即首帧被画成一块纯色（黑屏），要等 videoParams 事件到达、surface 被改成
+    // 真实尺寸后才重新出画 —— 表现就是「刚进视频卡住不动 + 黑屏，过一会儿才
+    // 正常播」，且这次重建落在首帧之前就看不见、落在之后就变成一段黑屏，
+    // 所以「不是所有视频都这样」。
+    //
+    // 另外 mpv 侧 `vo` / `wid` 带 UPDATE_VO 标志，改动它们会走
+    //   uninit_video_out() → reinit_video_chain() → queue_seek(0)
+    // 也就是整个视频输出链销毁重建外加一次主动 seek；早 attach 相当于白多做
+    // 一轮。（同值重复赋值不会触发：m_config 用 m_option_equal 比对，值没变就
+    // 不回调，所以 media_kit 那个 videoParams 监听器本身是幂等安全的。）
+    //
+    // 该行自 9744ec88a（2023-10-21，提交信息是 "mod: CDN优化 issues #70"）起
+    // 就是 false，看不出与 CDN 有关联，判定为顺手留下的实验值，恢复默认。
     _videoController = await VideoController.create(
       player,
       configuration: VideoControllerConfiguration(
         enableHardwareAcceleration: hwdec != null,
-        androidAttachSurfaceAfterVideoParameters: false,
         hwdec: hwdec,
       ),
     );
