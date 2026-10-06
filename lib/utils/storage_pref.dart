@@ -470,12 +470,28 @@ abstract final class Pref {
     defaultValue: AudioQuality.k192.code,
   );
 
+  /// 首选解码格式优先级（有序、多选）。用户没设过时用下面的默认值。
+  ///
+  /// 默认 **AVC → HEVC → AV1**，与 B 站官方 APP 的 `support_formats[].codecs`
+  /// 排序一致。**不能沿用上游的 `[AVC, AV1]`**：那个列表里根本没有 HEVC，
+  /// 于是只要某个清晰度不带 AVC，挑选就会一路落到 AV1。而 1080P 高码率(112)、
+  /// 1080P60(116)、4K(120) 这些档位 B 站**只发 HEVC 和 AV1、不发 AVC**，
+  /// 手机端默认画质又是"最高可用" → Wi-Fi 下几乎每个视频都会选到 AV1。
+  ///
+  /// 关键在于 AV1 硬解远未普及（要 2021 年后的高端 SoC），HEVC 硬解却是
+  /// 2014 年前后起的标配。选到本机没有硬解的格式时 mpv 退回**软解**，
+  /// 1080P60 的软解跟不上实时 → mpv 只能按音频时钟丢帧追帧，
+  /// 表现就是「每隔几秒画面卡住几秒、声音和进度条照常走」。
+  ///
+  /// HEVC 排在 AV1 前不是"降级"：能硬解的格式一律优先于只能软解的，官方 APP
+  /// 同样按 AVC/HEVC/AV1 挑第一条拿得到硬解的。要用 AV1 可在
+  /// 设置 → 首选解码格式 里自行调到最前。
   static List<VideoDecodeFormatType> get preferCodecs {
     final codecs = _setting.get(SettingBoxKey.preferCodecs);
     if (codecs is List) {
       return codecs.map((i) => VideoDecodeFormatType.values.byName(i)).toList();
     }
-    return const <VideoDecodeFormatType>[.AVC, .AV1];
+    return const <VideoDecodeFormatType>[.AVC, .HEVC, .AV1];
   }
 
   static List<VideoDecodeFormatType> get preferCodecsCellular {
