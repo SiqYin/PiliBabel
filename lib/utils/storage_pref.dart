@@ -509,8 +509,30 @@ abstract final class Pref {
         : HwDecType.auto.hwdec,
   );
 
-  static String get videoSync =>
-      _setting.get(SettingBoxKey.videoSync, defaultValue: 'display-resample');
+  /// 视频同步模式（mpv `--video-sync`）。
+  ///
+  /// Android 默认改为 `audio`。`display-*` 这一族要求「vsync 阻塞式呈现」
+  /// ——mpv 手册原文：*These modes also require a vsync blocked presentation
+  /// mode. For OpenGL, this translates to `--opengl-swapinterval=1`.*
+  /// 即 swap 必须真的等到垂直同步才返回。但本项目的视频输出走 media_kit 的
+  /// `--vo=gpu --gpu-context=android`，画面写进一张 `SurfaceTexture` 再交给
+  /// Flutter 的纹理管线消费（见 media_kit_video 的 AndroidVideoController），
+  /// swap 根本不等 vsync —— 这个前提不成立，display-resample 里「按显示刷新率
+  /// 推算每帧应该显示在什么时刻」就变成瞎猜。
+  ///
+  /// mpv 手册同一段还写明两点，与用户报告的症状逐条对上：
+  ///  * display-* 模式下「播放被打断（如切全屏/改窗口大小）时会**跳掉本该显示的
+  ///    帧**」—— 这就是「卡顿时进度条自己从 00:03 走到 00:05、恢复后内容被略过」；
+  ///  * 「**行为取决于 VO 和系统的音视频驱动**」，且刷新率测不准时会自动退回
+  ///    audio。
+  ///
+  /// 同类症状在 mpv-android#307 有完整记录：display-resample + 硬解在 Android
+  /// 120Hz 屏上持续掉帧/错时帧，**切到 `--video-sync=audio` 立刻平滑**。
+  /// mpv 上游默认本来就是 `audio`，桌面端继续沿用 display-resample。
+  static String get videoSync => _setting.get(
+    SettingBoxKey.videoSync,
+    defaultValue: Platform.isAndroid ? 'audio' : 'display-resample',
+  );
 
   static String get autosync => _setting.get(
     SettingBoxKey.autosync,
