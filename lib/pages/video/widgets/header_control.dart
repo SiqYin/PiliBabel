@@ -34,6 +34,7 @@ import 'package:PiliPlus/pages/video/introduction/ugc/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/widgets/action_item.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/widgets/menu_row.dart';
 import 'package:PiliPlus/pages/video/widgets/header_mixin.dart';
+import 'package:PiliPlus/pages/video/widgets/player_info_dialog.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_repeat.dart';
@@ -901,106 +902,12 @@ class HeaderControlState extends State<HeaderControl>
     BuildContext context, {
     required NativePlayer player,
   }) {
-    final hwdec = player.getProperty('hwdec-current');
-    final vo = player.getProperty('current-vo');
-    final volume =
-        '${(double.tryParse(player.getProperty('volume')) ?? 0).toStringAsFixed(1)}%';
+    // 诊断面板本体拆到 player_info_dialog.dart：它需要自己的 State 承载
+    // 1s 刷新定时器，并要在关闭时 cancel。三个调用方（视频页 / 听视频 / 直播）
+    // 共用这一个入口，签名不变。
     showDialog(
       context: context,
-      builder: (context) {
-        final state = player.state;
-        final colorScheme = ColorScheme.of(context);
-        return AlertDialog(
-          title: Text(uiTx('播放信息')),
-          contentPadding: const EdgeInsets.only(top: 16),
-          content: Material(
-            type: MaterialType.transparency,
-            child: ListTileTheme(
-              contentPadding: const .symmetric(horizontal: 24),
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    ListTile(
-                      dense: true,
-                      title: const Text("Resolution"),
-                      subtitle: Text('${state.width}x${state.height}'),
-                      onTap: () => Utils.copyText(
-                        'Resolution\n${state.width}x${state.height}',
-                      ),
-                    ),
-                    ListTile(
-                      dense: true,
-                      title: const Text("VideoParams"),
-                      subtitle: Text(state.videoParams.toString()),
-                      onTap: () =>
-                          Utils.copyText('VideoParams\n${state.videoParams}'),
-                    ),
-                    ListTile(
-                      dense: true,
-                      title: const Text("AudioParams"),
-                      subtitle: Text(state.audioParams.toString()),
-                      onTap: () =>
-                          Utils.copyText('AudioParams\n${state.audioParams}'),
-                    ),
-                    ListTile(
-                      dense: true,
-                      title: const Text("Media"),
-                      subtitle: Text(state.playlist.toString()),
-                      onTap: () => Utils.copyText('Media\n${state.playlist}'),
-                    ),
-                    ListTile(
-                      dense: true,
-                      title: const Text("AudioTrack"),
-                      subtitle: Text(state.track.audio.toString()),
-                      onTap: () =>
-                          Utils.copyText('AudioTrack\n${state.track.audio}'),
-                    ),
-                    ListTile(
-                      dense: true,
-                      title: const Text("VideoTrack"),
-                      subtitle: Text(state.track.video.toString()),
-                      onTap: () =>
-                          Utils.copyText('VideoTrack\n${state.track.video}'),
-                    ),
-                    ListTile(
-                      dense: true,
-                      title: const Text("rate"),
-                      subtitle: Text(state.rate.toString()),
-                      onTap: () => Utils.copyText('rate\n${state.rate}'),
-                    ),
-                    ListTile(
-                      dense: true,
-                      title: const Text("Volume"),
-                      subtitle: Text(volume),
-                      onTap: () => Utils.copyText('Volume\n$volume'),
-                    ),
-                    ListTile(
-                      dense: true,
-                      title: const Text('hwdec'),
-                      subtitle: Text(hwdec),
-                      onTap: () => Utils.copyText('hwdec\n$hwdec'),
-                    ),
-                    ListTile(
-                      dense: true,
-                      title: const Text('VO'),
-                      subtitle: Text(vo),
-                      onTap: () => Utils.copyText('VO\n$vo'),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: Get.back,
-              child: Text(uiTx('确定'),
-                style: TextStyle(color: colorScheme.outline),
-              ),
-            ),
-          ],
-        );
-      },
+      builder: (_) => PlayerInfoDialog(player: player),
     );
   }
 

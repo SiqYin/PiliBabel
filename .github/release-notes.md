@@ -1,3 +1,12 @@
+### PiliBabel v0.3.9
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+**What's new in 0.3.9**
+- **The player now tells you *why* it stutters.** 播放信息 (the player's ⋮ menu → 播放信息) used to be a one-off snapshot taken when you opened it, and it showed none of the numbers that actually distinguish the two very different causes of a stall. It now refreshes every second and reports, live: the hardware decoder and video output actually in use, the display / source / output frame rates, the four frame-drop counters, and the network side — bytes per second coming down, the video and audio bitrates, how much is buffered ahead, and whether mpv has paused for buffering. There is a 复制全部 button that copies the whole lot at once, and the panel works the same way on video, 听视频 and live.
+- Why this matters: a stall where the picture freezes but the sound and the progress bar keep going has two completely different causes — the network not keeping up with the chosen quality, or decoding/rendering not keeping up — and on screen they look identical. The counters settle it immediately: if `paused-for-cache` is yes and the download rate is well below the video bitrate, it is the line; if the buffer stays healthy while `decoder-frame-drop` / `frame-drop-count` climb, it is the decoder.
+- No behaviour change to playback itself in this release.
+
 ### PiliBabel v0.3.8
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
