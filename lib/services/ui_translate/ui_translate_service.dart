@@ -44,6 +44,18 @@ class UiTranslateService extends GetxService {
   /// 持久化缓存的内存副本。
   final Map<String, String> _cache = {};
 
+  /// 反向缓存：「界面语言文本 -> 简体中文」。
+  ///
+  /// 搜索时要把用户用界面语言输入的关键词翻回简体中文再检索（见
+  /// [translateQuery]）。方向与 [_cache] 相反，所以单独一份，键值不能混。
+  final Map<String, String> _reverseCache = {};
+
+  /// 同一个搜索词被多个分栏同时请求时，只发一次翻译请求。
+  final Map<String, Future<String?>> _queryInFlight = {};
+
+  /// 正在翻译检索词的并发数；>0 时结果页显示「正在翻译搜索词…」提示。
+  final RxInt queryTranslateBusy = 0.obs;
+
   /// 已渲染但尚未翻译的字符串，等待批量 flush。
   final Set<String> _pending = <String>{};
 
@@ -55,6 +67,7 @@ class UiTranslateService extends GetxService {
 
   Timer? _debounce;
   Timer? _persistTimer;
+  Timer? _persistQueryTimer;
 
   /// 单批最大字符串条数。较小 → 单次模型请求更快返回、译文更早逐块出现；
   /// 靠更大并发与逐块应用保证总吞吐。
@@ -83,6 +96,90 @@ class UiTranslateService extends GetxService {
       enabled &&
       Pref.uiTranslateApiUrl.trim().isNotEmpty &&
       Pref.uiTranslateModel.trim().isNotEmpty;
+
+  /// 内容型文本（视频/专栏/直播标题等）是否需要翻译。
+  ///
+  /// 与界面文案的区别：内容量很大，且**只有目标语言不是原文（简体中文）时**
+  /// 才值得翻——简体中文界面下这些标题本来就是中文，原样显示即可。
+  bool get translateContent => enabled && !isSourceLanguage;
+
+  /// 供 Obx 订阅的版本：读一次 [revision] 建立依赖，语言切换/关闭翻译后能重建。
+  ///
+  /// 搜索结果里的标题默认走「按 `<em>` 高亮分段渲染」那条路，逐段文本翻不了；
+  /// 只有本方法返回 true 时才改成整句走 [tx]。所以调用点必须在 Obx 里读它，
+  /// 才能跟着语言切换即时刷新。
+  static bool contentTranslationActive() {
+    if (!Get.isRegistered<UiTranslateService>()) return false;
+    final service = to;
+    service.revision.value;
+    return service.translateContent;
+  }
+
+  /// 是否正在把搜索词翻成简体中文（结果页据此显示等待提示）。
+  bool get isTranslatingQuery => queryTranslateBusy.value > 0;
+
+  /// 把用户在搜索框里输入的词（当前界面语言）翻回简体中文。
+  ///
+  /// 返回 `null` 表示**不需要翻译**：界面翻译没开、目标语言本来就是简体中文、
+  /// 输入为空、或翻译失败。调用方此时应直接用原词检索——搜索绝不能因为
+  /// 翻译不可用而整个失效。
+  ///
+  /// 三条快路径，命中任一都不发请求：
+  /// 1. 反向缓存命中（同一个词本次会话搜过）；
+  /// 2. **反查译文缓存**——用户搜的词正好等于某条已译内容，直接反查出中文原文。
+  ///    这正是「视频标题被译成日语后，用日语标题去搜」的场景，零成本；
+  /// 3. 并发去重（结果页 5 个分栏同时开搜同一个词，只发一次请求）。
+  Future<String?> translateQuery(String text) async {
+    final query = text.trim();
+    if (query.isEmpty || !translateContent) return null;
+
+    final cached = _reverseCache[query];
+    if (cached != null) return cached;
+
+    final reversed = _reverseLookup(query);
+    if (reversed != null) {
+      _reverseCache[query] = reversed;
+      _schedulePersistQuery();
+      return reversed;
+    }
+
+    final pending = _queryInFlight[query];
+    if (pending != null) return pending;
+
+    final future = _translateToSource(query);
+    _queryInFlight[query] = future;
+    try {
+      return await future;
+    } finally {
+      _queryInFlight.remove(query);
+    }
+  }
+
+  /// 在「中文原文 -> 界面语言译文」缓存里反查：找出译文恰好等于 [text] 的原文。
+  String? _reverseLookup(String text) {
+    for (final entry in _cache.entries) {
+      if (entry.value == text) return entry.key;
+    }
+    return null;
+  }
+
+  Future<String?> _translateToSource(String query) async {
+    queryTranslateBusy.value++;
+    try {
+      final out = await _translateChunkToSource([query]);
+      final result = out.isEmpty ? '' : out.first.trim();
+      if (result.isEmpty) return null;
+      _reverseCache[query] = result;
+      _schedulePersistQuery();
+      return result;
+    } catch (e, st) {
+      lastError.value = e.toString();
+      logger.e('搜索词回译失败', error: e, stackTrace: st);
+      return null;
+    } finally {
+      queryTranslateBusy.value--;
+    }
+  }
 
   bool showOriginalFor(String id) => _originalIds.contains(id);
 
@@ -156,14 +253,17 @@ class UiTranslateService extends GetxService {
       Pref.uiTranslatePromptRevision = promptRevision;
     }
     _cache.addAll(Pref.uiTranslateCache);
+    _reverseCache.addAll(Pref.uiTranslateQueryCache);
   }
 
   @override
   void onClose() {
     _debounce?.cancel();
     _persistTimer?.cancel();
+    _persistQueryTimer?.cancel();
     _revisionTimer?.cancel();
     _persist();
+    _persistQuery();
     super.onClose();
   }
 
@@ -195,6 +295,10 @@ class UiTranslateService extends GetxService {
     // 注意：**只有简体中文**走这条捷径。繁体中文 / 粤语 / 吴语 / 闽南语等虽然
     // 同属中文家族，但对简体原文来说并不是原文，仍然要正常调用 API 翻译。
     if (isSourceLanguage) return src;
+    // 原文本来就用目标语言书写（日语界面里的日文标题、韩语界面里的韩文标题）
+    // → 不需要翻译，原样返回：既省 token，也不会把专有名词译歪。
+    // 只在「文字与语言一一对应」时才这么判（见 looksLikeNativeScript）。
+    if (looksLikeNativeScript(src, currentLanguage.nativeScript)) return src;
     final hit = _cache[src];
     if (hit != null) return hit;
     // 尚未翻译：先显示原文，排进待翻队列。
@@ -298,6 +402,15 @@ class UiTranslateService extends GetxService {
     _persistTimer = Timer(const Duration(milliseconds: 1200), _persist);
   }
 
+  /// 反向（搜索词）缓存的节流写盘，与正缓存各自一个 timer，互不推迟。
+  void _schedulePersistQuery() {
+    _persistQueryTimer?.cancel();
+    _persistQueryTimer = Timer(
+      const Duration(milliseconds: 1200),
+      _persistQuery,
+    );
+  }
+
   Timer? _revisionTimer;
 
   /// 节流刷新：worker 每块都会产生译文，而 revision 是全 App 级依赖（播放器界面
@@ -328,7 +441,10 @@ class UiTranslateService extends GetxService {
       numbered.writeln('${i + 1}. ${sources[i]}');
     }
 
+    // 字形硬约束（简繁/方言目标才有内容）：放在最前面，模型对靠前的指令更敏感。
+    final scriptRule = currentLanguage.scriptRule;
     final system =
+        '${scriptRule.isEmpty ? '' : '$scriptRule\n\n'}'
         '你是应用界面本地化翻译引擎。用户会给出一个带编号的界面文案列表'
         '（每条可能为中文或外文），请把每一条翻译成『$lang』。'
         '严格要求：'
@@ -339,7 +455,10 @@ class UiTranslateService extends GetxService {
         '界面词尽量简短、术语一致；'
         '4) 严格遵守目标语言说明中的方言、地区与文字规范。每条译文必须完整使用'
         '同一个目标语言/方言，不得混用其他汉语方言，不得把不同方言拼成一句；'
-        '原文含其他方言词时，也要统一转换为指定目标方言。';
+        '原文含其他方言词时，也要统一转换为指定目标方言；'
+        '5) **字形一致性**：每一条译文的字形必须统一——简体目标不得出现任何'
+        '繁体字形，繁體目标不得出現任何簡體字形。'
+        '如果原文本身就使用了目标语言的文字体系，原样保留其字形，不要改写。';
     final user = '待翻译列表：\n$numbered';
 
     // 思考模式：开=启用推理(更准但慢)；关=显式关闭推理以求更快。
@@ -360,12 +479,67 @@ class UiTranslateService extends GetxService {
     )) {
       buf.write(chunk);
     }
-    return _parseArray(buf.toString(), sources.length);
+    return _normalizeScripts(
+      _parseArray(buf.toString(), sources.length),
+      currentLanguage.script,
+    );
+  }
+
+  /// 反向翻译：把界面语言的检索词还原成中国大陆简体中文的搜索用词。
+  ///
+  /// 走与正向翻译完全相同的接口/模型/流式通道，只是提示词方向相反。
+  Future<List<String>> _translateChunkToSource(List<String> sources) async {
+    if (!enabled) return const [];
+    final lang = currentLanguage.toModel;
+    final numbered = StringBuffer();
+    for (var i = 0; i < sources.length; i++) {
+      numbered.writeln('${i + 1}. ${sources[i]}');
+    }
+
+    final system =
+        '你是搜索词归一化引擎。用户会给出一个带编号的关键词列表，'
+        '每个关键词的书写语言是『$lang』。'
+        '请把每一条翻译成**中国大陆简体中文**的检索用词，'
+        '用于在中文视频网站（哔哩哔哩）上检索。'
+        '严格要求：'
+        '1) 只输出一个 JSON 数组，元素个数与输入条数相同、顺序一一对应，'
+        '每个元素是该条对应的简体中文检索词；'
+        '2) 不要输出任何解释、说明或 Markdown 代码块围栏；'
+        '3) 保留人名、作品名、数字与专有名词；专有名词在中文圈有通行译名时'
+        '用通行译名，不要音译成生僻写法；'
+        '4) 如果原文已经是简体中文，原样返回；'
+        '5) 只输出检索词本身，不要加引号、书名号之外的解释，'
+        '也不要加「搜索」「关键词」之类前缀。';
+    final user = '待归一化列表：\n$numbered';
+
+    final thinking = Pref.uiTranslateThinking;
+    final extraBody = <String, dynamic>{'enable_thinking': thinking};
+
+    final buf = StringBuffer();
+    await for (final chunk in AiChatService.streamChat(
+      messages: [
+        {'role': 'system', 'content': system},
+        {'role': 'user', 'content': user},
+      ],
+      model: translateModel,
+      apiUrl: translateApiUrl,
+      apiKey: translateApiKey,
+      extraBody: extraBody,
+    )) {
+      buf.write(chunk);
+    }
+    // 反向翻译的目标固定是简体中文（B 站搜索只认简体），
+    // 同样做一次字形归一化，免得把繁体词拿去搜。
+    return _normalizeScripts(
+      _parseArray(buf.toString(), sources.length),
+      'Hans',
+    );
   }
 
   /// 从模型输出里稳健地解析出 JSON 数组；解析失败退化为按行切分。
   static List<String> _parseArray(String raw, int expected) {
     var s = raw.trim();
+
     // 去掉可能的 ```json ... ``` 围栏。
     final fence = RegExp(r'```(?:json)?\s*([\s\S]*?)\s*```');
     final m = fence.firstMatch(s);
@@ -394,14 +568,33 @@ class UiTranslateService extends GetxService {
     return List.generate(expected, (i) => i < lines.length ? lines[i] : '');
   }
 
+  /// 按目标字形把一批译文做确定性归一化。
+  ///
+  /// 提示词只能"尽量"约束模型不串字形，模型偶发仍会漏一两个繁体/简体字；
+  /// 这里用一张无歧义的字表兜底，保证落库的译文不再混字形。
+  /// [script] 为 null（非中文家族）时是空操作。
+  static List<String> _normalizeScripts(
+    List<String> values,
+    String? script,
+  ) {
+    if (script == null) return values;
+    return values
+        .map((value) => normalizeScript(value, script))
+        .toList(growable: false);
+  }
+
   void _persist() => Pref.uiTranslateCache = _cache;
+
+  void _persistQuery() => Pref.uiTranslateQueryCache = _reverseCache;
 
   /// 清空翻译缓存（下次遇到同一字符串会重新翻译）。
   void clearCache() {
     _cache.clear();
+    _reverseCache.clear();
     _pending.clear();
     lastError.value = null;
     Pref.uiTranslateCache = {};
+    Pref.uiTranslateQueryCache = {};
     revision.value++;
   }
 

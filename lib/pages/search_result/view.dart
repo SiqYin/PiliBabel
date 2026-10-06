@@ -56,6 +56,46 @@ class _SearchResultPageState extends State<SearchResultPage>
     sSearchController?.initIndex = _tabController.index;
   }
 
+  /// 搜索词正在被翻成简体中文时显示的一条等待提示。
+  ///
+  /// 界面翻译开启后，用户输入的是界面语言，而 B 站的搜索接口只认中文，
+  /// 所以检索前要先把词翻回简体中文——这一步要等模型返回，通常一两秒。
+  /// 提示文案本身也走 [uiTx]，会跟着界面语言一起翻译。
+  Widget _buildTranslateHint(ThemeData theme) {
+    return Obx(() {
+      if (!UiTranslateService.to.isTranslatingQuery) {
+        return const SizedBox.shrink();
+      }
+      return Container(
+        width: double.infinity,
+        color: theme.colorScheme.secondaryContainer,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 12,
+              height: 12,
+              child: CircularProgressIndicator(
+                strokeWidth: 1.6,
+                color: theme.colorScheme.onSecondaryContainer,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                uiTx('正在把搜索词翻译成简体中文，请稍候…'),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: theme.colorScheme.onSecondaryContainer,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
   @override
   void dispose() {
     _tabController
@@ -150,6 +190,8 @@ class _SearchResultPageState extends State<SearchResultPage>
                 }
               },
             ),
+            if (Get.isRegistered<UiTranslateService>())
+              _buildTranslateHint(theme),
             Expanded(
               child: tabBarView(
                 controller: _tabController,

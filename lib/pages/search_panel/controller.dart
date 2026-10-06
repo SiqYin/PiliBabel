@@ -278,25 +278,54 @@ class SearchPanelController<R extends SearchNumData<T>, T>
 
   String? gaiaVtoken;
 
+  /// 译成简体中文后的检索词；null 表示这一轮还没解析过。
+  String? _resolvedKeyword;
+
+  /// 把界面语言的检索词还原成简体中文再检索。
+  ///
+  /// 界面翻译开启后，标题会被译成界面语言，用户自然会用界面语言去搜；
+  /// 但 B 站的搜索接口只认中文原文，直接拿外语词去搜必然搜不到。
+  /// 翻译不需要/失败时一律退回原词——搜索绝不能因为翻译不可用而失效。
+  ///
+  /// 结果缓存在本 controller 上：翻页复用同一个词，不会每页重译一次；
+  /// 多个分栏同时开搜同一个词时，[UiTranslateService.translateQuery] 内部
+  /// 会做并发去重，实际只发一次请求。
+  Future<String> _resolveKeyword() async {
+    final cached = _resolvedKeyword;
+    if (cached != null) return cached;
+    var resolved = keyword;
+    if (Get.isRegistered<UiTranslateService>()) {
+      final translated = await UiTranslateService.to.translateQuery(keyword);
+      if (translated != null && translated.isNotEmpty) {
+        resolved = translated;
+      }
+    }
+    _resolvedKeyword = resolved;
+    return resolved;
+  }
+
   @override
-  Future<LoadingState<R>> customGetData() => SearchHttp.searchByType<R>(
-    searchType: searchType,
-    keyword: keyword,
-    page: page,
-    order: order,
-    duration: videoDurationType?.index,
-    tids: videoZoneType?.tids,
-    orderSort: userOrderType?.value.orderSort,
-    userType: userType?.value.index,
-    categoryId: articleZoneType?.value.categoryId,
-    pubBegin: pubBegin,
-    pubEnd: pubEnd,
-    gaiaVtoken: gaiaVtoken,
-    onSuccess: (String gaiaVtoken) {
-      this.gaiaVtoken = gaiaVtoken;
-      queryData(page == 1);
-    },
-  );
+  Future<LoadingState<R>> customGetData() async {
+    final resolvedKeyword = await _resolveKeyword();
+    return SearchHttp.searchByType<R>(
+      searchType: searchType,
+      keyword: resolvedKeyword,
+      page: page,
+      order: order,
+      duration: videoDurationType?.index,
+      tids: videoZoneType?.tids,
+      orderSort: userOrderType?.value.orderSort,
+      userType: userType?.value.index,
+      categoryId: articleZoneType?.value.categoryId,
+      pubBegin: pubBegin,
+      pubEnd: pubEnd,
+      gaiaVtoken: gaiaVtoken,
+      onSuccess: (String gaiaVtoken) {
+        this.gaiaVtoken = gaiaVtoken;
+        queryData(page == 1);
+      },
+    );
+  }
 
   @override
   Future<void> onReload() {

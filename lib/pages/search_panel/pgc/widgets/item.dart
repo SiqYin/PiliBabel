@@ -3,9 +3,11 @@ import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/search/result.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 class SearchPgcItem extends StatelessWidget {
@@ -61,21 +63,27 @@ class SearchPgcItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 4),
-                    Text.rich(
-                      TextSpan(
-                        children: item.title
-                            .map(
-                              (e) => TextSpan(
-                                text: e.text,
-                                style: TextStyle(
-                                  color: e.isEm
-                                      ? theme.colorScheme.primary
-                                      : theme.colorScheme.onSurface,
-                                ),
+                    Obx(
+                      () => UiTranslateService.contentTranslationActive()
+                          // 搜索结果标题带 <em> 高亮分段，逐段翻译会译得支离破碎；
+                          // 界面翻译开启时整句走 uiTx，用高亮换取完整译文。
+                          ? Text(uiTx(item.title.map((e) => e.text).join()))
+                          : Text.rich(
+                              TextSpan(
+                                children: item.title
+                                    .map(
+                                      (e) => TextSpan(
+                                        text: e.text,
+                                        style: TextStyle(
+                                          color: e.isEm
+                                              ? theme.colorScheme.primary
+                                              : theme.colorScheme.onSurface,
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
                               ),
-                            )
-                            .toList(),
-                      ),
+                            ),
                     ),
                     const SizedBox(height: 12),
                     Text('评分:${item.mediaScore?['score']}', style: style),

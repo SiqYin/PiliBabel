@@ -216,6 +216,7 @@ abstract final class SettingBoxKey {
       uiTranslateApiKey = 'uiTranslateApiKey',
       uiTranslateThinking = 'uiTranslateThinking',
       uiTranslateCache = 'uiTranslateCache',
+      uiTranslateQueryCache = 'uiTranslateQueryCache',
       uiTranslatePromptRevision = 'uiTranslatePromptRevision',
       uiTranslateOnboarded = 'uiTranslateOnboarded';
 

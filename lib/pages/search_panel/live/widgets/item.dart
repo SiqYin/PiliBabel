@@ -6,6 +6,7 @@ import 'package:PiliPlus/models/search/result.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 class LiveItem extends StatelessWidget {
@@ -72,21 +73,29 @@ class LiveItem extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text.rich(
-            TextSpan(
-              children: liveItem.title
-                  .map(
-                    (e) => TextSpan(
-                      text: e.text,
-                      style: TextStyle(
-                        color: e.isEm
-                            ? theme.colorScheme.primary
-                            : theme.colorScheme.onSurface,
-                      ),
-                    ),
+          Obx(
+            () => UiTranslateService.contentTranslationActive()
+                // 搜索结果标题带 <em> 高亮分段，逐段翻译会译得支离破碎；
+                // 界面翻译开启时整句走 uiTx，用高亮换取完整译文。
+                ? Text(
+                    uiTx(liveItem.title.map((e) => e.text).join()),
                   )
-                  .toList(),
-            ),
+                : Text.rich(
+                    TextSpan(
+                      children: liveItem.title
+                          .map(
+                            (e) => TextSpan(
+                              text: e.text,
+                              style: TextStyle(
+                                color: e.isEm
+                                    ? theme.colorScheme.primary
+                                    : theme.colorScheme.onSurface,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
+                  ),
           ),
           Text(
             liveItem.uname!,

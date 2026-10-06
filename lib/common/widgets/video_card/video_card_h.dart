@@ -196,17 +196,22 @@ class VideoCardH extends StatelessWidget {
       child: Column(
         crossAxisAlignment: .start,
         children: [
-          if (videoItem.titleList?.isNotEmpty == true)
-            Expanded(
-              child: Obx(() {
-                final key = videoItem.bvid ?? videoItem.aid?.toString();
-                final isClicked =
-                    key != null && VideoCardH.clickedBvids.contains(key);
+          Expanded(
+            child: Obx(() {
+              final key = videoItem.bvid ?? videoItem.aid?.toString();
+              final isClicked =
+                  key != null && VideoCardH.clickedBvids.contains(key);
+              final titleList = videoItem.titleList;
+              // 搜索结果标题带 <em> 高亮分段（`titleList`），逐段翻译会译得
+              // 支离破碎，所以界面翻译开启时改成整句走 uiTx：放弃高亮，
+              // 换取一条完整的译文标题。翻译没开时行为与原来完全一致。
+              if (titleList?.isNotEmpty == true &&
+                  !UiTranslateService.contentTranslationActive()) {
                 return Text.rich(
                   overflow: .ellipsis,
                   maxLines: 2,
                   TextSpan(
-                    children: videoItem.titleList!
+                    children: titleList!
                         .map(
                           (e) => TextSpan(
                             text: e.text,
@@ -225,28 +230,21 @@ class VideoCardH extends StatelessWidget {
                         .toList(),
                   ),
                 );
-              }),
-            )
-          else
-            Expanded(
-              child: Obx(() {
-                final key = videoItem.bvid ?? videoItem.aid?.toString();
-                final isClicked =
-                    key != null && VideoCardH.clickedBvids.contains(key);
-                return Text(
-                  uiTx(videoItem.title),
-                  textAlign: .start,
-                  style: TextStyle(
-                    fontSize: theme.textTheme.bodyMedium!.fontSize,
-                    height: 1.42,
-                    letterSpacing: 0.3,
-                    color: isClicked ? theme.colorScheme.outline : null,
-                  ),
-                  maxLines: 2,
-                  overflow: .ellipsis,
-                );
-              }),
-            ),
+              }
+              return Text(
+                uiTx(videoItem.title),
+                textAlign: .start,
+                style: TextStyle(
+                  fontSize: theme.textTheme.bodyMedium!.fontSize,
+                  height: 1.42,
+                  letterSpacing: 0.3,
+                  color: isClicked ? theme.colorScheme.outline : null,
+                ),
+                maxLines: 2,
+                overflow: .ellipsis,
+              );
+            }),
+          ),
           Obx(
             () => Text(
               "$pubdate${remarkedName(
