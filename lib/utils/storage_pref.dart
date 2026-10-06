@@ -1735,6 +1735,28 @@ abstract final class Pref {
   static set uiTranslateCache(Map<String, String> value) =>
       _setting.put(SettingBoxKey.uiTranslateCache, jsonEncode(value));
 
+  /// 「界面语言搜索词 -> 简体中文检索词」的反向缓存。
+  ///
+  /// 独立于 [uiTranslateCache]（那份是「中文原文 -> 界面语言译文」）：
+  /// 搜索时要把用户输入的界面语言词翻回简体中文，方向相反，键值不能混。
+  static Map<String, String> get uiTranslateQueryCache {
+    final raw = _setting.get(
+      SettingBoxKey.uiTranslateQueryCache,
+      defaultValue: '',
+    );
+    if (raw is! String || raw.isEmpty) return {};
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) {
+        return decoded.map((k, v) => MapEntry(k.toString(), v.toString()));
+      }
+    } catch (_) {}
+    return {};
+  }
+
+  static set uiTranslateQueryCache(Map<String, String> value) =>
+      _setting.put(SettingBoxKey.uiTranslateQueryCache, jsonEncode(value));
+
   static int get uiTranslatePromptRevision =>
       _setting.get(SettingBoxKey.uiTranslatePromptRevision, defaultValue: 0);
 
