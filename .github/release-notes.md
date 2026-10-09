@@ -1,3 +1,12 @@
+### PiliBabel v0.3.10
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+**What's new in 0.3.10**
+- **Fixed the grey blocks that appeared in the feed.** A grey rectangle in the middle of a card was not a design element — it was Flutter's error box for a failed widget build. Feed cards draw their title and UP name as `Obx(() => Text(uiTx(...)))`, and GetX throws outright when an `Obx` finishes building without having read a single observable. `UiTranslateService.tx()` returned before touching its revision whenever the string was empty, so any empty string left its `Obx` with no dependency at all — and feed items with no UP name (which includes 充电专属 entries, where the payload has no `up_name`) hit this every time. Affected rows now render normally.
+- **Build errors are no longer silent.** They were previously neither logged nor reported anywhere: a failed subtree just turned grey. They now go through the app's own logger, so with 设置 → 日志 enabled they show up in the in-app log page and in Catcher2. If you ever see something missing or odd, that page is where the reason will be.
+- **No more grey slab for a failed widget.** In release builds a failed subtree now renders as nothing rather than a large opaque grey rectangle, which is a good deal less alarming to look at and no longer wrecks the layout around it. Debug builds keep the red error box, since that is what you want while developing.
+
 ### PiliBabel v0.3.9
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.

@@ -106,6 +106,26 @@ void main() async {
     exit(0);
   }
   ScaledWidgetsFlutterBinding.instance.scaleFactor = Pref.uiScale;
+
+  // Flutter 的 build / layout 异常此前没有任何记录：release 版只会把出错的那块
+  // 子树画成一块灰（`RenderErrorBox`，背景 0xF0C0C0C0）。用户看到「凭空多出一块
+  // 灰」，我们手里却一条线索都没有 —— 信息流卡片上那种灰块就是这么来的。
+  // 这里统一接到项目自己的 logger：开了「日志」开关就会进 Catcher2 与设置里的日志页。
+  FlutterError.onError = (details) {
+    FlutterError.presentError(details);
+    logger.e(
+      'FlutterError: ${details.exception}',
+      error: details.exception,
+      stackTrace: details.stack,
+    );
+  };
+
+  // 不再画那块灰色板砖：release 下渲染成空，让那一格自然缺失，好过糊一大块灰
+  // 把整张卡片弄脏。异常本身已由上面的 onError 记录下来，排查不依赖这个占位。
+  // debug 保留默认红框 —— 开发时正需要看见堆栈。
+  if (kReleaseMode) {
+    ErrorWidget.builder = (details) => const SizedBox.shrink();
+  }
   await Future.wait([
     _initDownPath(),
     _initTmpPath(),
