@@ -189,7 +189,12 @@ class UiTranslateService extends GetxService {
   }
 
   /// 评论/动态正文取词：该条处于“显示原文”态返回原文，否则返回译文。
+  ///
+  /// 与 [tx] 同理，**先读一次 [revision] 再走提前返回**：这条路径同样会被
+  /// `Obx(() => Text(...))` 包住，处于「显示原文」态时若直接返回，外层 Obx 就成了
+  /// 空 Obx，会运行时报错并显示成灰色错误块。
   String commentText(String src, String id) {
+    revision.value;
     if (_originalIds.contains(id)) return src;
     return _tx(src);
   }
@@ -271,10 +276,20 @@ class UiTranslateService extends GetxService {
   ///
   /// 该函数是同步的、必须在 build 里安全调用。未开启、空串、未命中缓存时
   /// 一律回退原文，同时把原文入队等待后台翻译。
+  ///
+  /// **必须在任何提前返回之前读一次 [revision]。** 调用方大量写成
+  /// `Obx(() => Text(uiTx(x)))`，而 GetX 的 Obx 若整次 build 没读到任何可观察量
+  /// 就直接运行时报错；报错后 release 构建会把该子树替换成灰色的错误块
+  /// （`RenderErrorBox`）—— 用户看到的就是卡片里凭空多出一块灰。
+  ///
+  /// 空串是最容易踩到的提前返回分支：没填 UP 名的条目 `RcmdOwner.name` 就是 `''`，
+  /// 于是「UP 名」那一行的 Obx 变成空 Obx、整行变灰。同理还有标题为空的信息流条目。
   static String tx(String src) {
-    if (src.isEmpty) return src;
     if (!Get.isRegistered<UiTranslateService>()) return src;
-    return to._tx(src);
+    final service = to;
+    service.revision.value;
+    if (src.isEmpty) return src;
+    return service._tx(src);
   }
 
   String _tx(String src) {
