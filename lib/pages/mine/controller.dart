@@ -240,22 +240,30 @@ class MineController extends CommonDataController<FavFolderData, FavFolderData>
                     style: theme.textTheme.bodySmall,
                   ),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    // 各占一半：译文（如日语）比中文长时不至于把另一个按钮挤出弹窗
                     children: [
-                      TextButton(
-                        onPressed: () {
-                          SmartDialog.dismiss(result: true);
-                          SmartDialog.showToast(uiTx('已设为永久无痕模式'));
-                        },
-                        child: Text(uiTx('保存为永久'), style: style),
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () {
+                            SmartDialog.dismiss(result: true);
+                            SmartDialog.showToast(uiTx('已设为永久无痕模式'));
+                          },
+                          child: Text(uiTx('保存为永久'),
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: style),
+                        ),
                       ),
                       const SizedBox(width: 10),
-                      TextButton(
-                        onPressed: () {
-                          SmartDialog.dismiss();
-                          SmartDialog.showToast(uiTx('已设为临时无痕模式'));
-                        },
-                        child: Text(uiTx('仅本次（默认）'), style: style),
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () {
+                            SmartDialog.dismiss();
+                            SmartDialog.showToast(uiTx('已设为临时无痕模式'));
+                          },
+                          child: Text(uiTx('仅本次（默认）'),
+                              maxLines: 1, overflow: TextOverflow.ellipsis,
+                              style: style),
+                        ),
                       ),
                     ],
                   ),

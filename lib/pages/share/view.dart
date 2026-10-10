@@ -87,9 +87,11 @@ class _SharePanelState extends State<SharePanel> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(uiTx('分享给')),
+                Expanded(
+                  child: Text(uiTx('分享给'),
+                      maxLines: 1, overflow: TextOverflow.ellipsis),
+                ),
                 iconButton(
                   size: 32,
                   iconSize: 18,
