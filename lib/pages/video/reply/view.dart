@@ -181,7 +181,7 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
                   alignment: .center,
                   margin: .only(bottom: bottom),
                   child: Text(
-                    _videoReplyController.isEnd ? '没有更多了' : '加载中...',
+                    uiTx(_videoReplyController.isEnd ? '没有更多了' : '加载中...'),
                     textAlign: .center,
                     style: TextStyle(fontSize: 12, color: colorScheme.outline),
                   ),

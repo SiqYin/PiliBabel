@@ -501,7 +501,7 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
                       height: 60,
                       alignment: Alignment.center,
                       child: Text(
-                        _favDetailController.isEnd ? '没有更多了' : '加载中...',
+                        uiTx(_favDetailController.isEnd ? '没有更多了' : '加载中...'),
                         style: TextStyle(
                           color: theme.colorScheme.outline,
                           fontSize: 13,
