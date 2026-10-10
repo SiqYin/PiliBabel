@@ -1,4 +1,6 @@
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
+import 'package:PiliPlus/pages/setting/pages/color_select.dart';
+import 'package:PiliPlus/pages/setting/pages/font_setting.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/http/login.dart';
@@ -70,6 +72,16 @@ class _SettingPageState extends State<SettingPage> {
       type: SettingType.aiTranslateSetting,
       subtitle: 'AI 接入、视频总结与界面翻译的集中配置入口',
       icon: Icon(Icons.auto_awesome),
+    ),
+    _SettingsModel(
+      type: SettingType.themeSetting,
+      subtitle: '主题模式、动态取色、高对比度深色、调色板与配色风格',
+      icon: Icon(Icons.palette_outlined),
+    ),
+    _SettingsModel(
+      type: SettingType.fontSetting,
+      subtitle: '内置霞鹜文楷、系统字体与自定义字体，字重与字号',
+      icon: Icon(Icons.text_fields),
     ),
     _SettingsModel(
       type: SettingType.videoSetting,
@@ -147,6 +159,8 @@ class _SettingPageState extends State<SettingPage> {
                       .aiTranslateSetting => const UiTranslateSettingPage(
                         showAppBar: false,
                       ),
+                      .themeSetting => const ColorSelectPage(showAppBar: false),
+                      .fontSetting => const FontSettingPage(showAppBar: false),
                       .webdavSetting => const WebDavSettingPage(
                         showAppBar: false,
                       ),

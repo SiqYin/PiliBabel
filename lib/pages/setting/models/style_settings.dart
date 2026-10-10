@@ -93,12 +93,6 @@ List<SettingsModel> get styleSettings => [
     onTap: _showSideBarThresholdDialog,
   ),
   NormalModel(
-    title: uiTx('App字体设置'),
-    subtitle: uiTx('点击设置'),
-    leading: const Icon(Icons.text_fields),
-    onTap: (context, setState) => Get.toNamed('/fontSetting'),
-  ),
-  NormalModel(
     title: uiTx('界面缩放'),
     getSubtitle: () => '当前缩放比例：${Pref.uiScale.toStringAsFixed(2)}',
     leading: const Icon(Icons.zoom_in_outlined),
@@ -329,25 +323,6 @@ List<SettingsModel> get styleSettings => [
         Get.updateMyAppTheme();
       }
     },
-  ),
-  NormalModel(
-    onTap: (context, setState) => Get.toNamed('/colorSetting'),
-    leading: const Icon(Icons.color_lens_outlined),
-    title: uiTx('主题与色彩'),
-    getSubtitle: () => uiTxP('当前主题：{0}', [
-      Pref.dynamicColor ? uiTx('动态取色') : uiTx('指定颜色'),
-    ]),
-    getTrailing: (theme) => Pref.dynamicColor
-        ? Icon(Icons.color_lens_rounded, color: theme.colorScheme.primary)
-        : SizedBox.square(
-            dimension: 20,
-            child: ColorPalette(
-              colorScheme: colorThemeTypes[Pref.customColor].color
-                  .asColorSchemeSeed(Pref.schemeVariant, theme.brightness),
-              selected: false,
-              showBgColor: false,
-            ),
-          ),
   ),
   PopupModel(
     leading: const Icon(Icons.home_outlined),
