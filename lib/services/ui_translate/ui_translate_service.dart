@@ -89,14 +89,19 @@ class UiTranslateService extends GetxService {
   /// 原文/译文切换的版本号，供各条 Obx 订阅以刷新。
   final RxInt contentRev = 0.obs;
 
-  /// 弹幕翻译运行时开关（默认关闭，不持久化；每次进入播放器需手动开启）。
-  final RxBool danmakuTranslate = false.obs;
+  /// 弹幕翻译运行时开关。默认值随引擎走：
+  /// * 内置官方模型——免费、不消耗用户配额，**默认开**，点了直接生效；
+  /// * 自备 API——消耗用户自己的 token，**默认关**，首次开启仍弹确认框。
+  /// 不持久化：每次进入播放器重新按默认值来。
+  final RxBool danmakuTranslate = RxBool(usingBuiltinTranslate);
 
-  /// 是否具备使用弹幕翻译的条件：界面翻译已启用，且已配置翻译独立接口地址与模型。
+  /// 是否具备使用弹幕翻译的条件：界面翻译已启用，且翻译通道的地址与模型可用。
+  ///
+  /// 注意用**解析后**的 [translateApiUrl] / [translateModel] 而不是直接读
+  /// `Pref.uiTranslateApiUrl` / `Pref.uiTranslateModel`——后者在内置引擎下
+  /// 是空串（内置的地址/模型来自 BuiltinTranslate），会让按钮对内置用户消失。
   bool get canTranslate =>
-      enabled &&
-      Pref.uiTranslateApiUrl.trim().isNotEmpty &&
-      Pref.uiTranslateModel.trim().isNotEmpty;
+      enabled && translateApiUrl.trim().isNotEmpty && translateModel.trim().isNotEmpty;
 
   /// 内容型文本（视频/专栏/直播标题等）是否需要翻译。
   ///
