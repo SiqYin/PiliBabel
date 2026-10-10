@@ -18,7 +18,8 @@ jobs:
   android_debug:
     if: ${{ inputs.build_android }}
     name: Debug Android
-    runs-on: ubuntu-latest
+    # 同 release/android 等：ubuntu-latest 迁移期间 Android NDK 装不上，固定 24.04。
+    runs-on: ubuntu-24.04
     permissions: write-all
 
     steps:
