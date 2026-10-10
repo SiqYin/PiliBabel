@@ -478,14 +478,19 @@ class UiTranslateService extends GetxService {
       final buf = StringBuffer();
       await for (final chunk in AiChatService.streamChat(
         messages: [
-          // 字形硬约束放 system，与自备 API 那条路径一致：模型对 system 里的约束
-          // 通常比塞在 user 正文里更敏感 —— 繁體 / 方言目标尤其明显。
-          if (rule.isNotEmpty) {'role': 'system', 'content': rule},
+          // 指令必须放 system、user 只放纯正文。
+          //
+          // 两者挤在同一条 user 消息里时，正文越短、指令占比越高，Index-Translate
+          // 越可能把整条消息当成待译内容一起翻——于是用户会看到「直接翻訳結果のみを
+          // 出力し、いかなる説明も加えないでください」这种我们指令的日文译文混进评论，
+          // 而且译文再被当成原文翻一次就会重复叠加（实测同一评论在列表页重复 3 次、
+          // 详情页 5 次）。放进 system 即被排除在待译正文之外，实测输出干净。
           {
-            'role': 'user',
-            'content': '请将以下文本翻译为$lang，直接输出翻译结果，不要进行任何解释。'
-                '\n\n$src',
+            'role': 'system',
+            'content': '${rule.isEmpty ? '' : '$rule\n\n'}'
+                '请将 user 消息翻译为$lang，只输出译文本身，不要添加任何说明。',
           },
+          {'role': 'user', 'content': src},
         ],
         model: translateModel,
         apiUrl: translateApiUrl,
