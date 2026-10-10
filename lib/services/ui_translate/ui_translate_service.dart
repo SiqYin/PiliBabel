@@ -238,24 +238,19 @@ class UiTranslateService extends GetxService {
   @override
   void onInit() {
     super.onInit();
-    // Target definitions are part of the translation contract. When Wu/Hokkien/
-    // region-standard prompts change, old translations must not mask the new
-    // rules. The cache is scoped to the currently selected language (language
-    // changes clear it), so invalidate it once only when that current target is
-    // one of the revised prompt families.
-    const promptRevision = 3;
-    const revisedTargets = {
-      'zh-TW',
-      'yue-Hans',
-      'yue-Hant',
-      'wuu-Hans',
-      'wuu-Hant',
-      'nan-TW',
-    };
+    // Target definitions are part of the translation contract. When prompts
+    // change, old translations must not mask the new rules. The cache is
+    // scoped to the currently selected language (language changes clear it),
+    // so invalidate it once on upgrade.
+    //
+    // revision 4 (1.2.0): 内置引擎把指令从 user 挪进 system。在此之前产生的
+    // 译文里可能混着我们指令的译文（表现为评论里反复出现「直接翻訳結果のみを
+    // 出力し…」且随页面渲染轮数叠加）。这些坏译文已落盘、且以原文为 key，
+    // **光改提示词不会自愈**——必须清一次缓存让它们重译。
+    // 这次的提示词改动影响所有目标语言，所以不再按 revisedTargets 挑语言。
+    const promptRevision = 4;
     if (Pref.uiTranslatePromptRevision < promptRevision) {
-      if (revisedTargets.contains(currentLanguage.code)) {
-        Pref.uiTranslateCache = {};
-      }
+      Pref.uiTranslateCache = {};
       Pref.uiTranslatePromptRevision = promptRevision;
     }
     _cache.addAll(Pref.uiTranslateCache);

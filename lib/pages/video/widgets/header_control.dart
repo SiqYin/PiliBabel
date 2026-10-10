@@ -295,7 +295,7 @@ class HeaderControl extends StatefulWidget {
       } else {
         extra.like--;
       }
-      SmartDialog.showToast('${isLike ? '' : '取消'}点赞成功');
+      SmartDialog.showToast(isLike ? uiTx('点赞成功') : uiTx('取消点赞成功'));
       return true;
     } else {
       res.toast();
@@ -518,7 +518,7 @@ class HeaderControlState extends State<HeaderControl>
                   subtitle: shutdownTimerService.isActive
                       ? ShutdownPanel(
                           buildCountdownText: (text) =>
-                              Text(text == null ? '已结束' : '剩余 $text'),
+                              Text(text == null ? uiTx('已结束') : uiTxP('剩余 {0}', [text])),
                           builder: (
                             context,
                             countdown,
@@ -583,8 +583,8 @@ class HeaderControlState extends State<HeaderControl>
                         title: Text(uiTx('播放器音量')),
                         subtitle: Text(
                           Pref.enableAppVolume
-                              ? '应用内音量开启时不生效'
-                              : '当前: ${Pref.playerVolume.toStringAsFixed(0)}%',
+                              ? uiTx('应用内音量开启时不生效')
+                              : uiTxP('当前: {0}%', [Pref.playerVolume.toStringAsFixed(0)]),
                         ),
                         onTap: () => showPlayerVolumeDialog(
                           context,
@@ -612,7 +612,7 @@ class HeaderControlState extends State<HeaderControl>
                       if (result != null) {
                         await applyCdnSelectResult(
                           result,
-                          toastSuffix: '，正在重载视频',
+                          toastSuffix: uiTx('，正在重载视频'),
                         );
                         videoDetailCtr.queryVideoUrl(fromReset: true);
                       }
@@ -939,7 +939,7 @@ class HeaderControlState extends State<HeaderControl>
                     height: 45,
                     child: GestureDetector(
                       onTap: () => SmartDialog.showToast(
-                        '标灰画质需要bilibili会员（已是会员？请关闭无痕模式）；4k和杜比视界播放效果可能不佳',
+                        uiTx('标灰画质需要bilibili会员（已是会员？请关闭无痕模式）；4k和杜比视界播放效果可能不佳'),
                       ),
                       child: Row(
                         spacing: 8,
@@ -1467,7 +1467,7 @@ class HeaderControlState extends State<HeaderControl>
                   ),
                   const SizedBox(height: 10),
                   ...sliderRow(
-                    title: '字体大小 ${(fontScale * 100).toStringAsFixed(1)}%',
+                    title: uiTxP('字体大小 {0}%', [(fontScale * 100).toStringAsFixed(1)]),
                     reset: isPrimary
                         ? resetBtn(theme, '100.0%', () => updateFontScale(1.0))
                         : resetBtn(theme, '80.0%', () => updateFontScale(0.8)),
@@ -1480,7 +1480,7 @@ class HeaderControlState extends State<HeaderControl>
                   ),
                   ...sliderRow(
                     title:
-                        '全屏字体大小 ${(fontScaleFS * 100).toStringAsFixed(1)}%',
+                        uiTxP('全屏字体大小 {0}%', [(fontScaleFS * 100).toStringAsFixed(1)]),
                     reset: isPrimary
                         ? resetBtn(
                             theme,

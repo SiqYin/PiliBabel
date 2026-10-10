@@ -142,7 +142,7 @@ class _LoginPageState extends State<LoginPage> {
             return GestureDetector(
               onTap: () => Utils.copyText(
                 url,
-                toastText: '已复制到剪贴板，可粘贴至已登录的app私信处发送，然后点击已发送的链接打开',
+                toastText: uiTx('已复制到剪贴板，可粘贴至已登录的app私信处发送，然后点击已发送的链接打开'),
               ),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -341,7 +341,7 @@ class _LoginPageState extends State<LoginPage> {
                             parameters: {
                               'url': 'https://passport.bilibili.com/h5-app/passport/login/findPassword',
                               'type': 'url',
-                              'pageTitle': '忘记密码',
+                              'pageTitle': uiTx('忘记密码'),
                             },
                           ),
                       ),
@@ -360,7 +360,7 @@ class _LoginPageState extends State<LoginPage> {
                             parameters: {
                               'url': 'https://passport.bilibili.com/pc/passport/findPassword',
                               'type': 'url',
-                              'pageTitle': '忘记密码',
+                              'pageTitle': uiTx('忘记密码'),
                               'uaType': 'pc',
                             },
                           ),
@@ -383,10 +383,13 @@ class _LoginPageState extends State<LoginPage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           child: Text(
-            '根据 bilibili 官方登录接口规范，密码将在本地加盐、加密后传输。\n'
-            '盐与公钥均由官方提供；以 RSA/ECB/PKCS1Padding 方式加密。\n'
-            '账号密码仅用于该登录接口，不予保存；本地仅存储登录凭证。\n'
-            '请务必在 ${Constants.appName} 开源仓库等可信渠道下载安装。',
+            uiTxP(
+              '根据 bilibili 官方登录接口规范，密码将在本地加盐、加密后传输。\n'
+              '盐与公钥均由官方提供；以 RSA/ECB/PKCS1Padding 方式加密。\n'
+              '账号密码仅用于该登录接口，不予保存；本地仅存储登录凭证。\n'
+              '请务必在 {0} 开源仓库等可信渠道下载安装。',
+              [Constants.appName],
+            ),
             textAlign: TextAlign.center,
             style: theme.textTheme.labelSmall!.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.4),
@@ -419,9 +422,13 @@ class _LoginPageState extends State<LoginPage> {
                     return StaticPopupMenuButton(
                       padding: EdgeInsets.zero,
                       tooltip:
-                          '选择国际冠码，'
-                          '当前为${_loginPageCtr.selectedCountryCodeId.cname}，'
-                          '+${_loginPageCtr.selectedCountryCodeId.countryId}',
+                          uiTxP(
+                            '选择国际冠码，当前为{0}，+{1}',
+                            [
+                              _loginPageCtr.selectedCountryCodeId.cname,
+                              _loginPageCtr.selectedCountryCodeId.countryId,
+                            ],
+                          ),
                       onSelected: (item) {
                         _loginPageCtr.selectedCountryCodeId = item;
                         (context as Element).markNeedsBuild();

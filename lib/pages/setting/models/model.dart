@@ -298,7 +298,7 @@ SettingsModel getListBanWordModel({
     getSubtitle: () {
       if (banWord.isEmpty) return "点击添加";
       final items = parseItems(banWord);
-      return items.isEmpty ? "点击添加" : '${items.length} 个关键词';
+      return items.isEmpty ? uiTx('点击添加') : uiTxP('{0} 个关键词', [items.length]);
     },
     onTap: (context, setState) async {
       final items = parseItems(banWord);
@@ -357,7 +357,7 @@ SettingsModel getListUidWithNameModel({
       final uidsMap = getUidsMap();
       if (uidsMap.isEmpty) return emptySubtitle;
       return countSubtitleBuilder?.call(uidsMap.length) ??
-          '已屏蔽 ${uidsMap.length} 个用户';
+          uiTxP('已屏蔽 {0} 个用户', [uidsMap.length]);
     },
     onTap: (context, setState) async {
       final uidsMap = getUidsMap();
@@ -378,10 +378,10 @@ SettingsModel getListUidWithNameModel({
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             allowEdit: false,
             validator: (value) {
-              if (value.isEmpty) return '请输入UID';
+              if (value.isEmpty) return uiTx('请输入UID');
               final uid = int.tryParse(value);
-              if (uid == null) return 'UID必须是数字';
-              if (uid <= 0) return 'UID必须大于0';
+              if (uid == null) return uiTx('UID必须是数字');
+              if (uid <= 0) return uiTx('UID必须大于0');
               return null;
             },
           );
@@ -433,7 +433,7 @@ SettingsModel getListUidModel({
     title: title,
     getSubtitle: () {
       final uids = getUids();
-      if (uids.isEmpty) return '点击添加';
+      if (uids.isEmpty) return uiTx('点击添加');
       return '已屏蔽 ${uids.length} 个用户';
     },
     onTap: (context, setState) async {
@@ -452,10 +452,10 @@ SettingsModel getListUidModel({
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             allowEdit: false,
             validator: (value) {
-              if (value.isEmpty) return '请输入UID';
+              if (value.isEmpty) return uiTx('请输入UID');
               final uid = int.tryParse(value);
-              if (uid == null) return 'UID必须是数字';
-              if (uid <= 0) return 'UID必须大于0';
+              if (uid == null) return uiTx('UID必须是数字');
+              if (uid <= 0) return uiTx('UID必须大于0');
               return null;
             },
           );
