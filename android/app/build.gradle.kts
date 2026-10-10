@@ -20,7 +20,15 @@ if (!isBuiltInKotlinEnabled) {
 android {
     namespace = "com.example.pilinara"
     compileSdk = 37
-    ndkVersion = flutter.ndkVersion
+    // 默认用 Flutter 自带的 ndkVersion；CI 会通过 -P/ORG_GRADLE_PROJECT_piliNdkVersion
+    // 覆盖成 runner 镜像预装的版本（见 .github/workflows 里的 "Use the runner's
+    // preinstalled NDK" 步骤）。原因：Flutter 3.47 要的版本不在 GitHub runner 的
+    // 预装列表里（预装 27.3 / 29.0 / 30.0），每次构建都得现下 2.6 GB，那个下载
+    // 一旦卡住，Android 构建在编译 Dart 之前就全挂。本项目 Android 侧没有
+    // externalNativeBuild / cmake / jniLibs，构建期不编译原生代码，NDK 只用于
+    // AGP 处理 AAR 里的预编译 .so，换版本不影响产物。
+    ndkVersion = (project.findProperty("piliNdkVersion") as String?)
+        ?: flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
