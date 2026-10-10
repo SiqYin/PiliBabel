@@ -16,6 +16,8 @@ class AppLanguage {
     this.chineseFamily = false,
     this.script,
     this.nativeScript,
+    this.official = true,
+    this.variantOf,
   });
 
   final String code;
@@ -27,6 +29,19 @@ class AppLanguage {
   ///
   /// 只管「字形」，不管方言——粤语 / 吴语 / 闽南语各自都有 Hans 与 Hant 两档。
   final String? script;
+
+  /// B 站官方 Index-Translate 清单是否覆盖本语言。
+  ///
+  /// **只影响界面提示，不影响「能不能选」** —— 两个引擎共用同一份清单。
+  /// 官方清单外的只有我们自己加的那几种（繁體中文、吴语、闽南语、壮语）。
+  final bool official;
+
+  /// 变体所属的组，值是**基准条目的 [name]**。
+  ///
+  /// 官方自己就把地区 / 字形变体拆成了独立条目（阿拉伯语 5 条、库尔德语 3 条、
+  /// 塞尔维亚语 2 条…）。语言选择器据此把它们折叠进一组，既守住「从分不从合」，
+  /// 又不至于把列表撑得没法看。基准条目本身留空。
+  final String? variantOf;
 
   /// 该语言的「专属文字」标识（见 [looksLikeNativeScript]）。
   ///
@@ -263,6 +278,7 @@ const List<AppLanguage> appLanguages = <AppLanguage>[
     '中國台灣地區繁體中文。請將中國大陸簡體中文原文轉換為中國台灣地區繁體中文；嚴格遵循中國台灣地區教育部門《國字標準字體表》及辭典的正體字形、用字和詞彙。使用當地慣用詞；不得輸出簡體字，不得混入粵語、吳語或閩南語詞彙。',
     chineseFamily: true,
     script: 'Hant',
+    official: false,
   ),
   AppLanguage('en', 'English', 'English'),
   AppLanguage('ja', '日本語', '日本語', nativeScript: 'kana'),
@@ -287,6 +303,7 @@ const List<AppLanguage> appLanguages = <AppLanguage>[
     '目标语言是以上海话为基础的吴语，**必须用简体字书写，不得出现繁体字**。请把中国大陆简体中文原文翻译／改写成自然、连贯的上海话书面表达；以上海话为准，参考苏州话的词汇与语感，仅在上海话缺少自然说法时借鉴苏州话。每一条输出都必须是同一种连贯的上海吴语，不得混入闽南语、粤语或普通话句式；严禁把上海话和闽南语拼接成混合文本。输出前自查方言一致性与字形：不确定的词优先采用上海话常用说法，不要自行拼接其他方言；出现繁体字形一律改成简体。',
     chineseFamily: true,
     script: 'Hans',
+    official: false,
   ),
   AppLanguage(
     'wuu-Hant',
@@ -294,6 +311,7 @@ const List<AppLanguage> appLanguages = <AppLanguage>[
     '目標語言是以上海話為基底的吳語，**必須用繁體字書寫，不得出現簡體字**。請把中國大陸簡體中文原文翻譯／改寫成自然、連貫的上海話書面表達；以上海話為準，參考蘇州話的詞彙與語感，僅在上海話缺少自然說法時借鑑蘇州話。繁體字形一律採用《古籍表繁體》（古籍表標準）規定的字形，不採用中國台灣地區教育部門字形標準。每條輸出都必須是同一種連貫的上海吳語，不得混入閩南語、粵語或普通話句式；嚴禁把上海話和閩南語拼接成混合文本。輸出前自查方言一致性與字形：出現簡體字形一律改成繁體。',
     chineseFamily: true,
     script: 'Hant',
+    official: false,
   ),
   AppLanguage(
     'nan-CN',
@@ -301,6 +319,7 @@ const List<AppLanguage> appLanguages = <AppLanguage>[
     '中国大陆闽南语，**必须用简体字书写，不得出现繁体字**。请把中国大陆简体中文原文翻译／改写成自然的闽南语表达；保持闽南语，不得混入吴语或粤语词汇。输出前自查字形：出现繁体字形一律改成简体。',
     chineseFamily: true,
     script: 'Hans',
+    official: false,
   ),
   AppLanguage(
     'nan-TW',
@@ -308,6 +327,7 @@ const List<AppLanguage> appLanguages = <AppLanguage>[
     '目標語言是中國台灣地區閩南語，**必須用繁體字書寫，不得出現簡體字**。請把中國大陸簡體中文原文翻譯／改寫成自然的中國台灣地區閩南語表達；嚴格採用中國台灣地區教育部門《臺灣閩南語常用詞辭典》及《國字標準字體表》的用字、正體字形與詞彙標準。保持一致的台灣閩南語，不得混入上海話/吳語或粵語詞彙；不確定的詞優先採用辭典規範，不要自行拼接其他方言。輸出前自查字形：出現簡體字形一律改成繁體。',
     chineseFamily: true,
     script: 'Hant',
+    official: false,
   ),
 
   // ===== 其余语言（按英文名 A–Z）=====
@@ -328,7 +348,139 @@ const List<AppLanguage> appLanguages = <AppLanguage>[
   AppLanguage('tr', 'Türkçe', 'Türkçe'),
   AppLanguage('ug', 'ئۇيغۇرچە', 'ئۇيغۇرچە (Uyghur)'),
   AppLanguage('vi', 'Tiếng Việt', 'Tiếng Việt'),
-  AppLanguage('za', 'Vahcuengh', 'Vahcuengh (Zhuang)'),
+  AppLanguage('za', 'Vahcuengh', 'Vahcuengh (Zhuang)', official: false),
+
+  // ===== B 站官方 Index-Translate 清单补齐（由调研脚本从技术报告 Appendix C 生成，勿手改）=====
+  // 官方拆出的地区/字形变体各自独立成条（`variantOf` 标出它属于哪一组），
+  // 这是刻意的「从分不从合」。
+  AppLanguage('pt', 'Português', 'Portuguese'),
+  AppLanguage('nl', 'Nederlands', 'Dutch'),
+  AppLanguage('pl', 'Polski', 'Polish'),
+  AppLanguage('ro', 'Română', 'Romanian'),
+  AppLanguage('sv', 'Svenska', 'Swedish'),
+  AppLanguage('hi', 'हिन्दी', 'Hindi'),
+  AppLanguage('ukr-cyrl', 'Українська', 'Ukrainian'),
+  AppLanguage('fas-arab', 'فارسی', 'Persian'),
+  AppLanguage('ces-latn', 'Čeština', 'Czech'),
+  AppLanguage('ell-grek', 'Ελληνικά', 'Greek'),
+  AppLanguage('dan-latn', 'Dansk', 'Danish'),
+  AppLanguage('hun-latn', 'Magyar', 'Hungarian'),
+  AppLanguage('fin-latn', 'Suomi', 'Finnish'),
+  AppLanguage('nob-latn', 'Norsk bokmål', 'Norwegian Bokmål'),
+  AppLanguage('slk-latn', 'Slovenčina', 'Slovak'),
+  AppLanguage('bul-cyrl', 'Български', 'Bulgarian'),
+  AppLanguage('bos-latn', 'Bosanski', 'Bosnian'),
+  AppLanguage('cat-latn', 'Català', 'Catalan'),
+  AppLanguage('ben-beng', 'বাংলা', 'Bengali'),
+  AppLanguage('lit-latn', 'Lietuvių', 'Lithuanian'),
+  AppLanguage('slv-latn', 'Slovenščina', 'Slovenian'),
+  AppLanguage('ekk-latn', 'Eesti', 'Estonian'),
+  AppLanguage('als-latn', 'Shqip', 'Albanian'),
+  AppLanguage('lvs-latn', 'Latviešu', 'Latvian'),
+  AppLanguage('azj-latn', 'Azərbaycanca', 'Azerbaijani'),
+  AppLanguage('hrv-latn', 'Hrvatski', 'Croatian'),
+  AppLanguage('tam-taml', 'தமிழ்', 'Tamil'),
+  AppLanguage('npi-deva', 'नेपाली', 'Nepali'),
+  AppLanguage('urd-arab', 'اردو', 'Urdu (Arabic script)'),
+  AppLanguage('mkd-cyrl', 'Македонски', 'Macedonian'),
+  AppLanguage('srp-cyrl', 'Српски', 'Serbian (Cyrillic)'),
+  AppLanguage('mar-deva', 'मराठी', 'Marathi'),
+  AppLanguage('kat-geor', 'ქართული', 'Georgian'),
+  AppLanguage('mal-mlym', 'മലയാളം', 'Malayalam'),
+  AppLanguage('kaz-cyrl', 'Қазақша', 'Kazakh'),
+  AppLanguage('isl-latn', 'Íslenska', 'Icelandic'),
+  AppLanguage('glg-latn', 'Galego', 'Galician'),
+  AppLanguage('kan-knda', 'ಕನ್ನಡ', 'Kannada'),
+  AppLanguage('ary-arab', 'العربية المغربية', 'Moroccan Arabic', variantOf: 'العربية'),
+  AppLanguage('guj-gujr', 'ગુજરાતી', 'Gujarati'),
+  AppLanguage('bel-cyrl', 'Беларуская', 'Belarusian'),
+  AppLanguage('afr-latn', 'Afrikaans', 'Afrikaans'),
+  AppLanguage('hye-armn', 'Հայերեն', 'Armenian'),
+  AppLanguage('khm-khmr', 'ខ្មែរ', 'Khmer'),
+  AppLanguage('eus-latn', 'Euskara', 'Basque'),
+  AppLanguage('mya-mymr', 'မြန်မာ', 'Burmese'),
+  AppLanguage('lat-latn', 'Latina', 'Latin'),
+  AppLanguage('uzn-cyrl', 'Ўзбекча', 'Uzbek (Cyrillic)', variantOf: 'Oʻzbekcha'),
+  AppLanguage('tel-telu', 'తెలుగు', 'Telugu'),
+  AppLanguage('ory-orya', 'ଓଡ଼ିଆ', 'Odia'),
+  AppLanguage('nno-latn', 'Nynorsk', 'Norwegian Nynorsk', variantOf: 'Norsk bokmål'),
+  AppLanguage('uzn-latn', 'Oʻzbekcha', 'Uzbek (Latin)'),
+  AppLanguage('swh-latn', 'Kiswahili', 'Swahili'),
+  AppLanguage('sin-sinh', 'සිංහල', 'Sinhala'),
+  AppLanguage('kir-cyrl', 'Кыргызча', 'Kyrgyz'),
+  AppLanguage('som-latn', 'Soomaali', 'Somali'),
+  AppLanguage('pan-guru', 'ਪੰਜਾਬੀ', 'Punjabi'),
+  AppLanguage('arz-arab', 'العربية المصرية', 'Egyptian Arabic', variantOf: 'العربية'),
+  AppLanguage('cym-latn', 'Cymraeg', 'Welsh'),
+  AppLanguage('nrm-latn', 'Nouormand', 'Norman'),
+  AppLanguage('pbt-arab', 'پښتو', 'Pashto'),
+  AppLanguage('gle-latn', 'Gaeilge', 'Irish'),
+  AppLanguage('srp-latn', 'Srpski', 'Serbian (Latin)', variantOf: 'Српски'),
+  AppLanguage('hau-latn', 'Hausa', 'Hausa'),
+  AppLanguage('ckb-arab', 'کوردیی ناوەندی', 'Central Kurdish', variantOf: 'Kurdî'),
+  AppLanguage('mlt-latn', 'Malti', 'Maltese'),
+  AppLanguage('tgk-cyrl', 'Тоҷикӣ', 'Tajik'),
+  AppLanguage('kmr-latn', 'Kurdî', 'Northern Kurdish'),
+  AppLanguage('bew-latn', 'Basa Betawi', 'Betawi'),
+  AppLanguage('amh-ethi', 'አማርኛ', 'Amharic'),
+  AppLanguage('lao-laoo', 'ລາວ', 'Lao'),
+  AppLanguage('ltz-latn', 'Lëtzebuergesch', 'Luxembourgish'),
+  AppLanguage('fry-latn', 'Frysk', 'Frisian'),
+  AppLanguage('div-thaa', 'ދިވެހި', 'Dhivehi'),
+  AppLanguage('epo-latn', 'Esperanto', 'Esperanto'),
+  AppLanguage('kin-latn', 'Ikinyarwanda', 'Kinyarwanda'),
+  AppLanguage('ars-arab', 'العربية النجدية', 'Najdi Arabic', variantOf: 'العربية'),
+  AppLanguage('fao-latn', 'Føroyskt', 'Faroese'),
+  AppLanguage('plt-latn', 'Malagasy', 'Malagasy'),
+  AppLanguage('asm-beng', 'অসমীয়া', 'Assamese'),
+  AppLanguage('snd-arab', 'سنڌي', 'Sindhi'),
+  AppLanguage('xho-latn', 'isiXhosa', 'Xhosa'),
+  AppLanguage('tuk-latn', 'Türkmençe', 'Turkmen'),
+  AppLanguage('hat-latn', 'Kreyòl ayisyen', 'Haitian Creole'),
+  AppLanguage('gla-latn', 'Gàidhlig', 'Scottish Gaelic'),
+  AppLanguage('ceb-latn', 'Cebuano', 'Cebuano'),
+  AppLanguage('ydd-hebr', 'ייִדיש', 'Yiddish'),
+  AppLanguage('jav-latn', 'Basa Jawa', 'Javanese'),
+  AppLanguage('bak-cyrl', 'Башҡортса', 'Bashkir'),
+  AppLanguage('pap-latn', 'Papiamentu', 'Papiamento'),
+  AppLanguage('mri-latn', 'Māori', 'Māori'),
+  AppLanguage('tat-cyrl', 'Татарча', 'Tatar'),
+  AppLanguage('hyw-armn', 'Հայերեն (արեւմտահայերեն)', 'Western Armenian'),
+  AppLanguage('yor-latn', 'Yorùbá', 'Yoruba'),
+  AppLanguage('zul-latn', 'isiZulu', 'Zulu'),
+  AppLanguage('sdh-arab', 'کوردی خوارگ', 'Southern Kurdish', variantOf: 'Kurdî'),
+  AppLanguage('smo-latn', 'Gagana Samoa', 'Samoan'),
+  AppLanguage('cos-latn', 'Corsu', 'Corsican'),
+  AppLanguage('hif-latn', 'Fiji Hindi', 'Fiji Hindi'),
+  AppLanguage('sun-latn', 'Basa Sunda', 'Sundanese'),
+  AppLanguage('nya-latn', 'Chichewa', 'Chichewa'),
+  AppLanguage('ibo-latn', 'Igbo', 'Igbo'),
+  AppLanguage('haw-latn', 'ʻŌlelo Hawaiʻi', 'Hawaiian'),
+  AppLanguage('sot-latn', 'Sesotho', 'Sesotho'),
+  AppLanguage('lus-latn', 'Mizo ṭawng', 'Mizo'),
+  AppLanguage('sna-latn', 'chiShona', 'Shona'),
+  AppLanguage('chv-cyrl', 'Чӑвашла', 'Chuvash'),
+  AppLanguage('azb-arab', 'آذربایجان دیلی', 'South Azerbaijani'),
+  AppLanguage('roh-latn', 'Rumantsch', 'Romansh'),
+  AppLanguage('run-latn', 'Ikirundi', 'Kirundi'),
+  AppLanguage('hin-latn', 'Hindi (Latin)', 'Hindi (Latin)', variantOf: 'हिन्दी'),
+  AppLanguage('sah-cyrl', 'Саха тыла', 'Yakut'),
+  AppLanguage('tir-ethi', 'ትግርኛ', 'Tigrinya'),
+  AppLanguage('ast-latn', 'Asturianu', 'Asturian'),
+  AppLanguage('oci-latn', 'Occitan', 'Occitan'),
+  AppLanguage('cnh-latn', 'Hakha Chin', 'Hakha Chin'),
+  AppLanguage('sme-latn', 'Davvisámegiella', 'Northern Sami'),
+  AppLanguage('nds-latn', 'Plattdüütsch', 'Low German'),
+  AppLanguage('oss-cyrl', 'Ирон', 'Ossetian'),
+  AppLanguage('urd-latn', 'Urdu (Latin)', 'Urdu (Latin)', variantOf: 'اردو'),
+  AppLanguage('gsw-latn', 'Schwiizerdütsch', 'Swiss German'),
+  AppLanguage('anp-deva', 'अंगिका', 'Angika'),
+  AppLanguage('apc-arab', 'العربية الشامية', 'Levantine Arabic', variantOf: 'العربية'),
+  AppLanguage('gaz-latn', 'Afaan Oromoo', 'Oromo'),
+  AppLanguage('nap-latn', 'Napulitano', 'Neapolitan'),
+  AppLanguage('hsb-latn', 'Hornjoserbšćina', 'Upper Sorbian'),
+  AppLanguage('hil-latn', 'Hiligaynon', 'Hiligaynon'),
+  AppLanguage('kal-latn', 'Kalaallisut', 'Greenlandic'),
 ];
 
 /// 默认应用语言：简体中文。
