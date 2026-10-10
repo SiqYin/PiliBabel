@@ -91,7 +91,7 @@ class LoginPageController extends GetxController
         final left = 180 - t.tick;
         if (left <= 0) {
           t.cancel();
-          statusQRCode.value = '二维码已过期，请刷新';
+          statusQRCode.value = uiTx('二维码已过期，请刷新');
           qrCodeLeftTime.value = 0;
           return;
         }
@@ -172,8 +172,8 @@ class LoginPageController extends GetxController
     final cookieMap = _cookieMapFromText(cookieTextController.text);
     final verified = await _verifyCookieAccount(
       cookieMap,
-      invalidToast: '哔哩哔哩登录已失效，请重新登录',
-      requestErrorToast: '获取哔哩哔哩用户信息失败，可前往账号管理重试',
+      invalidToast: uiTx('哔哩哔哩登录已失效，请重新登录'),
+      requestErrorToast: uiTx('获取哔哩哔哩用户信息失败，可前往账号管理重试'),
     );
     if (!verified) {
       return;
@@ -306,8 +306,8 @@ class LoginPageController extends GetxController
 
     final verified = await _verifyCookieAccount(
       cookieMap,
-      invalidToast: '网页登录态未生效，请完成扫码授权后重试',
-      requestErrorToast: '登录失败',
+      invalidToast: uiTx('网页登录态未生效，请完成扫码授权后重试'),
+      requestErrorToast: uiTx('登录失败'),
       appendRequestError: true,
     );
     if (!verified) {
