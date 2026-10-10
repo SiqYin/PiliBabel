@@ -263,6 +263,11 @@ bool looksLikeNativeScript(String text, String? nativeScript) {
 
 /// 排序：置顶组按固定顺序（简中、繁中、英、日、韩、简粤、繁粤、简吴、繁吴、
 /// 大陆闽南、台湾闽南）；其余语言按其英文名首字母 A–Z 排序（界面显示各自原语）。
+///
+/// **变体分组（`variantOf`）我们自己的条目也要标**，不能只标官方那几组：
+/// 简体中文↔繁體中文、简体粤语↔繁體粵語、简体吴语↔繁體吳語、大陆闽南语↔臺灣閩南語
+/// 都是「同一语种、不同字形或地区」，与官方拆阿拉伯语 / 塞尔维亚语变体是同一回事，
+/// 选择器里应当成组显示（基准条目的 name 即组键，基准条目本身无需标注）。
 const List<AppLanguage> appLanguages = <AppLanguage>[
   // ===== 置顶组（固定顺序）=====
   AppLanguage(
@@ -279,6 +284,7 @@ const List<AppLanguage> appLanguages = <AppLanguage>[
     chineseFamily: true,
     script: 'Hant',
     official: false,
+    variantOf: '简体中文',
   ),
   AppLanguage('en', 'English', 'English'),
   AppLanguage('ja', '日本語', '日本語', nativeScript: 'kana'),
@@ -296,6 +302,7 @@ const List<AppLanguage> appLanguages = <AppLanguage>[
     '香港粵語口語。請將中國大陸簡體中文原文改寫為自然地道的香港粵語書面白話，採用香港繁體字形及香港常用詞彙、語氣助詞與表達；**必須用繁體字書寫，不得出現簡體字**。遵循香港繁體中文用字習慣，不採用中國台灣地區專用詞彙；不得混入上海話/吳語或閩南語詞彙，也不要逐字硬譯成普通話句式。若原文為閩南語或吳語，仍須翻譯成香港粵語，不得將兩種方言內容接續混寫。',
     chineseFamily: true,
     script: 'Hant',
+    variantOf: '简体粤语',
   ),
   AppLanguage(
     'wuu-Hans',
@@ -312,6 +319,7 @@ const List<AppLanguage> appLanguages = <AppLanguage>[
     chineseFamily: true,
     script: 'Hant',
     official: false,
+    variantOf: '简体吴语',
   ),
   AppLanguage(
     'nan-CN',
@@ -328,6 +336,7 @@ const List<AppLanguage> appLanguages = <AppLanguage>[
     chineseFamily: true,
     script: 'Hant',
     official: false,
+    variantOf: '大陆闽南语',
   ),
 
   // ===== 其余语言（按英文名 A–Z）=====
