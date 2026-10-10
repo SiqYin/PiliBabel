@@ -1814,6 +1814,18 @@ abstract final class Pref {
   static set uiTranslatePromptRevision(int value) =>
       _setting.put(SettingBoxKey.uiTranslatePromptRevision, value);
 
+  /// 升级告知是否已经弹过。**只用一次**：0.3.x 升到 1.0 会看到一次，
+  /// 之后（哪怕是 1.0.0 → 1.0.1）都不再弹。
+  ///
+  /// 用布尔量而不是记录版本号：要满足的需求是「只出现一次」，判据是「有没有弹过」，
+  /// 与「上次是什么版本」无关，少一个需要维护和比较的字段。
+  static bool get uiTranslateUpgradeNoticeShown => _setting.get(
+    SettingBoxKey.uiTranslateUpgradeNoticeShown,
+    defaultValue: false,
+  );
+
+  static set uiTranslateUpgradeNoticeShown(bool value) =>
+      _setting.put(SettingBoxKey.uiTranslateUpgradeNoticeShown, value);
   static bool get uiTranslateOnboarded =>
       _setting.get(SettingBoxKey.uiTranslateOnboarded, defaultValue: false);
 

@@ -88,7 +88,7 @@ class AiSettingController extends GetxController {
         SmartDialog.showToast(uiTx('未获取到模型列表，请检查 API 配置'));
       }
     } catch (e) {
-      SmartDialog.showToast(uiTx('获取模型列表失败: $e'));
+      SmartDialog.showToast(uiTxP('获取模型列表失败: {0}', [e]));
     } finally {
       isLoadingModels.value = false;
     }
@@ -160,7 +160,7 @@ class AiSettingController extends GetxController {
       translateModelList.value = models;
       if (models.isEmpty) SmartDialog.showToast(uiTx('未获取到模型列表，请检查地址/Key'));
     } catch (e) {
-      SmartDialog.showToast(uiTx('获取翻译模型失败: $e'));
+      SmartDialog.showToast(uiTxP('获取翻译模型失败: {0}', [e]));
     } finally {
       isLoadingTranslateModels.value = false;
     }
@@ -222,9 +222,9 @@ class AiSettingController extends GetxController {
       final isSource = UiTranslateService.to.isSourceLanguage;
       final sample = isSource ? 'Hello world' : '直播';
       final out = await UiTranslateService.to.debugTranslate(sample);
-      SmartDialog.showToast(uiTx('测试成功：$sample → $out'));
+      SmartDialog.showToast(uiTxP('测试成功：{0} → {1}', [sample, out]));
     } catch (e) {
-      SmartDialog.showToast(uiTx('测试失败：$e'));
+      SmartDialog.showToast(uiTxP('测试失败：{0}', [e]));
     } finally {
       isTesting.value = false;
     }

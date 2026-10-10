@@ -219,7 +219,8 @@ abstract final class SettingBoxKey {
       uiTranslateCache = 'uiTranslateCache',
       uiTranslateQueryCache = 'uiTranslateQueryCache',
       uiTranslatePromptRevision = 'uiTranslatePromptRevision',
-      uiTranslateOnboarded = 'uiTranslateOnboarded';
+      uiTranslateOnboarded = 'uiTranslateOnboarded',
+      uiTranslateUpgradeNoticeShown = 'uiTranslateUpgradeNoticeShown';
 
   static const String minimizeOnExit = 'minimizeOnExit',
       windowSize = 'windowSize',

@@ -1,3 +1,21 @@
+### PiliBabel v1.0.1
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+Fixes for 1.0.0, plus one thing 1.0.0 should have had.
+
+**Upgrading from 0.3.x now tells you what changed.** If you were already using PiliBabel before 1.0, the first launch after updating shows a short notice: translation is now built in and has been switched to bilibili's free model, so there is nothing left to configure — and your own base URL, key and model are untouched, one tap away under 翻译引擎. Tap 去看看 and it opens the settings page, scrolls to the translation section and opens the engine picker, so switching back is right there. This appears **once**; 1.0.0 → 1.0.1 and later will not show it again. Fresh installs still get the "turn on AI translation" dialog instead — never both.
+
+**Fixed: the coverage note in the language picker stayed in Chinese.** The line about languages outside the official list was rendering under 简体吴语 / 繁體吳語 / 大陆闽南语 / 臺灣閩南語 but not under 繁體中文 — the same string, translated in one place and not another. The dialog's title and cancel button were wrapped in a reactive scope and the list rows were not, so each row kept whatever uiTx returned at build time and only corrected itself if it happened to be rebuilt after the translation arrived. Every row now refreshes. Two more of the same kind: the page title would never have refreshed, and the engine picker would have stayed Chinese on a cold cache.
+
+**Fixed: "test translation" refused to run on the built-in engine**, claiming the API address and model had to be configured. It was reading the own-API fields, which are necessarily empty when the built-in engine is selected; it now reads the resolved values.
+
+**Thinking mode and the test button moved into the own-API section**, so they appear with it. Thinking does nothing for the built-in engine — Index-Translate emits the translation directly, and the endpoint ignores the parameter outright (measured: `enable_thinking` true and false return byte-identical output). The built-in path now sends a fixed `false`. Clear cache stays available for both engines.
+
+**Also fixed:** five strings that interpolated a value before calling uiTx, so each distinct value became its own translation key. They use the placeholder template now.
+
+**Documentation:** the README is back to one file per language (English in README.md, the rest in README.<code>.md), so the language bar navigates to that language's page again.
+
 ### PiliBabel v1.0.0
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
