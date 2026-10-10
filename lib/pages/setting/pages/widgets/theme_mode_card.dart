@@ -60,7 +60,7 @@ class ThemeModeCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: theme.textTheme.labelLarge?.copyWith(
                         color: selected ? null : colorScheme.onSurfaceVariant,
-                        fontWeight: selected ? .w600 : null,
+                        fontWeight: selected ? FontWeight.w600 : null,
                       ),
                     ),
                   ),
