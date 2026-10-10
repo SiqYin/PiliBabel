@@ -577,9 +577,14 @@ class ReplyItemGrpc extends StatelessWidget {
         ],
         if (replyControl.cardLabels.isNotEmpty) ...[
           Text(
+            // cardLabels 是服务端下发的中文标签（如「UP主觉得很赞」），需经 uiTx 翻译。
+            // 外层 Obx 已无条件读过 revision，所以译文到达后会跟着刷新。
+            // 逐条翻译而不是先拼接：拼接会让「A+B」这种组合各自成为独立缓存 key。
             dialogBtn != null
-                ? replyControl.cardLabels.first.textContent
-                : replyControl.cardLabels.map((e) => e.textContent).join('  '),
+                ? uiTx(replyControl.cardLabels.first.textContent)
+                : replyControl.cardLabels
+                      .map((e) => uiTx(e.textContent))
+                      .join('  '),
             style: textStyle.copyWith(color: colorScheme.secondary),
           ),
           const SizedBox(width: 2),
