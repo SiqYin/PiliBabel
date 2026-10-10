@@ -154,9 +154,6 @@ test.dart
 docs/*
 !docs/danmaku_font_scaling.md
 !docs/inapp_pip_implementation.md
-# README 的分语言源文件（由 tool/build_readme.py 拼成根目录的 README.md）
-!docs/readme/
-!docs/readme/*.md
 test*.dart
 
 AGENTS.md
