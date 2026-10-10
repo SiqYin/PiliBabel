@@ -1,14 +1,12 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io' show Platform;
 
-import 'package:PiliPlus/common/widgets/animated_height.dart';
 import 'package:PiliPlus/common/widgets/color_palette.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/main.dart' show MyApp;
 import 'package:PiliPlus/models/common/nav_bar_config.dart';
 import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'package:PiliPlus/models/common/theme/theme_type.dart';
-import 'package:PiliPlus/pages/home/view.dart';
 import 'package:PiliPlus/pages/mine/controller.dart';
 import 'package:PiliPlus/pages/setting/pages/widgets/theme_mode_card.dart';
 import 'package:PiliPlus/pages/setting/widgets/popup_item.dart';
@@ -33,7 +31,10 @@ import 'package:material_ui/material_ui.dart';
 /// 下半段决定具体配色。区别在于本项目额外保留了 FlexSchemeVariant 调色板风格，
 /// 它能整批改变同一色相下所有容器色的生成方式，与选哪个色相互相独立。
 class ColorSelectPage extends StatefulWidget {
-  const ColorSelectPage({super.key});
+  const ColorSelectPage({super.key, this.showAppBar = true});
+
+  /// 作为「设置」首页的一个分页内嵌时为 false（与 AI 功能等同一层）
+  final bool showAppBar;
 
   @override
   State<ColorSelectPage> createState() => _ColorSelectPageState();
@@ -83,12 +84,13 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final size = MediaQuery.sizeOf(context);
     final padding = MediaQuery.viewPaddingOf(
       context,
     ).copyWith(top: 0, bottom: 0);
     return SimpleScaffold(
-      appBar: AppBar(title: Obx(() => Text(uiTx('主题与色彩')))),
+      appBar: widget.showAppBar
+          ? AppBar(title: Obx(() => Text(uiTx('主题与色彩'))))
+          : null,
       body: ListView(
         padding: .only(
           bottom: MediaQuery.viewPaddingOf(context).bottom + 100,
@@ -194,10 +196,7 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
           Padding(
             padding: padding + const .all(12),
             child: Obx(
-              () => AnimatedHeightWidgetExt(
-                expand: !ctr.dynamicColor.value,
-                duration: const Duration(milliseconds: 200),
-                child: Wrap(
+              () => Wrap(
                   alignment: .center,
                   spacing: 22,
                   runSpacing: 18,
@@ -234,20 +233,6 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
                       );
                     },
                   ).toList(),
-                ),
-              ),
-            ),
-          ),
-          Padding(
-            padding: padding,
-            child: ExcludeFocus(
-              child: IgnorePointer(
-                child: Container(
-                  height: size.height / 2,
-                  width: size.width,
-                  color: theme.colorScheme.surface,
-                  child: const HomePage(preview: true),
-                ),
               ),
             ),
           ),

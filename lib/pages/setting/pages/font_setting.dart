@@ -21,7 +21,10 @@ import 'package:material_ui/material_ui.dart';
 enum DanmakuFontSource { global, system }
 
 class FontSettingPage extends StatefulWidget {
-  const FontSettingPage({super.key});
+  const FontSettingPage({super.key, this.showAppBar = true});
+
+  /// 作为「设置」首页的一个分页内嵌时为 false（与 AI 功能等同一层）
+  final bool showAppBar;
 
   @override
   State<FontSettingPage> createState() => _FontSettingPageState();
@@ -205,7 +208,9 @@ class _FontSettingPageState extends State<FontSettingPage> {
   Widget build(BuildContext context) {
     final customFonts = FontUtils.customFonts.keys.toList();
     return SimpleScaffold(
-      appBar: AppBar(
+      appBar: !widget.showAppBar
+          ? null
+          : AppBar(
         actions: [
           Obx(
             () => TextButton(

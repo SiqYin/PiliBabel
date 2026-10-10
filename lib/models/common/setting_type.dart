@@ -12,6 +12,8 @@ enum SettingType {
   recommendSetting('推荐流设置'),
   dynamicsSetting('动态流设置'),
   aiTranslateSetting('AI 功能'),
+  themeSetting('主题与色彩'),
+  fontSetting('字体设定'),
   videoSetting('音视频设置'),
   playSetting('播放器设置'),
   styleSetting('外观设置'),
