@@ -102,7 +102,7 @@ List<SettingsModel> get recommendSettings => [
     title: uiTx('白名单用户'),
     leading: const Icon(Icons.person_add_alt_1_outlined),
     emptySubtitle: uiTx('点击添加白名单用户'),
-    countSubtitleBuilder: (count) => '已加入白名单 $count 个用户',
+    countSubtitleBuilder: (count) => uiTxP('已加入白名单 {0} 个用户', [count]),
     getUidsMap: () => Pref.whitelistMids,
     setUidsMap: UserWhitelist.save,
     onUpdate: () {
@@ -126,8 +126,8 @@ List<SettingsModel> get recommendSettings => [
     title: uiTx('屏蔽无权查看视频'),
     leading: const Icon(Icons.block_outlined),
     getSubtitle: () => Pref.rcmdMode != RcmdMode.web
-        ? '仅对首页 app 端推荐生效，屏蔽无权查看的视频(如充电专属视频)'
-        : '仅对首页 app 端推荐生效，请先切换为App端推荐或合并模式',
+        ? uiTx('仅对首页 app 端推荐生效，屏蔽无权查看的视频(如充电专属视频)')
+        : uiTx('仅对首页 app 端推荐生效，请先切换为App端推荐或合并模式'),
     getTrailing: (_) => StreamBuilder<BoxEvent>(
       stream: GStorage.setting.watch().where(
         (event) =>

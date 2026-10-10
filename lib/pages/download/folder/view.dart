@@ -175,7 +175,7 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
                     ),
                   );
                   SmartDialog.showToast(
-                    res.every((item) => item) ? '更新成功' : '更新失败',
+                    res.every((item) => item) ? uiTx('更新成功') : uiTx('更新失败'),
                   );
                 },
                 child: Text(uiTx('更新'),
@@ -304,7 +304,7 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
                           folderId: widget.folderId,
                           entries: [entry],
                         ),
-                        deleteLabel: '移出文件夹',
+                        deleteLabel: uiTx('移出文件夹'),
                         deleteConfirmText: '确定从当前文件夹移除？',
                         controller: _controller,
                         playContext: DownloadVideoPlayContext.folder(

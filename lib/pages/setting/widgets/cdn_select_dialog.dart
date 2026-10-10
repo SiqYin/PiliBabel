@@ -163,7 +163,7 @@ class CdnSpeedTester {
   String _describeError(DioException error) {
     final statusCode = error.response?.statusCode;
     if (statusCode != null && 400 <= statusCode && statusCode < 500) {
-      return '此视频可能无法替换为该CDN';
+      return uiTx('此视频可能无法替换为该CDN');
     }
     final message = error.toString();
     return message.isEmpty ? '测速失败' : message;

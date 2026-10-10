@@ -1111,7 +1111,7 @@ class LiveRoomController extends GetxController {
       _applyWearStatus(medalId, 1);
       wearingMedal.value = item.uinfoMedal;
       _fansMedalStale = true;
-      SmartDialog.showToast('已佩戴 ${item.medal?.medalName ?? ''}');
+      SmartDialog.showToast(uiTxP('已佩戴 {0}', [item.medal?.medalName ?? '']));
       return true;
     } else {
       res.toast();

@@ -58,7 +58,7 @@ class _CreateVotePageState extends State<CreateVotePage> {
     );
     return SimpleScaffold(
       appBar: AppBar(
-        title: Text('${_controller.voteId != null ? '' : '发起'}投票'),
+        title: Text(uiTxP('{0}投票', [_controller.voteId != null ? '' : uiTx('发起')])),
       ),
       body: ListView(
         padding: EdgeInsets.only(
@@ -81,7 +81,7 @@ class _CreateVotePageState extends State<CreateVotePage> {
               onChanged: (value) => _controller
                 ..title.value = value
                 ..updateCanCreate(),
-              desc: '投票标题',
+              desc: uiTx('投票标题'),
               hintText: uiTx('请填写标题'),
               inputFormatters: [LengthLimitingTextInputFormatter(32)],
             ),

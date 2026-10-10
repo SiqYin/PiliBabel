@@ -168,7 +168,7 @@ abstract final class RequestUtils {
 
       if (context.mounted) {
         bool isSpecialFollowed = followStatus!.special == 1;
-        String text = isSpecialFollowed ? '移除特别关注' : '加入特别关注';
+        String text = uiTx(isSpecialFollowed ? '移除特别关注' : '加入特别关注');
         showDialog(
           context: context,
           builder: (context) => SimpleDialog(

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:convert';
 
 import 'package:PiliPlus/http/browser_ua.dart';
@@ -103,7 +104,7 @@ abstract final class CdnNodeStore {
           continue;
         }
       }
-      return '更新失败，请检查网络后重试';
+      return uiTx('更新失败，请检查网络后重试');
     } finally {
       dio.close(force: true);
     }

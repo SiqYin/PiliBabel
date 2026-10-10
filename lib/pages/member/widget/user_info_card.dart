@@ -239,7 +239,7 @@ class UserInfoCard extends StatelessWidget {
                 color: colorScheme.vipColor,
               ),
               child: Text(
-                card.vip?.label?.text ?? '大会员',
+                card.vip?.label?.text ?? uiTx('大会员'),
                 strutStyle: const StrutStyle(
                   height: 1,
                   leading: 0,
