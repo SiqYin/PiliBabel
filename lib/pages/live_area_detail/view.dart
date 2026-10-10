@@ -105,7 +105,7 @@ class _LiveAreaDetailPageState extends State<LiveAreaDetailPage> {
                       iconButton(
                         iconSize: 20,
                         tooltip:
-                            '切换${_controller.showFirstFrame ? '封面' : '首帧'}',
+                            uiTxP('切换{0}', [_controller.showFirstFrame ? uiTx('封面') : uiTx('首帧')]),
                         icon: _controller.showFirstFrame
                             ? const Icon(MdiIcons.alphaFBox)
                             : const Icon(MdiIcons.image),

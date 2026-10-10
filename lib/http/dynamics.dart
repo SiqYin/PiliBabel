@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:convert';
 
 import 'package:PiliPlus/common/constants.dart';
@@ -66,7 +67,7 @@ abstract final class DynamicsHttp {
         return Error('$e\n\n$s');
       }
     } else {
-      return Error(code == 4101132 ? '没有数据' : res.data['message']);
+      return Error(code == 4101132 ? uiTx('没有数据') : res.data['message']);
     }
   }
 
@@ -397,7 +398,7 @@ abstract final class DynamicsHttp {
     if (res.data['code'] == 0) {
       final voteInfo = VoteInfo.fromSeparatedJson(res.data['data']);
       return voteInfo.voteId == null
-          ? const Error('无效的投票id')
+          ? Error(uiTx('无效的投票id'))
           : Success(voteInfo);
     } else {
       return Error(res.data['message']);

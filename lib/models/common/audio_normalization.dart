@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:PiliPlus/models/video/play/url.dart' show Volume;
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 
 enum AudioNormalization {
@@ -11,9 +12,12 @@ enum AudioNormalization {
   custom('自定义参数'),
   ;
 
-  final String title;
+  /// 展示用原文；翻译放在 getter 里（const 枚举值没法在定义处调 uiTx）。
+  final String _title;
   final String param;
-  const AudioNormalization(this.title, [this.param = '']);
+  const AudioNormalization(this._title, [this.param = '']);
+
+  String get title => uiTx(_title);
 
   static String getTitleFromConfig(String config) => switch (config) {
     '0' => disable.title,

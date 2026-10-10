@@ -95,7 +95,7 @@ class _NoteListPageState extends State<NoteListPage>
                     child: Obx(() {
                       final count = _controller.count.value;
                       return Text(
-                        '笔记${count == -1 ? '' : '($count)'}',
+                        uiTxP('笔记{0}', [count == -1 ? '' : '($count)']),
                         style: const TextStyle(fontSize: 16),
                       );
                     }),

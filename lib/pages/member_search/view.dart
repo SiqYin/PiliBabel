@@ -72,13 +72,13 @@ class _MemberSearchPageState extends State<MemberSearchPage> {
                         Obx(
                           () => Tab(
                             text:
-                                '视频 ${_controller.counts[0] != -1 ? _controller.counts[0] : ''}',
+                                uiTxP('视频 {0}', [_controller.counts[0] != -1 ? _controller.counts[0] : '']),
                           ),
                         ),
                         Obx(
                           () => Tab(
                             text:
-                                '动态 ${_controller.counts[1] != -1 ? _controller.counts[1] : ''}',
+                                uiTxP('动态 {0}', [_controller.counts[1] != -1 ? _controller.counts[1] : '']),
                           ),
                         ),
                       ],

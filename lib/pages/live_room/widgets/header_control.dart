@@ -146,7 +146,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
               final isAlwaysOnTop = plPlayerController.isAlwaysOnTop.value;
               return ComBtn(
                 height: btnHeight,
-                tooltip: '${isAlwaysOnTop ? '取消' : ''}置顶',
+                tooltip: uiTxP('{0}置顶', [isAlwaysOnTop ? uiTx('取消') : '']),
                 icon: isAlwaysOnTop
                     ? const Icon(
                         size: 18,
@@ -231,7 +231,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
                   plPlayerController.continuePlayInBackground.value;
               return ComBtn(
                 height: btnHeight,
-                tooltip: '${continuePlayInBackground ? '关闭' : ''}后台播放',
+                tooltip: uiTxP('{0}后台播放', [continuePlayInBackground ? uiTx('关闭') : '']),
                 onTap: plPlayerController.setContinuePlayInBackground,
                 icon: continuePlayInBackground
                     ? const Icon(

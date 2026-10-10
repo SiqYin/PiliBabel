@@ -60,7 +60,7 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
     final folderIds = await showDownloadFolderPickerDialog(
       context: context,
       collectionService: _collectionService,
-      title: '添加到文件夹',
+      title: uiTx('添加到文件夹'),
     );
     if (folderIds == null || folderIds.isEmpty) {
       return;
@@ -85,7 +85,7 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
     }
     await Get.to(
       DownloadVideoSortPage(
-        title: '排序: ${_controller.title.value}',
+        title: uiTxP('排序: {0}', [_controller.title.value]),
         entries: _controller.entries,
         onSave: (cids) =>
             _collectionService.reorderFolderVideos(widget.folderId, cids),
@@ -120,7 +120,7 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
     final currentTitle = _controller.title.value;
     final name = await showDownloadFolderNameDialog(
       context: context,
-      title: '重命名文件夹',
+      title: uiTx('重命名文件夹'),
       initialValue: currentTitle,
     );
     if (name == null || name == currentTitle) {
