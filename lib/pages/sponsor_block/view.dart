@@ -579,26 +579,30 @@ class _SponsorBlockPageState extends State<SponsorBlockPage> {
           title: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text.rich(
-                TextSpan(
-                  children: [
-                    WidgetSpan(
-                      alignment: PlaceholderAlignment.middle,
-                      child: Container(
-                        height: 10,
-                        width: 10,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: color,
+              Expanded(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      WidgetSpan(
+                        alignment: PlaceholderAlignment.middle,
+                        child: Container(
+                          height: 10,
+                          width: 10,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: color,
+                          ),
                         ),
+                        style: const TextStyle(fontSize: 14, height: 1),
                       ),
-                      style: const TextStyle(fontSize: 14, height: 1),
-                    ),
-                    TextSpan(
-                      text: ' ${item.first.title}',
-                      style: const TextStyle(fontSize: 14, height: 1),
-                    ),
-                  ],
+                      TextSpan(
+                        text: ' ${item.first.title}',
+                        style: const TextStyle(fontSize: 14, height: 1),
+                      ),
+                    ],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               Builder(
