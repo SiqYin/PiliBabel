@@ -145,7 +145,7 @@ class UiTranslateSettingPage extends StatelessWidget {
                           )
                         : uiTx(
                             '简体中文以外的语言（含繁體中文、粤语、吴语、闽南语等）'
-                            '都会调用下方配置的 API 翻译。',
+                            '都会用当前选定的翻译引擎翻译。',
                           ),
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: colorScheme.outline,
@@ -261,9 +261,13 @@ class UiTranslateSettingPage extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       uiTx(
+                        '• 翻译引擎可选内置（B 站官方免费模型，无需密钥）或自备 API，'
+                        '两者共用同一份语言清单\n'
                         '• 视频总结与界面翻译各自配置独立的接口地址/Key/模型，互不影响\n'
                         '• 应用语言默认简体中文：只把外文自动译成中文，中文内容不动\n'
-                        '• 选择其它语言即把界面与内容整体翻译为该语言（需配置翻译 API）\n'
+                        '• 选择其它语言即把界面与内容整体翻译为该语言\n'
+                        '• 升级到 1.0 后已自动切到内置模型；你原先填的接口地址/Key/模型'
+                        '原样保留，切回「自备 API」即可复用\n'
                         '• 每条只翻译一次并本地持久固定，切换语言会清缓存重翻',
                       ),
                       style: theme.textTheme.bodySmall,
@@ -284,6 +288,41 @@ class UiTranslateSettingPage extends StatelessWidget {
     child: Text(uiTx(text), style: theme.textTheme.titleMedium),
   );
 }
+
+
+/// 官方清单覆盖的语言数 / 清单外的数量，用于选择器顶部的说明。
+final int kOfficialLanguageCount =
+    appLanguages.where((e) => e.official).length;
+final int kUnofficialLanguageCount =
+    appLanguages.where((e) => !e.official).length;
+
+/// 选择器的行：`(语言, 是否该变体组的基准条目)`。
+///
+/// 官方把地区 / 字形变体拆成了独立条目（阿拉伯语 5 条、库尔德语 3 条…），
+/// 这里**只调整展示顺序**把变体并到基准条目后面，**不合并任何条目**
+/// —— 就是「从分不从合」：清单里一个都不少，只是看起来成组。
+final List<(AppLanguage, bool)> _pickerRows = () {
+  final groups = <String, List<AppLanguage>>{};
+  final order = <String>[];
+  for (final l in appLanguages) {
+    final key = l.variantOf ?? l.name;
+    (groups[key] ??= <AppLanguage>[]).add(l);
+    if (!order.contains(key)) order.add(key);
+  }
+  final rows = <(AppLanguage, bool)>[];
+  for (final key in order) {
+    final group = groups[key]!;
+    if (group.length == 1) {
+      rows.add((group.first, false));
+      continue;
+    }
+    for (final l in group) {
+      // 组内基准条目（没有 variantOf 的那个）当组头，加粗且不缩进。
+      rows.add((l, l.variantOf == null));
+    }
+  }
+  return rows;
+}();
 
 /// 翻译引擎选择器（内置官方模型 / 自备 API）。
 Future<void> _showTranslateProviderPicker(
@@ -324,16 +363,54 @@ Future<String?> promptAppLanguagePicker(
         width: double.maxFinite,
         height: MediaQuery.sizeOf(dialogContext).height * 0.62,
         child: ListView.builder(
-          itemCount: appLanguages.length,
+          itemCount: _pickerRows.length + 1,
           itemBuilder: (context, index) {
-            final language = appLanguages[index];
+            // 第 0 项是覆盖范围说明，跟着列表一起滚。
+            if (index == 0) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Text(
+                  uiTx(
+                    '内置的 B 站官方模型覆盖 $kOfficialLanguageCount 种语言。'
+                    '清单外的 $kUnofficialLanguageCount 种（繁體中文、吴语、闽南语、壮语等）'
+                    '一样可以选，但官方模型不保证效果 —— 想要这几种，建议在'
+                    '「翻译引擎」里切换到自备 API。\n\n'
+                    '若自行接入 API，还能翻译你自己的模型支持的**任何其它语言**，'
+                    '不限于这份清单。',
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.outline,
+                  ),
+                ),
+              );
+            }
+            final (language, isFamilyBase) = _pickerRows[index - 1];
             final selected = language.code == selectedCode;
             // Language names are autonyms; keep them literal instead of asking
             // the selected target language to translate the language selector.
             return ListTile(
               dense: true,
               selected: selected,
-              title: Text(language.name),
+              // 官方清单外的几种提醒一句：它们能选，但想要好效果得自备模型。
+              subtitle: language.official
+                  ? null
+                  : Text(
+                      uiTx('官方清单外 · 建议自备 API'),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    ),
+              contentPadding: EdgeInsets.only(
+                left: isFamilyBase ? 16 : 36,
+                right: 16,
+              ),
+              title: Text(
+                language.name,
+                style: isFamilyBase
+                    ? const TextStyle(fontWeight: FontWeight.w600)
+                    : null,
+              ),
               trailing: selected ? const Icon(Icons.check) : null,
               onTap: () => Navigator.pop(dialogContext, language.code),
             );

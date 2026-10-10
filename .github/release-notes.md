@@ -1,3 +1,25 @@
+### PiliBabel v1.0.0
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+**Translation now works out of the box.** Nothing to sign up for, no key, no bill: bilibili open-sourced its own translation model family, [Index-Translate](https://github.com/bilibili/Index-Translate), and serves it from a free public endpoint. PiliBabel ships pointed at it, so a fresh install translates the moment you open it — which it never did before, because you had to bring an API first.
+
+**What's new in 1.0.0**
+- **Two engines, one switch.** *Built-in* (the default) uses bilibili's official **Index-Translate-35B-A3B** free endpoint. *Own API* is the previous behaviour, unchanged: any OpenAI-compatible `/chat/completions` endpoint with your own base URL / key / model. Switching is a single setting and never changes which features you get.
+- **One language list for both engines — 157 entries, up from 29.** It merges the **150 languages** of bilibili's official inventory with the **4 languages of China's ethnic minorities and 3 Chinese dialects** PiliBabel adds, plus Traditional Chinese. Regional and script variants are kept as **separate entries** rather than folded together: Moroccan / Egyptian / Najdi / Levantine Arabic are each their own choice, and so are Cyrillic-vs-Latin Serbian, Uzbek and Urdu. The picker groups a family together visually without merging any entry.
+- **Honest about coverage.** The handful outside the official inventory — Traditional Chinese, and the Chinese dialects and minority languages above that bilibili does not list — stay selectable, but the picker says so plainly, so you know when a better result would need your own model. The picker also tells you that a custom API can translate any language your model knows, well beyond this list.
+- **Upgrading from 0.3.x keeps your setup.** Your base URL, key and model are left exactly as configured. Only the engine selection defaults to the built-in model, so you land on bilibili's free model; switch back to *Own API* and your configuration is there untouched.
+- **Onboarding does the work.** The first-launch dialog (still English) now offers to turn translation on. Accept, and it enables translation, selects the built-in model, opens the AI settings page and immediately asks which language you want — install to translated in two taps.
+- **Built-in engine goes one string per request.** Index-Translate is a translation specialist whose documented calling convention is a single-item template, and the endpoint is free, so there is nothing to gain by gambling on batched output. Own-API setups keep batching, since those are usually billed per token.
+
+**Also in this release (previously shipped as 0.3.10)**
+- Fixed the grey blocks that appeared in the feed. They were not a design element but Flutter's error box for a failed build: feed cards wrap their title and UP name in an `Obx`, and GetX throws when an `Obx` builds without reading any observable — which `uiTx` did for every empty string, and feed items with no UP name hit every time.
+- Build errors are no longer silent. They never reached any log before, so a failed subtree just turned grey with nothing to go on. They now go through the app's own logger and appear in 设置 → 日志.
+- No more grey slab for a failed widget in release builds; a failed subtree renders as nothing instead, and debug keeps the red box with the stack.
+
+**Documentation**
+- The README is now available in twelve languages — English, 中文, 粵語, 日本語, Français, Deutsch, Español, 한국어, العربية, Tiếng Việt, Bahasa Melayu and Bahasa Indonesia — and the language switcher moves between them **within the page** instead of sending you to a separate file.
+
 ### PiliBabel v0.3.10
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
