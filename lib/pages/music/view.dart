@@ -300,7 +300,7 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
                 Expanded(
                   child: textIconButton(
                     icon: CustomIcons.share_node,
-                    text: '分享',
+                    text: uiTx('分享'),
                     onPressed: () => ShareUtils.shareText(controller.shareUrl),
                   ),
                 ),
@@ -309,7 +309,7 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
                     builder: (context) => textIconButton(
                       icon: FontAwesomeIcons.thumbsUp,
                       activatedIcon: FontAwesomeIcons.solidThumbsUp,
-                      text: '点赞',
+                      text: uiTx('点赞'),
                       count: item.wishCount,
                       status: item.wishListen ?? false,
                       onPressed: () async {
@@ -547,8 +547,8 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
                 [
                   if (!(item.originArtist ?? item.originArtistList)
                       .isNullOrEmpty)
-                    '原唱：${item.originArtist ?? item.originArtistList}',
-                  if (!item.album.isNullOrEmpty) '专辑：${item.album}',
+                    uiTxP('原唱：{0}', [item.originArtist ?? item.originArtistList]),
+                  if (!item.album.isNullOrEmpty) uiTxP('专辑：{0}', [item.album]),
                   if (!item.musicSource.isNullOrEmpty) '出处：${item.musicSource}',
                 ].join('\n'),
               ),

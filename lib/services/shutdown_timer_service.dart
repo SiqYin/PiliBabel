@@ -22,8 +22,8 @@ const _kSqueeze = 1.25;
 const _kItemExtent = 38.0;
 
 enum _ShutdownType with EnumWithLabel {
-  pause('暂停视频'),
-  exit('退出APP'),
+  pause(uiTx('暂停视频')),
+  exit(uiTx('退出APP')),
   ;
 
   @override
@@ -138,12 +138,12 @@ class ShutdownTimerService {
       (minutes ~/ 60, minutes % 60);
 
   static String _format(int minutes) {
-    if (minutes == 60) return '60分钟';
+    if (minutes == 60) return uiTx('60分钟');
     final (int hour, int minute) = _parseMinutes(minutes);
     if (hour > 0 && minute > 0) {
-      return '$hour小时$minute分钟';
+      return uiTxP('{0}小时{1}分钟', [hour, minute]);
     } else if (hour > 0) {
-      return '$hour小时';
+      return uiTxP('{0}小时', [hour]);
     } else {
       return '$minute分钟';
     }

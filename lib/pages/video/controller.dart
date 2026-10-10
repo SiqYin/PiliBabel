@@ -782,8 +782,8 @@ class VideoDetailController extends GetxController
               padding: const .symmetric(horizontal: 8, vertical: 4),
               fontSize: 14,
               text: item is SegmentModel
-                  ? '跳过: ${item.segmentType.shortTitle}'
-                  : '上次看到第${(item as int) + 1}P，点击跳转',
+                  ? uiTxP('跳过: {0}', [item.segmentType.shortTitle])
+                  : uiTxP('上次看到第{0}P，点击跳转', [(item as int) + 1]),
               onTap: (_) {
                 if (item is int) {
                   try {
@@ -1232,7 +1232,7 @@ class VideoDetailController extends GetxController
 
       if (data.acceptDesc?.contains('试看') == true) {
         SmartDialog.showToast(
-          '该视频为专属视频，仅提供试看',
+          uiTx('该视频为专属视频，仅提供试看'),
           displayTime: const Duration(seconds: 3),
         );
       }
