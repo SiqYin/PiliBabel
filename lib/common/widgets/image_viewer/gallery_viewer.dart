@@ -605,7 +605,7 @@ class _GalleryViewerState extends State<GalleryViewer>
                 );
               },
               child: Text(
-                '保存${Platform.isIOS ? ' Live Photo' : '视频'}',
+                uiTxP('保存{0}', [Platform.isIOS ? ' Live Photo' : '视频']),
                 style: const TextStyle(fontSize: 14),
               ),
             ),

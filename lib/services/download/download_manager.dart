@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -116,7 +117,7 @@ class DownloadManager {
       file.createSync(recursive: true);
     }
     if (urls.isEmpty) {
-      await _fail('没有可用的下载直链');
+      await _fail(uiTx('没有可用的下载直链'));
       return;
     }
 
@@ -187,7 +188,7 @@ class DownloadManager {
           _status = DownloadStatus.pause;
           onDone(const StallDeferred());
         } else {
-          await _fail('线路太慢，已停止本次缓存');
+          await _fail(uiTx('线路太慢，已停止本次缓存'));
         }
         return;
       } on DioException catch (e) {
@@ -227,7 +228,7 @@ class DownloadManager {
     if (_cancelRequested) {
       return;
     }
-    await _fail('所有下载线路均失败');
+    await _fail(uiTx('所有下载线路均失败'));
   }
 
   /// 从 [url] 的断点处续传；完成/失败/换线都先关 sink。

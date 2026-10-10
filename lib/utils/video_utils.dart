@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/models/common/video/cdn_type.dart';
 import 'package:PiliPlus/models/common/video/video_decode_type.dart';
 import 'package:PiliPlus/models_new/live/live_room_play_info/codec.dart';
@@ -118,7 +119,7 @@ abstract final class VideoUtils {
     if (host == null) {
       return cdnService.desc;
     }
-    return CdnNodeStore.labelOf(host) ?? '自定义：$host';
+    return CdnNodeStore.labelOf(host) ?? uiTxP('自定义：{0}', [host]);
   }
 
   /// 下载时是否把大陆 upos 镜像改写成 Akamai 全球边缘。

@@ -126,7 +126,7 @@ abstract final class Update {
                 ] else if (Platform.isAndroid) ...[
                   if (bestAsset != null)
                     downloadBtn(
-                      '下载 APK (${bestAsset['name']})',
+                      uiTxP('下载 APK ({0})', [bestAsset['name']]),
                       url: bestAsset['browser_download_url'],
                     )
                   else

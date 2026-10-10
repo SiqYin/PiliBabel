@@ -204,7 +204,7 @@ abstract final class ReplyUtils {
             response.replies?.indexWhere((item) => item.rpid == id) ?? -1;
         if (index != -1) {
           // found
-          showReplyCheckResult('无账号状态下找到了你的评论，评论正常！\n\n你的评论：$message');
+          showReplyCheckResult(uiTxP('无账号状态下找到了你的评论，评论正常！\n\n你的评论：{0}', [message]));
         } else {
           // not found
 
@@ -219,7 +219,7 @@ abstract final class ReplyUtils {
 
           if (res1 is Error) {
             // not found
-            showReplyCheckResult('无法找到你的评论。\n\n你的评论：$message', isBan: true);
+            showReplyCheckResult(uiTxP('无法找到你的评论。\n\n你的评论：{0}', [message]), isBan: true);
           } else {
             // found
 
@@ -237,7 +237,7 @@ abstract final class ReplyUtils {
               // not found
               showReplyCheckResult(
                 res2.errMsg?.startsWith('12022') == true
-                    ? '你的评论被shadow ban（仅自己可见）！\n\n你的评论: $message'
+                    ? uiTxP('你的评论被shadow ban（仅自己可见）！\n\n你的评论: {0}', [message])
                     : '评论不可见(${res2.errMsg}): $message',
                 isBan: true,
               );
@@ -280,7 +280,7 @@ https://api.bilibili.com/x/v2/reply/reply?oid=$oid&pn=1&ps=20&root=$id&type=$typ
             // not found
           } else {
             // found
-            showReplyCheckResult('无账号状态下找到了你的评论，评论正常！\n\n你的评论：$message');
+            showReplyCheckResult(uiTxP('无账号状态下找到了你的评论，评论正常！\n\n你的评论：{0}', [message]));
             return;
           }
         }

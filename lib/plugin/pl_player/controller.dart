@@ -1496,7 +1496,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       if (Pref.autoPlayAdjust &&
           candidates > 1 &&
           _switchesSinceQuality < candidates - 1) {
-        if (await _switchToNextLine(toast: '当前线路过慢，已切换到备用线路')) {
+        if (await _switchToNextLine(toast: uiTx('当前线路过慢，已切换到备用线路'))) {
           _switchesSinceQuality++;
           return;
         }
@@ -1742,8 +1742,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
                   final customHost = VideoUtils.customCDNUrl;
                   SmartDialog.showToast(
                     customHost == null
-                        ? '视频链接打开失败，重试中'
-                        : '视频链接打开失败，重试中\n当前自定义CDN节点：$customHost，持续失败可尝试更换或清除',
+                        ? uiTx('视频链接打开失败，重试中')
+                        : uiTxP('视频链接打开失败，重试中\n当前自定义CDN节点：{0}，持续失败可尝试更换或清除',
+                          [customHost]),
                     displayTime: customHost == null
                         ? const Duration(milliseconds: 2500)
                         : const Duration(milliseconds: 3000),

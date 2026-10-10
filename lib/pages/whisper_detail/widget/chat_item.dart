@@ -228,7 +228,7 @@ class ChatItem extends StatelessWidget {
             ),
             const SizedBox(height: 1),
             Text(
-              '${content['author']} · 直播',
+              uiTxP('{0} · 直播', [content['author']]),
               style: TextStyle(
                 letterSpacing: 0.6,
                 height: 1.5,
@@ -468,7 +468,7 @@ class ChatItem extends StatelessWidget {
                       vertical: 8,
                     ),
                     child: Text(
-                      content['times'] == 0 ? '内容已失效' : content['title'],
+                      content['times'] == 0 ? uiTx('内容已失效') : content['title'],
                       style: TextStyle(
                         letterSpacing: 0.6,
                         height: 1.5,
