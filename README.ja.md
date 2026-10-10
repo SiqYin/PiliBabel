@@ -57,6 +57,8 @@ PiliBabel は **PiliNara / PiliPlus の全機能をそのまま残し**（巻末
 - **言語切り替えが速い**：バッチリクエスト + 同時実行数の制限 + 永続キャッシュ。言語を切り替えると現在の画面を一度だけ強制再構築するので、未翻訳のテキストを眺めたままになることはありません。AI 翻訳をオフにすると UI 全体が原文に戻り、リクエストは一切送信されません。
 - **初回起動のご案内。** 初めてアプリを開いたとき、英語のダイアログで翻訳を有効にするか尋ねます。同意すると、翻訳を有効化し、内蔵モデルを選び、AI 設定ページを開き、そのまま言語を選ばせます —— 新規ユーザーは 2 タップで「インストール直後」から「翻訳済み」まで進めます。
 - **世界どこでも再生できる。** PiliBabel は、あなたを中国本土（Alibaba Cloud / 深圳）ノードに固定するのではなく、bilibili が IP に応じて割り当てる海外エッジ（グローバル **Akamai**、`mirror*ov`、`cn-hk-eq-bcache`）を優先します。これにより中国本土以外のユーザーでも「音は進むのに映像が固まる」現象が起きません。設定で CDN を手動指定することもできます。
+- **Material You スタイルの「テーマとカラー」。** ライト / ダーク / システムに従うは、**3枚のライブプレビューカード**から選べます。各カードには、そのモードで実際に適用される配色で描いた画面の縮小図が表示されます（「システムに従う」は左上ライト・右下ダークの対角分割）。下には**ダイナミックカラー**（対応端末では壁紙の色彩から取得）、**高コントラストダーク**（純黒の画面、夜にやさしい）、**再生画面は常にダーク**が並びます。カラー側は FlexScheme のパレットをそのまま維持し、**19 種のシードカラー**に加えて独立した**「パレットスタイル」**を選べます —— どのシードを選ぶかとは独立に、同じ色相から各コンテナの色をどう導くかだけが変わります。
+- **LXGW WenKai を同梱。** 温かく読みやすい中文字体 **霞鹜文楷（LXGW WenKai）** を**同梱し、初期値として設定**している。インストール直後から使えて、フォント一覧を探す必要はない。画面全体のほか**弾幕（danmaku）**にも適用される。システムフォントに戻すことも、端末にインストール済みのフォントを選ぶことも、`.ttf` / `.otf` / `.ttc` を自分で読み込むことも可能で、更新前に明示的に選んでいたフォントはそのまま維持される。字重と字も従来どおり調整できる。
 
 ## 2 つの翻訳エンジン
 
@@ -197,6 +199,9 @@ PiliBabel は **GNU General Public License v3.0（GPL-3.0）** でライセン�
 
 サードパーティのコンポーネント（各種 Flutter パッケージ、[`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect)、[`media-kit`](https://github.com/media-kit/media-kit)、[`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer)、[`dio`](https://pub.dev/packages/dio) など）は、それぞれのライセンスに従います。
 
+
+同梱の **霞鹜文楷** は **SIL Open Font License 1.1** で別途ライセンス供与されています。ライセンス本文はアプリ内の `assets/fonts/LXGWWenKai-OFL.txt` に同梱されています。
+
 <br/>
 
 ## 謝辞
@@ -206,5 +211,6 @@ PiliBabel は **GNU General Public License v3.0（GPL-3.0）** でライセン�
 - [media-kit](https://github.com/media-kit/media-kit)
 - [dio](https://pub.dev/packages/dio)
 - [Index-Translate](https://github.com/bilibili/Index-Translate) —— bilibili がオープンソース化した翻訳モデルファミリーであり、内蔵エンジンの背後にある無料公開エンドポイント
+- [LXGW WenKai](https://github.com/lxgw/LxgwWenKai)（霞鹜文楷）—— 同梱しているオープンソースの中文字体。SIL Open Font License 1.1
 - そのほか多数
 - bilibili 公式の「AI インターフェース翻訳」に着想を得ています。

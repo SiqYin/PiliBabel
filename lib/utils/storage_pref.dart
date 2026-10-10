@@ -12,6 +12,7 @@ import 'package:PiliPlus/models/common/dynamic/dynamic_badge_mode.dart';
 import 'package:PiliPlus/models/common/dynamic/dynamics_type.dart';
 import 'package:PiliPlus/models/common/dynamic/up_panel_position.dart';
 import 'package:PiliPlus/models/common/follow_order_type.dart';
+import 'package:PiliPlus/models/common/font/app_font.dart';
 import 'package:PiliPlus/models/common/member/tab_type.dart';
 import 'package:PiliPlus/models/common/msg/msg_unread_type.dart';
 import 'package:PiliPlus/models/common/nav_bar_config.dart';
@@ -1869,6 +1870,13 @@ abstract final class Pref {
   static List? get liveStream => _setting.get(SettingBoxKey.liveStream);
 
   static String? get appFont => _setting.get(SettingBoxKey.appFont);
+
+  /// 应用字体**实际生效**的字体族名，由 [appFont] 的存储值解析而来。
+  ///
+  /// 未设置过（null）时返回内置的霞鹜文楷；显式选择「系统默认」时返回 null。
+  /// 渲染路径一律用这个 getter，不要直接用 [appFont]，
+  /// 否则旧版本升级上来的用户拿不到内置字体。
+  static String? get appFontFamily => AppFont.resolve(appFont);
 
   static bool get enableDocProvider =>
       _setting.get(SettingBoxKey.enableDocProvider, defaultValue: false);

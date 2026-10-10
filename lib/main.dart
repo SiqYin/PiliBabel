@@ -291,6 +291,13 @@ class MyApp extends StatelessWidget {
 
   static ColorScheme? _light, _dark;
 
+  /// 动态取色得到的亮/暗配色；未成功取色时为 null。
+  ///
+  /// 暴露给主题设置页做预览用：预览必须和实际生效的配色同源，
+  /// 否则开启动态取色后预览会与真实界面不符。
+  static (ColorScheme?, ColorScheme?) get dynamicColorSchemes =>
+      (_light, _dark);
+
   static (ThemeData, ThemeData) getAllTheme() {
     final dynamicColor = _light != null && _dark != null && Pref.dynamicColor;
     late final brandColor = colorThemeTypes[Pref.customColor].color;

@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/models/common/danmaku/danmaku_font_sync_mode.dart';
+import 'package:PiliPlus/models/common/font/app_font.dart';
 import 'package:PiliPlus/utils/extension/box_ext.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
@@ -27,9 +28,6 @@ class FontSettingPage extends StatefulWidget {
 }
 
 class _FontSettingPageState extends State<FontSettingPage> {
-  /// 字体选择："系统默认" 用空串表示
-  static const String _systemFontSentinel = '';
-
   /// 预览区在未选字体时使用的平台默认字体族
   ///
   /// ref [Typography._withPlatform]
@@ -44,6 +42,8 @@ class _FontSettingPageState extends State<FontSettingPage> {
   // ignore: deprecated_member_use
   static final _normalFontWeight = FontWeight.normal.index;
 
+  /// 存储原值，语义见 [AppFont]：`null` 为内置霞鹜文楷，
+  /// [AppFont.systemSentinel] 为系统默认，其余为具体字体族名
   String? _selectedFont = Pref.appFont;
   // ignore: deprecated_member_use
   int _selectedWeight = Pref.appFontWeight.index;
@@ -79,26 +79,35 @@ class _FontSettingPageState extends State<FontSettingPage> {
     colorScheme = ColorScheme.of(context);
   }
 
-  /// 应用字体菜单显示名：已导入字体显示族名，系统字体显示字体名
+  /// 应用字体菜单显示名：内置字体 / 系统默认 / 已导入字体（族名）/ 系统字体名
   String get _fontLabel {
     final font = _selectedFont;
-    if (font == null) return '系统默认';
+    if (AppFont.isSystem(font)) return uiTx('系统默认');
+    if (AppFont.isBundled(font)) {
+      return uiTxP('内置字体 {0}', [AppFont.bundledLabel]);
+    }
+    // 字体族名是专有名词，不该被翻译。但包裹本 getter 的 Obx 仍需要一条依赖，
+    // 否则会撞上 GetX 的「空 Obx」报错，所以空串走一次 uiTx：它只读修订号，不产生译文。
+    uiTx('');
     return FontUtils.isCustomFont(font)
-        ? FontUtils.displayName(font)
-        : font;
+        ? FontUtils.displayName(font!)
+        : font!;
   }
+
+  /// 应用字体实际生效的字体族名（null 表示系统默认）
+  String? get _fontFamily => AppFont.resolve(_selectedFont);
 
   /// 弹幕字体菜单显示名（跟随应用字体 / 系统默认弹幕字体 / 导入字体族名）
   String get _danmakuLabel => switch (_selectedDanmaku) {
-    DanmakuFontSource.global => '跟随应用字体',
-    DanmakuFontSource.system => '系统默认弹幕字体',
+    DanmakuFontSource.global => _fontLabel,
+    DanmakuFontSource.system => uiTx('系统默认弹幕字体'),
     String family => FontUtils.displayName(family),
-    _ => '系统默认弹幕字体',
+    _ => uiTx('系统默认弹幕字体'),
   };
 
   /// 弹幕字体实际生效的 fontFamily（跟随应用字体时取应用字体；系统默认为 null）
   String? get _danmakuFontFamily => switch (_selectedDanmaku) {
-    DanmakuFontSource.global => _selectedFont,
+    DanmakuFontSource.global => _fontFamily,
     DanmakuFontSource.system => null,
     String family => family,
     _ => null,
@@ -134,9 +143,9 @@ class _FontSettingPageState extends State<FontSettingPage> {
   }
 
   Future<void> _onFontSelected(String value) async {
-    final fontFamily = value.isEmpty ? null : value;
-    setState(() => _selectedFont = fontFamily);
-    if (fontFamily != null) await _loadInBackground(fontFamily);
+    // 选中后再按需装载。内置字体与系统字体都无需装载。
+    setState(() => _selectedFont = value);
+    await _loadInBackground(value);
   }
 
   Future<void> _onDanmakuSelected(Object value) async {
@@ -179,8 +188,11 @@ class _FontSettingPageState extends State<FontSettingPage> {
     SmartDialog.dismiss(status: SmartStatus.loading);
     if (!mounted) return;
     setState(() {
-      // 选中的是系统字体时不受影响，只回收指向导入池的选择
-      if (_selectedFont != null && !_fonts.contains(_selectedFont)) {
+      // 选中的是系统字体时不受影响，只回收指向导入池的选择；
+      // 回收后落回内置字体（存储值置空即代表内置）
+      if (_selectedFont != null &&
+          !AppFont.isSystem(_selectedFont) &&
+          !_fonts.contains(_selectedFont)) {
         _selectedFont = null;
       }
       if (_selectedDanmaku is String) {
@@ -195,24 +207,30 @@ class _FontSettingPageState extends State<FontSettingPage> {
     return SimpleScaffold(
       appBar: AppBar(
         actions: [
-          TextButton(
-            onPressed: () => setState(() {
-              _selectedFont = null;
-              _selectedWeight = _normalFontWeight;
-              _selectedScale = 1;
-            }),
-            child: Text(uiTx('重置')),
+          Obx(
+            () => TextButton(
+              onPressed: () => setState(() {
+                _selectedFont = null;
+                _selectedWeight = _normalFontWeight;
+                _selectedScale = 1;
+              }),
+              child: Text(uiTx('重置')),
+            ),
           ),
-          TextButton(
-            onPressed: _saveFontSetting,
-            child: Text(uiTx('确定')),
+          Obx(
+            () => TextButton(
+              onPressed: _saveFontSetting,
+              child: Text(uiTx('确定')),
+            ),
           ),
           const SizedBox(width: 12),
         ],
       ),
       body: SafeArea(
         top: false,
-        child: Column(
+        // 整页裹一层 Obx：译文是异步回来的，页面上所有 uiTx 都得能跟着刷新。
+        // 只要这一层的构建里读过修订号（本页多处都会），GetX 就不会报「空 Obx」。
+        child: Obx(() => Column(
           children: [
             Expanded(
               child: Center(
@@ -228,19 +246,29 @@ class _FontSettingPageState extends State<FontSettingPage> {
                           ? "中国智造，惠及全球"
                           : Platform.isMacOS || Platform.isIOS
                           ? "汉体书写信息技术标准相容"
-                          : "我能吞下玻璃而不伤身体"}\n\n'
-                      '注：部分字体可能无法应用',
+                          : "我能吞下玻璃而不伤身体"}',
                       style: TextStyle(
-                        fontFamily: _selectedFont ?? _kDefaultFontFamily,
+                        fontFamily: _fontFamily ?? _kDefaultFontFamily,
                         fontWeight: FontWeight.values[_selectedWeight],
                         fontSize: 14 * _selectedScale,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    Text(uiTx('弹幕预览：前方高能反应 666'),
+                    // 说明文字单独一行：字母样张不能翻，只有这句要翻
+                    Text(
+                      uiTx('注：部分字体可能无法应用'),
                       style: TextStyle(
-                        fontFamily: _danmakuFontFamily ?? _kDefaultFontFamily,
-                        fontSize: 14 * _selectedScale,
+                        fontFamily: _fontFamily ?? _kDefaultFontFamily,
+                        fontSize: 12 * _selectedScale,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Obx(
+                      () => Text(
+                        uiTx('弹幕预览：前方高能反应 666'),
+                        style: TextStyle(
+                          fontFamily: _danmakuFontFamily ?? _kDefaultFontFamily,
+                          fontSize: 14 * _selectedScale,
+                        ),
                       ),
                     ),
                   ],
@@ -254,35 +282,51 @@ class _FontSettingPageState extends State<FontSettingPage> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: StaticPopupMenuButton<String>(
-                      initialValue: _selectedFont ?? _systemFontSentinel,
+                      initialValue: _selectedFont ?? AppFont.bundledFamily,
                       borderRadius: BorderRadius.circular(8),
                       itemBuilder: (context) => [
-                        if (customFonts.isNotEmpty) ...[
-                          for (final font in customFonts)
-                            _importedFontItem(font),
-                          const CustomPopupMenuDivider(height: 8),
-                        ],
+                        // 内置字体：随安装包分发，1.1.0 起的默认项
                         CustomPopupMenuItem<String>(
-                          value: _systemFontSentinel,
+                          value: AppFont.bundledFamily,
+                          height: 40,
+                          child: Text(
+                            uiTxP('内置字体 {0}', [AppFont.bundledLabel]),
+                            style: const TextStyle(
+                              fontFamily: AppFont.bundledFamily,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        CustomPopupMenuItem<String>(
+                          value: AppFont.systemSentinel,
                           height: 40,
                           child: Text(uiTx('系统默认')),
                         ),
+                        if (customFonts.isNotEmpty) ...[
+                          const CustomPopupMenuDivider(height: 8),
+                          for (final font in customFonts)
+                            _importedFontItem(font),
+                        ],
+                        const CustomPopupMenuDivider(height: 8),
+                        // 排除内置字体：它已单独列在最前，避免出现同名条目
                         for (final font in _fonts)
-                          CustomPopupMenuItem<String>(
-                            value: font,
-                            height: 40,
-                            child: Text(
-                              font,
-                              style: TextStyle(fontFamily: font),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                          if (font != AppFont.bundledFamily)
+                            CustomPopupMenuItem<String>(
+                              value: font,
+                              height: 40,
+                              child: Text(
+                                font,
+                                style: TextStyle(fontFamily: font),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
                       ],
                       onSelected: _onFontSelected,
                       child: _selectorLabel(
                         text: _fontLabel,
-                        fontFamily: _selectedFont,
+                        fontFamily: _fontFamily,
                       ),
                     ),
                   ),
@@ -442,7 +486,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
               ),
             ),
           ],
-        ),
+        )),
       ),
     );
   }

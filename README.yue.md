@@ -57,6 +57,8 @@ PiliBabel **保留晒 PiliNara / PiliPlus 嘅全部功能**（睇文末[繼承�
 - **轉語言夠快**：分批請求 + 限流併發 + 持久快取；轉語言嗰陣當前介面會強制重建一次，唔會要你對住一堆未翻譯嘅字發呆。熄咗 AI 翻譯就會成個介面還原返原文，而且**完全唔會發任何請求**。
 - **首次開機引導。** 第一次開應用嗰陣會彈一個英文對話框，問你開唔開翻譯。撳咗同意之後會：開翻譯、揀內置模型、跳去 AI 設定頁，然後即刻問你想要邊種語言 —— 新用戶㩒兩下就由「啱啱裝好」變到「已經翻譯好」。
 - **全世界都播得到。** PiliBabel 會優先揀 B 站按 IP 就近派落嚟嘅海外線路（全球 **Akamai**、`mirror*ov`、`cn-hk-eq-bcache`），而唔係將你釘死喺中國大陸（阿里雲 / 深圳）節點 —— 中國大陸以外嘅用戶唔會再出現「聲仲行、畫面卡死」。當然，你都可以喺設定度自己指定 CDN。
+- **Material You 風格嘅「主題同色彩」。** 淺色 / 深色 / 跟系統改用三張**即時預覽卡**嚟揀 —— 每張卡都用嗰個模式實際會套用嘅配色，預先將迷你介面畫畀你睇（「跟系統」嗰張係左上淺色、右下深色嘅對角拼接）。下面係**動態取色**（支援嘅裝置會跟系統桌布取色）、**高對比度深色**（純黑介面，夜間更護眼）同**播放頁固定深色**。色彩嗰半保留完整嘅 FlexScheme 調色板 —— 除咗**19 種色相**，仲多一個獨立嘅**「調色板風格」**，決定同一色相下所有容器色點樣衍生，同你揀邊隻色相無關。
+- **內建霞鹜文楷。** App 直接內嵌**霞鹜文楷（LXGW WenKai）**，而且係**預設字體** —— 裝完就有，唔使自己喺字體清單度搵。介面同彈幕都適用。當然仲可以改返系統字體、揀系統上任一已安裝字體，或者匯入自己嘅 `.ttf` / `.otf` / `.ttc`；升級前你若明確揀過其他字體，會原樣保留。字重同字級照樣調得。
 
 ## 兩個翻譯引擎
 
@@ -197,6 +199,9 @@ PiliBabel 採用 **GNU General Public License v3.0（GPL-3.0）** —— 同 Pil
 
 第三方組件（各種 Flutter 套件、[`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect)、[`media-kit`](https://github.com/media-kit/media-kit)、[`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer)、[`dio`](https://pub.dev/packages/dio) 等等）照舊跟返各自嘅協議。
 
+
+內嵌嘅**霞鹜文楷**另行以 **SIL Open Font License 1.1** 授權，其授權文本隨 App 一併分發，喺 `assets/fonts/LXGWWenKai-OFL.txt`。
+
 <br/>
 
 ## 致謝
@@ -206,5 +211,6 @@ PiliBabel 採用 **GNU General Public License v3.0（GPL-3.0）** —— 同 Pil
 - [media-kit](https://github.com/media-kit/media-kit)
 - [dio](https://pub.dev/packages/dio)
 - [Index-Translate](https://github.com/bilibili/Index-Translate) —— B 站開源嘅翻譯模型家族，亦係內置引擎背後嗰個免費公網接口
+- [LXGW WenKai](https://github.com/lxgw/LxgwWenKai)（霞鹜文楷）—— App 內嵌嘅開源中文字體，採 SIL Open Font License 1.1 授權
 - 仲有更多
 - 靈感嚟自 B 站官方嘅「AI 介面翻譯」。

@@ -18,9 +18,7 @@ import 'package:PiliPlus/models/common/mine_card_type.dart';
 import 'package:PiliPlus/models/common/msg/msg_unread_type.dart';
 import 'package:PiliPlus/models/common/nav_bar_config.dart';
 import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
-import 'package:PiliPlus/models/common/theme/theme_type.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
-import 'package:PiliPlus/pages/mine/controller.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
 import 'package:PiliPlus/pages/setting/slide_color_picker.dart';
 import 'package:PiliPlus/pages/setting/widgets/dual_slider_dialog.dart';
@@ -321,13 +319,6 @@ List<SettingsModel> get styleSettings => [
     ),
     onTap: _showToastDialog,
   ),
-  PopupModel(
-    leading: const Icon(Icons.flashlight_on_outlined),
-    title: uiTx('主题模式'),
-    value: () => Pref.themeType,
-    items: ThemeType.values,
-    onSelected: _setThemeType,
-  ),
   SwitchModel(
     leading: const Icon(Icons.invert_colors),
     title: uiTx('纯黑主题'),
@@ -342,8 +333,10 @@ List<SettingsModel> get styleSettings => [
   NormalModel(
     onTap: (context, setState) => Get.toNamed('/colorSetting'),
     leading: const Icon(Icons.color_lens_outlined),
-    title: uiTx('应用主题'),
-    getSubtitle: () => '当前主题：${Pref.dynamicColor ? '动态取色' : '指定颜色'}',
+    title: uiTx('主题与色彩'),
+    getSubtitle: () => uiTxP('当前主题：{0}', [
+      Pref.dynamicColor ? uiTx('动态取色') : uiTx('指定颜色'),
+    ]),
     getTrailing: (theme) => Pref.dynamicColor
         ? Icon(Icons.color_lens_rounded, color: theme.colorScheme.primary)
         : SizedBox.square(
@@ -903,15 +896,6 @@ Future<void> _showToastDialog(
     SmartDialog.showToast(uiTx('设置成功'));
     setState();
   }
-}
-
-void _setThemeType(ThemeType value, VoidCallback setState) {
-  try {
-    Get.find<MineController>().themeType.value = value;
-  } catch (_) {}
-  GStorage.setting.put(SettingBoxKey.themeMode, value.index);
-  Get.changeThemeMode(ThemeUtils.themeMode = value.toThemeMode);
-  setState();
 }
 
 NormalModel _useSSDModel() {

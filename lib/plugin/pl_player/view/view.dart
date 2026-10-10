@@ -2182,59 +2182,65 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         ],
 
         Obx(() {
-          if ((!plPlayerController.suppressBufferingIndicator.value &&
-                  plPlayerController.dataStatus.loading) ||
-              (plPlayerController.isBuffering.value &&
-                  plPlayerController.playerStatus.isPlaying &&
-                  !plPlayerController.suppressBufferingIndicator.value)) {
-            return Center(
-              child: GestureDetector(
-                onTap: plPlayerController.refreshPlayer,
-                child: Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [Colors.black26, Colors.transparent],
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Image.asset(
-                        Assets.buffering,
-                        height: 25,
-                        cacheHeight: 25.cacheSize(context),
-                        semanticLabel: uiTx("加载中"),
-                        color: Colors.white,
-                      ),
-                      if (plPlayerController.isBuffering.value)
-                        Obx(() {
-                          final buffered = plPlayerController.buffered.value;
-                          if (buffered == 0) {
-                            return Text(uiTx('加载中...'),
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                              ),
-                            );
-                          }
-                          return Text(
-                            DurationUtils.formatDuration(buffered),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                            ),
-                          );
-                        }),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          } else {
+          final ctr = plPlayerController;
+          if (ctr.suppressBufferingIndicator.value || !ctr.showLoadIndicator) {
             return const SizedBox.shrink();
           }
+          // 百分比是阿拉伯数字，不配文字说明：直播没有总时长，算不出来，
+          // 这时只留动画，避免显示一个恒为 0 的假进度。
+          final percent = ctr.loadedPercent;
+          return Center(
+            child: GestureDetector(
+              onTap: ctr.refreshPlayer,
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [Colors.black26, Colors.transparent],
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      Assets.buffering,
+                      height: 25,
+                      cacheHeight: 25.cacheSize(context),
+                      semanticLabel: uiTx("加载中"),
+                      color: Colors.white,
+                    ),
+                    if (percent != null) ...[
+                      const SizedBox(height: 10),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(2),
+                        child: SizedBox(
+                          height: 3,
+                          width: 64,
+                          child: LinearProgressIndicator(
+                            value: percent / 100,
+                            backgroundColor: Colors.white24,
+                            valueColor: const AlwaysStoppedAnimation(
+                              Colors.white,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        '$percent%',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          );
         }),
 
         /// 点击 快进/快退

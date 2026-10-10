@@ -11,6 +11,7 @@ import 'package:PiliPlus/common/widgets/dialog/export_import.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
+import 'package:PiliPlus/models/common/font/app_font.dart';
 import 'package:PiliPlus/pages/mine/controller.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/utils/accounts.dart';
@@ -252,6 +253,18 @@ Commit Hash: ${BuildConfig.commitHash}''',
             title: const Text('Original Upstream (PiliPlus)'),
             subtitle: Text(
               Constants.originalUpstreamCodeUrl,
+              style: subTitleStyle,
+            ),
+          ),
+          ListTile(
+            onTap: () => PageUtils.launchURL(AppFont.bundledHomepage),
+            leading: const Icon(Icons.text_fields),
+            title: Text(
+              uiTxP('内置字体：{0}', [AppFont.bundledLabel]),
+              style: const TextStyle(fontFamily: AppFont.bundledFamily),
+            ),
+            subtitle: Text(
+              'LXGW WenKai · SIL Open Font License 1.1',
               style: subTitleStyle,
             ),
           ),

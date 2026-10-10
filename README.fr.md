@@ -57,6 +57,8 @@ Et depuis la 1.0, cela fonctionne **dès l'installation** : le modèle de traduc
 - **Changement de langue rapide** : requêtes par lots avec concurrence limitée sur un cache persistant ; changer de langue reconstruit une fois l'écran courant, pour ne pas vous laisser devant du texte non traduit. Désactiver la traduction par IA restaure tout l'affichage en texte d'origine et n'envoie **absolument aucune requête**.
 - **Prise en main au premier lancement.** À la première ouverture, une boîte de dialogue en anglais propose d'activer la traduction. En acceptant, elle active la traduction, sélectionne le modèle intégré, ouvre la page de réglages IA et demande immédiatement quelle langue vous voulez — un nouvel utilisateur passe de « tout juste installé » à « application traduite » en deux appuis.
 - **Une lecture qui marche partout dans le monde.** PiliBabel sélectionne le point de terminaison étranger (global **Akamai**, `mirror*ov`, `cn-hk-eq-bcache`) que le `playurl` géo-routé de bilibili propose déjà, au lieu de vous épingler sur un nœud continental (Alibaba Cloud / Shenzhen) — les utilisateurs hors de Chine continentale ne subissent donc plus les blocages « le son continue, l'image se figent ». Vous pouvez toujours épingler un CDN manuellement dans les réglages.
+- **Une page « Thème et couleurs » de style Material You.** Clair / sombre / suivre le système se choisissent parmi **trois cartes d'aperçu en direct** — chacune dessine une miniature de l'interface réelle avec les couleurs que ce mode appliquerait (la carte « suivre le système » est coupée en diagonale, clair en haut à gauche, sombre en bas à droite). En dessous : **couleurs dynamiques** (issues du fond d'écran système quand l'appareil le permet), **sombre haute contrastée** (surfaces noires, plus reposantes la nuit) et **lecteur toujours sombre**. La moitié couleur conserve toute la palette FlexScheme — **19 teintes de base**, plus un **« style de palette »** distinct qui décide de la façon dont chaque couleur de conteneur est dérivée de la teinte de base, indépendamment de la teinte choisie.
+- **LXGW WenKai est fourni avec l'application.** La police **霞鹜文楷 (LXGW WenKai)** est **incluse et définie par défaut** — une police chinoise chaleureuse et très lisible, disponible dès l'installation, au lieu d'aller la chercher dans un sélecteur. Elle s'applique à toute l'interface *et* aux danmaku. Vous pouvez revenir à la police système, choisir n'importe quelle police installée, ou importer votre propre `.ttf` / `.otf` / `.ttc` ; une police choisie explicitement avant la mise à jour est conservée. Le poids et la taille restent réglables comme avant.
 
 ## Les deux moteurs de traduction
 
@@ -197,6 +199,9 @@ PiliBabel est distribué sous **GNU General Public License v3.0 (GPL-3.0)** — 
 
 Les composants tiers (paquets Flutter, [`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect), [`media-kit`](https://github.com/media-kit/media-kit), [`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer), [`dio`](https://pub.dev/packages/dio), etc.) restent sous leurs propres licences.
 
+
+La police **霞鹜文楷** incluse est soumise séparément à la **SIL Open Font License 1.1** ; son texte de licence est distribué avec l'application dans `assets/fonts/LXGWWenKai-OFL.txt`.
+
 <br/>
 
 ## Remerciements
@@ -206,5 +211,6 @@ Les composants tiers (paquets Flutter, [`bilibili-API-collect`](https://github.c
 - [media-kit](https://github.com/media-kit/media-kit)
 - [dio](https://pub.dev/packages/dio)
 - [Index-Translate](https://github.com/bilibili/Index-Translate) — la famille de modèles de traduction open source de bilibili, et le point d'accès public gratuit derrière le moteur intégré
+- [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — la police chinoise open source incluse dans l'application, sous licence SIL Open Font License 1.1
 - et bien d'autres
 - Inspiré par la « traduction d'interface par IA » officielle de bilibili.
