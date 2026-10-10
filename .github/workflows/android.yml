@@ -95,22 +95,21 @@ jobs:
               shell: pwsh
               run: lib/scripts/build.ps1 android
 
-            - name: Use the runner's preinstalled NDK
-              # Flutter 3.47 默认的 ndkVersion（28.2）不在 GitHub runner 镜像的预装列表里
-              # （预装的是 27.3.13750724 / 29.0.14206865 / 30.0.16248370），于是每次构建都要去
-              # dl.google.com 现下 2.6 GB。该下载从 2026-10-10 起在 CI 上持续卡死（进度条停在
-              # 10~16% 后超时），Android 构建在编译 Dart 之前就全挂。改为复用镜像自带 NDK，
-              # 构建过程不再依赖网络。前提：本项目 Android 侧没有 externalNativeBuild /
-              # cmake / jniLibs，构建期不编译原生代码，NDK 仅供 AGP 处理 AAR 内的预编译 .so。
-              run: |
-                ndk_dir="${ANDROID_NDK_HOME:-${ANDROID_NDK_ROOT:-${ANDROID_NDK:-}}}"
-                ver="$(basename "$ndk_dir")"
-                if [ -n "$ver" ] && [ -d "$ndk_dir" ]; then
-                  echo "使用 runner 预装 NDK：$ver"
-                  echo "ORG_GRADLE_PROJECT_piliNdkVersion=$ver" >> "$GITHUB_ENV"
-                else
-                  echo "::warning title=NDK::runner 未提供预装 NDK，回退到 Flutter 默认版本（将触发下载）"
-                fi
+            - name: Cache Android NDK
+              # Flutter 要的 NDK 28.2 不在 runner 镜像预装列表里（预装 27.3 / 29.0 / 30.0），
+              # 每次构建都要现下约 2.6 GB，而这个下载在 CI 上时好时坏（2026-10-10 期间连续
+              # 多轮卡在 10~16% 后超时）。这里把成功下载的那份缓存下来，之后的构建就不再
+              # 依赖网络。不能靠改 ndkVersion 绕开：app_links 与 android_file_picker 都
+              # 声明需要 28.2，AGP 要求工程与所有插件的 NDK 版本一致，改低会直接报
+              # "Your project is configured with Android NDK ..."。
+              # key 用 pubspec 的哈希：NDK 版本由 Flutter 决定，而 pubspec 钉死了 flutter
+              # 版本，Flutter 一升级缓存即自动失效。路径即 runner 镜像的 ANDROID_HOME。
+              uses: actions/cache@v4
+              continue-on-error: true
+              with:
+                path: /usr/local/lib/android/sdk/ndk
+                key: android-ndk-${{ runner.os }}-${{ hashFiles('pubspec.yaml') }}
+
             - name: flutter build apk
               run: flutter build apk --release --split-per-abi --dart-define-from-file=pili_release.json --pub
 
