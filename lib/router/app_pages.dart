@@ -156,7 +156,14 @@ class Routes {
     GetPage(name: '/danmakuBlock', page: () => const DanmakuBlockPage()),
     GetPage(name: '/sponsorBlock', page: () => const SponsorBlockPage()),
     GetPage(name: '/aiSetting', page: () => const AiSettingPage()),
-    GetPage(name: '/aiTranslate', page: () => const UiTranslateSettingPage()),
+    GetPage(
+      name: '/aiTranslate',
+      // 带引导参数进来时，设置页会当着用户的面演一遍「滚到 AI 翻译 → 开开关
+      // → 弹语言列表」，见 kGuidedTranslateSetupArg。
+      page: () => UiTranslateSettingPage(
+        guidedSetup: Get.arguments == kGuidedTranslateSetupArg,
+      ),
+    ),
     GetPage(name: '/createFav', page: () => const CreateFavPage()),
     GetPage(name: '/editProfile', page: () => const EditProfilePage()),
     GetPage(name: '/settingsSearch', page: () => const SettingsSearchPage()),

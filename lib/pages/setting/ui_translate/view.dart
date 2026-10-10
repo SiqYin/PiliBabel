@@ -11,10 +11,80 @@ import 'package:get/get.dart';
 /// 「AI 视频总结」与「AI 界面翻译」各自使用独立的接口地址 / 密钥 / 模型。
 /// 目标语言选择器使用不透明、可滚动的对话框，避免长语言列表覆盖下面的 API Key 输入框；
 /// 语言名称以各自原名显示，不送入模型翻译，防止编号批次提示词污染选项标签。
-class UiTranslateSettingPage extends StatelessWidget {
-  const UiTranslateSettingPage({super.key, this.showAppBar = true});
+/// 引导式首次配置的路由参数（见 `services/ui_translate/onboarding.dart`）。
+///
+/// 带这个参数打开页面时，页面会**当着用户的面**依次做三件事：滚到「AI 界面翻译」
+/// 那一段 → 把开关打开（开关自己会播放一次动画）→ 弹出语言列表。
+/// 目的是让新用户完整看一遍「这些设置在哪、怎么开」，而不只是被丢一个弹窗。
+const String kGuidedTranslateSetupArg = 'guidedTranslateSetup';
+
+class UiTranslateSettingPage extends StatefulWidget {
+  const UiTranslateSettingPage({
+    super.key,
+    this.showAppBar = true,
+    this.guidedSetup = false,
+  });
 
   final bool showAppBar;
+
+  /// 见 [kGuidedTranslateSetupArg]。为 true 时页面自己跑一遍引导动作。
+  final bool guidedSetup;
+
+  @override
+  State<UiTranslateSettingPage> createState() => _UiTranslateSettingPageState();
+}
+
+class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
+  /// 定位「AI 界面翻译」那一节，滚动靠它。
+  final _aiSectionKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.guidedSetup) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _runGuidedSetup());
+    }
+  }
+
+  /// 当着用户的面走一遍：滚过去 → 开开关 → 弹语言列表。
+  ///
+  /// 每一步之间的停顿**是刻意的**：动作本身要被看见，否则新用户根本不知道这些设置
+  /// 藏在哪儿、开关长什么样。所有 await 之后都检查 `mounted`，用户中途返回时不会
+  /// 因为拿不到 context 而崩 —— 早先那版靠固定延迟「等页面推上来」的做法，就卡在
+  /// 这个风险上。
+  Future<void> _runGuidedSetup() async {
+    final controller = Get.isRegistered<AiSettingController>()
+        ? Get.find<AiSettingController>()
+        : Get.put(AiSettingController());
+
+    // 先让用户看清「AI 功能」这一页长什么样，再滚到 AI 翻译那一段。
+    await Future.delayed(const Duration(milliseconds: 450));
+    if (!mounted) return;
+    final sectionContext = _aiSectionKey.currentContext;
+    if (sectionContext != null) {
+      await Scrollable.ensureVisible(
+        sectionContext,
+        duration: const Duration(milliseconds: 550),
+        curve: Curves.easeInOut,
+      );
+    }
+    if (!mounted) return;
+    await Future.delayed(const Duration(milliseconds: 400));
+
+    // 当着用户的面把开关打开 —— 开关会自己播放一次动画。
+    controller.saveUiTranslateEnabled(true);
+    await Future.delayed(const Duration(milliseconds: 850));
+
+    // 最后才弹语言列表，接着让用户选语言。
+    if (!mounted) return;
+    final picked = await promptAppLanguagePicker(
+      context,
+      controller.uiTranslateLang.value,
+    );
+    if (picked != null) {
+      controller.saveUiTranslateLang(picked);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +95,7 @@ class UiTranslateSettingPage extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: showAppBar ? AppBar(title: Text(uiTx('AI 功能'))) : null,
+      appBar: widget.showAppBar ? AppBar(title: Text(uiTx('AI 功能'))) : null,
       body: Obx(() {
         UiTranslateService.to.revision.value;
         return ListView(
@@ -71,7 +141,11 @@ class UiTranslateSettingPage extends StatelessWidget {
             const SizedBox(height: 24),
 
             // ================= AI 界面翻译 =================
-            _sectionTitle(theme, 'AI 界面翻译'),
+            // 引导流程会滚到这里，所以标题要挂 key。
+            KeyedSubtree(
+              key: _aiSectionKey,
+              child: _sectionTitle(theme, 'AI 界面翻译'),
+            ),
             Obx(
               () => SwitchListTile(
                 contentPadding: EdgeInsets.zero,
