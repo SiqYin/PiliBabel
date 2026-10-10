@@ -1995,7 +1995,7 @@ class HeaderControlState extends State<HeaderControl>
                 child: Obx(() {
                   // 内置官方模型不弹确认（见 onPressed），只有自备 API 会消耗
                   // 用户自己的 token，才需要预热确认弹窗的译文
-                  if (!UiTranslateService.to.usingBuiltinTranslate) {
+                  if (!UiTranslateService.usingBuiltinTranslate) {
                     uiTx(UiTranslateService.danmakuTranslateWarning);
                     uiTx('取消');
                     uiTx('确定');
@@ -2010,7 +2010,7 @@ class HeaderControlState extends State<HeaderControl>
                         return;
                       }
                       // 内置官方模型免费、不消耗用户配额：直接开，不弹确认
-                      if (UiTranslateService.to.usingBuiltinTranslate) {
+                      if (UiTranslateService.usingBuiltinTranslate) {
                         UiTranslateService.to.danmakuTranslate.value = true;
                         return;
                       }
