@@ -216,7 +216,7 @@ class DetailItem extends StatelessWidget {
                                   child: PBadge(
                                     isStack: false,
                                     text: progress >= entry.totalTimeMilli - 400
-                                        ? '已看完'
+                                        ? uiTx('已看完')
                                         : '${DurationUtils.formatDuration(
                                                 progress ~/ 1000,
                                               )}/'
@@ -515,7 +515,7 @@ class DetailItem extends StatelessWidget {
                   CustomPopupMenuItem<void>(
                     height: 38,
                     child: Text(
-                      '访问${entry.ownerName != null ? '：${entry.ownerName}' : '用户主页'}',
+                      uiTxP('访问{0}', [entry.ownerName != null ? '：${entry.ownerName}' : uiTx('用户主页')]),
                       style: const TextStyle(fontSize: 13),
                     ),
                     onTap: () => Get.toNamed('/member?mid=$mid'),

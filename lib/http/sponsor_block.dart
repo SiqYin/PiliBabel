@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:convert';
 
 import 'package:PiliPlus/build_config.dart';
@@ -31,9 +32,9 @@ abstract final class SponsorBlock {
 
   static Error getErrMsg(Response res) {
     String statusMessage = switch (res.statusCode) {
-      200 => '意料之外的响应',
-      400 => '参数错误',
-      403 => '被自动审核机制拒绝',
+      200 => uiTx('意料之外的响应'),
+      400 => uiTx('参数错误'),
+      403 => uiTx('被自动审核机制拒绝'),
       404 => '未找到数据',
       409 => '重复提交',
       429 => '提交太快（触发速率控制）',

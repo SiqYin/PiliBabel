@@ -253,7 +253,7 @@ class _MemberPageState extends State<MemberPage> {
                         ),
                       ),
                       child: Text(
-                        '${e.isFollow ? '已' : ''}预约',
+                        uiTxP('{0}预约', [e.isFollow ? uiTx('已') : '']),
                         style: const TextStyle(fontSize: 13),
                       ),
                     );
@@ -291,7 +291,7 @@ class _MemberPageState extends State<MemberPage> {
                               TextSpan(
                                 text:
                                     '${e.descText1 == null ? '' : '${e.descText1}  '}'
-                                    '${NumUtils.numFormat(e.total)}人预约',
+                                    uiTxP('{0}人预约', [NumUtils.numFormat(e.total)]),
                               ),
                               if (e.lotteryPrizeInfo case final lottery?) ...[
                                 const TextSpan(text: '\n'),
@@ -360,7 +360,7 @@ class _MemberPageState extends State<MemberPage> {
                 const Icon(Icons.edit_note, size: 19),
                 const SizedBox(width: 10),
                 Obx(() => Text(
-                  _userController.remark.value.isEmpty ? '添加备注' : '编辑备注',
+                  _userController.remark.value.isEmpty ? uiTx('添加备注') : uiTx('编辑备注'),
                 )),
               ],
             ),

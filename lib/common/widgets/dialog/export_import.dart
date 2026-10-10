@@ -169,7 +169,7 @@ void importFromInput<T>(
             json = jsonDecode(value!) as T;
             return null;
           } catch (e) {
-            return '解析json失败：$e';
+            return uiTxP('解析json失败：{0}', [e]);
           }
         },
       ),
@@ -191,7 +191,7 @@ void importFromInput<T>(
                 SmartDialog.showToast(uiTx('导入成功'));
                 return;
               } catch (e) {
-                forceErrorText = '导入失败：$e';
+                forceErrorText = uiTxP('导入失败：{0}', [e]);
               }
               key.currentState?.validate();
               forceErrorText = null;

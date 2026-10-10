@@ -120,7 +120,7 @@ Future<void> autoWrapReportDialog(
                             onChanged: (value) => reasonDesc = value,
                             validator: (value) =>
                                 isContentRequired && value.isNullOrEmpty
-                                ? '理由不能为空'
+                                ? uiTx('理由不能为空')
                                 : null,
                           ),
                         ),
@@ -134,7 +134,7 @@ Future<void> autoWrapReportDialog(
             Padding(
               padding: const EdgeInsets.only(left: 14, top: 6),
               child: CheckBoxText(
-                text: '拉黑该用户',
+                text: uiTx('拉黑该用户'),
                 onChanged: (value) => banUid = value,
               ),
             ),

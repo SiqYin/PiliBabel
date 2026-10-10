@@ -178,9 +178,9 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
     assert((itemIndex == null) == (itemId == null));
     String filter = initFilter;
     final hintText = switch (type) {
-      DmBlockType.keyword => '输入过滤的关键词，其它类别请切换标签页后添加',
-      DmBlockType.regex => '输入//之间的正则表达式，无需包含头尾的"/"',
-      DmBlockType.uid => '输入用户UID',
+      DmBlockType.keyword => uiTx('输入过滤的关键词，其它类别请切换标签页后添加'),
+      DmBlockType.regex => uiTx('输入//之间的正则表达式，无需包含头尾的"/"'),
+      DmBlockType.uid => uiTx('输入用户UID'),
     };
     final isUid = type == DmBlockType.uid;
     showDialog(

@@ -295,9 +295,9 @@ class _MainAppState extends PopScopeState<MainApp>
 
     Menu trayMenu = Menu(
       items: [
-        MenuItem(key: 'show', label: '显示窗口'),
+        MenuItem(key: 'show', label: uiTx('显示窗口')),
         MenuItem.separator(),
-        MenuItem(key: 'exit', label: '退出 ${Constants.appName}'),
+        MenuItem(key: 'exit', label: uiTxP('退出 {0}', [Constants.appName])),
       ],
     );
     await trayManager.setContextMenu(trayMenu);
