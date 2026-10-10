@@ -298,14 +298,56 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   bool get showLoadIndicator =>
       dataStatus.loading || isReloading.value || isBuffering.value;
 
-  /// 已加载百分比（0~100）：已缓冲到的最远位置占总时长的比例。
+  /// mpv `cache-buffering-state`（0~100）：网络流的缓冲填充进度。
   ///
-  /// 取 `position + buffered` 而不是只看 `buffered`：重开媒体时 mpv 会从当前
-  /// 进度重新起算缓冲，只看 buffered 会出现「明明已经看到 60% 却显示 0%」。
+  /// -1 表示当前没有有效值（本地文件没有这个属性、属性读取失败、或指示器
+  /// 未显示）。加载指示器显示期间由 [_startCacheFillPolling] 每 250ms 刷新；
+  /// 隐藏时复位为 -1，避免上一次卡顿的残留值被当成当前进度。
+  final RxInt cacheFill = (-1).obs;
+  Timer? _cacheFillTimer;
+
+  void _startCacheFillPolling() {
+    _cacheFillTimer ??= Timer.periodic(const Duration(milliseconds: 250), (_) {
+      // 指示器没显示时不采样，防止两次卡顿之间残留旧值
+      if (!showLoadIndicator) {
+        if (cacheFill.value != -1) cacheFill.value = -1;
+        return;
+      }
+      final player = _videoPlayerController;
+      if (player == null) return;
+      try {
+        final v = int.tryParse(
+          player.getProperty('cache-buffering-state').trim(),
+        );
+        if (v != null && v >= 0 && v <= 100 && v != cacheFill.value) {
+          cacheFill.value = v;
+        }
+      } catch (_) {
+        // 本地文件 / 属性不可用：保持 -1，界面退回旧的「已缓冲/总时长」算法
+      }
+    });
+  }
+
+  void _stopCacheFillPolling() {
+    _cacheFillTimer?.cancel();
+    _cacheFillTimer = null;
+    cacheFill.value = -1;
+  }
+
+  /// 已加载百分比（0~100）：加载/缓冲阶段优先用 mpv 的
+  /// `cache-buffering-state`（见 [cacheFill]），不可用时退回
+  /// 「已缓冲到的最远位置占总时长的比例」。
+  ///
   /// 直播没有总时长，返回 null，界面上就只显示动画不显示数字。
   int? get loadedPercent {
     final total = duration.value;
     if (isLive || total <= 0) return null;
+    // 加载/卡顿补缓冲阶段：mpv 的 cache-buffering-state 会从 0 涨到 100
+    // （OSD 上的「缓冲中… X%」就是它），播放开始那一刻恰好 100 ——
+    // 这才是用户预期的「加载进度」。原来的「已缓冲时长/总时长」在长视频上
+    // 只有百分之几（readahead 有上限），看起来就是一直 0%、2%、3% 不动。
+    final fill = cacheFill.value;
+    if (fill > 0) return fill.clamp(0, 100);
     final ahead = position.value + buffered.value;
     if (ahead <= 0) return 0;
     return (ahead * 100 / total).clamp(0, 100).round();
@@ -1013,6 +1055,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       // _playbackSpeed.value = speed;
       // 初始化数据加载状态
       dataStatus.value = DataStatus.loading;
+      // 轮询 mpv 的缓冲填充进度，供加载指示器的百分比使用
+      _startCacheFillPolling();
       isReloading.value = false;
       // 初始化全屏方向
       _isVertical = isVertical ?? false;
@@ -2898,6 +2942,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   }
 
   void dispose() {
+    _stopCacheFillPolling();
     _cancelAutoAudioOnlyTimer();
     _interruptAutoAudioRestore();
     _autoAudioState = AutoAudioOnlyState.idle;
