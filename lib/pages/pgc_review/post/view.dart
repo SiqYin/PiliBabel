@@ -119,14 +119,18 @@ class _PgcReviewPostPanelState extends State<PgcReviewPostPanel> {
             () {
               final score = _score.value;
               return Text(
-                switch (score) {
-                  1 => '很差',
-                  2 => '较差',
-                  3 => '还行',
-                  4 => '很好',
-                  5 => '佳作',
-                  _ => '轻触评分',
-                },
+                // 这六条评分文案原本是硬编码，切到非中文语言时不会被翻译。
+                // 放在 Obx 里调用 uiTx 是安全的：uiTx 会读 revision，译文到达即刷新。
+                uiTx(
+                  switch (score) {
+                    1 => '很差',
+                    2 => '较差',
+                    3 => '还行',
+                    4 => '很好',
+                    5 => '佳作',
+                    _ => '轻触评分',
+                  },
+                ),
                 style: TextStyle(
                   fontSize: 16,
                   color: score == 0
