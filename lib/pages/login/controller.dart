@@ -238,7 +238,7 @@ class LoginPageController extends GetxController
 
   Future<bool> _persistCookieAccount(
     Map<String, String> cookieMap, {
-    String saveErrorToast = uiTx('登录失败'),
+    String? saveErrorToast,
   }) async {
     try {
       await _saveAccount(
@@ -246,7 +246,7 @@ class LoginPageController extends GetxController
       );
       return true;
     } catch (e) {
-      SmartDialog.showToast('$saveErrorToast: $e');
+      SmartDialog.showToast('${saveErrorToast ?? uiTx('登录失败')}: $e');
       return false;
     }
   }
