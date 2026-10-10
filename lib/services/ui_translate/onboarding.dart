@@ -63,7 +63,7 @@ Future<void> showAiTranslateOnboardingIfNeeded() async {
           onPressed: () {
             Pref.uiTranslateOnboarded = true;
             Get.back();
-            unawaited(_startAiTranslation());
+            _startAiTranslation();
           },
           child: const Text('Agree'),
         ),
@@ -77,27 +77,18 @@ Future<void> showAiTranslateOnboardingIfNeeded() async {
 ///
 /// 顺序有讲究：**先定语言再开开关** —— 开启时会 `prewarm()`，那一步要按最终
 /// 语言去预热，反过来会先按旧语言发一批请求。
-Future<void> _startAiTranslation() async {
+void _startAiTranslation() {
   final controller = Get.isRegistered<AiSettingController>()
       ? Get.find<AiSettingController>()
       : Get.put(AiSettingController());
 
   // 内置官方引擎：免密钥，装完即可用。显式写一次，设置页里的选中态才是对的。
   Pref.uiTranslateProvider = TranslateProvider.builtin;
+  // 目标语言先定成英语（弹窗本身是英文，进来的多半就要英文）。
+  // **开关先不开** —— 那一下要留给设置页当着用户的面打开，它是引导的一部分。
   controller.saveUiTranslateLang(onboardingDefaultLanguageCode);
-  controller.saveUiTranslateEnabled(true);
 
-  Get.toNamed('/aiTranslate');
-
-  // 等设置页推上来、过渡结束再弹语言列表。用户选了才落库，取消就保持英语。
-  await Future.delayed(const Duration(milliseconds: 600));
-  final context = Get.context;
-  if (context == null) return;
-  final picked = await promptAppLanguagePicker(
-    context,
-    controller.uiTranslateLang.value,
-  );
-  if (picked != null) {
-    controller.saveUiTranslateLang(picked);
-  }
+  // 带引导参数跳过去。设置页会自己演：滚到「AI 界面翻译」→ 打开开关 → 弹语言列表。
+  // 这样新用户能完整看一遍这些设置在哪、开关长什么样，而不是被丢一个弹窗就完事。
+  Get.toNamed('/aiTranslate', arguments: kGuidedTranslateSetupArg);
 }

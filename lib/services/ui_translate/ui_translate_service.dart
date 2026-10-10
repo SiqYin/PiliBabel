@@ -479,11 +479,12 @@ class UiTranslateService extends GetxService {
       final buf = StringBuffer();
       await for (final chunk in AiChatService.streamChat(
         messages: [
+          // 字形硬约束放 system，与自备 API 那条路径一致：模型对 system 里的约束
+          // 通常比塞在 user 正文里更敏感 —— 繁體 / 方言目标尤其明显。
+          if (rule.isNotEmpty) {'role': 'system', 'content': rule},
           {
             'role': 'user',
-            'content':
-                '${rule.isEmpty ? '' : '$rule\n\n'}'
-                '请将以下文本翻译为$lang，直接输出翻译结果，不要进行任何解释。'
+            'content': '请将以下文本翻译为$lang，直接输出翻译结果，不要进行任何解释。'
                 '\n\n$src',
           },
         ],
