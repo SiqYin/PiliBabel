@@ -162,57 +162,67 @@ class _WhisperPageState extends State<WhisperPage> {
       padding: EdgeInsets.only(left: padding.left, right: padding.right),
       sliver: SliverToBoxAdapter(
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          // 每项 Expanded 等分宽度：译文（如日语「回信してください」）比中文长，
+          // 不加约束会把最后一项挤出屏幕、点不到；等分后间距也自然均匀
+          // （原先 spaceEvenly 只均分剩余空隙，条目宽度不一时间距就参差）。
           children: List.generate(_controller.msgFeedTopItems.length, (index) {
             final item = _controller.msgFeedTopItems[index];
-            return GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Obx(
-                      () {
-                        final count = _controller.unreadCounts[index];
-                        return Badge(
-                          isLabelVisible: count > 0,
-                          label: Text(" $count "),
-                          alignment: Alignment.topRight,
-                          child: Container(
-                            width: 44,
-                            height: 44,
-                            decoration: BoxDecoration(
-                              shape: .circle,
-                              color: theme.colorScheme.onInverseSurface,
+            return Expanded(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 10,
+                    horizontal: 4,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Obx(
+                        () {
+                          final count = _controller.unreadCounts[index];
+                          return Badge(
+                            isLabelVisible: count > 0,
+                            label: Text(" $count "),
+                            alignment: Alignment.topRight,
+                            child: Container(
+                              width: 44,
+                              height: 44,
+                              decoration: BoxDecoration(
+                                shape: .circle,
+                                color: theme.colorScheme.onInverseSurface,
+                              ),
+                              child: Icon(
+                                item.icon,
+                                size: 20,
+                                color: theme.colorScheme.primary,
+                              ),
                             ),
-                            child: Icon(
-                              item.icon,
-                              size: 20,
-                              color: theme.colorScheme.primary,
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      uiTx(item.name),
-                      style: const TextStyle(fontSize: 13),
-                    ),
-                  ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        uiTx(item.name),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                    ],
+                  ),
                 ),
+                onTap: () {
+                  if (!item.enabled) {
+                    SmartDialog.showToast(uiTx('已禁用'));
+                    return;
+                  }
+                  _controller.unreadCounts[index] = 0;
+                  Get.toNamed(item.route);
+                },
               ),
-              onTap: () {
-                if (!item.enabled) {
-                  SmartDialog.showToast(uiTx('已禁用'));
-                  return;
-                }
-                _controller.unreadCounts[index] = 0;
-                Get.toNamed(item.route);
-              },
             );
           }),
         ),
