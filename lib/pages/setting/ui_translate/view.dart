@@ -11,24 +11,28 @@ import 'package:get/get.dart';
 /// 「AI 视频总结」与「AI 界面翻译」各自使用独立的接口地址 / 密钥 / 模型。
 /// 目标语言选择器使用不透明、可滚动的对话框，避免长语言列表覆盖下面的 API Key 输入框；
 /// 语言名称以各自原名显示，不送入模型翻译，防止编号批次提示词污染选项标签。
-/// 引导式首次配置的路由参数（见 `services/ui_translate/onboarding.dart`）。
+/// 引导式配置的路由参数（见 `services/ui_translate/onboarding.dart`）。
 ///
-/// 带这个参数打开页面时，页面会**当着用户的面**依次做三件事：滚到「AI 界面翻译」
-/// 那一段 → 把开关打开（开关自己会播放一次动画）→ 弹出语言列表。
-/// 目的是让新用户完整看一遍「这些设置在哪、怎么开」，而不只是被丢一个弹窗。
-const String kGuidedTranslateSetupArg = 'guidedTranslateSetup';
+/// 两种模式都会**当着用户的面**先滚到「AI 界面翻译」那一段，之后分岔：
+/// * [kGuidedSetupFirstRun]：新装用户 —— 打开开关（开关自己播放动画）→ 弹语言列表
+/// * [kGuidedSetupUpgrade]：从旧版升级的用户 —— 直接弹「翻译引擎」，让他一眼看到
+///   已切到内置模型，想切回自备 API 也伸手就能点
+///
+/// 目的是让用户完整看一遍「这些设置在哪、长什么样」，而不是被丢一个弹窗就完事。
+const String kGuidedSetupFirstRun = 'guidedTranslateFirstRun';
+const String kGuidedSetupUpgrade = 'guidedTranslateUpgrade';
 
 class UiTranslateSettingPage extends StatefulWidget {
   const UiTranslateSettingPage({
     super.key,
     this.showAppBar = true,
-    this.guidedSetup = false,
+    this.guidedSetup,
   });
 
   final bool showAppBar;
 
-  /// 见 [kGuidedTranslateSetupArg]。为 true 时页面自己跑一遍引导动作。
-  final bool guidedSetup;
+  /// 见 [kGuidedSetupFirstRun] / [kGuidedSetupUpgrade]。非空时页面自己跑一遍引导。
+  final String? guidedSetup;
 
   @override
   State<UiTranslateSettingPage> createState() => _UiTranslateSettingPageState();
@@ -41,8 +45,9 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
   @override
   void initState() {
     super.initState();
-    if (widget.guidedSetup) {
-      WidgetsBinding.instance.addPostFrameCallback((_) => _runGuidedSetup());
+    final mode = widget.guidedSetup;
+    if (mode != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _runGuidedSetup(mode));
     }
   }
 
@@ -52,7 +57,7 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
   /// 藏在哪儿、开关长什么样。所有 await 之后都检查 `mounted`，用户中途返回时不会
   /// 因为拿不到 context 而崩 —— 早先那版靠固定延迟「等页面推上来」的做法，就卡在
   /// 这个风险上。
-  Future<void> _runGuidedSetup() async {
+  Future<void> _runGuidedSetup(String mode) async {
     final controller = Get.isRegistered<AiSettingController>()
         ? Get.find<AiSettingController>()
         : Get.put(AiSettingController());
@@ -71,11 +76,17 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
     if (!mounted) return;
     await Future.delayed(const Duration(milliseconds: 400));
 
-    // 当着用户的面把开关打开 —— 开关会自己播放一次动画。
+    // 升级用户：直接把「翻译引擎」打开 —— 让他亲眼看到已切到内置模型，
+    // 想切回自己的 API 也就在这一个弹窗里。
+    if (mode == kGuidedSetupUpgrade) {
+      if (!mounted) return;
+      await _showTranslateProviderPicker(context, controller);
+      return;
+    }
+
+    // 新装用户：当着面把开关打开（开关会自己播放一次动画），再弹语言列表。
     controller.saveUiTranslateEnabled(true);
     await Future.delayed(const Duration(milliseconds: 850));
-
-    // 最后才弹语言列表，接着让用户选语言。
     if (!mounted) return;
     final picked = await promptAppLanguagePicker(
       context,
@@ -316,7 +327,7 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
               return Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  uiTx('最近错误：$err'),
+                  uiTxP('最近错误：{0}', [err]),
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: colorScheme.error,
                   ),
@@ -457,13 +468,21 @@ Future<String?> promptAppLanguagePicker(
                 () => Padding(
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Text(
-                  uiTx(
-                    '内置的 B 站官方模型覆盖 $kOfficialLanguageCount 种语言。'
-                    '清单外的 $kUnofficialLanguageCount 种（繁體中文、吴语、闽南语、壮语等）'
-                    '一样可以选，但官方模型不保证效果 —— 想要这几种，建议在'
+                  // 带插值的整句必须走 uiTxP：Dart 的字符串插值会把「已填好数字的
+                  // 整句」当成翻译 key，每条插值结果都是新 key，缓存永远命不中，
+                  // 而且模型也不能保证回填后语序还对。uiTxP 把带 {0}/{1} 的模板
+                  // 作为稳定 key 送翻，再回填参数。
+                  //
+                  // 另外**不要写 markdown 强调**：Flutter 的 Text 不解析 markdown，
+                  // `**xxx**` 会原样显示成星号。
+                  uiTxP(
+                    '内置的 B 站官方模型覆盖 {0} 种语言。清单外的 {1} 种'
+                    '（繁體中文、吴语、闽南语、壮语等）一样可以选，'
+                    '但官方模型不保证效果 —— 想要这几种，建议在'
                     '「翻译引擎」里切换到自备 API。\n\n'
-                    '若自行接入 API，还能翻译你自己的模型支持的**任何其它语言**，'
+                    '若自行接入 API，还能翻译你自己的模型支持的任何其它语言，'
                     '不限于这份清单。',
+                    [kOfficialLanguageCount, kUnofficialLanguageCount],
                   ),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.outline,
