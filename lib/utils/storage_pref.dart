@@ -41,6 +41,7 @@ import 'package:PiliPlus/plugin/pl_player/models/play_repeat.dart';
 import 'package:PiliPlus/utils/device_utils.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
+import 'package:PiliPlus/services/ui_translate/translate_provider.dart';
 import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/login_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
@@ -1727,6 +1728,18 @@ abstract final class Pref {
 
   static set uiTranslateEnabled(bool value) =>
       _setting.put(SettingBoxKey.uiTranslateEnabled, value);
+
+  /// 翻译引擎。默认 [TranslateProvider.builtin]（B 站官方免费模型，无需密钥）。
+  ///
+  /// 默认值即 [builtin]，所以旧版本升级上来的用户会自动切到官方模型，而他们
+  /// 原先填的 url/key/model 原样保留、不会被覆盖 —— 切回
+  /// [TranslateProvider.custom] 就能继续用。
+  static TranslateProvider get uiTranslateProvider => TranslateProvider.fromName(
+    _setting.get(SettingBoxKey.uiTranslateProvider),
+  );
+
+  static set uiTranslateProvider(TranslateProvider value) =>
+      _setting.put(SettingBoxKey.uiTranslateProvider, value.name);
 
   static String get uiTranslateLang =>
       _setting.get(SettingBoxKey.uiTranslateLang, defaultValue: 'zh-CN');

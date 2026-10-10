@@ -1,5 +1,7 @@
 import 'package:PiliPlus/pages/setting/ai_setting/controller.dart';
+import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/services/ui_translate/app_language.dart';
+import 'package:PiliPlus/services/ui_translate/translate_provider.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
@@ -79,6 +81,26 @@ class UiTranslateSettingPage extends StatelessWidget {
                 onChanged: controller.saveUiTranslateEnabled,
               ),
             ),
+            // 翻译引擎：内置官方模型（默认、免密钥）/ 自备 API。
+            // 两个引擎**共用同一份目标语言清单**，差异只在质量提示上。
+            Obx(() {
+              final builtin =
+                  controller.uiTranslateProvider.value ==
+                  TranslateProvider.builtin;
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.memory_outlined),
+                title: Text(uiTx('翻译引擎')),
+                subtitle: Text(
+                  builtin
+                      ? uiTx('B 站官方免费模型 · 无需密钥 · 开箱即用')
+                      : uiTx('自备 API · 自己填接口地址、密钥与模型'),
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () =>
+                    _showTranslateProviderPicker(context, controller),
+              );
+            }),
             Obx(() {
               final lang = appLanguageByCode(controller.uiTranslateLang.value);
               return Column(
@@ -97,7 +119,7 @@ class UiTranslateSettingPage extends StatelessWidget {
                     ),
                     child: InkWell(
                       onTap: () async {
-                        final selected = await _showAppLanguagePicker(
+                        final selected = await promptAppLanguagePicker(
                           context,
                           lang.code,
                         );
@@ -132,22 +154,35 @@ class UiTranslateSettingPage extends StatelessWidget {
                 ],
               );
             }),
-            const SizedBox(height: 12),
-            _ApiFields(
-              urlCtl: controller.translateApiUrlCtl,
-              keyCtl: controller.translateApiKeyCtl,
-              onUrl: controller.saveTranslateApiUrl,
-              onKey: controller.saveTranslateApiKey,
-            ),
-            _ModelPicker(
-              label: '翻译模型',
-              list: controller.translateModelList,
-              current: controller.translateModel,
-              manualCtl: controller.translateModelCtl,
-              loading: controller.isLoadingTranslateModels,
-              onSelect: controller.saveTranslateModel,
-              onFetch: controller.fetchTranslateModels,
-            ),
+            // 只在「自备 API」时展开这三项。选内置时藏起来，但**不清空**用户
+            // 已填的值 —— 切回自备立刻还能用（升级用户也是靠这一点保住原配置）。
+            Obx(() {
+              if (controller.uiTranslateProvider.value ==
+                  TranslateProvider.builtin) {
+                return const SizedBox.shrink();
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 12),
+                  _ApiFields(
+                    urlCtl: controller.translateApiUrlCtl,
+                    keyCtl: controller.translateApiKeyCtl,
+                    onUrl: controller.saveTranslateApiUrl,
+                    onKey: controller.saveTranslateApiKey,
+                  ),
+                  _ModelPicker(
+                    label: '翻译模型',
+                    list: controller.translateModelList,
+                    current: controller.translateModel,
+                    manualCtl: controller.translateModelCtl,
+                    loading: controller.isLoadingTranslateModels,
+                    onSelect: controller.saveTranslateModel,
+                    onFetch: controller.fetchTranslateModels,
+                  ),
+                ],
+              );
+            }),
             const SizedBox(height: 4),
             Obx(
               () => SwitchListTile(
@@ -250,7 +285,31 @@ class UiTranslateSettingPage extends StatelessWidget {
   );
 }
 
-Future<String?> _showAppLanguagePicker(
+/// 翻译引擎选择器（内置官方模型 / 自备 API）。
+Future<void> _showTranslateProviderPicker(
+  BuildContext context,
+  AiSettingController controller,
+) async {
+  final res = await showDialog<TranslateProvider>(
+    context: context,
+    builder: (context) => SelectDialog<TranslateProvider>(
+      title: uiTx('翻译引擎'),
+      value: controller.uiTranslateProvider.value,
+      // SelectDialog 只翻 title，选项文案要自己过一遍 uiTx
+      values: TranslateProvider.values.map((e) => (e, uiTx(e.desc))).toList(),
+    ),
+  );
+  if (res != null) {
+    controller.saveUiTranslateProvider(res);
+  }
+}
+
+/// 目标语言选择器。
+///
+/// 除了设置页，**首次引导（`services/ui_translate/onboarding.dart`）也会调它**：
+/// 用户点 Agree 后设置页刚推上来，立刻弹这个列表让他直接选语言。
+/// 返回 null 表示用户取消。
+Future<String?> promptAppLanguagePicker(
   BuildContext context,
   String selectedCode,
 ) {

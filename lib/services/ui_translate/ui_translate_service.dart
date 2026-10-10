@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
+import 'package:PiliPlus/services/ui_translate/translate_provider.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -328,7 +329,7 @@ class UiTranslateService extends GetxService {
       return;
     }
     // 攒满一批立即开翻，避免大批量（如切换语言）时干等防抖窗口
-    if (_pending.length >= _batchSize) {
+    if (_pending.length >= _effectiveBatchSize) {
       _debounce?.cancel();
       _flush();
       return;
@@ -358,9 +359,9 @@ class UiTranslateService extends GetxService {
 
       // 切成小批
       final chunks = <List<String>>[];
-      for (var i = 0; i < uncached.length; i += _batchSize) {
-        final end = i + _batchSize < uncached.length
-            ? i + _batchSize
+      for (var i = 0; i < uncached.length; i += _effectiveBatchSize) {
+        final end = i + _effectiveBatchSize < uncached.length
+            ? i + _effectiveBatchSize
             : uncached.length;
         chunks.add(uncached.sublist(i, end));
       }
@@ -439,9 +440,65 @@ class UiTranslateService extends GetxService {
   }
 
   /// 翻译使用独立的接口地址 / 密钥 / 模型（与视频总结完全分离，各配各的）。
-  static String get translateApiUrl => Pref.uiTranslateApiUrl;
-  static String get translateApiKey => Pref.uiTranslateApiKey;
-  static String get translateModel => Pref.uiTranslateModel;
+  ///
+  /// 具体走哪一套由 [Pref.uiTranslateProvider] 决定：
+  /// * **内置（默认）** → B 站官方免费接口的固定配置，**不需要密钥**；
+  /// * **自备** → 用户填的 url / key / model。
+  ///
+  /// 两个引擎**共用同一份目标语言清单**，差异只在质量提示上。
+  static bool get usingBuiltinTranslate =>
+      Pref.uiTranslateProvider == TranslateProvider.builtin;
+
+  static String get translateApiUrl => usingBuiltinTranslate
+      ? BuiltinTranslate.apiUrl
+      : Pref.uiTranslateApiUrl;
+  static String get translateApiKey => usingBuiltinTranslate
+      ? BuiltinTranslate.apiKey
+      : Pref.uiTranslateApiKey;
+  static String get translateModel =>
+      usingBuiltinTranslate ? BuiltinTranslate.model : Pref.uiTranslateModel;
+
+  /// 内置引擎**逐条**请求；自备引擎按 [_batchSize] 批量。
+  ///
+  /// 内置那个是翻译专精模型，官方推荐的调用方式就是单条模板；而接口免费，
+  /// 没必要为省请求去赌批量格式能稳住。自备 API（多半按 token 计费）仍走批量。
+  int get _effectiveBatchSize => usingBuiltinTranslate ? 1 : _batchSize;
+
+
+  /// 内置官方模型的**逐条**翻译。
+  ///
+  /// 提示词刻意贴着官方文档给的模板写：单条、点明目标语言、要求直接输出译文。
+  /// 不做 JSON 数组解析（只需要模型吐一段纯文本），出错面积因此小得多 —— 这是
+  /// 「求稳」的取舍。字形归一化仍保留：简体/繁體目标由客户端兜底纠正。
+  Future<List<String>> _builtinTranslate(List<String> sources) async {
+    final lang = targetLang;
+    final rule = currentLanguage.scriptRule;
+    final thinking = Pref.uiTranslateThinking;
+    final results = <String>[];
+    for (final src in sources) {
+      final buf = StringBuffer();
+      await for (final chunk in AiChatService.streamChat(
+        messages: [
+          {
+            'role': 'user',
+            'content':
+                '${rule.isEmpty ? '' : '$rule\n\n'}'
+                '请将以下文本翻译为$lang，直接输出翻译结果，不要进行任何解释。'
+                '\n\n$src',
+          },
+        ],
+        model: translateModel,
+        apiUrl: translateApiUrl,
+        apiKey: translateApiKey,
+        extraBody: <String, dynamic>{'enable_thinking': thinking},
+      )) {
+        buf.write(chunk);
+      }
+      final out = buf.toString().trim();
+      results.add(out.isEmpty ? src : out);
+    }
+    return _normalizeScripts(results, currentLanguage.script);
+  }
 
   Future<List<String>> _translateChunk(List<String> sources) async {
     // 最后一道防线（token 保护）：真正发请求前再确认一次开关，
@@ -449,6 +506,10 @@ class UiTranslateService extends GetxService {
     if (!enabled) {
       _pending.clear();
       return const [];
+    }
+    // 内置官方模型走逐条模板，不走下面那套「编号列表 + JSON 数组」的批量格式。
+    if (usingBuiltinTranslate) {
+      return _builtinTranslate(sources);
     }
     final lang = targetLang;
     final numbered = StringBuffer();

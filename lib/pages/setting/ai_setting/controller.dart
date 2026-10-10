@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
+import 'package:PiliPlus/services/ui_translate/translate_provider.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
@@ -16,6 +17,7 @@ class AiSettingController extends GetxController {
 
   // --- AI 界面翻译（使用独立 API）---
   final uiTranslateEnabled = false.obs;
+  final uiTranslateProvider = TranslateProvider.builtin.obs;
   final uiTranslateLang = 'zh-CN'.obs;
   final translateApiUrl = ''.obs;
   final translateApiKey = ''.obs;
@@ -43,6 +45,7 @@ class AiSettingController extends GetxController {
     modelCtl = TextEditingController(text: model.value);
     templates.value = AiChatService.getTemplates();
     uiTranslateEnabled.value = Pref.uiTranslateEnabled;
+    uiTranslateProvider.value = Pref.uiTranslateProvider;
     uiTranslateLang.value = Pref.uiTranslateLang;
     translateApiUrl.value = Pref.uiTranslateApiUrl;
     translateApiKey.value = Pref.uiTranslateApiKey;
@@ -160,6 +163,20 @@ class AiSettingController extends GetxController {
       SmartDialog.showToast(uiTx('获取翻译模型失败: $e'));
     } finally {
       isLoadingTranslateModels.value = false;
+    }
+  }
+
+  /// 切换翻译引擎。
+  ///
+  /// **必须清缓存**：换了引擎（比如从官方模型切到你自己更强的模型）后，
+  /// 不清就会继续命中旧译文，用户以为没生效。
+  void saveUiTranslateProvider(TranslateProvider value) {
+    if (uiTranslateProvider.value == value) return;
+    uiTranslateProvider.value = value;
+    Pref.uiTranslateProvider = value;
+    if (Get.isRegistered<UiTranslateService>()) {
+      UiTranslateService.to.resetForNewLanguage();
+      UiTranslateService.to.prewarm();
     }
   }
 
