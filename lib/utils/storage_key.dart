@@ -210,6 +210,7 @@ abstract final class SettingBoxKey {
       aiPromptTemplates = 'aiPromptTemplates';
 
   static const String uiTranslateEnabled = 'uiTranslateEnabled',
+      uiTranslateProvider = 'uiTranslateProvider',
       uiTranslateLang = 'uiTranslateLang',
       uiTranslateModel = 'uiTranslateModel',
       uiTranslateApiUrl = 'uiTranslateApiUrl',
