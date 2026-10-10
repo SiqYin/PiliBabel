@@ -171,7 +171,7 @@ mixin CommonDynPageMixin<T extends StatefulWidget>
                   margin: EdgeInsets.only(bottom: padding.bottom),
                   height: 125,
                   child: Text(
-                    controller.isEnd ? '没有更多了' : '加载中...',
+                    uiTx(controller.isEnd ? '没有更多了' : '加载中...'),
                     style: TextStyle(
                       fontSize: 12,
                       color: theme.colorScheme.outline,

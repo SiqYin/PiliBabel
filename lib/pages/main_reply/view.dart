@@ -135,7 +135,7 @@ class _MainReplyPageState extends State<MainReplyPage>
                       margin: EdgeInsets.only(bottom: padding.bottom),
                       height: 125,
                       child: Text(
-                        _controller.isEnd ? '没有更多了' : '加载中...',
+                        uiTx(_controller.isEnd ? '没有更多了' : '加载中...'),
                         style: TextStyle(
                           fontSize: 12,
                           color: colorScheme.outline,

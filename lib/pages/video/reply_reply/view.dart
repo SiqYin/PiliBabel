@@ -308,7 +308,7 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
               alignment: Alignment.center,
               margin: .only(bottom: MediaQuery.viewPaddingOf(context).bottom),
               child: Text(
-                _controller.isEnd ? '没有更多了' : '加载中...',
+                uiTx(_controller.isEnd ? '没有更多了' : '加载中...'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 12,
