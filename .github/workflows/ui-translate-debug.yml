@@ -21,10 +21,7 @@ env:
 jobs:
   android-debug:
     name: Build Debug APK
-    # 固定在 ubuntu-24.04，不要跟着 ubuntu-latest 走：镜像迁移 Ubuntu 26 期间
-    # 预装的 Android NDK 消失，而 NDK 下载在 CI 上会卡死（进度条停在 10~16%），
-    # 结果 Android 构建在编译 Dart 之前就全挂。镜像稳定后可改回 ubuntu-latest。
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions: write-all
 
     steps:
@@ -72,6 +69,23 @@ jobs:
         shell: pwsh
         run: ./lib/scripts/build.ps1 android
 
+      - name: Use the runner's preinstalled NDK
+        # Flutter 3.47 默认的 ndkVersion（28.2）不在 GitHub runner 镜像的预装列表里
+        # （预装的是 27.3.13750724 / 29.0.14206865 / 30.0.16248370），于是每次构建都要
+        # 去 dl.google.com 现下 2.6 GB。那个下载从 2026-10-10 起在 CI 上持续卡死
+        # （进度条停在 10~16% 后超时），Android 构建在编译 Dart 之前就全挂。
+        # 这里改成复用镜像自带的默认 NDK，构建过程不再依赖网络。
+        # 前提：本项目 Android 侧没有 externalNativeBuild / cmake / jniLibs，
+        # 构建期不编译原生代码，NDK 仅供 AGP 处理 AAR 内的预编译 .so。
+        run: |
+          ndk_dir="${ANDROID_NDK_HOME:-${ANDROID_NDK_ROOT:-${ANDROID_NDK:-}}}"
+          ver="$(basename "$ndk_dir")"
+          if [ -n "$ver" ] && [ -d "$ndk_dir" ]; then
+            echo "使用 runner 预装 NDK：$ver"
+            echo "ORG_GRADLE_PROJECT_piliNdkVersion=$ver" >> "$GITHUB_ENV"
+          else
+            echo "::warning title=NDK::runner 未提供预装 NDK，回退到 Flutter 默认版本（将触发下载）"
+          fi
       - name: Build Debug APK
         run: |
           set +e
