@@ -8,9 +8,9 @@
 </div>
 
 <div align="center">
-    <img src="assets/screenshots/readme_en_home.jpg" width="32%" alt="ホーム" />
-    <img src="assets/screenshots/readme_en_dynamics.jpg" width="32%" alt="ダイナミック" />
-    <img src="assets/screenshots/readme_en_mine.jpg" width="32%" alt="マイページ" />
+    <img src="assets/screenshots/readme_ja_home.jpg" width="32%" alt="ホーム" />
+    <img src="assets/screenshots/readme_ja_dynamics.jpg" width="32%" alt="ダイナミック" />
+    <img src="assets/screenshots/readme_ja_mine.jpg" width="32%" alt="マイページ" />
 </div>
 
 <br/>
