@@ -191,7 +191,7 @@ class VideoPopupMenu extends StatelessWidget {
   }
 
   void _showLocalBlockDialog(BuildContext context) {
-    final ownerName = videoItem.owner.name ?? '未知UP';
+    final ownerName = videoItem.owner.name ?? uiTx('未知UP');
     final title = videoItem.title.trim();
     final zoneName = _getZoneName()?.trim();
     _showReasonDialog(
@@ -202,7 +202,7 @@ class VideoPopupMenu extends StatelessWidget {
           title: uiTx('屏蔽原因'),
           actions: [
             _DialogChipAction(
-              label: 'UP主:$ownerName',
+              label: uiTxP('UP主:{0}', [ownerName]),
               onPressed: () {
                 Get.back();
                 _addBlockedUser();
@@ -210,7 +210,7 @@ class VideoPopupMenu extends StatelessWidget {
             ),
             if (title.isNotEmpty)
               _DialogChipAction(
-                label: '标题:$title',
+                label: uiTxP('标题:{0}', [title]),
                 onPressed: () {
                   Get.back();
                   _appendKeyword(
@@ -225,7 +225,9 @@ class VideoPopupMenu extends StatelessWidget {
                 },
               ),
             _DialogChipAction(
-              label: zoneName?.isNotEmpty == true ? '频道:$zoneName' : '频道:无法获取',
+              label: zoneName?.isNotEmpty == true
+                ? uiTxP('频道:{0}', [zoneName])
+                : uiTx('频道:无法获取'),
               onPressed: () {
                 if (zoneName?.isNotEmpty != true) {
                   SmartDialog.showToast(uiTx('当前视频无法获取频道信息'));
@@ -265,13 +267,13 @@ class VideoPopupMenu extends StatelessWidget {
         ),
         if (Accounts.main.isLogin)
           _VideoCustomAction(
-            '稍后再看',
+            uiTx('稍后再看'),
             const Icon(MdiIcons.clockTimeEightOutline, size: 16),
             () => UserHttp.toViewLater(bvid: videoItem.bvid),
           ),
         if (videoItem.cid != null && Pref.enableAi)
           _VideoCustomAction(
-            'AI总结',
+            uiTx('AI总结'),
             const Icon(CustomIcons.ai_circle, size: 16),
             () async {
               final res = await UgcIntroController.getAiConclusion(
@@ -300,12 +302,12 @@ class VideoPopupMenu extends StatelessWidget {
       ],
       if (videoItem is! SpaceArchiveItem) ...[
         _VideoCustomAction(
-          '访问：${videoItem.owner.name}',
+          uiTxP('访问：{0}', [videoItem.owner.name]),
           const Icon(MdiIcons.accountCircleOutline, size: 16),
           () => Get.toNamed('/member?mid=${videoItem.owner.mid}'),
         ),
         _VideoCustomAction(
-          '本地屏蔽',
+          uiTx('本地屏蔽'),
           const Icon(MdiIcons.accountOff, size: 16),
           () => _showLocalBlockDialog(context),
         ),

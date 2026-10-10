@@ -1008,7 +1008,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       BottomControlType.fullscreen => ComBtn(
         width: widgetWidth,
         height: 30,
-        tooltip: isFullScreen ? '退出全屏' : '全屏',
+        tooltip: uiTx(isFullScreen ? '退出全屏' : '全屏'),
         icon: isFullScreen
             ? const Icon(Icons.fullscreen_exit, size: 24, color: Colors.white)
             : const Icon(Icons.fullscreen, size: 24, color: Colors.white),
@@ -1520,7 +1520,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       child: Obx(() {
         final controlsLock = plPlayerController.controlsLock.value;
         return ComBtn(
-          tooltip: controlsLock ? '解锁' : '锁定',
+          tooltip: uiTx(controlsLock ? '解锁' : '锁定'),
           icon: controlsLock
               ? const Icon(
                   FontAwesomeIcons.lock,
@@ -1634,11 +1634,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                     // 避免恢复速度时文案里的数字被实时刷新
                     if (!hint.isNone) {
                       final speedText =
-                          '${plPlayerController.playbackSpeed}x播放';
+                          uiTxP('{0}x播放', [plPlayerController.playbackSpeed]);
                       _speedLockToastContent = switch (hint) {
                         SpeedLockHint.swipeUpToLock => (
                           const SpeedLockArrows(),
-                          '上滑锁定$speedText',
+                          uiTxP('上滑锁定{0}', [speedText]),
                         ),
                         SpeedLockHint.releaseToLock => (
                           const Icon(
@@ -1646,15 +1646,15 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                             size: 16,
                             color: Colors.white,
                           ),
-                          '松手锁定$speedText',
+                          uiTxP('松手锁定{0}', [speedText]),
                         ),
                         SpeedLockHint.lockedConfirm => (
                           null,
-                          '已经锁定$speedText',
+                          uiTxP('已经锁定{0}', [speedText]),
                         ),
                         SpeedLockHint.swipeDownToUnlock => (
                           const SpeedLockArrows(down: true),
-                          '下滑退出$speedText',
+                          uiTxP('下滑退出{0}', [speedText]),
                         ),
                         SpeedLockHint.releaseToUnlock => (
                           const Icon(
@@ -1662,7 +1662,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                             size: 16,
                             color: Colors.white,
                           ),
-                          '松手退出$speedText',
+                          uiTxP('松手退出{0}', [speedText]),
                         ),
                         SpeedLockHint.unlockedConfirm => (
                           null,
