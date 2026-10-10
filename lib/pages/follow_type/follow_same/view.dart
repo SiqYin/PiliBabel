@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/pages/follow_type/follow_same/controller.dart';
 import 'package:PiliPlus/pages/follow_type/view.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
@@ -36,7 +37,7 @@ class _FollowSamePageState extends FollowTypePageState<FollowSamePage> {
     title: Obx(
       () {
         final name = controller.name.value;
-        return Text('${name == null ? '' : '我与$name的'}共同关注');
+        return Text(uiTxP('{0}共同关注', [name == null ? '' : uiTxP('我与{0}的', [name])]));
       },
     ),
   );

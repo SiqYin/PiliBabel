@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 
@@ -24,7 +25,7 @@ class UserInfo {
       Duration(minutes: minutesSaved.round()),
     );
     if (minutes.isEmpty) {
-      minutes = '0分钟';
+      minutes = uiTx('0分钟');
     }
     return ('您提交了 ${NumUtils.formatPositiveDecimal(segmentCount)} 片段\n'
         '您为大家节省了 ${NumUtils.formatPositiveDecimal(viewCount)} 片段\n'

@@ -103,7 +103,7 @@ class LoginPageController extends GetxController
           _isReq = false;
           if (value['status']) {
             t.cancel();
-            statusQRCode.value = '扫码成功';
+            statusQRCode.value = uiTx('扫码成功');
             await setAccount(
               value['data'],
               value['data']['cookie_info']['cookies'],
@@ -238,7 +238,7 @@ class LoginPageController extends GetxController
 
   Future<bool> _persistCookieAccount(
     Map<String, String> cookieMap, {
-    String saveErrorToast = '登录失败',
+    String saveErrorToast = uiTx('登录失败'),
   }) async {
     try {
       await _saveAccount(

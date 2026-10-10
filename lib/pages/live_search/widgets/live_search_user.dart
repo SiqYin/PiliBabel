@@ -62,7 +62,8 @@ class LiveSearchUserItem extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '分区: ${item.areaName ?? ''}    关注数: ${NumUtils.numFormat(item.fansNum ?? 0)}',
+                  uiTxP('分区: {0}    关注数: {1}',
+                  [item.areaName ?? '', NumUtils.numFormat(item.fansNum ?? 0)]),
                   style: style,
                 ),
               ],

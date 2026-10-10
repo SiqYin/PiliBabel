@@ -124,7 +124,7 @@ class _PgcPanelState extends State<PgcPanel> {
                   ),
                   child: Text(
                     widget.newEp?.desc?.contains('连载') == true
-                        ? '连载中，更新至${Utils.isStringNumeric(widget.newEp!.title!) ? '第${widget.newEp!.title}话' : '${widget.newEp!.title}'}'
+                        ? uiTxP('连载中，更新至{0}', [Utils.isStringNumeric(widget.newEp!.title!) ? uiTxP('第{0}话', [widget.newEp!.title]) : widget.newEp!.title])
                         : widget.newEp?.desc ?? '查看全部',
                     style: const TextStyle(fontSize: 13),
                   ),
