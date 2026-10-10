@@ -8,9 +8,9 @@
 </div>
 
 <div align="center">
-    <img src="assets/screenshots/readme_en_home.jpg" width="32%" alt="主頁" />
-    <img src="assets/screenshots/readme_en_dynamics.jpg" width="32%" alt="動態" />
-    <img src="assets/screenshots/readme_en_mine.jpg" width="32%" alt="我嘅" />
+    <img src="assets/screenshots/readme_zh_home.jpg" width="32%" alt="主頁" />
+    <img src="assets/screenshots/readme_zh_dynamics.jpg" width="32%" alt="動態" />
+    <img src="assets/screenshots/readme_zh_mine.jpg" width="32%" alt="我嘅" />
 </div>
 
 <br/>

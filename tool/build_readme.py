@@ -33,6 +33,10 @@ SRC_DIR = os.path.join(ROOT, "docs", "readme")
 #
 # 命名沿用 README 既有惯例：**用该语言的通称、且不带字形前缀**
 # （繁體中文 → 「中文」，繁體粵語 → 「粵語」）。
+#
+# 截图归属（assets/screenshots/）：只有 en / zh / ja 有自己的一套
+# readme_<code>_*.jpg。**粵語复用中文那套**（同属中文家族、界面截图最接近），
+# 其余新语言一律复用英文那套 —— 新增语言时照此办理，别默认抄英文的。
 LANGUAGES = [
     ("en", "English"),
     ("zh", "中文"),
