@@ -1,3 +1,21 @@
+### PiliBabel v1.2.0
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+1.2.0 is a translation-coverage release: hundreds of strings that were still hard-coded Chinese now go through the AI interface translation, plus one important fix to *how* the built-in engine is prompted.
+
+**Fixed: the built-in engine used to translate our own instruction text into the output.** The per-comment / per-title translation prompt was sent as one user message — instruction first, text after. The shorter the text, the larger the instruction's share, so Index-Translate would sometimes translate the instruction too, and its Japanese rendering ("直接翻訳結果のみを出力し…") ended up inside comments, repeating once per render pass (3× in the list, 5× in the details page). The instruction now lives in the **system** message and the user message carries only the raw text. The translation cache is invalidated once on upgrade, so comments that already contain the artifact re-translate automatically.
+
+**~200 previously hard-coded Chinese strings are now translated.** This covers enum labels (hardware decoding modes, video/audio qualities, CDN lines and regions, SponsorBlock segment types), toasts and errors (network failures, AI request errors, login failures, download errors, cache deletion confirmations), interpolated subtitles ("当前使用：…", "剩余 X", "已缓冲 X%") rewritten as proper templates, and the multi-line help texts under the filter settings. Strings that must stay Chinese — AI prompts, log messages, API payload values, map keys matched against server categories — were deliberately excluded.
+
+**Settings restructure.** **主题与色彩 (Theme & Colour)** and **字体设定 (Font)** are now top-level settings entries, on the same tier as AI features and playback settings, instead of being buried inside 外观设定. Inside Theme & Colour, the pointless home-page screenshot preview is gone (changing the palette already recolours the whole app live), and the **palette is always visible** — it used to collapse when dynamic colour was on, so you had to toggle it off just to pick a colour.
+
+**Message page: the four top entries now split the width evenly.** Longer translations (Japanese "回信してください" vs Chinese "回复我的") used to overflow the row and push the last entry off-screen entirely. Each entry is now an equal-width slot with ellipsis. A project-wide audit found and fixed three more layouts with the same problem (the incognito-mode dialog buttons, the share sheet title, SponsorBlock list rows).
+
+**Danmaku translation now behaves per engine.** With the built-in official model (free, no quota) it **defaults to on** and toggles immediately — no confirmation dialog. With your own API it still defaults to off and shows the token warning first. This also fixes the danmaku-translate button not appearing at all for built-in users: the availability check looked at the user-configured API fields, which are empty when the built-in engine is selected.
+
+**The loading percentage now means "loading progress".** It used to show buffered-duration ÷ total-duration, which on long videos sat at 0–3% (mpv only readaheads a minute or two before starting). It now reads mpv's `cache-buffering-state` — the same 0→100 fill the mpv OSD shows — and reaches 100 exactly when playback begins. Falls back to the old formula when the property is unavailable (local files).
+
 ### PiliBabel v1.1.0
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
