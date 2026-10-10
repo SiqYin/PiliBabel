@@ -1,12 +1,15 @@
 <div align="center">
     <p><b>PiliBabel</b></p>
     <p><a href="#readme-en">English</a> · <a href="#readme-zh">中文</a> · <a href="#readme-yue">粵語</a> · <a href="#readme-ja">日本語</a> · <a href="#readme-fr">Français</a> · <a href="#readme-de">Deutsch</a> · <a href="#readme-es">Español</a> · <a href="#readme-ko">한국어</a> · <a href="#readme-ar">العربية</a> · <a href="#readme-vi">Tiếng Việt</a> · <a href="#readme-ms">Bahasa Melayu</a> · <a href="#readme-id">Bahasa Indonesia</a></p>
-    <p><sub>Pick your language above — the links jump within this page, no need to open another file.</sub></p>
+    <p><sub>Pick your language above — the links jump within this page, no need to open another file. Other languages are collapsed; click a language name to expand it.</sub></p>
 </div>
 
 <a id="readme-languages"></a>
 
 ---
+
+<details open>
+<summary><b>English</b></summary>
 
 <a id="readme-en"></a>
 
@@ -220,7 +223,12 @@ Third-party components (Flutter packages, [`bilibili-API-collect`](https://githu
 
 <sub><a href="#readme-languages">↑ <a href="#readme-en">English</a> · <a href="#readme-zh">中文</a> · <a href="#readme-yue">粵語</a> · <a href="#readme-ja">日本語</a> · <a href="#readme-fr">Français</a> · <a href="#readme-de">Deutsch</a> · <a href="#readme-es">Español</a> · <a href="#readme-ko">한국어</a> · <a href="#readme-ar">العربية</a> · <a href="#readme-vi">Tiếng Việt</a> · <a href="#readme-ms">Bahasa Melayu</a> · <a href="#readme-id">Bahasa Indonesia</a></a></sub>
 
+</details>
+
 ---
+
+<details>
+<summary><b>中文</b></summary>
 
 <a id="readme-zh"></a>
 
@@ -434,7 +442,12 @@ PiliBabel 採用 **GNU General Public License v3.0（GPL-3.0）** —— 與 Pil
 
 <sub><a href="#readme-languages">↑ <a href="#readme-en">English</a> · <a href="#readme-zh">中文</a> · <a href="#readme-yue">粵語</a> · <a href="#readme-ja">日本語</a> · <a href="#readme-fr">Français</a> · <a href="#readme-de">Deutsch</a> · <a href="#readme-es">Español</a> · <a href="#readme-ko">한국어</a> · <a href="#readme-ar">العربية</a> · <a href="#readme-vi">Tiếng Việt</a> · <a href="#readme-ms">Bahasa Melayu</a> · <a href="#readme-id">Bahasa Indonesia</a></a></sub>
 
+</details>
+
 ---
+
+<details>
+<summary><b>粵語</b></summary>
 
 <a id="readme-yue"></a>
 
@@ -648,7 +661,12 @@ PiliBabel 採用 **GNU General Public License v3.0（GPL-3.0）** —— 同 Pil
 
 <sub><a href="#readme-languages">↑ <a href="#readme-en">English</a> · <a href="#readme-zh">中文</a> · <a href="#readme-yue">粵語</a> · <a href="#readme-ja">日本語</a> · <a href="#readme-fr">Français</a> · <a href="#readme-de">Deutsch</a> · <a href="#readme-es">Español</a> · <a href="#readme-ko">한국어</a> · <a href="#readme-ar">العربية</a> · <a href="#readme-vi">Tiếng Việt</a> · <a href="#readme-ms">Bahasa Melayu</a> · <a href="#readme-id">Bahasa Indonesia</a></a></sub>
 
+</details>
+
 ---
+
+<details>
+<summary><b>日本語</b></summary>
 
 <a id="readme-ja"></a>
 
@@ -862,7 +880,12 @@ PiliBabel は **GNU General Public License v3.0（GPL-3.0）** でライセン�
 
 <sub><a href="#readme-languages">↑ <a href="#readme-en">English</a> · <a href="#readme-zh">中文</a> · <a href="#readme-yue">粵語</a> · <a href="#readme-ja">日本語</a> · <a href="#readme-fr">Français</a> · <a href="#readme-de">Deutsch</a> · <a href="#readme-es">Español</a> · <a href="#readme-ko">한국어</a> · <a href="#readme-ar">العربية</a> · <a href="#readme-vi">Tiếng Việt</a> · <a href="#readme-ms">Bahasa Melayu</a> · <a href="#readme-id">Bahasa Indonesia</a></a></sub>
 
+</details>
+
 ---
+
+<details>
+<summary><b>Français</b></summary>
 
 <a id="readme-fr"></a>
 
@@ -1076,7 +1099,12 @@ Les composants tiers (paquets Flutter, [`bilibili-API-collect`](https://github.c
 
 <sub><a href="#readme-languages">↑ <a href="#readme-en">English</a> · <a href="#readme-zh">中文</a> · <a href="#readme-yue">粵語</a> · <a href="#readme-ja">日本語</a> · <a href="#readme-fr">Français</a> · <a href="#readme-de">Deutsch</a> · <a href="#readme-es">Español</a> · <a href="#readme-ko">한국어</a> · <a href="#readme-ar">العربية</a> · <a href="#readme-vi">Tiếng Việt</a> · <a href="#readme-ms">Bahasa Melayu</a> · <a href="#readme-id">Bahasa Indonesia</a></a></sub>
 
+</details>
+
 ---
+
+<details>
+<summary><b>Deutsch</b></summary>
 
 <a id="readme-de"></a>
 
@@ -1290,7 +1318,12 @@ Komponenten von Drittanbietern (Flutter-Pakete, [`bilibili-API-collect`](https:/
 
 <sub><a href="#readme-languages">↑ <a href="#readme-en">English</a> · <a href="#readme-zh">中文</a> · <a href="#readme-yue">粵語</a> · <a href="#readme-ja">日本語</a> · <a href="#readme-fr">Français</a> · <a href="#readme-de">Deutsch</a> · <a href="#readme-es">Español</a> · <a href="#readme-ko">한국어</a> · <a href="#readme-ar">العربية</a> · <a href="#readme-vi">Tiếng Việt</a> · <a href="#readme-ms">Bahasa Melayu</a> · <a href="#readme-id">Bahasa Indonesia</a></a></sub>
 
+</details>
+
 ---
+
+<details>
+<summary><b>Español</b></summary>
 
 <a id="readme-es"></a>
 
@@ -1504,7 +1537,12 @@ Los componentes de terceros (paquetes de Flutter, [`bilibili-API-collect`](https
 
 <sub><a href="#readme-languages">↑ <a href="#readme-en">English</a> · <a href="#readme-zh">中文</a> · <a href="#readme-yue">粵語</a> · <a href="#readme-ja">日本語</a> · <a href="#readme-fr">Français</a> · <a href="#readme-de">Deutsch</a> · <a href="#readme-es">Español</a> · <a href="#readme-ko">한국어</a> · <a href="#readme-ar">العربية</a> · <a href="#readme-vi">Tiếng Việt</a> · <a href="#readme-ms">Bahasa Melayu</a> · <a href="#readme-id">Bahasa Indonesia</a></a></sub>
 
+</details>
+
 ---
+
+<details>
+<summary><b>한국어</b></summary>
 
 <a id="readme-ko"></a>
 
@@ -1718,7 +1756,12 @@ PiliBabel은 **GNU General Public License v3.0(GPL-3.0)** 으로 배포됩니다
 
 <sub><a href="#readme-languages">↑ <a href="#readme-en">English</a> · <a href="#readme-zh">中文</a> · <a href="#readme-yue">粵語</a> · <a href="#readme-ja">日本語</a> · <a href="#readme-fr">Français</a> · <a href="#readme-de">Deutsch</a> · <a href="#readme-es">Español</a> · <a href="#readme-ko">한국어</a> · <a href="#readme-ar">العربية</a> · <a href="#readme-vi">Tiếng Việt</a> · <a href="#readme-ms">Bahasa Melayu</a> · <a href="#readme-id">Bahasa Indonesia</a></a></sub>
 
+</details>
+
 ---
+
+<details>
+<summary><b>العربية</b></summary>
 
 <a id="readme-ar"></a>
 
@@ -1932,7 +1975,12 @@ PiliBabel مشروع شخصي مدفوع بالاهتمام، ويُقدَّم *
 
 <sub><a href="#readme-languages">↑ <a href="#readme-en">English</a> · <a href="#readme-zh">中文</a> · <a href="#readme-yue">粵語</a> · <a href="#readme-ja">日本語</a> · <a href="#readme-fr">Français</a> · <a href="#readme-de">Deutsch</a> · <a href="#readme-es">Español</a> · <a href="#readme-ko">한국어</a> · <a href="#readme-ar">العربية</a> · <a href="#readme-vi">Tiếng Việt</a> · <a href="#readme-ms">Bahasa Melayu</a> · <a href="#readme-id">Bahasa Indonesia</a></a></sub>
 
+</details>
+
 ---
+
+<details>
+<summary><b>Tiếng Việt</b></summary>
 
 <a id="readme-vi"></a>
 
@@ -2146,7 +2194,12 @@ Các thành phần bên thứ ba (các gói Flutter, [`bilibili-API-collect`](ht
 
 <sub><a href="#readme-languages">↑ <a href="#readme-en">English</a> · <a href="#readme-zh">中文</a> · <a href="#readme-yue">粵語</a> · <a href="#readme-ja">日本語</a> · <a href="#readme-fr">Français</a> · <a href="#readme-de">Deutsch</a> · <a href="#readme-es">Español</a> · <a href="#readme-ko">한국어</a> · <a href="#readme-ar">العربية</a> · <a href="#readme-vi">Tiếng Việt</a> · <a href="#readme-ms">Bahasa Melayu</a> · <a href="#readme-id">Bahasa Indonesia</a></a></sub>
 
+</details>
+
 ---
+
+<details>
+<summary><b>Bahasa Melayu</b></summary>
 
 <a id="readme-ms"></a>
 
@@ -2360,7 +2413,12 @@ Komponen pihak ketiga (pakej Flutter, [`bilibili-API-collect`](https://github.co
 
 <sub><a href="#readme-languages">↑ <a href="#readme-en">English</a> · <a href="#readme-zh">中文</a> · <a href="#readme-yue">粵語</a> · <a href="#readme-ja">日本語</a> · <a href="#readme-fr">Français</a> · <a href="#readme-de">Deutsch</a> · <a href="#readme-es">Español</a> · <a href="#readme-ko">한국어</a> · <a href="#readme-ar">العربية</a> · <a href="#readme-vi">Tiếng Việt</a> · <a href="#readme-ms">Bahasa Melayu</a> · <a href="#readme-id">Bahasa Indonesia</a></a></sub>
 
+</details>
+
 ---
+
+<details>
+<summary><b>Bahasa Indonesia</b></summary>
 
 <a id="readme-id"></a>
 
@@ -2573,3 +2631,5 @@ Komponen pihak ketiga (paket Flutter, [`bilibili-API-collect`](https://github.co
 - Terinspirasi oleh «terjemahan antarmuka AI» resmi bilibili.
 
 <sub><a href="#readme-languages">↑ <a href="#readme-en">English</a> · <a href="#readme-zh">中文</a> · <a href="#readme-yue">粵語</a> · <a href="#readme-ja">日本語</a> · <a href="#readme-fr">Français</a> · <a href="#readme-de">Deutsch</a> · <a href="#readme-es">Español</a> · <a href="#readme-ko">한국어</a> · <a href="#readme-ar">العربية</a> · <a href="#readme-vi">Tiếng Việt</a> · <a href="#readme-ms">Bahasa Melayu</a> · <a href="#readme-id">Bahasa Indonesia</a></a></sub>
+
+</details>

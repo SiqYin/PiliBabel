@@ -5,10 +5,19 @@
 `README.md` 手工维护，很容易改坏；拆成每语言一个源文件后，加语言 =
 加一个文件 + 在 LANGUAGES 里加一行，其余全自动。
 
-**语言切换用页内锚点，不用 `<details>`。** 折叠块能让页面短很多，但
-「点锚点跳到折叠块里会不会自动展开」在 GitHub 上并没有保证，赌不起；
-全部展开则一定跳到可见内容。代价是 README 变长 —— 但切换条在顶部、
-每节末尾也有「返回语言列表」，实际不影响使用。
+**语言切换用页内锚点 + 折叠块。** 除主语言外每种语言都收在 `<details>` 里，
+所以打开的 README 只有主语言是展开的，页面很短。
+
+锚点写在 `<details>` **内部、紧跟 `<summary>`**（`<a id="readme-xx">`）：
+- GitHub 会保留它，渲染成 `id="user-content-readme-xx"`，而链接写 `#readme-xx`
+  就能命中（这是 GitHub 页内跳转的通用机制，README 里的 `#disclaimer` 同理）
+- 放在折叠块**内部**而不是前面，是因为浏览器跳到折叠块内部的锚点时会自动展开它，
+  这样「点语言 → 直接看到内容」是一步；万一某个浏览器不自动展开，落点也正好在
+  那一行上，再点一下即可
+
+**这些锚点是线上实测过的**（v1.0.0 发布后从 GitHub 的渲染 HTML 里核对过 13 个
+`user-content-readme-*` 全部存活），不是照着文档猜的 —— GitHub 会过滤 `id` 属性，
+只有带 `user-content-` 前缀这一种形式能被 `#fragment` 命中。
 
 **允许增量**：只生成源文件已存在的语言，其余跳过并告警（切换条也只列已生成的），
 所以翻译可以一批一批加，期间不会出现死链。
@@ -100,21 +109,24 @@ def build():
         "    <p><b>PiliBabel</b></p>",
         "    <p>%s</p>" % bar,
         "    <p><sub>Pick your language above — the links jump within this "
-        "page, no need to open another file.</sub></p>",
+        "page, no need to open another file. Other languages are collapsed; "
+        "click a language name to expand it.</sub></p>",
         "</div>",
         "",
         '<a id="%s"></a>' % ANCHOR_TOP,
         "",
     ]
 
-    for code, name in langs:
+    for idx, (code, name) in enumerate(langs):
+        # 主语言默认展开，其余收合 —— 打开的 README 就只有主语言那么长。
         out += [
             "---",
             "",
-            # 显式 ASCII 锚点：**不要**依赖 GitHub 从标题自动生成的 slug
-            # （它会小写、会吃掉标点，Français / Español / Tiếng Việt 这类
-            # 带变音符号的标题极易对不上，点了就是不跳）。code 是我们自己的，
-            # 稳定且永远 ASCII。
+            "<details%s>" % (" open" if idx == 0 else ""),
+            "<summary><b>%s</b></summary>" % name,
+            "",
+            # 锚点必须在折叠块内部、紧跟 summary：浏览器跳到折叠块内部的
+            # 锚点会自动把块展开，于是「点语言 → 直接看到内容」一步到位。
             '<a id="%s%s"></a>' % (ANCHOR_PREFIX, code),
             "",
             "## %s" % name,
@@ -122,6 +134,8 @@ def build():
             read_source(code),
             "",
             '<sub><a href="#%s">↑ %s</a></sub>' % (ANCHOR_TOP, bar),
+            "",
+            "</details>",
             "",
         ]
 
