@@ -1993,10 +1993,13 @@ class HeaderControlState extends State<HeaderControl>
                 width: btnWidth,
                 height: btnHeight,
                 child: Obx(() {
-                  // 预热确认文案与按钮文字的翻译，确保弹窗出现时已是目标语言
-                  uiTx(UiTranslateService.danmakuTranslateWarning);
-                  uiTx('取消');
-                  uiTx('确定');
+                  // 内置官方模型不弹确认（见 onPressed），只有自备 API 会消耗
+                  // 用户自己的 token，才需要预热确认弹窗的译文
+                  if (!UiTranslateService.to.usingBuiltinTranslate) {
+                    uiTx(UiTranslateService.danmakuTranslateWarning);
+                    uiTx('取消');
+                    uiTx('确定');
+                  }
                   final on = UiTranslateService.to.danmakuTranslate.value;
                   return IconButton(
                     tooltip: uiTx('弹幕翻译'),
@@ -2006,13 +2009,18 @@ class HeaderControlState extends State<HeaderControl>
                         UiTranslateService.to.danmakuTranslate.value = false;
                         return;
                       }
+                      // 内置官方模型免费、不消耗用户配额：直接开，不弹确认
+                      if (UiTranslateService.to.usingBuiltinTranslate) {
+                        UiTranslateService.to.danmakuTranslate.value = true;
+                        return;
+                      }
+                      // 自备 API 要烧用户自己的 token，首次开启先确认。
                       // 两处刻意为之：
-                      // ① 包一层 Obx——弹窗是一次性构建的，译文晚到时没有响应式依赖
-                      //    就不会重建，用户会一直看到源文案（这正是"选了日语但弹窗
-                      //    还是原文"的原因）。包上之后译文一到就换成目标语言。
-                      // ② 用 showGeneralDialog 而不是 showDialog——默认弹窗是"啪"
-                      //    地直接出现（连遮罩一起硬闪），这里给 220ms 的淡入 +
-                      //    轻微上浮 + 放大，遮罩也跟着淡入，出场更柔和。
+                      // ① 弹窗外面包 Obx——弹窗是一次性构建的，译文晚到时没有
+                      //    响应式依赖就不会重建，用户会一直看到源文案。包上之后
+                      //    译文一到就换成目标语言。
+                      // ② 用 showGeneralDialog 而不是 showDialog——默认弹窗是
+                      //    "啪"地直接出现，这里给 220ms 淡入 + 轻微上浮 + 放大。
                       showGeneralDialog(
                         context: context,
                         barrierDismissible: true,
