@@ -103,8 +103,15 @@ jobs:
       - name: Build Release APK
         run: |
           set +e
-          flutter build apk --release --split-debug-info=split-debug --dart-define-from-file=pili_release.json --pub > build.log 2>&1
-          code=$?
+          code=1
+          for attempt in 1 2 3 4; do
+            echo "### 尝试 $attempt/4：flutter build apk"
+            flutter build apk --release --split-debug-info=split-debug --dart-define-from-file=pili_release.json --pub > build.log 2>&1
+            code=$?
+            if [ "$code" -eq 0 ]; then break; fi
+            echo "::warning title=BuildRetry::第 $attempt 次 flutter build 失败（exit=$code）"
+            [ "$attempt" -lt 4 ] && sleep 20
+          done
           echo "### flutter build apk --release (exit=$code)" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
           tail -n 180 build.log >> "$GITHUB_STEP_SUMMARY"
