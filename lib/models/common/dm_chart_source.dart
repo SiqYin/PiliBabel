@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/models/common/enum_with_label.dart';
 
 /// Source used for the high-energy/danmaku-density progress chart.
@@ -8,16 +9,19 @@ enum DmChartSource with EnumWithLabel {
   officialOnly('只用官方'),
   ;
 
-  @override
-  final String label;
-  const DmChartSource(this.label);
+  /// 展示用原文；翻译放在 getter 里，一处覆盖全部使用点。
+  final String _label;
+  const DmChartSource(this._label);
 
-  String get desc => switch (this) {
+  @override
+  String get label => uiTx(_label);
+
+  String get desc => uiTx(switch (this) {
     disabled => '不显示高能进度条，也不请求相关数据',
     officialFirst => '优先使用 B 站官方数据，缺失时用弹幕密度生成',
     danmakuDensity => '始终根据弹幕列表计算密度曲线',
     officialOnly => '仅使用 B 站官方高能进度条数据',
-  };
+  });
 
   bool get enableOfficial => switch (this) {
     officialFirst || officialOnly => true,

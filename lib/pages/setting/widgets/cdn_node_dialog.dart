@@ -81,7 +81,7 @@ class _CdnNodeDialogState extends State<CdnNodeDialog> {
       final url = VideoUtils.getCdnUrl(sample.playUrls, customHost: host);
       result = await tester.measure(url);
     } catch (e) {
-      result = '测速失败';
+      result = uiTx('测速失败');
     }
     if (mounted) {
       notifier.value = result;
@@ -95,7 +95,7 @@ class _CdnNodeDialogState extends State<CdnNodeDialog> {
       return;
     }
     setState(() => _refreshing = false);
-    SmartDialog.showToast(error ?? '节点列表已更新');
+    SmartDialog.showToast(error ?? uiTx('节点列表已更新'));
   }
 
   String _formatTime(DateTime time) {
@@ -176,7 +176,7 @@ class _CdnNodeDialogState extends State<CdnNodeDialog> {
     final textTheme = TextTheme.of(context);
     return AlertDialog(
       clipBehavior: Clip.hardEdge,
-      title: Text(widget.isLive ? '选择直播节点' : '选择节点'),
+      title: Text(uiTx(widget.isLive ? '选择直播节点' : '选择节点')),
       constraints: const BoxConstraints.tightFor(width: 320),
       contentPadding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
       content: FutureBuilder(
@@ -241,7 +241,7 @@ class _CdnNodeDialogState extends State<CdnNodeDialog> {
               ),
               const SizedBox(height: 4),
               if (widget.isLive)
-                _buildHint(context, '列表节点对直播的有效性未经验证，无法观看请清除设置')
+                _buildHint(context, uiTx('列表节点对直播的有效性未经验证，无法观看请清除设置'))
               else if (region == '外建')
                 _buildHint(context, '该分组多为直播节点，点播大概率无效'),
               Flexible(
