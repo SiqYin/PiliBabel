@@ -132,21 +132,27 @@ List<SettingsModel> get videoSettings => [
       getSubtitle: () {
         final qa = Pref.defaultVideoQaHalfScreen;
         if (qa == null) {
-          return '跟随全屏画质'
-              '（WiFi ${VideoQuality.fromCode(Pref.defaultVideoQa).desc}'
-              '｜蜂窝 ${VideoQuality.fromCode(Pref.defaultVideoQaCellular).desc}）';
+          return uiTxP('跟随全屏画质（WiFi {0}｜蜂窝 {1}）', [
+            VideoQuality.fromCode(Pref.defaultVideoQa).desc,
+            VideoQuality.fromCode(Pref.defaultVideoQaCellular).desc,
+          ]);
         }
         // 半屏实际画质 = min(半屏设置, 当前网络的全屏画质)，被夹持时提示实际值
         final clamped = [
           if (Pref.defaultVideoQa < qa)
-            'WiFi 下实际 ${VideoQuality.fromCode(Pref.defaultVideoQa).desc}',
+            uiTxP('WiFi 下实际 {0}', [
+              VideoQuality.fromCode(Pref.defaultVideoQa).desc,
+            ]),
           if (Pref.defaultVideoQaCellular < qa)
-            '蜂窝下实际 ${VideoQuality.fromCode(Pref.defaultVideoQaCellular).desc}',
+            uiTxP('蜂窝下实际 {0}', [
+              VideoQuality.fromCode(Pref.defaultVideoQaCellular).desc,
+            ]),
         ];
         final desc = VideoQuality.fromCode(qa).desc;
+        // desc 已是译文（VideoQuality.desc 走 getter 翻译），这里只译模板
         return clamped.isEmpty
-            ? '当前画质：$desc'
-            : '当前画质：$desc（${clamped.join('｜')}）';
+            ? uiTxP('当前画质：{0}', [desc])
+            : uiTxP('当前画质：{0}（{1}）', [desc, clamped.join('｜')]);
       },
       onTap: _showVideoQaHalfScreenDialog,
     ),

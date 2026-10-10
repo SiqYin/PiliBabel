@@ -391,7 +391,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
       root: widget.root,
       parent: widget.parent,
       message: widget.replyItem != null && widget.replyItem!.root != 0
-          ? ' 回复 @${widget.replyItem!.member.name} : $message'
+          ? uiTxP(' 回复 @{0} : {1}', [widget.replyItem!.member.name, message])
           : message,
       atNameToMid: atNameToMid,
       pictures: pictures,
@@ -427,8 +427,8 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
     if (spans.isEmpty) {
       SmartDialog.showToast(
         warnings.isEmpty
-            ? '未发现用 \$ 括起的公式'
-            : '公式未能识别：${warnings.join('、')}（已保留原文）',
+            ? uiTx('未发现用 \$ 括起的公式')
+            : uiTxP('公式未能识别：{0}（已保留原文）', [warnings.join('、')]),
       );
       return;
     }
@@ -437,7 +437,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
     _latexOn.value = true;
     if (warnings.isNotEmpty) {
       SmartDialog.showToast(
-        '无法识别：${warnings.join('、')}（已保留原文）',
+        uiTxP('无法识别：{0}（已保留原文）', [warnings.join('、')]),
       );
     }
   }

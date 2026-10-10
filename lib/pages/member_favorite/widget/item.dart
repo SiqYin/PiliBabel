@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
@@ -76,13 +77,13 @@ class MemberFavItem extends StatelessWidget {
                     const PBadge(
                       right: 6,
                       top: 6,
-                      text: '合集',
+                      text: uiTx('合集'),
                     )
                   else if (item.type == 11)
                     const PBadge(
                       right: 6,
                       top: 6,
-                      text: '收藏夹',
+                      text: uiTx('收藏夹'),
                     ),
                 ],
               ),
@@ -100,11 +101,12 @@ class MemberFavItem extends StatelessWidget {
                     const Spacer(),
                     Text(
                       item.type == 0
-                          ? '${item.mediaCount}个内容 · ${BiliUtils.isPublicFavText(item.attr)}'
+                          ? uiTxP('{0}个内容 · {1}', [item.mediaCount, BiliUtils.isPublicFavText(item.attr)])
                           : item.type == 11
-                          ? '${item.mediaCount}个内容 · ${item.upper?.name}'
+                          ? uiTxP('{0}个内容 · {1}', [item.mediaCount, item.upper?.name])
                           : item.type == 21
-                          ? '创建者: ${item.upper?.name}\n${item.mediaCount}个视频 · ${NumUtils.numFormat(item.viewCount)}播放'
+                          ? uiTxP('创建者: {0}\n{1}个视频 · {2}播放',
+                      [item.upper?.name, item.mediaCount, NumUtils.numFormat(item.viewCount)])
                           : '${item.mediaCount}个内容',
                       style: TextStyle(
                         fontSize: 12,

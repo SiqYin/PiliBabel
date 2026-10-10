@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 const double kScreenRatio = 1.2;
 
 // 全屏模式
@@ -16,6 +17,9 @@ enum FullScreenMode {
   gravity('忽略系统方向锁定，强制按重力转屏（仅安卓）'),
   ;
 
-  final String desc;
-  const FullScreenMode(this.desc);
+  /// 展示用原文；翻译放在 getter 里，一处覆盖全部使用点。
+  final String _desc;
+  const FullScreenMode(this._desc);
+
+  String get desc => uiTx(_desc);
 }

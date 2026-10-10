@@ -235,7 +235,7 @@ List<SettingsModel> get extraSettings => [
   NormalModel(
     title: uiTx('评论区过滤设置'),
     leading: const Icon(Icons.comment_outlined),
-    getSubtitle: () => '关键词、用户屏蔽、等级过滤、屏蔽带货评论',
+    getSubtitle: () => uiTx('关键词、用户屏蔽、等级过滤、屏蔽带货评论'),
     onTap: (context, _) => Get.to(() => const ReplySetting()),
   ),
   SwitchModel(
@@ -253,7 +253,8 @@ List<SettingsModel> get extraSettings => [
   ),
   NormalModel(
     title: uiTx('横向滑动阈值'),
-    getSubtitle: () => '当前:「${Pref.touchSlopH}」，系统默认值: $deviceTouchSlop',
+    getSubtitle: () => uiTxP('当前:「{0}」，系统默认值: {1}',
+        [Pref.touchSlopH, deviceTouchSlop]),
     onTap: _showTouchSlopDialog,
     leading: const Icon(Icons.pan_tool_alt_outlined),
   ),
@@ -261,7 +262,8 @@ List<SettingsModel> get extraSettings => [
     title: uiTx('刷新指示器高度'),
     leading: const Icon(Icons.height),
     getSubtitle: () =>
-        '当前指示器高度: ${Pref.refreshDisplacement}, 刷新滑动距离: $refreshDragExtent',
+        uiTxP('当前指示器高度: {0}, 刷新滑动距离: {1}',
+            [Pref.refreshDisplacement, refreshDragExtent]),
     onTap: _showRefreshDialog,
   ),
   SwitchModel(
@@ -274,9 +276,9 @@ List<SettingsModel> get extraSettings => [
     title: uiTx('合并弹幕'),
     getSubtitle: () {
       final enabled = Pref.mergeDanmaku;
-      if (!enabled) return '已关闭';
+      if (!enabled) return uiTx('已关闭');
       final window = Pref.mergeDanmakuWindowSeconds;
-      final crossMode = Pref.mergeDanmakuCrossMode ? '跨类型' : '同类型';
+      final crossMode = uiTx(Pref.mergeDanmakuCrossMode ? '跨类型' : '同类型');
       final enlarge = Pref.danmakuEnlarge
           ? '放大门槛: ${Pref.danmakuEnlargeThreshold}'
           : '字号放大: 关';

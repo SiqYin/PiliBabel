@@ -502,9 +502,14 @@ class _PresetDropdown extends StatelessWidget {
 class _MergePreset {
   const _MergePreset({
     required this.value,
-    required this.label,
-  });
+    required String label,
+  }) : _label = label;
 
   final int value;
-  final String label;
+
+  /// 展示用原文。这些预设放在 `static const` 列表里、构造是 const，
+  /// 没法在定义处调 uiTx，只能靠 getter 在读取时翻译。
+  final String _label;
+
+  String get label => uiTx(_label);
 }
