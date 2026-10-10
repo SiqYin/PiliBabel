@@ -258,52 +258,55 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                     onSelect: controller.saveTranslateModel,
                     onFetch: controller.fetchTranslateModels,
                   ),
+                  // 思考模式与「测试翻译」**只对自备 API 有意义**，所以放在这一块里
+                  // 跟着一起显示/隐藏：
+                  // 内置的官方模型是翻译专精模型，本来就该直接出译文 —— 它不需要推理，
+                  // 开了只会更慢；接口那头对 `enable_thinking` 也是忽略的（已实测，
+                  // 传 true/false 都返回同样的译文）。
+                  Obx(
+                    () => SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(uiTx('思考模式')),
+                      subtitle: Text(
+                        controller.thinking.value
+                            ? uiTx('启用推理，翻译更准但可能更慢')
+                            : uiTx('关闭推理，出结果更快（推荐）'),
+                      ),
+                      value: controller.thinking.value,
+                      onChanged: controller.saveThinking,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  SizedBox(
+                    width: double.infinity,
+                    child: Obx(
+                      () => FilledButton.tonalIcon(
+                        icon: controller.isTesting.value
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Icon(Icons.bolt, size: 18),
+                        label: Text(uiTx('测试翻译')),
+                        onPressed: controller.isTesting.value
+                            ? null
+                            : controller.testTranslate,
+                      ),
+                    ),
+                  ),
                 ],
               );
             }),
-            const SizedBox(height: 4),
-            Obx(
-              () => SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(uiTx('思考模式')),
-                subtitle: Text(
-                  controller.thinking.value
-                      ? uiTx('启用推理，翻译更准但可能更慢')
-                      : uiTx('关闭推理，出结果更快（推荐）'),
-                ),
-                value: controller.thinking.value,
-                onChanged: controller.saveThinking,
-              ),
-            ),
             const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Obx(
-                    () => FilledButton.tonalIcon(
-                      icon: controller.isTesting.value
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.bolt, size: 18),
-                      label: Text(uiTx('测试翻译')),
-                      onPressed: controller.isTesting.value
-                          ? null
-                          : controller.testTranslate,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: OutlinedButton.icon(
-                    icon: const Icon(Icons.delete_sweep, size: 18),
-                    label: Text(uiTx('清空缓存')),
-                    onPressed: controller.clearTranslateCache,
-                  ),
-                ),
-              ],
+            // 清空缓存**两种引擎都要留**：换了引擎或换回旧语言后想重翻，都靠它。
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.delete_sweep, size: 18),
+                label: Text(uiTx('清空缓存')),
+                onPressed: controller.clearTranslateCache,
+              ),
             ),
             Obx(() {
               final err = Get.isRegistered<UiTranslateService>()
