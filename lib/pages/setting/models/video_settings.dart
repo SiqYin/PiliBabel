@@ -94,7 +94,7 @@ List<SettingsModel> get videoSettings => [
   NormalModel(
     title: uiTx('直播 CDN 设置'),
     leading: const Icon(MdiIcons.cloudPlusOutline),
-    getSubtitle: () => '当前使用：${Pref.liveCdnUrl ?? "默认"}',
+    getSubtitle: () => uiTxP('当前使用：{0}', [Pref.liveCdnUrl ?? '默认']),
     onTap: _showLiveCDNDialog,
   ),
   SwitchModel(

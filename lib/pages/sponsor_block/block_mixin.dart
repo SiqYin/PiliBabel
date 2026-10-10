@@ -259,7 +259,7 @@ mixin BlockMixin on GetxController {
 
   void _skipToast(SegmentModel item) {
     if (autoPlay && Pref.blockToast) {
-      _showBlockToast('已跳过${item.segmentType.shortTitle}片段');
+      _showBlockToast(uiTxP('已跳过{0}片段', [item.segmentType.shortTitle]));
     }
     if (_segmentSourceIsBlock && Pref.blockTrack) {
       SponsorBlock.viewedVideoSponsorTime(item.uuid);
@@ -279,14 +279,14 @@ mixin BlockMixin on GetxController {
       if (isSkip) {
         _skipToast(item);
       } else {
-        _showBlockToast('已跳至${item.segmentType.shortTitle}');
+        _showBlockToast(uiTxP('已跳至{0}', [item.segmentType.shortTitle]));
       }
     } catch (e) {
       if (kDebugMode) debugPrint('failed to skip: $e');
       if (isSkip) {
-        _showBlockToast('${item.segmentType.shortTitle}片段跳过失败');
+        _showBlockToast(uiTxP('{0}片段跳过失败', [item.segmentType.shortTitle]));
       } else {
-        _showBlockToast('跳转失败');
+        _showBlockToast(uiTx('跳转失败'));
       }
     }
   }
@@ -334,7 +334,8 @@ mixin BlockMixin on GetxController {
   void _doVote(String uuid, int type) => SponsorBlock.voteOnSponsorTime(
     uuid: uuid,
     type: type,
-  ).then((i) => SmartDialog.showToast(i.isSuccess ? '投票成功' : '投票失败: $i'));
+  ).then((i) => SmartDialog.showToast(
+          i.isSuccess ? uiTx('投票成功') : uiTxP('投票失败: {0}', [i])));
 
   void _showCategoryDialog(SegmentModel segment) {
     showDialog(

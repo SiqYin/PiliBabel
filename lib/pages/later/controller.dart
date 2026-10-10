@@ -129,9 +129,9 @@ class LaterController extends MultiSelectController<LaterData, LaterItemModel>
   // 一键清空
   void toViewClear(BuildContext context, [int? cleanType]) {
     String content = switch (cleanType) {
-      1 => '确定清空已失效视频吗？',
-      2 => '确定清空已看完视频吗？',
-      _ => '确定清空稍后再看列表吗？',
+      1 => uiTx('确定清空已失效视频吗？'),
+      2 => uiTx('确定清空已看完视频吗？'),
+      _ => uiTx('确定清空稍后再看列表吗？'),
     };
     showConfirmDialog(
       context: context,
