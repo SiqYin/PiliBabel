@@ -192,7 +192,7 @@ class ImageGridView extends StatelessWidget {
               height: item.height.toInt(),
             ),
             child: Text(
-              '保存${Platform.isIOS ? '实况' : '视频'}',
+              uiTxP('保存{0}', [Platform.isIOS ? '实况' : '视频']),
               style: const TextStyle(fontSize: 14),
             ),
           ),
@@ -255,7 +255,7 @@ class ImageGridView extends StatelessWidget {
                 if (item.isLivePhoto)
                   const PBadge(text: 'Live', right: 8, bottom: 8, type: .gray)
                 else if (item.isLongPic)
-                  const PBadge(text: '长图', right: 8, bottom: 8),
+                  PBadge(text: uiTx('长图'), right: 8, bottom: 8),
               ],
             );
             if (!item.isLongPic) {

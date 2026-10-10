@@ -264,9 +264,9 @@ class _FansMedalTile extends StatelessWidget {
     if (medal == null) return null;
     final parts = [
       if (medal.nextIntimacy case final next? when next > 0)
-        '${medal.intimacy ?? 0}/$next 亲密度',
+        uiTxP('{0}/{1} 亲密度', [medal.intimacy ?? 0, next]),
       if (medal.dayLimit case final limit?)
-        '今日上限 ${NumUtils.numFormat(medal.todayFeed ?? 0)}/${NumUtils.numFormat(limit)}',
+        uiTxP('今日上限 {0}/{1}', [NumUtils.numFormat(medal.todayFeed ?? 0), NumUtils.numFormat(limit)]),
     ];
     return parts.isEmpty ? null : parts.join(' · ');
   }

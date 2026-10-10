@@ -86,7 +86,7 @@ class SearchPgcItem extends StatelessWidget {
                             ),
                     ),
                     const SizedBox(height: 12),
-                    Text('评分:${item.mediaScore?['score']}', style: style),
+                    Text(uiTxP('评分:{0}', [item.mediaScore?['score']]), style: style),
                     Row(
                       children: [
                         if (item.areas?.isNotEmpty == true)

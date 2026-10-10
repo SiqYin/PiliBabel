@@ -95,7 +95,7 @@ class CdnSpeedTester {
       allowAppSource: false,
     );
     final item = result.dataOrNull?.dash?.video?.first;
-    if (item == null) throw Exception('无法获取视频流');
+    if (item == null) throw Exception(uiTx('无法获取视频流'));
     return sample = item;
   }
 
@@ -145,10 +145,10 @@ class CdnSpeedTester {
           }
         },
       );
-      result ??= snapshot() ?? '测速失败';
+      result ??= snapshot() ?? uiTx('测速失败');
     } on DioException catch (e) {
       if (e.type == DioExceptionType.cancel) {
-        result ??= '测速超时';
+        result ??= uiTx('测速超时');
       } else {
         result ??= _describeError(e);
       }

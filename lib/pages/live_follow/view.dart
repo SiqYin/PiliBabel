@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/skeleton/video_card_v.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -30,7 +31,7 @@ class _LiveFollowPageState extends State<LiveFollowPage> {
         title: Obx(
           () {
             final count = _controller.count.value;
-            return Text(count != null ? '$count人正在直播' : '关注直播');
+            return Text(count != null ? uiTxP('{0}人正在直播', [count]) : uiTx('关注直播'));
           },
         ),
       ),

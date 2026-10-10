@@ -41,7 +41,7 @@ class _BlackListPageState extends State<BlackListPage> {
       appBar: AppBar(
         title: Obx(
           () => Text(
-            '黑名单管理${_blackListController.total.value == -1 ? '' : ': ${_blackListController.total.value}'}',
+            uiTxP('黑名单管理{0}', [_blackListController.total.value == -1 ? '' : ': ${_blackListController.total.value}']),
           ),
         ),
       ),

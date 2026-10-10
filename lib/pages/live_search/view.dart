@@ -69,13 +69,13 @@ class _LiveSearchPageState extends State<LiveSearchPage> {
                     Obx(
                       () => Tab(
                         text:
-                            '正在直播 ${_controller.counts[0] != -1 ? _controller.counts[0] : ''}',
+                            uiTxP('正在直播 {0}', [_controller.counts[0] != -1 ? _controller.counts[0] : '']),
                       ),
                     ),
                     Obx(
                       () => Tab(
                         text:
-                            '主播 ${_controller.counts[1] != -1 ? _controller.counts[1] : ''}',
+                            uiTxP('主播 {0}', [_controller.counts[1] != -1 ? _controller.counts[1] : '']),
                       ),
                     ),
                   ],

@@ -99,7 +99,7 @@ class LiveRoomController extends GetxController {
         liveTime * 1000,
         DateTime.now().millisecondsSinceEpoch,
       );
-      text += duration.isEmpty ? '刚刚开播' : '开播$duration';
+      text += duration.isEmpty ? uiTx('刚刚开播') : uiTxP('开播{0}', [duration]);
     }
     if (text.isEmpty) {
       return const SizedBox.shrink();
@@ -306,12 +306,12 @@ class LiveRoomController extends GetxController {
     );
     if (res case Success(:final response)) {
       if (response.liveStatus != 1) {
-        _showDialog('当前直播间未开播');
+        _showDialog(uiTx('当前直播间未开播'));
         return;
       }
       final playurl = response.playurlInfo?.playurl;
       if (playurl == null) {
-        _showDialog('无法获取播放地址');
+        _showDialog(uiTx('无法获取播放地址'));
         return;
       }
       ruid = response.uid;

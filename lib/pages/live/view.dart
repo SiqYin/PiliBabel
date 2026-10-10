@@ -115,7 +115,7 @@ class _LivePageState extends State<LivePage>
                                   horizontal: 8,
                                   vertical: 5,
                                 ),
-                                text: isFirst ? '推荐' : item.title!,
+                                text: isFirst ? uiTx('推荐') : item.title!,
                                 bgColor: isCurr
                                     ? theme.colorScheme.secondaryContainer
                                     : Colors.transparent,
@@ -137,7 +137,7 @@ class _LivePageState extends State<LivePage>
                       size: 26,
                       iconSize: 18,
                       context: context,
-                      tooltip: '切换${controller.showFirstFrame ? '封面' : '首帧'}',
+                      tooltip: uiTxP('切换{0}', [controller.showFirstFrame ? uiTx('封面') : uiTx('首帧')]),
                       icon: controller.showFirstFrame
                           ? const Icon(MdiIcons.alphaFBox)
                           : const Icon(MdiIcons.image),

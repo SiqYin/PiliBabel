@@ -158,7 +158,7 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
         ),
         if (item.rating != null)
           PBadge(
-            text: '评分 ${item.rating!.score!}',
+            text: uiTxP('评分 {0}', [item.rating!.score!]),
             top: null,
             right: 6,
             bottom: 6,
@@ -173,7 +173,7 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
               return iconButton(
                 size: 28,
                 iconSize: 26,
-                tooltip: '${isFav ? '取消' : ''}收藏',
+                tooltip: uiTxP('{0}收藏', [isFav ? uiTx('取消') : '']),
                 onPressed: () => introController.onFavPugv(isFav),
                 icon: isFav
                     ? const Icon(Icons.star_rounded)
@@ -236,7 +236,7 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
                   },
             child: Text(
               isFollowed
-                  ? '已${introController.pgcType}'
+                  ? uiTxP('已{0}', [introController.pgcType])
                   : introController.pgcType,
             ),
           );
