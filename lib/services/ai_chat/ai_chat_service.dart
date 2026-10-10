@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:dio/dio.dart';
@@ -101,16 +102,16 @@ class AiChatService {
     String detail;
     if (e.type == DioExceptionType.badResponse) {
       detail = _snippet(await _responseText(e.response));
-      if (detail.isEmpty) detail = '服务器返回错误';
+      if (detail.isEmpty) detail = uiTx('服务器返回错误');
     } else {
       detail = switch (e.type) {
         DioExceptionType.connectionTimeout ||
         DioExceptionType.sendTimeout ||
         DioExceptionType.receiveTimeout =>
-          '连接超时',
-        DioExceptionType.badCertificate => '证书校验失败',
-        DioExceptionType.cancel => '请求已取消',
-        _ => '无法连接（${e.message ?? e.error ?? e.type.name}）',
+          uiTx('连接超时'),
+        DioExceptionType.badCertificate => uiTx('证书校验失败'),
+        DioExceptionType.cancel => uiTx('请求已取消'),
+        _ => uiTxP('无法连接（{0}）', [e.message ?? e.error ?? e.type.name]),
       };
     }
     return _logged(
@@ -129,7 +130,7 @@ class AiChatService {
     String? apiKey,
   }) async {
     final baseUrl = _baseUrl(apiUrl);
-    if (baseUrl.isEmpty) throw Exception('请先配置 API 地址');
+    if (baseUrl.isEmpty) throw Exception(uiTx('请先配置 API 地址'));
     final url = '$baseUrl/models';
     final Response res;
     try {
@@ -165,7 +166,7 @@ class AiChatService {
     Duration? receiveTimeout,
   }) async {
     final baseUrl = _baseUrl();
-    if (baseUrl.isEmpty) throw Exception('请先配置 API 地址');
+    if (baseUrl.isEmpty) throw Exception(uiTx('请先配置 API 地址'));
     final useModel = model ?? Pref.aiModel;
     if (useModel.isEmpty) throw Exception('请先选择模型');
 
@@ -220,7 +221,7 @@ class AiChatService {
     String? apiKey,
   }) async* {
     final baseUrl = _baseUrl(apiUrl);
-    if (baseUrl.isEmpty) throw Exception('请先配置 API 地址');
+    if (baseUrl.isEmpty) throw Exception(uiTx('请先配置 API 地址'));
     final useModel = model ?? Pref.aiModel;
     if (useModel.isEmpty) throw Exception('请先选择模型');
 
