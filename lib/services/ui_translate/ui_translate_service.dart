@@ -473,7 +473,6 @@ class UiTranslateService extends GetxService {
   Future<List<String>> _builtinTranslate(List<String> sources) async {
     final lang = targetLang;
     final rule = currentLanguage.scriptRule;
-    final thinking = Pref.uiTranslateThinking;
     final results = <String>[];
     for (final src in sources) {
       final buf = StringBuffer();
@@ -491,7 +490,12 @@ class UiTranslateService extends GetxService {
         model: translateModel,
         apiUrl: translateApiUrl,
         apiKey: translateApiKey,
-        extraBody: <String, dynamic>{'enable_thinking': thinking},
+        // 内置引擎**固定关掉思考输出**，不看 Pref.uiTranslateThinking：
+        // 官方接口虽然接受这个参数，但实测传 true / false 返回完全一样（它并不
+        // 走思维链），而官方文档对这类接入的要求就是「强制关闭思考输出」。
+        // 界面上这个开关也只对「自备 API」显示，这里固定 false 可以避免用户
+        // 之前在自备 API 下开过、之后切到内置还带着 true 发过去。
+        extraBody: const <String, dynamic>{'enable_thinking': false},
       )) {
         buf.write(chunk);
       }

@@ -207,7 +207,11 @@ class AiSettingController extends GetxController {
       SmartDialog.showToast(uiTx('翻译服务未就绪'));
       return;
     }
-    if (Pref.uiTranslateApiUrl.isEmpty || Pref.uiTranslateModel.isEmpty) {
+    // **必须看引擎解析后的值，不能直接读 Pref.uiTranslateApiUrl / Model**：
+    // 那两项是「自备 API」专用的输入框内容，选内置引擎时用户根本没填过、必然为空，
+    // 于是选了官方模型也会被拦下来提示「请先配置」。
+    if (UiTranslateService.translateApiUrl.isEmpty ||
+        UiTranslateService.translateModel.isEmpty) {
       SmartDialog.showToast(uiTx('请先配置「界面翻译」的接口地址并选择翻译模型'));
       return;
     }
