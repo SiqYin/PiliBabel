@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 // edit from package:dio_cookie_manager
 import 'dart:io';
 
@@ -248,21 +249,21 @@ class AccountManager extends Interceptor {
   static Future<String> dioError(DioException error) async {
     switch (error.type) {
       case .badCertificate:
-        return '证书有误！';
+        return uiTx('证书有误！');
       case .badResponse:
-        return '服务器异常，请稍后重试！';
+        return uiTx('服务器异常，请稍后重试！');
       case .cancel:
-        return '请求已被取消，请重新请求';
+        return uiTx('请求已被取消，请重新请求');
       case .connectionError:
-        return '连接错误，请检查网络设置';
+        return uiTx('连接错误，请检查网络设置');
       case .connectionTimeout:
-        return '网络连接超时，请检查网络设置';
+        return uiTx('网络连接超时，请检查网络设置');
       case .receiveTimeout:
-        return '响应超时，请稍后重试！';
+        return uiTx('响应超时，请稍后重试！');
       case .sendTimeout:
-        return '发送请求超时，请检查网络设置';
+        return uiTx('发送请求超时，请检查网络设置');
       case .transformTimeout:
-        return '转换响应数据超时！';
+        return uiTx('转换响应数据超时！');
       case .unknown:
         String desc;
         try {
@@ -272,11 +273,14 @@ class AccountManager extends Interceptor {
         } catch (_) {
           desc = '';
         }
-        return '$desc网络异常 ${error.error}';
+        // 用 uiTxP 模板而不是插值后再 uiTx：后者会让每个不同的错误内容
+        // 各自成为一个新的翻译 key，缓存永远命不中。
+        return uiTxP('{0}网络异常 {1}', [desc, error.error]);
     }
   }
 }
 
 extension _ConnectivityResultExt on ConnectivityResult {
-  String get desc => const ['蓝牙', 'Wi-Fi', '局域', '流量', '无', '代理', '其他'][index];
+  static const _names = ['蓝牙', 'Wi-Fi', '局域', '流量', '无', '代理', '其他'];
+  String get desc => uiTx(_names[index]);
 }
