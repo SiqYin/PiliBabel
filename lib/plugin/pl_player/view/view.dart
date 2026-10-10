@@ -2229,10 +2229,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                       const SizedBox(height: 6),
                       Text(
                         '$percent%',
-                        style: const TextStyle(
+                        // tabularFigures 让数字等宽，百分比跳动时不会左右抖
+                        style: TextStyle(
                           color: Colors.white,
                           fontSize: 12,
-                          fontFeatures: [FontFeature.tabularFigures()],
+                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
                     ],

@@ -262,13 +262,11 @@ class _FontSettingPageState extends State<FontSettingPage> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    Obx(
-                      () => Text(
-                        uiTx('弹幕预览：前方高能反应 666'),
-                        style: TextStyle(
-                          fontFamily: _danmakuFontFamily ?? _kDefaultFontFamily,
-                          fontSize: 14 * _selectedScale,
-                        ),
+                    Text(
+                      uiTx('弹幕预览：前方高能反应 666'),
+                      style: TextStyle(
+                        fontFamily: _danmakuFontFamily ?? _kDefaultFontFamily,
+                        fontSize: 14 * _selectedScale,
                       ),
                     ),
                   ],
