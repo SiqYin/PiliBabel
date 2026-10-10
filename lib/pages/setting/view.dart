@@ -191,6 +191,8 @@ class _SettingPageState extends State<SettingPage> {
           .styleSetting ||
           .extraSetting => CommonSetting(settingType: type),
           .aiTranslateSetting => const UiTranslateSettingPage(),
+          .themeSetting => const ColorSelectPage(),
+          .fontSetting => const FontSettingPage(),
           .webdavSetting => const WebDavSettingPage(),
           .about => const AboutPage(),
         },
