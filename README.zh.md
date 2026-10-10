@@ -2,105 +2,123 @@
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
     <p><b>具備 AI 翻譯功能的第三方嗶哩嗶哩（Bilibili）客戶端。</b></p>
-    <p>巴別塔——打破語言的高牆，讓每個人都能用屬於自己的語言享受 Bilibili。</p>
+    <p>巴別塔 —— 打破語言的高牆，讓每個人都能用屬於自己的語言享受 Bilibili。</p>
     <p>含 4 種中國少數民族語言與 3 種漢語方言的翻譯。</p>
+    <p>內建 B 站官方免費翻譯模型，裝好即用，無需 API Key。</p>
     <p>
       <a href="README.md">English</a> · <b>中文</b> · <a href="README.ja.md">日本語</a>
     </p>
 </div>
 
 <div align="center">
-    <img src="assets/screenshots/readme_zh_home.jpg" width="32%" alt="首页" />
-    <img src="assets/screenshots/readme_zh_dynamics.jpg" width="32%" alt="动态" />
-    <img src="assets/screenshots/readme_zh_mine.jpg" width="32%" alt="我的" />
+    <img src="assets/screenshots/readme_en_home.jpg" width="32%" alt="首頁" />
+    <img src="assets/screenshots/readme_en_dynamics.jpg" width="32%" alt="動態" />
+    <img src="assets/screenshots/readme_en_mine.jpg" width="32%" alt="我的" />
 </div>
 
 <br/>
 
-> **免責聲明。** PiliBabel 是一款**非官方、開源、第三方**客戶端，與 Bilibili / 嗶哩嗶哩**無任何隸屬、授權或贊助關係**。所有 API 均取自官方公開介面，**不解鎖、不破解任何付費內容**。請完整閱讀下方的[免責聲明](#免責聲明)與[授權條款](#授權條款)章節。
+> **免責聲明。** PiliBabel 是一個**非官方、開源、第三方**客戶端，**與 bilibili 官方無任何隸屬、認可或贊助關係**。所有介面均取自官方公開介面，**不提供任何破解、越權或繞過付費的內容**。請完整閱讀 [免責聲明](#免責聲明) 與 [開源協議](#開源協議) 兩節。
 
 ## PiliBabel 是什麼？
 
-PiliBabel 是**基於 [PiliNara](https://github.com/Starfallan/PiliNara) 打造、獨立運作的第三方 fork**，並繼承了 PiliNara 所繼承的一切：
+PiliBabel 是**建立在 [PiliNara](https://github.com/Starfallan/PiliNara) 之上的獨立第三方分支**，完整繼承了 PiliNara 所繼承的一切：
 
 ```
-bilibili（官方公開 API）
+bilibili（官方公開介面）
         ▲
-   PiliPala / PiliPalaX        — 原始專案
+   PiliPala / PiliPalaX        — 最初的專案
         ▲
-   PiliPlus                    — 活躍的分支
+   PiliPlus                    — 活躍分支
         ▲
-   PiliNara                    — PiliPlus 的分支（個人化改動）
+   PiliNara                    — PiliPlus 的分支（個人改動）
         ▲
    PiliBabel  ← 你在這裡        — PiliNara 的分支
 ```
 
-PiliBabel 保留了 **PiliNara / PiliPlus 的全部功能**（見下方[繼承功能清單](#繼承功能清單來自-pilinara--piliplus)），並新增了**上游客戶端所沒有的招牌能力**：
+PiliBabel **保留 PiliNara / PiliPlus 的全部功能**（見文末[繼承功能清單](#繼承功能清單來自-pilinara--piliplus)），並加上了上游都沒有的核心能力：
 
-> **AI 介面／內容翻譯**——整個 App（介面標籤、影片標題、UP 主名稱、留言、動態、推薦流量，甚至直播彈幕）都會用**你**選擇的語言呈現，翻譯由**你自己**帶入的 AI 模型完成。
+> **AI 介面與內容翻譯** —— 整個應用（介面文案、影片標題、UP 主名字、評論、動態、資訊流，乃至直播彈幕）都用**你選擇的語言**呈現。
 
-其理念參照 bilibili 官方的「AI 介面翻譯」，但完全走**你自己**的 OpenAI 相容端點——沒有廠商鎖定、全 App 通用，並支援極多的目標語言。
+而且從 1.0 起，這件事**開箱即用**：翻譯模型是**內建**的。B 站開源了自己的翻譯模型家族 [Index-Translate](https://github.com/bilibili/Index-Translate)，並提供免費的公網介面；PiliBabel 預設就指向它，所以**裝好打開就能翻譯** —— 不用註冊、不用金鑰、不花錢。如果你更想用自己的模型，自備 API 的入口一直都在，一步之遙。
 
-## 主要特色
+## 主要特性
 
-- **全面 AI 翻譯。** 導覽分頁、影片卡片、詳情頁、留言、動態，以及「我的／收藏／歷史／訊息／搜尋」等介面——全域掃描涵蓋**約 1,650+ 條介面字串**，並含動態內容（標題、作者名稱、互動計數）。
-- **模型自備。** 填入你自己的 OpenAI 相容端點（`/chat/completions`）的網址／API 金鑰／模型即可。AI 影片摘要與 AI 翻譯兩者擁有**完全獨立**的端點與設定，統一收在一個「**AI 功能**」頁面下。
-- **只翻一次，翻完即固定。** 每條原文**僅翻譯一次**，結果落地快取、重開畫面**絕不重翻**——與官方客戶端同原理，翻譯穩定且可預期。
-- **選擇 App 語言。** 預設為簡體中文。約 35 種語言，包含 English、日本語、한국어、Français、Deutsch、Español、Italiano、Русский、ไทย、Tiếng Việt、Bahasa Melayu／Bahasa Indonesia、Filipino、Türkçe、العربية、עברית、བོད་སྐད་、Монгол хэл、ئۇيغۇرچە、Vahcuengh、粵語、以上海話為基底並參考蘇州話的吳語、閩南語等。只有簡體中文作為原文語言時不呼叫 API；繁體中文及所有方言目標都正常翻譯。
-- **逐則留言的「原文 ⇄ 譯文」切換**（一個小圖示，不用中文詞）。`@提及 / [表情] / #話題# / 連結` 會作為 token 保留，**含超連結的留言也能翻譯且連結維持可點擊**。
-- **彈幕翻譯**——播放器右上角控制列的獨立開關，**預設關閉**，開啟前需確認（確認文案本身也會翻譯）。開啟後，播放頭之後約 **15 秒**視窗內的彈幕會**分批預先翻譯**（拖曳到影片中段也能正確處理，而非從頭算起），滑入時譯文多半已就緒。
-- **思考模式開關**（`enable_thinking`）供品質／速度取捨，設定裡並有**「測試翻譯」**與**清空快取**按鈕。
-- **切換語言更快**：批次請求配合有限併發與持久快取；切換語言時強制重建當前畫面一次，不會讓你卡在還沒翻譯的原文上。
-- **首次啟動引導。** 第一次開啟 App 時會跳出（英文）說明如何開啟 AI 翻譯（**設定 → AI → AI 介面翻譯**），並提供一鍵直達該設定頁的按鈕。
-- **全球都能順暢播放。** PiliBabel 直接選用 B 站依你 IP 就近派發的海外節點（全球 **Akamai**、`mirror*ov`、`cn-hk-eq-bcache`），不再把播放固定在國內（阿里雲／深圳）節點——海外用戶不會再遇到「音訊還在走、視頻卡住」。（仍可在設定中手動指定 CDN。）
+- **翻譯覆蓋全應用。** 導覽列、影片卡片、詳情頁、評論、動態，以及「我的 / 收藏 / 歷史 / 訊息 / 搜尋」各介面 —— 全域替換覆蓋 **約 1650+ 條介面文案**，加上標題、UP 主名字、播放資料這類動態內容。
+- **兩種引擎，一個開關。** *內建*（預設）走 B 站官方 **Index-Translate-35B-A3B** 的免費介面，無需任何設定；*自備 API* 保留原有行為，可指向任意 OpenAI 相容的 `/chat/completions` 介面，填自己的位址 / 金鑰 / 模型。AI 影片總結與 AI 翻譯**各自獨立**設定，都收在同一個**「AI 功能」**頁裡。
+- **一份語言清單，兩個引擎共用。** 目標語言清單不按引擎拆分，選哪個引擎都是同一份清單。它把 B 站官方模型的 **150 種語言**與 PiliBabel 額外補上的 **4 種中國少數民族語言與 3 種漢語方言**合併在一起 —— 前者是藏語、維吾爾語、壯語、苗語，後者是粵語、吳語、閩南語 —— 再加上繁體中文。地區與字形變體**各佔一條、不合併** —— 摩洛哥 / 埃及 / 納吉迪 / 黎凡特阿拉伯語是各自獨立的選項，塞爾維亞語、烏茲別克語、烏爾都語的西里爾 / 拉丁字形同理。
+- **如實標註覆蓋範圍。** 官方清單內的語言由 B 站模型負責；清單外的少數幾種（繁體中文，以及 B 站未收錄的上述漢語方言與少數民族語言）依然出現在清單裡，但會標註出來，讓你一眼知道想要更好的效果可能需要自備模型。
+- **翻譯一次，永久固定。** 每條原文**只翻譯一次**，結果本地持久化，重進介面**不會重翻** —— 與官方客戶端同一原則，譯文穩定、可預期。
+- **逐條評論的「原文 ⇄ 譯文」切換**（一個小圖示，不是一個中文詞）。`@某人 / [表情] / #話題# / 連結` 會作為整體保留，**含超連結的評論照樣翻譯，且連結依然可點**。
+- **彈幕翻譯** —— 播放器右上角控制列裡的獨立開關，**預設關閉**，開啟前有一次內容本身也會被翻譯的確認。開啟後，播放頭之前的彈幕會按 **約 15 秒一批**提前預熱翻譯（跳到中間也能正確從該處開始，而不是從頭），通常彈幕飄到眼前時譯文已經就緒。
+- **思考模式開關**（`enable_thinking`）用於在品質與速度之間取捨，設定頁另有**「測試翻譯」**與**清空快取**兩個按鈕。
+- **切換語言夠快**：分批請求 + 限流併發 + 持久快取；切換語言時當前介面強制重建一次，不會讓你對著未翻譯的文字發愣。關閉 AI 翻譯會把整個介面恢復原文，並且**完全不發任何請求**。
+- **首次啟動引導。** 第一次打開應用時會彈出一個英文對話框，詢問是否開啟翻譯。同意後會：開啟翻譯、選中內建模型、跳到 AI 設定頁，並立刻問你想要哪種語言 —— 新使用者兩次點擊就能從「剛裝好」到「已經翻譯好」。
+- **全球可播放。** PiliBabel 會優先選用 B 站按 IP 就近下發的海外線路（全球 **Akamai**、`mirror*ov`、`cn-hk-eq-bcache`），而不是把你釘在中國大陸（阿里雲/深圳）節點上 —— 大陸以外的使用者不再出現「聲音在走、畫面卡住」。當然，你也可以在設定裡手動指定 CDN。
 
-## AI 介面翻譯的技術實作
+## 兩種翻譯引擎
 
-本倉庫**沒有 i18n / ARB 資源層**——介面字串都是硬編碼的中文。PiliBabel 不去重寫每個元件，而是在其上疊加一層薄薄的翻譯層：
+| | 內建（預設） | 自備 API |
+|---|---|---|
+| 模型 | B 站 **Index-Translate-35B-A3B** | 任意 OpenAI 相容模型 |
+| 介面 | `index-translate.bilibili.com/v1` | 你自己的位址 |
+| API Key | **不需要** | 你自己的 |
+| 花費 | 免費 | 取決於你的服務商 |
+| 請求方式 | 每次一條 | 批次（每次 ≤ 16 條） |
+| 額外語言 | — | 你的模型會的任何語言 |
 
-1. **全域查詞包裝。** `lib/services/ui_translate/` 暴露頂層函式 `uiTx(String src)`。原本 `Text('中文')` 變成 `Text(uiTx('中文'))`。透過腳本 **codemod**（`tool/ui_translate_*.py`）對全專案套用——約 **223 個檔案 / 1,650+ 條字串**——並在必要處自動移除因而失效的 `const`（含泛型 `const X<T>(...)`、點號名 `const Positioned.fill(...)`，以及把 `static const` 的清單／映射宣告改成 `static final`）。
+**內建引擎為什麼逐條請求。** Index-Translate 是翻譯**專精**模型，其作者給出的呼叫約定就是單條模板（「請將以下文本翻譯為 X，直接輸出翻譯結果」）。因此在這個引擎上，PiliBabel 每次只發一條，而不是自備 API 那套「編號清單 + 要求回 JSON 陣列」的批次提示詞。介面是免費的，為省請求去賭批次輸出並不划算 —— 這是**拿多一點請求量換少一大截出錯面**的自覺取捨。
+
+**從 0.3.x 升級上來。** 你自己配的 API —— 介面位址、金鑰、模型 —— **原樣保留，不會被改動**。引擎選擇預設落到內建模型，所以升級後第一次打開會使用 B 站的免費模型；到 *設定 → AI → AI 功能 → 翻譯引擎* 切回「自備 API」，即可立刻回到你原來的設定。
+
+## AI 介面翻譯的實作（技術細節）
+
+本倉庫**沒有任何 i18n / ARB 資源層** —— 介面文案全是硬編碼中文。PiliBabel 沒有重寫每個 widget，而是加了一層薄薄的翻譯層：
+
+1. **全域取詞包裝。** `lib/services/ui_translate/` 對外暴露頂層函式 `uiTx(String src)`，原先寫 `Text('中文')` 的地方改成 `Text(uiTx('中文'))`。這步由**腳本化 codemod** 全專案鋪開（`tool/ui_translate_*.py`）—— 約 **223 個檔案 / 1650+ 條文案** —— 並自動去掉因此失效的 `const`（含 `const X<T>(...)` 這類泛型與 `const Positioned.fill(...)` 這類點號呼叫），把 `static const` 的列表/映射宣告改成 `static final`。
 2. **`GetxService` 核心**（`ui_translate_service.dart`）：
-   - 持久的**原文 → 譯文**快取（以 GetStorage 支撐），每條字串只翻一次並永久複用；
-   - `tx()` 先讀 `RxInt revision`，再決定：未啟用→回傳原文；目標為**簡體中文（`zh-CN`）**時，直接回傳原文且不呼叫 API（Bilibili 原文絕大多數是簡體中文）；其餘目標語言——包括繁體中文、粵語、吳語／上海話、閩南語——都照常呼叫已設定的 API。是否屬於「中文家族」不再作為跳過翻譯的判斷；否則走快取或**入佇列**；
-   - 佇列由 **worker 執行池**處理，**逐塊遞迴套用**（每塊一返回即提升 `revision`，讓譯文漸進出現；批次 ≤ 16、併發 ≤ 10），結果**節流持久化**。
-3. **傳輸通道**沿用與 AI 影片摘要同一條已驗證的**串流**通道——`AiChatService.streamChat` → `{base}/chat/completions`（`stream: true`，相容僅支援串流的閘道）——並擴充讓翻譯能用**自己**的 `apiUrl` / `apiKey` / `model` 與 `enable_thinking` 旗標。此改動**向後相容**，影片摘要照常運作。
-4. **含變數的句子**走 `uiTxP(template, args)`：把帶 `{0}`/`{1}` 佔位符的整句作為一個穩定 key 送翻譯（提示詞要求保留佔位符），再把值回填——像 `共 {0} 條` 這種句子也能翻，且不動變數部分。
-5. **語言表**（`app_language.dart`）：每個 `AppLanguage` 帶有顯示用的自稱名，以及編入書寫／地域規範的 `toModel` 提示字串——這些規範只透過提示詞送達模型。
-6. **留言**走 `uiTxComment(text, id)`，保留 `@ / [表情] / #話題# / 連結` 為完整 token；含連結的富文本 span 會翻譯且連結辨識器保留，並以逐則 id 集合驅動「原文 ⇄ 譯文」切換。
-7. **彈幕**（`danmaku/view.dart`）：開關開啟時，位置監聽每秒走訪 `[playhead, playhead + 15s]`，對每條彈幕內容預熱 `uiTx()`，使其在滑入畫面前即已預翻；開啟時會清屏重繪。
-8. **儲存鍵**：`uiTranslate{Enabled,Lang,Model,ApiUrl,ApiKey,Thinking,Cache,Onboarded}`。**設定介面**：單一第一層「AI 功能」頁（`lib/pages/setting/ui_translate/`），內含 AI 影片摘要與 AI 翻譯兩段各自獨立的設定。
+   - 一份持久化的**原文 → 譯文**快取（落在 GetStorage），每條只翻一次、之後永久複用；
+   - `tx()` 先讀一次 `RxInt revision`，再決定：未開啟 → 傳回原文；目標語言是**簡體中文（`zh-CN`）** → 直接傳回原文、**不發請求**（B 站內容絕大多數本就是簡體）。其它任何目標 —— 包括繁體中文、粵語、吳語、閩南語 —— 都會走引擎翻譯；**光看是否屬於中文家族並不足以跳過翻譯**。接著查快取，未命中則**入隊**；
+   - 入隊文案由 **worker 池**消化，**按塊增量落庫**（每塊返回就自增 `revision`，文字漸進刷新），結果**節流持久化**。批次與併發跟隨引擎：內建模型**每次 1 條**，自備 API **每次 ≤ 16 條、併發 ≤ 10**。
+3. **引擎解析。** `TranslateProvider`（`builtin` / `custom`）決定傳輸層用哪一套位址、金鑰與模型；除此之外兩個引擎共用同一條程式路徑、同一份語言清單 —— 所以切換引擎只是一個設定項，**不會變成兩套功能**。
+4. **傳輸層**沿用與 AI 影片總結一致的、已驗證可用的**串流**通道 —— `AiChatService.streamChat` → `{base}/chat/completions`，帶 `stream: true`（相容只支援串流的閘道）—— 並擴展出翻譯**獨立**的 `apiUrl` / `apiKey` / `model` 與 `enable_thinking` 開關。該改動**向後相容**，影片總結不受影響。
+5. **含佔位符的整句**走 `uiTxP(template, args)`：把帶 `{0}`/`{1}` 的整句作為一個穩定 key 送翻譯（提示詞要求模型保留佔位符），再把參數回填 —— `"共 {0} 條"` 這類句子因此不會把動態部分譯壞。
+6. **語言表**（`app_language.dart`）：每個 `AppLanguage` 帶顯示用的自稱、編碼字形/地區規範的 `toModel` 提示詞串，以及一條「B 站官方清單是否覆蓋」的標記。字形硬約束（簡繁）與方言一致性要求**只經提示詞**傳給模型，客戶端之後再做一遍確定性的字形正規化兜底。
+7. **評論**走 `uiTxComment(text, id)`，把 `@ / [表情] / #話題# / 連結` 作為完整 token 保留；帶連結的富文字分段照樣翻譯，同時保住連結辨識；每條評論的 id 集合驅動「原文 ⇄ 譯文」切換。
+8. **彈幕**（`danmaku/view.dart`）：開關打開後，一個位置監聽器會以一秒一步走過 `[播放頭, 播放頭 + 15 秒]`，對每條彈幕內容預熱 `uiTx()`，讓它們在飄上螢幕前就譯好；開啟時清空並重繪畫布。
+9. **儲存鍵**：`uiTranslate{Enabled,Provider,Lang,Model,ApiUrl,ApiKey,Thinking,Cache,Onboarded}`。**設定介面**：一個統一的第一級頁「AI 功能」（`lib/pages/setting/ui_translate/`），影片總結與介面翻譯各自獨立成塊。
 
-**全球 CDN（`VideoUtils.getCdnUrl`）。** 播放網址附帶簽名，改寫主機會被 403 拒絕，因此播放路徑不再改寫主機：優先返回 B 站依客戶端 IP 就近返回的地址；若候選清單中已有海外節點（`*.akamaized.net`、`mirror(cos|ali|hw)ov`、`cn-hk-eq-bcache`）就直接採用。下載端（改寫主機是安全的）另外偏好全球 **Akamai** 邊緣，並在某條線路停擺時輪候下一條已簽名地址。純 `/v/resource` 的 P2P 連結仍沿用既有中繼以避免 404。
+**全球 CDN（`VideoUtils.getCdnUrl`）。** 直鏈是簽過名的，改寫主機名會被 403 拒絕 —— 所以**播放側絕不改寫主機**。PiliBabel 直接採用 B 站按客戶端 IP 就近下發的位址；當候選清單裡本來就有海外線路（`*.akamaized.net`、`mirror(cos|ali|hw)ov`、`cn-hk-eq-bcache`）時優先選它。下載側因為換主機是安全的，會額外優先 Akamai 全球邊緣，並在某條線路卡住或拒絕續傳時輪換到下一條已簽名候選。裸 `/v/resource` 的 P2P 直鏈仍回退到既有中轉，避免 404。
 
-**設計取捨／已知限制。** 由於字串就地包裝而非抽成資源，少數非 `Text` 的字串參數與部分富文本 span 仍持續增量補齊。被當作**邏輯鍵**使用的字串（以 `==` 比對、當作分頁名如 `简介`、或在 switch 中比較的列舉標籤）**刻意不**做整體包裝，以免破壞行為。彈幕翻譯在捲動畫布上屬盡力而為——彈幕極度密集時，你可能先短暫看到原文再看到譯文。翻譯需要網路與已設定的模型；未配置翻譯端點時，非中文目標語言是不會生效的。
+**設計取捨 / 已知限制。** 因為是在原地包裝字串、而不是抽取成資源，少數非 `Text` 的字串參數與部分富文字分段仍在逐步補齊。那些**兼作邏輯鍵**的字串（用 `==` 比較、當作 `簡介` 這類標籤名、或用於 switch 的列舉標籤）**刻意不做**統一包裝，以免改壞行為。彈幕翻譯是在滾動畫布上的盡力而為 —— 彈幕極密時可能先看到原文、隨後才變成譯文。翻譯需要網路；沒有網路時非中文目標自然不生效。內建介面是 B 站營運的免費公共服務，若被限流或不可用，應用會明確提示，你可以切到自備 API。
 
 ## 建置與驗證
 
-本 App 以「打了補丁的 Flutter SDK」加上補丁版 `material_ui` / `cupertino_ui` 套件建置，透過 `lib/scripts/patch.ps1` 與 `lib/scripts/build.ps1` 完成（與 PiliNara / PiliPlus 完全相同）。GitHub Actions 每次 push 產出 **debug APK**（`.github/workflows/ui-translate-debug.yml`）；**推送 tag `v*` 會自動建置並發布 Android、Windows、Linux 产物**（`release.yml`、`win_x64.yml`、`linux_x64.yml`）。
+建置方式與 PiliNara / PiliPlus 完全一致：打補丁的 Flutter SDK + 打補丁的 `material_ui` / `cupertino_ui` 套件，經由 `lib/scripts/patch.ps1` 與 `lib/scripts/build.ps1`。GitHub Actions 在每次推送時產出**除錯版 APK**（`.github/workflows/ui-translate-debug.yml`）；**推送 `v*` 標籤會自動建置並發佈 Android / Windows / Linux** 三端產物（`.github/workflows/release.yml`、`win_x64.yml`、`linux_x64.yml`）。
 
 <br/>
 
-## 適配平台
+## 平台支援
 - [x] Android
 - [ ] iOS
-- [ ] Pad
+- [ ] 平板
 - [x] Windows
 - [x] Linux
 
-PiliBabel 從 Releases 提供 **Android（APK）、Windows 與 Linux** 版本；iOS/Pad 此分支尚未打包。
+PiliBabel 在 Releases 提供 **Android（APK）、Windows 與 Linux** 建置；本分支暫未打包 iOS / 平板。
 
 <br/>
 
 ## 下載
 
-於 **Releases** 頁面下載建置產物，或將倉庫 clone 到本地自行編譯。
+從 **Releases** 取一個建置，或複製倉庫本地建置。
 
 ### Arch Linux
 
-感謝 [@nlsdt](https://github.com/nlsdt) 打包（PiliNara 的打包配方同樣適用於 PiliBabel）。
+感謝 [@nlsdt](https://github.com/nlsdt) 打包（PiliNara 的配方同樣適用於 PiliBabel）。
 
 ```bash
-sudo pacman -S pilinara      # 經 Arch Linux 中文（CN）倉庫
+sudo pacman -S pilinara      # 來自 Arch Linux CN 倉庫
 paru -S pilinara-bin         # 或經 AUR：pilinara-bin（預編譯）/ pilinara（原始碼）
 ```
 
@@ -108,44 +126,44 @@ paru -S pilinara-bin         # 或經 AUR：pilinara-bin（預編譯）/ pilinar
 
 ## 繼承功能清單（來自 PiliNara / PiliPlus）
 
-以下皆繼承自 PiliNara（並追溯繼承自 PiliPlus）；PiliBabel 在其上疊加了 AI 翻譯層。
+以下全部繼承自 PiliNara（並向上追溯到 PiliPlus）；PiliBabel 在其上加了一層 AI 翻譯。
 
-**基礎適配與介面**
-- [x] 各平台更名以實現多客戶端共存（PiliBabel 可與 PiliNara 並存安裝）
-- [x] 修正澎湃小窗下 Flutter 顯示問題（[#161086](https://github.com/flutter/flutter/issues/161086)，參考 [venera#467](https://github.com/venera-app/venera/pull/467)）；Android 支援預測性返回動畫
-- [x] 自訂「我的」卡片順序與數量；歷史卡片預覽與「稍後再看」區塊
-- [x] 自動側欄切換且可設定觸發寬度；長按／右鍵選單支援複製圖片；大量介面升級 MD3E 風格
+**介面與平台適配**
+- [x] 依平台改套件名，多客戶端可共存（PiliBabel 可與 PiliNara 並存）
+- [x] 修復小米 HyperOS 小窗下 Flutter 渲染異常（[#161086](https://github.com/flutter/flutter/issues/161086)，經 [venera#467](https://github.com/venera-app/venera/pull/467)）；Android 預測性返回動畫
+- [x] 「我的」卡片順序/數量可自訂；歷史卡片預覽與「稍後再看」分區
+- [x] 側邊欄自動切換與觸發寬度可調；長按/右鍵複製圖片；MD3E 風格大改版
 
-**字型系統** — 以內容雜湊去重的統一匯入池、彈幕字型併入同一池、`loadFontFromList` 支援 ttc、字型族名採純 ASCII 雜湊命名。
+**字型系統** —— 統一匯入池 + 內容雜湊去重，彈幕字型併入同一池，`loadFontFromList` 支援 ttc，純 ASCII 雜湊字族名。
 
-**播放、小窗與畫質** — 應用內小窗（拖曳、縮放、SponsorBlock 跳段、自動進系統小窗、直播自救控制列）、可與其他 App 同時播放、應用內音量最高 200%、自訂影片 CDN 域名與區域節點（含測速）、半／全屏各自預設畫質、上滑鎖定倍速、平板鍵盤控制、直播 SC 時間戳、直播心跳累積親密度。
+**播放、小窗與畫質** —— 應用內小窗（拖動、縮放、SponsorBlock 跳過、自動系統 PIP、直播自救列），併發音訊播放，應用內音量最高 200%，自訂影片 CDN 網域與地區節點選擇（帶延遲測速），半屏/全屏獨立預設畫質，上滑鎖定倍速，平板鍵盤控制，直播 SuperChat 時間戳，直播粉絲親密度心跳。
 
-**字幕、AI 與離線快取** — 雙語字幕與副字幕獨立樣式、AI 字幕分析（自訂 OpenAI 相容端點、時間戳跳轉、模板、對話持久化、無字幕軟性降級）、WEBVTT/SRT 匯出、離線快取雙視圖與資料夾管理與中繼資料持久化、匯出至公共 Download 目錄（僅 Android）。
+**字幕、AI 與離線** —— 雙語字幕（副字幕樣式獨立），AI 字幕分析（自訂 OpenAI 相容介面、時間戳跳轉、模板、工作階段持久化、無字幕軟回退），WEBVTT/SRT 匯出，離線快取雙視圖（資料夾管理 + 中繼資料持久化），匯出下載到公共 Download 目錄（Android）。
 
-**彈幕與封鎖** — 增強合併彈幕放大（類 [Pakku.js](https://github.com/xmcp/pakku.js)）、列表式視覺化正規表達式封鎖與匯入/匯出、SponsorBlock 拖入片段時跳過、高斯核高能進度條。
+**彈幕與封鎖** —— 合併彈幕增強縮放（[Pakku.js](https://github.com/xmcp/pakku.js) 風格），清單式視覺化正則封鎖（可匯入匯出），SponsorBlock 跳入片段，高斯核高能進度條。
 
-**推薦、動態與留言過濾** — 標題/UP/分區關鍵字、時長、播放量、點讚率、已關注 UP 豁免、無權/充電專屬過濾、共用白名單、帶貨/無權動態、UP 主本人留言與置頂豁免、App+Web 合併流量模式。
+**推薦 / 動態 / 評論過濾** —— 標題/UP/分區關鍵詞、時長、播放量、按讚率、已關注 UP 豁免、未授權/充電專屬過濾、共享白名單、帶貨/未授權動態、UP 自己的評論與置頂評論豁免、App+Web 合併資訊流模式。
 
-**動態、搜尋與使用者資訊** — UP 主自訂備註、備註取代暱稱覆蓋 13 處名稱位、樓中樓獨立排序、本地關鍵字搜尋過濾、b23.tv 短鏈直達、充電專屬角標、可隱藏推薦理由、投幣經驗顯示。
+**動態、搜尋與使用者資訊** —— UP 主備註，備註替換暱稱（覆蓋 13 處名字位），樓中樓獨立排序，本地關鍵詞搜尋過濾，b23.tv 短鏈跳轉，充電專屬徽章，隱藏推薦理由開關，硬幣經驗顯示。
 
-**直播增強** — 粉絲勳章佩戴面板、DLNA 投屏優先 HLS、SC 時間顯示、小窗底部控制列自救。
+**直播增強** —— 粉絲勳章佩戴面板，DLNA 投放優先 HLS，SuperChat 時間顯示，小窗底部自救控制列。
 
-**系統整合與桌面** — Windows SMTC、Linux MPRIS（`audio_service_mpris`）、音訊焦點處理重構。
+**系統整合與桌面端** —— Windows SMTC，Linux MPRIS（`audio_service_mpris`），重寫的音訊焦點處理。
 
 <details>
-<summary>完整原始功能清單（PiliNara 原文，點擊展開）</summary>
+<summary>完整原始功能清單（照搬自 PiliNara，點擊展開）</summary>
 
 **feat**
-编辑动态 · DLNA 投屏 · 离线缓存/播放 · 点击弹幕悬停(点赞/复制/举报) · 播放音频 · 跳过番剧片头/片尾 · 安卓 `loudnorm` · Win/Mac 极验/短信登录 · 视频截取动图 · AI 原声翻译 · SuperChat · 播放课堂视频 · 发起投票 · 发布动态/评论支持富文本/表情/@用户 · 修改消息/聊天设置 · 展示折叠消息 · 查看用户图文 · 动态话题 · 直播分区 · 分享至消息 · 创建/修改/删除关注分组 · 移除粉丝 · 直播弹幕发送表情 · 收藏夹排序 · 稍后再看分类 · WebDAV 备份/恢复 · 保存评论/动态 · 高级弹幕 · 取消/置顶评论 · 记笔记 · 多账号支持 · 屏蔽带货动态/评论 · 互动视频 · 发评/动态反诈 · 高能进度条 · 滑动跳转预览缩略图 · Live Photo · 复制/移动/排序收藏夹 · 超分辨率 · 会员彩色弹幕 · 播放全部/继续/倒序 · Cookie 登录 · 显示视频分段信息 · 调节字幕/全屏弹幕大小 · 收藏夹多选删除 · 搜索用户动态 · 直播弹幕 · 修改资料 · 创建/编辑/删除收藏夹 · 评论楼中楼对话/定位/排序 · 评论点踩 · 私信发图 · 投币动画 · 取消/追番 · 取消/订阅合集 · SponsorBlock · 显示完整合集 · 三连/番剧三连动画 · 带图评论 · 视频 TAG · 筛选搜索 · 转发动态 · 合集图片 · 私信删除/置顶/撤回 · 举报 · 发布/删除/置顶动态
+編輯動態 · DLNA 投放 · 離線快取/播放 · 點擊彈幕懸停(按讚/複製/檢舉) · 播放音訊 · 跳過番劇片頭/片尾 · 安卓 `loudnorm` · Win/Mac 極驗/簡訊登入 · 影片截取動圖 · AI 原聲翻譯 · SuperChat · 播放課堂影片 · 發起投票 · 發佈動態/評論支援富文字/表情/@使用者 · 修改訊息/聊天設定 · 顯示摺疊訊息 · 檢視使用者圖文 · 動態話題 · 直播分區 · 分享至訊息 · 建立/修改/刪除關注分組 · 移除粉絲 · 直播彈幕發送表情 · 收藏夾排序 · 稍後再看分類 · WebDAV 備份/還原 · 儲存評論/動態 · 高級彈幕 · 取消/置頂評論 · 記筆記 · 多帳號支援 · 封鎖帶貨動態/評論 · 互動影片 · 發評/動態反詐 · 高能進度條 · 滑動跳轉預覽縮圖 · Live Photo · 複製/移動/排序收藏夾 · 超解析度 · 會員彩色彈幕 · 播放全部/繼續/倒序 · Cookie 登入 · 顯示影片分段資訊 · 調節字幕/全屏彈幕大小 · 收藏夾多選刪除 · 搜尋使用者動態 · 直播彈幕 · 修改資料 · 建立/編輯/刪除收藏夾 · 評論樓中樓對話/定位/排序 · 評論倒讚 · 私訊發圖 · 投幣動畫 · 取消/追番 · 取消/訂閱合集 · SponsorBlock · 顯示完整合集 · 三連/番劇三連動畫 · 帶圖評論 · 影片 TAG · 篩選搜尋 · 轉發動態 · 合集圖片 · 私訊刪除/置頂/撤回 · 檢舉 · 發佈/刪除/置頂動態
 
 **opt**
-专栏界面 · 私信界面 · 收藏面板 · PIP · 视频封面 · 回复界面 · 系统通知 · 评论显示 · 亮度调节 · 视频播放 · 视频 staff · 防止 bottomsheet 遮挡全屏视频
+專欄介面 · 私訊介面 · 收藏面板 · PIP · 影片封面 · 回覆介面 · 系統通知 · 評論顯示 · 亮度調節 · 影片播放 · 影片 staff · 防止 bottomsheet 遮擋全屏影片
 
 **fix**
-番剧分集点赞/投币/收藏 · bugs
+番劇分集按讚/投幣/收藏 · bugs
 
 **功能**
-推荐视频列表(app 端) · 最热视频 · 热门直播 · 番剧列表 · 黑名单屏蔽 · 无痕模式 · 游客模式；用户(粉丝/关注/拉黑、主页、关注取关、离线缓存、稍后再看、观看记录、我的收藏、站内私信)；动态(全部/投稿/番剧、评论与回复)；播放(双击快进快退、播放暂停、亮度音量、上滑全屏、手势快进、全屏方向、倍速、硬件加速、画质/音质/解码、弹幕、字幕、记忆播放、比例)；搜索(热搜、历史、默认词、投稿/番剧/直播/用户、排序与时长筛选)；视频详情(分 P 切换、点赞投币收藏、相关视频、评论身份、排序与二楼、回复、点赞、笔记图)；设置(画质/音质/解码预设、图片质量、主题、震动、高帧率、自动全屏、横屏适配)
+推薦影片清單(app 端) · 最熱影片 · 熱門直播 · 番劇清單 · 黑名單封鎖 · 無痕模式 · 訪客模式；使用者(粉絲/關注/封鎖、主頁、關注取消、離線快取、稍後再看、觀看記錄、我的收藏、站內私訊)；動態(全部/投稿/番劇、評論與回覆)；播放(雙擊快進快退、播放暫停、亮度音量、上滑全屏、手勢快進、全屏方向、倍速、硬體加速、畫質/音質/解碼、彈幕、字幕、記憶播放、比例)；搜尋(熱搜、歷史、預設詞、投稿/番劇/直播/使用者、排序與時長篩選)；影片詳情(分 P 切換、按讚投幣收藏、相關影片、評論身分、排序與二樓、回覆、按讚、筆記圖)；設定(畫質/音質/解碼預設、圖片品質、主題、震動、高幀率、自動全屏、橫屏適配)
 
 </details>
 
@@ -153,28 +171,29 @@ paru -S pilinara-bin         # 或經 AUR：pilinara-bin（預編譯）/ pilinar
 
 ## 免責聲明
 
-本專案（PiliBabel）為個人興趣開發，**僅供學習與測試**；請在下載後 **24 小時內**刪除。
+PiliBabel 是個人興趣專案，**僅供學習與測試**；請在下載後 **24 小時內**刪除。
 
-- PiliBabel 為**非官方第三方**客戶端，與 bilibili **無任何隸屬、授權或贊助關係**。
-- 所有 API 均取自官方公開介面，**不提供任何破解、越權或繞過付費限制的內容**。
-- **AI 翻譯完全由使用者自備的第三方模型端點驅動。** 翻譯品質與合規由使用者及其選用的模型服務商負責；本專案**不託管任何模型或 API 金鑰**。
-- 請尊重智慧財產權與 bilibili 的服務條款，合理使用。
+- PiliBabel 是**非官方第三方**客戶端，**與 bilibili 無隸屬、認可或贊助關係**。
+- 所有介面均取自官方公開介面，**不提供任何破解、越權或繞過付費牆的內容**。
+- **AI 翻譯執行在第三方模型介面上。** 預設是 B 站自己的免費公網 Index-Translate 服務；若你切換到自備 API，則是你所設定的那個介面。翻譯品質與合規性由使用者及其所選模型服務商負責；本專案**不託管任何模型、也不提供任何 API Key**。
+- 請尊重版權與 B 站使用者協議，合理使用。
 
-謹此致敬原作者與上游作者對開源的無私奉獻：
+向以下開源專案的作者致敬：
 - [guozhigq/pilipala](https://github.com/guozhigq/pilipala)
 - [orz12/PiliPalaX](https://github.com/orz12/PiliPalaX)
 - [bggRGjQaUbCoE/PiliPlus](https://github.com/bggRGjQaUbCoE/PiliPlus)
-- [Starfallan/PiliNara](https://github.com/Starfallan/PiliNara) — PiliBabel 的直接父專案
+- [Starfallan/PiliNara](https://github.com/Starfallan/PiliNara) —— PiliBabel 的直接上游
+- [bilibili/Index-Translate](https://github.com/bilibili/Index-Translate) —— 內建引擎所呼叫的開源翻譯模型家族
 
-若任何內容侵犯了您的權益，請聯繫我們下架處理。
+若任何內容侵犯了你的權益，請聯絡我們刪除。
 
 <br/>
 
-## 授權條款
+## 開源協議
 
-PiliBabel 以 **GNU 通用公共授權條款 v3.0（GPL-3.0）** 授權——與 PiliNara、PiliPlus、PiliPala 相同。因其為衍生作品，**PiliBabel 亦須以 GPL-3.0 分發**：你可自由使用、研究、分享與修改，前提是保留相同授權、版權聲明與本授權全文。見 [`LICENSE`](./LICENSE)。
+PiliBabel 採用 **GNU General Public License v3.0（GPL-3.0）** —— 與 PiliNara、PiliPlus、PiliPala 相同。作為衍生作品，**PiliBabel 也必須以 GPL-3.0 散佈**：你可以自由使用、研究、分享與修改，但必須保留同樣的協議、版權聲明與本協議文本。詳見 [`LICENSE`](./LICENSE)。
 
-第三方元件（Flutter 套件、[`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect)、[`media-kit`](https://github.com/media-kit/media-kit)、[`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer)、[`dio`](https://pub.dev/packages/dio) 等）仍適用其各自授權條款。
+第三方元件（各類 Flutter 套件、[`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect)、[`media-kit`](https://github.com/media-kit/media-kit)、[`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer)、[`dio`](https://pub.dev/packages/dio) 等）仍遵循各自的協議。
 
 <br/>
 
@@ -184,5 +203,6 @@ PiliBabel 以 **GNU 通用公共授權條款 v3.0（GPL-3.0）** 授權——與
 - [flutter_meedu_videoplayer](https://github.com/zezo357/flutter_meedu_videoplayer)
 - [media-kit](https://github.com/media-kit/media-kit)
 - [dio](https://pub.dev/packages/dio)
-- 等等
-- 靈感來自 bilibili 官方「AI 介面翻譯」。
+- [Index-Translate](https://github.com/bilibili/Index-Translate) —— B 站開源的翻譯模型家族，也是內建引擎背後的免費公網介面
+- 以及更多
+- 靈感來自 B 站官方的「AI 介面翻譯」。
