@@ -95,7 +95,11 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: widget.showAppBar ? AppBar(title: Text(uiTx('AI 功能'))) : null,
+      // AppBar 在下面那个 body Obx 之外，标题也得自己包一层，
+      // 否则译文到了它不会刷新（会一直停在原文）。
+      appBar: widget.showAppBar
+          ? AppBar(title: Obx(() => Text(uiTx('AI 功能'))))
+          : null,
       body: Obx(() {
         UiTranslateService.to.revision.value;
         return ListView(
@@ -405,11 +409,15 @@ Future<void> _showTranslateProviderPicker(
 ) async {
   final res = await showDialog<TranslateProvider>(
     context: context,
-    builder: (context) => SelectDialog<TranslateProvider>(
-      title: uiTx('翻译引擎'),
-      value: controller.uiTranslateProvider.value,
-      // SelectDialog 只翻 title，选项文案要自己过一遍 uiTx
-      values: TranslateProvider.values.map((e) => (e, uiTx(e.desc))).toList(),
+    // 包一层 Obx：下面那些 uiTx 是在弹窗「打开那一刻」求值的，而译文是异步到的。
+    // 不包的话首开时若还没命中缓存，整个弹窗就会一直停在原文上。
+    builder: (context) => Obx(
+      () => SelectDialog<TranslateProvider>(
+        title: uiTx('翻译引擎'),
+        value: controller.uiTranslateProvider.value,
+        // SelectDialog 只翻 title，选项文案要自己过一遍 uiTx
+        values: TranslateProvider.values.map((e) => (e, uiTx(e.desc))).toList(),
+      ),
     ),
   );
   if (res != null) {
@@ -441,9 +449,11 @@ Future<String?> promptAppLanguagePicker(
           itemBuilder: (context, index) {
             // 第 0 项是覆盖范围说明，跟着列表一起滚。
             if (index == 0) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(
+              // 必须包 Obx：译文是异步到的，没有 Obx 就只在构建那一刻取一次值。
+              return Obx(
+                () => Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
                   uiTx(
                     '内置的 B 站官方模型覆盖 $kOfficialLanguageCount 种语言。'
                     '清单外的 $kUnofficialLanguageCount 种（繁體中文、吴语、闽南语、壮语等）'
@@ -452,17 +462,23 @@ Future<String?> promptAppLanguagePicker(
                     '若自行接入 API，还能翻译你自己的模型支持的**任何其它语言**，'
                     '不限于这份清单。',
                   ),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.outline,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
                   ),
                 ),
               );
             }
             final (language, isFamilyBase) = _pickerRows[index - 1];
             final selected = language.code == selectedCode;
-            // Language names are autonyms; keep them literal instead of asking
-            // the selected target language to translate the language selector.
-            return ListTile(
+            // 整行包 Obx。**这一步不能省**：下面的 uiTx 是异步拿译文的，没有 Obx 的话
+            // 这一行只在构建那一刻取一次值，译文晚到就永远停在原文上 —— 而「哪一行
+            // 恰好被重建过」取决于滚动时机，于是会出现「同为官方清单外，這行翻了、
+            // 那行没翻」的随机现象。
+            return Obx(
+              // Language names are autonyms; keep them literal instead of asking
+              // the selected target language to translate the language selector.
+              () => ListTile(
               dense: true,
               selected: selected,
               // 官方清单外的几种提醒一句：它们能选，但想要好效果得自备模型。
@@ -475,18 +491,19 @@ Future<String?> promptAppLanguagePicker(
                         color: Theme.of(context).colorScheme.error,
                       ),
                     ),
-              contentPadding: EdgeInsets.only(
-                left: isFamilyBase ? 16 : 36,
-                right: 16,
+                contentPadding: EdgeInsets.only(
+                  left: isFamilyBase ? 16 : 36,
+                  right: 16,
+                ),
+                title: Text(
+                  language.name,
+                  style: isFamilyBase
+                      ? const TextStyle(fontWeight: FontWeight.w600)
+                      : null,
+                ),
+                trailing: selected ? const Icon(Icons.check) : null,
+                onTap: () => Navigator.pop(dialogContext, language.code),
               ),
-              title: Text(
-                language.name,
-                style: isFamilyBase
-                    ? const TextStyle(fontWeight: FontWeight.w600)
-                    : null,
-              ),
-              trailing: selected ? const Icon(Icons.check) : null,
-              onTap: () => Navigator.pop(dialogContext, language.code),
             );
           },
         ),
