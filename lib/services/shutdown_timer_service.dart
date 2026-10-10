@@ -22,13 +22,17 @@ const _kSqueeze = 1.25;
 const _kItemExtent = 38.0;
 
 enum _ShutdownType with EnumWithLabel {
-  pause(uiTx('暂停视频')),
-  exit(uiTx('退出APP')),
+  pause('暂停视频'),
+  exit('退出APP'),
   ;
 
+  /// 展示用原文；翻译放在 getter 里（const 枚举值没法在定义处调 uiTx）。
   @override
-  final String label;
-  const _ShutdownType(this.label);
+  final String _label;
+  const _ShutdownType(this._label);
+
+  @override
+  String get label => uiTx(_label);
 }
 
 final shutdownTimerService = ShutdownTimerService._internal();
