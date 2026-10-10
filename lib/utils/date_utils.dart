@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:intl/intl.dart' show DateFormat;
 
 abstract final class DateFormatUtils {
@@ -21,20 +22,23 @@ abstract final class DateFormatUtils {
     final diff = now.difference(date);
 
     final diffInMins = diff.inMinutes;
-    if (diffInMins < 1) return '刚刚';
-    if (diffInMins < 60) return '$diffInMins分钟前';
+    if (diffInMins < 1) return uiTx('刚刚');
+    if (diffInMins < 60) return uiTxP('{0}分钟前', [diffInMins]);
 
     final diffInHours = diff.inHours;
-    if (diffInHours < 24) return '$diffInHours小时前';
+    if (diffInHours < 24) return uiTxP('{0}小时前', [diffInHours]);
 
     final today = DateTime(now.year, now.month, now.day);
     final dateDay = DateTime(date.year, date.month, date.day);
     final dayDiff = today.difference(dateDay).inDays;
     if (dayDiff == 1) {
-      return '昨天 ${_twoDigits(date.hour)}:${_twoDigits(date.minute)}';
+      return uiTxP('昨天 {0}:{1}', [
+        _twoDigits(date.hour),
+        _twoDigits(date.minute),
+      ]);
     }
     if (dayDiff < 4) {
-      return '$dayDiff天前';
+      return uiTxP('{0}天前', [dayDiff]);
     }
     final DateFormat sdf = now.year == date.year
         ? short ?? shortFormat
@@ -55,11 +59,14 @@ abstract final class DateFormatUtils {
     final today = DateTime(now.year, now.month, now.day);
     final dateDay = DateTime(date.year, date.month, date.day);
     if (today == dateDay) {
-      return '${isHistory ? '今天 ' : ''}${_twoDigits(date.hour)}:${_twoDigits(date.minute)}';
+      final hm = '${_twoDigits(date.hour)}:${_twoDigits(date.minute)}';
+      return isHistory ? uiTxP('今天 {0}', [hm]) : hm;
     }
     final isYesterday = today.subtract(const Duration(days: 1)) == dateDay;
     if (isYesterday) {
-      return '昨天 ${_twoDigits(date.hour)}:${_twoDigits(date.minute)}';
+      return uiTxP('昨天 {0}', [
+        '${_twoDigits(date.hour)}:${_twoDigits(date.minute)}',
+      ]);
     }
     if (isHistory) {
       final DateFormat sdf = now.year == date.year
