@@ -1,3 +1,5 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+
 enum VideoQuality {
   hdrVivid(129, 'HDR Vivid', 'HDR Vivid'),
   super8k(127, '8K 超高清', '8K'),
@@ -15,10 +17,15 @@ enum VideoQuality {
   ;
 
   final int code;
-  final String desc;
-  final String shortDesc;
 
-  const VideoQuality(this.code, this.desc, this.shortDesc);
+  /// 展示用原文；翻译放在 getter 里，一处改动覆盖全部使用点。
+  final String _desc;
+  final String _shortDesc;
+
+  const VideoQuality(this.code, this._desc, this._shortDesc);
+
+  String get desc => uiTx(_desc);
+  String get shortDesc => uiTx(_shortDesc);
 
   static final _codeMap = {for (final i in values) i.code: i};
 

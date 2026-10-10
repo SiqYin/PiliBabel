@@ -1,3 +1,5 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+
 // ignore_for_file: constant_identifier_names
 
 import 'dart:ui';
@@ -108,19 +110,24 @@ enum SegmentType {
   ;
 
   /// from https://github.com/hanydd/BilibiliSponsorBlock/blob/master/public/_locales/zh_CN/messages.json
-  final String title;
-  final String shortTitle;
-  final String description;
+  /// 展示用原文；翻译在 getter 里做，一处覆盖全部使用点。
+  final String _title;
+  final String _shortTitle;
+  final String _description;
   final Color color;
   final List<ActionType> toActionType;
 
   const SegmentType(
-    this.title,
-    this.shortTitle,
-    this.description,
+    this._title,
+    this._shortTitle,
+    this._description,
     this.color,
     this.toActionType,
   );
+
+  String get title => uiTx(_title);
+  String get shortTitle => uiTx(_shortTitle);
+  String get description => uiTx(_description);
 }
 
 // List<SegmentType> _actionType2SegmentType(ActionType actionType) {

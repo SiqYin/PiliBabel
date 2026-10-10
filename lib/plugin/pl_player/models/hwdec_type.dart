@@ -1,4 +1,6 @@
 // mpv --hwdec=help
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+
 enum HwDecType {
   no('no', '启用软解'),
   auto('auto', '启用任意可用解码器'),
@@ -34,9 +36,15 @@ enum HwDecType {
   qsvCopy('qsv-copy', 'Quick Sync Video (Intel独占) (非直通)'),
   ;
 
+  /// 传给 mpv 的值，**不可翻译**（会写进设置）
   final String hwdec;
-  final String desc;
-  const HwDecType(this.hwdec, this.desc);
+
+  /// 展示用原文。翻译放在 getter 里做，一处改动覆盖全部使用点。
+  final String _desc;
+
+  const HwDecType(this.hwdec, this._desc);
+
+  String get desc => uiTx(_desc);
 
   static final String androidDefault = [
     HwDecType.mediacodec.hwdec,

@@ -1,3 +1,5 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+
 // ignore_for_file: constant_identifier_names
 
 //https://github.com/yujincheng08/BiliRoaming/blob/master/app/src/main/res/values/strings_raw.xml
@@ -20,9 +22,12 @@ enum CdnRegion {
   other('其他地区'),
   ;
 
-  final String desc;
+  /// 展示用原文；翻译在 getter 里做，一处覆盖全部使用点。
+  final String _desc;
 
-  const CdnRegion(this.desc);
+  const CdnRegion(this._desc);
+
+  String get desc => uiTx(_desc);
 
   /// 非大陆地区：取流时应优先挑 B 站已下发的海外/Akamai 现成直链。
   bool get preferOverseas => this != CdnRegion.mainland;
@@ -106,10 +111,13 @@ enum CDNService {
   hk_bcache('hk_bcache（Bilibili海外）', 'cn-hk-eq-bcache-01.bilivideo.com'),
   ;
 
-  final String desc;
+  /// 展示用原文；[host] 是真实域名，**不可翻译**。
+  final String _desc;
   final String? host;
 
-  const CDNService(this.desc, [this.host]);
+  const CDNService(this._desc, [this.host]);
+
+  String get desc => uiTx(_desc);
 
   /// 这台主机的地理归属，用于把 CDN 列表按地区归类展示。
   ///
