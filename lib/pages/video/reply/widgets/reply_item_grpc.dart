@@ -466,7 +466,9 @@ class ReplyItemGrpc extends StatelessWidget {
           children: [
             Icon(Icons.translate, size: 16, color: color),
             Text(
-              replyControl.showTranslation ? '原文' : '翻译',
+              // 同样补上翻译：这个按钮目前全项目没有调用点（死代码），
+              // 但若日后重新启用，别让它又变成未翻译文案。
+              uiTx(replyControl.showTranslation ? '原文' : '翻译'),
               style: textStyle.copyWith(color: color),
             ),
           ],
