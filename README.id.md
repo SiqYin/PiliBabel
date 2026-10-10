@@ -57,6 +57,8 @@ Dan sejak 1.0, hal itu **langsung bekerja begitu dipasang**: model terjemahannya
 - **Ganti bahasa yang cepat**: permintaan berkelompok dengan konkurensi terbatas di atas cache permanen; mengganti bahasa membangun ulang layar saat ini sekali, supaya Anda tidak terus menatap teks yang belum diterjemahkan. Mematikan terjemahan AI mengembalikan seluruh antarmuka ke teks asli dan **tidak mengirim permintaan sama sekali**.
 - **Panduan saat pertama dibuka.** Saat pertama kali membuka aplikasi, dialog berbahasa Inggris menawarkan untuk menyalakan terjemahan. Jika setuju, ia menyalakan terjemahan, memilih model bawaan, membuka halaman pengaturan AI, dan langsung menanyakan bahasa yang Anda inginkan — pengguna baru berpindah dari «baru dipasang» ke «sudah diterjemahkan» hanya dengan dua ketukan.
 - **Pemutaran yang bekerja di seluruh dunia.** PiliBabel memilih simpul luar negeri (global **Akamai**, `mirror*ov`, `cn-hk-eq-bcache`) yang memang sudah ditawarkan `playurl` berperutean geo milik bilibili, alih-alih memaku Anda ke simpul daratan Tiongkok (Alibaba Cloud / Shenzhen) — sehingga pengguna di luar daratan Tiongkok tidak lagi mengalami «suara jalan, gambar membeku». Anda tetap bisa menetapkan CDN secara manual di pengaturan.
+- **Halaman "Tema & Warna" bergaya Material You.** Terang / gelap / ikuti sistem dipilih dari **tiga kartu pratinjau langsung** — setiap kartu menggambar versi mini antarmuka asli dengan warna yang benar-benar akan dipakai mode tersebut (kartu "ikuti sistem" terbelah diagonal, terang di kiri atas, gelap di kanan bawah). Di bawahnya: **warna dinamis** (diambil dari wallpaper sistem bila perangkat mendukungnya), **gelap kontras tinggi** (permukaan hitam pekat, lebih nyaman di malam hari) dan **pemutar selalu gelap**. Bagian warna mempertahankan palet FlexScheme penuh — **19 warna dasar** ditambah **"gaya palet"** tersendiri yang menentukan bagaimana setiap warna wadah diturunkan dari warna dasar, secara independen dari warna dasar yang Anda pilih.
+- **LXGW WenKai sudah disertakan.** Fon **霞鹜文楷 (LXGW WenKai)** **dikemas dan dijadikan bawaan** — fon Tionghoa yang hangat dan sangat mudah dibaca, langsung tersedia begitu aplikasi dipasang, tanpa perlu mencarinya di dalam daftar. Fon ini berlaku untuk seluruh antarmuka *dan* untuk danmaku. Anda tetap bisa beralih ke fon sistem, memilih fon sistem mana pun yang terpasang, atau mengimpor `.ttf` / `.otf` / `.ttc` sendiri; fon yang sebelumnya Anda pilih secara eksplisit tetap dipertahankan saat pembaruan. Berat dan ukuran fon tetap bisa diatur seperti sebelumnya.
 
 ## Dua mesin terjemahan
 
@@ -197,6 +199,9 @@ PiliBabel dilisensikan di bawah **GNU General Public License v3.0 (GPL-3.0)** �
 
 Komponen pihak ketiga (paket Flutter, [`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect), [`media-kit`](https://github.com/media-kit/media-kit), [`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer), [`dio`](https://pub.dev/packages/dio), dan lain-lain) tetap tunduk pada lisensinya masing-masing.
 
+
+Fon **霞鹜文楷** yang disertakan berlisensi secara terpisah di bawah **SIL Open Font License 1.1**; teks lisensinya disertakan bersama aplikasi sebagai `assets/fonts/LXGWWenKai-OFL.txt`.
+
 <br/>
 
 ## Ucapan terima kasih
@@ -206,5 +211,6 @@ Komponen pihak ketiga (paket Flutter, [`bilibili-API-collect`](https://github.co
 - [media-kit](https://github.com/media-kit/media-kit)
 - [dio](https://pub.dev/packages/dio)
 - [Index-Translate](https://github.com/bilibili/Index-Translate) — keluarga model terjemahan sumber terbuka bilibili, dan titik akhir publik gratis di balik mesin bawaan
+- [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — font Tionghoa sumber terbuka yang disertakan dalam aplikasi, berlisensi SIL Open Font License 1.1
 - dan masih banyak lagi
 - Terinspirasi oleh «terjemahan antarmuka AI» resmi bilibili.

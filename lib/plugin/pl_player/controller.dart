@@ -280,6 +280,37 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   final RxBool isBuffering = true.obs;
 
+  /// 正在重新打开媒体（换线路、点「重新加载」，以及卡顿后的自愈重开）。
+  ///
+  /// 这段时间 mpv 会先销毁再重建视频输出，画面必然是黑的，而此时
+  /// `dataStatus` 仍是 [DataStatus.loaded]、`isBuffering` 也可能为假，
+  /// 加载指示器的两个原有条件全都覆盖不到 —— 这正是「点重新加载后长时间黑屏」
+  /// 的成因：不是卡住了，是没人告诉用户正在重开。
+  final RxBool isReloading = false.obs;
+
+  /// 是否应该显示加载指示器（不含 [suppressBufferingIndicator] 的抑制）。
+  ///
+  /// 与旧判据的区别有两处：
+  /// ① 不再要求 `playerStatus.isPlaying`。mpv 的 cache-pause 会同时把 `pause`
+  ///    置真，而 media_kit 的 `playing` 直接由 `pause` 推导，所以真正"在等数据"
+  ///    的时候 isPlaying 恰恰是假 —— 旧判据恰好把最该提示的那种卡顿排除掉了。
+  /// ② 补上 [isReloading]，覆盖重开媒体这段既不缓冲、也没在加载的空窗。
+  bool get showLoadIndicator =>
+      dataStatus.loading || isReloading.value || isBuffering.value;
+
+  /// 已加载百分比（0~100）：已缓冲到的最远位置占总时长的比例。
+  ///
+  /// 取 `position + buffered` 而不是只看 `buffered`：重开媒体时 mpv 会从当前
+  /// 进度重新起算缓冲，只看 buffered 会出现「明明已经看到 60% 却显示 0%」。
+  /// 直播没有总时长，返回 null，界面上就只显示动画不显示数字。
+  int? get loadedPercent {
+    final total = duration.value;
+    if (isLive || total <= 0) return null;
+    final ahead = position.value + buffered.value;
+    if (ahead <= 0) return 0;
+    return (ahead * 100 / total).clamp(0, 100).round();
+  }
+
   /// 全屏方向
   // ignore: unnecessary_getters_setters
   bool get isVertical => _isVertical;
@@ -982,6 +1013,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       // _playbackSpeed.value = speed;
       // 初始化数据加载状态
       dataStatus.value = DataStatus.loading;
+      isReloading.value = false;
       // 初始化全屏方向
       _isVertical = isVertical ?? false;
       _aid = aid;
@@ -1545,7 +1577,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     if (_videoPlayerController case final ctr? when (ctr.current.isNotEmpty)) {
       var media = ctr.current.last;
       if (!isLive) media = media.copyWith(start: ctr.state.position);
-      return ctr.open(media, play: true);
+      // 重开期间画面必然是黑的，得让加载指示器顶上，否则只剩一片黑屏
+      isReloading.value = true;
+      return ctr
+          .open(media, play: true)
+          .whenComplete(() => isReloading.value = false);
     }
     return null;
   }

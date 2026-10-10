@@ -32,7 +32,8 @@ abstract final class ThemeUtils {
     bool isDark = false,
   }) {
     final fontWeight = Pref.appFontWeight;
-    final fontFamily = Pref.appFont;
+    // 走解析后的族名：未设置过时解析为内置的霞鹜文楷
+    final fontFamily = Pref.appFontFamily;
 
     TextTheme? textTheme;
     if (fontWeight != .normal) {

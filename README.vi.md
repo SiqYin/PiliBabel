@@ -57,6 +57,8 @@ Và từ phiên bản 1.0, việc đó chạy **ngay sau khi cài**: mô hình d
 - **Đổi ngôn ngữ nhanh**: yêu cầu theo lô với số luồng đồng thời giới hạn trên bộ nhớ đệm lâu dài; đổi ngôn ngữ sẽ dựng lại màn hình hiện tại một lần, để bạn không phải nhìn mãi vào phần chữ chưa dịch. Tắt dịch bằng AI sẽ trả toàn bộ giao diện về nguyên văn và **không gửi bất kỳ yêu cầu nào**.
 - **Hướng dẫn ở lần mở đầu tiên.** Lần đầu mở ứng dụng, một hộp thoại tiếng Anh đề nghị bật dịch. Nếu đồng ý, nó bật dịch, chọn mô hình tích hợp, mở trang cài đặt AI và hỏi ngay bạn muốn ngôn ngữ nào — người dùng mới đi từ «vừa cài xong» tới «đã dịch xong» chỉ với hai lần chạm.
 - **Phát được ở mọi nơi trên thế giới.** PiliBabel chọn điểm biên ở nước ngoài (global **Akamai**, `mirror*ov`, `cn-hk-eq-bcache`) mà `playurl` định tuyến theo vị trí của bilibili vốn đã cung cấp, thay vì ghim bạn vào một nút ở Trung Quốc đại lục (Alibaba Cloud / Thâm Quyến) — nên người dùng ngoài Trung Quốc đại lục không còn gặp cảnh «tiếng vẫn chạy, hình đứng im». Bạn vẫn có thể chỉ định CDN thủ công trong cài đặt.
+- **Trang "Chủ đề & Màu sắc" theo phong cách Material You.** Sáng / tối / theo hệ thống được chọn từ **ba thẻ xem trước trực tiếp** — mỗi thẻ vẽ bản thu nhỏ của giao diện thật với đúng bộ màu mà chế độ đó sẽ áp dụng (thẻ "theo hệ thống" được chia theo đường chéo, sáng ở góc trên trái, tối ở góc dưới phải). Bên dưới là **màu động** (lấy từ ảnh nền hệ thống nếu thiết bị hỗ trợ), **tối tương phản cao** (nền đen tuyệt đối, dịu mắt hơn ban đêm) và **trình phát luôn tối**. Phần màu sắc giữ nguyên bảng màu FlexScheme — **19 màu gốc** cùng một **"kiểu bảng màu"** riêng biết quyết định mọi màu vùng chứa được suy ra từ màu gốc ra sao, độc lập với việc bạn chọn màu gốc nào.
+- **LXGW WenKai đi kèm sẵn trong ứng dụng.** Phông chữ **霞鹜文楷 (LXGW WenKai)** được **đóng gói và đặt làm mặc định** — một phông Trung Quốc ấm áp và rất dễ đọc, có ngay sau khi cài đặt mà không phải tìm trong danh sách. Nó áp dụng cho toàn bộ giao diện *và* cho danmaku. Bạn vẫn có thể chuyển về phông hệ thống, chọn bất kỳ phông nào đã cài, hoặc nhập phông `.ttf` / `.otf` / `.ttc` của riêng mình; nếu trước đây bạn đã chủ động chọn một phông, lựa chọn đó được giữ nguyên khi nâng cấp. Độ đậm và cỡ chữ vẫn chỉnh được như trước.
 
 ## Hai bộ máy dịch
 
@@ -197,6 +199,9 @@ PiliBabel được cấp phép theo **GNU General Public License v3.0 (GPL-3.0)*
 
 Các thành phần bên thứ ba (các gói Flutter, [`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect), [`media-kit`](https://github.com/media-kit/media-kit), [`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer), [`dio`](https://pub.dev/packages/dio), v.v.) vẫn theo giấy phép riêng của chúng.
 
+
+Phông chữ **霞鹜文楷** được đóng gói được cấp phép riêng theo **SIL Open Font License 1.1**; văn bản giấy phép đi kèm trong ứng dụng tại `assets/fonts/LXGWWenKai-OFL.txt`.
+
 <br/>
 
 ## Lời cảm ơn
@@ -206,5 +211,6 @@ Các thành phần bên thứ ba (các gói Flutter, [`bilibili-API-collect`](ht
 - [media-kit](https://github.com/media-kit/media-kit)
 - [dio](https://pub.dev/packages/dio)
 - [Index-Translate](https://github.com/bilibili/Index-Translate) — họ mô hình dịch mã nguồn mở của bilibili, và là điểm truy cập công khai miễn phí đứng sau bộ máy tích hợp
+- [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — phông chữ Trung Quốc mã nguồn mở được đóng gói trong ứng dụng, theo giấy phép SIL Open Font License 1.1
 - và nhiều dự án khác
 - Lấy cảm hứng từ «dịch giao diện bằng AI» chính thức của bilibili.

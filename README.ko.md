@@ -57,6 +57,8 @@ PiliBabel은 **PiliNara / PiliPlus의 모든 기능을 그대로 유지**하고(
 - **빠른 언어 전환**: 지속 캐시 위에서 동시 실행 수를 제한한 묶음 요청을 사용하고, 언어를 바꾸면 현재 화면을 한 번 강제로 다시 그려서 번역되지 않은 텍스트를 멍하니 보게 되는 일이 없습니다. AI 번역을 끄면 인터페이스 전체가 원문으로 돌아가고 **요청을 전혀 보내지 않습니다**.
 - **첫 실행 안내.** 앱을 처음 열면 영어 대화상자가 번역을 켤지 물어봅니다. 동의하면 번역을 켜고, 내장 모델을 선택하고, AI 설정 페이지를 연 뒤 곧바로 어떤 언어를 쓸지 묻습니다 — 새 사용자는 두 번의 터치로 "방금 설치"에서 "이미 번역됨"까지 갑니다.
 - **전 세계에서 재생됩니다.** PiliBabel은 당신을 중국 본토(알리바바 클라우드 / 선전) 노드에 고정하는 대신, bilibili가 IP에 따라 내려주는 해외 엣지(글로벌 **Akamai**, `mirror*ov`, `cn-hk-eq-bcache`)를 우선 선택합니다. 그래서 중국 본토 밖 사용자에게 나타나던 "소리는 나오는데 화면이 멈추는" 현상이 사라집니다. 물론 설정에서 CDN을 직접 지정할 수도 있습니다.
+- **Material You 스타일의 「테마 및 색상」.** 라이트 / 다크 / 시스템 따르기는 **실시간 미리보기 카드** 세 장으로 고른다. 각 카드에는 그 모드에서 실제로 적용될 색으로 앱 화면을 축소해 보여준다(「시스템 따르기」는 좌상단 라이트 · 우하단 다크의 대각 분할). 그 아래에는 **동적 색상**(지원되는 기기에서는 시스템 배경화면에서 추출), **고대비 다크**(순수 검은 배경, 야간에 눈부심 감소), **재생 화면은 항상 다크**가 있다. 색상 쪽은 FlexScheme 팔레트를 그대로 유지하며, **19가지 시드 컬러**와 별개로 독립적인 **「팔레트 스타일」**을 고를 수 있다 — 어떤 시드 색을 고르는지와 무관하게, 같은 색상에서 모든 컨테이너 색을 어떻게 유도할지만 바꾼다.
+- **LXGW WenKai 내장.** 따뜻하고 가독성이 높은 중국어 글꼴 **霞鹜文楷(LXGW WenKai)** 을 **앱에 내장해 기본값으로 설정**했다. 설치 직후부터 쓸 수 있고, 글꼴 목록에서 찾아 고를 필요가 없다. 앱 전체에 적용되며 **다마쿠**에도 함께 쓰인다. 시스템 글꼴로 되돌리거나, 기기에 설치된 아무 글꼴이나 고르거나, `.ttf` / `.otf` / `.ttc` 를 직접 가져오는 것도 가능하다. 업그레이드 전에 명시적으로 골랐던 글꼴은 그대로 유지된다. 굵기와 크기도 예전처럼 조절할 수 있다.
 
 ## 두 가지 번역 엔진
 
@@ -197,6 +199,9 @@ PiliBabel은 **GNU General Public License v3.0(GPL-3.0)** 으로 배포됩니다
 
 서드파티 구성 요소(각종 Flutter 패키지, [`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect), [`media-kit`](https://github.com/media-kit/media-kit), [`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer), [`dio`](https://pub.dev/packages/dio) 등)는 각자의 라이선스를 따릅니다.
 
+
+내장된 **霞鹜文楷**은 별도로 **SIL Open Font License 1.1** 라이선스를 따르며, 라이선스 전문은 `assets/fonts/LXGWWenKai-OFL.txt` 로 함께 배포됩니다.
+
 <br/>
 
 ## 감사의 말
@@ -206,5 +211,6 @@ PiliBabel은 **GNU General Public License v3.0(GPL-3.0)** 으로 배포됩니다
 - [media-kit](https://github.com/media-kit/media-kit)
 - [dio](https://pub.dev/packages/dio)
 - [Index-Translate](https://github.com/bilibili/Index-Translate) — bilibili가 오픈소스로 공개한 번역 모델 패밀리이자, 내장 엔진 뒤에 있는 무료 공개 엔드포인트
+- [LXGW WenKai](https://github.com/lxgw/LxgwWenKai)(霞鹜文楷) — 앱에 내장된 오픈소스 중국어 글꼴. SIL Open Font License 1.1
 - 그리고 더 많은 프로젝트
 - bilibili 공식 "AI 인터페이스 번역"에서 영감을 받았습니다.

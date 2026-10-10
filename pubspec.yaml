@@ -17,7 +17,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
 # update when release
-version: 1.0.1+1
+version: 1.1.0+1
 
 environment:
   sdk: ">=3.13.0"
@@ -289,6 +289,8 @@ flutter:
     - assets/danmaku_merge/pinyin_dict.txt
     - assets/danmaku_merge/NOTICE.pakku
     - assets/cdn_nodes.json
+    # 霞鹜文楷为 SIL OFL 1.1 授权，随字体一并分发许可文本
+    - assets/fonts/LXGWWenKai-OFL.txt
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
 
@@ -299,3 +301,9 @@ flutter:
     - family: custom_icon
       fonts:
         - asset: assets/fonts/custom_icon.ttf
+    # 内置字体：霞鹜文楷 LXGW WenKai (SIL OFL 1.1)
+    # 族名与字体内部 name 表一致（Family = "LXGW WenKai"），
+    # 这样系统里若也装了同一字体，两者会合并为同一 family，不会出现重名歧义。
+    - family: LXGW WenKai
+      fonts:
+        - asset: assets/fonts/LXGWWenKai-Regular.ttf

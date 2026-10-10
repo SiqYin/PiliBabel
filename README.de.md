@@ -57,6 +57,8 @@ Und seit 1.0 funktioniert das **direkt nach der Installation**: Das Übersetzung
 - **Schneller Sprachwechsel**: Anfragen in Stapeln mit begrenzter Nebenläufigkeit auf einem dauerhaften Cache; ein Sprachwechsel baut den aktuellen Bildschirm einmal neu auf, damit du nicht auf unübersetzten Text starrst. Wer die KI-Übersetzung abschaltet, bekommt die gesamte Oberfläche im Original zurück, und es werden **überhaupt keine Anfragen** gesendet.
 - **Einführung beim ersten Start.** Beim ersten Öffnen der App schlägt ein englischer Dialog vor, die Übersetzung einzuschalten. Wer zustimmt, bekommt: Übersetzung aktiviert, eingebautes Modell ausgewählt, die KI-Einstellungen geöffnet und sofort die Frage nach der gewünschten Sprache — neue Nutzer kommen mit zwei Tipps von „gerade installiert“ zu „bereits übersetzt“.
 - **Wiedergabe, die weltweit funktioniert.** PiliBabel wählt den ausländischen Endpunkt (globales **Akamai**, `mirror*ov`, `cn-hk-eq-bcache`), den bilibilis geo-geroutetes `playurl` ohnehin anbietet, statt dich auf einen Festlandsknoten (Alibaba Cloud / Shenzhen) festzunageln — Nutzer außerhalb des chinesischen Festlands haben damit keine Hänger mehr nach dem Muster „Ton läuft, Bild steht“. Du kannst den CDN in den Einstellungen weiterhin manuell festlegen.
+- **Eine Seite „Design & Farben" im Material-You-Stil.** Hell / dunkel / Systemeinstellung werden über **drei Live-Vorschaukarten** gewählt — jede zeigt eine Miniatur der echten Oberfläche in genau den Farben, die der jeweilige Modus anwenden würde (die Karte „Systemeinstellung" ist diagonal geteilt, hell oben links, dunkel unten rechts). Darunter: **dynamische Farben** (vom System-Hintergrundbild übernommen, sofern das Gerät es unterstützt), **dunkel mit hohem Kontrast** (echt schwarze Flächen, nachts angenehmer) und **Player immer dunkel**. Die Farbhälfte behält die vollständige FlexScheme-Palette — **19 Basisfarben** sowie ein eigenständiger **„Palettenstil"**, der bestimmt, wie alle Containerfarben aus der Basisfarbe abgeleitet werden, unabhängig davon, welche Basisfarbe Sie wählen.
+- **LXGW WenKai ist mitgeliefert.** Die Schrift **霞鹜文楷 (LXGW WenKai)** ist **enthalten und als Standard gesetzt** — eine warme, sehr gut lesbare chinesische Schrift, die Sie direkt nach der Installation haben, statt sie in einer Auswahlliste zu suchen. Sie gilt für die gesamte Oberfläche *und* für die Danmaku. Sie können weiterhin zur Systemschrift wechseln, jede installierte Schrift wählen oder eine eigene `.ttf` / `.otf` / `.ttc` importieren; eine zuvor bewusst gewählte Schrift bleibt beim Update erhalten. Schriftschnitt und Größe sind wie bisher einstellbar.
 
 ## Die beiden Übersetzungs-Engines
 
@@ -197,6 +199,9 @@ PiliBabel steht unter der **GNU General Public License v3.0 (GPL-3.0)** — dies
 
 Komponenten von Drittanbietern (Flutter-Pakete, [`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect), [`media-kit`](https://github.com/media-kit/media-kit), [`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer), [`dio`](https://pub.dev/packages/dio) usw.) bleiben unter ihren eigenen Lizenzen.
 
+
+Die mitgelieferte Schrift **霞鹜文楷** steht separat unter der **SIL Open Font License 1.1**; ihr Lizenztext wird der App als `assets/fonts/LXGWWenKai-OFL.txt` beiliegen.
+
 <br/>
 
 ## Danksagung
@@ -206,5 +211,6 @@ Komponenten von Drittanbietern (Flutter-Pakete, [`bilibili-API-collect`](https:/
 - [media-kit](https://github.com/media-kit/media-kit)
 - [dio](https://pub.dev/packages/dio)
 - [Index-Translate](https://github.com/bilibili/Index-Translate) — bilibilis quelloffene Übersetzungsmodell-Familie und der kostenlose öffentliche Endpunkt hinter der eingebauten Engine
+- [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — die quelloffene chinesische Schrift, die der App beiliegt, unter der SIL Open Font License 1.1
 - und weitere
 - Inspiriert von bilibilis offizieller „KI-Oberflächenübersetzung“.

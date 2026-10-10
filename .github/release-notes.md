@@ -1,3 +1,23 @@
+### PiliBabel v1.1.0
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+1.1.0 is a look-and-feel release: a Material You **Theme & Colour** page, and a typeface that now ships inside the app.
+
+**Themes you can see before you pick.** Theme mode is no longer a three-item popup. It is three **live preview cards**, and each one draws a miniature of the real interface in the exact colours that mode would apply — the "follow system" card is split diagonally, light over dark, because that is literally what it does. Below them sit **dynamic colour** (taken from the system wallpaper where the device supports it), **high-contrast dark** (true-black surfaces, easier at night) and **always-dark player**. The colour half keeps the full FlexScheme palette: **19 seed colours**, plus a separate **"palette style"** that decides how every container colour is derived from the seed — independent of which seed you choose. Previews are generated from the same source as the live theme, so enabling dynamic colour does not leave the preview lying. (Modelled on animeko's Theme/Colour layout; PiliBabel keeps the FlexScheme palette on top of it.)
+
+**LXGW WenKai is now built in — and it is the default.** The app ships with the **霞鹜文楷 (LXGW WenKai)** typeface and uses it out of the box, so you get a warm, highly legible Chinese font the moment you install instead of hunting for one in a picker. It applies to the whole interface *and* to danmaku. Nothing was taken away: you can switch back to the system font, pick any installed system font, or import your own `.ttf` / `.otf` / `.ttc`. **If you had explicitly picked a font before upgrading, that choice is kept** — only "never chose anything" now resolves to LXGW WenKai. Weight and size remain adjustable, as before. The font is licensed separately under the SIL Open Font License 1.1; its licence text ships in the app and the About page credits the project.
+
+**Fixed: the long black screen after tapping reload.** The loading indicator used to require `playerStatus.isPlaying` — but mpv's cache-pause sets `pause` at the same time, and media_kit derives `playing` from `pause`. So during exactly the case the indicator exists for (waiting on data), the condition was false and nothing was shown. There was a second gap while re-opening the media: `dataStatus` is still `loaded` there and `isBuffering` may not have flipped yet, so neither branch held. A new `isReloading` flag covers that window and the `isPlaying` precondition is gone — pausing by hand still shows nothing, because `isBuffering` stays false then.
+
+**The loading indicator now shows progress.** A thin bar and an Arabic-numeral percentage under the animation, no caption. It is `(position + buffered) / duration`, i.e. how much of the video has actually been fetched — position is included so that reloading halfway through does not report 0% while you are visibly 60% in. On live streams there is no total, so only the animation is shown rather than a percentage permanently stuck at zero.
+
+**Also:** two hard-coded Chinese strings on the font settings page (the danmaku-font entry and the preview caption) are now part of the AI interface translation; the "current theme: …" subtitle under Settings is translated too. In Settings, **应用主题 is now 主题与色彩** — the standalone "theme mode" row moved into that page, and "pure black theme" is now called **高对比度深色** there, matching animeko's wording.
+
+**Size:** the bundled font is 25 MB uncompressed; the real increase per platform depends on how the package compresses it.
+
+**Documentation:** the README (all 12 languages) now describes the theme page and the built-in / imported fonts as distinguishing features, and thanks LXGW WenKai in the acknowledgements.
+
 ### PiliBabel v1.0.1
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.

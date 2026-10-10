@@ -57,6 +57,8 @@ And since 1.0 it does so **out of the box**: the translation model is **built in
 - **Fast language switching**: batched requests with limited concurrency against a persistent cache; switching language force-rebuilds the current screen once, so you are not left staring at untranslated text. Turning AI translation off reverts the whole UI to the original text and issues no requests at all.
 - **First-launch onboarding.** The first time you open the app, an English dialog offers to turn translation on. Accepting it enables translation, selects the built-in model, opens the AI settings page and immediately asks which language you want — so a new user goes from install to translated app in two taps.
 - **Playback that works worldwide.** PiliBabel selects the overseas edge (global **Akamai**, `mirror*ov`, `cn-hk-eq-bcache`) that bilibili's geo-routed `playurl` already offers instead of pinning you to a mainland (Aliyun/Shenzhen) node — so users outside mainland China no longer stall ("audio keeps playing, video freezes"). You can still pin a CDN manually in Settings.
+- **A "Theme & Colour" page, Material You style.** Light / dark / follow-system are chosen from **three live preview cards** — each one renders a miniature of the real interface in the exact colours that mode would apply (the "follow system" card is split diagonally, light over dark). Below them: **dynamic colour** (taken from the system wallpaper where the device supports it), **high-contrast dark** (true-black surfaces, easier on the eyes at night) and **always-dark player**. The colour half keeps the full FlexScheme palette — **19 seed colours** plus a separate **"palette style"** that decides how every container colour is derived from the seed, independently of which seed you pick.
+- **LXGW WenKai ships with the app.** The **LXGW WenKai (霞鹜文楷)** typeface is **bundled and set as the default** — a warm, highly legible Chinese font you have the moment you install, instead of hunting for one in a picker. It applies to the whole interface *and* to danmaku. You can still switch back to the system font, pick any installed system font, or import your own `.ttf` / `.otf` / `.ttc`; a font you had explicitly chosen before is kept across the upgrade. Weight and size stay adjustable as before.
 
 ## The two translation engines
 
@@ -197,6 +199,9 @@ PiliBabel is licensed under the **GNU General Public License v3.0 (GPL-3.0)** �
 
 Third-party components (Flutter packages, [`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect), [`media-kit`](https://github.com/media-kit/media-kit), [`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer), [`dio`](https://pub.dev/packages/dio), etc.) remain under their own licenses.
 
+
+The bundled **LXGW WenKai** typeface is licensed separately under the **SIL Open Font License 1.1**; its licence text ships inside the app as `assets/fonts/LXGWWenKai-OFL.txt`.
+
 <br/>
 
 ## Acknowledgements
@@ -206,5 +211,6 @@ Third-party components (Flutter packages, [`bilibili-API-collect`](https://githu
 - [media-kit](https://github.com/media-kit/media-kit)
 - [dio](https://pub.dev/packages/dio)
 - [Index-Translate](https://github.com/bilibili/Index-Translate) — bilibili's open-source translation model family, and the free public endpoint behind the built-in engine
+- [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — the open-source Chinese typeface bundled with the app, under the SIL Open Font License 1.1
 - and more
 - Inspired by bilibili's official "AI interface translation".
