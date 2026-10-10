@@ -21,7 +21,10 @@ env:
 jobs:
   android-release:
     name: Build & publish release APK
-    runs-on: ubuntu-latest
+    # 固定在 ubuntu-24.04，不要跟着 ubuntu-latest 走：镜像迁移 Ubuntu 26 期间
+    # 预装的 Android NDK 消失，而 NDK 下载在 CI 上会卡死（进度条停在 10~16%），
+    # 结果 Android 构建在编译 Dart 之前就全挂。镜像稳定后可改回 ubuntu-latest。
+    runs-on: ubuntu-24.04
     permissions:
       contents: write
 
