@@ -19,6 +19,8 @@ import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/theme_utils.dart';
+// mapIndexed 出自 collection：调色板那一段要用
+import 'package:collection/collection.dart';
 import 'package:flex_seed_scheme/flex_seed_scheme.dart';
 import 'package:flutter/foundation.dart' show kReleaseMode;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
