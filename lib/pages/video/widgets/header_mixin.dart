@@ -53,7 +53,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
   /// 弹幕功能
   void showSetDanmaku({bool isLive = false}) {
     // 屏蔽类型
-    const blockTypesList = [
+    blockTypesList = [
       (value: 2, label: uiTx('滚动')),
       (value: 5, label: uiTx('顶部')),
       (value: 4, label: uiTx('底部')),

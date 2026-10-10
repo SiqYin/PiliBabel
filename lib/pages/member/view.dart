@@ -289,9 +289,10 @@ class _MemberPageState extends State<MemberPage> {
                           TextSpan(
                             children: [
                               TextSpan(
-                                text:
-                                    '${e.descText1 == null ? '' : '${e.descText1}  '}'
-                                    uiTxP('{0}人预约', [NumUtils.numFormat(e.total)]),
+                                text: uiTxP('{0}{1}人预约', [
+                                  e.descText1 == null ? '' : '${e.descText1}  ',
+                                  NumUtils.numFormat(e.total),
+                                ]),
                               ),
                               if (e.lotteryPrizeInfo case final lottery?) ...[
                                 const TextSpan(text: '\n'),
