@@ -1402,27 +1402,29 @@ abstract final class Pref {
   static double get bufferSec =>
       _setting.get(SettingBoxKey.bufferSec, defaultValue: 16.0);
 
-  /// 播放受阻时是否允许播放器自动换线 / 自动降画质 / 自动重开（实验特性）。
-  /// 默认关闭：关闭时播放器不做任何自动动作，行为与上游一致，
-  /// 只有既有的错误提示与重试，便于稳定播放和定位问题。
+  /// 播放受阻时是否允许播放器自动换线 / 自动降画质 / 自动重开。
+  ///
+  /// **默认开启**，向 B 站官方客户端靠拢：官方播放器在卡顿时会主动换线/降码率，
+  /// 不会让用户对着卡住的画面干等。此前默认关闭是出于「不替用户做决定」的考虑，
+  /// 但实际效果是官方流畅、我们卡住 —— 现在改为默认按官方那样自愈。
+  /// 想完全手动控制的用户可以在这里关掉。
   static bool get autoPlayAdjust =>
-      _setting.get(SettingBoxKey.autoPlayAdjust, defaultValue: false);
+      _setting.get(SettingBoxKey.autoPlayAdjust, defaultValue: true);
 
   static set autoPlayAdjust(bool value) =>
       _setting.put(SettingBoxKey.autoPlayAdjust, value);
 
-  /// 带宽撑不住当前码率时自动降低画质。**默认关闭**，由用户在
-  /// 我的 → 设置 → 播放器设置 里自行决定（不替用户改画质）。
+  /// 带宽撑不住当前码率时自动降低画质。**默认开启**，向 B 站官方靠拢。
   ///
-  /// 开启后的行为：「播 1~2 秒、卡 3~4 秒」这种循环的根因是**实测吞吐 < 码率**——
-  /// 再大的缓冲也只能把卡顿推迟，不能消除。播放器用 15 秒窗口测「内容推进秒数 ÷
-  /// 实际经过秒数」，连续两个窗口低于 60% 就按实测吞吐**一步跳到撑得住的那一档**
-  /// （不是一档一档挪，否则从 8K 降到 1080P 要好几轮、好几分钟），并从原进度继续播。
+  /// 「播 1~2 秒、卡 3~4 秒」这种循环的根因是**实测吞吐 < 码率**——再大的缓冲
+  /// 也只能把卡顿推迟，不能消除。播放器用窗口测「内容推进秒数 ÷ 实际经过秒数」，
+  /// 窗口吞吐低于阈值就按实测吞吐**一步跳到撑得住的那一档**（不是一档一档挪，
+  /// 否则从 8K 降到 1080P 要好几轮、好几分钟），并从原进度继续播。
   ///
-  /// 只降不升；动作之间有冷却与次数上限，且**不换线路**（换线由下面那个实验开关
-  /// 单独控制——历史上"视频轨死掉+重载黑屏"就是盲目换线换到一条 403 的地址）。
+  /// 只降不升；降码率时播放界面会弹一个小窗提示「正在降码率」并给出
+  /// 「关闭降码率」按钮，用户随时可以在这里（或设置页）关掉本功能。
   static bool get autoLowerQuality =>
-      _setting.get(SettingBoxKey.autoLowerQuality, defaultValue: false);
+      _setting.get(SettingBoxKey.autoLowerQuality, defaultValue: true);
 
   static set autoLowerQuality(bool value) =>
       _setting.put(SettingBoxKey.autoLowerQuality, value);
