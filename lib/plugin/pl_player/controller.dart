@@ -1440,8 +1440,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 上一次自动动作是不是「降档」。决定下一次动作用长冷却还是短冷却。
   bool _lastActionWasDowngrade = false;
 
-  /// 上一次采样到的播放位置，用于判断「位置是否仍在推进」（音频是否还活着）。
-  Duration _livenessPos = Duration.zero;
+  /// 上一次采样到的播放位置（**整秒**，因为 [position] 是 `RxInt` 而非 Duration），
+  /// 用于判断「位置是否仍在推进」（即音频是否还活着）。
+  int _livenessPos = 0;
 
   /// 连续检测到「位置在走、但不出画」的拍数。
   int _frozenVideoTicks = 0;
@@ -1602,7 +1603,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       return false;
     }
     final pos = position.value;
-    final advanced = pos > _livenessPos + const Duration(milliseconds: 300);
+    // position 是整秒，所以「推进」就是本拍比上拍大。看门狗每 _stallTickSec(2s)
+    // 跑一次，正常播放时每拍应 +2 左右。
+    final advanced = pos > _livenessPos;
     _livenessPos = pos;
     if (!advanced) {
       // 位置没动：音频也停了，那是缓冲/暂停一类的问题，交给既有判据
