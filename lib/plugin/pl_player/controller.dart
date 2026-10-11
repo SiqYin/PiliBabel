@@ -302,6 +302,18 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 的成因：不是卡住了，是没人告诉用户正在重开。
   final RxBool isReloading = false.obs;
 
+  /// 是否已确认「音频在走、视频不出画」（见 [_checkVideoTrackFrozen]）。
+  ///
+  /// 加载指示器的三个原有条件（loading / isReloading / isBuffering）**没有一个**
+  /// 能反映视频轨有没有出画：`isBuffering` 由 mpv 的 paused-for-cache 推导，音频
+  /// 缓冲够了它就是假，而此时视频输出可能一帧都没出（`cache-buffering-state` 到
+  /// 100 也只代表缓存填满）。于是出现「加载图标 + 进度条 + 百分比到 100 → 全部
+  /// 消失 → 音频在播、画面全黑、零提示」。
+  ///
+  /// 由看门狗在拿到**肯定证据**（position 在推进 且 `estimated-vf-fps` 读到 0）
+  /// 并持续 [_frozenVideoWarnSec] 秒后置真，指示器据此重新顶上并给出可点的提示。
+  final RxBool videoStalled = false.obs;
+
   /// 是否应该显示加载指示器（不含 [suppressBufferingIndicator] 的抑制）。
   ///
   /// 与旧判据的区别有两处：
@@ -313,6 +325,10 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       dataStatus.loading ||
       isReloading.value ||
       isBuffering.value ||
+      // 「音频在走、视频不出画」（见 [videoStalled]）：此时上面三个条件可能全不
+      // 成立 —— 缓冲够了 isBuffering 就是假 —— 而画面仍然是黑的。不在这里顶上，
+      // 用户就是对着黑屏零提示地干等。
+      videoStalled.value ||
       // 加载失败也要保留指示器：否则 error 态下三个条件全不成立，整个画面
       // 纯黑、零反馈，用户分不清「在加载」和「已经死了」。指示器在 error 时
       // 换成错误图标 + 「加载失败，点击重试」（点击即 refreshPlayer 重试）。
@@ -1418,6 +1434,13 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 新帧是正常的，不宜立刻动作；而真死掉时用户等 10 秒就会看到自愈。
   static const int _frozenVideoAfterSec = 10;
 
+  /// 「音频在走、视频不出画」持续多久就把加载指示器重新顶上来（秒）。比
+  /// [_frozenVideoAfterSec] 早，先给用户一个看得见的状态，再等自愈动作。
+  static const int _frozenVideoWarnSec = 6;
+
+  /// 本视频内已做过几次「无损重开」（同线路、同画质、回到当前位置）。
+  int _losslessVideoReopens = 0;
+
   /// 稳定多久才尝试把画质升回去（秒）。太短会在「降→升→又卡→再降」之间来回抖，
   /// 所以给足 2 分钟：能撑住 2 分钟才认为网速是真的恢复了。
   static const int _restoreAfterSec = 120;
@@ -1480,6 +1503,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     _restorePending = false;
     _lastActionWasDowngrade = false;
     _frozenVideoTicks = 0;
+    _losslessVideoReopens = 0;
+    videoStalled.value = false;
     // 换视频就换了候选列表，下标不再对应：黑名单必须清空
     _badLineIndexes.clear();
     _lowerPromptCount = 0;
@@ -1520,6 +1545,17 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       _healthyTicks = 0;
       _effWindowStartMs = 0;
       _effBadWindows = 0;
+      // 两个自动动作都关掉了，但「音频在走、视频不出画」的**检测**以及随后的
+      // **无损重开**既不降画质也不换线路，属于故障自愈、不是替用户做决定，所以
+      // 不受这两个开关约束，单独保留。
+      if (!isLive &&
+          !onlyPlayAudio.value &&
+          !isSeeking.value &&
+          dataSource is NetworkSource &&
+          _videoPlayerController != null &&
+          !_switchingLine) {
+        _checkVideoTrackFrozen();
+      }
       return;
     }
     final player = _videoPlayerController;
@@ -1622,6 +1658,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   bool _checkVideoTrackFrozen() {
     if (onlyPlayAudio.value) {
       _frozenVideoTicks = 0;
+      videoStalled.value = false;
       return false;
     }
     final pos = position.value;
@@ -1632,6 +1669,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     if (!advanced) {
       // 位置没动：音频也停了，那是缓冲/暂停一类的问题，交给既有判据
       _frozenVideoTicks = 0;
+      // 暂停时 position 不推进，此时不该让「画面加载中」一直挂着
+      videoStalled.value = false;
       return false;
     }
     double vfps = -1;
@@ -1651,13 +1690,37 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     }
     if (vfps > 0.5) {
       _frozenVideoTicks = 0; // 在出画，正常
+      videoStalled.value = false;
       return false;
     }
     _frozenVideoTicks++;
-    if (_frozenVideoTicks * _stallTickSec < _frozenVideoAfterSec) {
+    final frozenSec = _frozenVideoTicks * _stallTickSec;
+    // 先让用户看见状态：指示器在缓冲结束时就已经收起，而「视频轨没出画」它一无所知
+    // —— 这段黑屏此前是完全静默的。
+    if (frozenSec >= _frozenVideoWarnSec) {
+      videoStalled.value = true;
+    }
+    if (frozenSec < _frozenVideoAfterSec) {
       return false;
     }
     _frozenVideoTicks = 0;
+    // 第一次先做**无损重开**：同一条线路、同一档画质、回到当前位置。视频一帧不出
+    // 多半是视频输出链这一次没挂上，重开同一条源就能恢复；直接拉黑线路去换线会把
+    // 一条好线误判成坏线，坏情况下还会在候选之间反复重开。重开一次仍不出画，才进
+    // 下面的换线 / 降档阶梯。
+    if (_losslessVideoReopens < 1) {
+      final reopened = refreshPlayer();
+      if (reopened != null) {
+        _losslessVideoReopens++;
+        if (kDebugMode) {
+          debugPrint(
+            '[plPlayer] 视频轨假活：position 在推进但 estimated-vf-fps=$vfps，'
+            '先无损重开一次（线路 $_lineIndex）',
+          );
+        }
+        return true;
+      }
+    }
     // 当前这条线极可能就是罪魁（视频分片被拒、音频分片正常）：先拉黑，
     // 这样接下来的换线不会再切回它 —— 否则会在同一条坏线上反复黑屏。
     _badLineIndexes.add(_lineIndex);

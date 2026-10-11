@@ -2222,6 +2222,22 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                           fontSize: 13,
                         ),
                       ),
+                    ] else if (ctr.videoStalled.value) ...[
+                    // 「音频在走、视频不出画」：不再只是转圈 —— 明确告诉用户画面还
+                    // 没出来，点一下即按同线路、同画质、当前位置重载（refreshPlayer）。
+                    const Icon(
+                      Icons.image_outlined,
+                      color: Colors.white,
+                      size: 26,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      uiTx('画面加载中，点击重试'),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                      ),
+                    ),
                     ] else ...[
                     Image.asset(
                       Assets.buffering,
