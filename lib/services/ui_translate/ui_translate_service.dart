@@ -253,7 +253,9 @@ class UiTranslateService extends GetxService {
     // 出力し…」且随页面渲染轮数叠加）。这些坏译文已落盘、且以原文为 key，
     // **光改提示词不会自愈**——必须清一次缓存让它们重译。
     // 这次的提示词改动影响所有目标语言，所以不再按 revisedTargets 挑语言。
-    const promptRevision = 4;
+    // 5：提示词新增「只做翻译、不解答」与「无需翻译时原样输出」，
+    // 且空输入判据由「非空」收紧为「含可译字符」——旧译文必须重译。
+    const promptRevision = 5;
     if (Pref.uiTranslatePromptRevision < promptRevision) {
       Pref.uiTranslateCache = {};
       Pref.uiTranslatePromptRevision = promptRevision;
@@ -306,7 +308,7 @@ class UiTranslateService extends GetxService {
     // 那句话是非空的，于是被当成译文写进缓存、显示在评论区里 —— 用户看到的就是
     // 「译文里混进了模型自己的说明」。这是本问题在接入内置引擎**之前**就存在的
     // 原因：它与提示词放在 system 还是 user 无关，纯属空输入没拦住。
-    if (src.trim().isEmpty) return src;
+    if (!_hasTranslatableText(src)) return src;
     // 目标语言就是原文语言（简体中文）时：**完全不调我们自己配置的 API**。
     //
     // B 站是大陆平台，绝大多数内容本来就是简体中文，"简体中文 → 简体中文"没有
@@ -479,18 +481,49 @@ class UiTranslateService extends GetxService {
   /// 提示词刻意贴着官方文档给的模板写：单条、点明目标语言、要求直接输出译文。
   /// 不做 JSON 数组解析（只需要模型吐一段纯文本），出错面积因此小得多 —— 这是
   /// 「求稳」的取舍。字形归一化仍保留：简体/繁體目标由客户端兜底纠正。
-  /// 模型回了「说明/拒绝」而不是译文。
+  /// 是否含有「值得翻译」的字符（拉丁字母 / 假名 / 汉字 / 谚文 / 泰文等）。
   ///
-  /// 命中率优先于覆盖率：只收几个特征明确的元信息说法，**故意不去匹配「翻译」
-  /// 这个词本身** —— 正常的评论完全可能就是在讲翻译这件事，那样会误伤。
-  /// 误判的代价也只是「保留原文」，比把模型的说明当成译文显示要轻。
-  static final _metaReplyRegExp = RegExp(
-    r'翻訳できません|翻訳することができません|翻訳はできません'
-    r'|无法翻译|不能翻译|翻译不了|無法翻譯|無法翻訳'
-    r'|メッセージが空|消息为空|内容为空|文本为空|入力が空|内容が空',
+  /// 纯空白、**纯标点、纯数字、纯表情**都不含可译内容。这一条比「非空」严格得多，
+  /// 而它是必须的：评论正文是按「表情 / 话题 / @ / 链接」切段后**逐段**翻译的
+  /// （见 `reply_item_grpc.dart` 的 `addPlainTextSpan`），相邻表情之间会切出
+  /// 空白或纯符号的小段。把这些段发给模型，它不会返回译文，而是回一句
+  /// 「（ユーザーからのメッセージが空であるため、翻訳できません。）」——
+  /// 那句话非空，于是被当成译文插在评论中间（截图里每个表情后面各跟一句、
+  /// 一条评论里出现四五次，就是这么来的）。
+  static final _translatableRegExp = RegExp(
+    r'[A-Za-z\u00c0-\u024f' // 拉丁（含带音标字母）
+    r'\u0370-\u03ff' // 希腊
+    r'\u0400-\u04ff' // 西里尔
+    r'\u0590-\u05ff' // 希伯来
+    r'\u0600-\u06ff' // 阿拉伯
+    r'\u0900-\u097f' // 天城文
+    r'\u0e00-\u0e7f' // 泰文
+    r'\u3040-\u30ff' // 平假名 / 片假名
+    r'\u3400-\u4dbf\u4e00-\u9fff\uf900-\ufaff' // 汉字（含扩展 A / 兼容）
+    r'\uac00-\ud7af]', // 谚文
   );
 
-  static bool _looksLikeMetaReply(String s) => _metaReplyRegExp.hasMatch(s);
+  static bool _hasTranslatableText(String s) =>
+      _translatableRegExp.hasMatch(s);
+
+  /// 模型自己的「说明句」而非译文。实测形态（可能被括号包住）：
+  /// 「（ユーザーからのメッセージが空であるため、翻訳できません。）」
+  ///
+  /// **故意不去匹配「翻译」二字本身** —— 正常评论完全可能就在讲翻译，那样会误伤。
+  static final _metaNoteRegExp = RegExp(
+    r'[（(][^（()）]{0,80}?'
+    r'(?:翻訳できません|翻訳することができません|无法翻译|無法翻譯|不能翻译|翻译不了'
+    r'|メッセージが空|消息为空|内容为空|文本为空|入力が空|内容が空)'
+    r'[^（()）]{0,80}?[）)]'
+    r'|翻訳できません|翻訳することができません|无法翻译|無法翻譯|不能翻译|翻译不了',
+  );
+
+  /// 把模型输出里的**元信息句剥掉**，而不是整条丢弃。
+  ///
+  /// 实测这些说明会插在**正常译文中间**、且同一段里出现多次；整条丢弃会把好译文
+  /// 也一起丢掉（用户看到的会是原文），所以逐个删除。删完若什么都不剩，调用方
+  /// 才退回原文。
+  static String _stripMetaNotes(String s) => s.replaceAll(_metaNoteRegExp, '');
 
   Future<List<String>> _builtinTranslate(List<String> sources) async {
     final lang = targetLang;
@@ -498,7 +531,7 @@ class UiTranslateService extends GetxService {
     final results = <String>[];
     for (final src in sources) {
       // 没有可翻内容的条目**原样返回、绝不发请求**（理由见 _tx 里对纯空白的说明）
-      if (src.trim().isEmpty) {
+      if (!_hasTranslatableText(src)) {
         results.add(src);
         continue;
       }
@@ -515,7 +548,11 @@ class UiTranslateService extends GetxService {
           {
             'role': 'system',
             'content': '${rule.isEmpty ? '' : '$rule\n\n'}'
-                '请将 user 消息翻译为$lang，只输出译文本身，不要添加任何说明。',
+                '请将 user 消息翻译为$lang。只做翻译，'
+                '只输出译文本身：不要回答、解释、评论、补充，'
+                '也不要就原文提出的任何问题给出看法。'
+                '如果内容无需翻译（纯符号、纯数字、纯表情等），原样输出，'
+                '不要添加任何说明。',
           },
           {'role': 'user', 'content': src},
         ],
@@ -531,10 +568,11 @@ class UiTranslateService extends GetxService {
       )) {
         buf.write(chunk);
       }
-      final out = buf.toString().trim();
-      // 安全网：模型偶尔不回译文、而是回一句元信息（如「消息为空，无法翻译」）。
-      // 那句话会被当成译文存下来并显示在评论里，宁可保留原文也不显示这种噪音。
-      results.add(out.isEmpty || _looksLikeMetaReply(out) ? src : out);
+      final raw = buf.toString().trim();
+      // 安全网：模型会在译文中间插入自己的说明句（见 _stripMetaNotes）。
+      // 这里把说明句剥离掉、保留正常译文；剥完什么都不剩才退回原文。
+      final out = _stripMetaNotes(raw).trim();
+      results.add(out.isEmpty ? src : out);
     }
     return _normalizeScripts(results, currentLanguage.script);
   }
@@ -573,7 +611,10 @@ class UiTranslateService extends GetxService {
         '原文含其他方言词时，也要统一转换为指定目标方言；'
         '5) **字形一致性**：每一条译文的字形必须统一——简体目标不得出现任何'
         '繁体字形，繁體目标不得出現任何簡體字形。'
-        '如果原文本身就使用了目标语言的文字体系，原样保留其字形，不要改写。';
+        '如果原文本身就使用了目标语言的文字体系，原样保留其字形，不要改写；'
+        '6) **只做翻译**：不要回答、解释、评论或补充原文提出的任何问题，'
+        '也不要输出任何说明性文字；某条内容无需翻译（纯符号/数字/表情）时，'
+        '原样返回该条。';
     final user = '待翻译列表：\n$numbered';
 
     // 思考模式：开=启用推理(更准但慢)；关=显式关闭推理以求更快。
