@@ -1,3 +1,16 @@
+### PiliBabel v1.4.2
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+**Automatic quality reduction now steps down one level at a time.** Watching a 4K video on a slow connection used to drop you straight to 720p in a single jump. That was deliberate — the reasoning was that walking down one level per step, with a cooldown between each, would take several minutes of stuttering before reaching a playable quality. But dropping several levels at once is jarring, and it leaves you no chance to stop at a level you would have been happy with. The target is now the **next lower quality** rather than a computed one, so 4K descends through 1080P60 → 1080P+ → 1080P → 720P.
+
+Two adjustments keep that from turning back into the problem the jump was avoiding:
+
+- **Consecutive steps are followed by a shorter cooldown** — 10 seconds instead of the usual 25 s. A four-step descent therefore completes in roughly 40 s rather than two minutes.
+- **The per-window action budget was raised** from 8 to 14, because stepping needs more actions than jumping (and line switches may come first). The budget still exists, and once the ladder is exhausted the app stops acting entirely instead of looping.
+
+Each step raises the **正在降码率** notice, whose **关闭降码率** button stops the descent — so the ladder is visible and you can settle on any level. (Raising quality again was already step-wise and is unchanged.)
+
 ### PiliBabel v1.4.1
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks language.
