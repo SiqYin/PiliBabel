@@ -1,3 +1,15 @@
+### PiliBabel v1.4.3
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+This release is about the playback watchdog: one bug where quality dropped before lines were tried, one failure mode the watchdog structurally could not see, and a guard so the first fix cannot make things worse.
+
+**Lines are now genuinely tried before quality is lowered.** The order was already "switch line, then lower quality", but the line probe introduced in 1.4.0 turned that on its head: `_switchToNextLine` walked the candidates and, **if none of them passed the probe, gave up immediately** — so the flow fell straight through to lowering quality. A single false negative (timeout, a rejected `Range` request, a fingerprint detail) was enough to show you a quality drop without a single line attempt. The probe is now a **preference, not a gate**: if nothing passes, the app still switches to the next candidate in order. Switching among candidates is safe — those URLs were each signed for this machine, and it is only *rewriting the host* that breaks them (which this app deliberately never does). Only the "failed to start" path still requires a passing probe, because blind switching there can cascade. The number of line attempts allowed before any quality change also went from one pass over the candidates to **two**.
+
+**"Picture frozen, sound playing" is now detected.** This one had no detection path at all. Audio and video segments are separate requests; when the video one is refused, audio is unaffected — so `paused-for-cache` is false, the forward buffer is fine, and the position keeps advancing. Both of the watchdog's existing criteria therefore fail to fire, and the state simply persists: picture stuck, sound fine, progress bar draggable, **no indication whatsoever**. A comment in the source even names this shape ("that is precisely the picture-stopped/audio-continuing form") but, having excluded position as a criterion, nothing replaced it. There is now a separate check: the position is advancing **and** mpv's `estimated-vf-fps` (the measured output frame rate) has been 0 for 10 s. When both hold, normal recovery runs. If the property is unavailable the app deliberately does **not** judge — a false positive would trigger a line switch or a quality drop, which costs more than the missed detection.
+
+**A switched-to line that shows nothing is now blacklisted.** Switching to a backup line and getting a black screen is the same "video track unusable" failure under a different name. Lines that fail the probe, and lines that turn out not to produce any picture after switching, are recorded and skipped — so the app stops cycling through the same bad line. The list resets per video (indexes refer to that video's candidates) and when every candidate has failed (the network may just be having a moment). If nothing usable remains, the ladder proceeds to lowering quality or re-fetching, as before.
+
 ### PiliBabel v1.4.2
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
