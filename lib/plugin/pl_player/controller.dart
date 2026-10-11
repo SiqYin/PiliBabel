@@ -57,6 +57,7 @@ import 'package:PiliPlus/utils/utils.dart';
 import 'package:PiliPlus/utils/video_utils.dart';
 import 'package:archive/archive.dart' show getCrc32;
 import 'package:canvas_danmaku/canvas_danmaku.dart';
+import 'package:dio/dio.dart';
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:flutter/foundation.dart' show clampDouble, kDebugMode;
 import 'package:flutter/services.dart' show HapticFeedback, DeviceOrientation;
@@ -1123,11 +1124,24 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       await _initializePlayer();
       onInit?.call();
     } catch (err, stackTrace) {
-      dataStatus.value = DataStatus.error;
       if (kDebugMode) {
         debugPrint(stackTrace.toString());
         debugPrint('plPlayer err:  $err');
       }
+      // 起播失败先别急着报错：官方播放器这时会直接换下一条线路重试。
+      // _switchToNextLine 自带可用性预检（只切到真的能拿到 200/206 的那条），
+      // 且候选地址数量有限，所以是有界重试、不会无限循环；一条都探不通就落到
+      // 下面的 error 分支，由指示器显示「加载失败，点击重试」。
+      if (Pref.autoPlayAdjust &&
+          await _switchToNextLine(
+            toast: uiTx('当前线路不可用，已切换到备用线路'),
+          )) {
+        dataStatus.value = DataStatus.loaded;
+        onInit?.call();
+        _processing = false;
+        return;
+      }
+      dataStatus.value = DataStatus.error;
     } finally {
       _processing = false;
     }
@@ -1638,6 +1652,57 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     );
   }
 
+  /// 换线前的可用性预检：对候选直链发一次 Range 探测，只取 1 字节。
+  ///
+  /// **请求指纹必须与播放时完全一致**，否则探测结果不代表真实可播性 ——
+  /// CDN 会按直链令牌的签发方校验指纹，指纹不对一律 403（见 [_applyMediaHeader]）：
+  /// * APP 令牌（gRPC `PlayView`）：官方 APP UA + **不发** Referer；
+  /// * Web 令牌（`/x/player/wbi/playurl`）：Safari UA + B 站 Referer。
+  ///
+  /// 200/206 视为可用；其余（403/404/超时）都当不可用。超时压到 5 秒，
+  /// 避免一条死线把换线拖太久。
+  Future<bool> _probeLine(String url) async {
+    try {
+      final res = await _probeClient
+          .get<List<int>>(
+            url,
+            options: Options(
+              responseType: ResponseType.bytes,
+              followRedirects: true,
+              validateStatus: (_) => true,
+              headers: {'range': 'bytes=0-0'},
+            ),
+          )
+          .timeout(const Duration(seconds: 5));
+      final code = res.statusCode ?? 0;
+      return code == 200 || code == 206;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Dio? _probeDio;
+
+  /// 探测专用客户端：headers 在每次请求前按当前 [dataSource] 的类型重建，
+  /// 因为同一个播放器可能在 APP 源与 Web 源之间切换。
+  Dio get _probeClient {
+    final appSource = dataSource is NetworkSource
+        ? (dataSource as NetworkSource).appSource
+        : false;
+    final headers = appSource
+        ? {'user-agent': Constants.userAgent}
+        : {'user-agent': BrowserUa.pc, 'referer': HttpString.baseUrl};
+    _probeDio ??= Dio(
+      BaseOptions(
+        connectTimeout: const Duration(seconds: 5),
+        receiveTimeout: const Duration(seconds: 5),
+        followRedirects: true,
+      ),
+    );
+    _probeDio!.options.headers = headers;
+    return _probeDio!;
+  }
+
   /// 换到 B 站已下发的另一条已签名线路，从当前位置继续播
   Future<bool> _switchToNextLine({String? toast}) async {
     final src = dataSource;
@@ -1652,7 +1717,27 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     if (player == null) {
       return false;
     }
-    final next = (_lineIndex + 1) % lines.length;
+    // 依次探测候选线路，用**第一条真的能拿到数据**的地址。
+    //
+    // 为什么必须先探：直链签名与主机绑定，某条候选可能已经失效（或与当前请求
+    // 指纹不匹配）而被 403。历史上「盲目换线」换到一条 403 地址，表现是
+    // **视频轨死掉 + 重载黑屏** —— 换线本身成了新的故障源。宁可多花一次
+    // Range 探测（只取 1 字节），也不要切到一条死的线。
+    //
+    // 探测失败**不推进 _lineIndex**：这条线这次不通，不代表下次也不通，
+    // 保持索引语义简单（永远是"当前正在用的那条"）。
+    int? chosen;
+    for (var i = 1; i < lines.length; i++) {
+      final idx = (_lineIndex + i) % lines.length;
+      if (await _probeLine(lines[idx])) {
+        chosen = idx;
+        break;
+      }
+    }
+    if (chosen == null) {
+      return false;
+    }
+    final next = chosen;
     _lineIndex = next;
     final audio = src.audioSource;
     final newAudio = (src.audioUrls.length > 1 &&
@@ -3009,6 +3094,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   void dispose() {
     _stopCacheFillPolling();
+    _probeDio?.close(force: true); // 换线预检用的客户端，随播放器一起回收
+    _probeDio = null;
     _cancelAutoAudioOnlyTimer();
     _interruptAutoAudioRestore();
     _autoAudioState = AutoAudioOnlyState.idle;

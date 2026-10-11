@@ -267,7 +267,12 @@ abstract final class VideoUtils {
         // 这里对齐 B 站海外的通行做法——改写到 Akamai 全局边缘、绕开国内 PCDN，
         // 让全球用户拿到可播地址（此前会回退硬编码成国内 ali）。
         // 回退说明：部分直链签名与 Akamai 主机不匹配会 403 → 播放卡"加载中"，
-        // 故恢复沿用 B 站就近地址；待实现"播放失败自动回退备用线路"后再评估。
+        // 故恢复沿用 B 站就近地址。
+        //
+        // 1.4.0 已实现"播放失败自动回退备用线路"（`_switchToNextLine` 换线前会先
+        // 用相同指纹探测目标地址，只切到真的能拿到 200/206 的那条），所以这里**也
+        // 不再需要**改写成 Akamai 来试运气 —— 交给回退机制挑一条能用的即可。
+        // 海外 PCDN 的「主动绕开」保持不变：P2P 节点在国内，对海外只会更慢。
         if (preferAkamai) {
           // 下载走 Akamai 海外（国内 P2P 节点对海外无效且慢）
           return uri.replace(host: CDNService.akamai.host!).toString();
