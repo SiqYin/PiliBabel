@@ -296,7 +296,13 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   ///    的时候 isPlaying 恰恰是假 —— 旧判据恰好把最该提示的那种卡顿排除掉了。
   /// ② 补上 [isReloading]，覆盖重开媒体这段既不缓冲、也没在加载的空窗。
   bool get showLoadIndicator =>
-      dataStatus.loading || isReloading.value || isBuffering.value;
+      dataStatus.loading ||
+      isReloading.value ||
+      isBuffering.value ||
+      // 加载失败也要保留指示器：否则 error 态下三个条件全不成立，整个画面
+      // 纯黑、零反馈，用户分不清「在加载」和「已经死了」。指示器在 error 时
+      // 换成错误图标 + 「加载失败，点击重试」（点击即 refreshPlayer 重试）。
+      dataStatus.value == DataStatus.error;
 
   /// mpv `cache-buffering-state`（0~100）：网络流的缓冲填充进度。
   ///

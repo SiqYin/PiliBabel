@@ -2189,6 +2189,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           // 百分比是阿拉伯数字，不配文字说明：直播没有总时长，算不出来，
           // 这时只留动画，避免显示一个恒为 0 的假进度。
           final percent = ctr.loadedPercent;
+          // 加载失败时 dataStatus 是 error，而 loading/reloading/buffering 都
+          // 不覆盖它 —— 不在这里单独接住，整个画面就是纯黑、零反馈，
+          // 用户完全分不清「在加载」和「已经死了」。
+          final isError = ctr.dataStatus.value == DataStatus.error;
           return Center(
             child: GestureDetector(
               onTap: ctr.refreshPlayer,
@@ -2203,6 +2207,22 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    if (isError) ...[
+                      const Icon(
+                        Icons.error_outline,
+                        color: Colors.white,
+                        size: 26,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        // 失败时不再显示「加载中」：那会让用户一直干等
+                        uiTx('加载失败，点击重试'),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ] else ...[
                     Image.asset(
                       Assets.buffering,
                       height: 25,
@@ -2236,6 +2256,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                           fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
+                    ],
                     ],
                   ],
                 ),
