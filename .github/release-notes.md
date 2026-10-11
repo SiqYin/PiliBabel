@@ -1,3 +1,21 @@
+### PiliBabel v1.4.0
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+1.4.0 is about **surviving a bad connection the way the official clients do** — same starting point, but with the recovery behaviour that used to be missing.
+
+**Line selection now probes before it switches.** The official app tests its alternatives and moves on when one fails; this app used to pick one address and stay with it forever. Stall recovery was already implemented (switch line → lower quality → re-fetch), but it was **off by default**, so in practice the app just sat there while the official client kept playing. Recovery is now **on by default**, with tighter thresholds: hard stalls act after 12 s (was 20 s), the throughput window is 10 s (was 15 s), and the cooldown is 25 s (was 60 s — nobody waits a minute). The "two consecutive bad windows" test is deliberately kept, because acting on a single window misreads the normal buffering at the start of a video as a slow line.
+
+**Before switching lines, the candidate is now probed.** A direct URL's signature is bound to its host, so an address can be 403 for reasons the player cannot see; historically, switching blindly onto one of those produced a dead video track and a black reload — the cure was worse than the disease. Each candidate is now checked with a `Range: bytes=0-0` request using **exactly the fingerprint playback will use** (APP token → official APP UA, no Referer; web token → Safari UA + Referer), and only a 200/206 is accepted. If nothing responds, the app does not switch at all. The same path now also covers **failing to start**: instead of showing an error immediately, it tries the next verified line first.
+
+**Quality goes back up.** Lowering the bitrate is a step back, and until now nothing ever took the step forward again — you were stuck at the reduced quality for the rest of the video. After **120 seconds of continuous** playback without a stall (any stall resets the timer), the quality is raised **one step at a time** and watched again. Raising it straight back to the original would mean that a momentarily better network immediately stalls again, and a picture that keeps jumping is worse than one that stays low.
+
+**A notice when the bitrate drops, with a switch to turn it off.** The official client lowers quality silently, which is how you end up wondering why the picture suddenly looks soft. A small card now appears over the player — "正在降码率" with a **关闭降码率** button — for 8 seconds; tapping the button turns automatic quality reduction off (the same setting as in Settings → Player settings). Both strings go through the interface translation, and the card is wrapped in an `Obx` so the translated text appears when it arrives.
+
+**Fixed: a model's own "cannot translate" note appearing as a translation.** This one predates the built-in translation engine, so it was never about where the prompt lives. An empty user message makes the model answer with a *note* rather than a translation — and that note is not empty, so it was stored and shown as the translated comment (observed: 「（ユーザーからのメッセージが空であるため、翻訳できません。）」). The guard only rejected truly empty strings; **whitespace-only content** (spaces, newlines, zero-width characters) went straight through. Whitespace is now treated as nothing-to-translate and never reaches the API, plus a safety net discards replies that look like the model talking about the task instead of doing it. Already-polluted cache entries no longer matter: those keys can never be looked up again.
+
+**Fixed: the loading percentage stopped meaning anything.** Two symptoms, one cause — a buffering *fill level* is not a progress bar. It falls as playback consumes the buffer (11% back to 6%), and it reaches 100% when the buffer is full, which does **not** mean playback can start (hence the 100% that then sat there). The number is now **monotonic within a load and capped at 99**, so 100% is reserved for the moment playback actually begins — when the indicator itself disappears.
+
 ### PiliBabel v1.3.0
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
