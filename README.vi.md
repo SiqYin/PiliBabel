@@ -38,13 +38,17 @@ bilibili (API công khai chính thức)
    PiliBabel  ← bạn đang ở đây   — bản fork của PiliNara
 ```
 
-PiliBabel giữ **toàn bộ tính năng của PiliNara / PiliPlus** (xem [danh sách tính năng kế thừa](#danh-sách-tính-năng-kế-thừa-từ-pilinara--piliplus) ở cuối) và bổ sung **một năng lực chủ đạo mà các ứng dụng gốc không có**:
+PiliBabel giữ **toàn bộ tính năng của PiliNara / PiliPlus** (xem [danh sách tính năng kế thừa](#danh-sách-tính-năng-kế-thừa-từ-pilinara--piliplus) ở cuối) và bổ sung **hai năng lực chủ đạo mà các ứng dụng gốc không có**:
 
 > **Dịch giao diện và nội dung bằng AI** — toàn bộ ứng dụng (nhãn giao diện, tiêu đề video, tên chủ kênh, bình luận, động thái, bảng tin, và cả danmaku trực tiếp) hiển thị bằng ngôn ngữ **mà bạn** chọn.
 
 Và từ phiên bản 1.0, việc đó chạy **ngay sau khi cài**: mô hình dịch đã được **tích hợp sẵn**. bilibili đã mở mã nguồn mô hình dịch của chính mình, [Index-Translate](https://github.com/bilibili/Index-Translate), và phục vụ nó qua một điểm truy cập công khai miễn phí. PiliBabel mặc định trỏ vào đó, nên bản dịch chạy ngay khi bạn cài ứng dụng — không đăng ký, không khóa, không hóa đơn. Nếu muốn dùng mô hình của riêng mình, đường dẫn «API riêng» vẫn còn nguyên, chỉ cách một lần chạm.
 
+> **Âm thanh tai nghe đồng bộ thật sự** — với tai nghe Bluetooth hay có dây, tiếng không còn chậm hơn hình. Ứng dụng chính thức làm được điều này; PiliNara và PiliPlus thì không, ít nhất là ở trạng thái mặc định. PiliBabel nay yêu cầu mpv dùng **AudioTrack** trước: giống ứng dụng chính thức, backend này **đo** độ trễ đầu ra âm thanh, trong khi **OpenSL ES** (mặc định cũ) chỉ **ước lượng**.
+
 ## Tính năng chính
+
+- **Âm thanh tai nghe không còn trễ.** Trình phát mặc định dùng backend **AudioTrack** của mpv (thứ tự `audiotrack,aaudio,opensles`) thay cho **OpenSL ES**. AudioTrack báo độ trễ **đo được** — nó đọc số khung đã phát ra và mốc thời gian trình bày của thiết bị — đúng cách ứng dụng bilibili chính thức và `MediaSync` của Android giữ hình và tiếng khớp nhau. OpenSL ES chỉ **ước lượng**, nên với tai nghe Bluetooth đồng hồ âm thanh bị lệch và hình bị hiển thị sớm. Qua thử nghiệm, độ trễ gần như không còn. Có thể đổi thứ tự bất cứ lúc nào trong Cài đặt → Video → Thiết bị xuất âm thanh.
 
 - **Dịch bằng AI, ở khắp mọi nơi.** Thanh điều hướng, thẻ video, trang chi tiết, bình luận, động thái, cùng các màn hình Của tôi / Yêu thích / Lịch sử / Tin nhắn / Tìm kiếm — một lượt quét toàn cục bao phủ **khoảng 1650 chuỗi giao diện**, cộng thêm nội dung động (tiêu đề, tên tác giả, các bộ đếm).
 - **Hai bộ máy, một công tắc.** *Tích hợp* (mặc định) dùng điểm truy cập miễn phí của mô hình chính thức **Index-Translate-35B-A3B** của bilibili — không cần cấu hình gì. *API riêng* giữ nguyên hành vi trước đây: trỏ tới bất kỳ điểm truy cập `/chat/completions` tương thích OpenAI nào, với URL gốc / khóa / mô hình của bạn. Tính năng tóm tắt video bằng AI và dịch bằng AI vẫn có điểm truy cập và cài đặt **hoàn toàn độc lập**, cùng nằm trong một trang **«Tính năng AI»**.

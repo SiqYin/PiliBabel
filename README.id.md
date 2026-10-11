@@ -38,13 +38,17 @@ bilibili (API publik resmi)
    PiliBabel  ← Anda di sini    — fork PiliNara
 ```
 
-PiliBabel mempertahankan **seluruh fitur PiliNara / PiliPlus** (lihat [daftar fitur warisan](#daftar-fitur-warisan-dari-pilinara--piliplus) di bawah) dan menambahkan **satu kemampuan utama yang tidak dimiliki klien hulu**:
+PiliBabel mempertahankan **seluruh fitur PiliNara / PiliPlus** (lihat [daftar fitur warisan](#daftar-fitur-warisan-dari-pilinara--piliplus) di bawah) dan menambahkan **dua kemampuan utama yang tidak dimiliki klien hulu**:
 
 > **Terjemahan antarmuka dan konten dengan AI** — seluruh aplikasi (label antarmuka, judul video, nama kreator, komentar, dinamika, feed, bahkan danmaku siaran langsung) ditampilkan dalam bahasa **yang Anda** pilih.
 
 Dan sejak 1.0, hal itu **langsung bekerja begitu dipasang**: model terjemahannya **sudah terpasang di dalam**. bilibili membuka sumber model terjemahannya sendiri, [Index-Translate](https://github.com/bilibili/Index-Translate), dan menyediakannya lewat titik akhir publik gratis. PiliBabel secara bawaan menunjuk ke sana, jadi terjemahan berjalan begitu Anda memasang aplikasi — tanpa pendaftaran, tanpa kunci, tanpa tagihan. Kalau Anda lebih suka model sendiri, jalur «API sendiri» tetap ada, hanya sejauh satu ketukan.
 
+> **Audio headphone yang benar-benar tersinkron** — dengan headphone Bluetooth maupun kabel, suara tidak lagi tertinggal di belakang gambar. Aplikasi resmi bisa melakukannya; PiliNara dan PiliPlus tidak, setidaknya secara bawaan. PiliBabel kini meminta **AudioTrack** lebih dulu kepada mpv: seperti klien resmi, backend ini **mengukur** latensi keluaran audio, sedangkan **OpenSL ES** (bawaan sebelumnya) hanya **memperkirakannya**.
+
 ## Fitur utama
+
+- **Audio headphone tanpa latensi.** Pemutar kini memakai backend **AudioTrack** milik mpv secara bawaan (urutan `audiotrack,aaudio,opensles`), bukan **OpenSL ES**. AudioTrack melaporkan latensi yang **terukur** — ia membaca jumlah frame yang sudah diputar dan stempel waktu penyajian perangkat — persis seperti yang dilakukan aplikasi resmi bilibili dan `MediaSync` milik Android untuk menyelaraskan gambar dan suara. OpenSL ES hanya **memperkirakan**, sehingga pada headphone Bluetooth jam audio bergeser dan gambar ditampilkan terlalu awal. Dalam pengujian, latensinya praktis hilang. Urutannya bisa diubah kapan saja di Pengaturan → Video → Perangkat keluaran audio.
 
 - **Terjemahan AI di mana-mana.** Bilah navigasi, kartu video, halaman detail, komentar, dinamika, serta layar Saya / Favorit / Riwayat / Pesan / Pencarian — satu sapuan global mencakup **sekitar 1650 teks antarmuka**, ditambah konten dinamis (judul, nama penulis, penghitung).
 - **Dua mesin, satu sakelar.** *Bawaan* (default) memakai titik akhir gratis model resmi **Index-Translate-35B-A3B** milik bilibili — tidak ada yang perlu dikonfigurasi. *API sendiri* mempertahankan perilaku sebelumnya: arahkan ke titik akhir `/chat/completions` yang kompatibel dengan OpenAI, dengan URL dasar / kunci / model Anda sendiri. Ringkasan video AI dan terjemahan AI tetap memiliki titik akhir dan pengaturan yang **sepenuhnya independen**, keduanya berada dalam satu halaman **«Fitur AI»**.

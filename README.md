@@ -38,13 +38,17 @@ bilibili (official public API)
    PiliBabel  ← you are here   — fork of PiliNara
 ```
 
-PiliBabel keeps **every feature of PiliNara / PiliPlus** (see the [inherited feature log](#inherited-feature-log-from-pilinara--piliplus) near the bottom) and adds **one headline capability the upstream clients do not have**:
+PiliBabel keeps **every feature of PiliNara / PiliPlus** (see the [inherited feature log](#inherited-feature-log-from-pilinara--piliplus) near the bottom) and adds **two headline capabilities the upstream clients do not have**:
 
 > **AI interface & content translation** — the whole app (UI labels, video titles, UP names, comments, dynamics, feed, and even live danmaku) is rendered in the language **you** choose.
 
 And since 1.0 it does so **out of the box**: the translation model is **built in**. bilibili open-sourced its own translation model family, [Index-Translate](https://github.com/bilibili/Index-Translate), and serves it from a free public endpoint. PiliBabel ships pointed at it, so translation works the moment you install the app — no sign-up, no key, no bill. If you would rather use your own model, the own-API path is still there, one tap away.
 
+> **Headphone audio that actually stays in sync** — with Bluetooth or wired headphones, the sound no longer trails the picture. The official app gets this right; PiliNara and PiliPlus do not, out of the box. PiliBabel now asks mpv for **AudioTrack** first, which *measures* the audio output latency the same way the official client does, instead of **OpenSL ES**, which only *estimates* it.
+
 ## Key features
+
+- **Headphone audio in sync.** The player now uses mpv's **AudioTrack** backend by default (order `audiotrack,aaudio,opensles`) instead of **OpenSL ES**. AudioTrack reports a *measured* output latency — it reads the played-out frame count and the device presentation timestamp — which is exactly how the official bilibili app and Android's own `MediaSync` keep picture and sound together. OpenSL ES only *estimates* it, so on Bluetooth headphones the audio clock drifted and the picture was shown early. In testing, the lag is essentially gone. Reorder it any time in Settings → Video → Audio output device.
 
 - **AI translation, everywhere.** Navigation tabs, video cards, detail pages, comments, dynamics, and the Mine / Favorites / History / Messages / Search surfaces — a global sweep covers **~1,650+ UI strings**, plus dynamic content (titles, author names, action counts).
 - **Two engines, one switch.** *Built-in* (default) uses bilibili's official **Index-Translate-35B-A3B** free endpoint — nothing to configure. *Own API* keeps the previous behaviour: point it at any OpenAI-compatible `/chat/completions` endpoint with your own base URL / key / model. The AI video-summary feature and the AI translation feature still have **completely independent** endpoints and settings, both living under one **"AI features"** page.
