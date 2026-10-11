@@ -38,13 +38,17 @@ bilibili (API pública oficial)
    PiliBabel  ← estás aquí      — fork de PiliNara
 ```
 
-PiliBabel conserva **todas las funciones de PiliNara / PiliPlus** (consulta el [registro de funciones heredadas](#registro-de-funciones-heredadas-de-pilinara--piliplus) al final) y añade **una capacidad principal que los clientes originales no tienen**:
+PiliBabel conserva **todas las funciones de PiliNara / PiliPlus** (consulta el [registro de funciones heredadas](#registro-de-funciones-heredadas-de-pilinara--piliplus) al final) y añade **dos capacidades principales que los clientes originales no tienen**:
 
 > **Traducción de interfaz y contenido por IA**: toda la aplicación (etiquetas de la interfaz, títulos de vídeos, nombres de los UP, comentarios, dinámicas, el feed e incluso los danmaku en directo) se muestra en el idioma **que tú** elijas.
 
 Y desde la 1.0 funciona **nada más instalar**: el modelo de traducción viene **integrado**. bilibili publicó su propio modelo de traducción, [Index-Translate](https://github.com/bilibili/Index-Translate), servido desde un punto de acceso público y gratuito. PiliBabel apunta ahí por defecto, así que la traducción funciona en cuanto instalas la aplicación: sin registro, sin clave y sin factura. Si prefieres tu propio modelo, la vía de «API propia» sigue ahí, a un toque.
 
+> **Audio por auriculares que de verdad va sincronizado** — con auriculares Bluetooth o con cable, el sonido ya no se queda por detrás de la imagen. La app oficial lo consigue; PiliNara y PiliPlus no, tal como vienen. Ahora PiliBabel pide a mpv **AudioTrack** en primer lugar: igual que el cliente oficial, este backend **mide** la latencia de salida de audio, mientras que **OpenSL ES** (el ajuste anterior por defecto) solo la **estima**.
+
 ## Funciones principales
+
+- **Audio por auriculares sin retardo.** El reproductor usa por defecto el backend **AudioTrack** de mpv (orden `audiotrack,aaudio,opensles`) en lugar de **OpenSL ES**. AudioTrack informa de una latencia **medida** — lee los fotogramas ya reproducidos y la marca de tiempo de presentación del dispositivo —, que es justo como la app oficial de bilibili y el propio `MediaSync` de Android mantienen juntos imagen y sonido. OpenSL ES solo la **estima**, así que con auriculares Bluetooth el reloj de audio se desviaba y la imagen se mostraba antes de tiempo. En las pruebas, el retardo ha desaparecido prácticamente. El orden se puede cambiar cuando quieras en Ajustes → Vídeo → Dispositivo de salida de audio.
 
 - **Traducción por IA, en todas partes.** Barras de navegación, tarjetas de vídeo, páginas de detalle, comentarios, dinámicas y las pantallas Yo / Favoritos / Historial / Mensajes / Búsqueda: un barrido global cubre **unos 1650 textos de interfaz**, más el contenido dinámico (títulos, nombres de autores, contadores).
 - **Dos motores, un solo ajuste.** *Integrado* (por defecto) usa el punto de acceso gratuito del modelo oficial **Index-Translate-35B-A3B** de bilibili: nada que configurar. *API propia* mantiene el comportamiento anterior: apúntala a cualquier punto de acceso `/chat/completions` compatible con OpenAI, con tu propia URL base / clave / modelo. El resumen de vídeo por IA y la traducción por IA siguen teniendo puntos de acceso y ajustes **totalmente independientes**, reunidos en una sola página **«Funciones de IA»**.

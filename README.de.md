@@ -38,13 +38,17 @@ bilibili (offizielle öffentliche API)
    PiliBabel  ← du bist hier    — Fork von PiliNara
 ```
 
-PiliBabel behält **alle Funktionen von PiliNara / PiliPlus** (siehe das [Verzeichnis der übernommenen Funktionen](#verzeichnis-der-übernommenen-funktionen-aus-pilinara--piliplus) weiter unten) und fügt **eine Kernfähigkeit hinzu, die die vorgelagerten Clients nicht haben**:
+PiliBabel behält **alle Funktionen von PiliNara / PiliPlus** (siehe das [Verzeichnis der übernommenen Funktionen](#verzeichnis-der-übernommenen-funktionen-aus-pilinara--piliplus) weiter unten) und fügt **zwei Kernfähigkeiten hinzu, die die vorgelagerten Clients nicht haben**:
 
 > **KI-Übersetzung von Oberfläche und Inhalten** — die gesamte App (Beschriftungen, Videotitel, Namen der UP, Kommentare, Dynamik, Feed und sogar Live-Danmaku) erscheint in der Sprache, **die du** wählst.
 
 Und seit 1.0 funktioniert das **direkt nach der Installation**: Das Übersetzungsmodell ist **eingebaut**. bilibili hat sein eigenes Übersetzungsmodell [Index-Translate](https://github.com/bilibili/Index-Translate) quelloffen veröffentlicht und betreibt es über einen kostenlosen öffentlichen Endpunkt. PiliBabel zeigt standardmäßig darauf — die Übersetzung läuft also, sobald du die App installierst: keine Anmeldung, kein Schlüssel, keine Rechnung. Wenn du lieber dein eigenes Modell nutzt, bleibt der Weg über die eigene API bestehen, einen Tipp entfernt.
 
+> **Kopfhörerton, der wirklich synchron bleibt** — mit Bluetooth- oder kabelgebundenen Kopfhörern läuft der Ton dem Bild nicht mehr hinterher. Die offizielle App bekommt das hin; PiliNara und PiliPlus nicht, jedenfalls nicht ab Werk. PiliBabel verlangt von mpv jetzt zuerst **AudioTrack**: Dieses Backend **misst** die Audio-Ausgabelatenz, genau wie der offizielle Client — während **OpenSL ES** (die bisherige Voreinstellung) sie nur **schätzt**.
+
 ## Hauptfunktionen
+
+- **Kopfhörerton ohne Verzögerung.** Der Player nutzt standardmäßig das **AudioTrack**-Backend von mpv (Reihenfolge `audiotrack,aaudio,opensles`) statt **OpenSL ES**. AudioTrack meldet eine **gemessene** Latenz — es liest die bereits ausgegebenen Frames und den Präsentationszeitstempel des Geräts —, genau wie es die offizielle bilibili-App und Androids eigenes `MediaSync` tun, um Bild und Ton zusammenzuhalten. OpenSL ES **schätzt** nur: Bei Bluetooth-Kopfhörern driftete die Audiouhr, und das Bild wurde zu früh gezeigt. Im Test ist die Verzögerung praktisch verschwunden. Die Reihenfolge lässt sich jederzeit unter Einstellungen → Video → Audioausgabegerät ändern.
 
 - **KI-Übersetzung, überall.** Navigationsleisten, Videokarten, Detailseiten, Kommentare, Dynamik sowie die Bereiche Ich / Favoriten / Verlauf / Nachrichten / Suche — ein globaler Durchlauf erfasst **rund 1.650 Oberflächentexte**, dazu dynamische Inhalte (Titel, Autorennamen, Zähler).
 - **Zwei Engines, ein Schalter.** *Eingebaut* (Standard) nutzt den kostenlosen Endpunkt des offiziellen Modells **Index-Translate-35B-A3B** von bilibili — nichts einzurichten. *Eigene API* behält das bisherige Verhalten: Richte sie auf einen beliebigen OpenAI-kompatiblen `/chat/completions`-Endpunkt mit eigener Basis-URL / Schlüssel / Modell. Die KI-Videozusammenfassung und die KI-Übersetzung haben weiterhin **vollständig getrennte** Endpunkte und Einstellungen und liegen gemeinsam auf einer Seite **„KI-Funktionen“**.

@@ -38,13 +38,17 @@ bilibili (API awam rasmi)
    PiliBabel  ← anda di sini    — cabang PiliNara
 ```
 
-PiliBabel mengekalkan **semua ciri PiliNara / PiliPlus** (lihat [log ciri yang diwarisi](#log-ciri-yang-diwarisi-daripada-pilinara--piliplus) di bawah) dan menambah **satu keupayaan utama yang tiada pada klien huluan**:
+PiliBabel mengekalkan **semua ciri PiliNara / PiliPlus** (lihat [log ciri yang diwarisi](#log-ciri-yang-diwarisi-daripada-pilinara--piliplus) di bawah) dan menambah **dua keupayaan utama yang tiada pada klien huluan**:
 
 > **Terjemahan antara muka dan kandungan dengan AI** — seluruh aplikasi (label antara muka, tajuk video, nama pencipta, komen, dinamik, suapan, malah danmaku siaran langsung) dipaparkan dalam bahasa **yang anda** pilih.
 
 Dan sejak 1.0, ia berfungsi **sebaik sahaja dipasang**: model terjemahan **terbina dalam**. bilibili telah membuka sumber model terjemahannya sendiri, [Index-Translate](https://github.com/bilibili/Index-Translate), dan menyediakannya melalui titik akhir awam percuma. PiliBabel menghala ke sana secara lalai, jadi terjemahan berjalan sebaik anda memasang aplikasi — tanpa pendaftaran, tanpa kunci, tanpa bil. Jika anda lebih suka model sendiri, laluan «API sendiri» masih ada, hanya sejauh satu ketikan.
 
+> **Audio fon kepala yang benar-benar segerak** — dengan fon kepala Bluetooth atau berwayar, bunyi tidak lagi ketinggalan di belakang gambar. Aplikasi rasmi berjaya melakukannya; PiliNara dan PiliPlus tidak, sebagaimana adanya. PiliBabel kini meminta **AudioTrack** daripada mpv terlebih dahulu: seperti klien rasmi, backend ini **mengukur** kependaman output audio, manakala **OpenSL ES** (tetapan lalai sebelum ini) hanya **menganggar**.
+
 ## Ciri utama
+
+- **Audio fon kepala tanpa kependaman.** Pemain kini menggunakan backend **AudioTrack** mpv secara lalai (susunan `audiotrack,aaudio,opensles`) dan bukan **OpenSL ES**. AudioTrack melaporkan kependaman yang **diukur** — ia membaca bilangan bingkai yang telah dimainkan dan cap masa persembahan peranti — sama seperti yang dilakukan aplikasi rasmi bilibili dan `MediaSync` Android untuk memadankan gambar dengan bunyi. OpenSL ES hanya **menganggar**, jadi dengan fon kepala Bluetooth jam audio terpesong dan gambar dipaparkan lebih awal. Dalam ujian, kependaman itu hampir hilang. Susunannya boleh diubah bila-bila masa di Tetapan → Video → Peranti output audio.
 
 - **Terjemahan AI, di merata tempat.** Bar navigasi, kad video, halaman butiran, komen, dinamik, serta skrin Saya / Kegemaran / Sejarah / Mesej / Carian — satu sapuan global meliputi **kira-kira 1650 rentetan antara muka**, ditambah kandungan dinamik (tajuk, nama penulis, pengira).
 - **Dua enjin, satu suis.** *Terbina dalam* (lalai) menggunakan titik akhir percuma model rasmi **Index-Translate-35B-A3B** bilibili — tiada apa perlu dikonfigurasi. *API sendiri* mengekalkan tingkah laku sebelum ini: halakan ke mana-mana titik akhir `/chat/completions` serasi OpenAI, dengan URL asas / kunci / model anda sendiri. Ringkasan video AI dan terjemahan AI masih mempunyai titik akhir serta tetapan yang **sepenuhnya bebas**, kedua-duanya di bawah satu halaman **«Ciri AI»**.
