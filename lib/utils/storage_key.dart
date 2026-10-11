@@ -312,6 +312,7 @@ abstract final class SettingBoxKey {
       customDanmakuFontName = 'customDanmakuFontName',
       dynamicColor = 'dynamicColor',
       customColor = 'customColor',
+      colorPaletteRevision = 'colorPaletteRevision',
       displayMode = 'displayMode',
       smallCardWidth = 'smallCardWidth',
       recommendCardWidth = 'recommendCardWidth',

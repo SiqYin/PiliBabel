@@ -105,6 +105,9 @@ void main() async {
     if (kDebugMode) debugPrint('GStorage init error: $e');
     exit(0);
   }
+  // 调色板删过重复色，下标表变了：先把老用户存的下标迁移到新表，
+  // 否则他们的主题色会静默变成另一个颜色（详见 migrateColorPalette 注释）。
+  migrateColorPalette();
   ScaledWidgetsFlutterBinding.instance.scaleFactor = Pref.uiScale;
 
   // Flutter 的 build / layout 异常此前没有任何记录：release 版只会把出错的那块

@@ -1,3 +1,4 @@
+import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -1279,8 +1280,15 @@ abstract final class Pref {
   static bool get p1080 =>
       _setting.get(SettingBoxKey.p1080, defaultValue: true);
 
-  static int get customColor =>
-      _setting.get(SettingBoxKey.customColor, defaultValue: 0);
+  /// 调色板种子色下标。
+  ///
+  /// 收口到合法区间：这个值会被直接拿去索引 [colorThemeTypes]，而色表皮过
+  /// 好几次（删过重复色），历史值可能越界 —— 越界就是 RangeError + 启动白屏。
+  static int get customColor {
+    final v = _setting.get(SettingBoxKey.customColor, defaultValue: 0);
+    if (v is! int) return 0;
+    return (v >= 0 && v < colorThemeTypes.length) ? v : 0;
+  }
 
   static bool get dynamicColor =>
       !Platform.isIOS &&
