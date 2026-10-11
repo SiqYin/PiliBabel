@@ -1447,6 +1447,14 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 连续检测到「位置在走、但不出画」的拍数。
   int _frozenVideoTicks = 0;
 
+  /// 已确认「不可用」的候选线路下标。
+  ///
+  /// 两种来源：探测没通过（探不通）、以及**切过去之后确实不出画**（视频轨死掉，
+  /// 表现就是切完直接黑屏）。换线时跳过它们，避免在同一条坏线上来回打转 ——
+  /// 这正是「切到备用线路然后直接黑屏」这个现象的护栏。
+  /// 全部候选都在黑名单里时清空重来（网络可能只是临时抽风）。
+  final Set<int> _badLineIndexes = <int>{};
+
   void _startStallWatchdog() {
     _stallTimer?.cancel();
     _stallTicks = 0;
@@ -1461,6 +1469,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     _restorePending = false;
     _lastActionWasDowngrade = false;
     _frozenVideoTicks = 0;
+    // 换视频就换了候选列表，下标不再对应：黑名单必须清空
+    _badLineIndexes.clear();
     _livenessPos = position.value;
     _startPos = position.value; // 开播前先记下起始位置
     _stallTimer = Timer.periodic(
@@ -1636,14 +1646,17 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       return false;
     }
     _frozenVideoTicks = 0;
-    if (!_canRecoverNow()) {
-      return false;
-    }
+    // 当前这条线极可能就是罪魁（视频分片被拒、音频分片正常）：先拉黑，
+    // 这样接下来的换线不会再切回它 —— 否则会在同一条坏线上反复黑屏。
+    _badLineIndexes.add(_lineIndex);
     if (kDebugMode) {
       debugPrint(
         '[plPlayer] 视频轨假活：position 仍在推进但 estimated-vf-fps=$vfps，'
-        '按播放受阻处理',
+        '线路 $_lineIndex 记入黑名单，按播放受阻处理',
       );
+    }
+    if (!_canRecoverNow()) {
+      return false;
     }
     unawaited(_recoverPlaybackStall(_lastEffRatio));
     return true;
@@ -1888,13 +1901,21 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     //
     // 探测失败**不推进 _lineIndex**：这条线这次不通，不代表下次也不通，
     // 保持索引语义简单（永远是"当前正在用的那条"）。
+    // 候选全在黑名单里 → 清空重来（网络可能只是临时抽风）
+    if (_badLineIndexes.length >= lines.length) {
+      _badLineIndexes.clear();
+    }
     int? chosen;
     for (var i = 1; i < lines.length; i++) {
       final idx = (_lineIndex + i) % lines.length;
+      if (_badLineIndexes.contains(idx)) {
+        continue; // 已知不可用：别再切过去（切过去就是黑屏）
+      }
       if (await _probeLine(lines[idx])) {
         chosen = idx;
         break;
       }
+      _badLineIndexes.add(idx); // 探不通也记下来，本轮不再重试
     }
     // 一条都探不通时**仍然按顺序切下一条**（除非调用方要求必须探测通过）。
     //
@@ -1906,7 +1927,19 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       if (requireProbe) {
         return false;
       }
-      chosen = (_lineIndex + 1) % lines.length;
+      // 兜底：找一个不在黑名单里的候选
+      int? fallback;
+      for (var i = 1; i < lines.length; i++) {
+        final idx = (_lineIndex + i) % lines.length;
+        if (!_badLineIndexes.contains(idx)) {
+          fallback = idx;
+          break;
+        }
+      }
+      if (fallback == null) {
+        return false; // 全不可用：交给上层阶梯（降码率 / 重取地址）
+      }
+      chosen = fallback;
     }
     final next = chosen;
     _lineIndex = next;
