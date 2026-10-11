@@ -1,3 +1,15 @@
+### PiliBabel v1.3.0
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+**The colour palette is now 15 well-separated colours instead of 19 with duplicates.** This turned out to be a measurement problem rather than a taste problem: the swatch draws the *generated* scheme (primary / tertiary / primaryContainer), and the generation rule (FlexTones.material3Legacy) fixes chroma — primary 48, tertiary 24, and tertiary hue = seed hue + 60. **The seed's lightness and saturation are discarded; only its hue survives.** So two seeds that look different as raw colours can render as the same swatch. Measured that way, the worst pair was **蓝绿色 ↔ 灰色 at ΔE 2.0 — visually identical**. "Grey" (#9E9E9E) is the real surprise: a neutral grey has a CAM16 hue of 209.5°, and with chroma forced to 48 it renders as **cyan-blue, not grey at all**. Shipped deletions are 默认绿 (10° from 绿色), 灰色 (it isn't grey), 浅蓝色 (11° from 蓝色) and 棕色 (13° from 红色) — chosen by exhaustive search over all 3876 combinations to maximise the worst-case separation, while keeping 红色 and every other colour users expect. Minimum ΔE rises from 2.0 to 8.0. The remaining 15 are ordered **by hue**, which also fills a 5 × 3 grid with no jarring jumps between neighbours.
+
+**Upgrading will not silently change your theme.** `customColor` is stored as an index, and removing colours shifts every index — so there is now a one-time `colorPaletteRevision` migration that maps old indices onto the nearest surviving colour (grey → blue-green, preserving what you were actually looking at). `Pref.customColor` is also bounds-checked, since an out-of-range index used to mean a RangeError at startup.
+
+**Dynamic colour no longer looks like it works when it doesn't.** With dynamic colour on, picking a seed colour has no effect — but nothing said so. There is now a line under the palette saying exactly that (translated along with the rest of the interface), and the swatches fade to 35% when dynamic colour is active, so it reads as "selectable, but currently inert".
+
+**Fixed: a failed load showed a black screen with no explanation.** When the media failed to load, `dataStatus` became `error` — and the loading indicator's three conditions (`loading` / `isReloading` / `isBuffering`) covered none of them, so the whole indicator was skipped and you got pure black. You could not tell "still loading" from "already dead". The indicator now stays visible in the error state and shows a failure icon with **加载失败，点击重试**; tapping it retries. (The other suspect — `suppressBufferingIndicator` — was checked and is correctly reset in a `finally`, so it cannot latch.)
+
 ### PiliBabel v1.2.0
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
