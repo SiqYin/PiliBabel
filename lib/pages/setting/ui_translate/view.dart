@@ -3,17 +3,16 @@ import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/services/ui_translate/translate_provider.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
-import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 
-/// 统一「AI 功能」一级设置页。
-/// 「AI 视频总结」与「AI 界面翻译」各自使用独立的接口地址 / 密钥 / 模型。
+/// 统一「AI 翻译」一级设置页。
+/// 这里只管界面翻译；「AI 视频总结」的配置在 我的 → 设置 → 其它设置 → AI 视频总结。
 /// 目标语言选择器使用不透明、可滚动的对话框，避免长语言列表覆盖下面的 API Key 输入框；
 /// 语言名称以各自原名显示，不送入模型翻译，防止编号批次提示词污染选项标签。
 /// 引导式配置的路由参数（见 `services/ui_translate/onboarding.dart`）。
 ///
-/// 两种模式都会**当着用户的面**先滚到「AI 界面翻译」那一段，之后分岔：
+/// 引导流程会**当着用户的面**先把这一页滚到可见处，之后分岔：
 /// * [kGuidedSetupFirstRun]：新装用户 —— 打开开关（开关自己播放动画）→ 弹语言列表
 /// * [kGuidedSetupUpgrade]：从旧版升级的用户 —— 直接弹「翻译引擎」，让他一眼看到
 ///   已切到内置模型，想切回自备 API 也伸手就能点
@@ -39,7 +38,7 @@ class UiTranslateSettingPage extends StatefulWidget {
 }
 
 class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
-  /// 定位「AI 界面翻译」那一节，滚动靠它。
+  /// 引导流程的滚动锚点：挂在页面第一项上（这一页只剩翻译设置）。
   final _aiSectionKey = GlobalKey();
 
   @override
@@ -62,7 +61,7 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
         ? Get.find<AiSettingController>()
         : Get.put(AiSettingController());
 
-    // 先让用户看清「AI 功能」这一页长什么样，再滚到 AI 翻译那一段。
+    // 先让用户看清「AI 翻译」这一页长什么样，再滚过去。
     await Future.delayed(const Duration(milliseconds: 450));
     if (!mounted) return;
     final sectionContext = _aiSectionKey.currentContext;
@@ -109,65 +108,26 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
       // AppBar 在下面那个 body Obx 之外，标题也得自己包一层，
       // 否则译文到了它不会刷新（会一直停在原文）。
       appBar: widget.showAppBar
-          ? AppBar(title: Obx(() => Text(uiTx('AI 功能'))))
+          ? AppBar(title: Obx(() => Text(uiTx('AI 翻译'))))
           : null,
       body: Obx(() {
         UiTranslateService.to.revision.value;
         return ListView(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           children: [
-            // ================= AI 视频总结 =================
-            _sectionTitle(theme, 'AI 视频总结'),
-            Obx(
-              () => SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(uiTx('启用视频总结助手')),
-                subtitle: Text(uiTx('在视频详情页用 AI 生成字幕分析/总结')),
-                value: controller.enableAiChat.value,
-                onChanged: (v) {
-                  controller.enableAiChat.value = v;
-                  Pref.enableAiChat = v;
-                },
-              ),
-            ),
-            _ApiFields(
-              urlCtl: controller.apiUrlCtl,
-              keyCtl: controller.apiKeyCtl,
-              onUrl: controller.saveApiUrl,
-              onKey: controller.saveApiKey,
-            ),
-            _ModelPicker(
-              label: '视频总结模型',
-              list: controller.modelList,
-              current: controller.model,
-              manualCtl: controller.modelCtl,
-              loading: controller.isLoadingModels,
-              onSelect: controller.saveModel,
-              onFetch: controller.fetchModels,
-            ),
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.tune),
-              title: Text(uiTx('提示词模板')),
-              subtitle: Text(uiTx('管理视频总结的提示词模板')),
-              trailing: const Icon(Icons.chevron_right),
-              onTap: () => Get.toNamed('/aiSetting'),
-            ),
-            const SizedBox(height: 24),
-
-            // ================= AI 界面翻译 =================
-            // 引导流程会滚到这里，所以标题要挂 key。
+            // 引导流程会滚到这里，所以锚点要挂 key。
+            // 「AI 视频总结」已移回 我的 → 设置 → 其它设置（与 PiliNara 同位置）；
+            // 这一页只剩翻译设置，因此不再需要分节标题 —— 大标题「AI 翻译」就是它。
             KeyedSubtree(
               key: _aiSectionKey,
-              child: _sectionTitle(theme, 'AI 界面翻译'),
-            ),
-            Obx(
-              () => SwitchListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(uiTx('启用 AI 翻译')),
-                subtitle: Text(uiTx('将界面与外文内容翻译为所选应用语言')),
-                value: controller.uiTranslateEnabled.value,
-                onChanged: controller.saveUiTranslateEnabled,
+              child: Obx(
+                () => SwitchListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(uiTx('启用 AI 翻译')),
+                  subtitle: Text(uiTx('将界面与外文内容翻译为所选应用语言')),
+                  value: controller.uiTranslateEnabled.value,
+                  onChanged: controller.saveUiTranslateEnabled,
+                ),
               ),
             ),
             // 翻译引擎：内置官方模型（默认、免密钥）/ 自备 API。
@@ -355,7 +315,7 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                       uiTx(
                         '• 翻译引擎可选内置（B 站官方免费模型，无需密钥）或自备 API，'
                         '两者共用同一份语言清单\n'
-                        '• 视频总结与界面翻译各自配置独立的接口地址/Key/模型，互不影响\n'
+                        '• 视频总结的设置已移到 我的 → 设置 → 其它设置 → AI 视频总结\n'
                         '• 应用语言默认简体中文：只把外文自动译成中文，中文内容不动\n'
                         '• 选择其它语言即把界面与内容整体翻译为该语言\n'
                         '• 升级到 1.0 后已自动切到内置模型；你原先填的接口地址/Key/模型'
@@ -374,11 +334,6 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
       }),
     );
   }
-
-  Widget _sectionTitle(ThemeData theme, String text) => Padding(
-    padding: const EdgeInsets.only(bottom: 8, top: 2),
-    child: Text(uiTx(text), style: theme.textTheme.titleMedium),
-  );
 }
 
 
