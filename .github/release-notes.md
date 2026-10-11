@@ -1,6 +1,6 @@
-### PiliBabel v1.5.0
+### PiliBabel v1.6.0
 
-- **Headphone audio is back in sync.** The player used to ask mpv for OpenSL ES first, which only *estimates* the output latency; AudioTrack *measures* it, the same way the official Bilibili app does. The default order is now `audiotrack,aaudio,opensles` — reorder it in 设置 → 视频 → 音频输出设备.
-- **A black picture with sound playing is no longer silent.** If the video track stops producing frames while audio keeps going, the loading indicator comes back with 画面加载中，点击重试, and the app reloads the same line and quality before switching anything.
+- **Settings got tidier.** 「AI 功能」 is now 「AI 翻译」, and it holds the translation settings only — the 「AI 界面翻译」 sub-heading is gone, because the page title already says it.
+- **「AI 视频总结」 moved back to 我的 → 设置 → 其它设置** (the same place as PiliNara), between 「番剧片头/片尾跳过类型」 and 「检查未读动态」. It opens the existing AI 视频总结设置 page: master switch, API config, model picker and prompt templates.
 
 Downloads are below.
