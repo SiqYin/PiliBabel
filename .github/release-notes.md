@@ -1,3 +1,17 @@
+### PiliBabel v1.4.1
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks language.
+
+A translation-quality release. Both fixes are in the prompt/guard layer, so the translation cache is invalidated once on upgrade and everything re-translates.
+
+**Fixed: a model's own note appearing *inside* a comment translation.** 1.4.0 stopped empty messages from reaching the API, but that was not the whole story — it still happened, several times per comment. The clue was the pattern: the note appeared **after every emoji**, four or five times in one comment. That only makes sense if the text is not translated as a whole: comment bodies are **split into segments** (plain text / emotes / topics / @-mentions / links) and **each plain-text segment is sent separately**. Between adjacent emotes the split produces whitespace or punctuation-only fragments; sent to the model, those do not produce a translation — they produce a note saying the message is empty, and that note is not empty, so it was stored and displayed in the middle of the comment.
+
+The guard is therefore no longer "is it empty" or "is it blank" but **"does it contain anything translatable"** — any letter from Latin, Greek, Cyrillic, Hebrew, Arabic, Devanagari, Thai, kana, CJK or Hangul. Emoji-only, punctuation-only and digit-only fragments now return unchanged without ever calling the API. Previously-stored bad entries stop mattering, and the revision bump clears the rest.
+
+Two supporting changes: notes are now **stripped out of** a reply instead of discarding the whole reply (they arrive embedded between good sentences, so throwing the reply away also threw away the translation — you would have seen the raw text), and the prompt states that content needing no translation should be passed through unaltered. The matching deliberately **does not** look for the word "translate" itself, since a perfectly ordinary comment can be about translation; that case is covered by a test.
+
+**Fixed: the model answering questions in the text instead of only translating.** A comment asking "为什么现在有这么多人买小米" came back translated *and* answered. Both prompts (built-in and bring-your-own-API) now state explicitly: translate only — do not answer, explain, comment on, or add to anything, and do not offer a view on any question raised in the source text.
+
 ### PiliBabel v1.4.0
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
