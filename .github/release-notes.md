@@ -1,3 +1,15 @@
+### PiliBabel v1.4.4
+
+AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
+
+**Lowering the quality is now your decision, not the app's.** Until now, when the connection could not sustain the current bitrate, the app lowered the quality by itself. That was wrong — the official web player does not force it either: it offers a prompt ("drop to 720p HD?") and only acts when you accept. This release matches that: the app now asks.
+
+The card reads **当前网速带不动该画质，是否降到 720P 高清？** with two choices — **降到 720P 高清** and **暂不**. Only tapping the first actually lowers the quality, one step at a time. Tapping 暂不, or simply letting the card expire after 10 seconds, leaves the picture exactly as it is: the app will rather let it stutter than quietly reduce your resolution. It will not nag either — you get at most two offers per video, and accepting resets that count.
+
+Line switching is still automatic (preferring lines over quality is deliberate), so this only moves the one decision that cannot be undone quickly — quality takes 2 minutes of stable playback to climb back up. The prompt names the exact level it would drop to, and that level comes from the same calculation the downgrade itself uses, so what you are offered is what you get.
+
+Both settings were renamed to match what they now do, since their old wording no longer described reality: **带宽不足时询问是否降画质** (on by default — it only ever asks) and **卡顿时自动换线路** (on by default). Note that the quality setting now genuinely controls whether you are asked at all; with it off the app stays silent and leaves everything to you.
+
 ### PiliBabel v1.4.3
 
 AI interface & content translation layered on top of **PiliNara / PiliPlus** — the whole app speaks your language.
