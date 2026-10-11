@@ -74,6 +74,11 @@ jobs:
           tag_name: ${{ github.event.inputs.tag != '' && github.event.inputs.tag || github.ref_name }}
           name: ${{ github.event.inputs.tag != '' && github.event.inputs.tag || github.ref_name }}
           target_commitish: ${{ github.sha }}
+          # 必须显式给 body_path：这个 action 不传 body 时会把正文留空／清空，
+          # 而 release.yml 的 APK job 才是那个用 --notes-file 写正文的。只要 APK
+          # 那次构建先失败（例如 runner 拉 Gradle 依赖偶发失败），Release 就会由
+          # 本工作流创建 —— 之前的 v1.4.1 就是这么变成空正文的。
+          body_path: .github/release-notes.md
           files: |
             PiliBabel_windows_*.zip
             PiliBabel-Win-Setup/PiliBabel_windows_*.exe
