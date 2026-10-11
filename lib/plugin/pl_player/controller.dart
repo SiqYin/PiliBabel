@@ -1354,13 +1354,16 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   /// 连续饿死多少秒才动手恢复：2~5 秒的短抖动交给缓冲自己缓过来（旧版本"卡一下
   /// 就好了"的正常表现），重开只会把它放大成一次真正的卡顿。
-  static const int _recoverAfterSec = 20;
+  static const int _recoverAfterSec = 12;
 
   /// 吞吐自检窗口：窗口内「内容推进秒数 / 实际经过秒数」低于 [_effBadRatio] 即判
   /// 这条线带不动（带宽 < 码率）。连续 [_effBadWindowsLimit] 个窗口不行才动手。
   /// "播 1~2 秒、卡好几秒"这种断续抖动只能靠吞吐比识别——连续饿死计数每播 2 秒
   /// 就被清零，永远攒不满。
-  static const int _effWindowSec = 15;
+  /// 向官方口径靠拢时收紧过：窗口 15s→10s（更快拿到判断依据），
+  /// 硬停摆等待 20s→12s。但**保留「连续两个坏窗口」**这个判据不变 ——
+  /// 改成单窗口会让开播时的正常缓冲（首帧慢几秒）被算进比值而误判降码率。
+  static const int _effWindowSec = 10;
   static const int _effBadWindowsLimit = 2;
   static const double _effBadRatio = 0.6;
   static const double _effGoodRatio = 0.9;
@@ -1368,9 +1371,12 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 两次自动动作之间的单次冷却，以及窗口内总次数上限。动作是"换线 / 降一档画质"
   /// 这种分级手段（而不是无脑重开），所以间距可以比纯重开短；梯子用尽后会置
   /// [_escalationExhausted] 彻底停下，不会无限循环。
-  static const int _recoverCooldownSec = 60;
+  /// 冷却 60s→25s、窗口内上限 4→8：官方卡顿时切换得比这快得多，而我们此前
+  /// 60 秒才允许动一次，用户早就手动退出了。上限仍在，且梯子用尽后会置
+  /// [_escalationExhausted] 彻底停手，不会无限重开。
+  static const int _recoverCooldownSec = 25;
   static const int _recoverWindowSec = 600;
-  static const int _recoverWindowMax = 4;
+  static const int _recoverWindowMax = 8;
 
   void _startStallWatchdog() {
     _stallTimer?.cancel();
@@ -1559,7 +1565,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       }
       if (lowered) {
         _switchesSinceQuality = 0;
-        SmartDialog.showToast(uiTx('当前网速带不动该画质，已自动降低画质'));
+        _showQualityLoweredTip();
         return;
       }
       // ③ 无线路可换且已到最低画质：重取一次 playurl（可能拿到另一批地址）后停手
@@ -1576,6 +1582,60 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       _startedPlaying = true;
       _effWindowStartMs = 0;
     }
+  }
+
+  /// 降码率时的提示小窗：一句说明 + 一个「关闭降码率」按钮。
+  ///
+  /// 官方播放器降码率是**静默**的，用户只会突然发现画面变糊却不知道原因。
+  /// 这里给一个既可见又能关的入口：点「关闭降码率」即把自动降码率关掉
+  /// （写进设置，与 设置 → 播放器设置 里那个开关同一份状态），之后不再自动降。
+  ///
+  /// 两个细节：
+  /// * 停留 8 秒（用户要求 5~10 秒之间），`usePenetrate` 让点击穿透，
+  ///   不挡播放器的手势与控件；
+  /// * 内容包一层 `Obx` —— 弹窗只构建一次，译文晚到时若没有响应式依赖就不会
+  ///   重建，用户会一直看到源文案（这正是弹幕那个弹窗踩过的坑）。`uiTx` 会读
+  ///   revision，所以包上之后译文一到就刷新。
+  void _showQualityLoweredTip() {
+    SmartDialog.show(
+      usePenetrate: true,
+      clickMaskDismiss: false,
+      displayTime: const Duration(seconds: 8),
+      alignment: Alignment.bottomCenter,
+      builder: (context) => Obx(() {
+        final theme = Theme.of(context);
+        final onSurface = theme.colorScheme.onInverseSurface;
+        return Container(
+          margin: const EdgeInsets.only(left: 16, right: 16, bottom: 96),
+          padding: const EdgeInsets.fromLTRB(16, 6, 6, 6),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.inverseSurface,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.speed_outlined, size: 20, color: onSurface),
+              const SizedBox(width: 10),
+              Flexible(
+                child: Text(
+                  uiTx('正在降码率'),
+                  style: theme.textTheme.bodyMedium?.copyWith(color: onSurface),
+                ),
+              ),
+              TextButton(
+                onPressed: () {
+                  // 关掉的是「自动降码率」本身，与设置页开关同一份状态
+                  Pref.autoLowerQuality = false;
+                  SmartDialog.dismiss();
+                },
+                child: Text(uiTx('关闭降码率')),
+              ),
+            ],
+          ),
+        );
+      }),
+    );
   }
 
   /// 换到 B 站已下发的另一条已签名线路，从当前位置继续播
