@@ -459,6 +459,7 @@ class VideoDetailController extends GetxController
     };
     plPlayerController.onNeedLowerQuality = tryLowerQuality;
     plPlayerController.onNeedRestoreQuality = tryRestoreQuality;
+    plPlayerController.describeNextLowerQuality = _describeNextLowerQuality;
 
     // 开启新视频时，如果存在前代播放器的应用内小窗，则按播放上下文决定是否重置旧状态
     // 避免不同视频/分P之间 SponsorBlock 片段状态污染，同时保留同上下文无缝恢复能力
@@ -996,6 +997,29 @@ class VideoDetailController extends GetxController
     currentVideoQa.value = VideoQuality.fromCode(next);
     updatePlayer();
     return true;
+  }
+
+  /// 下一档更低画质的描述（如「720P 高清」）；已是当前列表最低档时返回 null。
+  ///
+  /// 供播放器在「询问用户是否降档」时展示目标档位 —— 降档改成由用户点选之后，
+  /// 提示语必须写明会降到哪一档，而画质列表只有本页知道。
+  /// 与 [tryLowerQuality] 用同一套「升序取最后一个」的口径，保证**问的和降的一致**。
+  String? _describeNextLowerQuality() {
+    final videos = data.dash?.video;
+    final cur = currentVideoQa.value;
+    if (videos == null || videos.isEmpty || cur == null) {
+      return null;
+    }
+    final lower = videos
+        .map((v) => v.id)
+        .where((c) => c < cur.code)
+        .toSet()
+        .toList()
+      ..sort();
+    if (lower.isEmpty) {
+      return null;
+    }
+    return VideoQuality.fromCode(lower.last).desc;
   }
 
   /// 降码率之前用的档位。稳定一段时间后按原路一档一档升回去；
@@ -1875,6 +1899,7 @@ class VideoDetailController extends GetxController
     plPlayerController.onNeedsPlayerInit = null;
     plPlayerController.onNeedLowerQuality = null;
     plPlayerController.onNeedRestoreQuality = null;
+    plPlayerController.describeNextLowerQuality = null;
     if (isEnteringPip) {
       // 正在进入小窗，保留资源
       return;
