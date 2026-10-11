@@ -33,7 +33,7 @@ import 'package:material_ui/material_ui.dart';
 class ColorSelectPage extends StatefulWidget {
   const ColorSelectPage({super.key, this.showAppBar = true});
 
-  /// 作为「设置」首页的一个分页内嵌时为 false（与 AI 功能等同一层）
+  /// 作为「设置」首页的一个分页内嵌时为 false（与 AI 翻译等同一层）
   final bool showAppBar;
 
   @override

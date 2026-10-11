@@ -11,7 +11,7 @@ enum SettingType {
   privacySetting('隐私设置'),
   recommendSetting('推荐流设置'),
   dynamicsSetting('动态流设置'),
-  aiTranslateSetting('AI 功能'),
+  aiTranslateSetting('AI 翻译'),
   themeSetting('主题与色彩'),
   fontSetting('字体设定'),
   videoSetting('音视频设置'),

@@ -105,6 +105,12 @@ List<SettingsModel> get extraSettings => [
         .put(SettingBoxKey.pgcSkipType, value.index)
         .whenComplete(setState),
   ),
+  NormalModel(
+    title: uiTx('AI 视频总结'),
+    leading: const Icon(Icons.auto_awesome),
+    getSubtitle: () => uiTx('配置 OpenAI 兼容 API 和提示词模板'),
+    onTap: (context, _) => Get.toNamed('/aiSetting'),
+  ),
   SplitModel(
     normalModel: NormalModel.split(
       title: uiTx('检查未读动态'),

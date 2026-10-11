@@ -70,7 +70,7 @@ class _SettingPageState extends State<SettingPage> {
     ),
     _SettingsModel(
       type: SettingType.aiTranslateSetting,
-      subtitle: 'AI 接入、视频总结与界面翻译的集中配置入口',
+      subtitle: '翻译引擎、应用语言与界面翻译',
       icon: Icon(Icons.auto_awesome),
     ),
     _SettingsModel(
@@ -100,7 +100,7 @@ class _SettingPageState extends State<SettingPage> {
     ),
     _SettingsModel(
       type: SettingType.extraSetting,
-      subtitle: '震动、搜索、收藏、ai、评论、代理、更新检查等',
+      subtitle: '震动、搜索、收藏、ai视频总结、评论、代理、更新检查等',
       icon: Icon(Icons.extension_outlined),
     ),
     _SettingsModel(
