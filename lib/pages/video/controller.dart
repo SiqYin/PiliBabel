@@ -942,10 +942,16 @@ class VideoDetailController extends GetxController
   /// 网速撑不住当前码率时自动降画质，并从当前进度重新打开。返回 false 表示已是
   /// 最低档，交给播放器走下一级兜底。
   ///
-  /// [ratio] ≈ 实测吞吐 ÷ 当前码率（播放器侧按「内容推进 ÷ 实际经过」测得），
-  /// 用它**一步算出**目标档位：可持续码率 ≈ 当前码率 × ratio。一档一档挪的话，
-  /// 从 8K 降到 1080P 要 6 轮、每轮还有冷却，用户得先卡好几分钟——这里直接跳。
-  /// 只降不升；留 0.8 安全系数（宁低勿高，免得刚降完还是卡）。
+  /// [ratio] ≈ 实测吞吐 ÷ 当前码率（播放器侧按「内容推进 ÷ 实际经过」测得）。
+  /// 现在**只用于日志**：降档已经改成逐级降，不再拿它一步算出目标档位。
+  ///
+  /// **一次只降一档**（用户明确要求：4K 不能一口气拉到 720P）。
+  ///
+  /// 这里曾经用 ratio 一步跳到「撑得住的最高档」，理由是逐级降要好几轮、每轮还有
+  /// 冷却、用户得先卡好几分钟。但那会让画质断崖式下跌，用户也不知道该在哪一档
+  /// 叫停。逐级降配合「正在降码率」提示窗和「关闭降码率」按钮，观感可控得多；
+  /// 而且播放器侧把**连续降档的冷却从 25s 缩到 10s**，所以逐级降不会拖成好几分钟。
+  /// 只降不升。
   Future<bool> tryLowerQuality([double ratio = 1.0]) async {
     if (isFileSource) {
       return false;
@@ -969,26 +975,12 @@ class VideoDetailController extends GetxController
       return false;
     }
 
-    int next = lowerCodes.first; // 兜底：最低档
-    final curBandwidth = bandwidthOf[cur.code] ?? 0;
-    if (curBandwidth > 0) {
-      final sustainable =
-          curBandwidth * ratio.clamp(0.05, 1.0) * 0.8;
-      int? best;
-      for (final c in lowerCodes) {
-        // lowerCodes 升序，一路取到最后一个满足的 = 撑得住的最高档
-        if ((bandwidthOf[c] ?? 0) <= sustainable) {
-          best = c;
-        }
-      }
-      if (best != null) {
-        next = best;
-      }
-    }
+    // 升序表的最后一个 = 紧邻当前档位的**下一档**，一次只走一级台阶
+    final next = lowerCodes.last;
 
     // 记住「这次降级之前用的是哪一档」，供网速恢复后升回去。
-    // 用 ??= 而不是 =：连续降级时保留**最初**那一档，否则会被中间档覆盖，
-    // 最终只能升回倒数第二档、回不到用户原本选的画质。
+    // 只在**换到另一个视频**（cid 变了）时才覆盖：逐级降会连续记好几次，
+    // 每次都覆盖的话最终只剩倒数第二档，回不到用户原本选的那一档。
     if (_qaBeforeDowngradeCid != cid.value) {
       _qaBeforeDowngrade = cur.code;
       _qaBeforeDowngradeCid = cid.value;
@@ -1012,7 +1004,7 @@ class VideoDetailController extends GetxController
 
   /// [_qaBeforeDowngrade] 属于哪个 cid。页面在「连播/切分P」时会复用同一个
   /// controller，只比对 cid 才知道记忆是否过期 —— 不清理的话，上一个视频留下的
-  /// 目标档位会让新视频第一次降级时**记不进去**（下面用 `??=` 不覆盖旧值），
+  /// 目标档位会让新视频第一次降级时**记不进去**（下面只在 cid 变化时才覆盖），
   /// 结果新视频永远升不回自己原本选的画质。
   int? _qaBeforeDowngradeCid;
 
