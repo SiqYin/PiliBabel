@@ -274,6 +274,13 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 参数 ≈ 实测吞吐 ÷ 当前码率，供实现方直接算出目标档位
   Future<bool> Function(double ratio)? onNeedLowerQuality;
 
+  /// 稳定一段时间后「把画质升回去」的回调（由视频页实现）。
+  ///
+  /// 降码率是「退一步」，网速恢复了不升回去，用户会一直停在低画质 ——
+  /// 官方也是双向的。返回 true 表示已升档并重新打开媒体。
+  /// 由实现方保证**一次只升一档**（一上来跳回原档又卡，比不升更糟）。
+  Future<bool> Function()? onNeedRestoreQuality;
+
   /// 镜像
   late final RxBool flipX = false.obs;
 
@@ -305,19 +312,29 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       // 换成错误图标 + 「加载失败，点击重试」（点击即 refreshPlayer 重试）。
       dataStatus.value == DataStatus.error;
 
-  /// mpv `cache-buffering-state`（0~100）：网络流的缓冲填充进度。
+  /// 加载指示器上显示的百分比（0~99）；-1 表示当前没有有效值。
   ///
-  /// -1 表示当前没有有效值（本地文件没有这个属性、属性读取失败、或指示器
-  /// 未显示）。加载指示器显示期间由 [_startCacheFillPolling] 每 250ms 刷新；
-  /// 隐藏时复位为 -1，避免上一次卡顿的残留值被当成当前进度。
+  /// 数据源是 mpv 的 `cache-buffering-state`，但**不能直接拿它当进度条** ——
+  /// 它是「当前缓存填充度」，有两个致命性质（实测）：
+  /// * **会回落**：播放一边消费一边填，数值会往下掉（11% → 6%），进度条来回跳；
+  /// * **到 100 不代表能播**：100 只表示缓存填满，此时画面可能仍未开始，
+  ///   于是出现「跳到 100% 然后卡住」。
+  ///
+  /// 所以这里做两件事：**单调化**（同一轮加载内只增不减）和**封顶 99**
+  /// （100% 留给真正开始播放那一刻，而那时指示器本身也就消失了）。
+  /// 一轮加载结束（指示器隐藏）时复位，下一轮从 0 重新递增。
   final RxInt cacheFill = (-1).obs;
   Timer? _cacheFillTimer;
 
+  /// 本轮加载里见过的最大填充度，用于单调化显示。
+  int _loadPercentPeak = 0;
+
   void _startCacheFillPolling() {
     _cacheFillTimer ??= Timer.periodic(const Duration(milliseconds: 250), (_) {
-      // 指示器没显示时不采样，防止两次卡顿之间残留旧值
+      // 指示器没显示 = 本轮加载结束：复位，避免下一轮接着上一轮的峰值继续涨
       if (!showLoadIndicator) {
         if (cacheFill.value != -1) cacheFill.value = -1;
+        _loadPercentPeak = 0;
         return;
       }
       final player = _videoPlayerController;
@@ -326,9 +343,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         final v = int.tryParse(
           player.getProperty('cache-buffering-state').trim(),
         );
-        if (v != null && v >= 0 && v <= 100 && v != cacheFill.value) {
-          cacheFill.value = v;
-        }
+        if (v == null || v < 0 || v > 100) return;
+        if (v > _loadPercentPeak) _loadPercentPeak = v;
+        // 封顶 99：见上方注释，100 不作为「加载进度」展示
+        final shown = _loadPercentPeak > 99 ? 99 : _loadPercentPeak;
+        if (shown != cacheFill.value) cacheFill.value = shown;
       } catch (_) {
         // 本地文件 / 属性不可用：保持 -1，界面退回旧的「已缓冲/总时长」算法
       }
@@ -1388,9 +1407,20 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 冷却 60s→25s、窗口内上限 4→8：官方卡顿时切换得比这快得多，而我们此前
   /// 60 秒才允许动一次，用户早就手动退出了。上限仍在，且梯子用尽后会置
   /// [_escalationExhausted] 彻底停手，不会无限重开。
+  /// 稳定多久才尝试把画质升回去（秒）。太短会在「降→升→又卡→再降」之间来回抖，
+  /// 所以给足 2 分钟：能撑住 2 分钟才认为网速是真的恢复了。
+  static const int _restoreAfterSec = 120;
+
   static const int _recoverCooldownSec = 25;
   static const int _recoverWindowSec = 600;
   static const int _recoverWindowMax = 8;
+
+  /// 稳定计时（秒）：只有持续不卡才累加，一卡就清零。
+  int _restoreTicks = 0;
+
+  /// 是否处于「降过码率、正等网速恢复后升回去」的状态。
+  /// 没降过就不该去升，避免把用户手动选的档位也擅自改动。
+  bool _restorePending = false;
 
   void _startStallWatchdog() {
     _stallTimer?.cancel();
@@ -1402,6 +1432,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     _lastEffRatio = 1.0;
     _switchesSinceQuality = 0;
     _escalationExhausted = false;
+    _restoreTicks = 0;
+    _restorePending = false;
     _startPos = position.value; // 开播前先记下起始位置
     _stallTimer = Timer.periodic(
       const Duration(seconds: _stallTickSec),
@@ -1479,6 +1511,19 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     final starving = isBuffering.value || buffered.value <= 0;
     if (!starving) {
       _stallTicks = 0;
+      // 稳定时长累计 → 够久就把画质升回去（只对「降过码率」的情况做，
+      // 不会去动用户手动选的档位）。升完清除挂起状态；若因此又卡，
+      // 卡顿阶梯会重新降档并再次挂起，形成有节制的双向调节。
+      if (_restorePending) {
+        if (++_restoreTicks * _stallTickSec >= _restoreAfterSec) {
+          _restoreTicks = 0;
+          _restorePending = false;
+          final restore = onNeedRestoreQuality;
+          if (restore != null) {
+            unawaited(restore());
+          }
+        }
+      }
       if (++_healthyTicks >= 30) {
         _healthyTicks = 0;
         _recoveriesInWindow = 0; // 已稳定 60 秒：之后的新问题可以重新处理
@@ -1486,6 +1531,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       return;
     }
     _healthyTicks = 0;
+    _restoreTicks = 0; // 一卡就清零：必须「连续稳定」才算网速恢复
     _stallTicks++;
     if (_stallTicks * _stallTickSec < _recoverAfterSec) {
       return; // 前 20 秒只等不重开
@@ -1579,6 +1625,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       }
       if (lowered) {
         _switchesSinceQuality = 0;
+        // 记下「降过码率」：之后稳定够久就尝试升回去
+        _restorePending = true;
+        _restoreTicks = 0;
         _showQualityLoweredTip();
         return;
       }

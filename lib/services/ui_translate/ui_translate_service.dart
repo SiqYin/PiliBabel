@@ -298,6 +298,15 @@ class UiTranslateService extends GetxService {
     // 避免 GetX “空 Obx” 运行时报错；开启时则据此在译文回来后刷新。
     revision.value;
     if (!enabled) return src;
+    // 纯空白同样算「没有可翻的东西」——**不能只判 isEmpty**。
+    //
+    // 只判空串会漏掉「只有空格 / 换行 / 零宽字符」的内容，而模型收到这样的
+    // user 消息时会回一句**元信息**而不是译文（实测原文：
+    // 「（ユーザーからのメッセージが空であるため、翻訳できません。）」）。
+    // 那句话是非空的，于是被当成译文写进缓存、显示在评论区里 —— 用户看到的就是
+    // 「译文里混进了模型自己的说明」。这是本问题在接入内置引擎**之前**就存在的
+    // 原因：它与提示词放在 system 还是 user 无关，纯属空输入没拦住。
+    if (src.trim().isEmpty) return src;
     // 目标语言就是原文语言（简体中文）时：**完全不调我们自己配置的 API**。
     //
     // B 站是大陆平台，绝大多数内容本来就是简体中文，"简体中文 → 简体中文"没有
@@ -470,11 +479,29 @@ class UiTranslateService extends GetxService {
   /// 提示词刻意贴着官方文档给的模板写：单条、点明目标语言、要求直接输出译文。
   /// 不做 JSON 数组解析（只需要模型吐一段纯文本），出错面积因此小得多 —— 这是
   /// 「求稳」的取舍。字形归一化仍保留：简体/繁體目标由客户端兜底纠正。
+  /// 模型回了「说明/拒绝」而不是译文。
+  ///
+  /// 命中率优先于覆盖率：只收几个特征明确的元信息说法，**故意不去匹配「翻译」
+  /// 这个词本身** —— 正常的评论完全可能就是在讲翻译这件事，那样会误伤。
+  /// 误判的代价也只是「保留原文」，比把模型的说明当成译文显示要轻。
+  static final _metaReplyRegExp = RegExp(
+    r'翻訳できません|翻訳することができません|翻訳はできません'
+    r'|无法翻译|不能翻译|翻译不了|無法翻譯|無法翻訳'
+    r'|メッセージが空|消息为空|内容为空|文本为空|入力が空|内容が空',
+  );
+
+  static bool _looksLikeMetaReply(String s) => _metaReplyRegExp.hasMatch(s);
+
   Future<List<String>> _builtinTranslate(List<String> sources) async {
     final lang = targetLang;
     final rule = currentLanguage.scriptRule;
     final results = <String>[];
     for (final src in sources) {
+      // 没有可翻内容的条目**原样返回、绝不发请求**（理由见 _tx 里对纯空白的说明）
+      if (src.trim().isEmpty) {
+        results.add(src);
+        continue;
+      }
       final buf = StringBuffer();
       await for (final chunk in AiChatService.streamChat(
         messages: [
@@ -505,7 +532,9 @@ class UiTranslateService extends GetxService {
         buf.write(chunk);
       }
       final out = buf.toString().trim();
-      results.add(out.isEmpty ? src : out);
+      // 安全网：模型偶尔不回译文、而是回一句元信息（如「消息为空，无法翻译」）。
+      // 那句话会被当成译文存下来并显示在评论里，宁可保留原文也不显示这种噪音。
+      results.add(out.isEmpty || _looksLikeMetaReply(out) ? src : out);
     }
     return _normalizeScripts(results, currentLanguage.script);
   }

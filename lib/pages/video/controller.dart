@@ -458,6 +458,7 @@ class VideoDetailController extends GetxController
       await playerInit();
     };
     plPlayerController.onNeedLowerQuality = tryLowerQuality;
+    plPlayerController.onNeedRestoreQuality = tryRestoreQuality;
 
     // 开启新视频时，如果存在前代播放器的应用内小窗，则按播放上下文决定是否重置旧状态
     // 避免不同视频/分P之间 SponsorBlock 片段状态污染，同时保留同上下文无缝恢复能力
@@ -985,6 +986,14 @@ class VideoDetailController extends GetxController
       }
     }
 
+    // 记住「这次降级之前用的是哪一档」，供网速恢复后升回去。
+    // 用 ??= 而不是 =：连续降级时保留**最初**那一档，否则会被中间档覆盖，
+    // 最终只能升回倒数第二档、回不到用户原本选的画质。
+    if (_qaBeforeDowngradeCid != cid.value) {
+      _qaBeforeDowngrade = cur.code;
+      _qaBeforeDowngradeCid = cid.value;
+    }
+
     if (kDebugMode) {
       debugPrint(
         '[VideoDetail] throughput ratio=$ratio -> lower quality '
@@ -994,6 +1003,63 @@ class VideoDetailController extends GetxController
     plPlayerController.cacheVideoQa = next;
     currentVideoQa.value = VideoQuality.fromCode(next);
     updatePlayer();
+    return true;
+  }
+
+  /// 降码率之前用的档位。稳定一段时间后按原路一档一档升回去；
+  /// null 表示当前没有待恢复的降级。
+  int? _qaBeforeDowngrade;
+
+  /// [_qaBeforeDowngrade] 属于哪个 cid。页面在「连播/切分P」时会复用同一个
+  /// controller，只比对 cid 才知道记忆是否过期 —— 不清理的话，上一个视频留下的
+  /// 目标档位会让新视频第一次降级时**记不进去**（下面用 `??=` 不覆盖旧值），
+  /// 结果新视频永远升不回自己原本选的画质。
+  int? _qaBeforeDowngradeCid;
+
+  /// 网速恢复后把画质升回去（由播放器在「连续稳定足够久」时回调）。
+  ///
+  /// **一次只升一档**而不是直接跳回原档：直接跳回去，网络若只是短暂好转就会
+  /// 立刻又卡，用户看到画质反复横跳，比一直停在低画质更糟。升一档后重新观察，
+  /// 够稳就再升下一档，所以最终仍能回到原画质。
+  Future<bool> tryRestoreQuality() async {
+    if (isFileSource) {
+      return false;
+    }
+    final target = _qaBeforeDowngrade;
+    final videos = data.dash?.video;
+    final cur = currentVideoQa.value;
+    if (target == null || videos == null || videos.isEmpty || cur == null) {
+      return false;
+    }
+    if (cur.code >= target) {
+      _qaBeforeDowngrade = null; // 已经回到原档
+      return false;
+    }
+    // 候选：所有高于当前、且不高于原档的档位，取最低的那个 = 上一档
+    final higher =
+        videos
+            .map((v) => v.id)
+            .where((c) => c > cur.code && c <= target)
+            .toSet()
+            .toList()
+          ..sort();
+    if (higher.isEmpty) {
+      _qaBeforeDowngrade = null;
+      return false;
+    }
+    final next = higher.first;
+    if (kDebugMode) {
+      debugPrint(
+        '[VideoDetail] stable -> restore quality ${cur.code} -> $next '
+        '(target $target)',
+      );
+    }
+    plPlayerController.cacheVideoQa = next;
+    currentVideoQa.value = VideoQuality.fromCode(next);
+    updatePlayer();
+    if (next >= target) {
+      _qaBeforeDowngrade = null; // 已回到原档，收工
+    }
     return true;
   }
 
@@ -1816,6 +1882,7 @@ class VideoDetailController extends GetxController
   void onClose() {
     plPlayerController.onNeedsPlayerInit = null;
     plPlayerController.onNeedLowerQuality = null;
+    plPlayerController.onNeedRestoreQuality = null;
     if (isEnteringPip) {
       // 正在进入小窗，保留资源
       return;
