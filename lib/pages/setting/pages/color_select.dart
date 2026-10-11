@@ -196,7 +196,15 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
           Padding(
             padding: padding + const .all(12),
             child: Obx(
-              () => Wrap(
+              () => Column(
+                children: [
+                  // 动态取色开启时，选颜色不会生效（配色由系统壁纸决定）。
+                  // 淡化色块给出「此时无效」的暗示 —— 之前没有任何提示，
+                  // 用户点了半天没反应，根本不知道是在做无用功。
+                  AnimatedOpacity(
+                    opacity: ctr.dynamicColor.value ? 0.35 : 1,
+                    duration: const Duration(milliseconds: 200),
+                    child: Wrap(
                   alignment: .center,
                   spacing: 22,
                   runSpacing: 18,
@@ -233,6 +241,18 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
                       );
                     },
                   ).toList(),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    // 走 uiTx：这句要在界面翻译开启时一并被翻译
+                    uiTx('打开动态取色后，选择颜色方案无效'),
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.outline,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
