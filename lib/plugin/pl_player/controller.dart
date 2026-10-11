@@ -1413,7 +1413,17 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   static const int _recoverCooldownSec = 25;
   static const int _recoverWindowSec = 600;
-  static const int _recoverWindowMax = 8;
+
+  /// 窗口内自动动作次数上限。降档改成**逐级**之后需要的动作变多
+  /// （4K→720P 是 4 级台阶，前面还可能先换几次线），8 次会在降到目标前就被
+  /// 卡住，所以放宽到 14；梯子用尽仍会置 [_escalationExhausted] 彻底停手。
+  static const int _recoverWindowMax = 14;
+
+  /// **连续降档**之间的冷却（秒），比通用冷却 25s 短得多。
+  ///
+  /// 用户要求「一层一层往下降」，而通用冷却会让 4K→720P 的四级台阶拖两分钟，
+  /// 那比一次性跳下去还难受。上一动作是降档时改用这个更短的间隔。
+  static const int _downgradeStepCooldownSec = 10;
 
   /// 稳定计时（秒）：只有持续不卡才累加，一卡就清零。
   int _restoreTicks = 0;
@@ -1421,6 +1431,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 是否处于「降过码率、正等网速恢复后升回去」的状态。
   /// 没降过就不该去升，避免把用户手动选的档位也擅自改动。
   bool _restorePending = false;
+
+  /// 上一次自动动作是不是「降档」。决定下一次动作用长冷却还是短冷却。
+  bool _lastActionWasDowngrade = false;
 
   void _startStallWatchdog() {
     _stallTimer?.cancel();
@@ -1434,6 +1447,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     _escalationExhausted = false;
     _restoreTicks = 0;
     _restorePending = false;
+    _lastActionWasDowngrade = false;
     _startPos = position.value; // 开播前先记下起始位置
     _stallTimer = Timer.periodic(
       const Duration(seconds: _stallTickSec),
@@ -1452,7 +1466,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     if (_recoveriesInWindow >= _recoverWindowMax) {
       return false;
     }
-    return now - _lastRecoveryMs >= _recoverCooldownSec * 1000;
+    // 上一动作是降档 → 走更短的冷却，让逐级降能较快走完，不至于拖成好几分钟
+    final cooldownSec = _lastActionWasDowngrade
+        ? _downgradeStepCooldownSec
+        : _recoverCooldownSec;
+    return now - _lastRecoveryMs >= cooldownSec * 1000;
   }
 
   void _checkPlaybackStall() {
@@ -1592,7 +1610,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   /// 分级自救：
   /// ① （仅实验开关打开时）换 B 站已下发的下一条线路；
-  /// ② 按实测吞吐把画质**一步降到撑得住的那一档**（真正解决"带宽 < 码率"）；
+  /// ② 把画质**逐级降一档**（真正解决"带宽 < 码率"；用户要求一层一层降，
+  ///    不再一步跳到目标档），连续降档之间用更短的冷却；
   /// ③ 已到最低档时重取一次 playurl，然后彻底停止自动动作。
   ///
   /// [ratio] ≈ 实测吞吐 ÷ 当前码率，用来直接算出目标档位；缺省 1.0（退化成降一档）。
@@ -1614,6 +1633,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
           _switchesSinceQuality < candidates - 1) {
         if (await _switchToNextLine(toast: uiTx('当前线路过慢，已切换到备用线路'))) {
           _switchesSinceQuality++;
+          _lastActionWasDowngrade = false;
           return;
         }
       }
@@ -1628,11 +1648,14 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         // 记下「降过码率」：之后稳定够久就尝试升回去
         _restorePending = true;
         _restoreTicks = 0;
+        // 下一次自动动作走**短冷却**：逐级降要连续走好几级台阶
+        _lastActionWasDowngrade = true;
         _showQualityLoweredTip();
         return;
       }
       // ③ 无线路可换且已到最低画质：重取一次 playurl（可能拿到另一批地址）后停手
       SmartDialog.showToast(uiTx('视频缓冲中断，正在重新获取播放地址'));
+      _lastActionWasDowngrade = false;
       await onNeedsPlayerInit?.call();
       _escalationExhausted = true;
     } catch (_) {
