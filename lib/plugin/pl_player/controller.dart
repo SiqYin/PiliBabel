@@ -1154,6 +1154,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       if (Pref.autoPlayAdjust &&
           await _switchToNextLine(
             toast: uiTx('当前线路不可用，已切换到备用线路'),
+            requireProbe: true,
           )) {
         dataStatus.value = DataStatus.loaded;
         onInit?.call();
@@ -1407,6 +1408,10 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 冷却 60s→25s、窗口内上限 4→8：官方卡顿时切换得比这快得多，而我们此前
   /// 60 秒才允许动一次，用户早就手动退出了。上限仍在，且梯子用尽后会置
   /// [_escalationExhausted] 彻底停手，不会无限重开。
+  /// 「画面冻住但音频照走」持续多久才动手（秒）。给足 10 秒：个别拍子采不到
+  /// 新帧是正常的，不宜立刻动作；而真死掉时用户等 10 秒就会看到自愈。
+  static const int _frozenVideoAfterSec = 10;
+
   /// 稳定多久才尝试把画质升回去（秒）。太短会在「降→升→又卡→再降」之间来回抖，
   /// 所以给足 2 分钟：能撑住 2 分钟才认为网速是真的恢复了。
   static const int _restoreAfterSec = 120;
@@ -1435,6 +1440,12 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 上一次自动动作是不是「降档」。决定下一次动作用长冷却还是短冷却。
   bool _lastActionWasDowngrade = false;
 
+  /// 上一次采样到的播放位置，用于判断「位置是否仍在推进」（音频是否还活着）。
+  Duration _livenessPos = Duration.zero;
+
+  /// 连续检测到「位置在走、但不出画」的拍数。
+  int _frozenVideoTicks = 0;
+
   void _startStallWatchdog() {
     _stallTimer?.cancel();
     _stallTicks = 0;
@@ -1448,6 +1459,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     _restoreTicks = 0;
     _restorePending = false;
     _lastActionWasDowngrade = false;
+    _frozenVideoTicks = 0;
+    _livenessPos = position.value;
     _startPos = position.value; // 开播前先记下起始位置
     _stallTimer = Timer.periodic(
       const Duration(seconds: _stallTickSec),
@@ -1524,6 +1537,12 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     }
     // ①「这条线带得动吗」：断续抖动（播 1~2 秒卡好几秒）只能靠吞吐比识别
     _checkLineThroughput();
+    // ①b 视频轨「假活」。**必须单独一条判据**：下面那条 starving 判据结构上
+    // 覆盖不到它 —— 音频还在走时 paused-for-cache 为假、前向缓冲也正常，
+    // 于是「画面冻住、声音照走、完全没有提示」会一直持续下去。
+    if (_checkVideoTrackFrozen()) {
+      return; // 已触发恢复
+    }
     // ② 连续饿死判据：mpv 报缓冲中，或前向缓冲已被抽干。position 不作判据——音频还在走时
     // position 照常推进，那恰恰是"画面停住、音频继续"的形态。
     final starving = isBuffering.value || buffered.value <= 0;
@@ -1563,6 +1582,69 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 最近一个吞吐窗口测得的「内容推进 ÷ 实际经过」，1.0 = 完全跟得上。
   /// 硬饿死分支没有自己的窗口数据，就用这个最近值来算目标档位。
   double _lastEffRatio = 1.0;
+
+  /// 视频轨「假活」检测：位置在推进（音频正常）但不再输出新画面。
+  ///
+  /// 返回 true 表示已触发恢复。
+  ///
+  /// **与「缓冲饿死」是不同的故障**：音频分片和视频分片是两条独立的请求，
+  /// 视频那条被拒（403 / 分片损坏）时音频完全不受影响 —— 于是
+  /// `paused-for-cache` 为假、`buffered` 正常、`position` 照常前进，
+  /// 上面那条 starving 判据一个都不成立，看门狗永远不动作。用户看到的就是
+  /// 「画面卡死、声音照走、进度条还能拖、全程没有任何提示」。
+  ///
+  /// 判据用 mpv 的 `estimated-vf-fps`（**实测输出帧率**，真在出画时约等于
+  /// container-fps，画面冻住时为 0）。拿不到这个属性时不做判定，宁可漏报也
+  /// 不误报 —— 误报会去换线/降码率，代价比漏报大。
+  bool _checkVideoTrackFrozen() {
+    if (onlyPlayAudio.value) {
+      _frozenVideoTicks = 0;
+      return false;
+    }
+    final pos = position.value;
+    final advanced = pos > _livenessPos + const Duration(milliseconds: 300);
+    _livenessPos = pos;
+    if (!advanced) {
+      // 位置没动：音频也停了，那是缓冲/暂停一类的问题，交给既有判据
+      _frozenVideoTicks = 0;
+      return false;
+    }
+    double vfps = -1;
+    try {
+      final raw = _videoPlayerController
+          ?.getProperty('estimated-vf-fps')
+          ?.trim();
+      if (raw != null && raw.isNotEmpty) {
+        vfps = double.tryParse(raw) ?? -1;
+      }
+    } catch (_) {
+      vfps = -1;
+    }
+    if (vfps < 0) {
+      _frozenVideoTicks = 0; // 属性不可用：不判定
+      return false;
+    }
+    if (vfps > 0.5) {
+      _frozenVideoTicks = 0; // 在出画，正常
+      return false;
+    }
+    _frozenVideoTicks++;
+    if (_frozenVideoTicks * _stallTickSec < _frozenVideoAfterSec) {
+      return false;
+    }
+    _frozenVideoTicks = 0;
+    if (!_canRecoverNow()) {
+      return false;
+    }
+    if (kDebugMode) {
+      debugPrint(
+        '[plPlayer] 视频轨假活：position 仍在推进但 estimated-vf-fps=$vfps，'
+        '按播放受阻处理',
+      );
+    }
+    unawaited(_recoverPlaybackStall(_lastEffRatio));
+    return true;
+  }
 
   /// 线路吞吐自检：窗口内「内容推进秒数 / 实际经过秒数」过低 = 这条线的带宽低于
   /// 码率，表现就是"播 1~2 秒、卡好几秒"并循环。连续两个窗口都不行才动手。
@@ -1628,9 +1710,12 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       // ① 先换线路（换遍为止）——只在实验开关打开时做
       final src = dataSource;
       final candidates = src is NetworkSource ? src.videoUrls.length : 0;
+      // 换**两遍**候选线路之后才考虑降码率：用户明确要求「优先改线路、
+      // 多改几条、确定都不行再降画质」。只换一遍时，某条线可能只是临时抽风，
+      // 而降到低画质是不可逆的（回复要等稳定 2 分钟）。
       if (Pref.autoPlayAdjust &&
           candidates > 1 &&
-          _switchesSinceQuality < candidates - 1) {
+          _switchesSinceQuality < (candidates - 1) * 2) {
         if (await _switchToNextLine(toast: uiTx('当前线路过慢，已切换到备用线路'))) {
           _switchesSinceQuality++;
           _lastActionWasDowngrade = false;
@@ -1776,7 +1861,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   }
 
   /// 换到 B 站已下发的另一条已签名线路，从当前位置继续播
-  Future<bool> _switchToNextLine({String? toast}) async {
+  /// [requireProbe] 为真时**必须**有候选探测通过才切（用于「起播失败」那条路径：
+  /// 那里盲切可能连环失败）；为假（播放中卡顿）时探测只是「优先挑好的」。
+  Future<bool> _switchToNextLine({String? toast, bool requireProbe = false}) async {
     final src = dataSource;
     if (src is! NetworkSource) {
       return false;
@@ -1806,8 +1893,17 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         break;
       }
     }
+    // 一条都探不通时**仍然按顺序切下一条**（除非调用方要求必须探测通过）。
+    //
+    // 探测是「优先挑一条好的」，不是「禁止切换」：候选直链本来就是 B 站针对本机
+    // 分别签发的，换用其中一条不会让签名失效（真正危险的是改写主机，我们不那么做）。
+    // 若把探测当成硬门禁，一次探测误判（超时、Range 被拒）就会让流程直接跳到
+    // 「降码率」—— 而用户的明确要求是**先把线路换遍、都不行才降画质**。
     if (chosen == null) {
-      return false;
+      if (requireProbe) {
+        return false;
+      }
+      chosen = (_lineIndex + 1) % lines.length;
     }
     final next = chosen;
     _lineIndex = next;
