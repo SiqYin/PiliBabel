@@ -274,6 +274,12 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 参数 ≈ 实测吞吐 ÷ 当前码率，供实现方直接算出目标档位
   Future<bool> Function(double ratio)? onNeedLowerQuality;
 
+  /// 返回**下一档更低画质**的描述（如「720P 高清」），已是最低档时返回 null。
+  ///
+  /// 降档改成「询问用户」之后，提示语里要写出目标档位，而画质列表只有视频页
+  /// 知道，所以由视频页提供这个查询。
+  String? Function()? describeNextLowerQuality;
+
   /// 稳定一段时间后「把画质升回去」的回调（由视频页实现）。
   ///
   /// 降码率是「退一步」，网速恢复了不升回去，用户会一直停在低画质 ——
@@ -1447,6 +1453,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 连续检测到「位置在走、但不出画」的拍数。
   int _frozenVideoTicks = 0;
 
+  /// 本视频内已弹出过几次「是否降画质」询问。上限 2 次 —— 用户拒绝了就别反复
+  /// 骚扰；接受后清零（说明愿意配合）。换视频时重置。
+  int _lowerPromptCount = 0;
+  static const int _lowerPromptMax = 2;
+
   /// 已确认「不可用」的候选线路下标。
   ///
   /// 两种来源：探测没通过（探不通）、以及**切过去之后确实不出画**（视频轨死掉，
@@ -1471,6 +1482,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     _frozenVideoTicks = 0;
     // 换视频就换了候选列表，下标不再对应：黑名单必须清空
     _badLineIndexes.clear();
+    _lowerPromptCount = 0;
     _livenessPos = position.value;
     _startPos = position.value; // 开播前先记下起始位置
     _stallTimer = Timer.periodic(
@@ -1738,23 +1750,23 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
           return;
         }
       }
-      // ② 线路都带不动（或不允许换线）→ 按实测吞吐降码率
-      final lower = onNeedLowerQuality;
-      var lowered = false;
-      if (lower != null) {
-        lowered = await lower(ratio);
-      }
-      if (lowered) {
-        _switchesSinceQuality = 0;
-        // 记下「降过码率」：之后稳定够久就尝试升回去
-        _restorePending = true;
-        _restoreTicks = 0;
-        // 下一次自动动作走**短冷却**：逐级降要连续走好几级台阶
-        _lastActionWasDowngrade = true;
-        _showQualityLoweredTip();
+      // ② 线路都带不动 → **询问用户**是否降画质，不强制降。
+      //
+      // 官方网页端的做法就是提示「是否降到 720P 高清」，用户点了才降；我们原来
+      // 是直接降，属于替用户做了不可逆的决定（降到低画质后要等稳定 2 分钟才回升）。
+      // 改成只提示、由用户决定：不点（或点「暂不」）就保持当前画质。
+      _lastActionWasDowngrade = false; // 本次没降档，下次仍走通用冷却
+      // 受设置项控制：关掉「询问是否降画质」就完全不打扰用户（纯手动）
+      final nextDesc = Pref.autoLowerQuality
+          ? describeNextLowerQuality?.call()
+          : null;
+      if (nextDesc != null && _lowerPromptCount < _lowerPromptMax) {
+        _lowerPromptCount++;
+        _showLowerQualityPrompt(ratio, nextDesc);
         return;
       }
-      // ③ 无线路可换且已到最低画质：重取一次 playurl（可能拿到另一批地址）后停手
+      // ③ 无可降档位（已是最高可用）/ 询问已达上限 / 无询问能力：
+      //    重取一次 playurl（可能拿到另一批地址）后停手
       SmartDialog.showToast(uiTx('视频缓冲中断，正在重新获取播放地址'));
       _lastActionWasDowngrade = false;
       await onNeedsPlayerInit?.call();
@@ -1771,23 +1783,23 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     }
   }
 
-  /// 降码率时的提示小窗：一句说明 + 一个「关闭降码率」按钮。
+  /// 询问用户「是否降到 <下一档>」。
   ///
-  /// 官方播放器降码率是**静默**的，用户只会突然发现画面变糊却不知道原因。
-  /// 这里给一个既可见又能关的入口：点「关闭降码率」即把自动降码率关掉
-  /// （写进设置，与 设置 → 播放器设置 里那个开关同一份状态），之后不再自动降。
+  /// **不强制降画质**：官方网页端就是提示一句「是否降到 720P 高清」，用户点了才降。
+  /// 我们原来直接降，等于替用户做了不可逆的决定（降到低画质后要等稳定 2 分钟
+  /// 才会自动升回去）。现在只提示、由用户定：不点或点「暂不」就保持当前画质。
   ///
   /// 两个细节：
-  /// * 停留 8 秒（用户要求 5~10 秒之间），`usePenetrate` 让点击穿透，
-  ///   不挡播放器的手势与控件；
-  /// * 内容包一层 `Obx` —— 弹窗只构建一次，译文晚到时若没有响应式依赖就不会
-  ///   重建，用户会一直看到源文案（这正是弹幕那个弹窗踩过的坑）。`uiTx` 会读
-  ///   revision，所以包上之后译文一到就刷新。
-  void _showQualityLoweredTip() {
+  /// * 停留 10 秒后自动消失（等同于「暂不」，即不降画质）；`usePenetrate` 让点击
+  ///   穿透，不挡播放器的手势与控件；
+  /// * 文案用 `uiTxP` 而不是先拼字符串再 `uiTx` —— 后者会让每个不同的清晰度名
+  ///   变成一个新 key，翻译缓存永远命不中；内容再包一层 `Obx`，弹窗只构建一次，
+  ///   译文晚到时没有响应式依赖就不会重建（弹幕那个弹窗踩过同样的坑）。
+  void _showLowerQualityPrompt(double ratio, String nextDesc) {
     SmartDialog.show(
       usePenetrate: true,
       clickMaskDismiss: false,
-      displayTime: const Duration(seconds: 8),
+      displayTime: const Duration(seconds: 10),
       alignment: Alignment.bottomCenter,
       builder: (context) => Obx(() {
         final theme = Theme.of(context);
@@ -1806,23 +1818,41 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
               const SizedBox(width: 10),
               Flexible(
                 child: Text(
-                  uiTx('正在降码率'),
+                  uiTxP('当前网速带不动该画质，是否降到 {0}？', [nextDesc]),
                   style: theme.textTheme.bodyMedium?.copyWith(color: onSurface),
                 ),
               ),
               TextButton(
                 onPressed: () {
-                  // 关掉的是「自动降码率」本身，与设置页开关同一份状态
-                  Pref.autoLowerQuality = false;
                   SmartDialog.dismiss();
+                  // 用户同意降档：才真正执行（一次只降一档，见 tryLowerQuality）
+                  _lowerPromptCount = 0; // 愿意配合，不再限制询问次数
+                  unawaited(_applyLowerQuality(ratio));
                 },
-                child: Text(uiTx('关闭降码率')),
+                child: Text(uiTxP('降到 {0}', [nextDesc])),
+              ),
+              TextButton(
+                onPressed: SmartDialog.dismiss,
+                child: Text(uiTx('暂不')),
               ),
             ],
           ),
         );
       }),
     );
+  }
+
+  /// 用户点了「降到 xxx」之后真正执行降档，并记下状态供之后自动升回去。
+  Future<void> _applyLowerQuality(double ratio) async {
+    final lower = onNeedLowerQuality;
+    if (lower == null) return;
+    if (!await lower(ratio)) return;
+    _switchesSinceQuality = 0;
+    // 记下「降过码率」：之后稳定够久就尝试升回去
+    _restorePending = true;
+    _restoreTicks = 0;
+    // 下一次自动动作走**短冷却**：逐级降要连续走好几级台阶
+    _lastActionWasDowngrade = true;
   }
 
   /// 换线前的可用性预检：对候选直链发一次 Range 探测，只取 1 字节。
