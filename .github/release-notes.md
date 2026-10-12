@@ -1,6 +1,8 @@
-### PiliBabel v1.6.0
+### PiliBabel v1.6.1
 
-- **Settings got tidier.** 「AI 功能」 is now 「AI 翻译」, and it holds the translation settings only — the 「AI 界面翻译」 sub-heading is gone, because the page title already says it.
-- **「AI 视频总结」 moved back to 我的 → 设置 → 其它设置** (the same place as PiliNara), between 「番剧片头/片尾跳过类型」 and 「检查未读动态」. It opens the existing AI 视频总结设置 page: master switch, API config, model picker and prompt templates.
+- **Fixed: sound playing over a black picture.** One of Bilibili's CDN hosts was truncating the video segment mid-response (measured: 835 KB of a 956.9 MB file, and 3.7 MB of a 284.8 MB file). ffmpeg treats that as end-of-file, so the video track simply stops — no packets, no frames — while the audio, a separate stream, keeps playing. These errors used to be logged and nothing else.
+- **Bad hosts are now remembered by host, not by line index.** The same host often sits at several positions in the candidate list, so banning an index still landed on the same machine — that is why reloading never helped. A truncated response now blacklists that host, and line switching skips it.
+- **Network streams reconnect instead of ending.** `--stream-lavf-o=reconnect=1,reconnect_streamed=1,reconnect_delay_max=10` resumes the download with a Range request rather than treating the cut connection as a finished file.
+- Recovery now starts the moment a truncation is seen, instead of waiting for the watchdog to conclude the video track is frozen.
 
 Downloads are below.
