@@ -1621,8 +1621,12 @@ class VideoDetailController extends GetxController
                     (await FlutterVolumeController.getVolume() ?? 0.0) <= 0.0)
             ? 1
             : 0,
+      SubtitlePrefType.followLanguage => await _followLanguageIndex(),
     };
     if (!isClosed) await setSubtitle(idx);
+    if (Pref.subtitlePreferenceV2 == SubtitlePrefType.followLanguage) {
+      await _attachCompanionSubtitle(idx);
+    }
   }
 
   // 设定字幕轨道
@@ -1686,6 +1690,70 @@ class VideoDetailController extends GetxController
       vttSubtitles[subIdx] = subtitle;
     }
     return subtitle.isData ? 'memory://${subtitle.id}' : subtitle.id;
+  }
+
+  /// 「跟随界面语言」：挑一条与当前界面语言一致的轨（1-based，0 = 关闭）。
+  ///
+  /// 界面语言取 [Pref.uiTranslateLang] —— 界面翻译关掉时界面本身就是简体中文，
+  /// 所以那时按 `zh-CN` 算，而不是按那个可能已被改成英语的配置值。
+  ///
+  /// 挑不到一致语言的轨时**退回**「静音时开第一条」的旧规则：宁可显示一条语言
+  /// 不对的字幕，也比什么都不显示强 —— 官方 APP 在没有译文轨时也是照原样显示。
+  Future<int> _followLanguageIndex() async {
+    if (subtitles.isEmpty) {
+      return 0;
+    }
+    final target = Pref.uiTranslateEnabled ? Pref.uiTranslateLang : 'zh-CN';
+    var best = -1;
+    var bestScore = 0;
+    for (var i = 0; i < subtitles.length; i++) {
+      final score = Subtitle.langScore(subtitles[i].lan, target);
+      if (score > bestScore) {
+        bestScore = score;
+        best = i;
+      }
+    }
+    if (best >= 0) {
+      return best + 1;
+    }
+    return !subtitles.first.lan.startsWith('ai') ||
+            (PlatformUtils.isMobile &&
+                (await FlutterVolumeController.getVolume() ?? 0.0) <= 0.0)
+        ? 1
+        : 0;
+  }
+
+  /// 跟随界面语言时的「双语」补位：主轨与别的轨不同语言时，把另一条挂成副字幕。
+  ///
+  /// 对齐官方 APP 的双语字幕（界面英语 → 主字幕英文、副字幕中文）。两个约束：
+  /// 只补**空位**（副字幕原本关闭时才动，绝不覆盖用户已选好的副字幕）；同语言
+  /// 多条时优先挑中文 —— B 站内容绝大多数以中文为原文。
+  Future<void> _attachCompanionSubtitle(int mainIdx) async {
+    if (mainIdx <= 0 ||
+        vttSecondarySubtitlesIndex.value != 0 ||
+        vttSubtitlesIndex.value != mainIdx) {
+      return;
+    }
+    final mainTag = subtitles[mainIdx - 1].langTag;
+    // 主轨已经就是排序后的第一条（通常即原文语言）时不补双语：官方 APP 的双语
+    // 是「译文 + 原文」，原文当主字幕时再挂一条同语言副字幕没有意义。
+    if (mainTag.isEmpty || mainTag == subtitles.first.langTag) {
+      return;
+    }
+    var best = -1;
+    for (var i = 0; i < subtitles.length; i++) {
+      if (i == mainIdx - 1 || subtitles[i].langTag == mainTag) {
+        continue;
+      }
+      if (best == -1 ||
+          (subtitles[i].langTag == 'zh' && subtitles[best].langTag != 'zh')) {
+        best = i;
+      }
+    }
+    if (best == -1 || isClosed) {
+      return;
+    }
+    await setSecondarySubtitle(best + 1);
   }
 
   // interactive video
@@ -1856,8 +1924,12 @@ class VideoDetailController extends GetxController
                     (await FlutterVolumeController.getVolume() ?? 0.0) <= 0.0)
             ? 1
             : 0,
+      .followLanguage => await _followLanguageIndex(),
     };
     await setSubtitle(idx);
+    if (Pref.subtitlePreferenceV2 == SubtitlePrefType.followLanguage) {
+      await _attachCompanionSubtitle(idx);
+    }
   }
 
   void updateMediaListHistory(int aid) {
