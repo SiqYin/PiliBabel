@@ -869,6 +869,7 @@ class VideoDetailController extends GetxController
       urls,
       isAudio: isAudio,
       nativeOrder: data.isAppSource,
+      excludeHosts: VideoUtils.badHosts,
     );
   }
 

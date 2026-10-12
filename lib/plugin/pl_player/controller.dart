@@ -1333,6 +1333,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     }
   }
 
+  static const String _lavfReconnect =
+      'reconnect=1,reconnect_streamed=1,reconnect_delay_max=10';
+
   late final buffer = Pref.initBuffer(_playbackSpeed.value);
   late final liveBuffer = Pref.initLiveBuffer();
 
@@ -1372,6 +1375,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         ...liveBuffer
       else
         ...buffer,
+      if (dataSource is NetworkSource) 'stream-lavf-o': _lavfReconnect,
     };
 
     if (dataSource case NetworkSource(:final videoUrls) when videoUrls.length > 1) {
@@ -1489,6 +1493,37 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 全部候选都在黑名单里时清空重来（网络可能只是临时抽风）。
   final Set<int> _badLineIndexes = <int>{};
 
+  String? get _currentVideoUrl {
+    final src = dataSource;
+    if (src is! NetworkSource) {
+      return null;
+    }
+    final urls = src.videoUrls;
+    if (urls.isEmpty) {
+      return null;
+    }
+    final idx = _lineIndex;
+    if (idx < 0 || idx >= urls.length) {
+      return null;
+    }
+    return urls[idx];
+  }
+
+  static bool _isStreamTruncated(String event) {
+    if (event.contains('Stream ends prematurely') ||
+        event.contains('Error reading HTTP response')) {
+      return true;
+    }
+    const marker = ', size ';
+    if (event.startsWith('Seek failed (to ') && event.contains(marker)) {
+      final tail = event.substring(event.lastIndexOf(marker) + marker.length);
+      final cut = tail.indexOf(')');
+      final size = int.tryParse(cut < 0 ? tail.trim() : tail.substring(0, cut));
+      return size != null && size > 0 && size < 4096;
+    }
+    return false;
+  }
+
   void _startStallWatchdog() {
     _stallTimer?.cancel();
     _stallTicks = 0;
@@ -1507,6 +1542,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     videoStalled.value = false;
     // 换视频就换了候选列表，下标不再对应：黑名单必须清空
     _badLineIndexes.clear();
+    VideoUtils.clearBadHosts();
     _lowerPromptCount = 0;
     _livenessPos = position.value;
     _startPos = position.value; // 开播前先记下起始位置
@@ -1724,6 +1760,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     // 当前这条线极可能就是罪魁（视频分片被拒、音频分片正常）：先拉黑，
     // 这样接下来的换线不会再切回它 —— 否则会在同一条坏线上反复黑屏。
     _badLineIndexes.add(_lineIndex);
+    VideoUtils.markBadHost(_currentVideoUrl);
     if (kDebugMode) {
       debugPrint(
         '[plPlayer] 视频轨假活：position 仍在推进但 estimated-vf-fps=$vfps，'
@@ -1998,11 +2035,17 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     if (_badLineIndexes.length >= lines.length) {
       _badLineIndexes.clear();
     }
+    if (VideoUtils.badHosts.length >= lines.length) {
+      VideoUtils.clearBadHosts();
+    }
     int? chosen;
     for (var i = 1; i < lines.length; i++) {
       final idx = (_lineIndex + i) % lines.length;
       if (_badLineIndexes.contains(idx)) {
         continue; // 已知不可用：别再切过去（切过去就是黑屏）
+      }
+      if (VideoUtils.badHosts.contains(VideoUtils.hostOf(lines[idx]))) {
+        continue; // 同一台坏主机在别的下标上：换过去等于没换
       }
       if (await _probeLine(lines[idx])) {
         chosen = idx;
@@ -2024,7 +2067,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       int? fallback;
       for (var i = 1; i < lines.length; i++) {
         final idx = (_lineIndex + i) % lines.length;
-        if (!_badLineIndexes.contains(idx)) {
+        if (!_badLineIndexes.contains(idx) &&
+            !VideoUtils.badHosts.contains(VideoUtils.hostOf(lines[idx]))) {
           fallback = idx;
           break;
         }
@@ -2244,6 +2288,17 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
                   refreshPlayer();
                 }
               });
+            },
+          );
+        } else if (_isStreamTruncated(event)) {
+          EasyThrottle.throttle(
+            'controllerStreamTruncated',
+            const Duration(seconds: 10),
+            () {
+              VideoUtils.markBadHost(_currentVideoUrl);
+              if (_canRecoverNow()) {
+                unawaited(_recoverPlaybackStall(_lastEffRatio));
+              }
             },
           );
         } else if (event.startsWith('Could not open codec')) {

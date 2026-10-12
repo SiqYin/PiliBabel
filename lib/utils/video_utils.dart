@@ -44,11 +44,17 @@ abstract final class VideoUtils {
   );
 
   /// 从候选直链中挑第一个"海外可用"的现成地址（不改写主机，避免签名失效）
-  static String? _firstOverseasUrl(Iterable<String> urls) {
+  static String? _firstOverseasUrl(
+    Iterable<String> urls, {
+    Set<String>? excludeHosts,
+  }) {
     for (final url in urls) {
       final uri = Uri.tryParse(url);
       final host = uri?.host;
       if (host == null || host.isEmpty) {
+        continue;
+      }
+      if (excludeHosts != null && excludeHosts.contains(host)) {
         continue;
       }
       if (_overseasHostRegex.hasMatch(host)) {
@@ -133,6 +139,46 @@ abstract final class VideoUtils {
   static bool get downloadPreferAkamai =>
       CdnRegionResolver.effective.preferOverseas;
 
+  /// 本次播放内被判定为「坏节点」的主机（响应被服务端截断，见 [markBadHost]）。
+  ///
+  /// 故障是**主机级**的：某条 CDN 地址会把视频分片截断（ffmpeg 报
+  /// `Stream ends prematurely`，或重试只回几百字节），而**同一个主机常出现在
+  /// 候选列表的多个下标上** —— 只按下标拉黑，换线仍会落回同一台机器。
+  static final Set<String> badHosts = <String>{};
+
+  static String? hostOf(String? url) {
+    if (url == null || url.isEmpty) {
+      return null;
+    }
+    final host = Uri.tryParse(url)?.host;
+    return (host == null || host.isEmpty) ? null : host;
+  }
+
+  static void markBadHost(String? url) {
+    final host = hostOf(url);
+    if (host != null) {
+      badHosts.add(host);
+    }
+  }
+
+  static void clearBadHosts() => badHosts.clear();
+
+  static String _firstUsable(Iterable<String> urls, {Set<String>? excludeHosts}) {
+    final list = urls.toList();
+    if (list.isEmpty) {
+      return '';
+    }
+    if (excludeHosts != null && excludeHosts.isNotEmpty) {
+      for (final url in list) {
+        final host = hostOf(url);
+        if (host == null || !excludeHosts.contains(host)) {
+          return url;
+        }
+      }
+    }
+    return list.first;
+  }
+
   /// [customHost] 显式指定自定义节点（节点测速用）；未传时按 [applyCustomCDN]
   /// 决定是否采用全局自定义节点。全局自定义生效时完全旁路枚举语义。
   /// [nativeOrder] 为真时**不改写主机**，只在 B 站已下发的候选里挑：
@@ -144,6 +190,7 @@ abstract final class VideoUtils {
   /// 有效性 —— 海外用户必须挑，否则会拿到对境外限速的大陆镜像。
   static String getCdnUrl(
     Iterable<String> urls, {
+    Set<String>? excludeHosts,
     CDNService? defaultCDNService,
     String? customHost,
     bool applyCustomCDN = true,
@@ -164,12 +211,12 @@ abstract final class VideoUtils {
       //
       // 大陆用户保持原样（第一条就是 B 站按 IP 就近的结果），行为不变。
       if (CdnRegionResolver.effective.preferOverseas) {
-        final overseas = _firstOverseasUrl(urls);
+        final overseas = _firstOverseasUrl(urls, excludeHosts: excludeHosts);
         if (overseas != null) {
           return overseas;
         }
       }
-      return urls.first;
+      return _firstUsable(urls, excludeHosts: excludeHosts);
     }
     defaultCDNService ??= cdnService;
     customHost ??= applyCustomCDN ? customCDNUrl : null;
@@ -188,14 +235,14 @@ abstract final class VideoUtils {
       // **只在用户确实位于海外时才这样挑**：大陆镜像对大陆用户最快，
       // 强挑海外地址反而会落到更远的边缘节点 —— 那正是「每隔几秒卡一下」
       // 的成因之一。地区由 `CdnRegionResolver` 自动识别（可手动指定）。
-      final overseas = _firstOverseasUrl(urls);
+      final overseas = _firstOverseasUrl(urls, excludeHosts: excludeHosts);
       if (overseas != null) {
         return overseas;
       }
     }
 
     if (customHost == null && defaultCDNService == CDNService.baseUrl) {
-      return urls.first;
+      return _firstUsable(urls, excludeHosts: excludeHosts);
     }
 
     String? mcdnTf;
