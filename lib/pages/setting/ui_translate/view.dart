@@ -343,32 +343,25 @@ final int kOfficialLanguageCount =
 final int kUnofficialLanguageCount =
     appLanguages.where((e) => !e.official).length;
 
-/// 选择器的行：`(语言, 是否该变体组的基准条目)`。
-///
-/// 官方把地区 / 字形变体拆成了独立条目（阿拉伯语 5 条、库尔德语 3 条…），
-/// 这里**只调整展示顺序**把变体并到基准条目后面，**不合并任何条目**
-/// —— 就是「从分不从合」：清单里一个都不少，只是看起来成组。
-final List<(AppLanguage, bool)> _pickerRows = () {
-  final groups = <String, List<AppLanguage>>{};
-  final order = <String>[];
+// 列表顺序：1.0.0 之前内置的那 29 种（还没接 B 站官方翻译时的清单）按当年的
+// 先后排在最前，其余按原有顺序（英文名 A–Z）跟在后面。常用语言始终在列表上方，
+// 不用滚就能点到。
+const List<String> _legacyLanguageOrder = <String>[
+  'zh-CN', 'zh-TW', 'en', 'ja', 'ko', 'yue-Hans', 'yue-Hant', 'wuu-Hans',
+  'wuu-Hant', 'nan-CN', 'nan-TW', 'ar', 'fil', 'fr', 'de', 'he', 'hmn', 'id',
+  'it', 'ms', 'mn', 'ru', 'es', 'th', 'bo', 'tr', 'ug', 'vi', 'za',
+];
+
+final List<AppLanguage> _pickerRows = () {
+  final legacy = <AppLanguage>[];
+  final rest = <AppLanguage>[];
   for (final l in appLanguages) {
-    final key = l.variantOf ?? l.name;
-    (groups[key] ??= <AppLanguage>[]).add(l);
-    if (!order.contains(key)) order.add(key);
+    (_legacyLanguageOrder.contains(l.code) ? legacy : rest).add(l);
   }
-  final rows = <(AppLanguage, bool)>[];
-  for (final key in order) {
-    final group = groups[key]!;
-    if (group.length == 1) {
-      rows.add((group.first, false));
-      continue;
-    }
-    for (final l in group) {
-      // 组内基准条目（没有 variantOf 的那个）当组头，加粗且不缩进。
-      rows.add((l, l.variantOf == null));
-    }
-  }
-  return rows;
+  legacy.sort((a, b) => _legacyLanguageOrder
+      .indexOf(a.code)
+      .compareTo(_legacyLanguageOrder.indexOf(b.code)));
+  return <AppLanguage>[...legacy, ...rest];
 }();
 
 /// 翻译引擎选择器（内置官方模型 / 自备 API）。
@@ -403,9 +396,21 @@ Future<String?> promptAppLanguagePicker(
   BuildContext context,
   String selectedCode,
 ) {
+  var query = '';
   return showDialog<String>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
+    builder: (dialogContext) => StatefulBuilder(
+      builder: (dialogContext, setState) {
+        // 搜索：按自称名过滤，한국어 / français 这种直接能搜到。
+        final q = query.trim().toLowerCase();
+        final rows = q.isEmpty
+            ? _pickerRows
+            : _pickerRows
+                .where((l) =>
+                    l.name.toLowerCase().contains(q) ||
+                    l.code.toLowerCase().contains(q))
+                .toList();
+        return AlertDialog(
       title: Obx(() {
         UiTranslateService.to.revision.value;
         return Text(uiTx('选择应用语言'));
@@ -413,8 +418,36 @@ Future<String?> promptAppLanguagePicker(
       content: SizedBox(
         width: double.maxFinite,
         height: MediaQuery.sizeOf(dialogContext).height * 0.62,
-        child: ListView.builder(
-          itemCount: _pickerRows.length + 1,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Obx(() {
+              UiTranslateService.to.revision.value;
+              return TextField(
+                decoration: InputDecoration(
+                  isDense: true,
+                  prefixIcon: const Icon(Icons.search, size: 20),
+                  hintText: uiTx('搜索语言的自称名，例如 한국어、français'),
+                  border: const OutlineInputBorder(),
+                ),
+                onChanged: (v) => setState(() => query = v),
+              );
+            }),
+            Padding(
+              padding: const EdgeInsets.only(top: 6, bottom: 8),
+              child: Obx(() {
+                UiTranslateService.to.revision.value;
+                return Text(
+                  uiTx('按该语言的自称名检索：想找韩语就输 한국어，想找法语就输 français。'),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(context).colorScheme.outline,
+                      ),
+                );
+              }),
+            ),
+            Expanded(
+              child: ListView.builder(
+          itemCount: rows.length + 1,
           itemBuilder: (context, index) {
             // 第 0 项是覆盖范围说明，跟着列表一起滚。
             if (index == 0) {
@@ -446,7 +479,7 @@ Future<String?> promptAppLanguagePicker(
                 ),
               );
             }
-            final (language, isFamilyBase) = _pickerRows[index - 1];
+            final language = rows[index - 1];
             final selected = language.code == selectedCode;
             // 整行包 Obx。**这一步不能省**：下面的 uiTx 是异步拿译文的，没有 Obx 的话
             // 这一行只在构建那一刻取一次值，译文晚到就永远停在原文上 —— 而「哪一行
@@ -473,24 +506,19 @@ Future<String?> promptAppLanguagePicker(
                         color: Theme.of(context).colorScheme.error,
                       ),
                     ),
-                contentPadding: EdgeInsets.only(
-                  left: isFamilyBase ? 16 : 36,
-                  right: 16,
-                ),
-                title: Text(
-                  language.name,
-                  style: isFamilyBase
-                      ? const TextStyle(fontWeight: FontWeight.w600)
-                      : null,
-                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+                title: Text(language.name),
                 trailing: selected ? const Icon(Icons.check) : null,
                 onTap: () => Navigator.pop(dialogContext, language.code),
               );
             });
-          },
-        ),
+              },
+            ),
+          ),
+        ],
       ),
-      actions: [
+    ),
+    actions: [
         TextButton(
           onPressed: () => Navigator.pop(dialogContext),
           child: Obx(() {
@@ -499,6 +527,8 @@ Future<String?> promptAppLanguagePicker(
           }),
         ),
       ],
+    );
+      },
     ),
   );
 }
