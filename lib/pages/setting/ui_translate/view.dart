@@ -452,10 +452,15 @@ Future<String?> promptAppLanguagePicker(
             // 这一行只在构建那一刻取一次值，译文晚到就永远停在原文上 —— 而「哪一行
             // 恰好被重建过」取决于滚动时机，于是会出现「同为官方清单外，這行翻了、
             // 那行没翻」的随机现象。
-            return Obx(
+            return Obx(() {
+              // 官方条目的 subtitle 是 null，行内一次 uiTx 都不调，也就是这个 Obx
+              // 里没有任何 observable。GetX 4.7.2 下这种行会在构建时抛错，而 release
+              // 不弹红屏、只静默丢行 —— 官方那 151 种语言于是整批从列表里消失，
+              // 只剩清单外那 6 种。所以这里也要显式读一次 revision。
+              UiTranslateService.to.revision.value;
               // Language names are autonyms; keep them literal instead of asking
               // the selected target language to translate the language selector.
-              () => ListTile(
+              return ListTile(
               dense: true,
               selected: selected,
               // 官方清单外的几种提醒一句：它们能选，但想要好效果得自备模型。
@@ -480,8 +485,8 @@ Future<String?> promptAppLanguagePicker(
                 ),
                 trailing: selected ? const Icon(Icons.check) : null,
                 onTap: () => Navigator.pop(dialogContext, language.code),
-              ),
-            );
+              );
+            });
           },
         ),
       ),
