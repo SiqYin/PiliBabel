@@ -1,8 +1,10 @@
-### PiliBabel v1.6.1
+### PiliBabel v1.6.2
 
-- **Fixed: sound playing over a black picture.** One of Bilibili's CDN hosts was truncating the video segment mid-response (measured: 835 KB of a 956.9 MB file, and 3.7 MB of a 284.8 MB file). ffmpeg treats that as end-of-file, so the video track simply stops — no packets, no frames — while the audio, a separate stream, keeps playing. These errors used to be logged and nothing else.
-- **Bad hosts are now remembered by host, not by line index.** The same host often sits at several positions in the candidate list, so banning an index still landed on the same machine — that is why reloading never helped. A truncated response now blacklists that host, and line switching skips it.
-- **Network streams reconnect instead of ending.** `--stream-lavf-o=reconnect=1,reconnect_streamed=1,reconnect_delay_max=10` resumes the download with a Range request rather than treating the cut connection as a finished file.
-- Recovery now starts the moment a truncation is seen, instead of waiting for the watchdog to conclude the video track is frozen.
+- **Subtitles can now follow your interface language.** Bilibili delivers auto-translated subtitles as *separate tracks the server has already generated* — the official FAQ describes ASR on the foreign-language audio and then a machine translation on top (Chinese → English/Thai/Indonesian/Vietnamese, English/Japanese/Korean → Chinese), and they show up in the subtitle menu as 「中文（自动翻译）」. So the official app's "set the interface to English and the English subtitles turn on" is just picking the matching track on the client; there is no translation API to call and nothing extra to pay for.
+- **New subtitle preference: 「跟随界面语言」** (我的 → 设置 → 播放设置 → 字幕偏好). An English interface picks the English track, a Japanese one the Japanese track. It is appended at the end of the enum, so the three existing preferences keep their stored values and behave exactly as they did.
+- **Matching is deliberately tolerant.** Bilibili writes the same language in several shapes (`zh-CN`, `zh-Hans`, `ai-zh`), so tracks are scored rather than compared: exact match, same language, same language but a different Chinese script, or no match. Simplified Chinese no longer loses to a Traditional track merely because the string differs.
+- **Dual subtitles come along for free.** When the chosen track is a translation rather than the original, the other track is attached as the secondary subtitle — the same English-over-Chinese pairing the official app calls 双语字幕. It only ever fills an empty slot, so a secondary subtitle you picked yourself is never overwritten.
+- If nothing matches your interface language, the old rule still applies (first track, unless it is an AI track and the device is not muted), so you get a subtitle rather than none.
+- One limit worth stating plainly: the interface language cannot conjure up a track the server never sent — this only chooses among the tracks Bilibili already delivers.
 
 Downloads are below.
