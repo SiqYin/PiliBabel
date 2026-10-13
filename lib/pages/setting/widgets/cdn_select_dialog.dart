@@ -400,7 +400,7 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
               M3eOptionItem(
                 selected: true,
                 selectionControl: true,
-                title: Text(CdnNodeStore.labelOf(customHost) ?? uiTx('自定义节点')),
+                title: Text(CdnNodeStore.labelOf(customHost) ?? '自定义节点'),
                 subtitle: Text(
                   customHost,
                   maxLines: 1,

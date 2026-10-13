@@ -176,7 +176,7 @@ class _CdnNodeDialogState extends State<CdnNodeDialog> {
     final textTheme = TextTheme.of(context);
     return AlertDialog(
       clipBehavior: Clip.hardEdge,
-      title: Text(uiTx(widget.isLive ? uiTx('选择直播节点') : uiTx('选择节点'))),
+      title: Text(uiTx(widget.isLive ? '选择直播节点' : '选择节点')),
       constraints: const BoxConstraints.tightFor(width: 320),
       contentPadding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
       content: FutureBuilder(

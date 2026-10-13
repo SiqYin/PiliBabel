@@ -90,9 +90,138 @@ class SearchArchiveGrpc extends StatelessWidget {
                               height: maxHeight,
                             ),
                             if (item.isPugv)
-                              PBadge(
-                                text: uiTx('课堂'),
+                              const PBadge(
+                                text: '课堂',
                                 top: 6.0,
                                 right: 6.0,
                               ),
-                 
+                            if (arc.duration > Int64.ZERO)
+                              PBadge(
+                                text: DurationUtils.formatDuration(
+                                  arc.duration.toInt(),
+                                ),
+                                right: 6.0,
+                                bottom: 6.0,
+                                type: PBadgeType.gray,
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  content(context, regTitle),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 12,
+            width: 29,
+            height: 29,
+            child: StaticPopupMenuButton(
+              padding: EdgeInsets.zero,
+              icon: Icon(
+                Icons.more_vert_outlined,
+                color: Theme.of(context).colorScheme.outline,
+                size: 17,
+              ),
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  height: 45,
+                  onTap: () => Utils.copyText(bvid),
+                  child: Row(
+                    spacing: 6,
+                    children: [
+                      const Icon(CustomIcons.identifier_circle, size: 16),
+                      Text(bvid, style: const TextStyle(fontSize: 13)),
+                    ],
+                  ),
+                ),
+                PopupMenuItem(
+                  height: 45,
+                  onTap: () => UserHttp.toViewLater(bvid: bvid),
+                  child: Row(
+                    spacing: 6,
+                    children: [
+                      Icon(MdiIcons.clockTimeEightOutline, size: 16),
+                      Text(uiTx('稍后再看'), style: TextStyle(fontSize: 13)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget content(
+    BuildContext context,
+    List<({bool isEm, String text})> regTitle,
+  ) {
+    final arc = item.archive;
+    final theme = Theme.of(context);
+    String pubdate = DateFormatUtils.dateFormat(arc.pubdate.toInt());
+    if (pubdate != '') pubdate += '  ';
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Text.rich(
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
+              TextSpan(
+                children: regTitle
+                    .map(
+                      (e) => TextSpan(
+                        text: e.text,
+                        style: TextStyle(
+                          fontSize: theme.textTheme.bodyMedium!.fontSize,
+                          height: 1.42,
+                          letterSpacing: 0.3,
+                          color: e.isEm
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.onSurface,
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
+          ),
+          Text(
+            "$pubdate${remarkedName(
+              arc.author.mid.toInt(),
+              arc.author.name,
+            )}",
+            maxLines: 1,
+            style: TextStyle(
+              fontSize: 12,
+              height: 1,
+              color: theme.colorScheme.outline,
+              overflow: TextOverflow.clip,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Row(
+            spacing: 8,
+            children: [
+              StatWidget(
+                type: StatType.play,
+                value: arc.stat.view,
+              ),
+              StatWidget(
+                type: StatType.danmaku,
+                value: arc.stat.danmaku,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}

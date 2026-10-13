@@ -131,7 +131,158 @@ class VideoCardV extends StatelessWidget {
                             :final canPlay,
                           ) when canPlay != 1)
                             const PBadge(
-                              text: uiTx('充电专属'),
+                              text: '充电专属',
                               top: 6,
                               right: 6,
-                              size: .sm
+                              size: .small,
+                              type: .error,
+                              fontSize: 10,
+                            ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                content(context),
+              ],
+            ),
+          ),
+        ),
+        if (videoItem.goto == 'av')
+          Positioned(
+            right: -5,
+            bottom: -2,
+            width: 29,
+            height: 29,
+            child: VideoPopupMenu(
+              iconSize: 17,
+              videoItem: videoItem,
+              onRemove: onRemove,
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget content(BuildContext context) {
+    final theme = Theme.of(context);
+    return Expanded(
+      child: Padding(
+        padding: const .fromLTRB(6, 5, 6, 5),
+        child: Column(
+          crossAxisAlignment: .start,
+          children: [
+            Expanded(
+              child: Obx(
+                () => Text(
+                  uiTx(videoItem.title),
+                  maxLines: 2,
+                  overflow: .ellipsis,
+                  style: const TextStyle(height: 1.38),
+                ),
+              ),
+            ),
+            videoStat(theme),
+            Row(
+              spacing: 2,
+              children: [
+                if (videoItem.goto == 'bangumi')
+                  PBadge(
+                    text: videoItem.pgcBadge,
+                    isStack: false,
+                    size: .small,
+                    type: .line_primary,
+                    fontSize: 9,
+                  ),
+                if (Pref.showRcmdReason && videoItem.rcmdReason != null)
+                  PBadge(
+                    text: videoItem.rcmdReason,
+                    isStack: false,
+                    size: .small,
+                    type: .secondary,
+                  ),
+                if (videoItem.goto == 'picture')
+                  const PBadge(
+                    text: '动态',
+                    isStack: false,
+                    size: .small,
+                    type: .line_primary,
+                    fontSize: 9,
+                  ),
+                if (Pref.showRcmdReason && videoItem.isFollowed)
+                  const PBadge(
+                    text: '已关注',
+                    isStack: false,
+                    size: .small,
+                    type: .secondary,
+                  ),
+                Expanded(
+                  flex: 1,
+                  child: Obx(
+                    () => Text(
+                      remarkedName(
+                        videoItem.owner.mid,
+                        uiTx(videoItem.owner.name.toString()),
+                      ),
+                      maxLines: 1,
+                      overflow: .clip,
+                      semanticsLabel: 'UP：${remarkedName(
+                        videoItem.owner.mid,
+                        uiTx(videoItem.owner.name.toString()),
+                      )}',
+                      style: TextStyle(
+                        height: 1.5,
+                        fontSize: theme.textTheme.labelMedium!.fontSize,
+                        color: theme.colorScheme.outline,
+                      ),
+                    ),
+                  ),
+                ),
+                if (videoItem.goto == 'av') const SizedBox(width: 10),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static final shortFormat = DateFormat('M-d');
+  static final longFormat = DateFormat('yy-M-d');
+
+  Widget videoStat(ThemeData theme) {
+    return Row(
+      children: [
+        StatWidget(
+          type: .play,
+          value: videoItem.stat.view,
+        ),
+        if (videoItem.goto != 'picture') ...[
+          const SizedBox(width: 4),
+          StatWidget(
+            type: .danmaku,
+            value: videoItem.stat.danmu,
+          ),
+        ],
+        if (videoItem is RcmdVideoItemModel) ...[
+          const Spacer(),
+          Text.rich(
+            maxLines: 1,
+            TextSpan(
+              style: TextStyle(
+                fontSize: theme.textTheme.labelSmall!.fontSize,
+                color: theme.colorScheme.outline.withValues(alpha: 0.8),
+              ),
+              text: DateFormatUtils.dateFormat(
+                videoItem.pubdate,
+                short: shortFormat,
+                long: longFormat,
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
+        ],
+      ],
+    );
+  }
+}

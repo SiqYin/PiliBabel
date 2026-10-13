@@ -378,7 +378,7 @@ class _WhisperDetailPageState
                       ? Icons.send
                       : Icons.add_photo_alternate_outlined,
                 ),
-                tooltip: enablePublish ? uiTx('发送') : uiTx('图片'),
+                tooltip: enablePublish ? '发送' : '图片',
               );
             },
           ),

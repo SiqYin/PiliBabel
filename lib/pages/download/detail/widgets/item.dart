@@ -565,7 +565,7 @@ class DetailItem extends StatelessWidget {
                       }
                       showConfirmDialog(
                         context: menuContext,
-                        title: Text(deleteConfirmText ?? uiTx('确定删除该视频？')),
+                        title: Text(deleteConfirmText ?? '确定删除该视频？'),
                         onConfirm: onDelete,
                       );
                     },
@@ -579,7 +579,7 @@ class DetailItem extends StatelessWidget {
                         entry: entry,
                         isUpdate: true,
                       );
-                      SmartDialog.showToast(res ? uiTx('更新成功') : uiTx('更新失败'));
+                      SmartDialog.showToast(res ? '更新成功' : '更新失败');
                     },
                   ),
               ],

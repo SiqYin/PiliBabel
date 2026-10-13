@@ -244,7 +244,7 @@ mixin FavMixin on TripleMixin {
           if (result.isSuccess) {
             updateFavCount(hasFav ? -1 : 1);
             this.hasFav.toggle();
-            SmartDialog.showToast(hasFav ? uiTx('已从默认收藏夹中移除') : uiTx('已加入默认收藏夹'));
+            SmartDialog.showToast(hasFav ? '已从默认收藏夹中移除' : '已加入默认收藏夹');
           } else {
             res.toast();
           }

@@ -465,7 +465,7 @@ abstract class CommonRichTextPubPageState<T extends CommonRichTextPubPage>
     () {
       final isEmoji = panelType.value == PanelType.emoji;
       return ToolbarIconButton(
-        tooltip: isEmoji ? uiTx('输入') : uiTx('表情'),
+        tooltip: isEmoji ? '输入' : '表情',
         onPressed: () => updatePanelType(isEmoji ? .keyboard : .emoji),
         icon: isEmoji
             ? const Icon(Icons.keyboard, size: 22)
@@ -486,7 +486,7 @@ abstract class CommonRichTextPubPageState<T extends CommonRichTextPubPage>
     () {
       final isMore = panelType.value == PanelType.more;
       return ToolbarIconButton(
-        tooltip: isMore ? uiTx('输入') : uiTx('更多'),
+        tooltip: isMore ? '输入' : '更多',
         onPressed: () => updatePanelType(isMore ? .keyboard : .more),
         icon: isMore
             ? const Icon(Icons.keyboard, size: 22)

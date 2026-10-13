@@ -152,7 +152,169 @@ class HistoryItem extends StatelessWidget {
                               ),
                             if (item.isFav == 1)
                               const PBadge(
-                                text: uiTx('已收藏'),
+                                text: '已收藏',
                                 top: 6.0,
                                 right: 6.0,
-                               
+                                type: PBadgeType.gray,
+                              )
+                            else if (item.badge?.isNotEmpty == true)
+                              PBadge(
+                                text: item.badge,
+                                top: 6.0,
+                                right: 6.0,
+                                type: business == 'live' && item.liveStatus != 1
+                                    ? PBadgeType.gray
+                                    : PBadgeType.primary,
+                              ),
+                            if (hasDuration &&
+                                item.progress != null &&
+                                item.progress != 0)
+                              Positioned(
+                                left: 0,
+                                right: 0,
+                                bottom: 0,
+                                child: VideoProgressIndicator(
+                                  color: theme.colorScheme.primary,
+                                  backgroundColor:
+                                      theme.colorScheme.secondaryContainer,
+                                  progress: item.progress == -1
+                                      ? 1
+                                      : item.progress! / item.duration!,
+                                ),
+                              ),
+                            Positioned.fill(
+                              child: selectMask(
+                                theme.colorScheme,
+                                item.checked,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  content(theme),
+                ],
+              ),
+            ),
+            Positioned(
+              right: 12,
+              bottom: 0,
+              width: 29,
+              height: 29,
+              child: StaticPopupMenuButton(
+                padding: EdgeInsets.zero,
+                tooltip: uiTx('功能菜单'),
+                icon: Icon(
+                  Icons.more_vert_outlined,
+                  color: theme.colorScheme.outline,
+                  size: 18,
+                ),
+                itemBuilder: (_) => [
+                  if (item.authorMid != null &&
+                      item.authorName?.isNotEmpty == true)
+                    PopupMenuItem(
+                      onTap: () => Get.toNamed('/member?mid=${item.authorMid}'),
+                      height: 38,
+                      child: Row(
+                        children: [
+                          const Icon(
+                            MdiIcons.accountCircleOutline,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${uiTx('访问：')}${uiTx(item.authorName ?? '')}',
+                            style: const TextStyle(fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (business != 'pgc' &&
+                      item.badge != '番剧' &&
+                      item.tagName?.contains('动画') != true &&
+                      business != 'live' &&
+                      business?.contains('article') != true)
+                    PopupMenuItem(
+                      onTap: () =>
+                          UserHttp.toViewLater(bvid: item.history.bvid),
+                      height: 38,
+                      child: Row(
+                        children: [
+                          const Icon(Icons.watch_later_outlined, size: 16),
+                          const SizedBox(width: 6),
+                          Text(uiTx('稍后再看'), style: const TextStyle(fontSize: 13)),
+                        ],
+                      ),
+                    ),
+                  PopupMenuItem(
+                    onTap: () => onDelete(item.kid!, business!),
+                    height: 38,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.close_outlined, size: 16),
+                        const SizedBox(width: 6),
+                        Text(uiTx('删除记录'), style: const TextStyle(fontSize: 13)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget content(ThemeData theme) {
+    return Expanded(
+      child: Column(
+        spacing: 2,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            uiTx(item.title!),
+            style: TextStyle(
+              fontSize: theme.textTheme.bodyMedium!.fontSize,
+              height: 1.42,
+              letterSpacing: 0.3,
+            ),
+            maxLines: item.videos! > 1 ? 1 : 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          if (item.history.business == 'pgc' &&
+              item.showTitle?.isNotEmpty == true)
+            Text(
+              uiTx(item.showTitle!),
+              style: TextStyle(
+                fontSize: 13,
+                color: theme.colorScheme.outline,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          const Spacer(),
+          if (item.authorName?.isNotEmpty == true)
+            Text(
+              uiTx(item.authorName!),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: theme.textTheme.labelMedium!.fontSize,
+                color: theme.colorScheme.outline,
+              ),
+            ),
+          Text(
+            DateFormatUtils.chatFormat(item.viewAt!, isHistory: true),
+            style: TextStyle(
+              fontSize: theme.textTheme.labelMedium!.fontSize,
+              color: theme.colorScheme.outline,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

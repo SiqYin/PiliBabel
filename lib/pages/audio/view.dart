@@ -507,7 +507,7 @@ class _AudioPageState extends State<AudioPage> {
       context: context,
       builder: (context) => SelectDialog<int>(
         // SelectDialog 内部会对 title 再做一次 uiTx，这里传原文即可。
-        title: uiTx('音质'),
+        title: '音质',
         value: _controller.currentAudioQa.value.code,
         values: qualities.map((e) => (e.code, e.desc)).toList(),
       ),
@@ -836,7 +836,7 @@ class _AudioPageState extends State<AudioPage> {
               },
               selectStatus: false,
               semanticsLabel: uiTx('看MV'),
-              text: uiTx('看MV'),
+              text: '看MV',
             ),
         ],
       ),

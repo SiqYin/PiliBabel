@@ -126,7 +126,7 @@ class HistoryCardItem extends StatelessWidget {
                     // 右上角：直播状态 / 专栏标记 / pgc badge
                     if (_isLive)
                       PBadge(
-                        text: item.liveStatus == 1 ? uiTx('直播中') : uiTx('未开播'),
+                        text: item.liveStatus == 1 ? '直播中' : '未开播',
                         top: 6.0,
                         right: 6.0,
                         type: item.liveStatus == 1
@@ -135,6 +135,58 @@ class HistoryCardItem extends StatelessWidget {
                       )
                     else if (_isArticle)
                       const PBadge(
-                        text: uiTx('专栏'),
+                        text: '专栏',
                         top: 6.0,
-                   
+                        right: 6.0,
+                        type: PBadgeType.secondary,
+                      )
+                    else if (item.badge?.isNotEmpty == true)
+                      PBadge(
+                        text: item.badge,
+                        top: 6.0,
+                        right: 6.0,
+                        type: PBadgeType.primary,
+                      ),
+                    // 右下角：视频进度（只显示角标文字，无进度条）
+                    if (_isVideo && hasDuration)
+                      PBadge(
+                        text: item.progress == -1
+                            ? '已看完'
+                            : '${DurationUtils.formatDuration(item.progress)}/${DurationUtils.formatDuration(item.duration)}',
+                        right: 6.0,
+                        bottom: 6.0,
+                        type: PBadgeType.gray,
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          // 标题
+          SizedBox(
+            width: _cardWidth,
+            child: Text(
+              ' ${uiTx(item.title ?? '')}',
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: theme.textTheme.bodySmall,
+            ),
+          ),
+          // 副标题（作者名 / showTitle）
+          SizedBox(
+            width: _cardWidth,
+            child: Text(
+              ' ${uiTx(item.authorName ?? item.showTitle ?? '')}',
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+              style: theme.textTheme.labelSmall!.copyWith(
+                color: theme.colorScheme.outline,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

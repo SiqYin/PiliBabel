@@ -170,7 +170,7 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: <Widget>[
-                        Text(isDialogue ? uiTx('对话列表') : uiTx('评论详情')),
+                        Text(isDialogue ? '对话列表' : '评论详情'),
                         IconButton(
                           tooltip: uiTx('关闭'),
                           icon: const Icon(Icons.close, size: 20),

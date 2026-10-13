@@ -384,7 +384,7 @@ abstract final class RequestUtils {
                               ),
                       ),
                       TextSpan(
-                        text: uiTx(' 动态检查结果'),
+                        text: ' 动态检查结果',
                         style: TextStyle(color: color),
                       ),
                     ],
@@ -416,7 +416,7 @@ abstract final class RequestUtils {
     final status = like?.status ?? false;
 
     if (status ^ uiStatus) {
-      SmartDialog.showToast(status ? uiTx('点赞成功') : uiTx('取消赞'));
+      SmartDialog.showToast(status ? '点赞成功' : '取消赞');
       onSuccess();
       return;
     }
@@ -426,7 +426,7 @@ abstract final class RequestUtils {
       up: status ? 2 : 1, // 1 已点赞 2 不喜欢 0 未操作
     );
     if (res.isSuccess) {
-      SmartDialog.showToast(status ? uiTx('取消赞') : uiTx('点赞成功'));
+      SmartDialog.showToast(status ? '取消赞' : '点赞成功');
       like
         ?..count = (like.count ?? 0) + (status ? -1 : 1)
         ..status = !status;

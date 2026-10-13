@@ -122,7 +122,7 @@ class PgcIntroController extends CommonIntroController {
     final newVal = !hasLike.value;
     final result = await VideoHttp.likeVideo(bvid: bvid, type: newVal);
     if (result case Success(:final response)) {
-      SmartDialog.showToast(newVal ? response : uiTx('取消赞'));
+      SmartDialog.showToast(newVal ? response : '取消赞');
       pgcItem.stat?.like += newVal ? 1 : -1;
       hasLike.value = newVal;
     } else {

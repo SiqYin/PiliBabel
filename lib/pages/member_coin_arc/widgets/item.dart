@@ -75,9 +75,73 @@ class MemberCoinLikeItem extends StatelessWidget {
                         borderRadius: const .vertical(top: .circular(12)),
                       ),
                       if (item.isCooperation == true)
-                        PBadge(
-                          text: uiTx('合作'),
+                        const PBadge(
+                          text: '合作',
                           top: 6,
                           right: 6,
                         )
-                      else if (item.isSteins =
+                      else if (item.isSteins == true)
+                        const PBadge(
+                          text: '互动',
+                          top: 6,
+                          right: 6,
+                        ),
+                      if (item.duration != null && item.duration! > 0)
+                        PBadge(
+                          bottom: 6,
+                          right: 6,
+                          type: PBadgeType.gray,
+                          text: DurationUtils.formatDuration(item.duration),
+                        ),
+                    ],
+                  );
+                },
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(5, 6, 0, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${item.title}\n',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      StatWidget(
+                        type: StatType.play,
+                        value: item.play,
+                      ),
+                      const SizedBox(width: 8),
+                      StatWidget(
+                        type: StatType.danmaku,
+                        value: item.danmaku,
+                      ),
+                      const Spacer(),
+                      Text(
+                        DateFormatUtils.dateFormat(
+                          item.ctime,
+                          short: VideoCardV.shortFormat,
+                          long: VideoCardV.longFormat,
+                        ),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Theme.of(context).colorScheme.outline,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

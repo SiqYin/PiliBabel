@@ -292,7 +292,7 @@ class _VotePanelState extends State<VotePanel> {
     spacing: 16,
     children: [
       CheckBoxText(
-        text: uiTx('显示比例'),
+        text: '显示比例',
         selected: _showPercentage,
         onChanged: (value) {
           setState(() {
@@ -301,7 +301,7 @@ class _VotePanelState extends State<VotePanel> {
         },
       ),
       CheckBoxText(
-        text: uiTx('匿名'),
+        text: '匿名',
         selected: anonymous,
         onChanged: (val) => anonymous = val,
       ),

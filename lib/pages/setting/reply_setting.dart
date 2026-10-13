@@ -103,7 +103,7 @@ class _ReplySettingState extends State<ReplySetting> {
                   max: 6,
                   divisions: 6,
                   value: _level.toDouble(),
-                  label: _level == 0 ? uiTx('关闭') : 'Lv$_level',
+                  label: _level == 0 ? '关闭' : 'Lv$_level',
                   onChanged: (v) {
                     final level = v.round();
                     setState(() => _level = level);

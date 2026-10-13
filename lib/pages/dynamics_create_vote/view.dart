@@ -93,7 +93,7 @@ class _CreateVotePageState extends State<CreateVotePage> {
               key: ValueKey('${_controller.key}desc'),
               initialValue: _controller.desc.value,
               onChanged: _controller.desc.call,
-              desc: uiTx('投票说明'),
+              desc: '投票说明',
               inputFormatters: [LengthLimitingTextInputFormatter(100)],
             ),
           ),
@@ -197,7 +197,7 @@ class _CreateVotePageState extends State<CreateVotePage> {
                           .map(
                             (e) => PopupMenuItem(
                               value: e,
-                              child: Text(e == 1 ? uiTx('单选') : uiTxP('最多选{0}项', [e])),
+                              child: Text(e == 1 ? '单选' : '最多选$e项'),
                             ),
                           )
                           .toList();

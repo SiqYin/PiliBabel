@@ -167,7 +167,7 @@ class _GroupPanelState extends State<GroupPanel> {
           child: FilledButton.tonal(
             onPressed: onSave,
             style: const ButtonStyle(visualDensity: .compact),
-            child: Obx(() => Text(showDefaultBtn.value ? uiTx('保存至默认分组') : uiTx('保存'))),
+            child: Obx(() => Text(showDefaultBtn.value ? '保存至默认分组' : '保存')),
           ),
         ),
       ],
