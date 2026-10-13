@@ -101,14 +101,14 @@ class VideoCardHLater extends StatelessWidget {
                           cacheWidth: videoItem.dimension?.cacheWidth,
                         ),
                         if (videoItem.isCharging == true)
-                          const PBadge(
+                          PBadge(
                             text: uiTx('充电专属'),
                             top: 6.0,
                             right: 6.0,
                             type: PBadgeType.error,
                           )
                         else if (videoItem.rights?.isCooperation == 1)
-                          const PBadge(
+                          PBadge(
                             text: uiTx('合作'),
                             top: 6.0,
                             right: 6.0,
@@ -120,7 +120,7 @@ class VideoCardHLater extends StatelessWidget {
                             right: 6.0,
                           )
                         else if (videoItem.isPugv ?? false)
-                          const PBadge(
+                          PBadge(
                             text: uiTx('课堂'),
                             top: 6.0,
                             right: 6.0,

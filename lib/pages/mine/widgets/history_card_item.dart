@@ -134,7 +134,7 @@ class HistoryCardItem extends StatelessWidget {
                             : PBadgeType.gray,
                       )
                     else if (_isArticle)
-                      const PBadge(
+                      PBadge(
                         text: uiTx('专栏'),
                         top: 6.0,
                         right: 6.0,
