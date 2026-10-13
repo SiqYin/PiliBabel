@@ -250,7 +250,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                               setState(() {});
                               setOptions();
                             },
-                            text: '海量弹幕',
+                            text: uiTx('海量弹幕'),
                           ),
                           ActionRowLineItem(
                             selectStatus: DanmakuOptions.danmakuStatic2Scroll,
@@ -260,7 +260,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                               setState(() {});
                               setOptions();
                             },
-                            text: '固定转滚动',
+                            text: uiTx('固定转滚动'),
                           ),
                           ActionRowLineItem(
                             selectStatus: DanmakuOptions.danmakuFixedV,
@@ -270,7 +270,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                               setState(() {});
                               setOptions();
                             },
-                            text: '滚动弹幕固定速度',
+                            text: uiTx('滚动弹幕固定速度'),
                           ),
                         ],
                       ),
