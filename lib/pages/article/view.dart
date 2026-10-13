@@ -429,7 +429,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                       builder: (btnContext) {
                         final forward = stats.forward;
                         return textIconButton(
-                          text: '转发',
+                          text: uiTx('转发'),
                           icon: FontAwesomeIcons.shareFromSquare,
                           stat: forward,
                           onPressed: () {
@@ -470,7 +470,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                   ),
                   Expanded(
                     child: textIconButton(
-                      text: '分享',
+                      text: uiTx('分享'),
                       icon: CustomIcons.share_node,
                       stat: null,
                       onPressed: () => ShareUtils.shareText(controller.url),
@@ -480,7 +480,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                     child: textIconButton(
                       icon: FontAwesomeIcons.star,
                       activatedIcon: FontAwesomeIcons.solidStar,
-                      text: '收藏',
+                      text: uiTx('收藏'),
                       stat: stats.favorite,
                       onPressed: controller.onFav,
                     ),
@@ -489,7 +489,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                     child: textIconButton(
                       icon: FontAwesomeIcons.thumbsUp,
                       activatedIcon: FontAwesomeIcons.solidThumbsUp,
-                      text: '点赞',
+                      text: uiTx('点赞'),
                       stat: stats.like,
                       onPressed: controller.onLike,
                     ),
@@ -569,74 +569,4 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                       if (pic.isLongPic == true)
                         const PBadge(
                           right: 12,
-                          bottom: 12,
-                          text: '长图',
-                          type: .primary,
-                        ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-        Obx(
-          () => PBadge(
-            top: 12,
-            right: 12,
-            type: .gray,
-            text: '${controller.topIndex.value + 1}/$length',
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget? _buildAuthor() {
-    final pubTime =
-        controller.opusData?.modules.moduleAuthor?.pubTs ??
-        controller.articleData?.publishTime;
-    return Padding(
-      padding: const .symmetric(vertical: 10),
-      child: GestureDetector(
-        onTap: () => Get.toNamed(
-          '/member?mid=${controller.summary.author?.mid}',
-        ),
-        child: SelectionContainer.disabled(
-          child: Row(
-            spacing: 10,
-            children: [
-              NetworkImgLayer(
-                width: 40,
-                height: 40,
-                type: .avatar,
-                src: controller.summary.author?.face,
-              ),
-              Flexible(
-                child: Column(
-                  crossAxisAlignment: .start,
-                  children: [
-                    Text(
-                      controller.summary.author?.name ?? '',
-                      style: TextStyle(
-                        fontSize: theme.textTheme.titleSmall!.fontSize,
-                      ),
-                    ),
-                    if (pubTime != null)
-                      Text(
-                        DateFormatUtils.format(pubTime),
-                        style: TextStyle(
-                          color: theme.colorScheme.outline,
-                          fontSize: theme.textTheme.labelSmall!.fontSize,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
+ 

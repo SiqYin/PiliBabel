@@ -172,7 +172,7 @@ class _PlayerInfoDialogState extends State<PlayerInfoDialog> {
       ),
       actions: [
         TextButton(
-          onPressed: () => Utils.copyText('PiliBabel 播放诊断\n\n$_diag\n\n$_info'),
+          onPressed: () => Utils.copyText(uiTxP('PiliBabel 播放诊断\n\n{0}\n\n{1}', [_diag, _info])),
           child: Text(uiTx('复制全部')),
         ),
         TextButton(

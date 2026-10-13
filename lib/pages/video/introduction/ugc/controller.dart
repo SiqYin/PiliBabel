@@ -237,7 +237,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
     final newVal = !hasLike.value;
     final result = await VideoHttp.likeVideo(bvid: bvid, type: newVal);
     if (result case Success(:final response)) {
-      SmartDialog.showToast(newVal ? response : '取消赞');
+      SmartDialog.showToast(newVal ? response : uiTx('取消赞'));
       videoDetail.value.stat?.like += newVal ? 1 : -1;
       hasLike.value = newVal;
       if (newVal) {
