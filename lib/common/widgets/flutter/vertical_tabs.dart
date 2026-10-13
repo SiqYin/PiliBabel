@@ -108,7 +108,7 @@ class VerticalTab extends StatelessWidget {
   final double? width;
 
   Widget _buildLabelText() {
-    return child ?? Text(uiTx(text!), style: TextStyle(fontSize: 15));
+    return child ?? Text(uiTx(text!), style: const TextStyle(fontSize: 15));
   }
 
   @override

@@ -443,7 +443,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
                                 type: PBadgeType.gray,
                               ),
                             if (isCharging == true)
-                              PBadge(
+                              const PBadge(
                                 text: uiTx('充电专属'),
                                 top: 6,
                                 right: 6,

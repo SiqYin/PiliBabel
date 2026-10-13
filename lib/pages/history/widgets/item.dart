@@ -151,7 +151,7 @@ class HistoryItem extends StatelessWidget {
                                 type: PBadgeType.gray,
                               ),
                             if (item.isFav == 1)
-                              PBadge(
+                              const PBadge(
                                 text: uiTx('已收藏'),
                                 top: 6.0,
                                 right: 6.0,
@@ -244,7 +244,7 @@ class HistoryItem extends StatelessWidget {
                         children: [
                           const Icon(Icons.watch_later_outlined, size: 16),
                           const SizedBox(width: 6),
-                          Text(uiTx('稍后再看'), style: TextStyle(fontSize: 13)),
+                          Text(uiTx('稍后再看'), style: const TextStyle(fontSize: 13)),
                         ],
                       ),
                     ),
@@ -255,7 +255,7 @@ class HistoryItem extends StatelessWidget {
                       children: [
                         const Icon(Icons.close_outlined, size: 16),
                         const SizedBox(width: 6),
-                        Text(uiTx('删除记录'), style: TextStyle(fontSize: 13)),
+                        Text(uiTx('删除记录'), style: const TextStyle(fontSize: 13)),
                       ],
                     ),
                   ),
