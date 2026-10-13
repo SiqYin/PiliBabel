@@ -17,6 +17,7 @@
 
 import 'dart:ui' as ui;
 
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart' show listEquals;
@@ -249,7 +250,7 @@ class RenderViewPointProgressBar
       final title = segment.title;
       if (title != null && title.isNotEmpty) {
         final segmentWidth = segmentEnd - prevEnd;
-        final paragraph = _getParagraph(title, 10);
+        final paragraph = _getParagraph(uiTx(title), 10);
         final textWidth = paragraph.maxIntrinsicWidth;
         final textHeight = paragraph.height;
 

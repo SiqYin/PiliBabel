@@ -137,6 +137,7 @@ class _AudioPageState extends State<AudioPage> {
         actions: [
           if (_controller.isUgc && _controller.enableSponsorBlock)
             Obx(() {
+              UiTranslateService.to.revision.value;
               if (_controller.segmentProgressList.isNotEmpty) {
                 return IconButton(
                   tooltip: uiTx('片段信息'),
@@ -146,8 +147,9 @@ class _AudioPageState extends State<AudioPage> {
               }
               return const SizedBox.shrink();
             }),
-          Builder(
+          Obx(
             builder: (context) {
+            UiTranslateService.to.revision.value;
               return StaticPopupMenuButton<ListOrder>(
                 tooltip: uiTx('排序'),
                 icon: const Icon(Icons.sort, size: 22),
@@ -271,18 +273,21 @@ class _AudioPageState extends State<AudioPage> {
                         initiallyExpanded: isCurr,
                         collapsedIconColor: isCurr ? colorScheme.primary : null,
                         iconColor: isCurr ? null : colorScheme.onSurfaceVariant,
-                        title: Text(
-                          uiTx(item.arc.title),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: isCurr
-                              ? TextStyle(
-                                  fontSize: 14,
-                                  color: colorScheme.primary,
-                                  fontWeight: FontWeight.bold,
-                                )
-                              : const TextStyle(fontSize: 14),
-                        ),
+                        title: Obx(() {
+                          UiTranslateService.to.revision.value;
+                          return Text(
+                            uiTx(item.arc.title),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: isCurr
+                                ? TextStyle(
+                                    fontSize: 14,
+                                    color: colorScheme.primary,
+                                    fontWeight: FontWeight.bold,
+                                  )
+                                : const TextStyle(fontSize: 14),
+                          );
+                        }),
                         trailing: isCurr
                             ? null
                             : iconButton(
@@ -346,7 +351,7 @@ class _AudioPageState extends State<AudioPage> {
                                     ),
                                     const TextSpan(text: '  '),
                                   ],
-                                  TextSpan(text: e.title),
+                                  TextSpan(text: uiTx(e.title)),
                                 ],
                               ),
                             ),
@@ -363,39 +368,42 @@ class _AudioPageState extends State<AudioPage> {
                           _controller.playIndex(index);
                         }
                       },
-                      title: Text.rich(
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: isCurr
-                            ? TextStyle(
-                                fontSize: 14,
-                                color: colorScheme.primary,
-                                fontWeight: FontWeight.bold,
-                              )
-                            : const TextStyle(fontSize: 14),
-                        TextSpan(
-                          children: [
-                            if (isCurr) ...[
-                              WidgetSpan(
-                                alignment: .bottom,
-                                child: Image.asset(
-                                  Assets.livingChart,
-                                  width: 16,
-                                  height: 16,
-                                  cacheWidth: 16.cacheSize(
-                                    context,
-                                  ),
+                      title: Obx(() {
+                        UiTranslateService.to.revision.value;
+                        return Text.rich(
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: isCurr
+                              ? TextStyle(
+                                  fontSize: 14,
                                   color: colorScheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                )
+                              : const TextStyle(fontSize: 14),
+                          TextSpan(
+                            children: [
+                              if (isCurr) ...[
+                                WidgetSpan(
+                                  alignment: .bottom,
+                                  child: Image.asset(
+                                    Assets.livingChart,
+                                    width: 16,
+                                    height: 16,
+                                    cacheWidth: 16.cacheSize(
+                                      context,
+                                    ),
+                                    color: colorScheme.primary,
+                                  ),
                                 ),
+                                const TextSpan(text: '  '),
+                              ],
+                              TextSpan(
+                                text: uiTx(item.arc.title),
                               ),
-                              const TextSpan(text: '  '),
                             ],
-                            TextSpan(
-                              text: item.arc.title,
-                            ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      }),
                       trailing: isCurr
                           ? null
                           : iconButton(
@@ -722,7 +730,10 @@ class _AudioPageState extends State<AudioPage> {
                     dense: true,
                     leading: const Icon(Icons.volume_up, size: 20),
                     title: Text(
-                      '播放器音量: ${player.getProperty('volume').subLength(3)}%',
+                      uiTxP(
+                        '播放器音量: {0}%',
+                        [player.getProperty('volume').subLength(3)],
+                      ),
                       style: const TextStyle(fontSize: 14),
                     ),
                     onTap: () {
@@ -986,6 +997,8 @@ class _AudioPageState extends State<AudioPage> {
 
   Widget _buildInfo(ColorScheme colorScheme, bool isPortrait) {
     return Obx(() {
+      // 读一次 revision：译文到位后信息区整块重建
+      UiTranslateService.to.revision.value;
       final audioItem = _controller.audioItem.value;
       if (audioItem != null) {
         final cover = audioItem.arc.cover.http2https;
@@ -1017,7 +1030,7 @@ class _AudioPageState extends State<AudioPage> {
                     ),
                     const SizedBox(height: 12),
                     SelectionText(
-                      audioItem.arc.title,
+                      uiTx(audioItem.arc.title),
                       style: const TextStyle(height: 1.7, fontSize: 16),
                     ),
                     const SizedBox(height: 12),
@@ -1040,9 +1053,11 @@ class _AudioPageState extends State<AudioPage> {
                                 type: ImageType.avatar,
                               ),
                             Text(
-                              remarkedName(
-                                audioItem.owner.mid.toInt(),
-                                audioItem.owner.name,
+                              uiTx(
+                                remarkedName(
+                                  audioItem.owner.mid.toInt(),
+                                  audioItem.owner.name,
+                                ),
                               ),
                             ),
                           ],
@@ -1084,7 +1099,7 @@ class _AudioPageState extends State<AudioPage> {
                     ),
                     if (audioItem.arc.hasDesc()) ...[
                       const SizedBox(height: 10),
-                      SelectionText(audioItem.arc.desc),
+                      SelectionText(uiTx(audioItem.arc.desc)),
                     ],
                   ],
                 ),
