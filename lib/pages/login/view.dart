@@ -621,9 +621,9 @@ class _LoginPageState extends State<LoginPage> {
           if (!isLandscape)
             TabBar(
               tabs: const [
-                Tab(icon: Icon(Icons.password), text: '密码'),
-                Tab(icon: Icon(Icons.sms_outlined), text: '短信'),
-                Tab(icon: Icon(Icons.qr_code), text: '扫码'),
+                Tab(icon: Icon(Icons.password), text: uiTx('密码')),
+                Tab(icon: Icon(Icons.sms_outlined), text: uiTx('短信')),
+                Tab(icon: Icon(Icons.qr_code), text: uiTx('扫码')),
                 Tab(icon: Icon(Icons.cookie_outlined), text: 'Cookie'),
               ],
               controller: _loginPageCtr.tabController,

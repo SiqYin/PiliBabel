@@ -20,7 +20,7 @@ void showReplyCopyDialog(
               buttonItems.insertOrAdd(
                 3,
                 ContextMenuButtonItem(
-                  label: showEmote ? '文本' : '表情',
+                  label: showEmote ? uiTx('文本') : uiTx('表情'),
                   onPressed: () {
                     state.hideAndClear();
                     showEmote = !showEmote;
@@ -72,7 +72,7 @@ void showReplyCopyDialog(
                       },
                     );
                   },
-                  label: '加入过滤',
+                  label: uiTx('加入过滤'),
                 ),
               );
             }

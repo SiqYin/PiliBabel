@@ -33,8 +33,8 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
     Widget tabBar = TabBar(
       controller: _controller.tabController,
       tabs: const [
-        Tab(text: '关键词'),
-        Tab(text: '用户'),
+        Tab(text: uiTx('关键词')),
+        Tab(text: uiTx('用户')),
       ],
     );
 

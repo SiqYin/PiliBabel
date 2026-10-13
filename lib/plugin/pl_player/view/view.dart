@@ -1008,7 +1008,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       BottomControlType.fullscreen => ComBtn(
         width: widgetWidth,
         height: 30,
-        tooltip: uiTx(isFullScreen ? '退出全屏' : '全屏'),
+        tooltip: uiTx(isFullScreen ? uiTx('退出全屏') : uiTx('全屏')),
         icon: isFullScreen
             ? const Icon(Icons.fullscreen_exit, size: 24, color: Colors.white)
             : const Icon(Icons.fullscreen, size: 24, color: Colors.white),
@@ -1520,7 +1520,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       child: Obx(() {
         final controlsLock = plPlayerController.controlsLock.value;
         return ComBtn(
-          tooltip: uiTx(controlsLock ? '解锁' : '锁定'),
+          tooltip: uiTx(controlsLock ? uiTx('解锁') : uiTx('锁定')),
           icon: controlsLock
               ? const Icon(
                   FontAwesomeIcons.lock,
@@ -2847,7 +2847,7 @@ class _SubtitleSelectPanel extends StatelessWidget {
           child: Center(child: Text(title, style: _headerStyle)),
         ),
         _item(
-          label: '关闭',
+          label: uiTx('关闭'),
           selected: selectedIndex == 0,
           disabled: false,
           onTap: () => onSelect(0),
