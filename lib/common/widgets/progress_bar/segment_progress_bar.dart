@@ -18,6 +18,7 @@
 import 'dart:ui' as ui;
 
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:get/get.dart' show Obx;
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart' show listEquals;
@@ -143,9 +144,38 @@ class RenderProgressBar extends BaseRenderProgressBar<Segment> {
   }
 }
 
-class ViewPointSegmentProgressBar
-    extends BaseSegmentProgressBar<ViewPointSegment> {
+/// 进度条上画的「分段名」是 UP 主自己写的原文，需要在渲染边界翻一次。
+///
+/// 这里套一层 [Obx] 读 [UiTranslateService.revision]：译文是异步落缓存的，
+/// 画布只在 progress 变化时重绘，不订阅 revision 的话分段名会一直停在原文。
+class ViewPointSegmentProgressBar extends StatelessWidget {
   const ViewPointSegmentProgressBar({
+    super.key,
+    this.height = 3.5,
+    required this.segments,
+    this.onSeek,
+  });
+
+  final double height;
+  final List<ViewPointSegment> segments;
+  final ValueSetter<Duration>? onSeek;
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(() {
+      UiTranslateService.to.revision.value;
+      return _ViewPointSegmentProgressBar(
+        height: height,
+        segments: segments,
+        onSeek: onSeek,
+      );
+    });
+  }
+}
+
+class _ViewPointSegmentProgressBar
+    extends BaseSegmentProgressBar<ViewPointSegment> {
+  const _ViewPointSegmentProgressBar({
     super.key,
     super.height,
     required super.segments,
@@ -172,6 +202,9 @@ class ViewPointSegmentProgressBar
       ..height = height
       ..segments = segments
       ..onSeek = onSeek;
+    // segments 没变时上面的 setter 不会触发重绘，这里显式标脏，
+    // 保证译文到位后进度条上的分段名跟着重画。
+    renderObject.markNeedsPaint();
   }
 }
 
