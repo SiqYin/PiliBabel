@@ -285,7 +285,7 @@ class _InfoCard extends StatelessWidget {
           iconButton(
             size: 34,
             iconSize: 22,
-            tooltip: info.isExpanded ? '收起' : '展开',
+            tooltip: info.isExpanded ? uiTx('收起') : uiTx('展开'),
             icon: Icon(
               info.isExpanded ? Icons.expand_less : Icons.expand_more,
             ),
@@ -362,7 +362,7 @@ class _ReportCard extends StatelessWidget {
           iconButton(
             size: 34,
             iconSize: 22,
-            tooltip: report.isExpanded ? '收起' : '展开',
+            tooltip: report.isExpanded ? uiTx('收起') : uiTx('展开'),
             icon: Icon(
               report.isExpanded ? Icons.expand_less : Icons.expand_more,
             ),

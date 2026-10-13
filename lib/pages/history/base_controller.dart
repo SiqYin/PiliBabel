@@ -56,7 +56,7 @@ class HistoryBaseController extends GetxController {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(uiTx('提示')),
-        content: Text(pauseStatus ? '啊叻？你要暂停历史记录功能吗？' : '啊叻？要恢复历史记录功能吗？'),
+        content: Text(pauseStatus ? uiTx('啊叻？你要暂停历史记录功能吗？') : uiTx('啊叻？要恢复历史记录功能吗？')),
         actions: [
           TextButton(
             onPressed: Get.back,
@@ -73,7 +73,7 @@ class HistoryBaseController extends GetxController {
               );
               SmartDialog.dismiss();
               if (res.isSuccess) {
-                SmartDialog.showToast(pauseStatus ? '暂停观看历史' : '恢复观看历史');
+                SmartDialog.showToast(pauseStatus ? uiTx('暂停观看历史') : uiTx('恢复观看历史'));
                 this.pauseStatus.value = pauseStatus;
                 GStorage.localCache.put(
                   LocalCacheKey.historyPause,
@@ -84,7 +84,7 @@ class HistoryBaseController extends GetxController {
               }
               Get.back();
             },
-            child: Text(pauseStatus ? '确认暂停' : '确认恢复'),
+            child: Text(pauseStatus ? uiTx('确认暂停') : uiTx('确认恢复')),
           ),
         ],
       ),

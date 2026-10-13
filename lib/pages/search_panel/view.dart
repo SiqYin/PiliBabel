@@ -144,7 +144,7 @@ abstract class CommonSearchPanelState<
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
                     : const Icon(Icons.keyboard_double_arrow_down, size: 18),
-                label: Text(_isLoadingMore ? '加载中...' : '继续加载'),
+                label: Text(_isLoadingMore ? uiTx('加载中...') : uiTx('继续加载')),
               ),
               const SizedBox(height: 8),
               Text(uiTx('加载完成后方可进行下次加载，避免触发频率限制'),
@@ -178,7 +178,7 @@ abstract class CommonSearchPanelState<
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.keyboard_double_arrow_down, size: 18),
-            label: Text(_isLoadingMore ? '加载中...' : '继续加载'),
+            label: Text(_isLoadingMore ? uiTx('加载中...') : uiTx('继续加载')),
           ),
         ),
       ),
