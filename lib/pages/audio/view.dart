@@ -147,8 +147,7 @@ class _AudioPageState extends State<AudioPage> {
               }
               return const SizedBox.shrink();
             }),
-          Obx(
-            builder: (context) {
+          Obx(() {
             UiTranslateService.to.revision.value;
               return StaticPopupMenuButton<ListOrder>(
                 tooltip: uiTx('排序'),
