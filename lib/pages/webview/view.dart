@@ -657,7 +657,7 @@ document.styleSheets[0].insertRule('#app__display-area > div.control-panel {disp
                         showCloseIcon: true,
                         content: Text(uiTx('当前网页将要打开外部链接，是否打开')),
                         action: SnackBarAction(
-                          label: uiTx('打开'),
+                          label: '打开',
                           onPressed: () => PageUtils.launchURL(url),
                         ),
                       );

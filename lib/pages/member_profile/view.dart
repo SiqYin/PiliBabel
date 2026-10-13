@@ -137,7 +137,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           divider1,
           _item(
             theme: theme,
-            title: uiTx('头像'),
+            title: '头像',
             widget: Padding(
               padding: const EdgeInsets.symmetric(vertical: 5),
               child: NetworkImgLayer(

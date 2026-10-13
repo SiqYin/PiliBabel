@@ -227,7 +227,7 @@ abstract final class ImageUtils {
         SmartDialog.showToast(uiTx('已取消下载'));
         return false;
       } else {
-        SmartDialog.showToast(success ? uiTx(' 已保存 ') : uiTx('保存失败'));
+        SmartDialog.showToast(success ? ' 已保存 ' : '保存失败');
       }
       return success;
     } catch (e) {

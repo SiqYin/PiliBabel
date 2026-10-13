@@ -346,7 +346,7 @@ class AiSettingPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isEdit ? uiTx('编辑模板') : uiTx('添加模板')),
+        title: Text(isEdit ? '编辑模板' : '添加模板'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

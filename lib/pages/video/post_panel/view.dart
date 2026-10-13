@@ -90,7 +90,7 @@ class PostPanel extends CommonSlidePage {
             iconButton(
               context: context,
               size: 26,
-              tooltip: isFirst ? uiTx('视频开头') : uiTx('视频结尾'),
+              tooltip: isFirst ? '视频开头' : '视频结尾',
               icon: isFirst
                   ? const Icon(Icons.first_page)
                   : const Icon(Icons.last_page),

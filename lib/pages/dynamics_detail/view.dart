@@ -573,7 +573,7 @@ class _DynamicDetailPageState
                       final forward = moduleStat?.forward;
                       return textIconButton(
                         icon: FontAwesomeIcons.shareFromSquare,
-                        text: uiTx('转发'),
+                        text: '转发',
                         stat: forward,
                         onPressed: (_) => showModalBottomSheet(
                           context: context,
@@ -599,7 +599,7 @@ class _DynamicDetailPageState
                 Expanded(
                   child: textIconButton(
                     icon: CustomIcons.share_node,
-                    text: uiTx('分享'),
+                    text: '分享',
                     stat: null,
                     onPressed: (_) => ShareUtils.shareText(
                       '${HttpString.opusBaseUrl}/${controller.dynItem.idStr}',
@@ -609,7 +609,7 @@ class _DynamicDetailPageState
                 Expanded(
                   child: textIconButton(
                     icon: FontAwesomeIcons.comment,
-                    text: uiTx('评论'),
+                    text: '评论',
                     stat: moduleStat?.comment,
                     onPressed: _jumpToComment,
                   ),
@@ -620,7 +620,7 @@ class _DynamicDetailPageState
                       return textIconButton(
                         icon: FontAwesomeIcons.thumbsUp,
                         activatedIcon: FontAwesomeIcons.solidThumbsUp,
-                        text: uiTx('点赞'),
+                        text: '点赞',
                         stat: moduleStat?.like,
                         onPressed: (iconColor) => RequestUtils.onLikeDynamic(
                           controller.dynItem,

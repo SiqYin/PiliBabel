@@ -77,7 +77,7 @@ class _CreateFavPageState extends State<CreateFavPage> {
     final theme = Theme.of(context);
     return SimpleScaffold(
       appBar: AppBar(
-        title: Text(_mediaId != null ? uiTx('编辑') : uiTx('创建')),
+        title: Text(_mediaId != null ? '编辑' : '创建'),
         actions: [
           TextButton(
             onPressed: () {
@@ -277,4 +277,113 @@ class _CreateFavPageState extends State<CreateFavPage> {
                           ),
                         ),
                         const TextSpan(
-                     
+                          text: '名称',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: TextField(
+                    autofocus: true,
+                    readOnly: _attr != null && BiliUtils.isDefaultFav(_attr!),
+                    controller: _titleController,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: _attr != null && BiliUtils.isDefaultFav(_attr!)
+                          ? theme.colorScheme.outline
+                          : null,
+                    ),
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(20),
+                    ],
+                    decoration: InputDecoration(
+                      isDense: true,
+                      hintText: uiTx('名称'),
+                      hintStyle: TextStyle(
+                        fontSize: 14,
+                        color: theme.colorScheme.outline,
+                      ),
+                      border: const OutlineInputBorder(
+                        borderSide: BorderSide.none,
+                        gapPadding: 0,
+                      ),
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (_attr == null || !BiliUtils.isDefaultFav(_attr!))
+            ListTile(
+              tileColor: theme.colorScheme.onInverseSurface,
+              title: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    width: 55,
+                    child: Text(uiTx('简介'),
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: TextField(
+                      minLines: 6,
+                      maxLines: 6,
+                      controller: _introController,
+                      style: const TextStyle(fontSize: 14),
+                      inputFormatters: [
+                        LengthLimitingTextInputFormatter(200),
+                      ],
+                      decoration: InputDecoration(
+                        isDense: true,
+                        hintText: uiTx('可填写简介'),
+                        hintStyle: TextStyle(
+                          fontSize: 14,
+                          color: theme.colorScheme.outline,
+                        ),
+                        border: const OutlineInputBorder(
+                          borderSide: BorderSide.none,
+                          gapPadding: 0,
+                        ),
+                        contentPadding: EdgeInsets.zero,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          Builder(
+            builder: (context) {
+              void onTap() {
+                _isPublic = !_isPublic;
+                (context as Element).markNeedsBuild();
+              }
+
+              return ListTile(
+                onTap: onTap,
+                tileColor: theme.colorScheme.onInverseSurface,
+                leading: Text(uiTx('公开'),
+                  style: leadingStyle,
+                ),
+                trailing: Transform.scale(
+                  alignment: Alignment.centerRight,
+                  scale: 0.8,
+                  child: Switch(
+                    value: _isPublic,
+                    onChanged: (value) => onTap(),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    ),
+  );
+}

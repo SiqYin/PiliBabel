@@ -436,7 +436,7 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
                   introController.handleAction(introController.viewLater),
               selectStatus: introController.hasLater.value,
               semanticsLabel: uiTx('再看'),
-              text: uiTx('再看'),
+              text: '再看',
             ),
           ),
           ActionItem(

@@ -221,7 +221,7 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                     onKey: controller.saveTranslateApiKey,
                   ),
                   _ModelPicker(
-                    label: uiTx('翻译模型'),
+                    label: '翻译模型',
                     list: controller.translateModelList,
                     current: controller.translateModel,
                     manualCtl: controller.translateModelCtl,
