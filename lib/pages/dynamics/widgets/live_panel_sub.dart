@@ -6,6 +6,7 @@ import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 
 Widget livePanelSub(
   BuildContext context, {

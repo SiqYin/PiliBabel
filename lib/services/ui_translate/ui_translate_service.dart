@@ -7,6 +7,7 @@ import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 
 /// AI 界面翻译服务（路线 B 的落地核心）。
 ///

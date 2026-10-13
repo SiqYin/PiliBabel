@@ -8,6 +8,7 @@ import 'package:fixnum/fixnum.dart' as $fixnum;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 
 class ZanButtonGrpc extends StatelessWidget {
   const ZanButtonGrpc({

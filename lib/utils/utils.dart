@@ -7,6 +7,7 @@ import 'package:catcher_2/catcher_2.dart';
 import 'package:flutter/services.dart'
     show Clipboard, ClipboardData, MethodChannel;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 
 abstract final class Utils {
   static final random = Random();
