@@ -608,7 +608,7 @@ class EpisodePanelState extends State<EpisodePanel>
     return switch (loadingState) {
       Success(:final response) => iconButton(
         iconSize: 22,
-        tooltip: response ? '取消订阅' : '订阅',
+        tooltip: response ? uiTx('取消订阅') : uiTx('订阅'),
         icon: response
             ? const Icon(Icons.notifications_off_outlined)
             : const Icon(Icons.notifications_active_outlined),
@@ -635,7 +635,7 @@ class EpisodePanelState extends State<EpisodePanel>
     final order = widget.listOrder;
     return iconButton(
       iconSize: 22,
-      tooltip: order?.label ?? '正序播放',
+      tooltip: order?.label ?? uiTx('正序播放'),
       icon: switch (order) {
         ListOrder.desc => const Icon(MdiIcons.sortDescending),
         ListOrder.shuffle => const Icon(Icons.shuffle),
@@ -715,7 +715,7 @@ class EpisodePanelState extends State<EpisodePanel>
             final currentTabIndex = _currentTabIndex.value;
             return iconButton(
               iconSize: 22,
-              tooltip: _isReversed[currentTabIndex] ? '顺序' : '倒序',
+              tooltip: _isReversed[currentTabIndex] ? uiTx('顺序') : uiTx('倒序'),
               icon: !_isReversed[currentTabIndex]
                   ? const Icon(MdiIcons.sortNumericAscending)
                   : const Icon(MdiIcons.sortNumericDescending),
