@@ -150,7 +150,7 @@ abstract class BaseVideoWebState<
     final page = controller.page - 1;
     final canBackward = page > 1;
     final canForward = page < totalPage;
-    const size = 30.0;
+    size = 30.0;
     iconSize = 24.0;
 
     final backwardBtn = iconButton(
