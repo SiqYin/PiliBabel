@@ -126,7 +126,7 @@ class HistoryCardItem extends StatelessWidget {
                     // 右上角：直播状态 / 专栏标记 / pgc badge
                     if (_isLive)
                       PBadge(
-                        text: item.liveStatus == 1 ? '直播中' : '未开播',
+                        text: item.liveStatus == 1 ? uiTx('直播中') : uiTx('未开播'),
                         top: 6.0,
                         right: 6.0,
                         type: item.liveStatus == 1
@@ -135,7 +135,7 @@ class HistoryCardItem extends StatelessWidget {
                       )
                     else if (_isArticle)
                       const PBadge(
-                        text: '专栏',
+                        text: uiTx('专栏'),
                         top: 6.0,
                         right: 6.0,
                         type: PBadgeType.secondary,

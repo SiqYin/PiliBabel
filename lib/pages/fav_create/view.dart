@@ -77,7 +77,7 @@ class _CreateFavPageState extends State<CreateFavPage> {
     final theme = Theme.of(context);
     return SimpleScaffold(
       appBar: AppBar(
-        title: Text(_mediaId != null ? '编辑' : '创建'),
+        title: Text(_mediaId != null ? uiTx('编辑') : uiTx('创建')),
         actions: [
           TextButton(
             onPressed: () {
@@ -277,7 +277,7 @@ class _CreateFavPageState extends State<CreateFavPage> {
                           ),
                         ),
                         const TextSpan(
-                          text: '名称',
+                          text: uiTx('名称'),
                           style: TextStyle(fontSize: 14),
                         ),
                       ],

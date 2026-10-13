@@ -131,7 +131,7 @@ class VideoCardV extends StatelessWidget {
                             :final canPlay,
                           ) when canPlay != 1)
                             const PBadge(
-                              text: '充电专属',
+                              text: uiTx('充电专属'),
                               top: 6,
                               right: 6,
                               size: .small,
@@ -203,7 +203,7 @@ class VideoCardV extends StatelessWidget {
                   ),
                 if (videoItem.goto == 'picture')
                   const PBadge(
-                    text: '动态',
+                    text: uiTx('动态'),
                     isStack: false,
                     size: .small,
                     type: .line_primary,
@@ -211,7 +211,7 @@ class VideoCardV extends StatelessWidget {
                   ),
                 if (Pref.showRcmdReason && videoItem.isFollowed)
                   const PBadge(
-                    text: '已关注',
+                    text: uiTx('已关注'),
                     isStack: false,
                     size: .small,
                     type: .secondary,

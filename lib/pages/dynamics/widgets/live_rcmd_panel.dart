@@ -60,8 +60,8 @@ Widget liveRcmdPanel(
                 ),
               )
             else
-              const PBadge(
-                text: '直播结束',
+              PBadge(
+                text: uiTx('直播结束'),
                 top: 6,
                 right: 6,
                 type: PBadgeType.gray,

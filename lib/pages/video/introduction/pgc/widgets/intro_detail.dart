@@ -64,9 +64,9 @@ class _IntroDetailState extends State<PgcIntroPanel>
                   isScrollable: true,
                   tabAlignment: TabAlignment.start,
                   dividerColor: Colors.transparent,
-                  tabs: const [
-                    Tab(text: '详情'),
-                    Tab(text: '点评'),
+                  tabs: [
+                    Tab(text: uiTx('详情')),
+                    Tab(text: uiTx('点评')),
                   ],
                   onTap: (index) {
                     if (!_tabController.indexIsChanging) {

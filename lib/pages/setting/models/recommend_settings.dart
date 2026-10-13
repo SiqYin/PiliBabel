@@ -196,7 +196,7 @@ List<SettingsModel> get recommendSettings => [
   ),
   WidgetModel(
     searchTitle: '推荐过滤说明',
-    searchSubtitle: '手动搜索、链接跳转不受过滤器影响',
+    searchSubtitle: uiTx('手动搜索、链接跳转不受过滤器影响'),
     child: Builder(
       builder: (context) {
         final theme = Theme.of(context);
