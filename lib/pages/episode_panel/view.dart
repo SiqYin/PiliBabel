@@ -516,7 +516,7 @@ class EpisodePanelState extends State<EpisodePanel>
                           )
                         else if (isCharging == true)
                           const PBadge(
-                            text: '充电专属',
+                            text: uiTx('充电专属'),
                             top: 6,
                             right: 6,
                             type: .error,

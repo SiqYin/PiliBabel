@@ -75,14 +75,14 @@ class MemberCoinLikeItem extends StatelessWidget {
                         borderRadius: const .vertical(top: .circular(12)),
                       ),
                       if (item.isCooperation == true)
-                        const PBadge(
-                          text: '合作',
+                        PBadge(
+                          text: uiTx('合作'),
                           top: 6,
                           right: 6,
                         )
                       else if (item.isSteins == true)
-                        const PBadge(
-                          text: '互动',
+                        PBadge(
+                          text: uiTx('互动'),
                           top: 6,
                           right: 6,
                         ),

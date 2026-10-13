@@ -590,7 +590,7 @@ void _showSpringDialog(BuildContext context, _) {
                 SmartDialog.showToast(e.toString());
               }
             },
-            child: Text(physicalMode ? '滑动时间' : '物理参数'),
+            child: Text(physicalMode ? uiTx('滑动时间') : uiTx('物理参数')),
           ),
         ],
       ),

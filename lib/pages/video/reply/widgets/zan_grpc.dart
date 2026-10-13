@@ -41,7 +41,7 @@ class ZanButtonGrpc extends StatelessWidget {
     );
     // SmartDialog.dismiss();
     if (res.isSuccess) {
-      SmartDialog.showToast(isDislike ? '取消踩' : '点踩成功');
+      SmartDialog.showToast(isDislike ? uiTx('取消踩') : uiTx('点踩成功'));
       if (action == 2) {
         if (isLike) replyItem.like -= $fixnum.Int64.ONE;
         replyItem.replyControl.action = $fixnum.Int64.TWO;
@@ -81,7 +81,7 @@ class ZanButtonGrpc extends StatelessWidget {
       action: action,
     );
     if (res.isSuccess) {
-      SmartDialog.showToast(isLike ? '取消赞' : '点赞成功');
+      SmartDialog.showToast(isLike ? uiTx('取消赞') : uiTx('点赞成功'));
       if (action == 1) {
         replyItem
           ..like += $fixnum.Int64.ONE

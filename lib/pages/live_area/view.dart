@@ -43,7 +43,7 @@ class _LiveAreaPageState extends State<LiveAreaPage> {
                     visualDensity: VisualDensity.compact,
                   ),
                   child: Obx(
-                    () => Text(_controller.isEditing.value ? '完成' : '编辑'),
+                    () => Text(_controller.isEditing.value ? uiTx('完成') : uiTx('编辑')),
                   ),
                 ),
                 const SizedBox(width: 16),

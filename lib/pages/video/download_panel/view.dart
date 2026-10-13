@@ -444,7 +444,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
                               ),
                             if (isCharging == true)
                               const PBadge(
-                                text: '充电专属',
+                                text: uiTx('充电专属'),
                                 top: 6,
                                 right: 6,
                                 type: PBadgeType.error,
@@ -560,7 +560,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
       child: Row(
         children: [
           _buildBottomBtn(
-            text: '缓存全部',
+            text: uiTx('缓存全部'),
             onTap: () {
               showConfirmDialog(
                 context: context,
@@ -586,7 +586,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
             ),
           ),
           _buildBottomBtn(
-            text: '查看缓存',
+            text: uiTx('查看缓存'),
             onTap: () => Navigator.of(context).push(
               GetPageRoute(page: () => const DownloadPage()),
             ),

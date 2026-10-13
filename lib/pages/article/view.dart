@@ -429,7 +429,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                       builder: (btnContext) {
                         final forward = stats.forward;
                         return textIconButton(
-                          text: '转发',
+                          text: uiTx('转发'),
                           icon: FontAwesomeIcons.shareFromSquare,
                           stat: forward,
                           onPressed: () {
@@ -470,7 +470,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                   ),
                   Expanded(
                     child: textIconButton(
-                      text: '分享',
+                      text: uiTx('分享'),
                       icon: CustomIcons.share_node,
                       stat: null,
                       onPressed: () => ShareUtils.shareText(controller.url),
@@ -480,7 +480,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                     child: textIconButton(
                       icon: FontAwesomeIcons.star,
                       activatedIcon: FontAwesomeIcons.solidStar,
-                      text: '收藏',
+                      text: uiTx('收藏'),
                       stat: stats.favorite,
                       onPressed: controller.onFav,
                     ),
@@ -489,7 +489,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                     child: textIconButton(
                       icon: FontAwesomeIcons.thumbsUp,
                       activatedIcon: FontAwesomeIcons.solidThumbsUp,
-                      text: '点赞',
+                      text: uiTx('点赞'),
                       stat: stats.like,
                       onPressed: controller.onLike,
                     ),
@@ -570,7 +570,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                         const PBadge(
                           right: 12,
                           bottom: 12,
-                          text: '长图',
+                          text: uiTx('长图'),
                           type: .primary,
                         ),
                     ],

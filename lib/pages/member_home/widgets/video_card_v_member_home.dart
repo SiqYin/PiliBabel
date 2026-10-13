@@ -126,13 +126,13 @@ class VideoCardVMemberHome extends StatelessWidget {
                         )
                       else if (videoItem.isCooperation == true)
                         const PBadge(
-                          text: '合作',
+                          text: uiTx('合作'),
                           top: 6,
                           right: 6,
                         )
                       else if (videoItem.isSteins == true)
                         const PBadge(
-                          text: '互动',
+                          text: uiTx('互动'),
                           top: 6,
                           right: 6,
                         ),

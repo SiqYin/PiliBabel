@@ -16,7 +16,7 @@ extension SelectableRegionStateExt on SelectableRegionState {
       buttonItems.insertOrAdd(
         index,
         ContextMenuButtonItem(
-          label: isScheme ? '打开' : '站内搜索',
+          label: isScheme ? uiTx('打开') : uiTx('站内搜索'),
           onPressed: () => onMenuPressed(
             isScheme
                 ? PageUtils.handleWebview

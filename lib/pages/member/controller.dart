@@ -244,7 +244,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
       context: context,
       builder: (context) => AlertDialog(
         title: Text(uiTx('提示')),
-        content: Text(relation.value != 128 ? '确定拉黑UP主?' : '从黑名单移除UP主'),
+        content: Text(relation.value != 128 ? uiTx('确定拉黑UP主?') : uiTx('从黑名单移除UP主')),
         actions: [
           TextButton(
             onPressed: Get.back,

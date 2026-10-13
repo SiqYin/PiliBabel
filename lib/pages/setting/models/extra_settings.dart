@@ -701,7 +701,7 @@ Future<void> audioNormalization(
         '3',
       };
       return SelectDialog<String>(
-        title: fallback ? '服务器无loudnorm配置时使用' : '音量均衡',
+        title: fallback ? uiTx('服务器无loudnorm配置时使用') : uiTx('音量均衡'),
         toggleable: true,
         value: audioNormalization,
         values: values

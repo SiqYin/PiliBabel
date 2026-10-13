@@ -58,7 +58,7 @@ class SearchUserItem extends StatelessWidget {
                             ),
                             if (remarkOf(item.mid) case final remark?)
                               TextSpan(
-                                text: '（$remark）',
+                                text: uiTxP('（{0}）', [remark]),
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: ColorScheme.of(context).primary,
