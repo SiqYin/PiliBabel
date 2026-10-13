@@ -151,7 +151,7 @@ class HistoryItem extends StatelessWidget {
                                 type: PBadgeType.gray,
                               ),
                             if (item.isFav == 1)
-                              const PBadge(
+                              PBadge(
                                 text: uiTx('已收藏'),
                                 top: 6.0,
                                 right: 6.0,

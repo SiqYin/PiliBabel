@@ -50,7 +50,7 @@ class PgcCardVTimeline extends StatelessWidget {
                         height: maxHeight,
                       ),
                       if (item.follow == 1)
-                        const PBadge(
+                        PBadge(
                           text: uiTx('已追番'),
                           right: 6,
                           top: 6,
