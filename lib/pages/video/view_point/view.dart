@@ -157,17 +157,20 @@ class _ViewPointsPageState extends State<ViewPointsPage>
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      segment.title ?? '',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: isCurr
-                          ? TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.primary,
-                            )
-                          : null,
-                    ),
+                    Obx(() {
+                      UiTranslateService.to.revision.value;
+                      return Text(
+                        uiTx(segment.title ?? ''),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: isCurr
+                            ? TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.primary,
+                              )
+                            : null,
+                      );
+                    }),
                     Text(
                       '${segment.from != null ? DurationUtils.formatDuration(segment.from) : ''} - '
                       '${segment.to != null ? DurationUtils.formatDuration(segment.to) : ''}',
