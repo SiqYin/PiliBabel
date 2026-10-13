@@ -10,7 +10,7 @@ Widget scMenuBuilder(
       ..insertOrAdd(
         3,
         ContextMenuButtonItem(
-          label: '视频',
+          label: uiTx('视频'),
           onPressed: () {
             state.onMenuPressed(
               (text) => PiliScheme.videoPush(null, text),
@@ -21,7 +21,7 @@ Widget scMenuBuilder(
       ..insertOrAdd(
         4,
         ContextMenuButtonItem(
-          label: '搜索',
+          label: uiTx('搜索'),
           onPressed: () {
             state.onMenuPressed(
               (text) => Get.toNamed(

@@ -560,7 +560,7 @@ class _SavePanelState extends State<SavePanel> {
                   ),
                   iconButton(
                     size: 42,
-                    tooltip: showBottom ? '隐藏' : '显示',
+                    tooltip: showBottom ? uiTx('隐藏') : uiTx('显示'),
                     context: context,
                     icon: showBottom
                         ? const Icon(Icons.visibility_off)

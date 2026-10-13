@@ -245,24 +245,6 @@ class _UpowerRankPageState extends State<UpowerRankPage>
                               ),
                             ),
                             const TextSpan(
-                              text: ' 天',
+                              text: uiTx(' 天'),
                               style: TextStyle(fontSize: 13),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              )
-            : HttpError(onReload: _controller.onReload),
-      Error(:final errMsg) => HttpError(
-        errMsg: errMsg,
-        onReload: _controller.onReload,
-      ),
-    };
-  }
-
-  @override
-  bool get wantKeepAlive => widget.privilegeType != null;
-}
+           

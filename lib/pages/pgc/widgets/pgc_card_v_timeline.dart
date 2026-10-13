@@ -50,56 +50,8 @@ class PgcCardVTimeline extends StatelessWidget {
                       ),
                       if (item.follow == 1)
                         const PBadge(
-                          text: '已追番',
+                          text: uiTx('已追番'),
                           right: 6,
                           top: 6,
                         ),
                       PBadge(
-                        text: '${item.pubTime}',
-                        left: 6,
-                        bottom: 6,
-                        type: PBadgeType.gray,
-                      ),
-                    ],
-                  );
-                },
-              ),
-            ),
-            content(context),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget content(BuildContext context) {
-    final theme = Theme.of(context);
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(4, 5, 0, 3),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              item.title ?? '',
-              textAlign: TextAlign.start,
-              style: const TextStyle(
-                letterSpacing: 0.3,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            Text(
-              item.pubIndex ?? '',
-              maxLines: 1,
-              style: TextStyle(
-                fontSize: theme.textTheme.labelMedium!.fontSize,
-                color: theme.colorScheme.outline,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

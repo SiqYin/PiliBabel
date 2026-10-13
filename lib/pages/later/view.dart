@@ -235,7 +235,7 @@ class _LaterPageState extends State<LaterPage>
                     ),
                     TextSpan(
                       children: [
-                        TextSpan(text: value ? '最早添加' : '最近添加'),
+                        TextSpan(text: value ? uiTx('最早添加') : uiTx('最近添加')),
                         WidgetSpan(
                           alignment: .middle,
                           child: Icon(

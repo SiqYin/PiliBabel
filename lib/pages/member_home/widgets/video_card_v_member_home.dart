@@ -126,41 +126,8 @@ class VideoCardVMemberHome extends StatelessWidget {
                         )
                       else if (videoItem.isCooperation == true)
                         const PBadge(
-                          text: '合作',
+                          text: uiTx('合作'),
                           top: 6,
                           right: 6,
                         )
-                      else if (videoItem.isSteins == true)
-                        const PBadge(
-                          text: '互动',
-                          top: 6,
-                          right: 6,
-                        ),
-                    ],
-                  );
-                },
-              ),
-            ),
-            content(context),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget content(BuildContext context) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(6, 5, 6, 5),
-        child: Text(
-          '${videoItem.title}\n',
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            height: 1.38,
-          ),
-        ),
-      ),
-    );
-  }
-}
+                      else if (v

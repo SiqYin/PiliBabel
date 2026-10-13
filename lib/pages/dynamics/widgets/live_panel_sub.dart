@@ -66,54 +66,11 @@ Widget livePanelSub(
                 ),
               )
             else
-              const PBadge(
-                text: '直播结束',
+              PBadge(
+                text: uiTx('直播结束'),
                 top: 6,
                 right: 6,
               ),
             if (live.areaName case final areaName?)
               Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Container(
-                  height: 80,
-                  alignment: Alignment.bottomLeft,
-                  padding: const EdgeInsets.fromLTRB(12, 0, 10, 10),
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: <Color>[
-                        Colors.transparent,
-                        Colors.black45,
-                      ],
-                    ),
-                    borderRadius: BorderRadius.vertical(
-                      bottom: Style.imgRadius,
-                    ),
-                  ),
-                  child: Text(
-                    areaName,
-                    style: TextStyle(
-                      fontSize: theme.textTheme.labelMedium!.fontSize,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        if (live.title case final title?)
-          Text(
-            title,
-            maxLines: isDetail ? null : 1,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-            overflow: isDetail ? null : TextOverflow.ellipsis,
-          ),
-        const SizedBox(height: 2),
-      ],
-    ),
-  );
-}
+     

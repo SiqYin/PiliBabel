@@ -69,56 +69,10 @@ class _FavNotePageState extends State<FavNotePage>
                     const TextStyle(fontSize: 14),
                 labelColor: theme.colorScheme.onSecondaryContainer,
                 unselectedLabelColor: theme.colorScheme.outline,
-                tabs: const [
-                  Tab(text: '未发布笔记'),
-                  Tab(text: '公开笔记'),
+                tabs: [
+                  Tab(text: uiTx('未发布笔记')),
+                  Tab(text: uiTx('公开笔记')),
                 ],
                 onTap: (index) {
                   try {
-                    if (!_tabController.indexIsChanging) {
-                      Get.find<FavNoteController>(
-                        tag: index == 0 ? 'false' : 'true',
-                      ).scrollController.animToTop();
-                    }
-                  } catch (_) {}
-                },
-              ),
-            ),
-            // TextButton(
-            //   style: TextButton.styleFrom(
-            //     foregroundColor: theme.colorScheme.onSurfaceVariant,
-            //     visualDensity: VisualDensity.compact,
-            //     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            //   ),
-            //   onPressed: () async {
-            //     final favNoteController = Get.find<FavNoteController>(
-            //         tag: _tabController.index == 0 ? 'false' : 'true');
-            //     if (favNoteController.enableMultiSelect.value) {
-            //       favNoteController.onDisable();
-            //     } else {
-            //       if (favNoteController.loadingState.value.isSuccess &&
-            //           favNoteController.loadingState.value.data?.isNotEmpty ==
-            //               true) {
-            //         favNoteController.enableMultiSelect.value = true;
-            //       }
-            //     }
-            //   },
-            //   child: Text(uiTx('管理')),
-            // ),
-            // const SizedBox(width: 12),
-          ],
-        ),
-        Expanded(
-          child: TabBarView(
-            controller: _tabController,
-            physics: const NeverScrollableScrollPhysics(),
-            children: const [
-              FavNoteChildPage(isPublish: false),
-              FavNoteChildPage(isPublish: true),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
+                    if (!_tab
