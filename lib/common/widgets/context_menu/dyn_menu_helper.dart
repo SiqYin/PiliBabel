@@ -10,7 +10,7 @@ Widget dynTextMenuBuilder(
     ..insertOrAdd(
       3,
       ContextMenuButtonItem(
-        label: '文本',
+        label: uiTx('文本'),
         onPressed: () {
           state.hideAndClear();
           _showTextDialog(text);
@@ -20,7 +20,7 @@ Widget dynTextMenuBuilder(
     ..insertOrAdd(
       4,
       ContextMenuButtonItem(
-        label: '表情',
+        label: uiTx('表情'),
         onPressed: () {
           state.hideAndClear();
           _showEmoteDialog(moduleDynamic);
@@ -79,7 +79,7 @@ void _addDynFilterItem(
             },
           );
         },
-        label: '加入过滤',
+        label: uiTx('加入过滤'),
       ),
     );
   }

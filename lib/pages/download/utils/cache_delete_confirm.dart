@@ -103,7 +103,7 @@ Future<bool> confirmDeleteFolders({
   );
   final choice = await _showPrimaryDialog(
     context: context,
-    title: uiTx(folderList.length == 1 ? '确定删除该文件夹？' : '确定删除选中文件夹？'),
+    title: uiTx(folderList.length == 1 ? uiTx('确定删除该文件夹？') : uiTx('确定删除选中文件夹？')),
     description: uiTx('只会删除文件夹关联，不会删除本地离线缓存。'),
     cacheCount: entries.length,
   );

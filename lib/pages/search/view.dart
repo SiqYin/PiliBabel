@@ -125,7 +125,7 @@ class _SearchPageState extends State<SearchPage> {
       onChanged: _searchController.onChange,
       decoration: InputDecoration(
         visualDensity: .standard,
-        hintText: _searchController.hintText ?? '搜索',
+        hintText: _searchController.hintText ?? uiTx('搜索'),
         border: InputBorder.none,
       ),
       onSubmitted: (value) => _searchController.submit(),
@@ -370,7 +370,7 @@ class _SearchPageState extends State<SearchPage> {
       bool enable = _searchController.recordSearchHistory.value;
       return IconButton(
         iconSize: 22,
-        tooltip: enable ? '记录搜索' : '无痕搜索',
+        tooltip: enable ? uiTx('记录搜索') : uiTx('无痕搜索'),
         icon: DisabledIcon(
           disable: !enable,
           child: Icon(

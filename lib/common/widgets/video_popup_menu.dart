@@ -361,7 +361,7 @@ class VideoPopupMenu extends StatelessWidget {
                       actions: tp.dislikeReasons!
                           .map(
                             (reason) => _DialogChipAction(
-                              label: reason.name ?? '未知',
+                              label: reason.name ?? uiTx('未知'),
                               onPressed: onReasonTap(r: reason),
                             ),
                           )
@@ -373,7 +373,7 @@ class VideoPopupMenu extends StatelessWidget {
                       actions: tp.feedbacks!
                           .map(
                             (feedback) => _DialogChipAction(
-                              label: feedback.name ?? '未知',
+                              label: feedback.name ?? uiTx('未知'),
                               onPressed: onReasonTap(f: feedback),
                             ),
                           )

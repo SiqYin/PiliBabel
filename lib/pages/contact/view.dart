@@ -69,8 +69,8 @@ class _ContactPageState extends State<ContactPage>
           TabBar(
             controller: _controller,
             tabs: const [
-              Tab(text: '我的关注'),
-              Tab(text: '我的粉丝'),
+              Tab(text: uiTx('我的关注')),
+              Tab(text: uiTx('我的粉丝')),
             ],
           ),
           Expanded(
