@@ -42,6 +42,7 @@ import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 
 const Set<TargetPlatform> _kDesktopPlatforms = <TargetPlatform>{
   TargetPlatform.macOS,

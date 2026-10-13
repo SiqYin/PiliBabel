@@ -13,6 +13,7 @@ import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/theme_utils.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 
 class EmotePanel extends StatefulWidget {
   final Function(Emote emote, double? width, double? height) onChoose;
