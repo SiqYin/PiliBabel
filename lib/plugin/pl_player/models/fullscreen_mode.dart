@@ -1,5 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
-const double kScreenRatio = 1.2;
+double kScreenRatio = 1.2;
 
 // 全屏模式
 enum FullScreenMode {

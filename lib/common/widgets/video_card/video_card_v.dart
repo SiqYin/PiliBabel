@@ -130,7 +130,7 @@ class VideoCardV extends StatelessWidget {
                           if (videoItem case RcmdVideoItemAppModel(
                             :final canPlay,
                           ) when canPlay != 1)
-                            const PBadge(
+                            PBadge(
                               text: uiTx('充电专属'),
                               top: 6,
                               right: 6,
@@ -202,7 +202,7 @@ class VideoCardV extends StatelessWidget {
                     type: .secondary,
                   ),
                 if (videoItem.goto == 'picture')
-                  const PBadge(
+                  PBadge(
                     text: uiTx('动态'),
                     isStack: false,
                     size: .small,
@@ -210,7 +210,7 @@ class VideoCardV extends StatelessWidget {
                     fontSize: 9,
                   ),
                 if (Pref.showRcmdReason && videoItem.isFollowed)
-                  const PBadge(
+                  PBadge(
                     text: uiTx('已关注'),
                     isStack: false,
                     size: .small,

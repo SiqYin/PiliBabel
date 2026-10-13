@@ -276,7 +276,7 @@ class _CreateFavPageState extends State<CreateFavPage> {
                             color: theme.colorScheme.error,
                           ),
                         ),
-                        const TextSpan(
+                        TextSpan(
                           text: uiTx('名称'),
                           style: TextStyle(fontSize: 14),
                         ),

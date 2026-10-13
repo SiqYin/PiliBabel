@@ -19,7 +19,7 @@ import 'package:get/get_state_manager/src/rx_flutter/rx_obx_widget.dart';
 import 'package:material_ui/material_ui.dart';
 
 const _kSqueeze = 1.25;
-const _kItemExtent = 38.0;
+_kItemExtent = 38.0;
 
 enum _ShutdownType with EnumWithLabel {
   pause('暂停视频'),
