@@ -115,7 +115,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
     }
     child = Expanded(child: child);
 
-    const btnHeight = 30.0;
+    btnHeight = 30.0;
 
     return Padding(
       padding: const .only(

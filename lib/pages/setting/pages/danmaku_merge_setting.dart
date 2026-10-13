@@ -507,7 +507,7 @@ class _MergePreset {
 
   final int value;
 
-  /// 展示用原文。这些预设放在 `static const` 列表里、构造是 const，
+  /// 展示用原文。这些预设放在 `static ` 列表里、构造是 const，
   /// 没法在定义处调 uiTx，只能靠 getter 在读取时翻译。
   final String _label;
 
