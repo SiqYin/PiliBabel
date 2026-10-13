@@ -619,15 +619,18 @@ class _LoginPageState extends State<LoginPage> {
       body: Column(
         children: [
           if (!isLandscape)
-            TabBar(
-              tabs: const [
+            Obx(() {
+              UiTranslateService.to.revision.value;
+              return TabBar(
+              tabs: [
                 Tab(icon: Icon(Icons.password), text: uiTx('密码')),
                 Tab(icon: Icon(Icons.sms_outlined), text: uiTx('短信')),
                 Tab(icon: Icon(Icons.qr_code), text: uiTx('扫码')),
                 Tab(icon: Icon(Icons.cookie_outlined), text: 'Cookie'),
               ],
               controller: _loginPageCtr.tabController,
-            ),
+            );
+            }),
           Expanded(
             child: NotificationListener<ScrollStartNotification>(
               onNotification: (notification) {

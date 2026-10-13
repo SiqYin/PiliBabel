@@ -30,13 +30,16 @@ class _LiveDmBlockPageState extends State<LiveDmBlockPage> {
   @override
   Widget build(BuildContext context) {
     padding = MediaQuery.viewPaddingOf(context);
-    Widget tabBar = TabBar(
+    Widget tabBar = Obx(() {
+                      UiTranslateService.to.revision.value;
+                      return TabBar(
       controller: _controller.tabController,
-      tabs: const [
+      tabs: [
         Tab(text: uiTx('关键词')),
         Tab(text: uiTx('用户')),
       ],
     );
+                    });
 
     Widget view = tabBarView(
       hitTestBehavior: .translucent,

@@ -47,7 +47,9 @@ class _FavPgcPageState extends State<FavPgcPage>
         Row(
           children: [
             Expanded(
-              child: TabBar(
+              child: Obx(() {
+                       UiTranslateService.to.revision.value;
+                       return TabBar(
                 overlayColor: const WidgetStatePropertyAll(Colors.transparent),
                 splashFactory: NoSplash.splashFactory,
                 isScrollable: true,
@@ -72,7 +74,7 @@ class _FavPgcPageState extends State<FavPgcPage>
                     const TextStyle(fontSize: 14),
                 labelColor: theme.colorScheme.onSecondaryContainer,
                 unselectedLabelColor: theme.colorScheme.outline,
-                tabs: const [
+                tabs: [
                   Tab(text: uiTx('想看')),
                   Tab(text: uiTx('在看')),
                   Tab(text: uiTx('看过')),
@@ -86,7 +88,8 @@ class _FavPgcPageState extends State<FavPgcPage>
                     }
                   } catch (_) {}
                 },
-              ),
+              );
+                     }),
             ),
             // TextButton(
             //   style: TextButton.styleFrom(
