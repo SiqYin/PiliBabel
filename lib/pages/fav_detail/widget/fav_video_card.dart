@@ -118,7 +118,7 @@ class FavVideoCardH extends StatelessWidget {
                           type: PBadgeType.gray,
                         ),
                         if (item.type == 12)
-                          PBadge(
+                          const PBadge(
                             text: uiTx('音频'),
                             top: 6.0,
                             right: 6.0,

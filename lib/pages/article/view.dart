@@ -567,7 +567,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                         placeholder: (_, _) => const SizedBox.shrink(),
                       ),
                       if (pic.isLongPic == true)
-                        PBadge(
+                        const PBadge(
                           right: 12,
                           bottom: 12,
                           text: uiTx('长图'),
