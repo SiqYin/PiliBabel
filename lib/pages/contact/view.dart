@@ -66,13 +66,16 @@ class _ContactPageState extends State<ContactPage>
       ),
       body: Column(
         children: [
-          TabBar(
+          Obx(() {
+            UiTranslateService.to.revision.value;
+            return TabBar(
             controller: _controller,
-            tabs: const [
+            tabs: [
               Tab(text: uiTx('我的关注')),
               Tab(text: uiTx('我的粉丝')),
             ],
-          ),
+          );
+          }),
           Expanded(
             child: tabBarView(
               controller: _controller,
