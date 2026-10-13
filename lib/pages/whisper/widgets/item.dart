@@ -94,7 +94,7 @@ class WhisperSessionItem extends StatelessWidget {
                 Get.back();
                 onSetTop(item.isPinned, item.id);
               },
-              child: Text(item.isPinned ? '移除置顶' : '置顶'),
+              child: Text(item.isPinned ? uiTx('移除置顶') : uiTx('置顶')),
             ),
             if (item.id.privateId.hasTalkerUid()) ...[
               if (kDebugMode || item.hasUnread())
@@ -137,7 +137,7 @@ class WhisperSessionItem extends StatelessWidget {
                 CustomPopupMenuItem<void>(
                   height: 42,
                   onTap: () => onSetTop(item.isPinned, item.id),
-                  child: Text(item.isPinned ? '移除置顶' : '置顶'),
+                  child: Text(item.isPinned ? uiTx('移除置顶') : uiTx('置顶')),
                 ),
                 if (item.id.privateId.hasTalkerUid()) ...[
                   if (kDebugMode || item.hasUnread())

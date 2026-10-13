@@ -110,7 +110,7 @@ class _DownloadPageState extends State<DownloadPage>
   Future<void> _createFolder() async {
     final title = await showDownloadFolderNameDialog(
       context: context,
-      title: '新建文件夹',
+      title: uiTx('新建文件夹'),
       initialValue: _collectionService.buildDefaultFolderTitle(),
     );
     if (title == null) {
@@ -123,7 +123,7 @@ class _DownloadPageState extends State<DownloadPage>
   Future<void> _renameFolder(DownloadFolder folder) async {
     final title = await showDownloadFolderNameDialog(
       context: context,
-      title: '重命名文件夹',
+      title: uiTx('重命名文件夹'),
       initialValue: folder.title,
     );
     if (title == null || title == folder.title) {
@@ -146,7 +146,7 @@ class _DownloadPageState extends State<DownloadPage>
     final folderIds = await showDownloadFolderPickerDialog(
       context: context,
       collectionService: _collectionService,
-      title: '添加到文件夹',
+      title: uiTx('添加到文件夹'),
     );
     if (folderIds == null || folderIds.isEmpty) {
       return;
@@ -213,7 +213,7 @@ class _DownloadPageState extends State<DownloadPage>
     }
     await Get.to(
       DownloadVideoSortPage(
-        title: '排序: 全部视频',
+        title: uiTx('排序: 全部视频'),
         entries: _controller.allVideos,
         onSave: _collectionService.saveAllVideoOrder,
       ),
@@ -258,7 +258,7 @@ class _DownloadPageState extends State<DownloadPage>
             final selectedIds = await showDownloadFolderPickerDialog(
               context: context,
               collectionService: _collectionService,
-              title: '添加到文件夹',
+              title: uiTx('添加到文件夹'),
             );
             if (selectedIds == null || selectedIds.isEmpty) {
               return;
@@ -296,7 +296,7 @@ class _DownloadPageState extends State<DownloadPage>
           final selectedIds = await showDownloadFolderPickerDialog(
             context: context,
             collectionService: _collectionService,
-            title: '添加到文件夹',
+            title: uiTx('添加到文件夹'),
           );
           if (selectedIds == null || selectedIds.isEmpty) {
             return;
