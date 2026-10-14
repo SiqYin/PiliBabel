@@ -1,4 +1,3 @@
-import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
@@ -141,8 +140,7 @@ class HistoryItem extends StatelessWidget {
                                   : item.covers?.firstOrNull ?? '',
                               width: maxWidth,
                               height: maxHeight,
-                            )
-                            CoverTranslateButton(cover: item.cover?.isNotEmpty == true),,
+                            ),
                             if (hasDuration)
                               PBadge(
                                 text: item.progress == -1

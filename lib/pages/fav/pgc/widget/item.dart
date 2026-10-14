@@ -1,4 +1,3 @@
-import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
@@ -73,8 +72,7 @@ class FavPgcItem extends StatelessWidget {
                               borderRadius: const BorderRadius.all(
                                 Radius.circular(4),
                               ),
-                            )
-                            CoverTranslateButton(cover: item.cover),,
+                            ),
                             PBadge(
                               right: 4,
                               top: 4,
