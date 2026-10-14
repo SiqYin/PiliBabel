@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:get/get.dart';
 
 /// 视频封面左下角的「翻译封面」按钮。
 ///
@@ -11,8 +10,9 @@ import 'package:get/get.dart';
 /// 用当前界面语言说清楚封面上写了什么；图上没有文字就回一句「未识别到文字」。
 /// 只在点击时发请求，不预取，所以列表里刷再多封面也不会有额外开销。
 ///
-/// 按下到出结果之间没有任何静默期：手指一落就先弹 toast 并让按钮转圈，
-/// 请求成功给译文、失败给原因、超时也给原因，四条路径都会弹对话框。
+/// 弹窗刻意不用 AlertDialog：它依赖 MaterialLocalizations，而全局弹窗的
+/// overlay 不一定提供这套上下文，构造失败时会只剩一个变暗的遮罩、什么都看不到。
+/// 这里用不依赖任何 Material 上下文的普通容器，并把真实错误原文显示出来。
 class CoverTranslateButton extends StatefulWidget {
   const CoverTranslateButton({
     super.key,
@@ -35,44 +35,82 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
   Future<void> _onTap() async {
     if (_loading) return;
     setState(() => _loading = true);
-    // 按下立刻给可见反馈，不等请求回来
     SmartDialog.showToast('正在翻译封面…');
-    String? text;
+
+    String msg;
     try {
       final cover = widget.cover;
-      text = (cover == null || cover.isEmpty)
-          ? null
-          : await UiTranslateService.to
-                .describeImage(cover)
-                .timeout(const Duration(seconds: 15));
-    } catch (_) {
-      text = null;
+      if (cover == null || cover.isEmpty) {
+        msg = '这张封面没有可用的图片地址';
+      } else {
+        final text = await UiTranslateService.to
+            .describeImage(cover)
+            .timeout(const Duration(seconds: 15));
+        msg = (text?.trim().isNotEmpty == true)
+            ? text!
+            : '接口没有返回内容（请求已发出，但没有拿到译文）';
+      }
+    } catch (e) {
+      // 把真实原因原样显示出来，不再静默
+      msg = '请求出错：$e';
     }
+
     if (mounted) {
       setState(() => _loading = false);
     }
-    // 用项目里的全局弹窗（SmartDialog），不依赖卡片自身的 context，
-    // 列表重建、卡片被回收都不会影响这次点击的结果
-    SmartDialog.show(
-      builder: (dialogContext) => AlertDialog(
-        title: Obx(() => Text(uiTx('封面翻译'))),
-        content: SingleChildScrollView(
-          child: Text(
-            text?.trim().isNotEmpty == true
-                ? text!
-                : (widget.cover?.isNotEmpty == true
-                      ? uiTx('封面翻译失败，请稍后重试')
-                      : uiTx('这张封面没有可用的图片地址')),
+    try {
+      await SmartDialog.show(
+        builder: (_) => Container(
+          constraints: const BoxConstraints(maxWidth: 320),
+          padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFF2B2B2B),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '封面翻译',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 10),
+              SingleChildScrollView(
+                child: Text(
+                  msg,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                    height: 1.45,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: SmartDialog.dismiss,
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    child: Text(
+                      '关闭',
+                      style: TextStyle(color: Color(0xFF7FB4FF), fontSize: 14),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Obx(() => Text(uiTx('关闭'))),
-          ),
-        ],
-      ),
-    );
+      );
+    } catch (e) {
+      SmartDialog.showToast('弹窗失败：$e');
+    }
   }
 
   @override
