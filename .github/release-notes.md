@@ -1,15 +1,10 @@
-### PiliBabel v1.8.11
+### PiliBabel v1.8.12
 
-**The cover image is sent with its real format.**
+**Cover translation describes the picture, not just its text.**
 
-- **Why the server answered 500.** The cover was always declared as `image/jpeg`, but the
-  Bilibili CDN hands WebP to a mobile user agent. The server tried to decode WebP bytes as
-  JPEG and failed. The format is now read from the image's own header - WebP, PNG, GIF and
-  JPEG are all recognised.
-- **A fallback for the data URI.** If the server rejects an inline image with a 5xx, the
-  request is retried once with the plain image URL, which is how the endpoint originally
-  expected to receive it.
-- **Failures stay readable.** A failed image download, an empty response and an HTTP error
-  each report themselves, so the reason is visible rather than guessed.
+- **The prompt changed.** It used to ask only for the text on the image and to answer "no text
+  found" when there was none. It now asks for a translation of the text first and a
+  description of what the image shows second, so a cover without any writing still comes back
+  with something useful.
 
 Downloads are below.
