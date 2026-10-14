@@ -110,6 +110,8 @@ class AiSettingController extends GetxController {
   }
 
   void saveUiTranslateEnabled(bool value) {
+    // 打开 AI 翻译时自动打开、关闭时自动关闭（之后用户仍可手动改）
+    Pref.videoTitleFull = value;
     if (uiTranslateEnabled.value == value) return;
     uiTranslateEnabled.value = value;
     Pref.uiTranslateEnabled = value;

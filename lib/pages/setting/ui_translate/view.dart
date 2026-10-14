@@ -1,4 +1,5 @@
 import 'package:PiliPlus/pages/setting/ai_setting/controller.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/services/ui_translate/translate_provider.dart';
@@ -130,6 +131,25 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                 ),
               ),
             ),
+            Obx(() {
+              final enabled = controller.uiTranslateEnabled.value;
+              return SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(uiTx('视频标题完全显示')),
+                subtitle: Text(
+                  uiTx(
+                    enabled
+                        ? '首页与动态的视频方块会纵向拉长，尽量完整显示翻译后的标题'
+                        : '开启 AI 翻译后生效；当前翻译已关闭',
+                  ),
+                ),
+                value: Pref.videoTitleFull,
+                onChanged: (value) {
+                  Pref.videoTitleFull = value;
+                  setState(() {});
+                },
+              );
+            }),
             // 翻译引擎：内置官方模型（默认、免密钥）/ 自备 API。
             // 两个引擎**共用同一份目标语言清单**，差异只在质量提示上。
             Obx(() {
