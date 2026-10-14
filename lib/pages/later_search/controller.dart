@@ -25,9 +25,10 @@ class LaterSearchController
   }
 
   @override
-  Future<LoadingState<LaterData>> customGetData() => UserHttp.seeYouLater(
+  Future<LoadingState<LaterData>> customGetData() async =>
+      UserHttp.seeYouLater(
     page: page,
-    keyword: editController.value.text,
+    keyword: await resolveKeyword(),
   );
 
   @override

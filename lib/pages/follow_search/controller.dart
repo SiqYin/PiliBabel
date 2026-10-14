@@ -10,12 +10,12 @@ class FollowSearchController
   final int mid;
 
   @override
-  Future<LoadingState<FollowData>> customGetData() =>
+  Future<LoadingState<FollowData>> customGetData() async =>
       MemberHttp.getfollowSearch(
         mid: mid,
         ps: 20,
         pn: page,
-        name: editController.value.text,
+        name: await resolveKeyword(),
       );
 
   @override
