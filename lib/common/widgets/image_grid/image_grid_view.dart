@@ -21,6 +21,7 @@ import 'dart:io' show Platform;
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/image_grid/image_grid_builder.dart';
@@ -256,6 +257,8 @@ class ImageGridView extends StatelessWidget {
                   const PBadge(text: 'Live', right: 8, bottom: 8, type: .gray)
                 else if (item.isLongPic)
                   PBadge(text: uiTx('长图'), right: 8, bottom: 8),
+                // 图片翻译：放在 Stack 最后一位，命中测试才优先于整块图片的点击
+                if (!item.isLivePhoto) CoverTranslateButton(cover: item.url),
               ],
             );
             if (!item.isLongPic) {
