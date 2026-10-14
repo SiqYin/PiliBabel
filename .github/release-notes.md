@@ -1,27 +1,26 @@
-### PiliBabel v1.7.0
+### PiliBabel v1.8.0
 
-**Interface translation now covers the whole player, not just the chrome.**
+**Subtitles and covers translate themselves now.**
 
-- **Listen-video page.** The audio page only translated its buttons and tooltips; the
-  body it renders — video title, UP name, description, playlist entries — went out in
-  the source language. All of it goes through the translation table now, and the panels
-  refresh themselves the moment a translation lands.
-- **Chapter names on the progress bar.** The segment labels an uploader writes are
-  painted by a RenderBox that only repainted when the playback position moved, so the
-  translation arrived after the last repaint and never showed. It repaints on the
-  translation revision now.
-- **The rest of the app.** A sweep of the tree added ~200 more strings that reached the
-  screen without going through the translation table: settings subtitles, danmaku merge
-  presets, log viewer, search include/exclude dialogs, history controls, player
-  fullscreen and lock buttons, live danmaku block, favourite tabs, login tabs, the
-  context menus, publish and repost dialogs, and the list goes on. Enum labels, static
-  field initializers and interpolated strings were left alone on purpose — their values
-  double as request parameters and comparison keys.
-- **README language inventory corrected.** The old text claimed 150 official languages
-  plus four minority languages and three dialects that PiliBabel added. Cantonese,
-  Tibetan, Uyghur and Miao were already in the official list; the real split is 151
-  official plus six the official list does not cover — Traditional Chinese, Simplified
-  and Traditional Wu, mainland and Taiwan Hokkien, and Zhuang. All 12 translations of
-  the README carry the corrected numbers now.
+- **Built-in Chinese subtitles are translated.** When a video ships a Chinese subtitle track
+  (including Bilibili's `ai-zh` auto-generated one) and the interface language is anything
+  other than Simplified Chinese, that track is opened automatically and its lines are
+  translated into the interface language. Simplified Chinese is left alone, since the source
+  is already Simplified Chinese, and a video with no subtitles keeps them off. Auto-opening
+  only applies while the subtitle preference is still at its default; if you have picked a
+  preference yourself, your choice wins. Translation itself is not optional: whatever Chinese
+  track is on screen gets translated.
+- **Cover translation.** Every video cover now carries a small button in its bottom-left
+  corner. Tapping it asks the built-in multimodal model what the text on that cover says and
+  shows the answer in the interface language; a cover with no text says so. The request only
+  goes out when you tap.
+- **Badges translate too.** The charging-exclusive and interactive-video labels next to the
+  video title, and the badges on video cards, used to be hardcoded or taken straight from the
+  API and stayed Chinese. They go through the translation table now.
+- **Search boxes on the list pages.** Watch history, favourites, following and watch-later
+  each have their own search box, and typing in the interface language found nothing because
+  Bilibili's search only understands the Chinese original. They now resolve the query the
+  same way the video search page does, and fall back to exactly what you typed when
+  translation is unavailable.
 
 Downloads are below.
