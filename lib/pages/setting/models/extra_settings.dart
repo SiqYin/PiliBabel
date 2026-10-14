@@ -57,6 +57,13 @@ import 'package:material_design_icons_flutter/material_design_icons_flutter.dart
 import 'package:material_ui/material_ui.dart' hide RefreshIndicator;
 
 List<SettingsModel> get extraSettings => [
+  SwitchModel(
+    title: uiTx('评论区默认展开评论'),
+      subtitle: uiTx('开启后评论区所有「查看更多」默认就是展开的'),
+    leading: const Icon(Icons.unfold_more),
+    setKey: SettingBoxKey.replyDefaultExpand,
+    defaultVal: false,
+  ),
   if (PlatformUtils.isDesktop) ...[
     SwitchModel(
       title: uiTx('退出时最小化'),
