@@ -1,11 +1,8 @@
-### PiliBabel v1.10.7
+### PiliBabel v1.10.8
 
-**The home feed blocks now grow and shrink with the switch.**
-
-- The grid delegate on the home feed was a `late final` field: it was computed once and
-  then cached, so rebuilding the page never picked up the new height. It is a getter now
-  and is recomputed on every build.
-- Turning the option on stretches the home blocks to fit four title lines; turning it off
-  puts them back immediately. The same applies to the member, ranking, live and search grids.
+- Fixed a syntax error introduced in v1.10.7 by converting a grid delegate that lived
+  inside a method instead of on a class; that file is back to its original form.
+- The home feed grid delegate is still recomputed on every build, so the blocks follow the
+  switch: on stretches them to four title lines, off puts them back right away.
 
 Downloads are below.
