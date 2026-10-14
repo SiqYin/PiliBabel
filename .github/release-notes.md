@@ -1,26 +1,14 @@
-### PiliBabel v1.8.0
+### PiliBabel v1.8.1
 
-**Subtitles and covers translate themselves now.**
+**The cover translation button answers every time it is pressed.**
 
-- **Built-in Chinese subtitles are translated.** When a video ships a Chinese subtitle track
-  (including Bilibili's `ai-zh` auto-generated one) and the interface language is anything
-  other than Simplified Chinese, that track is opened automatically and its lines are
-  translated into the interface language. Simplified Chinese is left alone, since the source
-  is already Simplified Chinese, and a video with no subtitles keeps them off. Auto-opening
-  only applies while the subtitle preference is still at its default; if you have picked a
-  preference yourself, your choice wins. Translation itself is not optional: whatever Chinese
-  track is on screen gets translated.
-- **Cover translation.** Every video cover now carries a small button in its bottom-left
-  corner. Tapping it asks the built-in multimodal model what the text on that cover says and
-  shows the answer in the interface language; a cover with no text says so. The request only
-  goes out when you tap.
-- **Badges translate too.** The charging-exclusive and interactive-video labels next to the
-  video title, and the badges on video cards, used to be hardcoded or taken straight from the
-  API and stayed Chinese. They go through the translation table now.
-- **Search boxes on the list pages.** Watch history, favourites, following and watch-later
-  each have their own search box, and typing in the interface language found nothing because
-  Bilibili's search only understands the Chinese original. They now resolve the query the
-  same way the video search page does, and fall back to exactly what you typed when
-  translation is unavailable.
+- **No more dead taps.** The button used to bail out silently in three cases: an empty cover
+  URL, the translation service not being registered yet, and the request throwing an
+  exception. Any of them made a tap do nothing at all - not even a spinner. All three now end
+  in a dialog: the translation on success, and the reason for the failure otherwise.
+- **Bigger tap target.** The icon grew from 13 to 19, and the button now reserves a fixed
+  32x32 area with an opaque hit test, so the padding around the icon is tappable as well.
+- **Tooltip removed from the tap path.** It sat between the gesture detector and the icon and
+  could swallow the press on some platforms.
 
 Downloads are below.
