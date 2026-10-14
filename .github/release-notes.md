@@ -1,18 +1,16 @@
-### PiliBabel v1.8.6
+### PiliBabel v1.8.7
 
-**The cover translation button, take three.**
+**The cover translation result now actually shows up.**
 
-- **Build fix.** 1.8.4 and 1.8.5 never produced a release: 1.8.4 shipped with an unbalanced
-  parenthesis and 1.8.5 called a dialog API this codebase does not have. Both are corrected.
-- **Nothing can sit in front of the button.** It is now the last child of the cover stack,
-  which makes it the topmost element and the first one a tap reaches. It used to be inserted
-  right after the cover image, leaving the badges painted after it.
-- **The dialog no longer depends on the card.** It opens through the app level dialog rather
-  than the card's own context, so a list rebuild or a recycled card cannot swallow a result
-  that has already arrived.
-- **Immediate feedback.** A tap shows a toast and starts the button spinner before the request
-  goes out, and the request carries a 15 second timeout.
-- **Original size.** The visible button keeps its 13 pixel icon and 3 pixel padding; the tap
-  target underneath is a fixed 28x28 block.
+- **The dialog no longer fails to build.** It was an `AlertDialog`, which depends on
+  `MaterialLocalizations`; the app level overlay that hosts it does not necessarily provide
+  that context, so building it failed and all that was left was the dimmed barrier behind it.
+  It is now a plain container that depends on nothing, with its own close button.
+- **Failures are shown, not swallowed.** Whatever goes wrong - a request error, a timeout, an
+  empty response - is printed verbatim in the dialog, so a failure can be read instead of
+  guessed at.
+- **Tap handling kept from 1.8.6.** The button is the topmost child of the cover stack, its
+  tap target is a fixed 28x28 block, the visible icon stays at its original 13 pixels, and a
+  press shows a toast and starts the spinner immediately.
 
 Downloads are below.
