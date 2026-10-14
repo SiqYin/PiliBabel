@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
 /// 视频封面左下角的「翻译封面」按钮。
@@ -8,8 +11,8 @@ import 'package:get/get.dart';
 /// 用当前界面语言说清楚封面上写了什么；图上没有文字就回一句「未识别到文字」。
 /// 只在点击时发请求，不预取，所以列表里刷再多封面也不会有额外开销。
 ///
-/// 点击路径上没有任何静默返回：只要手指落在按钮上，就一定会弹出对话框
-/// （成功给结果，失败给原因），不会再出现「点了没反应」。
+/// 按下到出结果之间没有任何静默期：手指一落就先弹 toast 并让按钮转圈，
+/// 请求成功给译文、失败给原因、超时也给原因，四条路径都会弹对话框。
 class CoverTranslateButton extends StatefulWidget {
   const CoverTranslateButton({
     super.key,
@@ -31,16 +34,17 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
 
   Future<void> _onTap() async {
     if (_loading) return;
-    // 先把反馈做出来，后面的任何失败都只影响对话框里的文案
     setState(() => _loading = true);
+    // 按下立刻给可见反馈，不等请求回来
+    SmartDialog.showToast('正在翻译封面…');
     String? text;
     try {
       final cover = widget.cover;
-      if (cover == null || cover.isEmpty) {
-        text = null;
-      } else {
-        text = await UiTranslateService.to.describeImage(cover);
-      }
+      text = (cover == null || cover.isEmpty)
+          ? null
+          : await UiTranslateService.to
+                .describeImage(cover)
+                .timeout(const Duration(seconds: 15));
     } catch (_) {
       text = null;
     }
@@ -74,28 +78,40 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
     return Positioned(
       left: widget.left,
       bottom: widget.bottom,
-      // 32x32 的点击区，比图标本身大一圈，手指不容易点空
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: _onTap,
-        child: Container(
-          width: 32,
-          height: 32,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: Colors.black54,
-            borderRadius: BorderRadius.circular(6),
+      // 视觉上保持原来的小尺寸，但点击区透明放大到 28x28，手指不容易点空
+      child: SizedBox(
+        width: 28,
+        height: 28,
+        child: Align(
+          alignment: Alignment.bottomLeft,
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: _onTap,
+              borderRadius: BorderRadius.circular(4),
+              child: Container(
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: _loading
+                    ? const SizedBox(
+                        width: 13,
+                        height: 13,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Icon(
+                        Icons.translate,
+                        size: 13,
+                        color: Colors.white,
+                      ),
+              ),
+            ),
           ),
-          child: _loading
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: Colors.white,
-                  ),
-                )
-              : const Icon(Icons.translate, size: 19, color: Colors.white),
         ),
       ),
     );
