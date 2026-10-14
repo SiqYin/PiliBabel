@@ -7,12 +7,12 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 /// 视频封面左下角的「翻译封面」按钮。
 ///
 /// 点一下拿封面图去问内置多模态模型（Index-Translate 已支持识图），
-/// 用当前界面语言说清楚封面上写了什么；图上没有文字就回一句「未识别到文字」。
+/// 先用当前界面语言把封面上的文字识别并翻译出来，再顺带描述画面；
+/// 图上没有文字就说明未检测到文字并描述画面内容。
 /// 只在点击时发请求，不预取，所以列表里刷再多封面也不会有额外开销。
 ///
-/// 弹窗刻意不用 AlertDialog：它依赖 MaterialLocalizations，而全局弹窗的
-/// overlay 不一定提供这套上下文，构造失败时会只剩一个变暗的遮罩、什么都看不到。
-/// 这里用不依赖任何 Material 上下文的普通容器，并把真实错误原文显示出来。
+/// 弹窗与更新弹窗同一套写法（SmartDialog + AlertDialog + ColorScheme），
+/// 主题跟随 App；失败时把真实错误原文显示出来，便于定位。
 class CoverTranslateButton extends StatefulWidget {
   const CoverTranslateButton({
     super.key,
@@ -74,6 +74,15 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
               ),
             ),
             actions: [
+              // 左下角：重新识别一次（关掉当前弹窗后重跑一遍请求）
+              TextButton(
+                onPressed: () {
+                  SmartDialog.dismiss();
+                  _onTap();
+                },
+                child: Text(uiTx('再次检测')),
+              ),
+              // 右下角：满意就直接关掉
               TextButton(
                 onPressed: SmartDialog.dismiss,
                 child: Text(
