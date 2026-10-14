@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
@@ -110,7 +111,8 @@ class FavVideoCardH extends StatelessWidget {
                           src: item.cover,
                           width: maxWidth,
                           height: maxHeight,
-                        ),
+                        )
+                        CoverTranslateButton(cover: item.cover),,
                         PBadge(
                           text: DurationUtils.formatDuration(item.duration),
                           right: 6.0,

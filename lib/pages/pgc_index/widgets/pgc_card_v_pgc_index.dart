@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
@@ -47,7 +48,8 @@ class PgcCardVPgcIndex extends StatelessWidget {
                         src: item.cover,
                         width: maxWidth,
                         height: maxHeight,
-                      ),
+                      )
+                      CoverTranslateButton(cover: item.cover),,
                       PBadge(
                         text: uiTx(item.badge ?? ''),
                         top: 6,
