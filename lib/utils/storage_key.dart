@@ -300,7 +300,6 @@ abstract final class SettingBoxKey {
       systemProxyPort = 'systemProxyPort';
 
   static const String themeMode = 'themeMode',
-  static const String videoTitleFull = 'videoTitleFull',
       defaultTextScale = 'textScale',
       appFontWeightV2 = 'appFontWeightV2',
       customFontPath = 'customFontPath',
@@ -343,6 +342,8 @@ abstract final class SettingBoxKey {
       appFont = 'appFont',
       customAppFont = 'customAppFont',
       customAppFontNames = 'customAppFontNames';
+  static const String videoTitleFull = 'videoTitleFull';
+  static const String replyDefaultExpand = 'replyDefaultExpand';
 }
 
 abstract final class LocalCacheKey {

@@ -347,7 +347,9 @@ class ReplyItemGrpc extends StatelessWidget {
           child: TextMore.rich(
             primary: colorScheme.primary,
             style: const TextStyle(height: 1.75, fontSize: 14),
-            maxLines: replyLevel == 1 ? replyLengthLimit : null,
+            maxLines: replyLevel == 1
+                ? (Pref.replyDefaultExpand ? null : replyLengthLimit)
+                : null,
             TextSpan(
               children: [
                 if (replyControl.isUpTop) ...[

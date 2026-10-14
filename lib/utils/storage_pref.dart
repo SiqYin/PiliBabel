@@ -315,6 +315,12 @@ abstract final class Pref {
   static set videoTitleFull(bool value) =>
       _setting.put(SettingBoxKey.videoTitleFull, value);
 
+  /// 评论区默认展开评论：开启后评论区的「查看更多」默认就是展开状态。
+  static bool get replyDefaultExpand =>
+      _setting.get(SettingBoxKey.replyDefaultExpand, defaultValue: false);
+  static set replyDefaultExpand(bool value) =>
+      _setting.put(SettingBoxKey.replyDefaultExpand, value);
+
   static ThemeMode get themeMode => switch (_themeTypeInt) {
     0 => ThemeMode.light,
     1 => ThemeMode.dark,
