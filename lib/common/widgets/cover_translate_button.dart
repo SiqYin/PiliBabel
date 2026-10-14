@@ -51,9 +51,10 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
     if (mounted) {
       setState(() => _loading = false);
     }
-    // 用全局弹窗，不依赖卡片自身的 context，列表重建也不影响这次点击的结果
-    await Get.dialog<void>(
-      AlertDialog(
+    // 用项目里的全局弹窗（SmartDialog），不依赖卡片自身的 context，
+    // 列表重建、卡片被回收都不会影响这次点击的结果
+    SmartDialog.show(
+      builder: (dialogContext) => AlertDialog(
         title: Obx(() => Text(uiTx('封面翻译'))),
         content: SingleChildScrollView(
           child: Text(
@@ -66,7 +67,7 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
         ),
         actions: [
           TextButton(
-            onPressed: Get.back,
+            onPressed: () => Navigator.of(dialogContext).pop(),
             child: Obx(() => Text(uiTx('关闭'))),
           ),
         ],
