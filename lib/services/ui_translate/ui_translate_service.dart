@@ -616,42 +616,62 @@ class UiTranslateService extends GetxService {
       if (bytes == null || bytes.isEmpty) {
         throw Exception('封面图片内容为空');
       }
-      dataUri = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+      dataUri = 'data:${_imageMime(bytes)};base64,${base64Encode(bytes)}';
     } catch (e) {
       throw Exception('封面图片下载失败：$e');
     }
 
-    final res = await Dio().post<Map<String, dynamic>>(
-      '$base/chat/completions',
-      options: Options(
-        headers: translateApiKey.isEmpty
-            ? null
-            : {'Authorization': 'Bearer $translateApiKey'},
-        sendTimeout: const Duration(seconds: 60),
-        receiveTimeout: const Duration(seconds: 120),
-      ),
-      data: {
-        'model': translateModel,
-        'messages': [
-          {
-            'role': 'user',
-            'content': [
-              {
-                'type': 'text',
-                'text': '请用$lang描述这张图片上的文字内容，并说明这些文字'
-                    '是什么意思。如果图上没有任何文字，就直接说「未识别到文字」。'
-                    '只输出这段描述本身，不要客套、不要解释你在做什么。',
-              },
-              {
-                'type': 'image_url',
-                'image_url': {'url': dataUri},
-              },
-            ],
-          },
-        ],
-        'enable_thinking': false,
-      },
+    Map<String, dynamic> body(String image) => {
+      'model': translateModel,
+      'messages': [
+        {
+          'role': 'user',
+          'content': [
+            {
+              'type': 'text',
+              'text': '请用$lang描述这张图片上的文字内容，并说明这些文字'
+                  '是什么意思。如果图上没有任何文字，就直接说「未识别到文字」。'
+                  '只输出这段描述本身，不要客套、不要解释你在做什么。',
+            },
+            {
+              'type': 'image_url',
+              'image_url': {'url': image},
+            },
+          ],
+        },
+      ],
+      'enable_thinking': false,
+    };
+
+    final uri = '$base/chat/completions';
+    final opts = Options(
+      headers: translateApiKey.isEmpty
+          ? null
+          : {'Authorization': 'Bearer $translateApiKey'},
+      sendTimeout: const Duration(seconds: 60),
+      receiveTimeout: const Duration(seconds: 120),
     );
+
+    Response<Map<String, dynamic>> res;
+    try {
+      res = await Dio().post<Map<String, dynamic>>(
+        uri,
+        options: opts,
+        data: body(dataUri),
+      );
+    } on DioException catch (e) {
+      final code = e.response?.statusCode ?? 0;
+      if (code >= 500) {
+        // 服务端不认 data URI 时退回直发图片地址，由服务端自己抓图
+        res = await Dio().post<Map<String, dynamic>>(
+          uri,
+          options: opts,
+          data: body(imageUrl),
+        );
+      } else {
+        rethrow;
+      }
+    }
 
     final choices = res.data?['choices'];
     if (choices is List && choices.isNotEmpty) {
@@ -662,6 +682,36 @@ class UiTranslateService extends GetxService {
       }
     }
     throw Exception('接口返回内容为空（HTTP ${res.statusCode}）');
+  }
+
+  /// 按字节头判断图片真实格式：B 站图床对移动端 UA 会返回 WebP，
+  /// 一律按 jpeg 声明会让服务端解码失败。
+  static String _imageMime(List<int> b) {
+    if (b.length > 12 &&
+        b[0] == 0x52 &&
+        b[1] == 0x49 &&
+        b[2] == 0x46 &&
+        b[3] == 0x46 &&
+        b[8] == 0x57 &&
+        b[9] == 0x45 &&
+        b[10] == 0x42 &&
+        b[11] == 0x50) {
+      return 'image/webp';
+    }
+    if (b.length > 8 &&
+        b[0] == 0x89 &&
+        b[1] == 0x50 &&
+        b[2] == 0x4E &&
+        b[3] == 0x47) {
+      return 'image/png';
+    }
+    if (b.length > 4 && b[0] == 0x47 && b[1] == 0x49 && b[2] == 0x46) {
+      return 'image/gif';
+    }
+    if (b.length > 3 && b[0] == 0xFF && b[1] == 0xD8 && b[2] == 0xFF) {
+      return 'image/jpeg';
+    }
+    return 'image/jpeg';
   }
 
   /// 兼容两种写法：`.../v1` 直接用，只有域名时补上 `/v1`。
