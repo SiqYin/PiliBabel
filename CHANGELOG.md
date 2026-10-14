@@ -2,6 +2,17 @@
 
 按 Keep a Changelog 的思路编写,留个记录,方便知道每次更新都改了什么,也方便用户查看更新内容.
 
+## 1.11.0
+
+### PiliBabel v1.11.0
+
+- **New: expand dynamics by default.** A switch under Settings - Other, right below the
+  comment one, opens every "show more" in an uploader's dynamics so long posts read in full
+  without a tap. Off by default.
+- Quoted videos in dynamics now follow the title switch as well.
+
+Downloads are below.
+
 ## 1.10.9
 
 ### PiliBabel v1.10.9

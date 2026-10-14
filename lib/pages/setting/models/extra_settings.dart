@@ -64,6 +64,13 @@ List<SettingsModel> get extraSettings => [
     setKey: SettingBoxKey.replyDefaultExpand,
     defaultVal: false,
   ),
+  SwitchModel(
+    title: uiTx('动态默认展开'),
+    subtitle: uiTx('开启后 UP 主动态的「查看更多」默认就是展开的'),
+    leading: const Icon(Icons.expand_more),
+    setKey: SettingBoxKey.dynamicDefaultExpand,
+    defaultVal: false,
+  ),
   if (PlatformUtils.isDesktop) ...[
     SwitchModel(
       title: uiTx('退出时最小化'),

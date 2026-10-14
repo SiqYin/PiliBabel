@@ -321,6 +321,12 @@ abstract final class Pref {
   static set replyDefaultExpand(bool value) =>
       _setting.put(SettingBoxKey.replyDefaultExpand, value);
 
+  /// 动态默认展开：开启后 UP 主动态的「查看更多」默认就是展开状态。
+  static bool get dynamicDefaultExpand =>
+      _setting.get(SettingBoxKey.dynamicDefaultExpand, defaultValue: false);
+  static set dynamicDefaultExpand(bool value) =>
+      _setting.put(SettingBoxKey.dynamicDefaultExpand, value);
+
   static ThemeMode get themeMode => switch (_themeTypeInt) {
     0 => ThemeMode.light,
     1 => ThemeMode.dark,

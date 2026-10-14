@@ -2,6 +2,15 @@
 
 Release 正文由 `.github/release-notes.md` 提供，只放**当前这一版**的说明。
 
+### PiliBabel v1.10.9
+
+- **Quoted videos in dynamics follow the switch too.** When an uploader forwards someone
+  else's video, that quoted card kept a single-line title no matter what the option said.
+  Its title now shows two lines with the option on and one line with it off, matching the
+  dynamics feed itself.
+
+Downloads are below.
+
 ### PiliBabel v1.10.8
 
 - Fixed a syntax error introduced in v1.10.7 by converting a grid delegate that lived
