@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
@@ -100,6 +101,7 @@ class VideoCardHLater extends StatelessWidget {
                           height: maxHeight,
                           cacheWidth: videoItem.dimension?.cacheWidth,
                         ),
+                        CoverTranslateButton(cover: videoItem.pic),
                         if (videoItem.isCharging == true)
                           PBadge(
                             text: uiTx('充电专属'),
