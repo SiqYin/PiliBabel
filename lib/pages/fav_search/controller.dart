@@ -38,12 +38,12 @@ class FavSearchController
   final Rx<FavOrderType> order = FavOrderType.mtime.obs;
 
   @override
-  Future<LoadingState<FavDetailData>> customGetData() =>
+  Future<LoadingState<FavDetailData>> customGetData() async =>
       FavHttp.userFavFolderDetail(
         pn: page,
         ps: 20,
         mediaId: mediaId,
-        keyword: editController.text,
+        keyword: await resolveKeyword(),
         type: type,
         order: order.value,
       );

@@ -15,9 +15,10 @@ class HistorySearchController
     extends CommonSearchController<HistoryData, HistoryItemModel>
     with CommonMultiSelectMixin<HistoryItemModel>, DeleteItemMixin {
   @override
-  Future<LoadingState<HistoryData>> customGetData() => UserHttp.searchHistory(
+  Future<LoadingState<HistoryData>> customGetData() async =>
+      UserHttp.searchHistory(
     pn: page,
-    keyword: editController.value.text,
+    keyword: await resolveKeyword(),
     account: account,
   );
 
