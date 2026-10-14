@@ -7,8 +7,9 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 /// 视频封面左下角的「翻译封面」按钮。
 ///
 /// 点一下拿封面图去问内置多模态模型（Index-Translate 已支持识图），
-/// 先用当前界面语言把封面上的文字识别并翻译出来，再顺带描述画面；
+/// 先用当前界面语言把图上的文字识别并翻译出来，再顺带描述画面；
 /// 图上没有文字就说明未检测到文字并描述画面内容。
+/// 视频封面、评论区图片、专栏插图共用这一个按钮；动图由服务层拦掉。
 /// 只在点击时发请求，不预取，所以列表里刷再多封面也不会有额外开销。
 ///
 /// 弹窗与更新弹窗同一套写法（SmartDialog + AlertDialog + ColorScheme），
@@ -35,7 +36,7 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
   Future<void> _onTap() async {
     if (_loading) return;
     setState(() => _loading = true);
-    SmartDialog.showToast(uiTx('正在翻译封面…'));
+    SmartDialog.showToast(uiTx('正在翻译图片…'));
 
     String msg;
     try {
@@ -71,7 +72,7 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
         builder: (context) {
           final colorScheme = ColorScheme.of(context);
           return AlertDialog(
-            title: Text(uiTx('封面翻译')),
+            title: Text(uiTx('图片翻译')),
             content: SizedBox(
               width: 320,
               child: SingleChildScrollView(

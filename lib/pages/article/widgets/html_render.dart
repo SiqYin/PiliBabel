@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/image_viewer/hero.dart';
 import 'package:PiliPlus/models/common/image_preview_type.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
@@ -51,7 +52,7 @@ Widget htmlRender({
             );
           }
           final width = isEmote ? 22.0 : maxWidth;
-          return GestureDetector(
+          final img = GestureDetector(
             onTap: () => PageUtils.imageView(
               imgList: [SourceModel(url: imgUrl)],
               quality: 60,
@@ -68,6 +69,13 @@ Widget htmlRender({
                 placeholder: (context, url) => Image.asset(Assets.loading),
               ),
             ),
+          );
+          // 表情包太小，不给翻译入口；正文插图挂「图片翻译」
+          if (isEmote) {
+            return img;
+          }
+          return Stack(
+            children: [img, CoverTranslateButton(cover: imgUrl)],
           );
         } catch (err) {
           if (kDebugMode) debugPrint('错误的HTML: $element');

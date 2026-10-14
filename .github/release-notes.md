@@ -1,12 +1,15 @@
-### PiliBabel v1.8.15
+### PiliBabel v1.8.16
 
-**Cover recognition no longer gives up after 15 seconds.**
+**Image translation: faster, and it now covers comments and articles.**
 
-- **The wait was too short.** Reading a cover means downloading the image, uploading it and then
-  waiting for a vision model to answer - far slower than plain text translation, and slower
-  still on a poor connection. The 15 second limit was cutting the request off before the model
-  could reply; it is now 60 seconds, which is what the HTTP layer was already allowing.
-- **The timeout message says something useful.** Instead of the raw exception text, it now
-  explains the wait and points at the "detect again" button.
+- **Much faster on big images.** Recognition used to fetch the original picture - often a
+  megabyte or more - and upload it in full. It now asks the image service for a compressed
+  copy first and only falls back to the original if that fails, which is where the long
+  waits were coming from.
+- **Comments and article illustrations too.** The button is no longer only on video covers:
+  pictures in comments and images inside articles get it as well. It is called "image
+  translation" everywhere now.
+- **Animated images are skipped.** GIFs, and WebP files that carry an animation block, are
+  refused with a short message instead of being sent for recognition.
 
 Downloads are below.

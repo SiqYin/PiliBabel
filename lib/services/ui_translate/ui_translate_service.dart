@@ -591,35 +591,52 @@ class UiTranslateService extends GetxService {
       throw Exception('翻译接口地址为空');
     }
     if (imageUrl.isEmpty) {
-      throw Exception('这张封面没有可用的图片地址');
+      throw Exception('这张图片没有可用的图片地址');
+    }
+    // 动图不接：GIF 按后缀直接挡掉，WebP 动图拿到字节后再判一次
+    if (_isAnimatedUrl(imageUrl)) {
+      throw Exception('动图不支持翻译');
     }
     final lang = currentLanguage.toModel;
 
-    // 封面先由 App 自己抓下来，转成 data URI 一起发。
+    // 图片先由 App 自己抓下来，转成 data URI 一起发。
     // 之前是把 B 站图床的直链交给服务端去抓，那一步会静默失败（图床需要 Referer），
     // 表现出来就是「请求已发出但拿不到译文」。
-    final String dataUri;
-    try {
-      final img = await Dio().get<List<int>>(
-        imageUrl,
-        options: Options(
-          responseType: ResponseType.bytes,
-          headers: {
-            'Referer': 'https://www.bilibili.com/',
-            'User-Agent': BrowserUa.mob,
-          },
-          sendTimeout: const Duration(seconds: 20),
-          receiveTimeout: const Duration(seconds: 40),
-        ),
-      );
-      final bytes = img.data;
-      if (bytes == null || bytes.isEmpty) {
-        throw Exception('封面图片内容为空');
+    //
+    // 抓取顺序：先要图床的压缩版本，再退原图。识图只要文字看得清，而原图动辄
+    // 上兆 —— 下载和 base64 上传都随之变大，这正是「偶尔要等很久」的主要来源。
+    List<int>? bytes;
+    Object? lastErr;
+    for (final url in [_smallImageUrl(imageUrl), imageUrl]) {
+      try {
+        final img = await Dio().get<List<int>>(
+          url,
+          options: Options(
+            responseType: ResponseType.bytes,
+            headers: {
+              'Referer': 'https://www.bilibili.com/',
+              'User-Agent': BrowserUa.mob,
+            },
+            sendTimeout: const Duration(seconds: 20),
+            receiveTimeout: const Duration(seconds: 40),
+          ),
+        );
+        final data = img.data;
+        if (data != null && data.isNotEmpty) {
+          bytes = data;
+          break;
+        }
+      } catch (e) {
+        lastErr = e;
       }
-      dataUri = 'data:${_imageMime(bytes)};base64,${base64Encode(bytes)}';
-    } catch (e) {
-      throw Exception('封面图片下载失败：$e');
     }
+    if (bytes == null) {
+      throw Exception('图片下载失败：$lastErr');
+    }
+    if (_isAnimatedBytes(bytes)) {
+      throw Exception('动图不支持翻译');
+    }
+    final dataUri = 'data:${_imageMime(bytes)};base64,${base64Encode(bytes)}';
 
     Map<String, dynamic> body(String image) => {
       'model': translateModel,
@@ -683,6 +700,49 @@ class UiTranslateService extends GetxService {
       }
     }
     throw Exception('接口返回内容为空（HTTP ${res.statusCode}）');
+  }
+
+  /// 图床压缩版：B 站图片服务支持 `@<quality>q.<fmt>` 后缀。
+  /// 已带处理参数的地址不再叠加，避免拼出无效参数。
+  static String _smallImageUrl(String url) {
+    if (url.contains('@')) {
+      return url;
+    }
+    final dot = url.lastIndexOf('.');
+    if (dot <= url.lastIndexOf('/')) {
+      return url;
+    }
+    return '${url.substring(0, dot)}@60q.webp';
+  }
+
+  /// GIF 一律当动图（B 站评论区的动图基本都是 gif 后缀）
+  static bool _isAnimatedUrl(String url) =>
+      url.split('@').first.toLowerCase().endsWith('.gif');
+
+  /// 字节级判动图：GIF87a/GIF89a，以及带 ANIM 块的 WebP
+  static bool _isAnimatedBytes(List<int> b) {
+    if (b.length > 6 && b[0] == 0x47 && b[1] == 0x49 && b[2] == 0x46) {
+      return true;
+    }
+    if (b.length > 12 &&
+        b[0] == 0x52 &&
+        b[1] == 0x49 &&
+        b[2] == 0x46 &&
+        b[3] == 0x46 &&
+        b[8] == 0x57 &&
+        b[9] == 0x45 &&
+        b[10] == 0x42 &&
+        b[11] == 0x50) {
+      for (var i = 12; i + 4 <= b.length; i++) {
+        if (b[i] == 0x41 &&
+            b[i + 1] == 0x4E &&
+            b[i + 2] == 0x49 &&
+            b[i + 3] == 0x4D) {
+          return true; // 'ANIM'
+        }
+      }
+    }
+    return false;
   }
 
   /// 按字节头判断图片真实格式：B 站图床对移动端 UA 会返回 WebP，
