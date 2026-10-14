@@ -578,6 +578,69 @@ class UiTranslateService extends GetxService {
     return _normalizeScripts(results, currentLanguage.script);
   }
 
+  /// 用内置多模态能力描述一张图片（视频封面）上的文字。
+  ///
+  /// Index-Translate 支持图片输入（`image_url` 走 OpenAI 兼容格式，由服务端
+  /// 自行抓取图片）。返回可直接展示的文案；识别不到文字时模型会按提示词
+  /// 回一句说明，所以这里不做二次判断。失败返回 null，由界面兜底。
+  Future<String?> describeImage(String imageUrl) async {
+    final base = _normalizeApiBase(translateApiUrl);
+    if (base.isEmpty || imageUrl.isEmpty) return null;
+    final lang = currentLanguage.toModel;
+    try {
+      final res = await Dio().post<Map<String, dynamic>>(
+        '\$base/chat/completions',
+        options: Options(
+          headers: translateApiKey.isEmpty
+              ? null
+              : {'Authorization': 'Bearer \$translateApiKey'},
+          sendTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 120),
+        ),
+        data: {
+          'model': translateModel,
+          'messages': [
+            {
+              'role': 'user',
+              'content': [
+                {
+                  'type': 'text',
+                  'text': '请用\$lang描述这张图片上的文字内容，并说明这些文字'
+                      '是什么意思。如果图上没有任何文字，就直接说「未识别到文字」。'
+                      '只输出这段描述本身，不要客套、不要解释你在做什么。',
+                },
+                {
+                  'type': 'image_url',
+                  'image_url': {'url': imageUrl},
+                },
+              ],
+            },
+          ],
+          'enable_thinking': false,
+        },
+      );
+      final choices = res.data?['choices'];
+      if (choices is List && choices.isNotEmpty) {
+        final message = choices.first['message'];
+        final content = message is Map ? message['content'] : null;
+        if (content is String && content.trim().isNotEmpty) {
+          return content.trim();
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// 兼容两种写法：`.../v1` 直接用，只有域名时补上 `/v1`。
+  static String _normalizeApiBase(String url) {
+    var u = url.trim();
+    while (u.endsWith('/')) {
+      u = u.substring(0, u.length - 1);
+    }
+    if (u.isEmpty) return '';
+    return u.contains('/v1') ? u : '\$u/v1';
+  }
+
   /// 供字幕这类大段正文复用：把一批文本翻成当前界面语言。
   /// 翻译不可用、或返回条数对不上时原样返回，调用方不必自己兜底。
   Future<List<String>> translateTexts(List<String> sources) async {
