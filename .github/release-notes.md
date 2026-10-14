@@ -1,15 +1,11 @@
-### PiliBabel v1.9.0
+### PiliBabel v1.10.0
 
-**Image translation is now everywhere, not just on some cards.**
+**Long translated titles get room to breathe.**
 
-- **Every video cover in the app has the button.** The dynamics feed - the one that was
-  missing it - plus favourites, search, subscriptions, music, downloads, rankings, the
-  member pages, the live lists and the rest. Around seventy files were covered in this pass,
-  on top of the ones done earlier.
-- **Comments, articles and quoted videos too.** Pictures in comments and article illustrations
-  were already done; video covers embedded in articles and forwarded dynamics now carry the
-  button as well.
-- **One tap, one action.** Tapping the picture still opens it full size; only the button in
-  its bottom-left corner starts a translation.
+- **Video blocks stretch when needed.** Titles translated into English, French, German or
+  Japanese are longer than the Chinese original and were being cut off after two lines. The
+  title area now takes up to four lines when the new option is on, and the block grows with it.
+- **On by default, and yours to turn off.** The option follows the translation feature: it
+  starts enabled, and can be switched off at any time in AI translation settings.
 
 Downloads are below.

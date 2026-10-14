@@ -300,6 +300,7 @@ abstract final class SettingBoxKey {
       systemProxyPort = 'systemProxyPort';
 
   static const String themeMode = 'themeMode',
+  static const String videoTitleFull = 'videoTitleFull',
       defaultTextScale = 'textScale',
       appFontWeightV2 = 'appFontWeightV2',
       customFontPath = 'customFontPath',

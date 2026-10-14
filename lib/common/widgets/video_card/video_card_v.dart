@@ -178,7 +178,7 @@ class VideoCardV extends StatelessWidget {
               child: Obx(
                 () => Text(
                   uiTx(videoItem.title),
-                  maxLines: 2,
+                  maxLines: Pref.videoTitleFull ? 4 : 2,
                   overflow: .ellipsis,
                   style: const TextStyle(height: 1.38),
                 ),
