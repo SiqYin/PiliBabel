@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/skeleton/video_card_v.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/models/search/result.dart';
@@ -50,7 +51,7 @@ class _SearchLivePanelState
     crossAxisSpacing: Style.cardSpace,
     mainAxisSpacing: Style.cardSpace,
     childAspectRatio: Style.aspectRatio,
-    mainAxisExtent: MediaQuery.textScalerOf(context).scale(80),
+    mainAxisExtent: MediaQuery.textScalerOf(context).scale(80) + (Pref.videoTitleFull ? 38 : 0),
   );
 
   @override

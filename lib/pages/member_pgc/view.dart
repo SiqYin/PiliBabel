@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -71,7 +72,7 @@ class _MemberBangumiState extends State<MemberBangumi>
     crossAxisSpacing: Style.cardSpace,
     maxCrossAxisExtent: Grid.smallCardWidth * 0.6,
     childAspectRatio: 0.75,
-    mainAxisExtent: MediaQuery.textScalerOf(context).scale(52),
+    mainAxisExtent: MediaQuery.textScalerOf(context).scale(52) + (Pref.videoTitleFull ? 38 : 0),
   );
 
   Widget _buildBody(LoadingState<List<SpaceArchiveItem>?> loadingState) {

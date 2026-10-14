@@ -59,7 +59,7 @@ class _RcmdPageState extends State<RcmdPage>
     crossAxisSpacing: Style.cardSpace,
     maxCrossAxisExtent: Pref.recommendCardWidth,
     childAspectRatio: Style.aspectRatio,
-    mainAxisExtent: MediaQuery.textScalerOf(context).scale(90),
+    mainAxisExtent: MediaQuery.textScalerOf(context).scale(90) + (Pref.videoTitleFull ? 38 : 0),
   );
 
   Widget _buildBody(

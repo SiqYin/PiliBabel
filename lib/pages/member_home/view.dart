@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'dart:math';
 
 import 'package:PiliPlus/common/style.dart';
@@ -50,7 +51,7 @@ class _MemberHomeState extends State<MemberHome>
     crossAxisSpacing: Style.cardSpace,
     maxCrossAxisExtent: Grid.smallCardWidth,
     childAspectRatio: Style.aspectRatio,
-    mainAxisExtent: MediaQuery.textScalerOf(context).scale(55),
+    mainAxisExtent: MediaQuery.textScalerOf(context).scale(55) + (Pref.videoTitleFull ? 38 : 0),
   );
 
   late final gridDelegateAudio = Grid.videoCardHDelegate();
@@ -60,7 +61,7 @@ class _MemberHomeState extends State<MemberHome>
     crossAxisSpacing: Style.cardSpace,
     maxCrossAxisExtent: Grid.smallCardWidth * 0.6,
     childAspectRatio: 0.75,
-    mainAxisExtent: MediaQuery.textScalerOf(context).scale(52),
+    mainAxisExtent: MediaQuery.textScalerOf(context).scale(52) + (Pref.videoTitleFull ? 38 : 0),
   );
 
   Widget _buildBody(LoadingState<SpaceData?> loadingState) {
