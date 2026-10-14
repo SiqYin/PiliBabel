@@ -60,7 +60,7 @@ Widget videoSeasonWidget(
               ),
               if (video.badge?.text case final badge?)
                 PBadge(
-                  text: badge,
+                  text: uiTx(badge ?? ''),
                   top: 8.0,
                   right: 10.0,
                   bottom: null,
