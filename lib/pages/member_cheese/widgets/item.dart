@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
@@ -90,14 +91,17 @@ class MemberCheeseItem extends StatelessWidget {
                 aspectRatio: Style.aspectRatio,
                 child: LayoutBuilder(
                   builder: (context, boxConstraints) {
-                    Widget child = NetworkImgLayer(
+                    Widget child = Stack(children: [
+NetworkImgLayer(
                       src: item.cover,
                       width: boxConstraints.maxWidth,
                       height: boxConstraints.maxHeight,
                       borderRadius: const BorderRadius.all(
                         Radius.circular(4),
                       ),
-                    );
+                    ),
+CoverTranslateButton(cover: item.cover),
+]);
                     if (item.marks?.isNotEmpty == true) {
                       return Stack(
                         clipBehavior: Clip.none,

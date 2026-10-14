@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -204,7 +205,8 @@ Widget module(
             child: Row(
               spacing: 10,
               children: [
-                NetworkImgLayer(
+                Stack(children: [
+NetworkImgLayer(
                   width: 45,
                   height: 45,
                   src: music.cover,
@@ -212,6 +214,8 @@ Widget module(
                     Radius.circular(8),
                   ),
                 ),
+CoverTranslateButton(cover: music.cover),
+]),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -253,11 +257,14 @@ Widget module(
               children: [
                 Hero(
                   tag: major!.medialist!.cover!,
-                  child: NetworkImgLayer(
+                  child: Stack(children: [
+NetworkImgLayer(
                     width: 180,
                     height: 110,
                     src: major.medialist!.cover,
                   ),
+CoverTranslateButton(cover: major.medialist!.cover),
+]),
                 ),
                 PBadge(
                   right: 6,

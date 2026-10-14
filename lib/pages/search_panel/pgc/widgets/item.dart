@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -43,11 +44,14 @@ class SearchPgcItem extends StatelessWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  NetworkImgLayer(
+                  Stack(children: [
+NetworkImgLayer(
                     width: 111,
                     height: 148,
                     src: item.cover,
                   ),
+CoverTranslateButton(cover: item.cover),
+]),
                   PBadge(
                     text: item.seasonTypeName,
                     top: 6.0,

@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -46,14 +47,17 @@ class MemberComicItem extends StatelessWidget {
                 child: LayoutBuilder(
                   builder:
                       (BuildContext context, BoxConstraints boxConstraints) {
-                        return NetworkImgLayer(
+                        return Stack(children: [
+NetworkImgLayer(
                           src: item.cover,
                           width: boxConstraints.maxWidth,
                           height: boxConstraints.maxHeight,
                           borderRadius: const BorderRadius.all(
                             Radius.circular(4),
                           ),
-                        );
+                        ),
+CoverTranslateButton(cover: item.cover),
+]);
                       },
                 ),
               ),

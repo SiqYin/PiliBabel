@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/widgets/badge.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/http/search.dart';
 import 'package:PiliPlus/models/common/badge_type.dart';
@@ -76,11 +77,14 @@ class ToViewCardItem extends StatelessWidget {
                 child: Stack(
                   clipBehavior: Clip.hardEdge,
                   children: [
-                    NetworkImgLayer(
+                    Stack(children: [
+NetworkImgLayer(
                       src: item.pic,
                       width: _cardWidth,
                       height: _cardHeight,
                     ),
+CoverTranslateButton(cover: item.pic),
+]),
                     if (item.pgcLabel?.isNotEmpty == true)
                       PBadge(
                         text: item.pgcLabel,

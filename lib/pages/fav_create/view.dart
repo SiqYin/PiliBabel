@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'dart:io' show File;
 
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
@@ -242,7 +243,8 @@ class _CreateFavPageState extends State<CreateFavPage> {
                       if (_cover?.isNotEmpty == true)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 5),
-                          child: NetworkImgLayer(
+                          child: Stack(children: [
+NetworkImgLayer(
                             src: _cover,
                             height: 55,
                             width: 88,
@@ -250,6 +252,8 @@ class _CreateFavPageState extends State<CreateFavPage> {
                               Radius.circular(6),
                             ),
                           ),
+CoverTranslateButton(cover: _cover),
+]),
                         ),
                       Icon(
                         Icons.keyboard_arrow_right,

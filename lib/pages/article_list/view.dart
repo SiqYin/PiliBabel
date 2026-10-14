@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -114,7 +115,8 @@ class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (item.imageUrl?.isNotEmpty == true) ...[
-                NetworkImgLayer(
+                Stack(children: [
+NetworkImgLayer(
                   width: 91,
                   height: 120,
                   src: item.imageUrl,
@@ -122,6 +124,8 @@ class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
                     Radius.circular(6),
                   ),
                 ),
+CoverTranslateButton(cover: item.imageUrl),
+]),
                 const SizedBox(width: 10),
               ],
               Column(

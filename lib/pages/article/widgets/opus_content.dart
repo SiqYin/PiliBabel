@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'dart:math' as math;
 
 import 'package:PiliPlus/common/assets.dart';
@@ -357,12 +358,15 @@ class OpusContent extends StatelessWidget {
                   child = Row(
                     spacing: 10,
                     children: [
-                      NetworkImgLayer(
+                      Stack(children: [
+NetworkImgLayer(
                         width: 104,
                         height: 65,
                         src: ugc.cover,
                         borderRadius: const .all(.circular(6)),
                       ),
+CoverTranslateButton(cover: ugc.cover),
+]),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: .start,
@@ -392,12 +396,15 @@ class OpusContent extends StatelessWidget {
                   child = Row(
                     spacing: 10,
                     children: [
-                      NetworkImgLayer(
+                      Stack(children: [
+NetworkImgLayer(
                         width: 104,
                         height: 65,
                         src: common.cover,
                         borderRadius: const .all(.circular(6)),
                       ),
+CoverTranslateButton(cover: common.cover),
+]),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: .start,
@@ -431,12 +438,15 @@ class OpusContent extends StatelessWidget {
                   child = Row(
                     spacing: 10,
                     children: [
-                      NetworkImgLayer(
+                      Stack(children: [
+NetworkImgLayer(
                         width: 104,
                         height: 65,
                         src: live.cover,
                         borderRadius: const .all(.circular(6)),
                       ),
+CoverTranslateButton(cover: live.cover),
+]),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: .start,
@@ -470,12 +480,15 @@ class OpusContent extends StatelessWidget {
                   child = Row(
                     spacing: 10,
                     children: [
-                      NetworkImgLayer(
+                      Stack(children: [
+NetworkImgLayer(
                         width: 104,
                         height: 65,
                         src: opus.cover,
                         borderRadius: const .all(.circular(6)),
                       ),
+CoverTranslateButton(cover: opus.cover),
+]),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: .start,
@@ -531,12 +544,15 @@ class OpusContent extends StatelessWidget {
                   child = Row(
                     spacing: 10,
                     children: [
-                      NetworkImgLayer(
+                      Stack(children: [
+NetworkImgLayer(
                         width: 104,
                         height: 65,
                         src: music.cover,
                         borderRadius: const .all(.circular(6)),
                       ),
+CoverTranslateButton(cover: music.cover),
+]),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: .start,
@@ -570,12 +586,15 @@ class OpusContent extends StatelessWidget {
                         child: Row(
                           spacing: 10,
                           children: [
-                            NetworkImgLayer(
+                            Stack(children: [
+NetworkImgLayer(
                               width: 104,
                               height: 65,
                               src: e.cover,
                               borderRadius: const .all(.circular(6)),
                             ),
+CoverTranslateButton(cover: e.cover),
+]),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: .start,

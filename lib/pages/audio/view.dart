@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'dart:math' show min;
 
 import 'package:PiliPlus/common/assets.dart';
@@ -1018,12 +1019,15 @@ class _AudioPageState extends State<AudioPage> {
                         ),
                         child: fromHero(
                           tag: cover,
-                          child: NetworkImgLayer(
+                          child: Stack(children: [
+NetworkImgLayer(
                             src: cover,
                             width: 170,
                             height: 170,
                             cacheWidth: false,
                           ),
+CoverTranslateButton(cover: cover),
+]),
                         ),
                       ),
                     ),

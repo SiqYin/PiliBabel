@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/dynamics/result.dart';
 import 'package:material_ui/material_ui.dart';
@@ -22,11 +23,14 @@ Widget livePanel(
     child: Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        NetworkImgLayer(
+        Stack(children: [
+NetworkImgLayer(
           width: 120,
           height: 75,
           src: live.cover,
         ),
+CoverTranslateButton(cover: live.cover),
+]),
         const SizedBox(width: 10),
         Expanded(
           child: Column(

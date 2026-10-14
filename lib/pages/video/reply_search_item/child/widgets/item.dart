@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -72,11 +73,14 @@ class ReplySearchItem extends StatelessWidget {
                   builder: (context, boxConstraints) {
                     return Stack(
                       children: [
-                        NetworkImgLayer(
+                        Stack(children: [
+NetworkImgLayer(
                           src: cover,
                           width: boxConstraints.maxWidth,
                           height: boxConstraints.maxHeight,
                         ),
+CoverTranslateButton(cover: cover),
+]),
                         if (category != null)
                           PBadge(
                             right: 6,

@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -45,11 +46,14 @@ class SeasonSeriesCard extends StatelessWidget {
                     return Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        NetworkImgLayer(
+                        Stack(children: [
+NetworkImgLayer(
                           src: item.meta!.cover,
                           width: maxWidth,
                           height: maxHeight,
                         ),
+CoverTranslateButton(cover: item.meta!.cover),
+]),
                         PBadge(
                           text:
                               '${item.meta!.seasonId != null ? '合集' : '列表'}: ${item.meta!.total}',

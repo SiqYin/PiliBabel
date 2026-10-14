@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'dart:io';
 
 import 'package:PiliPlus/common/style.dart';
@@ -180,12 +181,15 @@ class DetailItem extends StatelessWidget {
                                       : null,
                                 ),
                               )
-                            : NetworkImgLayer(
+                            : Stack(children: [
+NetworkImgLayer(
                                 src: entry.cover,
                                 width: maxWidth,
                                 height: maxHeight,
                                 cacheWidth: entry.pageData?.cacheWidth,
-                              );
+                              ),
+CoverTranslateButton(cover: entry.cover),
+]);
                       },
                     ),
                   ),

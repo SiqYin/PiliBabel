@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
@@ -149,11 +150,14 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
           ),
           child: fromHero(
             tag: item.cover!,
-            child: NetworkImgLayer(
+            child: Stack(children: [
+NetworkImgLayer(
               width: 115,
               height: 153,
               src: item.cover!,
             ),
+CoverTranslateButton(cover: item.cover!),
+]),
           ),
         ),
         if (item.rating != null)

@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/stat/stat.dart';
@@ -46,11 +47,14 @@ class FavArticleItem extends StatelessWidget {
                       aspectRatio: Style.aspectRatio,
                       child: LayoutBuilder(
                         builder: (context, boxConstraints) {
-                          return NetworkImgLayer(
+                          return Stack(children: [
+NetworkImgLayer(
                             src: item.cover!.url,
                             width: boxConstraints.maxWidth,
                             height: boxConstraints.maxHeight,
-                          );
+                          ),
+CoverTranslateButton(cover: item.cover!.url),
+]);
                         },
                       ),
                     ),

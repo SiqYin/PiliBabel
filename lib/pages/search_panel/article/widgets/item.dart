@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -51,11 +52,14 @@ class SearchArticleItem extends StatelessWidget {
                     builder: (context, boxConstraints) {
                       double maxWidth = boxConstraints.maxWidth;
                       double maxHeight = boxConstraints.maxHeight;
-                      return NetworkImgLayer(
+                      return Stack(children: [
+NetworkImgLayer(
                         width: maxWidth,
                         height: maxHeight,
                         src: item.imageUrls?.firstOrNull,
-                      );
+                      ),
+CoverTranslateButton(cover: item.imageUrls?.firstOrNull),
+]);
                     },
                   ),
                 ),

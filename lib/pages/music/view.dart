@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'dart:io';
 import 'dart:math';
 
@@ -435,11 +436,14 @@ class _MusicDetailPageState extends CommonDynPageState<MusicDetailPage> {
                     ),
                     child: fromHero(
                       tag: item.mvCover!,
-                      child: NetworkImgLayer(
+                      child: Stack(children: [
+NetworkImgLayer(
                         src: item.mvCover,
                         width: 80,
                         height: 80,
                       ),
+CoverTranslateButton(cover: item.mvCover),
+]),
                     ),
                   ),
                   Expanded(

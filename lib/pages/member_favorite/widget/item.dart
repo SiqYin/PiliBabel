@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
@@ -66,11 +67,14 @@ class MemberFavItem extends StatelessWidget {
                   AspectRatio(
                     aspectRatio: Style.aspectRatio,
                     child: LayoutBuilder(
-                      builder: (context, constraints) => NetworkImgLayer(
+                      builder: (context, constraints) => Stack(children: [
+NetworkImgLayer(
                         src: item.cover,
                         width: constraints.maxWidth,
                         height: constraints.maxHeight,
                       ),
+CoverTranslateButton(cover: item.cover),
+]),
                     ),
                   ),
                   if (item.type == 21)

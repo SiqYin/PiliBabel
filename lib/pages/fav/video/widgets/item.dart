@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models_new/fav/fav_folder/list.dart';
@@ -46,11 +47,14 @@ class FavVideoItem extends StatelessWidget {
                   builder: (context, boxConstraints) {
                     return Hero(
                       tag: heroTag,
-                      child: NetworkImgLayer(
+                      child: Stack(children: [
+NetworkImgLayer(
                         src: item.cover,
                         width: boxConstraints.maxWidth,
                         height: boxConstraints.maxHeight,
                       ),
+CoverTranslateButton(cover: item.cover),
+]),
                     );
                   },
                 ),

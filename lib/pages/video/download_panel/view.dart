@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
@@ -429,12 +430,15 @@ class _DownloadPanelState extends State<DownloadPanel> {
                         Stack(
                           clipBehavior: Clip.none,
                           children: [
-                            NetworkImgLayer(
+                            Stack(children: [
+NetworkImgLayer(
                               src: cover,
                               width: 160,
                               height: 100,
                               cacheWidth: cacheWidth,
                             ),
+CoverTranslateButton(cover: cover),
+]),
                             if (duration != null && duration > 0)
                               PBadge(
                                 text: DurationUtils.formatDuration(duration),

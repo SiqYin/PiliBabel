@@ -1,13 +1,15 @@
-### PiliBabel v1.8.18
+### PiliBabel v1.9.0
 
-**The translate button on comment pictures actually responds now.**
+**Image translation is now everywhere, not just on some cards.**
 
-- **Taps were being swallowed.** The comment image grid runs its own hit test and only ever
-  recorded the grid cell itself, never asking the cell's children - so the button inside the
-  picture never received a tap, and the grid's own handler opened the full-size image instead.
-  The grid now lets its children hit test first. Tapping the picture still opens the full-size
-  image; tapping the button in its bottom-left corner translates it.
-- **Both dialog buttons look the same.** "Close" was drawn in the outline colour, which read as
-  a disabled button. It uses the same colour as "Detect again" now.
+- **Every video cover in the app has the button.** The dynamics feed - the one that was
+  missing it - plus favourites, search, subscriptions, music, downloads, rankings, the
+  member pages, the live lists and the rest. Around seventy files were covered in this pass,
+  on top of the ones done earlier.
+- **Comments, articles and quoted videos too.** Pictures in comments and article illustrations
+  were already done; video covers embedded in articles and forwarded dynamics now carry the
+  button as well.
+- **One tap, one action.** Tapping the picture still opens it full size; only the button in
+  its bottom-left corner starts a translation.
 
 Downloads are below.

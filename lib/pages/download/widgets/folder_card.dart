@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'dart:io';
 
 import 'package:PiliPlus/common/style.dart';
@@ -111,11 +112,14 @@ class DownloadFolderCard extends StatelessWidget {
           fit: BoxFit.cover,
         );
       }
-      return NetworkImgLayer(
+      return Stack(children: [
+NetworkImgLayer(
         src: entry.cover,
         width: width,
         height: height,
-      );
+      ),
+CoverTranslateButton(cover: entry.cover),
+]);
     }
     final theme = Theme.of(context);
     return DecoratedBox(
