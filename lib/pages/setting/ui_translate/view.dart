@@ -147,6 +147,9 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                 onChanged: (value) {
                   Pref.videoTitleFull = value;
                   setState(() {});
+                  // 网格的 mainAxisExtent 是构建时读的，不强制重建的话
+                  // 关掉开关后方块高度收不回去。
+                  Get.forceAppUpdate();
                 },
               );
             }),

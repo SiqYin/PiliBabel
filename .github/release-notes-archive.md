@@ -2,6 +2,19 @@
 
 Release 正文由 `.github/release-notes.md` 提供，只放**当前这一版**的说明。
 
+### PiliBabel v1.10.5
+
+- **The switch is now where it belongs.** "Show full video titles" lives in AI translation
+  settings, right under "Enable AI translation" - the previous build had it on the wrong
+  page, so it was not visible.
+- **It follows the translation switch.** Turning AI translation on turns it on, turning it
+  off turns it off, and you can still flip it by hand at any time.
+- **Dynamics titles get two lines too.** A dynamics video title was capped at one line;
+  with the option on it now takes two, and the dynamics entry grows with it. The same
+  switch controls both the home feed and the dynamics feed.
+
+Downloads are below.
+
 ### PiliBabel v1.10.4
 
 - **The title option now has a switch of its own.** It sits in AI translation settings,
