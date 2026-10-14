@@ -89,12 +89,10 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
                 child: Text(uiTx('再次检测')),
               ),
               // 右下角：满意就直接关掉
+              // 两个按钮都用默认主色：给「关闭」单独上灰色会让人以为它不可点
               TextButton(
                 onPressed: SmartDialog.dismiss,
-                child: Text(
-                  uiTx('关闭'),
-                  style: TextStyle(color: colorScheme.outline),
-                ),
+                child: Text(uiTx('关闭')),
               ),
             ],
           );
