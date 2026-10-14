@@ -2,6 +2,17 @@
 
 按 Keep a Changelog 的思路编写,留个记录,方便知道每次更新都改了什么,也方便用户查看更新内容.
 
+## 1.10.6
+
+### PiliBabel v1.10.6
+
+- **Turning the option off now actually shrinks the blocks back.** The grid reads its
+  height when it is built, so switching the option off left the home feed blocks stretched
+  until the page was recreated. Toggling the switch now forces a rebuild, so the home feed
+  and the dynamics feed both return to their original size immediately.
+
+Downloads are below.
+
 ## 1.10.5
 
 ### PiliBabel v1.10.5

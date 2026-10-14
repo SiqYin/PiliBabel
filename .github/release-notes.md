@@ -1,12 +1,8 @@
-### PiliBabel v1.10.5
+### PiliBabel v1.10.6
 
-- **The switch is now where it belongs.** "Show full video titles" lives in AI translation
-  settings, right under "Enable AI translation" - the previous build had it on the wrong
-  page, so it was not visible.
-- **It follows the translation switch.** Turning AI translation on turns it on, turning it
-  off turns it off, and you can still flip it by hand at any time.
-- **Dynamics titles get two lines too.** A dynamics video title was capped at one line;
-  with the option on it now takes two, and the dynamics entry grows with it. The same
-  switch controls both the home feed and the dynamics feed.
+- **Turning the option off now actually shrinks the blocks back.** The grid reads its
+  height when it is built, so switching the option off left the home feed blocks stretched
+  until the page was recreated. Toggling the switch now forces a rebuild, so the home feed
+  and the dynamics feed both return to their original size immediately.
 
 Downloads are below.
