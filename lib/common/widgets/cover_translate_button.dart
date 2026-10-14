@@ -35,24 +35,24 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
   Future<void> _onTap() async {
     if (_loading) return;
     setState(() => _loading = true);
-    SmartDialog.showToast('正在翻译封面…');
+    SmartDialog.showToast(uiTx('正在翻译封面…'));
 
     String msg;
     try {
       final cover = widget.cover;
       if (cover == null || cover.isEmpty) {
-        msg = '这张封面没有可用的图片地址';
+        msg = uiTx('这张封面没有可用的图片地址');
       } else {
         final text = await UiTranslateService.to
             .describeImage(cover)
             .timeout(const Duration(seconds: 15));
         msg = (text?.trim().isNotEmpty == true)
             ? text!
-            : '接口没有返回内容（请求已发出，但没有拿到译文）';
+            : uiTx('接口没有返回内容（请求已发出，但没有拿到译文）');
       }
     } catch (e) {
-      // 把真实原因原样显示出来，不再静默
-      msg = '请求出错：$e';
+      // 用 uiTxP 模板而不是先插值再 uiTx：否则每个不同的错误内容都会变成一条新词条
+      msg = uiTxP('请求出错：{0}', [e]);
     }
 
     if (mounted) {
@@ -71,8 +71,8 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '封面翻译',
+              Text(
+                uiTx('封面翻译'),
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 16,
@@ -95,10 +95,10 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
                 alignment: Alignment.centerRight,
                 child: GestureDetector(
                   onTap: SmartDialog.dismiss,
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     child: Text(
-                      '关闭',
+                      uiTx('关闭'),
                       style: TextStyle(color: Color(0xFF7FB4FF), fontSize: 14),
                     ),
                   ),
