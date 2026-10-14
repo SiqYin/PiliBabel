@@ -2,6 +2,17 @@
 
 按 Keep a Changelog 的思路编写,留个记录,方便知道每次更新都改了什么,也方便用户查看更新内容.
 
+## 1.10.9
+
+### PiliBabel v1.10.9
+
+- **Quoted videos in dynamics follow the switch too.** When an uploader forwards someone
+  else's video, that quoted card kept a single-line title no matter what the option said.
+  Its title now shows two lines with the option on and one line with it off, matching the
+  dynamics feed itself.
+
+Downloads are below.
+
 ## 1.10.8
 
 ### PiliBabel v1.10.8
