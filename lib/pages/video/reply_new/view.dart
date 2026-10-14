@@ -270,7 +270,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<ReplyPage> {
 
     final isRoot = widget.root == 0;
     final color = theme.colorScheme.onSurfaceVariant;
-    SliverGridDelegateWithExtentAndRatio get gridDelegate => SliverGridDelegateWithExtentAndRatio(
+    late final gridDelegate = SliverGridDelegateWithExtentAndRatio(
       maxCrossAxisExtent: 65,
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
