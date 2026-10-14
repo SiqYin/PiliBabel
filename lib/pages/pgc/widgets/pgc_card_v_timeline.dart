@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
@@ -49,6 +50,7 @@ class PgcCardVTimeline extends StatelessWidget {
                         width: maxWidth,
                         height: maxHeight,
                       ),
+                      CoverTranslateButton(cover: item.cover),
                       if (item.follow == 1)
                         PBadge(
                           text: uiTx('已追番'),
