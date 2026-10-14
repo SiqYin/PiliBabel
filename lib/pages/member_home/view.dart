@@ -46,7 +46,7 @@ class _MemberHomeState extends State<MemberHome>
     return _buildBody(_ctr.loadingState.value);
   }
 
-  late final gridDelegateV = SliverGridDelegateWithExtentAndRatio(
+  SliverGridDelegateWithExtentAndRatio get gridDelegateV => SliverGridDelegateWithExtentAndRatio(
     mainAxisSpacing: Style.cardSpace,
     crossAxisSpacing: Style.cardSpace,
     maxCrossAxisExtent: Grid.smallCardWidth,
@@ -56,7 +56,7 @@ class _MemberHomeState extends State<MemberHome>
 
   late final gridDelegateAudio = Grid.videoCardHDelegate();
 
-  late final gridDelegatePgc = SliverGridDelegateWithExtentAndRatio(
+  SliverGridDelegateWithExtentAndRatio get gridDelegatePgc => SliverGridDelegateWithExtentAndRatio(
     mainAxisSpacing: Style.cardSpace,
     crossAxisSpacing: Style.cardSpace,
     maxCrossAxisExtent: Grid.smallCardWidth * 0.6,

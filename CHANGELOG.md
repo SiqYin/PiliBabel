@@ -2,6 +2,20 @@
 
 按 Keep a Changelog 的思路编写,留个记录,方便知道每次更新都改了什么,也方便用户查看更新内容.
 
+## 1.10.7
+
+### PiliBabel v1.10.7
+
+**The home feed blocks now grow and shrink with the switch.**
+
+- The grid delegate on the home feed was a `late final` field: it was computed once and
+  then cached, so rebuilding the page never picked up the new height. It is a getter now
+  and is recomputed on every build.
+- Turning the option on stretches the home blocks to fit four title lines; turning it off
+  puts them back immediately. The same applies to the member, ranking, live and search grids.
+
+Downloads are below.
+
 ## 1.10.6
 
 ### PiliBabel v1.10.6

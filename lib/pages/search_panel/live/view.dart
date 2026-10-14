@@ -46,7 +46,7 @@ class _SearchLivePanelState
     );
   }
 
-  late final gridDelegate = SliverGridDelegateWithExtentAndRatio(
+  SliverGridDelegateWithExtentAndRatio get gridDelegate => SliverGridDelegateWithExtentAndRatio(
     maxCrossAxisExtent: Grid.smallCardWidth,
     crossAxisSpacing: Style.cardSpace,
     mainAxisSpacing: Style.cardSpace,
