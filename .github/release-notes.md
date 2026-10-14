@@ -1,10 +1,10 @@
-### PiliBabel v1.8.12
+### PiliBabel v1.8.13
 
-**Cover translation describes the picture, not just its text.**
+**Cover translation stops inventing text that is not there.**
 
-- **The prompt changed.** It used to ask only for the text on the image and to answer "no text
-  found" when there was none. It now asks for a translation of the text first and a
-  description of what the image shows second, so a cover without any writing still comes back
-  with something useful.
+- **The prompt now forbids guessing.** It asks for the text on the image, a description of what
+  the image shows, and nothing else: no inferring, no filling in the blanks, no inventing
+  characters that are not on the cover. Anything illegible or uncertain is to be reported as
+  illegible rather than guessed at.
 
 Downloads are below.

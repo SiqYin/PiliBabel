@@ -2,6 +2,19 @@
 
 按 Keep a Changelog 的思路编写,留个记录,方便知道每次更新都改了什么,也方便用户查看更新内容.
 
+## 1.8.13
+
+### PiliBabel v1.8.13
+
+**Cover translation stops inventing text that is not there.**
+
+- **The prompt now forbids guessing.** It asks for the text on the image, a description of what
+  the image shows, and nothing else: no inferring, no filling in the blanks, no inventing
+  characters that are not on the cover. Anything illegible or uncertain is to be reported as
+  illegible rather than guessed at.
+
+Downloads are below.
+
 ## 1.8.12
 
 ### PiliBabel v1.8.12
