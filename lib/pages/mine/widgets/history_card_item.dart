@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/common/badge_type.dart';
@@ -122,7 +123,8 @@ class HistoryCardItem extends StatelessWidget {
                       src: coverSrc,
                       width: _cardWidth,
                       height: _cardHeight,
-                    ),
+                    )
+                    CoverTranslateButton(cover: coverSrc),,
                     // 右上角：直播状态 / 专栏标记 / pgc badge
                     if (_isLive)
                       PBadge(
