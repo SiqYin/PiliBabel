@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 
+import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
 import 'package:PiliPlus/services/ui_translate/translate_provider.dart';
 import 'package:PiliPlus/services/logger.dart';
@@ -586,50 +587,81 @@ class UiTranslateService extends GetxService {
   /// 回一句说明，所以这里不做二次判断。失败返回 null，由界面兜底。
   Future<String?> describeImage(String imageUrl) async {
     final base = _normalizeApiBase(translateApiUrl);
-    if (base.isEmpty || imageUrl.isEmpty) return null;
+    if (base.isEmpty) {
+      throw Exception('翻译接口地址为空');
+    }
+    if (imageUrl.isEmpty) {
+      throw Exception('这张封面没有可用的图片地址');
+    }
     final lang = currentLanguage.toModel;
+
+    // 封面先由 App 自己抓下来，转成 data URI 一起发。
+    // 之前是把 B 站图床的直链交给服务端去抓，那一步会静默失败（图床需要 Referer），
+    // 表现出来就是「请求已发出但拿不到译文」。
+    final String dataUri;
     try {
-      final res = await Dio().post<Map<String, dynamic>>(
-        '\$base/chat/completions',
+      final img = await Dio().get<List<int>>(
+        imageUrl,
         options: Options(
-          headers: translateApiKey.isEmpty
-              ? null
-              : {'Authorization': 'Bearer \$translateApiKey'},
-          sendTimeout: const Duration(seconds: 30),
-          receiveTimeout: const Duration(seconds: 120),
+          responseType: ResponseType.bytes,
+          headers: {
+            'Referer': 'https://www.bilibili.com/',
+            'User-Agent': BrowserUa.mob,
+          },
+          sendTimeout: const Duration(seconds: 20),
+          receiveTimeout: const Duration(seconds: 40),
         ),
-        data: {
-          'model': translateModel,
-          'messages': [
-            {
-              'role': 'user',
-              'content': [
-                {
-                  'type': 'text',
-                  'text': '请用\$lang描述这张图片上的文字内容，并说明这些文字'
-                      '是什么意思。如果图上没有任何文字，就直接说「未识别到文字」。'
-                      '只输出这段描述本身，不要客套、不要解释你在做什么。',
-                },
-                {
-                  'type': 'image_url',
-                  'image_url': {'url': imageUrl},
-                },
-              ],
-            },
-          ],
-          'enable_thinking': false,
-        },
       );
-      final choices = res.data?['choices'];
-      if (choices is List && choices.isNotEmpty) {
-        final message = choices.first['message'];
-        final content = message is Map ? message['content'] : null;
-        if (content is String && content.trim().isNotEmpty) {
-          return content.trim();
-        }
+      final bytes = img.data;
+      if (bytes == null || bytes.isEmpty) {
+        throw Exception('封面图片内容为空');
       }
-    } catch (_) {}
-    return null;
+      dataUri = 'data:image/jpeg;base64,\${base64Encode(bytes)}';
+    } catch (e) {
+      throw Exception('封面图片下载失败：$e');
+    }
+
+    final res = await Dio().post<Map<String, dynamic>>(
+      '$base/chat/completions',
+      options: Options(
+        headers: translateApiKey.isEmpty
+            ? null
+            : {'Authorization': 'Bearer $translateApiKey'},
+        sendTimeout: const Duration(seconds: 60),
+        receiveTimeout: const Duration(seconds: 120),
+      ),
+      data: {
+        'model': translateModel,
+        'messages': [
+          {
+            'role': 'user',
+            'content': [
+              {
+                'type': 'text',
+                'text': '请用$lang描述这张图片上的文字内容，并说明这些文字'
+                    '是什么意思。如果图上没有任何文字，就直接说「未识别到文字」。'
+                    '只输出这段描述本身，不要客套、不要解释你在做什么。',
+              },
+              {
+                'type': 'image_url',
+                'image_url': {'url': dataUri},
+              },
+            ],
+          },
+        ],
+        'enable_thinking': false,
+      },
+    );
+
+    final choices = res.data?['choices'];
+    if (choices is List && choices.isNotEmpty) {
+      final message = choices.first['message'];
+      final content = message is Map ? message['content'] : null;
+      if (content is String && content.trim().isNotEmpty) {
+        return content.trim();
+      }
+    }
+    throw Exception('接口返回内容为空（HTTP ${res.statusCode}）');
   }
 
   /// 兼容两种写法：`.../v1` 直接用，只有域名时补上 `/v1`。

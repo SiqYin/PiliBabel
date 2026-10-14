@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 
 /// 视频封面左下角的「翻译封面」按钮。
@@ -59,57 +59,34 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
       setState(() => _loading = false);
     }
     try {
+      // 和更新弹窗用同一套写法：SmartDialog + AlertDialog + ColorScheme，
+      // 主题跟随 App，不再是自绘的黑底容器
       await SmartDialog.show(
-        builder: (_) => Container(
-          constraints: const BoxConstraints(maxWidth: 320),
-          padding: const EdgeInsets.fromLTRB(20, 18, 20, 10),
-          decoration: BoxDecoration(
-            color: const Color(0xFF2B2B2B),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                uiTx('封面翻译'),
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
+        animationType: SmartAnimationType.centerFade_otherSlide,
+        builder: (context) {
+          final colorScheme = ColorScheme.of(context);
+          return AlertDialog(
+            title: Text(uiTx('封面翻译')),
+            content: SizedBox(
+              width: 320,
+              child: SingleChildScrollView(
+                child: SelectableText(msg),
               ),
-              const SizedBox(height: 10),
-              SingleChildScrollView(
+            ),
+            actions: [
+              TextButton(
+                onPressed: SmartDialog.dismiss,
                 child: Text(
-                  msg,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                    height: 1.45,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Align(
-                alignment: Alignment.centerRight,
-                child: GestureDetector(
-                  onTap: SmartDialog.dismiss,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    child: Text(
-                      uiTx('关闭'),
-                      style: TextStyle(color: Color(0xFF7FB4FF), fontSize: 14),
-                    ),
-                  ),
+                  uiTx('关闭'),
+                  style: TextStyle(color: colorScheme.outline),
                 ),
               ),
             ],
-          ),
-        ),
+          );
+        },
       );
     } catch (e) {
-      SmartDialog.showToast('弹窗失败：$e');
+      SmartDialog.showToast(uiTxP('弹窗失败：{0}', [e]));
     }
   }
 

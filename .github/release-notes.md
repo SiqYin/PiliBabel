@@ -1,14 +1,16 @@
-### PiliBabel v1.8.8
+### PiliBabel v1.8.9
 
-**The cover translation strings go through the translation table again.**
+**Cover translation works, and the dialog matches the rest of the app.**
 
-- **Interface text is translated.** The progress toast, the dialog title and the close button
-  were hardcoded while chasing the dialog bug; they run through the translation table now, the
-  same way the rest of the app does. Failure messages use the template form so each distinct
-  error does not turn into its own dictionary entry.
-- **Everything else is unchanged from 1.8.7.** The result dialog is a plain container that does
-  not depend on any Material context, failures are printed verbatim instead of being swallowed,
-  and the button stays the topmost element of the cover stack with its original small size and
-  a 28x28 tap target.
+- **The cover is fetched by the app now.** The image used to be handed to the model as a
+  plain Bilibili CDN URL and the server did the fetching, which fails silently because that
+  CDN expects a Referer. The app downloads the cover itself and sends it inline as a data
+  URI, so there is no server side fetch left to fail.
+- **Failures are readable.** The request layer no longer swallows its exceptions: a failed
+  image download, an empty response or an HTTP error each surface as their own message in the
+  dialog instead of the generic "no content returned".
+- **The dialog follows the app theme.** It uses the same `SmartDialog` animation, `AlertDialog`
+  and `ColorScheme` as the update dialog, so it picks up the current theme instead of being a
+  hardcoded dark card.
 
 Downloads are below.
