@@ -578,6 +578,17 @@ class UiTranslateService extends GetxService {
     return _normalizeScripts(results, currentLanguage.script);
   }
 
+  /// 供字幕这类大段正文复用：把一批文本翻成当前界面语言。
+  /// 翻译不可用、或返回条数对不上时原样返回，调用方不必自己兜底。
+  Future<List<String>> translateTexts(List<String> sources) async {
+    if (!translateContent || sources.isEmpty) return sources;
+    try {
+      final out = await _translateChunk(sources);
+      if (out.length == sources.length) return out;
+    } catch (_) {}
+    return sources;
+  }
+
   Future<List<String>> _translateChunk(List<String> sources) async {
     // 最后一道防线（token 保护）：真正发请求前再确认一次开关，
     // 任何入队/换语言/关闭时序问题都不可能导致关闭状态下产生 API 调用。
