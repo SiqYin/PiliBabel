@@ -43,13 +43,18 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
       if (cover == null || cover.isEmpty) {
         msg = uiTx('这张封面没有可用的图片地址');
       } else {
+        // 识图比纯文字翻译慢得多（下封面 + 传 base64 图 + 视觉模型推理），
+        // dio 那层给的是 60s 发送 / 120s 接收，这里不能掐得比它还早。
         final text = await UiTranslateService.to
             .describeImage(cover)
-            .timeout(const Duration(seconds: 15));
+            .timeout(const Duration(seconds: 60));
         msg = (text?.trim().isNotEmpty == true)
             ? text!
             : uiTx('接口没有返回内容（请求已发出，但没有拿到译文）');
       }
+    } on TimeoutException {
+      msg = uiTx('请求超时：识图比纯文字翻译慢，网络不好时更明显。'
+          '可以点左下角「再次检测」重试');
     } catch (e) {
       // 用 uiTxP 模板而不是先插值再 uiTx：否则每个不同的错误内容都会变成一条新词条
       msg = uiTxP('请求出错：{0}', [e]);
