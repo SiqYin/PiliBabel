@@ -1,10 +1,13 @@
-### PiliBabel v1.8.13
+### PiliBabel v1.8.14
 
-**Cover translation stops inventing text that is not there.**
+**Cover translation now translates the text instead of reading it out.**
 
-- **The prompt now forbids guessing.** It asks for the text on the image, a description of what
-  the image shows, and nothing else: no inferring, no filling in the blanks, no inventing
-  characters that are not on the cover. Anything illegible or uncertain is to be reported as
-  illegible rather than guessed at.
+- **The prompt asks for a translation.** It was describing the writing on the cover in its
+  original language - a Japanese interface got back the Chinese text it was looking at. It now
+  asks for the text to be recognised and translated into the interface language first, and to
+  describe the picture afterwards. Guessing at characters is still forbidden: only what is
+  actually on the cover gets translated.
+- **The dialog gained a "detect again" button.** Bottom left re-runs the recognition if the
+  result is not good enough; bottom right closes it.
 
 Downloads are below.
