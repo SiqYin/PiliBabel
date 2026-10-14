@@ -616,7 +616,7 @@ class UiTranslateService extends GetxService {
       if (bytes == null || bytes.isEmpty) {
         throw Exception('封面图片内容为空');
       }
-      dataUri = 'data:image/jpeg;base64,\${base64Encode(bytes)}';
+      dataUri = 'data:image/jpeg;base64,${base64Encode(bytes)}';
     } catch (e) {
       throw Exception('封面图片下载失败：$e');
     }
