@@ -159,7 +159,7 @@ class HistoryItem extends StatelessWidget {
                               )
                             else if (item.badge?.isNotEmpty == true)
                               PBadge(
-                                text: item.badge,
+                                text: uiTx(item.badge),
                                 top: 6.0,
                                 right: 6.0,
                                 type: business == 'live' && item.liveStatus != 1

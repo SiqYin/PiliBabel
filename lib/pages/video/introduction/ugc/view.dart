@@ -393,7 +393,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
           ],
           if (videoDetail.isUpowerExclusive == true) ...[
             _labelWidget(
-              '充电专属',
+              uiTx('充电专属'),
               colorScheme.isDark
                   ? colorScheme.error
                   : colorScheme.errorContainer,
@@ -404,7 +404,7 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
             const TextSpan(text: ' '),
           ] else if (videoDetail.rights?.isSteinGate == 1) ...[
             _labelWidget(
-              '互动视频',
+              uiTx('互动视频'),
               colorScheme.secondaryContainer,
               colorScheme.onSecondaryContainer,
             ),

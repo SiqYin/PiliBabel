@@ -49,7 +49,7 @@ class PgcCardVPgcIndex extends StatelessWidget {
                         height: maxHeight,
                       ),
                       PBadge(
-                        text: item.badge,
+                        text: uiTx(item.badge),
                         top: 6,
                         right: 6,
                         bottom: null,
