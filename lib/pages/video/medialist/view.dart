@@ -210,7 +210,7 @@ class _MediaListPanelState extends State<MediaListPanel>
                           ),
                           if (item.badge?.isNotEmpty == true)
                             PBadge(
-                              text: uiTx(item.badge),
+                              text: uiTx(item.badge ?? ''),
                               right: 6.0,
                               top: 6.0,
                               type: switch (item.badge) {

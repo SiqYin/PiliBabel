@@ -76,7 +76,7 @@ class FavPgcItem extends StatelessWidget {
                             PBadge(
                               right: 4,
                               top: 4,
-                              text: uiTx(item.badge),
+                              text: uiTx(item.badge ?? ''),
                               size: PBadgeSize.small,
                               fontSize: 10,
                               padding: const EdgeInsets.symmetric(

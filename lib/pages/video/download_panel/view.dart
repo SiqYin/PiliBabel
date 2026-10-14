@@ -451,7 +451,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
                               )
                             else if (episode.badge != null)
                               PBadge(
-                                text: uiTx(episode.badge),
+                                text: uiTx(episode.badge ?? ''),
                                 top: 6,
                                 right: 6,
                                 type: switch (episode.badge) {
