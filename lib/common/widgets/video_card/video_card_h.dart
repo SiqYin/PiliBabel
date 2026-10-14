@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
@@ -121,6 +122,7 @@ class VideoCardH extends StatelessWidget {
                               width: maxWidth,
                               height: maxHeight,
                             ),
+                            CoverTranslateButton(cover: videoItem.cover),
                             if (videoItem.badge case final badge?)
                               PBadge(
                                 text: uiTx(badge ?? ''),
