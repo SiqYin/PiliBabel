@@ -100,7 +100,7 @@ Widget content(
                       ? const TextStyle(fontSize: 15)
                       : const TextStyle(fontSize: 14),
                   richNodes,
-                  maxLines: isSave ? null : 6,
+                  maxLines: isSave || Pref.dynamicDefaultExpand ? null : 6,
                   onShowMore: () => PageUtils.pushDynDetail(item, isPush: true),
                   primary: theme.colorScheme.primary,
                 ),

@@ -344,6 +344,7 @@ abstract final class SettingBoxKey {
       customAppFontNames = 'customAppFontNames';
   static const String videoTitleFull = 'videoTitleFull';
   static const String replyDefaultExpand = 'replyDefaultExpand';
+  static const String dynamicDefaultExpand = 'dynamicDefaultExpand';
 }
 
 abstract final class LocalCacheKey {
