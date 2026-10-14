@@ -2,6 +2,18 @@
 
 按 Keep a Changelog 的思路编写,留个记录,方便知道每次更新都改了什么,也方便用户查看更新内容.
 
+## 1.10.4
+
+### PiliBabel v1.10.4
+
+- **The title option now has a switch of its own.** It sits in AI translation settings,
+  right under the AI video assistant toggle, and is on by default - turn it off and cards
+  go back to their original height and two-line titles.
+- The taller block itself shipped in v1.10.3: the title area grows by 38px in every cover
+  grid, so translated titles really do fit instead of being clipped.
+
+Downloads are below.
+
 ## 1.10.3
 
 ### PiliBabel v1.10.3

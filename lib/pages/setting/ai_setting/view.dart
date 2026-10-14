@@ -34,6 +34,9 @@ class AiSettingPage extends StatelessWidget {
               )),
           const SizedBox(height: 8),
 
+          const _TitleFullSwitch(),
+          const SizedBox(height: 8),
+
           // API 配置
           Card(
             child: Padding(
@@ -425,6 +428,31 @@ class _ApiKeyFieldState extends State<_ApiKeyField> {
       autocorrect: false,
       enableSuggestions: false,
       onChanged: widget.controller.saveApiKey,
+    );
+  }
+}
+
+
+class _TitleFullSwitch extends StatefulWidget {
+  const _TitleFullSwitch();
+
+  @override
+  State<_TitleFullSwitch> createState() => _TitleFullSwitchState();
+}
+
+class _TitleFullSwitchState extends State<_TitleFullSwitch> {
+  bool _value = Pref.videoTitleFull;
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      title: Text(uiTx('视频标题完全显示')),
+      subtitle: Text(uiTx('开启后首页等处的视频方块会纵向拉长，尽量完整显示翻译后的标题')),
+      value: _value,
+      onChanged: (value) {
+        Pref.videoTitleFull = value;
+        setState(() => _value = value);
+      },
     );
   }
 }
