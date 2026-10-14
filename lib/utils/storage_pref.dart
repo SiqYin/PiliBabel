@@ -308,6 +308,13 @@ abstract final class Pref {
 
   static ThemeType get themeType => ThemeType.values[_themeTypeInt];
 
+  /// 视频标题完全显示：开启后卡片纵向拉长、标题多给几行，
+  /// 让英/法/德/日等较长的译文尽量完整显示。
+  static bool get videoTitleFull =>
+      _setting.get(SettingBoxKey.videoTitleFull, defaultValue: true);
+  static set videoTitleFull(bool value) =>
+      _setting.put(SettingBoxKey.videoTitleFull, value);
+
   static ThemeMode get themeMode => switch (_themeTypeInt) {
     0 => ThemeMode.light,
     1 => ThemeMode.dark,

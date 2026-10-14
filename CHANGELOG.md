@@ -2,6 +2,20 @@
 
 按 Keep a Changelog 的思路编写,留个记录,方便知道每次更新都改了什么,也方便用户查看更新内容.
 
+## 1.10.0
+
+### PiliBabel v1.10.0
+
+**Long translated titles get room to breathe.**
+
+- **Video blocks stretch when needed.** Titles translated into English, French, German or
+  Japanese are longer than the Chinese original and were being cut off after two lines. The
+  title area now takes up to four lines when the new option is on, and the block grows with it.
+- **On by default, and yours to turn off.** The option follows the translation feature: it
+  starts enabled, and can be switched off at any time in AI translation settings.
+
+Downloads are below.
+
 ## 1.9.0
 
 ### PiliBabel v1.9.0

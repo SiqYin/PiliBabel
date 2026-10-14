@@ -211,7 +211,7 @@ class VideoCardH extends StatelessWidget {
                   !UiTranslateService.contentTranslationActive()) {
                 return Text.rich(
                   overflow: .ellipsis,
-                  maxLines: 2,
+                  maxLines: Pref.videoTitleFull ? 4 : 2,
                   TextSpan(
                     children: titleList!
                         .map(
