@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'dart:convert';
 import 'dart:math' as math;
 
@@ -211,11 +212,14 @@ class ChatItem extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            NetworkImgLayer(
+            Stack(children: [
+NetworkImgLayer(
               width: 220,
               height: 123.75,
               src: content['cover'],
             ),
+CoverTranslateButton(cover: content['cover']),
+]),
             const SizedBox(height: 6),
             Text(
               content['title'] ?? "",
@@ -353,11 +357,14 @@ class ChatItem extends StatelessWidget {
                 child: Row(
                   spacing: 6,
                   children: [
-                    NetworkImgLayer(
+                    Stack(children: [
+NetworkImgLayer(
                       width: 130,
                       height: 73.125,
                       src: i['cover_url'],
                     ),
+CoverTranslateButton(cover: i['cover_url']),
+]),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -446,12 +453,15 @@ class ChatItem extends StatelessWidget {
                   Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      NetworkImgLayer(
+                      Stack(children: [
+NetworkImgLayer(
                         width: constrains.maxWidth,
                         height: constrains.maxWidth / Style.aspectRatio16x9,
                         src: content['cover'],
                         borderRadius: const .vertical(top: Style.imgRadius),
                       ),
+CoverTranslateButton(cover: content['cover']),
+]),
                       PBadge(
                         left: 6,
                         bottom: 6,
@@ -627,11 +637,14 @@ class ChatItem extends StatelessWidget {
     final imgHeight = (content['height'] as num).toDouble();
     final width = math.min(220.0, imgWidth);
     final ratio = imgHeight / imgWidth;
-    Widget child = NetworkImgLayer(
+    Widget child = Stack(children: [
+NetworkImgLayer(
       width: width,
       height: width * ratio,
       src: url,
-    );
+    ),
+CoverTranslateButton(cover: url),
+]);
     if (ratio <= Style.imgMaxRatio) {
       child = fromHero(
         tag: url,

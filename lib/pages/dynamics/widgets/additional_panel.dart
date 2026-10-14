@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -42,11 +43,14 @@ Widget? addWidget(
             ),
             child: Row(
               children: [
-                NetworkImgLayer(
+                Stack(children: [
+NetworkImgLayer(
                   width: 120,
                   height: 75,
                   src: ugc.cover,
                 ),
+CoverTranslateButton(cover: ugc.cover),
+]),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
@@ -327,7 +331,8 @@ Widget? addWidget(
                   child: Row(
                     children: [
                       if (e.cover?.isNotEmpty == true) ...[
-                        NetworkImgLayer(
+                        Stack(children: [
+NetworkImgLayer(
                           width: 45,
                           height: 45,
                           src: e.cover,
@@ -335,6 +340,8 @@ Widget? addWidget(
                             Radius.circular(6),
                           ),
                         ),
+CoverTranslateButton(cover: e.cover),
+]),
                         const SizedBox(width: 10),
                       ],
                       Expanded(
@@ -495,7 +502,8 @@ Widget? addWidget(
             child: Row(
               children: [
                 if (content.cover?.isNotEmpty == true) ...[
-                  NetworkImgLayer(
+                  Stack(children: [
+NetworkImgLayer(
                     width: 45,
                     height: 45,
                     src: content.cover,
@@ -503,6 +511,8 @@ Widget? addWidget(
                       Radius.circular(6),
                     ),
                   ),
+CoverTranslateButton(cover: content.cover),
+]),
                   const SizedBox(width: 10),
                 ],
                 Expanded(

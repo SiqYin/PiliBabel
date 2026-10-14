@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -41,11 +42,14 @@ class MemberFavItem extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              NetworkImgLayer(
+              Stack(children: [
+NetworkImgLayer(
                 src: item.cover,
                 width: 160,
                 height: 100,
               ),
+CoverTranslateButton(cover: item.cover),
+]),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(

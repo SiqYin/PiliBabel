@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
@@ -74,11 +75,14 @@ class SubItem extends StatelessWidget {
                       children: [
                         Hero(
                           tag: heroTag,
-                          child: NetworkImgLayer(
+                          child: Stack(children: [
+NetworkImgLayer(
                             src: item.cover,
                             width: maxWidth,
                             height: maxHeight,
                           ),
+CoverTranslateButton(cover: item.cover),
+]),
                         ),
                         PBadge(
                           right: 6,

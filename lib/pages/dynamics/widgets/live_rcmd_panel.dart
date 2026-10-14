@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -35,12 +36,15 @@ Widget liveRcmdPanel(
           clipBehavior: Clip.none,
           children: [
             LayoutBuilder(
-              builder: (context, constraints) => NetworkImgLayer(
+              builder: (context, constraints) => Stack(children: [
+NetworkImgLayer(
                 width: constraints.maxWidth,
                 height: constraints.maxWidth / Style.aspectRatio,
                 src: liveRcmd.cover,
                 quality: 40,
               ),
+CoverTranslateButton(cover: liveRcmd.cover),
+]),
             ),
             PBadge(
               text: liveRcmd.watchedShow?.textLarge,

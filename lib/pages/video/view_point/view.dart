@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -145,11 +146,14 @@ class _ViewPointsPageState extends State<ViewPointsPage>
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              NetworkImgLayer(
+              Stack(children: [
+NetworkImgLayer(
                 src: segment.url,
                 width: 160,
                 height: 100,
               ),
+CoverTranslateButton(cover: segment.url),
+]),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(

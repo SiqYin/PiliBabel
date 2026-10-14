@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -40,12 +41,15 @@ class LiveCardVFollow extends StatelessWidget {
                   return Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      NetworkImgLayer(
+                      Stack(children: [
+NetworkImgLayer(
                         src: liveItem.roomCover!,
                         width: maxWidth,
                         height: maxHeight,
                         borderRadius: const .vertical(top: .circular(12)),
                       ),
+CoverTranslateButton(cover: liveItem.roomCover!),
+]),
                       Positioned(
                         left: 0,
                         right: 0,

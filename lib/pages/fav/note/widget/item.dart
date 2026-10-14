@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/select_mask.dart';
 import 'package:PiliPlus/models_new/fav/fav_note/list.dart';
@@ -60,11 +61,14 @@ class FavNoteItem extends StatelessWidget {
                       return Stack(
                         clipBehavior: Clip.none,
                         children: [
-                          NetworkImgLayer(
+                          Stack(children: [
+NetworkImgLayer(
                             src: item.pic,
                             width: boxConstraints.maxWidth,
                             height: boxConstraints.maxHeight,
                           ),
+CoverTranslateButton(cover: item.pic),
+]),
                           Positioned.fill(
                             child: selectMask(
                               colorScheme,

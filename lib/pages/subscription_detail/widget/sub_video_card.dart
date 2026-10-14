@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
@@ -67,11 +68,14 @@ class SubVideoCardH extends StatelessWidget {
                     return Stack(
                       clipBehavior: Clip.none,
                       children: [
-                        NetworkImgLayer(
+                        Stack(children: [
+NetworkImgLayer(
                           src: videoItem.cover,
                           width: maxWidth,
                           height: maxHeight,
                         ),
+CoverTranslateButton(cover: videoItem.cover),
+]),
                         PBadge(
                           text: DurationUtils.formatDuration(
                             videoItem.duration,

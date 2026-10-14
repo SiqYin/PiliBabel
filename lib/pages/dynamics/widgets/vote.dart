@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'dart:async';
 
 import 'package:PiliPlus/common/widgets/avatars.dart';
@@ -338,12 +339,15 @@ class _VotePanelState extends State<VotePanel> {
                     AspectRatio(
                       aspectRatio: 1,
                       child: LayoutBuilder(
-                        builder: (context, constraints) => NetworkImgLayer(
+                        builder: (context, constraints) => Stack(children: [
+NetworkImgLayer(
                           src: opt.imgUrl,
                           width: constraints.maxWidth,
                           height: constraints.maxHeight,
                           borderRadius: const .vertical(top: .circular(6)),
                         ),
+CoverTranslateButton(cover: opt.imgUrl),
+]),
                       ),
                     ),
                     if (_enabled || selected)

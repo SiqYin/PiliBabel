@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -403,7 +404,8 @@ class _SavePanelState extends State<SavePanel> {
                             child: Row(
                               spacing: 10,
                               children: [
-                                NetworkImgLayer(
+                                Stack(children: [
+NetworkImgLayer(
                                   src: cover!,
                                   height: coverSize,
                                   width: coverType == .def16_9
@@ -412,6 +414,8 @@ class _SavePanelState extends State<SavePanel> {
                                   quality: 100,
                                   borderRadius: const .all(.circular(6)),
                                 ),
+CoverTranslateButton(cover: cover!),
+]),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: .start,

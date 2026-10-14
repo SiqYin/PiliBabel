@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'dart:io';
 
 import 'package:PiliPlus/common/style.dart';
@@ -103,11 +104,14 @@ class _LocalIntroPanelState extends State<LocalIntroPanel>
                                     : null,
                               ),
                             )
-                          : NetworkImgLayer(
+                          : Stack(children: [
+NetworkImgLayer(
                               src: entry.cover,
                               width: 160,
                               height: 100,
                             ),
+CoverTranslateButton(cover: entry.cover),
+]),
                       PBadge(
                         text: DurationUtils.formatDuration(
                           entry.totalTimeMilli ~/ 1000,

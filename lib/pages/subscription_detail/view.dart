@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -123,11 +124,14 @@ class _SubDetailPageState extends State<SubDetailPage> with GridMixin {
       fontSize: 12.5,
       color: theme.colorScheme.outline,
     );
-    Widget cover = NetworkImgLayer(
+    Widget cover = Stack(children: [
+NetworkImgLayer(
       width: 176,
       height: 110,
       src: info.cover,
-    );
+    ),
+CoverTranslateButton(cover: info.cover),
+]);
     if (_subDetailController.heroTag != null) {
       cover = Hero(
         tag: _subDetailController.heroTag!,

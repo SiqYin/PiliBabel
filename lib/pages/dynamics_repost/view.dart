@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/animated_height.dart';
 import 'package:PiliPlus/common/widgets/draggable_sheet/dyn.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/text_field.dart';
@@ -166,7 +167,8 @@ class _RepostPanelState extends CommonRichTextPubPageState<RepostPanel>
       child: Row(
         children: [
           if (_pic != null) ...[
-            NetworkImgLayer(
+            Stack(children: [
+NetworkImgLayer(
               width: 40,
               height: 40,
               src: _pic,
@@ -174,6 +176,8 @@ class _RepostPanelState extends CommonRichTextPubPageState<RepostPanel>
                 Radius.circular(6),
               ),
             ),
+CoverTranslateButton(cover: _pic),
+]),
             const SizedBox(width: 10),
           ],
           Expanded(

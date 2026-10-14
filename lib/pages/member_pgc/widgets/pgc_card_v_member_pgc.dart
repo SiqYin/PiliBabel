@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -36,11 +37,14 @@ class PgcCardVMemberPgc extends StatelessWidget {
               aspectRatio: 0.75,
               child: LayoutBuilder(
                 builder: (context, boxConstraints) {
-                  return NetworkImgLayer(
+                  return Stack(children: [
+NetworkImgLayer(
                     src: item.cover,
                     width: boxConstraints.maxWidth,
                     height: boxConstraints.maxHeight,
-                  );
+                  ),
+CoverTranslateButton(cover: item.cover),
+]);
                 },
               ),
             ),

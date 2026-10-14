@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'dart:io' show File;
 
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
@@ -325,7 +326,8 @@ class _CreateVotePageState extends State<CreateVotePage> {
         if (showImg)
           GestureDetector(
             onTap: onPickImg,
-            child: NetworkImgLayer(
+            child: Stack(children: [
+NetworkImgLayer(
               src: imgUrl,
               width: 40,
               height: 40,
@@ -333,6 +335,8 @@ class _CreateVotePageState extends State<CreateVotePage> {
                 Radius.circular(6),
               ),
             ),
+CoverTranslateButton(cover: imgUrl),
+]),
           ),
         if (showDel)
           iconButton(

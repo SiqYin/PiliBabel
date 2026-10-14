@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/models_new/fav/fav_folder/list.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/bili_utils.dart';
@@ -51,11 +52,14 @@ class FavFolderItem extends StatelessWidget {
             ),
             child: Hero(
               tag: heroTag,
-              child: NetworkImgLayer(
+              child: Stack(children: [
+NetworkImgLayer(
                 src: item.cover,
                 width: 180,
                 height: 110,
               ),
+CoverTranslateButton(cover: item.cover),
+]),
             ),
           ),
           const SizedBox(height: 8),

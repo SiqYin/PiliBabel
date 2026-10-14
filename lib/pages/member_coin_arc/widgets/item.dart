@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -69,12 +70,15 @@ class MemberCoinLikeItem extends StatelessWidget {
                   return Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      NetworkImgLayer(
+                      Stack(children: [
+NetworkImgLayer(
                         src: item.cover,
                         width: maxWidth,
                         height: maxHeight,
                         borderRadius: const .vertical(top: .circular(12)),
                       ),
+CoverTranslateButton(cover: item.cover),
+]),
                       if (item.isCooperation == true)
                         PBadge(
                           text: uiTx('合作'),

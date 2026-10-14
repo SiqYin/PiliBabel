@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
@@ -394,11 +395,14 @@ class _FavDetailPageState extends State<FavDetailPage> with GridMixin {
                     children: [
                       Hero(
                         tag: _favDetailController.heroTag,
-                        child: NetworkImgLayer(
+                        child: Stack(children: [
+NetworkImgLayer(
                           width: 176,
                           height: 110,
                           src: folderInfo.cover,
                         ),
+CoverTranslateButton(cover: folderInfo.cover),
+]),
                       ),
                       Positioned(
                         right: 6,

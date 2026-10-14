@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -42,14 +43,17 @@ class PgcRankItem extends StatelessWidget {
                 aspectRatio: 3 / 4,
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    return NetworkImgLayer(
+                    return Stack(children: [
+NetworkImgLayer(
                       width: constraints.maxWidth,
                       height: constraints.maxHeight,
                       src: item.cover,
                       borderRadius: const BorderRadius.all(
                         Radius.circular(6),
                       ),
-                    );
+                    ),
+CoverTranslateButton(cover: item.cover),
+]);
                   },
                 ),
               ),

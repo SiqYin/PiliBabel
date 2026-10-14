@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
@@ -84,11 +85,14 @@ class SearchArchiveGrpc extends StatelessWidget {
                         return Stack(
                           clipBehavior: Clip.none,
                           children: [
-                            NetworkImgLayer(
+                            Stack(children: [
+NetworkImgLayer(
                               src: arc.pic,
                               width: maxWidth,
                               height: maxHeight,
                             ),
+CoverTranslateButton(cover: arc.pic),
+]),
                             if (item.isPugv)
                               PBadge(
                                 text: uiTx('课堂'),

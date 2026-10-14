@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -38,13 +39,16 @@ void imageSaveDialog({
               mainAxisSize: .min,
               children: [
                 IgnorePointer(
-                  child: NetworkImgLayer(
+                  child: Stack(children: [
+NetworkImgLayer(
                     src: cover,
                     quality: 100,
                     width: imgWidth,
                     height: height,
                     borderRadius: const .vertical(top: Style.imgRadius),
                   ),
+CoverTranslateButton(cover: cover),
+]),
                 ),
                 Padding(
                   padding: const .fromLTRB(12, 10, 8, 10),
