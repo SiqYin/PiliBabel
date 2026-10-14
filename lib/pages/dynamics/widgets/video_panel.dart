@@ -1,5 +1,6 @@
 // 视频or合集
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -128,7 +129,7 @@ CoverTranslateButton(cover: cover),
         if (video.title case final title?)
           Text(
             uiTx(title),
-            maxLines: isDetail ? null : 1,
+            maxLines: isDetail ? null : (Pref.videoTitleFull ? 2 : 1),
             style: const TextStyle(fontWeight: FontWeight.bold),
             overflow: isDetail ? null : TextOverflow.ellipsis,
           ),
