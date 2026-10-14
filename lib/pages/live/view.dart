@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/skeleton/video_card_v.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -184,7 +185,7 @@ class _LivePageState extends State<LivePage>
     crossAxisSpacing: Style.cardSpace,
     maxCrossAxisExtent: Grid.smallCardWidth,
     childAspectRatio: Style.aspectRatio,
-    mainAxisExtent: textScaler.scale(90),
+    mainAxisExtent: textScaler.scale(90) + (Pref.videoTitleFull ? 38 : 0),
   );
 
   Widget _buildBody(ThemeData theme, LoadingState<List?> loadingState) {

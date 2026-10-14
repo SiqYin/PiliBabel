@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/skeleton/msg_feed_top.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/skeleton/video_card_v.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -80,12 +81,12 @@ class _LiveSearchChildPageState extends State<LiveSearchChildPage>
     crossAxisSpacing: Style.cardSpace,
     maxCrossAxisExtent: Grid.smallCardWidth,
     childAspectRatio: Style.aspectRatio,
-    mainAxisExtent: MediaQuery.textScalerOf(context).scale(60),
+    mainAxisExtent: MediaQuery.textScalerOf(context).scale(60) + (Pref.videoTitleFull ? 38 : 0),
   );
 
   late final userDelegate = SliverGridDelegateWithMaxCrossAxisExtent(
     maxCrossAxisExtent: Grid.smallCardWidth * 2,
-    mainAxisExtent: 60,
+    mainAxisExtent: 60 + (Pref.videoTitleFull ? 38 : 0),
   );
 
   Widget _buildBody(LoadingState<List?> loadingState) {

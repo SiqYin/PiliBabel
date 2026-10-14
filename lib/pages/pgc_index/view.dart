@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/animated_height.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -227,7 +228,7 @@ class _PgcIndexPageState extends State<PgcIndexPage>
     crossAxisSpacing: Style.cardSpace,
     maxCrossAxisExtent: Grid.smallCardWidth * 0.6,
     childAspectRatio: 0.75,
-    mainAxisExtent: MediaQuery.textScalerOf(context).scale(50),
+    mainAxisExtent: MediaQuery.textScalerOf(context).scale(50) + (Pref.videoTitleFull ? 38 : 0),
   );
 
   Widget _buildList(LoadingState<List<PgcIndexItem>?> loadingState) {

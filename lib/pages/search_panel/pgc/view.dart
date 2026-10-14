@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/skeleton/media_bangumi.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/models/search/result.dart';
@@ -48,7 +49,7 @@ class _SearchPgcPanelState
 
   late final gridDelegate = SliverGridDelegateWithMaxCrossAxisExtent(
     maxCrossAxisExtent: Grid.smallCardWidth * 2,
-    mainAxisExtent: 160,
+    mainAxisExtent: 160 + (Pref.videoTitleFull ? 38 : 0),
   );
 
   @override
