@@ -74,7 +74,6 @@ class FavPgcItem extends StatelessWidget {
                                 Radius.circular(4),
                               ),
                             ),
-                            CoverTranslateButton(cover: item.cover),
                             PBadge(
                               right: 4,
                               top: 4,
@@ -95,7 +94,8 @@ class FavPgcItem extends StatelessWidget {
                                 ),
                               ),
                             ),
-                          ],
+                          
+                            CoverTranslateButton(cover: item.cover),],
                         );
                       },
                     ),

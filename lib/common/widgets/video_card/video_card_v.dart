@@ -118,7 +118,6 @@ class VideoCardV extends StatelessWidget {
                             height: maxHeight,
                             borderRadius: const .vertical(top: .circular(12)),
                           ),
-                          CoverTranslateButton(cover: videoItem.cover),
                           if (videoItem.duration > 0)
                             PBadge(
                               bottom: 6,
@@ -140,7 +139,8 @@ class VideoCardV extends StatelessWidget {
                               type: .error,
                               fontSize: 10,
                             ),
-                        ],
+                        
+                          CoverTranslateButton(cover: videoItem.cover),],
                       );
                     },
                   ),

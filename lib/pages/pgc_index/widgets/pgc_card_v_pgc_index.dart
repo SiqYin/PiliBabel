@@ -49,7 +49,6 @@ class PgcCardVPgcIndex extends StatelessWidget {
                         width: maxWidth,
                         height: maxHeight,
                       ),
-                      CoverTranslateButton(cover: item.cover),
                       PBadge(
                         text: uiTx(item.badge ?? ''),
                         top: 6,
@@ -65,7 +64,8 @@ class PgcCardVPgcIndex extends StatelessWidget {
                         left: 6,
                         type: PBadgeType.gray,
                       ),
-                    ],
+                    
+                      CoverTranslateButton(cover: item.cover),],
                   );
                 },
               ),

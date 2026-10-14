@@ -122,7 +122,6 @@ class VideoCardH extends StatelessWidget {
                               width: maxWidth,
                               height: maxHeight,
                             ),
-                            CoverTranslateButton(cover: videoItem.cover),
                             if (videoItem.badge case final badge?)
                               PBadge(
                                 text: uiTx(badge ?? ''),
@@ -164,7 +163,8 @@ class VideoCardH extends StatelessWidget {
                                 bottom: 6.0,
                                 type: .gray,
                               ),
-                          ],
+                          
+                            CoverTranslateButton(cover: videoItem.cover),],
                         );
                       },
                     ),

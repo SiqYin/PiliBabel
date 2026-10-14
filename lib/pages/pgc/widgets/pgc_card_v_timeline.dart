@@ -50,7 +50,6 @@ class PgcCardVTimeline extends StatelessWidget {
                         width: maxWidth,
                         height: maxHeight,
                       ),
-                      CoverTranslateButton(cover: item.cover),
                       if (item.follow == 1)
                         PBadge(
                           text: uiTx('已追番'),
@@ -63,7 +62,8 @@ class PgcCardVTimeline extends StatelessWidget {
                         bottom: 6,
                         type: PBadgeType.gray,
                       ),
-                    ],
+                    
+                      CoverTranslateButton(cover: item.cover),],
                   );
                 },
               ),
