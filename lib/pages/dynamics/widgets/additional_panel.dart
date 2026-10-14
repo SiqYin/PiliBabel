@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/gesture/tap_gesture_recognizer.dart';
@@ -58,7 +59,7 @@ CoverTranslateButton(cover: ugc.cover),
                     children: [
                       Text(
                         uiTx(ugc.title!),
-                        maxLines: 2,
+                        maxLines: Pref.videoTitleFull ? 2 : 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(height: 4),
@@ -237,7 +238,11 @@ CoverTranslateButton(cover: ugc.cover),
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (content.title?.isNotEmpty == true)
-                        Text(uiTx(content.title!)),
+                        Text(
+                          uiTx(content.title!),
+                          maxLines: Pref.videoTitleFull ? 2 : 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       if (content.hint?.text?.isNotEmpty == true)
                         Text(
                           content.hint!.text!,
@@ -522,7 +527,11 @@ CoverTranslateButton(cover: content.cover),
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       if (content.title?.isNotEmpty == true)
-                        Text(uiTx(content.title!)),
+                        Text(
+                          uiTx(content.title!),
+                          maxLines: Pref.videoTitleFull ? 2 : 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       if (content.desc1?.isNotEmpty == true)
                         Text(
                           content.desc1!,

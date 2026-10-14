@@ -1,8 +1,8 @@
-### PiliBabel v1.10.8
+### PiliBabel v1.10.9
 
-- Fixed a syntax error introduced in v1.10.7 by converting a grid delegate that lived
-  inside a method instead of on a class; that file is back to its original form.
-- The home feed grid delegate is still recomputed on every build, so the blocks follow the
-  switch: on stretches them to four title lines, off puts them back right away.
+- **Quoted videos in dynamics follow the switch too.** When an uploader forwards someone
+  else's video, that quoted card kept a single-line title no matter what the option said.
+  Its title now shows two lines with the option on and one line with it off, matching the
+  dynamics feed itself.
 
 Downloads are below.
