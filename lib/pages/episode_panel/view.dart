@@ -523,7 +523,7 @@ class EpisodePanelState extends State<EpisodePanel>
                           )
                         else if (episode.badge != null)
                           PBadge(
-                            text: episode.badge,
+                            text: uiTx(episode.badge),
                             top: 6,
                             right: 6,
                             type: switch (episode.badge) {
