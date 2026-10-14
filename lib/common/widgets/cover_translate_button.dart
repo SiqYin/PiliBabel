@@ -51,14 +51,12 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
       builder: (dialogContext) => AlertDialog(
         title: Obx(() => Text(uiTx('封面翻译'))),
         content: SingleChildScrollView(
-          child: Obx(
-            () => Text(
-              text?.trim().isNotEmpty == true
-                  ? text!
-                  : (widget.cover?.isNotEmpty == true
-                        ? uiTx('封面翻译失败，请稍后重试')
-                        : uiTx('这张封面没有可用的图片地址')),
-            ),
+          child: Text(
+            text?.trim().isNotEmpty == true
+                ? text!
+                : (widget.cover?.isNotEmpty == true
+                      ? uiTx('封面翻译失败，请稍后重试')
+                      : uiTx('这张封面没有可用的图片地址')),
           ),
         ),
         actions: [
@@ -80,26 +78,24 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: _onTap,
-        child: Obx(
-          () => Container(
-            width: 32,
-            height: 32,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: Colors.black54,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: _loading
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Icon(Icons.translate, size: 19, color: Colors.white),
+        child: Container(
+          width: 32,
+          height: 32,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: Colors.black54,
+            borderRadius: BorderRadius.circular(6),
           ),
+          child: _loading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : const Icon(Icons.translate, size: 19, color: Colors.white),
         ),
       ),
     );
