@@ -97,7 +97,6 @@ class VideoCardHMemberVideo extends StatelessWidget {
                               width: maxWidth,
                               height: maxHeight,
                             ),
-                            CoverTranslateButton(cover: videoItem.cover),
                             if (fromViewAid == videoItem.param)
                               Positioned.fill(
                                 child: DecoratedBox(
@@ -184,7 +183,8 @@ class VideoCardHMemberVideo extends StatelessWidget {
                                 bottom: 6.0,
                                 type: PBadgeType.gray,
                               ),
-                          ],
+                          
+                            CoverTranslateButton(cover: videoItem.cover),],
                         );
                       },
                     ),

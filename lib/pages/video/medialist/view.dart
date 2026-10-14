@@ -209,7 +209,6 @@ class _MediaListPanelState extends State<MediaListPanel>
                             width: 160,
                             height: 100,
                           ),
-                          CoverTranslateButton(cover: item.cover),
                           if (item.badge?.isNotEmpty == true)
                             PBadge(
                               text: uiTx(item.badge ?? ''),
@@ -228,7 +227,8 @@ class _MediaListPanelState extends State<MediaListPanel>
                             bottom: 6.0,
                             type: PBadgeType.gray,
                           ),
-                        ],
+                        
+                          CoverTranslateButton(cover: item.cover),],
                       ),
                       const SizedBox(width: 10),
                       Expanded(

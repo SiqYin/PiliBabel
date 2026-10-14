@@ -112,7 +112,6 @@ class FavVideoCardH extends StatelessWidget {
                           width: maxWidth,
                           height: maxHeight,
                         ),
-                        CoverTranslateButton(cover: item.cover),
                         PBadge(
                           text: DurationUtils.formatDuration(item.duration),
                           right: 6.0,
@@ -141,7 +140,8 @@ class FavVideoCardH extends StatelessWidget {
                               item.checked,
                             ),
                           ),
-                      ],
+                      
+                        CoverTranslateButton(cover: item.cover),],
                     );
                   },
                 ),

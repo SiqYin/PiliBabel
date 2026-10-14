@@ -101,7 +101,6 @@ class VideoCardHLater extends StatelessWidget {
                           height: maxHeight,
                           cacheWidth: videoItem.dimension?.cacheWidth,
                         ),
-                        CoverTranslateButton(cover: videoItem.pic),
                         if (videoItem.isCharging == true)
                           PBadge(
                             text: uiTx('充电专属'),
@@ -164,7 +163,8 @@ class VideoCardHLater extends StatelessWidget {
                             videoItem.checked,
                           ),
                         ),
-                      ],
+                      
+                        CoverTranslateButton(cover: videoItem.pic),],
                     );
                   },
                 ),

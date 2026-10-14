@@ -142,11 +142,6 @@ class HistoryItem extends StatelessWidget {
                               width: maxWidth,
                               height: maxHeight,
                             ),
-                            CoverTranslateButton(
-                              cover: item.cover?.isNotEmpty == true
-                                  ? item.cover
-                                  : item.covers?.firstOrNull,
-                            ),
                             if (hasDuration)
                               PBadge(
                                 text: item.progress == -1
@@ -194,7 +189,12 @@ class HistoryItem extends StatelessWidget {
                                 item.checked,
                               ),
                             ),
-                          ],
+                          
+                            CoverTranslateButton(
+                              cover: item.cover?.isNotEmpty == true
+                                  ? item.cover
+                                  : item.covers?.firstOrNull,
+                            ),],
                         );
                       },
                     ),

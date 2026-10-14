@@ -124,7 +124,6 @@ class HistoryCardItem extends StatelessWidget {
                       width: _cardWidth,
                       height: _cardHeight,
                     ),
-                    CoverTranslateButton(cover: coverSrc),
                     // 右上角：直播状态 / 专栏标记 / pgc badge
                     if (_isLive)
                       PBadge(
@@ -159,7 +158,8 @@ class HistoryCardItem extends StatelessWidget {
                         bottom: 6.0,
                         type: PBadgeType.gray,
                       ),
-                  ],
+                  
+                    CoverTranslateButton(cover: coverSrc),],
                 ),
               ),
             ),

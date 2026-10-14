@@ -48,11 +48,9 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
     } catch (_) {
       text = null;
     }
-    if (!mounted) return;
-    setState(() => _loading = false);
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
+    if (mounted) setState(() => _loading = false);
+    await Get.dialog<void>(
+      AlertDialog(
         title: Obx(() => Text(uiTx('封面翻译'))),
         content: SingleChildScrollView(
           child: Text(
@@ -65,7 +63,7 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
+            onPressed: Get.back,
             child: Obx(() => Text(uiTx('关闭'))),
           ),
         ],
@@ -79,17 +77,15 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
       left: widget.left,
       bottom: widget.bottom,
       // 视觉上保持原来的小尺寸，但点击区透明放大到 28x28，手指不容易点空
-      child: SizedBox(
-        width: 28,
-        height: 28,
-        child: Align(
-          alignment: Alignment.bottomLeft,
-          child: Material(
-            type: MaterialType.transparency,
-            child: InkWell(
-              onTap: _onTap,
-              borderRadius: BorderRadius.circular(4),
-              child: Container(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: _onTap,
+        child: SizedBox(
+          width: 28,
+          height: 28,
+          child: Align(
+            alignment: Alignment.bottomLeft,
+            child: Container(
                 padding: const EdgeInsets.all(3),
                 decoration: BoxDecoration(
                   color: Colors.black54,
