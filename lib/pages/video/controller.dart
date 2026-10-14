@@ -42,6 +42,7 @@ import 'package:PiliPlus/models_new/video/video_detail/episode.dart' as ugc;
 import 'package:PiliPlus/models_new/video/video_detail/page.dart';
 import 'package:PiliPlus/models_new/video/video_pbp/data.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translate_service.dart';
 import 'package:PiliPlus/models_new/video/video_stein_edgeinfo/data.dart';
 import 'package:PiliPlus/pages/ai_chat/controller.dart';
 import 'package:PiliPlus/pages/audio/view.dart';
@@ -1650,6 +1651,29 @@ class VideoDetailController extends GetxController
       SubtitleTrack(subUri, sub.lanDoc, sub.lan, uri: true),
     );
     vttSubtitlesIndex.value = index;
+    _maybeTranslateSubtitle(index);
+  }
+
+  /// 已经用译文替换过的主字幕轨下标（1-based，0 = 无），用来防止重挂时死循环。
+  int _translatedSubtitleIndex = 0;
+
+  /// 正在显示的是中文字幕、且界面语言不是简体中文时，后台把这条轨翻成界面语言；
+  /// 翻好且用户没切走就用译文重挂一次。失败静默退回原轨，不影响播放。
+  Future<void> _maybeTranslateSubtitle(int index) async {
+    if (index <= 0 || index == _translatedSubtitleIndex) return;
+    if (!SubtitleTranslateService.needed) return;
+    final sub = subtitles[index - 1];
+    if (!SubtitleTranslateService.isChineseTrack(sub)) return;
+    final vtt = await SubtitleTranslateService.translatedVtt(
+      bvid: bvid,
+      cid: cid.value,
+      sub: sub,
+    );
+    if (vtt == null || isClosed) return;
+    if (vttSubtitlesIndex.value != index) return;
+    _translatedSubtitleIndex = index;
+    vttSubtitles[index - 1] = (isData: true, id: vtt);
+    await setSubtitle(index);
   }
 
   // 副字幕(双语字幕):0 表示关闭,>0 对应 subtitles[index - 1]
@@ -1914,7 +1938,7 @@ class VideoDetailController extends GetxController
 
   Future<void> _setSubtitle(List<Subtitle> sub) async {
     subtitles.value = sub;
-    final idx = switch (Pref.subtitlePreferenceV2) {
+    var idx = switch (Pref.subtitlePreferenceV2) {
       .off => 0,
       .on => 1,
       .withoutAi => sub.first.lan.startsWith('ai') ? 0 : 1,
@@ -1926,6 +1950,14 @@ class VideoDetailController extends GetxController
             : 0,
       .followLanguage => await _followLanguageIndex(),
     };
+    // 字幕偏好保持默认（默认不显示）时：界面语言不是简体中文、且视频自带中文轨，
+    // 就自动开那条中文字幕，译文由 setSubtitle 里的后台翻译补上。
+    // 用户显式改过字幕偏好时不动它 —— 尊重用户的选择。
+    if (Pref.subtitlePreferenceV2 == SubtitlePrefType.off &&
+        SubtitleTranslateService.needed) {
+      final zhIdx = sub.indexWhere(SubtitleTranslateService.isChineseTrack);
+      if (zhIdx >= 0) idx = zhIdx + 1;
+    }
     await setSubtitle(idx);
     if (Pref.subtitlePreferenceV2 == SubtitlePrefType.followLanguage) {
       await _attachCompanionSubtitle(idx);
