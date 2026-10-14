@@ -67,7 +67,7 @@ class _MemberBangumiState extends State<MemberBangumi>
     );
   }
 
-  late final gridDelegate = SliverGridDelegateWithExtentAndRatio(
+  SliverGridDelegateWithExtentAndRatio get gridDelegate => SliverGridDelegateWithExtentAndRatio(
     mainAxisSpacing: Style.cardSpace,
     crossAxisSpacing: Style.cardSpace,
     maxCrossAxisExtent: Grid.smallCardWidth * 0.6,

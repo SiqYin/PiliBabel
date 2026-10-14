@@ -54,7 +54,7 @@ class _RcmdPageState extends State<RcmdPage>
     );
   }
 
-  late final gridDelegate = SliverGridDelegateWithExtentAndRatio(
+  SliverGridDelegateWithExtentAndRatio get gridDelegate => SliverGridDelegateWithExtentAndRatio(
     mainAxisSpacing: Style.cardSpace,
     crossAxisSpacing: Style.cardSpace,
     maxCrossAxisExtent: Pref.recommendCardWidth,

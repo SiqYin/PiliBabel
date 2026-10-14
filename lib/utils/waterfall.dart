@@ -26,7 +26,7 @@ mixin DynMixin {
     );
   }
 
-  late final skeDelegate = SliverGridDelegateWithExtentAndRatio(
+  SliverGridDelegateWithExtentAndRatio get skeDelegate => SliverGridDelegateWithExtentAndRatio(
     crossAxisSpacing: 4,
     mainAxisSpacing: 4,
     maxCrossAxisExtent: Grid.smallCardWidth * 2,

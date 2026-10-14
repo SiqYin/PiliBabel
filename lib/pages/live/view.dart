@@ -180,7 +180,7 @@ class _LivePageState extends State<LivePage>
     );
   }
 
-  late final gridDelegate = SliverGridDelegateWithExtentAndRatio(
+  SliverGridDelegateWithExtentAndRatio get gridDelegate => SliverGridDelegateWithExtentAndRatio(
     mainAxisSpacing: Style.cardSpace,
     crossAxisSpacing: Style.cardSpace,
     maxCrossAxisExtent: Grid.smallCardWidth,

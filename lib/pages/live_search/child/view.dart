@@ -76,7 +76,7 @@ class _LiveSearchChildPageState extends State<LiveSearchChildPage>
     };
   }
 
-  late final roomDelegate = SliverGridDelegateWithExtentAndRatio(
+  SliverGridDelegateWithExtentAndRatio get roomDelegate => SliverGridDelegateWithExtentAndRatio(
     mainAxisSpacing: Style.cardSpace,
     crossAxisSpacing: Style.cardSpace,
     maxCrossAxisExtent: Grid.smallCardWidth,

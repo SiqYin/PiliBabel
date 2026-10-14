@@ -1,8 +1,11 @@
-### PiliBabel v1.10.6
+### PiliBabel v1.10.7
 
-- **Turning the option off now actually shrinks the blocks back.** The grid reads its
-  height when it is built, so switching the option off left the home feed blocks stretched
-  until the page was recreated. Toggling the switch now forces a rebuild, so the home feed
-  and the dynamics feed both return to their original size immediately.
+**The home feed blocks now grow and shrink with the switch.**
+
+- The grid delegate on the home feed was a `late final` field: it was computed once and
+  then cached, so rebuilding the page never picked up the new height. It is a getter now
+  and is recomputed on every build.
+- Turning the option on stretches the home blocks to fit four title lines; turning it off
+  puts them back immediately. The same applies to the member, ranking, live and search grids.
 
 Downloads are below.
