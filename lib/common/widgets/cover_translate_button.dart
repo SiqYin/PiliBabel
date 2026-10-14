@@ -48,7 +48,10 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
     } catch (_) {
       text = null;
     }
-    if (mounted) setState(() => _loading = false);
+    if (mounted) {
+      setState(() => _loading = false);
+    }
+    // 用全局弹窗，不依赖卡片自身的 context，列表重建也不影响这次点击的结果
     await Get.dialog<void>(
       AlertDialog(
         title: Obx(() => Text(uiTx('封面翻译'))),
@@ -76,7 +79,7 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
     return Positioned(
       left: widget.left,
       bottom: widget.bottom,
-      // 视觉上保持原来的小尺寸，但点击区透明放大到 28x28，手指不容易点空
+      // 视觉上还是原来的小按钮，但点击区是 28x28 的实心命中块，手指不容易点空
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
         onTap: _onTap,
@@ -86,26 +89,21 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
           child: Align(
             alignment: Alignment.bottomLeft,
             child: Container(
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: _loading
-                    ? const SizedBox(
-                        width: 13,
-                        height: 13,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      )
-                    : const Icon(
-                        Icons.translate,
-                        size: 13,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: _loading
+                  ? const SizedBox(
+                      width: 13,
+                      height: 13,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
                         color: Colors.white,
                       ),
-              ),
+                    )
+                  : const Icon(Icons.translate, size: 13, color: Colors.white),
             ),
           ),
         ),
