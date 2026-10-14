@@ -1,3 +1,4 @@
+import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
@@ -96,6 +97,7 @@ class VideoCardHMemberVideo extends StatelessWidget {
                               width: maxWidth,
                               height: maxHeight,
                             ),
+                            CoverTranslateButton(cover: videoItem.cover),
                             if (fromViewAid == videoItem.param)
                               Positioned.fill(
                                 child: DecoratedBox(
