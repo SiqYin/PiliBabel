@@ -142,7 +142,7 @@ class HistoryCardItem extends StatelessWidget {
                       )
                     else if (item.badge?.isNotEmpty == true)
                       PBadge(
-                        text: uiTx(item.badge),
+                        text: uiTx(item.badge ?? ''),
                         top: 6.0,
                         right: 6.0,
                         type: PBadgeType.primary,
