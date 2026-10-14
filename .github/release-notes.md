@@ -1,15 +1,14 @@
-### PiliBabel v1.8.16
+### PiliBabel v1.8.17
 
-**Image translation: faster, and it now covers comments and articles.**
+**The covers that used to spin forever should stop doing that.**
 
-- **Much faster on big images.** Recognition used to fetch the original picture - often a
-  megabyte or more - and upload it in full. It now asks the image service for a compressed
-  copy first and only falls back to the original if that fails, which is where the long
-  waits were coming from.
-- **Comments and article illustrations too.** The button is no longer only on video covers:
-  pictures in comments and images inside articles get it as well. It is called "image
-  translation" everywhere now.
-- **Animated images are skipped.** GIFs, and WebP files that carry an animation block, are
-  refused with a short message instead of being sent for recognition.
+- **The fetch is width-capped now.** A few covers were taking so long to come down that the
+  whole request timed out before the model ever saw them - typically very large uploads on a
+  slow image node. The picture is now requested at 720px wide and 60 quality, which is still
+  plenty for reading the text, and the original is only used if that fails.
+- **Downloads give up sooner.** Send and receive limits on the image fetch are 10 and 20
+  seconds, so a stuck node no longer eats the whole budget before the fallback is tried.
+- **Plain http image addresses are upgraded to https.** Some covers are served over http,
+  which Android can stall on.
 
 Downloads are below.

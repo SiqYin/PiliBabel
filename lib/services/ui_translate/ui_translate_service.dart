@@ -607,7 +607,10 @@ class UiTranslateService extends GetxService {
     // 上兆 —— 下载和 base64 上传都随之变大，这正是「偶尔要等很久」的主要来源。
     List<int>? bytes;
     Object? lastErr;
-    for (final url in [_smallImageUrl(imageUrl), imageUrl]) {
+    final fallback = imageUrl.startsWith('http://')
+        ? 'https://${imageUrl.substring(7)}'
+        : imageUrl;
+    for (final url in [_smallImageUrl(imageUrl), fallback]) {
       try {
         final img = await Dio().get<List<int>>(
           url,
@@ -617,8 +620,8 @@ class UiTranslateService extends GetxService {
               'Referer': 'https://www.bilibili.com/',
               'User-Agent': BrowserUa.mob,
             },
-            sendTimeout: const Duration(seconds: 20),
-            receiveTimeout: const Duration(seconds: 40),
+            sendTimeout: const Duration(seconds: 10),
+            receiveTimeout: const Duration(seconds: 20),
           ),
         );
         final data = img.data;
@@ -705,14 +708,18 @@ class UiTranslateService extends GetxService {
   /// 图床压缩版：B 站图片服务支持 `@<quality>q.<fmt>` 后缀。
   /// 已带处理参数的地址不再叠加，避免拼出无效参数。
   static String _smallImageUrl(String url) {
-    if (url.contains('@')) {
-      return url;
+    final fixed = url.startsWith('http://')
+        ? 'https://${url.substring(7)}'
+        : url;
+    if (fixed.contains('@')) {
+      return fixed;
     }
-    final dot = url.lastIndexOf('.');
-    if (dot <= url.lastIndexOf('/')) {
-      return url;
+    final dot = fixed.lastIndexOf('.');
+    if (dot <= fixed.lastIndexOf('/')) {
+      return fixed;
     }
-    return '${url.substring(0, dot)}@60q.webp';
+    // 720w 限宽 + 60q：识图只要文字看得清，原图动辄几兆、下载就能吃掉十几秒
+    return '${fixed.substring(0, dot)}@720w_1e_60q.webp';
   }
 
   /// GIF 一律当动图（B 站评论区的动图基本都是 gif 后缀）
