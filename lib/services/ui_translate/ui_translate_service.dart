@@ -336,6 +336,27 @@ class UiTranslateService extends GetxService {
     return src;
   }
 
+  /// 与 [tx] 同源，但**等译文真正到齐再返回**。
+  ///
+  /// toast / 弹窗这类只渲染一次、之后不会重建的地方必须用它：`tx` 是同步读缓存的，
+  /// 显示那一刻缓存里还没有译文，用户看到的就永远是原文（网络错误提示、图片翻译
+  /// 报错都栽在这里）。翻译关闭、原文就是目标语言、没有可翻内容时原样返回。
+  Future<String> txAsync(String src) async {
+    final now = _tx(src);
+    if (now != src) return now;
+    if (!enabled || !_hasTranslatableText(src)) return src;
+    try {
+      final res = await _translateChunk([src]);
+      final value = res.isNotEmpty ? res.first.trim() : '';
+      if (value.isNotEmpty && value != src) {
+        _cache[src] = value;
+        _bumpRevisionSoon();
+        return value;
+      }
+    } catch (_) {}
+    return src;
+  }
+
   void _scheduleFlush() {
     // 关闭状态：清空待翻队列，绝不发起请求（保护用户的 API 额度/token）
     if (!enabled) {
@@ -585,7 +606,14 @@ class UiTranslateService extends GetxService {
   /// Index-Translate 支持图片输入（`image_url` 走 OpenAI 兼容格式，由服务端
   /// 自行抓取图片）。返回可直接展示的文案；识别不到文字时模型会按提示词
   /// 回一句说明，所以这里不做二次判断。失败返回 null，由界面兜底。
-  Future<String?> describeImage(String imageUrl) async {
+  /// [isLongImage] 为真时走长图分支：只出译文、不列原文，超时也放宽。
+  /// [onDownloadProgress] 回调图片下载百分比（0~100），[cancelToken] 供弹窗「关闭」中断。
+  Future<String?> describeImage(
+    String imageUrl, {
+    bool isLongImage = false,
+    void Function(int percent)? onDownloadProgress,
+    CancelToken? cancelToken,
+  }) async {
     final base = _normalizeApiBase(translateApiUrl);
     if (base.isEmpty) {
       throw Exception('翻译接口地址为空');
@@ -620,9 +648,13 @@ class UiTranslateService extends GetxService {
               'Referer': 'https://www.bilibili.com/',
               'User-Agent': BrowserUa.mob,
             },
-            sendTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 20),
+            sendTimeout: const Duration(seconds: 20),
+            receiveTimeout: Duration(seconds: isLongImage ? 120 : 60),
           ),
+          cancelToken: cancelToken,
+          onReceiveProgress: (r, total) {
+            if (total > 0) onDownloadProgress?.call((r * 100 ~/ total));
+          },
         );
         final data = img.data;
         if (data != null && data.isNotEmpty) {
@@ -649,10 +681,22 @@ class UiTranslateService extends GetxService {
           'content': [
             {
               'type': 'text',
-              'text': '请用$lang完成下面这件事：先识别封面图片中的文字，并把这些文字翻译成$lang。'
-                  '识别时不要猜字，图上有什么就翻译什么，看不清的不要编。翻译完文字之后，'
-                    '顺便描述封面图片的内容。如果图片里没有检测到文字，就说明未检测到文字，'
-                  '并描述封面图片的内容。只输出结果本身，不要客套、不要解释你在做什么。',
+              'text': isLongImage
+              ? '这是一张长图，图中文字可能很多，请用$lang完成下面这件事：'
+                  '直接输出$lang译文，不要输出原文，也不要逐段标注「原文／译文」，'
+                  '按图中文字从上到下的顺序译出，尽量保持原有分段。'
+                  '即使某段文字本身就是$lang，也照样译出、保持原样，不要跳过。'
+                  '识别时不要猜字，看不清的不要编。'
+                  '只输出译文本身，不要客套、不要解释你在做什么。',
+              : '请用$lang完成下面这件事：先逐段识别图片中的文字，再给出每段对应的译文。'
+                  '即使图中某一段文字本身就是$lang，也照样把它作为原文列出并给出译文，'
+                  '不要因为「看起来已经是目标语言」就跳过不译；原文也可能有中英日混排。'
+                  '格式：每一段先写「原文：」再写图上原文，然后写「译文：」再写$lang译文，'
+                  '图中有几段文字就分成几组、一组一行，逐组列出。'
+                  '识别时不要猜字，图上有什么就写什么，看不清的不要编。'
+                  '文字列完之后，再用一两句话描述图片的内容。'
+                  '如果图中没有文字，就说明未检测到文字，然后描述图片内容。'
+                  '只输出结果本身，不要客套、不要解释你在做什么。',
             },
             {
               'type': 'image_url',
@@ -670,7 +714,7 @@ class UiTranslateService extends GetxService {
           ? null
           : {'Authorization': 'Bearer $translateApiKey'},
       sendTimeout: const Duration(seconds: 60),
-      receiveTimeout: const Duration(seconds: 120),
+      receiveTimeout: const Duration(seconds: 300),
     );
 
     Response<Map<String, dynamic>> res;
@@ -1011,6 +1055,10 @@ String uiTx(String src) => UiTranslateService.tx(src);
 
 /// 带占位符的模板翻译：把含 `{0}`/`{1}`… 的整句模板作为一个稳定 key 送翻译，
 /// 再把参数回填（提示词已要求模型保留 `{n}` 占位符）。用于 `'共 {0} 条'` 这类句子。
+/// [uiTxP] 的异步版：先把模板填好，再等译文到齐。toast / 弹窗用这个。
+Future<String> uiTxPAsync(String template, List<Object?> args) =>
+    UiTranslateService.to.txAsync(uiTxP(template, args));
+
 String uiTxP(String template, List<Object?> args) {
   var out = UiTranslateService.tx(template);
   for (var i = 0; i < args.length; i++) {

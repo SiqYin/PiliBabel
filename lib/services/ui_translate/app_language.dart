@@ -236,12 +236,18 @@ String normalizeScript(String text, String? script) {
 /// 阿拉伯与维吾尔），一概不收——否则会把「法语标题」误判成「已经是英语」
 /// 而不翻，那是实打实的回归。
 ///
-/// 典型场景：日语界面里，一个本来就是日语的视频标题（含假名）不需要翻译，
+/// 典型场景：日语界面里，一个**通篇**日语的视频标题（含假名）不需要翻译，
 /// 原样显示即可，既省 token，也避免模型把专有名词译歪。
 bool looksLikeNativeScript(String text, String? nativeScript) {
   if (text.isEmpty || nativeScript == null) return false;
+  // 只出现**一个**目标文字的字，不能说明整条就是该语言写的。
+  // 中英混杂的标题、一半中文一半日语的标题，只要混进一个假名就会被判成「已是日语」
+  // 而整条跳过翻译 —— 用户要的是「即使一部分本身就是目标语言，也照样全文翻译」。
+  // 因此按**占比**判：目标文字占全部有效字符的六成以上才算「本来就用该语言书写」。
+  var matched = 0;
+  var total = 0;
   for (final rune in text.runes) {
-    final matched = switch (nativeScript) {
+    final matchedFlag = switch (nativeScript) {
       // 平假名 + 片假名 + 半角片假名
       'kana' =>
         (rune >= 0x3040 && rune <= 0x30FF) ||
@@ -256,9 +262,15 @@ bool looksLikeNativeScript(String text, String? nativeScript) {
       'hebrew' => rune >= 0x0590 && rune <= 0x05FF,
       _ => false,
     };
-    if (matched) return true;
+    final ch = String.fromCharCode(rune);
+    // 空白与常见标点不计入分母，否则「Hello, 世界!」这类会被标点稀释
+    final isBlank = ch.trim().isEmpty ||
+        '，。！？、；：（）「」『』【】《》…—～·.,!?;:()[]{}"\'`~-'.contains(ch);
+    if (!isBlank) total++;
+    if (matchedFlag) matched++;
   }
-  return false;
+  if (total == 0) return false;
+  return matched * 100 >= total * 60;
 }
 
 /// 排序：置顶组按固定顺序（简中、繁中、英、日、韩、简粤、繁粤、简吴、繁吴、

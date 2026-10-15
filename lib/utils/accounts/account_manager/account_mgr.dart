@@ -247,23 +247,25 @@ class AccountManager extends Interceptor {
   }
 
   static Future<String> dioError(DioException error) async {
+    // 返回值走 txAsync：这几条是 toast / 弹窗里只显示一次的文字，
+    // uiTx 是同步读缓存的，弹出来的那一刻缓存里还没有译文，用户只会看到中文。
     switch (error.type) {
       case .badCertificate:
-        return uiTx('证书有误！');
+        return UiTranslateService.to.txAsync('证书有误！');
       case .badResponse:
-        return uiTx('服务器异常，请稍后重试！');
+        return UiTranslateService.to.txAsync('服务器异常，请稍后重试！');
       case .cancel:
-        return uiTx('请求已被取消，请重新请求');
+        return UiTranslateService.to.txAsync('请求已被取消，请重新请求');
       case .connectionError:
-        return uiTx('连接错误，请检查网络设置');
+        return UiTranslateService.to.txAsync('连接错误，请检查网络设置');
       case .connectionTimeout:
-        return uiTx('网络连接超时，请检查网络设置');
+        return UiTranslateService.to.txAsync('网络连接超时，请检查网络设置');
       case .receiveTimeout:
-        return uiTx('响应超时，请稍后重试！');
+        return UiTranslateService.to.txAsync('响应超时，请稍后重试！');
       case .sendTimeout:
-        return uiTx('发送请求超时，请检查网络设置');
+        return UiTranslateService.to.txAsync('发送请求超时，请检查网络设置');
       case .transformTimeout:
-        return uiTx('转换响应数据超时！');
+        return UiTranslateService.to.txAsync('转换响应数据超时！');
       case .unknown:
         String desc;
         try {
@@ -275,7 +277,7 @@ class AccountManager extends Interceptor {
         }
         // 用 uiTxP 模板而不是插值后再 uiTx：后者会让每个不同的错误内容
         // 各自成为一个新的翻译 key，缓存永远命不中。
-        return uiTxP('{0}网络异常 {1}', [desc, error.error]);
+        return uiTxPAsync('{0}网络异常 {1}', [desc, error.error]);
     }
   }
 }
