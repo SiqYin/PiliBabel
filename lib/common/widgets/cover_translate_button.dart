@@ -211,14 +211,16 @@ class _LongImageTranslateDialogState extends State<_LongImageTranslateDialog> {
             },
           )
           .timeout(const Duration(seconds: 300));
+      // 译文要等：await 必须写在 setState 之外，闭包里不能有 await
+      final msg = (text?.trim().isNotEmpty == true)
+          ? text!.trim()
+          : await UiTranslateService.to
+              .txAsync('接口没有返回内容（请求已发出，但没有拿到译文）');
       if (!mounted) return;
       setState(() {
         _dl = 1;
         _tx = 1;
-        _result = (text?.trim().isNotEmpty == true)
-            ? text!.trim()
-            : await UiTranslateService.to
-                .txAsync('接口没有返回内容（请求已发出，但没有拿到译文）');
+        _result = msg;
       });
     } on TimeoutException {
       final msg = await UiTranslateService.to
