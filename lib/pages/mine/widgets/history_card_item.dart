@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/common/badge_type.dart';
@@ -171,7 +172,7 @@ class HistoryCardItem extends StatelessWidget {
             child: Text(
               ' ${uiTx(item.title ?? '')}',
               overflow: TextOverflow.ellipsis,
-              maxLines: 1,
+              maxLines: Pref.videoTitleFull ? 2 : 1,
               style: theme.textTheme.bodySmall,
             ),
           ),

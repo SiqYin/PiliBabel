@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
@@ -655,7 +656,7 @@ class _MediaPageState extends CommonPageState<MinePage>
             return const SizedBox.shrink();
           }
           return SizedBox(
-            height: 173,
+            height: Pref.videoTitleFull ? 189 : 173,
             child: ListView.separated(
               padding: const EdgeInsets.only(left: 20, top: 10, right: 20),
               itemCount: list.length + 1,
