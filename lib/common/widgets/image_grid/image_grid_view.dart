@@ -258,7 +258,8 @@ class ImageGridView extends StatelessWidget {
                 else if (item.isLongPic)
                   PBadge(text: uiTx('长图'), right: 8, bottom: 8),
                 // 图片翻译：放在 Stack 最后一位，命中测试才优先于整块图片的点击
-                if (!item.isLivePhoto) CoverTranslateButton(cover: item.url),
+                if (!item.isLivePhoto)
+                  CoverTranslateButton(cover: item.url, isLongPic: item.isLongPic),
               ],
             );
             if (!item.isLongPic) {

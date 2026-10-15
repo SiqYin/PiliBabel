@@ -1,57 +1,48 @@
-### PiliBabel v2.0.0
+### PiliBabel v2.1.0
 
-Two milestones since 1.0.0: the whole interface can now be read in your own language, and
-image translation reaches every corner of the app. A round-up of what changed in between.
+This release is about image translation growing up: long images get their own progress
+window, the prompts stop guessing, and the messages that used to stay in Chinese now go
+through translation like everything else.
 
-**Translation itself**
+**Long images translate in their own window**
 
-- **Built-in engine, no API key.** PiliBabel ships with Bilibili's own free Index-Translate
-  model, so translation works the moment you install it. Your own API settings are kept and
-  can be switched back to at any time. The language list grew from 29 to 157 entries,
-  keeping regional and script variants as separate entries rather than merging them.
-- **The whole player, not just its chrome.** The listen-video page, chapter names on the
-  progress bar and roughly two hundred strings that used to reach the screen untranslated
-  - settings subtitles, danmaku presets, the log viewer, context menus, publish dialogs and
-  more - all go through the translation table now.
-- **Subtitles follow your interface language.** Bilibili pre-generates translated subtitle
-  tracks server-side; PiliBabel now picks the one matching your interface language by
-  scoring, and attaches the other as a secondary track.
+- A long image - the kind that carries the little long-image badge, a chat log screenshot
+  for instance - is recognised as such and translated from the original at full size.
+- A window opens on its own while it works: "translating a long image, this may take a
+  while" with a spinner, then two progress bars with arabic percentages - one for fetching
+  the image, one for reading and translating the text.
+- When it is done the full translation appears in the same window. If it is longer than
+  the window, it scrolls on the right instead of stretching the dialog off the screen.
+- A Close button at the bottom cancels the request. If you would rather not wait, the
+  translation stops and you carry on with something else.
+- Image translation now waits much longer before giving up, which is what long images
+  need.
 
-**Image translation**
+**Error messages are translated now**
 
-- Tap the corner button on a cover, a comment picture or an article illustration and the
-  text in it is read, translated and the picture described. Around seventy files were
-  touched so that every video cover in the app carries it - the home feed, dynamics,
-  favourites, search, subscriptions, music, downloads, rankings, member pages and the live
-  lists. Animated images are skipped on purpose, and quoted videos in dynamics are covered
-  too.
+- Network failures used to show a Chinese sentence followed by a long URL no matter which
+  language the interface was in. The wording was already marked for translation, but a
+  toast is drawn once and never redrawn, so it was showing the value from before the
+  translation arrived. These paths now wait for the translation and then show it - the
+  same fix covers the image-translation error dialog.
 
-**Reading long titles**
+**The translator no longer skips text just because it looks like the target language**
 
-- English, French, German and Japanese titles are longer than the Chinese original, so a
-  two-line cap used to cut them off. A new option in AI translation settings stretches the
-  card blocks vertically - the home feed, member pages, rankings, live and search grids -
-  and gives titles up to four lines. It follows the translation switch and can be turned
-  off by hand.
+- A title with a little English in it, read with English as the target language, used to
+  be taken as "already English" and left alone. So did a half-Chinese half-Japanese title
+  read with Japanese as the target language - one kana character was enough to skip the
+  whole thing. The check is now about proportion rather than the presence of a single
+  character: text counts as written in the target language only when that script makes up
+  the large majority of it. Mixed text is translated in full.
 
-**Comment and dynamics reading**
+**Image translation output**
 
-- **Expand comments by default** and **expand dynamics by default**, two switches under
-  Settings - Other, open every "show more" without a tap. Both are off by default.
-
-**Playback and appearance**
-
-- Audio output on Android now prefers AudioTrack, matching Bilibili's own app, which fixes
-  the half-beat lag on Bluetooth headsets.
-- A truncated video segment on some CDN hosts used to leave audio playing over a black
-  picture; bad hosts are now excluded per host, with ffmpeg stream reconnection.
-- A Material You style theme and colour page with live preview cards, and LXGW WenKai
-  embedded as the default font for both interface and danmaku.
-
-**Reliability**
-
-- Fixed a GetX pitfall where a widget that read no observable rendered as a grey block, and
-  hooked up `FlutterError.onError` so build failures are recorded and visible in the app log
-  instead of disappearing.
+- The result is now laid out segment by segment: the original text as it appears in the
+  image first, then its translation, one pair per line, with several segments listed
+  separately - and a short description of the picture after the text. Previously the
+  original and the translation were often the same string, which made the output useless
+  for checking anything.
+- Long images are the exception: those show the translation only. Listing the original
+  next to it would double the length of a chat log for no benefit.
 
 Downloads are below.
