@@ -1,25 +1,31 @@
-### PiliBabel v2.1.3
+### PiliBabel v2.2.0
 
-**The listen-video sleep timer translated only one of its options**
+A layout pass for the sidebar, and for the screens where it appears.
 
-- Four of the five options stayed Chinese: Disable, 15 minutes, 30 minutes and 45
-  minutes. Only 60 minutes came out translated. Two separate misses in the same panel -
-  the "Disable" entry was a bare string, and the shared formatter returned
-  `'$minute分钟'` without going through the translation table, a branch that exactly the
-  15 / 30 / 45 minute options take. Both go through translation now, so the whole row
-  follows your interface language.
+**The sidebar now sizes itself to your language**
 
-**Listen-video playback stopping part way through**
+- On a tablet in landscape, the left column is a drawer, and its width was pinned at
+  130 logical pixels. That fits two or three Chinese characters; a word like
+  "Recommendations" in a longer language does not, so the first entries came out cut in
+  half. The drawer now measures the longest navigation label in the current language and
+  sizes itself accordingly, up to 45% of the screen so a very long language cannot eat
+  the content area.
+- The icon-and-label rail used elsewhere had the same problem from the other direction:
+  Flutter's default minimum width of 72 pixels, with labels laid out inside it. It now
+  takes the measured label width as well, so the rail widens instead of clipping.
+- Both keep a single-line ellipsis as a last resort, so nothing is ever hard-cut again.
 
-- Audio could stop at some point mid-track; pressing play jumped the position to 00:00
-  and nothing played. The server's total duration was being filled in first, but then
-  overwritten unconditionally by whatever duration the player reported - and when a CDN
-  edge serves a truncated file, the player only sees the length up to the cut. The
-  progress bar shrank to that point, and reaching it looked exactly like the track
-  finishing.
-- The duration from the server is now authoritative and is not overwritten by a shorter
-  one. A premature end is recognised for what it is - the stream was cut, not finished -
-  and the address is fetched again from the current position, which lands on a fresh
-  connection. It gives up after two attempts rather than looping on a bad edge.
+**Phone in landscape no longer gets a vertical sidebar**
+
+- The breakpoint only looked at width. A phone in landscape is wide enough to qualify
+  for the sidebar but only 360 to 420 pixels tall, which is not enough height for the
+  navigation entries plus the header above them. Mobile devices under 480 pixels tall
+  now stay on the bottom navigation bar, where the height is not a problem.
+
+**What this covers**
+
+- Phone portrait and landscape, tablet portrait and landscape, and desktop all share the
+  same sidebar code, so the sizing fix applies to every one of them. Desktop windows are
+  unaffected by the short-screen rule, which is limited to mobile.
 
 Downloads are below.
