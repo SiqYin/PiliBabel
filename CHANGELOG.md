@@ -798,6 +798,40 @@ Downloads are below.
 ### Changed
 - 播放器三点菜单入口与面板标题由「视频画面参数」更名为「视频参数」，以涵盖新增的音频延迟项。
 
+## 2.2.0
+
+### PiliBabel v2.2.0
+
+A layout pass for the sidebar, and for the screens where it appears.
+
+**The sidebar now sizes itself to your language**
+
+- On a tablet in landscape, the left column is a drawer, and its width was pinned at
+  130 logical pixels. That fits two or three Chinese characters; a word like
+  "Recommendations" in a longer language does not, so the first entries came out cut in
+  half. The drawer now measures the longest navigation label in the current language and
+  sizes itself accordingly, up to 45% of the screen so a very long language cannot eat
+  the content area.
+- The icon-and-label rail used elsewhere had the same problem from the other direction:
+  Flutter's default minimum width of 72 pixels, with labels laid out inside it. It now
+  takes the measured label width as well, so the rail widens instead of clipping.
+- Both keep a single-line ellipsis as a last resort, so nothing is ever hard-cut again.
+
+**Phone in landscape no longer gets a vertical sidebar**
+
+- The breakpoint only looked at width. A phone in landscape is wide enough to qualify
+  for the sidebar but only 360 to 420 pixels tall, which is not enough height for the
+  navigation entries plus the header above them. Mobile devices under 480 pixels tall
+  now stay on the bottom navigation bar, where the height is not a problem.
+
+**What this covers**
+
+- Phone portrait and landscape, tablet portrait and landscape, and desktop all share the
+  same sidebar code, so the sizing fix applies to every one of them. Desktop windows are
+  unaffected by the short-screen rule, which is limited to mobile.
+
+Downloads are below.
+
 ## 2.1.3 -[Remielle] - 2026-09-10
 
 本版的重点是**后台自动只听音频**——进入后台 10 秒自动断开视频流只保留声音，回到前台自动恢复画面。视频播放器新增**画面参数调节面板**（亮度、对比度、饱和度、伽马、色相），AI 对话补全了 Markdown 渲染全面修复。评论输入框支持 LaTeX 转 Unicode，定时关机终于会报时了。Side 项目重构了直播弹幕屏蔽的实现，删掉了大量冗余代码。同时修复了一批弹窗字体、小窗手势、看完人数残留等问题。

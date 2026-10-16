@@ -92,7 +92,11 @@ class _MainAppState extends PopScopeState<MainApp>
     if (!_mainController.useSideBar) {
       final size = MediaQuery.sizeOf(context);
       if (Pref.autoSideBar) {
-        _mainController.useBottomNav = size.width < Pref.sideBarThreshold;
+        // 竖栏还要求高度放得下：手机横屏常常只有 360~420 逻辑像素高，
+        // 一排导航项加头部会直接溢出，此时仍走底部导航。
+        final tooShort = PlatformUtils.isMobile && size.height < 480;
+        _mainController.useBottomNav =
+            size.width < Pref.sideBarThreshold || tooShort;
       } else {
         _mainController.useBottomNav = size.isPortrait;
       }
@@ -413,6 +417,43 @@ class _MainAppState extends PopScopeState<MainApp>
     return bottomNav;
   }
 
+  /// 当前语言下最长的导航标签宽度（逻辑像素）。
+  ///
+  /// 侧栏宽度此前是写死的：平板抽屉固定 130，导航栏用 Flutter 默认的 minWidth 72。
+  /// 中文标签两三个字放得下，换成英/德/俄等语言后长词必然被裁掉——这就是
+  /// 「外语翻译时最左侧那一列选项名字显示不全」。改成按实际标签量出来再定宽度，
+  /// 任何语言都能显示完整。
+  double _sideBarLabelWidth(BuildContext context) {
+    final style = Theme.of(context).textTheme.labelMedium;
+    var maxWidth = 0.0;
+    for (final e in _mainController.navigationBars) {
+      final painter = TextPainter(
+        text: TextSpan(
+          text: UiTranslateService.tx(e.label),
+          style: style,
+        ),
+        maxLines: 1,
+        textDirection: TextDirection.ltr,
+      )..layout();
+      if (painter.width > maxWidth) maxWidth = painter.width;
+    }
+    return maxWidth;
+  }
+
+  /// 抽屉总宽：图标 24 + 两侧内边距 + 标签，再留一点余量；上限取屏宽的 45%，
+  /// 免得超长语种把内容区挤没。
+  double _drawerWidth(BuildContext context) {
+    final label = _sideBarLabelWidth(context);
+    final screen = MediaQuery.sizeOf(context).width;
+    return (label + 72 + _padding.left).clamp(130.0, screen * 0.45);
+  }
+
+  /// 导航栏（图标在上、标签在下）总宽：标签宽度 + 内边距，下限保持 Flutter 默认 72。
+  double _railWidth(BuildContext context) {
+    final label = _sideBarLabelWidth(context);
+    return (label + 40).clamp(72.0, 220.0);
+  }
+
   Widget _sideBar() {
     if (_mainController.navigationBars.length > 1) {
       if (context.isTablet && _mainController.optTabletNav) {
@@ -422,7 +463,7 @@ class _MainAppState extends PopScopeState<MainApp>
             context: context,
             removeRight: true,
             child: DrawerTheme(
-              data: DrawerThemeData(width: 130 + _padding.left),
+              data: DrawerThemeData(width: _drawerWidth(context)),
               child: Obx(
                 () => NavigationDrawer(
                   /// apply `lib/scripts/navigation_drawer.patch`
@@ -438,7 +479,11 @@ class _MainAppState extends PopScopeState<MainApp>
                   children: _mainController.navigationBars
                       .map(
                         (e) => NavigationDrawerDestination(
-                          label: Text(UiTranslateService.tx(e.label)),
+                          label: Text(
+                            UiTranslateService.tx(e.label),
+                            maxLines: 1,
+                            overflow: .ellipsis,
+                          ),
                           icon: _buildIcon(type: e),
                           selectedIcon: _buildIcon(
                             type: e,
@@ -457,6 +502,9 @@ class _MainAppState extends PopScopeState<MainApp>
         () => NavigationRail(
           groupAlignment: 0.5,
           labelType: .selected,
+          // 默认 minWidth 只有 72，标签会被裁；按当前语言的标签宽度放开
+          minWidth: _railWidth(context),
+          minExtendedWidth: _railWidth(context),
           leading: userAndSearchVertical(),
           backgroundColor: Colors.transparent,
           onDestinationSelected: _mainController.setIndex,
@@ -464,7 +512,11 @@ class _MainAppState extends PopScopeState<MainApp>
           destinations: _mainController.navigationBars
               .map(
                 (e) => NavigationRailDestination(
-                  label: Text(UiTranslateService.tx(e.label)),
+                  label: Text(
+                    UiTranslateService.tx(e.label),
+                    maxLines: 1,
+                    overflow: .ellipsis,
+                  ),
                   icon: _buildIcon(type: e),
                   selectedIcon: _buildIcon(type: e, selected: true),
                 ),
