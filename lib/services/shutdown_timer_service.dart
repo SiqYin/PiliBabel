@@ -149,7 +149,9 @@ class ShutdownTimerService {
     } else if (hour > 0) {
       return uiTxP('{0}小时', [hour]);
     } else {
-      return '$minute分钟';
+      // 15 / 30 / 45 分钟走的是这一支：此前是裸插值，没进翻译表，
+      // 于是同一排里只有 60 分钟（上面单独处理那行）能被翻译。
+      return uiTxP('{0}分钟', [minute]);
     }
   }
 
@@ -282,7 +284,7 @@ class ShutdownTimerService {
                         },
                         title: Text(
                           switch (minutes) {
-                            0 => '禁用',
+                            0 => uiTx('禁用'),
                             _ => _format(minutes),
                           },
                           style: titleStyle,

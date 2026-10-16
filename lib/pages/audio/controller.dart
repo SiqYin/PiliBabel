@@ -114,6 +114,16 @@ class AudioController extends GetxController
   final RxInt position = RxInt(0);
   final RxInt duration = RxInt(0);
 
+  /// 服务端下发的总时长（秒）。CDN 分片被截断时 mpv 只会看到断点处的时长，
+  /// 拿它当权威值，避免进度条凭空缩短、以及把提前 EOF 误判成「播完了」。
+  int _apiDurationSeconds = 0;
+
+  /// 最近一次打开的音频地址：提前 EOF 时用它重取一次（新连接通常落到别的节点）。
+  String? _lastAudioUrl;
+
+  /// 提前 EOF 的续播次数，防止在坏节点上反复重试。
+  int _truncationRetries = 0;
+
   late final AnimationController animController;
 
   List<StreamSubscription>? _subscriptions;
@@ -404,6 +414,7 @@ class AudioController extends GetxController
       // 时长而不是 00:00 —— 之前 duration 只等mpv 的 stream.duration 事件，
       // 一旦CDN 403 就永远是 0。
       if (playDash.duration > 0) {
+        _apiDurationSeconds = playDash.duration;
         duration.value = playDash.duration;
       }
       // 记下整批轨道，供音质切换时直接换轨道重播，不再二次取流。
@@ -501,7 +512,10 @@ class AudioController extends GetxController
     String url, {
     _TokenOrigin tokenOrigin = _TokenOrigin.app,
     http_model.Volume? volume,
+    bool isTruncationRetry = false,
   }) async {
+    _lastAudioUrl = url;
+    if (!isTruncationRetry) _truncationRetries = 0;
     await _initPlayerIfNeeded();
     final extras = audioFilterExtras(volume);
     _tokenOrigin = tokenOrigin;
@@ -552,7 +566,13 @@ class AudioController extends GetxController
         }
       }),
       stream.duration.listen((duration) {
-        this.duration.value = duration.inSeconds;
+        final secs = duration.inSeconds;
+        // 服务端给的时长是权威值：流被截断时 mpv 报的是断点处的「时长」，
+        // 无条件覆盖会让进度条凭空缩短，播到断点即 EOF。
+        this.duration.value =
+            (_apiDurationSeconds > 0 && secs < _apiDurationSeconds)
+            ? _apiDurationSeconds
+            : secs;
       }),
       stream.playing.listen((playing) {
         final PlayerStatus playerStatus;
@@ -565,10 +585,30 @@ class AudioController extends GetxController
         }
         videoPlayerServiceHandler?.onStatusChange(playerStatus, false, false);
       }),
-      stream.completed.listen((completed) {
+      stream.completed.listen((completed) async {
         // completed:false 是 seek 之后库主动发出的"离开完成态"事件，不能当作
         // "本集播完"去上报状态，否则每次循环/拖动都会把媒体会话刷成已完成。
         if (!completed) {
+          return;
+        }
+        // 提前 EOF：mpv 看到的时长明显短于服务端下发的总时长，说明这条流被截断了，
+        // 不是真的播完（用户看到的就是「播到某一刻自动暂停、再点播放跳回 00:00 不动」）。
+        // 重取一次地址并从断点前一点续播；同一条流反复截断时最多重试 2 次。
+        final apiSeconds = _apiDurationSeconds;
+        final seenSeconds = player!.state.duration.inSeconds;
+        if (apiSeconds > 0 &&
+            seenSeconds > 0 &&
+            seenSeconds < apiSeconds * 0.98 &&
+            _truncationRetries < 2 &&
+            _lastAudioUrl != null) {
+          _truncationRetries++;
+          final resume = position.value > 2 ? position.value - 2 : 0;
+          SmartDialog.showToast(uiTx('音频流提前结束，正在重新加载'));
+          await _onOpenMedia(_lastAudioUrl!, isTruncationRetry: true);
+          if (resume > 0) {
+            await Future.delayed(const Duration(milliseconds: 300));
+            onSeek(Duration(seconds: resume));
+          }
           return;
         }
         _videoDetailController?.playedTime = player!.state.duration;
