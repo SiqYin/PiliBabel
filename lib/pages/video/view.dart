@@ -2064,7 +2064,15 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       return TabBar(
         padding: .zero,
         dividerHeight: 0,
-        labelPadding: .zero,
+        // 标签按自身文字宽度排布，不按等分宽度。
+        //
+        // 此前是不可滚动 + labelPadding 为 0：每个标签只分到「栏宽 / 标签数」，
+        // 中文两三个字刚好放得下，换成英/德/俄等语言后长标签溢出；而标签又是
+        // overflow: .visible，溢出部分直接画出去，于是最上方那排小标签互相叠在一起
+        // （平板横屏右侧那一列最明显）。改成可滚动 + 左右留白，长标签不再挤压相邻项。
+        isScrollable: true,
+        tabAlignment: .start,
+        labelPadding: const .symmetric(horizontal: 10),
         dividerColor: Colors.transparent,
         controller: videoDetailController.tabCtr,
         indicator: flag ? const BoxDecoration() : null,
