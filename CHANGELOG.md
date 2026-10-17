@@ -798,6 +798,24 @@ Downloads are below.
 ### Changed
 - 播放器三点菜单入口与面板标题由「视频画面参数」更名为「视频参数」，以涵盖新增的音频延迟项。
 
+## 2.2.2
+
+### PiliBabel v2.2.2
+
+**The "jumping to 12:34" popup is translated now**
+
+- Tapping a timestamp in a comment seeks the player and shows a small popup naming the
+  position. That popup stayed Chinese in every interface language, for two reasons
+  stacked on top of each other: the timestamp was interpolated into the string before it
+  was handed to the translation table, so every different timestamp became its own entry
+  that the cache could never hit, and a toast is drawn once and never redrawn, so even a
+  cache hit would have arrived too late.
+- It now goes through a template - one entry, filled in with whatever the timestamp is -
+  and waits for the translation before showing. The failure popup next to it had the same
+  problem and is fixed the same way.
+
+Downloads are below.
+
 ## 2.2.1
 
 ### PiliBabel v2.2.1

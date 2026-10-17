@@ -676,7 +676,7 @@ class ReplyItemGrpc extends StatelessWidget {
                             ),
                             style: TextStyle(color: colorScheme.primary),
                             recognizer: NoDeadlineTapGestureRecognizer()
-                              ..onTap = () {
+                              ..onTap = () async {
                                 feedBack();
                                 Get.toNamed(
                                   '/member?mid=${childReply.member.mid}',
@@ -948,7 +948,11 @@ class ReplyItemGrpc extends StatelessWidget {
                           final duration = Duration(
                             seconds: DurationUtils.parseDuration(matchStr),
                           );
-                          SmartDialog.showToast(uiTx('跳转至：$matchStr'));
+                          // 模板而不是插值：插值会让每个时间戳各成一个词条，缓存永远命不中；
+                          // 并且 toast 只渲染一次，必须等译文到齐再弹。
+                          SmartDialog.showToast(
+                            await uiTxPAsync('跳转至：{0}', [matchStr]),
+                          );
                           if (kDebugMode) {
                             debugPrint('Seeking to $duration with tag: $heroTag');
                           }
@@ -968,7 +972,9 @@ class ReplyItemGrpc extends StatelessWidget {
                             );
                           }
                         } catch (e) {
-                          SmartDialog.showToast(uiTx('跳转失败: $e'));
+                          SmartDialog.showToast(
+                            await uiTxPAsync('跳转失败: {0}', [e]),
+                          );
                           if (kDebugMode) debugPrint('Seek error: $e');
                         }
                       })
