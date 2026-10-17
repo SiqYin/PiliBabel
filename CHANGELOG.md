@@ -798,6 +798,17 @@ Downloads are below.
 ### Changed
 - 播放器三点菜单入口与面板标题由「视频画面参数」更名为「视频参数」，以涵盖新增的音频延迟项。
 
+## 2.3.2
+
+### PiliBabel v2.3.2
+
+- The frozen-picture line switch from 2.3.0 did not compile: it passed the flag as a
+  named argument on the recovery method, and the compiler refused it even though the
+  parameter was declared. The flag now travels on a field that the recovery method reads
+  once, which compiles and behaves the same. Nothing else changes.
+
+Downloads are below.
+
 ## 2.3.1
 
 ### PiliBabel v2.3.1
