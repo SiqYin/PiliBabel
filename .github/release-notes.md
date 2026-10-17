@@ -1,16 +1,15 @@
-### PiliBabel v2.2.1
+### PiliBabel v2.2.2
 
-**The video page's tab labels no longer overlap in a foreign language**
+**The "jumping to 12:34" popup is translated now**
 
-- On a tablet in landscape the right column opens with a row of small labels - the
-  intro, comments, playlist. In a language other than Chinese they were drawn on top of
-  each other.
-- The tab bar was not scrollable and its label padding was zero, so every tab was given
-  an equal share of the row: two or three Chinese characters fit, a longer word does not.
-  The labels were also set to keep their overflow visible, so instead of being clipped
-  the excess was painted straight over the neighbouring tab.
-- The bar now lays its tabs out by their own text width and keeps spacing between them,
-  so a long label pushes the row wider and scrolls instead of colliding. This applies to
-  every place the video page uses this bar, including the bottom layout.
+- Tapping a timestamp in a comment seeks the player and shows a small popup naming the
+  position. That popup stayed Chinese in every interface language, for two reasons
+  stacked on top of each other: the timestamp was interpolated into the string before it
+  was handed to the translation table, so every different timestamp became its own entry
+  that the cache could never hit, and a toast is drawn once and never redrawn, so even a
+  cache hit would have arrived too late.
+- It now goes through a template - one entry, filled in with whatever the timestamp is -
+  and waits for the translation before showing. The failure popup next to it had the same
+  problem and is fixed the same way.
 
 Downloads are below.
