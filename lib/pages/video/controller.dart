@@ -1181,6 +1181,16 @@ class VideoDetailController extends GetxController
 
   bool isQuerying = false;
 
+  /// 本次取流的开始时间，配合 [_queryStaleAfter] 判断上一次是否卡死。
+  DateTime? _queryStartedAt;
+
+  /// 取流超过这个时长仍未返回，就认为上一次卡死、放行「重载视频」。
+  /// 比 playurl 的 receiveTimeout（30s）短，避免用户在这段窗口里点了毫无反应。
+  static const Duration _queryStaleAfter = Duration(seconds: 20);
+
+  /// 取流代次：被放行的旧请求不得清掉新请求的 in-flight 标记。
+  int _queryGen = 0;
+
   String? _lastQueryBvid;
   int? _lastQueryCid;
 
@@ -1236,9 +1246,20 @@ class VideoDetailController extends GetxController
       return _initPlayerIfNeeded(autoFullScreenFlag);
     }
     if (isQuerying) {
-      return;
+      // 上一次取流仍在进行（海外拉 playurl 慢，最长可到 30 秒）。此前这里静默
+      // return，于是卡顿期间点「重载视频」完全没有反应：没有提示、没有转圈，
+      // 用户只能反复点。现在给反馈；若上一次已超过 _queryStaleAfter 仍未回来，
+      // 判定为卡死，放行本次重载。
+      if (_queryStartedAt != null &&
+          DateTime.now().difference(_queryStartedAt!) < _queryStaleAfter) {
+        // toast 只渲染一次、不会重建，用 uiTx 拿不到后到的译文，必须等译文到齐。
+        SmartDialog.showToast(await txAsync('正在获取播放地址，请稍候'));
+        return;
+      }
     }
+    final gen = ++_queryGen;
     isQuerying = true;
+    _queryStartedAt = DateTime.now();
     try {
     if (_lastQueryBvid != bvid || _lastQueryCid != cid.value) {
       // 跨视频/分P时重置画质缓存，确保根据半屏/全屏设置重新选择默认画质。
@@ -1252,7 +1273,12 @@ class VideoDetailController extends GetxController
     }
     await _queryVideoUrl(fromReset, autoFullScreenFlag, reinitializePlayer);
     } finally {
-      isQuerying = false;
+      // 只有最新一次取流才有资格复位；被判定卡死而放行的旧请求不得清掉新请求的
+      // in-flight 标记，否则重载会与旧请求并发取流。
+      if (gen == _queryGen) {
+        isQuerying = false;
+        _queryStartedAt = null;
+      }
     }
   }
 

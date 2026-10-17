@@ -1,8 +1,11 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'dart:async';
+
 import 'package:PiliPlus/models/common/video/cdn_type.dart';
 import 'package:PiliPlus/models/common/video/video_decode_type.dart';
 import 'package:PiliPlus/models_new/live/live_room_play_info/codec.dart';
 import 'package:PiliPlus/utils/cdn_node_store.dart';
+import 'package:PiliPlus/utils/cdn_speed_test.dart';
 import 'package:PiliPlus/utils/cdn_region.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -43,25 +46,42 @@ abstract final class VideoUtils {
     caseSensitive: false,
   );
 
-  /// 从候选直链中挑第一个"海外可用"的现成地址（不改写主机，避免签名失效）
+  /// 从候选直链中挑一条"海外可用"的现成地址（不改写主机，避免签名失效）。
+  ///
+  /// 开了 [Pref.cdnSpeedTest]（默认开）时优先用实测最快的：B 站下发的海外候选
+  /// 里可能好几条都"看起来可用"，但实际速率差很多，静态取第一条没有兜底 ——
+  /// 挑中一条被限速的，就是「画面卡住、声音照走」。测速本身是异步的，而
+  /// [getCdnUrl] 是同步方法，所以这里「有结果就用实测最优，同时把这一轮测出来
+  /// 给下次用」；第一次播放仍按原顺序，同一条视频的后续取流、换线、切清晰度就
+  /// 能吃到实测结果。
   static String? _firstOverseasUrl(
     Iterable<String> urls, {
     Set<String>? excludeHosts,
   }) {
+    final candidates = <String>[];
     for (final url in urls) {
-      final uri = Uri.tryParse(url);
-      final host = uri?.host;
-      if (host == null || host.isEmpty) {
+      final host = hostOf(url);
+      if (host == null) {
         continue;
       }
       if (excludeHosts != null && excludeHosts.contains(host)) {
         continue;
       }
       if (_overseasHostRegex.hasMatch(host)) {
-        return url;
+        candidates.add(url);
       }
     }
-    return null;
+    if (candidates.isEmpty) {
+      return null;
+    }
+    if (Pref.cdnSpeedTest) {
+      final best = CdnSpeedTest.bestOf(candidates);
+      unawaited(CdnSpeedTest.test(candidates));
+      if (best != null) {
+        return best;
+      }
+    }
+    return candidates.first;
   }
 
   /// 下载专用：把 B 站**大陆** upos 镜像直链改写成 Akamai 全球边缘，作为额外候选线路。
@@ -168,15 +188,26 @@ abstract final class VideoUtils {
     if (list.isEmpty) {
       return '';
     }
-    if (excludeHosts != null && excludeHosts.isNotEmpty) {
-      for (final url in list) {
-        final host = hostOf(url);
-        if (host == null || !excludeHosts.contains(host)) {
-          return url;
-        }
+    final usable = (excludeHosts == null || excludeHosts.isEmpty)
+        ? list
+        : list
+              .where((url) {
+                final host = hostOf(url);
+                return host == null || !excludeHosts.contains(host);
+              })
+              .toList();
+    if (usable.isEmpty) {
+      return list.first;
+    }
+    // 有实测结果时优先实测最优。测速只在海外分支触发过，所以大陆用户的
+    // _score 为空、bestOf 返回 null，行为与改动前完全一致。
+    if (Pref.cdnSpeedTest) {
+      final best = CdnSpeedTest.bestOf(usable);
+      if (best != null) {
+        return best;
       }
     }
-    return list.first;
+    return usable.first;
   }
 
   /// [customHost] 显式指定自定义节点（节点测速用）；未传时按 [applyCustomCDN]
