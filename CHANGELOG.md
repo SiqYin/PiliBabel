@@ -798,6 +798,15 @@ Downloads are below.
 ### Changed
 - 播放器三点菜单入口与面板标题由「视频画面参数」更名为「视频参数」，以涵盖新增的音频延迟项。
 
+## 2.3.1
+
+### PiliBabel v2.3.1
+
+- 2.3.0 did not compile: the new reload message called the translation helper without
+  going through its singleton. Corrected. Everything else from 2.3.0 is unchanged.
+
+Downloads are below.
+
 ## 2.3.0
 
 ### PiliBabel v2.3.0

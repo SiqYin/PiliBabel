@@ -1253,7 +1253,9 @@ class VideoDetailController extends GetxController
       if (_queryStartedAt != null &&
           DateTime.now().difference(_queryStartedAt!) < _queryStaleAfter) {
         // toast 只渲染一次、不会重建，用 uiTx 拿不到后到的译文，必须等译文到齐。
-        SmartDialog.showToast(await txAsync('正在获取播放地址，请稍候'));
+        SmartDialog.showToast(
+          await UiTranslateService.to.txAsync('正在获取播放地址，请稍候'),
+        );
         return;
       }
     }
