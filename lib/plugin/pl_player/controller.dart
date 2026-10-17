@@ -1770,7 +1770,14 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     if (!_canRecoverNow()) {
       return false;
     }
-    unawaited(_recoverPlaybackStall(_lastEffRatio));
+    // 画面冻住不是带宽问题：同一条源重开一次仍不出画，就换线路 —— 这是唯一解，
+    // 所以不受「卡顿时自动换线」开关约束（换线自带可用性预检）。
+    unawaited(
+      _recoverPlaybackStall(
+        _lastEffRatio,
+        allowLineSwitchWhenDisabled: true,
+      ),
+    );
     return true;
   }
 
@@ -1825,7 +1832,15 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// ③ 已到最低档时重取一次 playurl，然后彻底停止自动动作。
   ///
   /// [ratio] ≈ 实测吞吐 ÷ 当前码率，用来直接算出目标档位；缺省 1.0（退化成降一档）。
-  Future<void> _recoverPlaybackStall([double ratio = 1.0]) async {
+  /// [allowLineSwitchWhenDisabled] 为真时，即使「卡顿时自动换线」开关没开也允许换
+  /// 线路。只给「画面冻住但音频照走」这一条路用：那不是带宽问题，换线是唯一解，
+  /// 而用户默认设置下这个开关是关的，会出现「画面一直不动、用户只能手动退」。
+  /// 这种情况下的换线强制带可用性预检（只切到真能拿到 200/206 的那条），避免
+  /// 历史上「盲目换线换到 403 地址 → 视频轨死掉 + 重载黑屏」的老问题。
+  Future<void> _recoverPlaybackStall([
+    double ratio = 1.0,
+    bool allowLineSwitchWhenDisabled = false,
+  ]) async {
     if (_escalationExhausted) {
       return;
     }
@@ -1841,10 +1856,13 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       // 换**两遍**候选线路之后才考虑降码率：用户明确要求「优先改线路、
       // 多改几条、确定都不行再降画质」。只换一遍时，某条线可能只是临时抽风，
       // 而降到低画质是不可逆的（回复要等稳定 2 分钟）。
-      if (Pref.autoPlayAdjust &&
+      if ((Pref.autoPlayAdjust || allowLineSwitchWhenDisabled) &&
           candidates > 1 &&
           _switchesSinceQuality < (candidates - 1) * 2) {
-        if (await _switchToNextLine(toast: uiTx('当前线路过慢，已切换到备用线路'))) {
+        if (await _switchToNextLine(
+          toast: uiTx('当前线路过慢，已切换到备用线路'),
+          requireProbe: allowLineSwitchWhenDisabled,
+        )) {
           _switchesSinceQuality++;
           _lastActionWasDowngrade = false;
           return;

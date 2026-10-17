@@ -1463,12 +1463,20 @@ abstract final class Pref {
     final bufSec = Pref.bufferSec * playbackSpeed;
     // 前向缓冲直接决定能不能扛住限速抖动：太小 → 缓存被抽干 → 周期性卡顿。
     final bufSiz = (Pref.bufferSize * 0x100000).toStringAsFixed(0);
+    // 起播阈值给一个上限：默认值算出来是 10.6 秒，意味着要等十秒出头才出画，
+    // 官方 APP 的首帧要快得多。夹到 6 秒 —— 既明显缩短起播等待，又保留足够
+    // 余量，不至于一开播就被抽干。
+    final hysteresis = (bufSec / 1.5).clamp(1.0, 6.0);
     return {
       'cache': 'yes',
       'cache-secs': bufSec.toStringAsFixed(3),
-      'demuxer-hysteresis-secs': (bufSec / 1.5).toStringAsFixed(3),
+      'demuxer-hysteresis-secs': hysteresis.toStringAsFixed(3),
       'demuxer-max-bytes': bufSiz,
-      'demuxer-max-back-bytes': bufSiz,
+      // 回退缓存只服务「往回拖」：它占的是和前进缓存同等的内存，却不提升流畅度
+      // （缓存浪费治理）。官方在点播侧也把用不上的缓存单独收紧。这里固定 8MB，
+      // 不跟随 bufferSize —— 把内存留给真正决定卡不卡的前向缓冲。往回拖十几秒
+      // 仍然在缓存内，再远本来就要重新取流。
+      'demuxer-max-back-bytes': (8 * 0x100000).toStringAsFixed(0),
     };
   }
 
