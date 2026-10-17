@@ -798,6 +798,16 @@ Downloads are below.
 ### Changed
 - 播放器三点菜单入口与面板标题由「视频画面参数」更名为「视频参数」，以涵盖新增的音频延迟项。
 
+## 2.2.3
+
+### PiliBabel v2.2.3
+
+- The timestamp popup fix from 2.2.2 did not compile: the edit that made the tap handler
+  asynchronous landed on a different handler earlier in the same file, so the two `await`
+  calls sat in a synchronous closure. Corrected here. Nothing else changes.
+
+Downloads are below.
+
 ## 2.2.2
 
 ### PiliBabel v2.2.2
