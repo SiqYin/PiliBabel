@@ -294,6 +294,10 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   final RxBool isBuffering = true.obs;
 
+  /// 下一次 [_recoverPlaybackStall] 是否强制允许换线（只给「画面冻住」那条路用，
+  /// 读到即清）。
+  bool _forceLineSwitch = false;
+
   /// 正在重新打开媒体（换线路、点「重新加载」，以及卡顿后的自愈重开）。
   ///
   /// 这段时间 mpv 会先销毁再重建视频输出，画面必然是黑的，而此时
@@ -1772,12 +1776,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     }
     // 画面冻住不是带宽问题：同一条源重开一次仍不出画，就换线路 —— 这是唯一解，
     // 所以不受「卡顿时自动换线」开关约束（换线自带可用性预检）。
-    unawaited(
-      _recoverPlaybackStall(
-        _lastEffRatio,
-        allowLineSwitchWhenDisabled: true,
-      ),
-    );
+    _forceLineSwitch = true;
+    unawaited(_recoverPlaybackStall(_lastEffRatio));
     return true;
   }
 
@@ -1837,13 +1837,14 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 而用户默认设置下这个开关是关的，会出现「画面一直不动、用户只能手动退」。
   /// 这种情况下的换线强制带可用性预检（只切到真能拿到 200/206 的那条），避免
   /// 历史上「盲目换线换到 403 地址 → 视频轨死掉 + 重载黑屏」的老问题。
-  Future<void> _recoverPlaybackStall([
-    double ratio = 1.0,
-    bool allowLineSwitchWhenDisabled = false,
-  ]) async {
+  Future<void> _recoverPlaybackStall([double ratio = 1.0]) async {
     if (_escalationExhausted) {
       return;
     }
+    // 「画面冻住但音频照走」那条路会先把 _forceLineSwitch 置真再调进来：那不是
+    // 带宽问题，换线是唯一解，所以即使「卡顿时自动换线」开关没开也要换。
+    final allowLineSwitchWhenDisabled = _forceLineSwitch;
+    _forceLineSwitch = false;
     _lastRecoveryMs = DateTime.now().millisecondsSinceEpoch;
     _recoveriesInWindow++;
     _stallTicks = 0;

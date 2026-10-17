@@ -1,6 +1,8 @@
-### PiliBabel v2.3.1
+### PiliBabel v2.3.2
 
-- 2.3.0 did not compile: the new reload message called the translation helper without
-  going through its singleton. Corrected. Everything else from 2.3.0 is unchanged.
+- The frozen-picture line switch from 2.3.0 did not compile: it passed the flag as a
+  named argument on the recovery method, and the compiler refused it even though the
+  parameter was declared. The flag now travels on a field that the recovery method reads
+  once, which compiles and behaves the same. Nothing else changes.
 
 Downloads are below.
