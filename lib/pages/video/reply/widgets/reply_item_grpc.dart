@@ -940,7 +940,7 @@ class ReplyItemGrpc extends StatelessWidget {
               style: isValid ? TextStyle(color: colorScheme.primary) : null,
               recognizer: isValid
                   ? (NoDeadlineTapGestureRecognizer()
-                      ..onTap = () {
+                      ..onTap = () async {
                         // 跳转到指定位置
                         try {
                           final heroTag =
