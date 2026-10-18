@@ -754,6 +754,8 @@ class UiTranslateService extends GetxService {
                   '按图中文字从上到下的顺序译出，尽量保持原有分段。'
                   '即使某段文字本身就是$lang，也照样译出、保持原样，不要跳过。'
                   '识别时不要猜字，看不清的不要编。'
+                  '同一段译文只输出一次，绝不重复；一旦发现自己开始重复，立刻停止。'
+                  '原文或译文为空的段落直接跳过。'
                   '只输出译文本身，不要客套、不要解释你在做什么。'
               : '你是翻译引擎，请完成下面这件事，'
                   '输出语言必须是$lang。'
@@ -770,8 +772,14 @@ class UiTranslateService extends GetxService {
                   '这两个标签本身也必须用$lang书写'
                   '（$lang是英语时写 Original 和 Translation，是日语时写 原文 和 訳文）。'
                   '图中有几段文字就分成几组、一组一行，逐组列出。'
+                  '图上只有一两个字、只有一组文字时，就只列这一组，'
+                  '不要为了凑数补任何空条目，也不要把同一组重复列出来。'
+                  '每一组文字只允许出现一次；原文或译文为空的那一组直接不要写。'
+                  '如果你发现自己开始重复同样的内容，立刻停下来。'
                   '识别时不要猜字，图上有什么就写什么，看不清的不要编。'
-                  '文字列完之后，再用一两句话用$lang描述图片的内容。'
+                  '列完文字之后必须再用一两句话用$lang描述图片的内容。'
+                  '这一段是必须的：不能省略、不能跳过、不能用「同上」代替，'
+                  '哪怕图中只有一两个字也要写。'
                   '如果图中没有文字，就用$lang说明未检测到文字，然后用$lang描述图片内容。'
                   '只输出结果本身，不要客套、不要解释你在做什么。',
             },
@@ -783,6 +791,7 @@ class UiTranslateService extends GetxService {
         },
       ],
       'enable_thinking': false,
+      'max_tokens': isLongImage ? 8000 : 2500,
     };
 
     final uri = '$base/chat/completions';
@@ -821,10 +830,48 @@ class UiTranslateService extends GetxService {
       final message = choices.first['message'];
       final content = message is Map ? message['content'] : null;
       if (content is String && content.trim().isNotEmpty) {
-        return content.trim();
+        return _cleanImageOutput(content);
       }
     }
     throw Exception('接口返回内容为空（HTTP ${res.statusCode}）');
+  }
+
+  /// 模型在图里文字很少时会退化成无限重复（补空条目，或整段循环刷同一两句），
+  /// 这里做兜底：丢掉空条目、切掉重复的循环尾巴、限制总行数。
+  /// 提示词里已经要求不要重复，但模型不保证听话，所以输出侧再兜一层。
+  static String _cleanImageOutput(String raw) {
+    final lines = <String>[];
+    for (final line in raw.split('\n')) {
+      final t = line.trim();
+      if (t.isEmpty) continue;
+      // 丢掉「原文：」这种冒号后面什么都没有的空条目
+      final i = t.lastIndexOf('：') > t.lastIndexOf(':')
+          ? t.lastIndexOf('：')
+          : t.lastIndexOf(':');
+      if (i >= 0 && t.substring(i + 1).trim().isEmpty) continue;
+      lines.add(t);
+    }
+    // 切掉重复循环：从末尾找一个最短周期，若与前一周期完全相同，
+    // 说明模型开始刷同一段内容了，把重复的部分整段砍掉
+    for (var period = 1; period <= 8; period++) {
+      if (lines.length < period * 2) break;
+      final n = lines.length;
+      final tail = lines.sublist(n - period).join('\u0001');
+      final prev = lines.sublist(n - period * 2, n - period).join('\u0001');
+      if (tail == prev) {
+        var cut = n - period;
+        while (cut - period >= 0 &&
+            lines.sublist(cut - period, cut).join('\u0001') == tail) {
+          cut -= period;
+        }
+        return lines.sublist(0, cut).join('\n');
+      }
+    }
+    // 兜底：正常的图文翻译不会有几百行
+    if (lines.length > 300) {
+      return lines.sublist(0, 300).join('\n');
+    }
+    return lines.join('\n');
   }
 
   /// 图床压缩版：B 站图片服务支持 `@<quality>q.<fmt>` 后缀。

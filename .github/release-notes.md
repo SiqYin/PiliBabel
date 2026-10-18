@@ -1,9 +1,8 @@
-### PiliBabel v2.3.6
+### PiliBabel v2.3.7
 
-Fixes "image download failed" errors in image translation.
+Fixes two output problems in image translation.
 
-- Image downloads now connect directly first and only fall back to the configured system proxy. They previously always went through the proxy, which could not reach the image CDN (`Network is unreachable`, errno 101) while covers, which load directly, worked fine at the same moment.
-- API requests (the translation endpoint) still use the system proxy.
-- A failed request still discards the HTTP client so the retry re-resolves DNS with a fresh connection.
+- When an image contains only a character or two, the model could degenerate into endless repetition, emitting empty "original / translation" pairs or looping the same one or two lines. The prompt only said how many groups to split the text into, with no stop condition, so the model kept padding when there was nothing left to enumerate. It now states that each group may appear only once, that no empty entries may be added, and that the model must stop as soon as it notices a repeat. A `max_tokens` cap was also added.
+- The image description was frequently skipped. It is now mandatory, and the output is post-processed to drop empty entries, truncate repeated loops and cap the total number of lines.
 
 Downloads are below.
