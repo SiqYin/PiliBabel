@@ -1,8 +1,8 @@
-### PiliBabel v2.3.7
+### PiliBabel v2.3.8
 
-Fixes two output problems in image translation.
+**Fixes**
 
-- When an image contains only a character or two, the model could degenerate into endless repetition, emitting empty "original / translation" pairs or looping the same one or two lines. The prompt only said how many groups to split the text into, with no stop condition, so the model kept padding when there was nothing left to enumerate. It now states that each group may appear only once, that no empty entries may be added, and that the model must stop as soon as it notices a repeat. A `max_tokens` cap was also added.
-- The image description was frequently skipped. It is now mandatory, and the output is post-processed to drop empty entries, truncate repeated loops and cap the total number of lines.
+- Search history: long keywords that wrap to multiple lines were squeezed together. The history item height is now computed from the actual line count instead of being fixed to a single line.
+- Search keywords were being picked up by the AI translator. User input such as search history and search suggestions is no longer sent for translation, so question-like keywords (e.g. "AI发展到什么程度了") can no longer be treated as a prompt, answered, and written back into the search history.
 
 Downloads are below.
