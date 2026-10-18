@@ -2,6 +2,15 @@
 
 Release 正文由 `.github/release-notes.md` 提供，只放**当前这一版**的说明。
 
+### PiliBabel v2.3.2
+
+- The frozen-picture line switch from 2.3.0 did not compile: it passed the flag as a
+  named argument on the recovery method, and the compiler refused it even though the
+  parameter was declared. The flag now travels on a field that the recovery method reads
+  once, which compiles and behaves the same. Nothing else changes.
+
+Downloads are below.
+
 ### PiliBabel v2.0.0
 
 Two milestones since 1.0.0: the whole interface can now be read in your own language, and

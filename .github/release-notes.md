@@ -1,8 +1,9 @@
-### PiliBabel v2.3.2
+### PiliBabel v2.3.3
 
-- The frozen-picture line switch from 2.3.0 did not compile: it passed the flag as a
-  named argument on the recovery method, and the compiler refused it even though the
-  parameter was declared. The flag now travels on a field that the recovery method reads
-  once, which compiles and behaves the same. Nothing else changes.
+Fixes an intermittent "image download failed" error in image translation.
+
+- Image translation now uses one shared HTTP client that honours the app's proxy settings and is rebuilt when the network changes. Previously each request created a bare `Dio()` that ignored the configured proxy and was never reset, so after a network switch or proxy reconnect it could keep failing with `SocketException: No route to host` (errno 113) until the app was restarted.
+- Image downloads now set a connect timeout.
+- Image downloads now retry each candidate URL once before giving up.
 
 Downloads are below.
