@@ -1,8 +1,7 @@
-### PiliBabel v2.3.8
+### PiliBabel v2.3.9
 
 **Fixes**
 
-- Search history: long keywords that wrap to multiple lines were squeezed together. The history item height is now computed from the actual line count instead of being fixed to a single line.
-- Search keywords were being picked up by the AI translator. User input such as search history and search suggestions is no longer sent for translation, so question-like keywords (e.g. "AI发展到什么程度了") can no longer be treated as a prompt, answered, and written back into the search history.
+- Fixed a regression from 2.3.8 where search history chips had their text pushed to the bottom and overlapping the chip's lower edge. History chips are now sized by their own line count instead of a single shared fixed height, so short keywords keep their normal height and long keywords grow the chip with even padding.
 
 Downloads are below.

@@ -280,7 +280,6 @@ class _SearchPageState extends State<SearchPage> {
     );
   }
 
-  late final mainAxisExtent = 16 + MediaQuery.textScalerOf(context).scale(14);
   Widget get _buildHistory {
     return Obx(
       () {
@@ -340,22 +339,21 @@ class _SearchPageState extends State<SearchPage> {
                   ),
                 ),
               ),
-              SliverFixedWrap(
-                mainAxisExtent: _historyExtent(context, list),
-                spacing: 8,
-                runSpacing: 8,
-                delegate: SliverChildBuilderDelegate(
-                  addAutomaticKeepAlives: false,
-                  addRepaintBoundaries: false,
-                  childCount: list.length,
-                  (context, index) => SearchText(
-                    text: list[index],
-                    onTap: _searchController.onClickKeyword,
-                    onLongPress: _searchController.onLongSelect,
-                    fontSize: 14,
-                    height: 1,
-                    padding: const .fromLTRB(11, 8, 11, 0),
-                  ),
+              SliverToBoxAdapter(
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final e in list)
+                      SearchText(
+                        text: e,
+                        onTap: _searchController.onClickKeyword,
+                        onLongPress: _searchController.onLongSelect,
+                        fontSize: 14,
+                        height: 1,
+                        padding: const .symmetric(horizontal: 11, vertical: 8),
+                      ),
+                  ],
                 ),
               ),
             ],
@@ -363,30 +361,6 @@ class _SearchPageState extends State<SearchPage> {
         );
       },
     );
-  }
-
-  /// 搜索历史条目的高度：长关键词会换行，按实际行数给高度，
-  /// 否则 SliverFixedWrap 会把子项强制压成单行高度，多行文字挤在一起。
-  double _historyExtent(BuildContext context, List<dynamic> list) {
-    final scaler = MediaQuery.textScalerOf(context);
-    final lineHeight = scaler.scale(14);
-    final maxWidth = MediaQuery.of(context).size.width - 60;
-    var lines = 1;
-    for (final e in list) {
-      final tp = TextPainter(
-        text: TextSpan(
-          text: '$e',
-          style: const TextStyle(fontSize: 14, height: 1),
-        ),
-        textScaler: scaler,
-        maxLines: 3,
-        textDirection: TextDirection.ltr,
-      )..layout(maxWidth: maxWidth);
-      final n = tp.computeLineMetrics().length;
-      if (n > lines) lines = n;
-      if (lines >= 3) break;
-    }
-    return 8 + lineHeight * lines;
   }
 
   Widget get _recordBtn => Obx(
