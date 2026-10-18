@@ -63,7 +63,7 @@ void _dropUiTxClient() {
   // 任何一次失败后立刻丢弃，下一次重试就会重建客户端、重新解析、重新建连。
   final dio = _uiTxDio;
   _uiTxDio = null;
-  if (dio != null) unawaited(dio.close(force: true));
+  if (dio != null) dio.close(force: true);
 }
 class UiTranslateService extends GetxService {
   static UiTranslateService get to => Get.find<UiTranslateService>();
