@@ -56,6 +56,15 @@ Dio _uiTxClient() {
   });
   return _uiTxDio = dio;
 }
+
+void _dropUiTxClient() {
+  // 缓存的客户端会一直复用已经坏掉的连接和 DNS 解析结果 —— 表现就是连不上图床
+  // （Network is unreachable / No route to host），只能重启 app 才好。
+  // 任何一次失败后立刻丢弃，下一次重试就会重建客户端、重新解析、重新建连。
+  final dio = _uiTxDio;
+  _uiTxDio = null;
+  if (dio != null) unawaited(dio.close(force: true));
+}
 class UiTranslateService extends GetxService {
   static UiTranslateService get to => Get.find<UiTranslateService>();
 
@@ -702,6 +711,7 @@ class UiTranslateService extends GetxService {
         }
       } catch (e) {
         lastErr = e;
+        _dropUiTxClient();
       }
     }
     if (bytes == null) {
@@ -783,6 +793,7 @@ class UiTranslateService extends GetxService {
       final code = e.response?.statusCode ?? 0;
       if (code >= 500) {
         // 服务端不认 data URI 时退回直发图片地址，由服务端自己抓图
+        _dropUiTxClient();
         res = await _uiTxClient().post<Map<String, dynamic>>(
           uri,
           options: opts,
