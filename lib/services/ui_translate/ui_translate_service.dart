@@ -10,6 +10,9 @@ import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'dart:io';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:dio/io.dart';
 
 /// AI 界面翻译服务（路线 B 的落地核心）。
 ///
@@ -20,6 +23,39 @@ import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 ///    后台批量翻译完成后写入缓存并自增 [revision] 触发 Obx 局部重建。
 /// 3. 批量翻译：把攒到的一批字符串塞进一次 chat 请求（编号列表 -> JSON 数组），
 ///    显著降低冷启动时的 API 调用次数。
+
+// 图片翻译的下载/请求统一走这里。
+// 原来每次都是裸 Dio()：既不套 app 的代理设置（lib/http/init.dart 里给
+// Request 单例配的 systemProxy），也不在网络变化时重建连接 —— 网络切换或
+// 代理重连之后这条路径会卡在坏连接上，报 SocketException: No route to host，
+// 只有重启 app 才好。这里和 Request 层保持一致：读同一份代理配置，并在
+// 网络变化后丢弃旧客户端重建。
+Dio? _uiTxDio;
+StreamSubscription<List<ConnectivityResult>>? _uiTxNetSub;
+
+Dio _uiTxClient() {
+  final cached = _uiTxDio;
+  if (cached != null) return cached;
+  final dio = Dio(
+    BaseOptions(connectTimeout: const Duration(seconds: 15)),
+  );
+  final host = Pref.systemProxyHost;
+  final port = int.tryParse(Pref.systemProxyPort);
+  final useProxy =
+      Pref.enableSystemProxy && host.isNotEmpty && port != null;
+  dio.httpClientAdapter = IOHttpClientAdapter(
+    createHttpClient: useProxy
+        ? () => HttpClient()
+            ..idleTimeout = const Duration(seconds: 15)
+            ..findProxy = ((_) => 'PROXY $host:$port')
+            ..badCertificateCallback = (cert, h, p) => true
+        : () => HttpClient()..idleTimeout = const Duration(seconds: 15),
+  );
+  _uiTxNetSub ??= Connectivity().onConnectivityChanged.listen((_) {
+    _uiTxDio = null;
+  });
+  return _uiTxDio = dio;
+}
 class UiTranslateService extends GetxService {
   static UiTranslateService get to => Get.find<UiTranslateService>();
 
@@ -638,9 +674,12 @@ class UiTranslateService extends GetxService {
     final fallback = imageUrl.startsWith('http://')
         ? 'https://${imageUrl.substring(7)}'
         : imageUrl;
-    for (final url in [_smallImageUrl(imageUrl), fallback]) {
+    final _candidateUrls = [_smallImageUrl(imageUrl), fallback];
+    // 每个地址各试两次：网络或代理状态刚变化时第一次常直接失败，
+    // 立刻重试一次能救回大部分情况（原来两个地址各只试一次就直接报错）
+    for (final url in [..._candidateUrls, ..._candidateUrls]) {
       try {
-        final img = await Dio().get<List<int>>(
+        final img = await _uiTxClient().get<List<int>>(
           url,
           options: Options(
             responseType: ResponseType.bytes,
@@ -735,7 +774,7 @@ class UiTranslateService extends GetxService {
 
     Response<Map<String, dynamic>> res;
     try {
-      res = await Dio().post<Map<String, dynamic>>(
+      res = await _uiTxClient().post<Map<String, dynamic>>(
         uri,
         options: opts,
         data: body(dataUri),
@@ -744,7 +783,7 @@ class UiTranslateService extends GetxService {
       final code = e.response?.statusCode ?? 0;
       if (code >= 500) {
         // 服务端不认 data URI 时退回直发图片地址，由服务端自己抓图
-        res = await Dio().post<Map<String, dynamic>>(
+        res = await _uiTxClient().post<Map<String, dynamic>>(
           uri,
           options: opts,
           data: body(imageUrl),
