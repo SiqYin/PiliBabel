@@ -24,27 +24,27 @@ import 'package:dio/io.dart';
 /// 3. 批量翻译：把攒到的一批字符串塞进一次 chat 请求（编号列表 -> JSON 数组），
 ///    显著降低冷启动时的 API 调用次数。
 
-// 图片翻译的下载/请求统一走这里。
-// 原来每次都是裸 Dio()：既不套 app 的代理设置（lib/http/init.dart 里给
-// Request 单例配的 systemProxy），也不在网络变化时重建连接 —— 网络切换或
-// 代理重连之后这条路径会卡在坏连接上，报 SocketException: No route to host，
-// 只有重启 app 才好。这里和 Request 层保持一致：读同一份代理配置，并在
-// 网络变化后丢弃旧客户端重建。
+// 图片翻译的下载/请求统一走这里。两条路径分开：
+//   - 接口请求（翻译 API）走系统代理，和 app 的 Request 层一致；
+//   - 图床下载直连优先 —— app 里的封面图就是直连加载的，实测能通，而走系统
+//     代理时这一段可能不通（Network is unreachable, errno 101），表现就是
+//     封面正常、只有图片翻译失败。直连失败才退回代理兜底。
+// 失败后立刻丢弃客户端：Dart 的 HttpClient 会把 DNS 解析和连接池留在实例里，
+// 坏掉的状态会被一直复用，只有重启 app 才好。
 Dio? _uiTxDio;
+Dio? _uiTxDioDirect;
 StreamSubscription<List<ConnectivityResult>>? _uiTxNetSub;
 
-Dio _uiTxClient() {
-  final cached = _uiTxDio;
-  if (cached != null) return cached;
+Dio _uiTxBuild(bool useProxy) {
   final dio = Dio(
     BaseOptions(connectTimeout: const Duration(seconds: 15)),
   );
   final host = Pref.systemProxyHost;
   final port = int.tryParse(Pref.systemProxyPort);
-  final useProxy =
-      Pref.enableSystemProxy && host.isNotEmpty && port != null;
+  final proxy =
+      useProxy && Pref.enableSystemProxy && host.isNotEmpty && port != null;
   dio.httpClientAdapter = IOHttpClientAdapter(
-    createHttpClient: useProxy
+    createHttpClient: proxy
         ? () => HttpClient()
             ..idleTimeout = const Duration(seconds: 15)
             ..findProxy = ((_) => 'PROXY $host:$port')
@@ -53,18 +53,26 @@ Dio _uiTxClient() {
   );
   _uiTxNetSub ??= Connectivity().onConnectivityChanged.listen((_) {
     _uiTxDio = null;
+    _uiTxDioDirect = null;
   });
-  return _uiTxDio = dio;
+  return dio;
 }
 
+/// 接口请求：走系统代理
+Dio _uiTxClient() => _uiTxDio ??= _uiTxBuild(true);
+
+/// 图床下载：直连优先
+Dio _uiTxDirectClient() => _uiTxDioDirect ??= _uiTxBuild(false);
+
 void _dropUiTxClient() {
-  // 缓存的客户端会一直复用已经坏掉的连接和 DNS 解析结果 —— 表现就是连不上图床
-  // （Network is unreachable / No route to host），只能重启 app 才好。
-  // 任何一次失败后立刻丢弃，下一次重试就会重建客户端、重新解析、重新建连。
-  final dio = _uiTxDio;
+  final a = _uiTxDio;
+  final b = _uiTxDioDirect;
   _uiTxDio = null;
-  if (dio != null) dio.close(force: true);
+  _uiTxDioDirect = null;
+  if (a != null) a.close(force: true);
+  if (b != null) b.close(force: true);
 }
+
 class UiTranslateService extends GetxService {
   static UiTranslateService get to => Get.find<UiTranslateService>();
 
@@ -684,11 +692,15 @@ class UiTranslateService extends GetxService {
         ? 'https://${imageUrl.substring(7)}'
         : imageUrl;
     final _candidateUrls = [_smallImageUrl(imageUrl), fallback];
-    // 每个地址各试两次：网络或代理状态刚变化时第一次常直接失败，
-    // 立刻重试一次能救回大部分情况（原来两个地址各只试一次就直接报错）
-    for (final url in [..._candidateUrls, ..._candidateUrls]) {
+    // 两轮尝试：先全部直连（app 里的封面图就是直连加载的，实测能通），再全部
+    // 走系统代理兜底。之前一律走代理，代理到图床这一段不通时就一直失败，
+    // 表现就是封面正常、只有图片翻译报 Network is unreachable。
+    for (var _i = 0; _i < _candidateUrls.length * 2; _i++) {
+      final url = _candidateUrls[_i % _candidateUrls.length];
+      final client =
+          _i < _candidateUrls.length ? _uiTxDirectClient() : _uiTxClient();
       try {
-        final img = await _uiTxClient().get<List<int>>(
+        final img = await client.get<List<int>>(
           url,
           options: Options(
             responseType: ResponseType.bytes,
