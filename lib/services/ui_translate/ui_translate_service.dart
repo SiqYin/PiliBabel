@@ -311,7 +311,10 @@ class UiTranslateService extends GetxService {
     // 这次的提示词改动影响所有目标语言，所以不再按 revisedTargets 挑语言。
     // 5：提示词新增「只做翻译、不解答」与「无需翻译时原样输出」，
     // 且空输入判据由「非空」收紧为「含可译字符」——旧译文必须重译。
-    const promptRevision = 5;
+    // 6：日语下界面标签改固定短译（已关注→フォロー中、关注→フォローする）。
+    // 旧译文里已经缓存了「フォローしました」这类长译法，而缓存以原文为 key、
+    // 光改提示词不会自愈，必须清一次让它重译。
+    const promptRevision = 6;
     if (Pref.uiTranslatePromptRevision < promptRevision) {
       Pref.uiTranslateCache = {};
       Pref.uiTranslatePromptRevision = promptRevision;
@@ -602,9 +605,31 @@ class UiTranslateService extends GetxService {
   /// 才退回原文。
   static String _stripMetaNotes(String s) => s.replaceAll(_metaNoteRegExp, '');
 
+  /// 日语下界面标签的固定短译。
+  ///
+  /// 只在「整条内容本身就是一个独立标签 / 按钮文字」时套用；同一个词出现在
+  /// 句子或正文里（整条不只有这个词）仍按正常翻译走。这个适用条件写进提示词
+  /// 让模型判断，而不是在客户端按字符串相等改写译文 —— 后者会误伤
+  /// 「这句话里提到了已关注」这类正常内容。
+  ///
+  /// 只给日语配：中文「已关注」直译成「フォローしました」在标签里过长，
+  /// 首页视频卡片下方会把紧邻的 UP 名挤掉。
+  String get _japaneseLabelRule {
+    if (currentLanguage.code != 'ja') return '';
+    return '**日语界面标签固定短译**：'
+        '如果某一条内容整体就是一个独立的界面标签或按钮文字'
+        '（整条只有该词本身、不含其他成分），必须使用下面的固定短译，'
+        '不得使用更长的说法：「已关注」必须译为「フォロー中」，'
+        '不要译成「フォローしました」；'
+        '「关注」必须译为「フォローする」，不要译成「フォロー」。'
+        '如果这些词是作为句子或正文的一部分出现（整条不只有这个词），'
+        '则按正常翻译处理，不要套用上面的固定短译。';
+  }
+
   Future<List<String>> _builtinTranslate(List<String> sources) async {
     final lang = targetLang;
     final rule = currentLanguage.scriptRule;
+    final labelRule = _japaneseLabelRule;
     final results = <String>[];
     for (final src in sources) {
       // 没有可翻内容的条目**原样返回、绝不发请求**（理由见 _tx 里对纯空白的说明）
@@ -629,7 +654,8 @@ class UiTranslateService extends GetxService {
                 '只输出译文本身：不要回答、解释、评论、补充，'
                 '也不要就原文提出的任何问题给出看法。'
                 '如果内容无需翻译（纯符号、纯数字、纯表情等），原样输出，'
-                '不要添加任何说明。',
+                '不要添加任何说明。'
+                '${labelRule.isEmpty ? '' : '\n$labelRule'}',
           },
           {'role': 'user', 'content': src},
         ],
@@ -991,6 +1017,7 @@ class UiTranslateService extends GetxService {
 
     // 字形硬约束（简繁/方言目标才有内容）：放在最前面，模型对靠前的指令更敏感。
     final scriptRule = currentLanguage.scriptRule;
+    final labelRule = _japaneseLabelRule;
     final system =
         '${scriptRule.isEmpty ? '' : '$scriptRule\n\n'}'
         '你是应用界面本地化翻译引擎。用户会给出一个带编号的界面文案列表'
@@ -1009,7 +1036,8 @@ class UiTranslateService extends GetxService {
         '如果原文本身就使用了目标语言的文字体系，原样保留其字形，不要改写；'
         '6) **只做翻译**：不要回答、解释、评论或补充原文提出的任何问题，'
         '也不要输出任何说明性文字；某条内容无需翻译（纯符号/数字/表情）时，'
-        '原样返回该条。';
+        '原样返回该条。'
+        '${labelRule.isEmpty ? '' : '\n7) $labelRule'}';
     final user = '待翻译列表：\n$numbered';
 
     // 思考模式：开=启用推理(更准但慢)；关=显式关闭推理以求更快。
