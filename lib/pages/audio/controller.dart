@@ -431,8 +431,7 @@ class AudioController extends GetxController
       // 一旦CDN 403 就永远是 0。
       if (playDash.duration > 0) {
         _apiDurationSeconds = playDash.duration;
-        duration.value = playDash.duration;
-      }
+        duration.value = playDash.duration;      }
       // 记下整批轨道，供音质切换时直接换轨道重播，不再二次取流。
       _audios = List.of(audios);
       _refreshAvailableQualities();
