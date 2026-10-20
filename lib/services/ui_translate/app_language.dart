@@ -229,6 +229,62 @@ String normalizeScript(String text, String? script) {
   return buffer.toString();
 }
 
+/// 只出现在日文里的汉字字形（新字体与国字）：既不是简体的规范字形，
+/// 也不是繁体的规范字形。命中任意一个，就说明这段文字不是简体中文。
+const Set<String> _jaOnlyKanji = <String>{
+  '検', '験', '権', '続', '読', '売', '実', '応', '円', '図', '帰', '済',
+  '発', '変', '経', '総', '戦', '単', '団', '対', '帯', '広', '庁', '戸',
+  '掲', '拡', '拠', '摂', '挙', '収', '沢', '択', '訳', '駅', '桜', '塩',
+  '壊', '斉', '剤', '剣', '圏', '塁', '増', '髪', '齢', '徳', '恵', '篤',
+  '辺', '弁', '亜', '悪', '圧', '囲', '稲', '絵', '蛍', '軽', '継', '剰',
+  '壌', '嬢', '錠', '穣', '醸', '荘', '捜', '挿', '巣', '曽', '痩', '蔵',
+  '贈', '臓', '滝', '弾', '遅', '鋳', '徴', '聴', '懲', '勅', '鎮', '塚',
+  '逓', '鉄', '転', '伝', '闘', '弐', '悩', '脳', '覇', '拝', '廃', '抜',
+  '浜', '払', '仏', '歩', '豊', '満', '黙', '薬', '様', '謡', '覧', '竜',
+  '両', '緑', '隣', '涙', '戻', '霊', '隷', '暦', '錬', '労', '録',
+};
+
+/// 繁体专属字形：[_hansToHant] 的取值里，自己不是简体字的那些字形。
+final Set<String> _hantOnlyKanji = <String>{
+  for (final v in _hansToHant.values)
+    if (!_hansToHant.containsKey(v)) v,
+};
+
+bool _isHanRune(int rune) =>
+    (rune >= 0x4E00 && rune <= 0x9FFF) ||
+    (rune >= 0x3400 && rune <= 0x4DBF) ||
+    (rune >= 0xF900 && rune <= 0xFAFF) ||
+    (rune >= 0x20000 && rune <= 0x2FA1F);
+
+/// 判断文本是不是简体中文写的。
+///
+/// 口径：含汉字，且不含日文假名或韩文谚文，也不含繁体专属字形或日文汉字
+/// 新字体——也就是每个汉字都必须是简体字或繁简共享的传承字。
+///
+/// 只按字形判、不看词义，所以极个别纯汉字的日文（恰好每个字都是传承字）
+/// 会漏判成中文；但那种情况在中文里的写法基本一致，搜出来的结果差不多，
+/// 不用特意去处理。
+bool looksLikeSimplifiedChinese(String text) {
+  var hasHan = false;
+  for (final rune in text.runes) {
+    // 日文假名（含半角片假名）、韩文谚文：直接排除
+    if ((rune >= 0x3040 && rune <= 0x30FF) ||
+        (rune >= 0xFF66 && rune <= 0xFF9D) ||
+        (rune >= 0xAC00 && rune <= 0xD7AF) ||
+        (rune >= 0x1100 && rune <= 0x11FF) ||
+        (rune >= 0x3130 && rune <= 0x318F)) {
+      return false;
+    }
+    if (!_isHanRune(rune)) continue;
+    hasHan = true;
+    final ch = String.fromCharCode(rune);
+    if (_hantOnlyKanji.contains(ch) || _jaOnlyKanji.contains(ch)) {
+      return false;
+    }
+  }
+  return hasHan;
+}
+
 /// 判断文本是否**本来就用目标语言书写**（据此跳过翻译）。
 ///
 /// 只收录「文字 ↔ 语言一一对应」的：日文假名、韩文谚文、泰文、藏文、希伯来文。
