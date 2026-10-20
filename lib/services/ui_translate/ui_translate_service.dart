@@ -626,6 +626,40 @@ class UiTranslateService extends GetxService {
         '则按正常翻译处理，不要套用上面的固定短译。';
   }
 
+  /// 探测内置官方模型（Index-Translate）是否可用。
+  ///
+  /// 走一次最小的真实翻译请求：拿到任意一段非空输出就算通，任何异常、超时、
+  /// 空输出都算不通。它判断的是「官方接口本身挂没挂」，所以**不读用户当前的
+  /// 引擎设置**，永远打官方地址 —— 用户已经切到自备 API 时也要能测出官方恢复了。
+  static Future<bool> pingBuiltin() async {
+    try {
+      return await _pingBuiltinOnce().timeout(const Duration(seconds: 15));
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool> _pingBuiltinOnce() async {
+    final buf = StringBuffer();
+    await for (final chunk in AiChatService.streamChat(
+      messages: const [
+        {
+          'role': 'system',
+          'content': '请把 user 消息翻译为日语。只输出译文本身。',
+        },
+        {'role': 'user', 'content': '你好'},
+      ],
+      model: BuiltinTranslate.model,
+      apiUrl: BuiltinTranslate.apiUrl,
+      apiKey: BuiltinTranslate.apiKey,
+      extraBody: const <String, dynamic>{'enable_thinking': false},
+    )) {
+      buf.write(chunk);
+      if (buf.toString().trim().isNotEmpty) return true;
+    }
+    return buf.toString().trim().isNotEmpty;
+  }
+
   Future<List<String>> _builtinTranslate(List<String> sources) async {
     final lang = targetLang;
     final rule = currentLanguage.scriptRule;

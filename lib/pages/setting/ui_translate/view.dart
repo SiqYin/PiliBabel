@@ -22,6 +22,12 @@ import 'package:get/get.dart';
 const String kGuidedSetupFirstRun = 'guidedTranslateFirstRun';
 const String kGuidedSetupUpgrade = 'guidedTranslateUpgrade';
 
+/// 官方接口故障时：替用户切到「自备 API」。
+const String kGuidedSetupOutageCustom = 'guidedTranslateOutageCustom';
+
+/// 官方接口恢复后：替用户切回内置官方模型。
+const String kGuidedSetupOutageBuiltin = 'guidedTranslateOutageBuiltin';
+
 class UiTranslateSettingPage extends StatefulWidget {
   const UiTranslateSettingPage({
     super.key,
@@ -81,6 +87,21 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
     if (mode == kGuidedSetupUpgrade) {
       if (!mounted) return;
       await _showTranslateProviderPicker(context, controller);
+      return;
+    }
+
+    // 官方接口故障 / 恢复的引导：同样先打开「翻译引擎」，让用户看清有哪两个
+    // 选项，停一下再替他完成切换 —— 用户自己点了就以他点的为准。
+    if (mode == kGuidedSetupOutageCustom ||
+        mode == kGuidedSetupOutageBuiltin) {
+      if (!mounted) return;
+      await _showTranslateProviderPicker(
+        context,
+        controller,
+        autoPick: mode == kGuidedSetupOutageCustom
+            ? TranslateProvider.custom
+            : TranslateProvider.builtin,
+      );
       return;
     }
 
@@ -388,10 +409,23 @@ final List<AppLanguage> _pickerRows = () {
 }();
 
 /// 翻译引擎选择器（内置官方模型 / 自备 API）。
+/// [autoPick] 非空时（官方接口故障 / 恢复引导）会替用户做决定：弹窗照常打开，
+/// 让用户看清有哪两个选项，1.5 秒后自动选中 [autoPick] 并关闭。用户在这段
+/// 时间里自己点了就以他点的为准。
 Future<void> _showTranslateProviderPicker(
   BuildContext context,
-  AiSettingController controller,
+  AiSettingController controller, {
+  TranslateProvider? autoPick,
 ) async {
+  // 用户先选了之后，延迟回调不能再 pop —— 那时弹窗已经关了，
+  // 再 pop 会把设置页本身弹掉。
+  var picked = false;
+  if (autoPick != null) {
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (picked || !context.mounted) return;
+      Navigator.of(context, rootNavigator: true).maybePop(autoPick);
+    });
+  }
   final res = await showDialog<TranslateProvider>(
     context: context,
     // 包一层 Obx：下面那些 uiTx 是在弹窗「打开那一刻」求值的，而译文是异步到的。
@@ -405,6 +439,7 @@ Future<void> _showTranslateProviderPicker(
       ),
     ),
   );
+  picked = true;
   if (res != null) {
     controller.saveUiTranslateProvider(res);
   }
