@@ -10,9 +10,16 @@ import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 class SearchArticleItem extends StatelessWidget {
-  const SearchArticleItem({super.key, required this.item});
+  const SearchArticleItem({
+    super.key,
+    required this.item,
+    this.translate = true,
+  });
 
   final SearchArticleItemModel item;
+
+  /// 是否跟随界面翻译翻译标题；搜索结果用中文搜时置 false，按原文显示。
+  final bool translate;
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +77,7 @@ CoverTranslateButton(cover: item.imageUrls?.firstOrNull),
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Obx(
-                      () => UiTranslateService.contentTranslationActive()
+                      () => translate && UiTranslateService.contentTranslationActive()
                           // 搜索结果标题带 <em> 高亮分段，逐段翻译会译得支离破碎；
                           // 界面翻译开启时整句走 uiTx，用高亮换取完整译文。
                           ? Text(

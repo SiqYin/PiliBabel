@@ -60,7 +60,10 @@ class _SearchPgcPanelState
         if (index == list.length - 1) {
           controller.onLoadMore();
         }
-        return SearchPgcItem(item: list[index]);
+        return SearchPgcItem(
+        item: list[index],
+        translate: !controller.searchInSourceLanguage,
+      );
       },
       itemCount: list.length,
     );

@@ -15,9 +15,13 @@ class SearchPgcItem extends StatelessWidget {
   const SearchPgcItem({
     super.key,
     required this.item,
+    this.translate = true,
   });
 
   final SearchPgcItemModel item;
+
+  /// 是否跟随界面翻译翻译标题；搜索结果用中文搜时置 false，按原文显示。
+  final bool translate;
 
   @override
   Widget build(BuildContext context) {
@@ -68,7 +72,7 @@ CoverTranslateButton(cover: item.cover),
                   children: [
                     const SizedBox(height: 4),
                     Obx(
-                      () => UiTranslateService.contentTranslationActive()
+                      () => translate && UiTranslateService.contentTranslationActive()
                           // 搜索结果标题带 <em> 高亮分段，逐段翻译会译得支离破碎；
                           // 界面翻译开启时整句走 uiTx，用高亮换取完整译文。
                           ? Text(uiTx(item.title.map((e) => e.text).join()))

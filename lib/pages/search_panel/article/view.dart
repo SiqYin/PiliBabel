@@ -103,7 +103,10 @@ class _SearchArticlePanelState
         if (index == list.length - 1) {
           controller.onLoadMore();
         }
-        return SearchArticleItem(item: list[index]);
+        return SearchArticleItem(
+        item: list[index],
+        translate: !controller.searchInSourceLanguage,
+      );
       },
       itemCount: list.length,
     );

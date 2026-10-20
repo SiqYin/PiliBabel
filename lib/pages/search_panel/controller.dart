@@ -304,10 +304,50 @@ class SearchPanelController<R extends SearchNumData<T>, T>
     return resolved;
   }
 
+  /// 搜索词本身就是简体中文时，结果按 B 站原文显示，不做内容翻译。
+  bool get searchInSourceLanguage =>
+      Get.isRegistered<UiTranslateService>() &&
+      UiTranslateService.isSourceLanguageChinese(keyword);
+
+  /// 需要额外用原文搜一次的词（非中文搜索词译成中文时才有值）。
+  String? _originalKeyword;
+
+  /// 两路结果按各自名次交替合并，同一个对象只留一条。
+  List<T>? _mergeSearchList(List<T>? primary, List<T>? secondary) {
+    if (primary == null || primary.isEmpty) return secondary;
+    if (secondary == null || secondary.isEmpty) return primary;
+    final merged = <T>[];
+    final seen = <String>{};
+    final len = primary.length > secondary.length
+        ? primary.length
+        : secondary.length;
+    for (var i = 0; i < len; i++) {
+      if (i < primary.length && seen.add(_searchItemKey(primary[i]))) {
+        merged.add(primary[i]);
+      }
+      if (i < secondary.length && seen.add(_searchItemKey(secondary[i]))) {
+        merged.add(secondary[i]);
+      }
+    }
+    return merged;
+  }
+
+  String _searchItemKey(T e) {
+    if (e is SearchVideoItemModel) return 'v${e.aid ?? e.id}';
+    if (e is SearchUserItemModel) return 'u${e.mid}';
+    if (e is SearchLiveItemModel) return 'l${e.roomid ?? e.uid}';
+    if (e is SearchPgcItemModel) return 'p${e.seasonId ?? e.mediaId}';
+    if (e is SearchArticleItemModel) return 'a${e.id}';
+    return '$e';
+  }
+
   @override
   Future<LoadingState<R>> customGetData() async {
     final resolvedKeyword = await _resolveKeyword();
-    return SearchHttp.searchByType<R>(
+    // 译名和原文不一样说明确实翻译过：第一页额外用原文再搜一次，
+    // 有些内容正文里直接引用了这段外文，只搜译名会漏掉。
+    _originalKeyword = resolvedKeyword == keyword ? null : keyword;
+    final response = await SearchHttp.searchByType<R>(
       searchType: searchType,
       keyword: resolvedKeyword,
       page: page,
@@ -319,12 +359,35 @@ class SearchPanelController<R extends SearchNumData<T>, T>
       categoryId: articleZoneType?.value.categoryId,
       pubBegin: pubBegin,
       pubEnd: pubEnd,
-      gaiaVtoken: gaiaVtoken,
-      onSuccess: (String gaiaVtoken) {
-        this.gaiaVtoken = gaiaVtoken;
+      gaiaVToken: gaiaVToken,
+      onSuccess: (String gaiaVToken) {
+        this.gaiaVToken = gaiaVToken;
         queryData(page == 1);
       },
     );
+    final origin = _originalKeyword;
+    if (page != 1 || origin == null) return response;
+    final extra = await SearchHttp.searchByType<R>(
+      searchType: searchType,
+      keyword: origin,
+      page: page,
+      order: order,
+      duration: videoDurationType?.index,
+      tids: videoZoneType?.tids,
+      orderSort: userOrderType?.value.orderSort,
+      userType: userType?.value.index,
+      categoryId: articleZoneType?.value.categoryId,
+      pubBegin: pubBegin,
+      pubEnd: pubEnd,
+      gaiaVToken: gaiaVToken,
+    );
+    if (response is Success<R> && extra is Success<R>) {
+      response.response.list = _mergeSearchList(
+        response.response.list,
+        extra.response.list,
+      );
+    }
+    return response;
   }
 
   @override
