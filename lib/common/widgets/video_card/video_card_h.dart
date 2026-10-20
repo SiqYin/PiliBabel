@@ -29,11 +29,15 @@ class VideoCardH extends StatelessWidget {
     this.onTap,
     this.onViewLater,
     this.onRemove,
+    this.translate = true,
   });
   final HorizontalVideoModel videoItem;
   final VoidCallback? onTap;
   final ValueChanged<int>? onViewLater;
   final VoidCallback? onRemove;
+
+  /// 是否跟随界面翻译翻译标题；搜索结果用中文搜时置 false，按原文显示。
+  final bool translate;
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +213,7 @@ class VideoCardH extends StatelessWidget {
               // 支离破碎，所以界面翻译开启时改成整句走 uiTx：放弃高亮，
               // 换取一条完整的译文标题。翻译没开时行为与原来完全一致。
               if (titleList?.isNotEmpty == true &&
-                  !UiTranslateService.contentTranslationActive()) {
+                  !(translate && UiTranslateService.contentTranslationActive())) {
                 return Text.rich(
                   overflow: .ellipsis,
                   maxLines: Pref.videoTitleFull ? 4 : 2,

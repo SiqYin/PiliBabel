@@ -118,6 +118,7 @@ class _SearchVideoPanelState
         }
         return VideoCardH(
           videoItem: list[index],
+          translate: !controller.searchInSourceLanguage,
           onRemove: () => controller.loadingState
             ..value.data!.removeAt(index)
             ..refresh(),

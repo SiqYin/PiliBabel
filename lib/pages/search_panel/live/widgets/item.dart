@@ -13,7 +13,14 @@ import 'package:material_ui/material_ui.dart';
 class LiveItem extends StatelessWidget {
   final SearchLiveItemModel liveItem;
 
-  const LiveItem({super.key, required this.liveItem});
+  /// 是否跟随界面翻译翻译标题；搜索结果用中文搜时置 false，按原文显示。
+  final bool translate;
+
+  const LiveItem({
+    super.key,
+    required this.liveItem,
+    this.translate = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +85,7 @@ CoverTranslateButton(cover: liveItem.cover),
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Obx(
-            () => UiTranslateService.contentTranslationActive()
+            () => translate && UiTranslateService.contentTranslationActive()
                 // 搜索结果标题带 <em> 高亮分段，逐段翻译会译得支离破碎；
                 // 界面翻译开启时整句走 uiTx，用高亮换取完整译文。
                 ? Text(

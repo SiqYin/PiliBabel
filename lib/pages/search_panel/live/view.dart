@@ -67,7 +67,10 @@ class _SearchLivePanelState
           if (index == list.length - 1) {
             controller.onLoadMore();
           }
-          return LiveItem(liveItem: list[index]);
+          return LiveItem(
+        liveItem: list[index],
+        translate: !controller.searchInSourceLanguage,
+      );
         },
         itemCount: list.length,
       ),
