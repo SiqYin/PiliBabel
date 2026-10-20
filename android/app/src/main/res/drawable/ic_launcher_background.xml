@@ -1,12 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Modify this file to customize your launch splash screen -->
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="?android:colorBackground" />
-
-    <!-- You can insert your own image assets here -->
-    <!-- <item>
-        <bitmap
-            android:gravity="center"
-            android:src="@mipmap/launch_image" />
-    </item> -->
-</layer-list>
+<!-- PiliBabel 自适应图标底色：左上 #000000 → 右下 #3a6da2 的斜向渐变。
+     用矢量渐变而不是纯色，是为了让所有 Android 版本、所有设备上的图标底色
+     都固定成同一套配色，不再跟随系统主题色（Material You）。 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:height="108dp"
+    android:width="108dp"
+    android:viewportWidth="108.0"
+    android:viewportHeight="108.0">
+    <path android:pathData="M0,0 H108 V108 H0 Z">
+        <aapt:attr name="android:fillColor">
+            <gradient
+                android:type="linear"
+                android:startX="0.0"
+                android:startY="0.0"
+                android:endX="108.0"
+                android:endY="108.0"
+                android:startColor="#FF000000"
+                android:endColor="#FF3A6DA2" />
+        </aapt:attr>
+    </path>
+</vector>
