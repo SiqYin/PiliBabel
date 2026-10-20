@@ -1,12 +1,7 @@
-### PiliBabel v2.4.0
+### PiliBabel v2.4.1
 
-**New icon**
+**Fixes**
 
-- Android, Windows and Linux now share one icon: a pure white tower (`#ffffff`) on a diagonal gradient that runs from black (`#000000`) at the top-left to blue (`#3a6da2`) at the bottom-right. The shape, the canvas size and the tower's proportions are unchanged. The README logo and the tray icons use the same palette.
-
-**Index Translate outage handling**
-
-- On launch PiliBabel probes the built-in Bilibili Index Translate endpoint. If it is unavailable, an English notice explains the outage and offers `Got it` (change nothing, keep using the app) or `Use my own AI translation`. The second option walks you through 我的 → 设置 → AI 翻译 → 翻译引擎 and switches the engine to your own API configuration; if you have not set one up yet it simply opens that screen for you to fill in.
-- If you were switched over by that prompt and the official endpoint later recovers, PiliBabel asks once whether to keep your current configuration or switch back to the Bilibili model, with the same guided animation. This notice is translated by your own AI translation setup.
+- Android launcher icon: the adaptive icon was still taking its colours from the system theme on Android 12+ (`system_neutral2_700` foreground, `system_accent1_100` background) and shipped a `<monochrome>` layer, so devices showed a themed grey tower on a light purple tile instead of the new artwork. The adaptive icon is now fixed: a vector diagonal gradient from black (`#000000`) to blue (`#3a6da2`) with a pure white tower, and the Android 12+ colour overrides plus the monochrome layer are gone. Every device now shows the same icon.
 
 Downloads are below.

@@ -17,7 +17,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
 # update when release
-version: 2.4.0+1
+version: 2.4.1+1
 environment:
   sdk: ">=3.13.0"
   flutter: 3.47.2
@@ -249,6 +249,10 @@ dev_dependencies:
   flutter_native_splash: ^2.4.6
   jnigen: ^1.0.0
 
+# 注意：安卓的自适应图标（渐变底 + 纯白塔）是手工维护在
+# android/app/src/main/res/drawable/ic_launcher_background.xml、
+# drawable/ic_launcher_foreground.xml 与 mipmap-anydpi-v26/ic_launcher.xml 里的，
+# 重新跑 flutter_launcher_icons 会把它们覆盖掉。
 flutter_launcher_icons:
   android: true
   ios: true

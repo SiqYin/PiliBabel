@@ -3,16 +3,14 @@
      Same three tiers, central arch and split crown as 0.3.0, scaled about the
      canvas centre to about 33% width / 42% height: 0.3.0 read slightly large and
      0.3.1 read too small, so this lands in between.
-     Keep @color/ic_launcher_foreground: Android 12+ colors.xml supplies the
-     Material You wallpaper palette, while older Android uses the green/white
-     fallback. -->
+     塔固定为纯白 #ffffff：不再跟随系统主题色，所有设备上都是同一个图标。 -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:height="108dp"
     android:width="108dp"
     android:viewportWidth="108.0"
     android:viewportHeight="108.0">
     <path
-        android:fillColor="@color/ic_launcher_foreground"
+        android:fillColor="#FFFFFFFF"
         android:fillType="evenOdd"
         android:pathData="M36.4 72.48 H71.6 V77.76 H36.4 Z M39.92 54.88 H68.08 V72.48 H39.92 Z M44.32 37.28 H63.68 V54.88 H44.32 Z M40.8 32 H49.6 V37.28 H40.8 Z M58.4 32 H67.2 V37.28 H58.4 Z M46.08 72.48 V61.92 C46.08 58.03 49.23 54.88 54 54.88 C58.77 54.88 61.92 58.03 61.92 61.92 V72.48 Z" />
 </vector>
