@@ -380,6 +380,7 @@ class SearchPanelController<R extends SearchNumData<T>, T>
       pubBegin: pubBegin,
       pubEnd: pubEnd,
       gaiaVtoken: gaiaVtoken,
+      onSuccess: (_) {},
     );
     if (response is Success<R> && extra is Success<R>) {
       response.response.list = _mergeSearchList(
