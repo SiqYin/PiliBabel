@@ -175,20 +175,8 @@ class UiTranslateService extends GetxService {
   /// 含汉字、且不含日文假名/韩文谚文时算中文。B 站搜索接口只认中文原文：
   /// 用户直接输入中文时它本身就是接口要的词，再过一遍翻译纯属浪费，
   /// 界面翻译开着时还会把中文当外文翻一遍，反而搜不到。
-  static bool isSourceLanguageChinese(String text) {
-    var hasHan = false;
-    for (final r in text.runes) {
-      if ((r >= 0x3040 && r <= 0x30FF) || (r >= 0xAC00 && r <= 0xD7AF)) {
-        return false;
-      }
-      if ((r >= 0x4E00 && r <= 0x9FFF) ||
-          (r >= 0x3400 && r <= 0x4DBF) ||
-          (r >= 0xF900 && r <= 0xFAFF)) {
-        hasHan = true;
-      }
-    }
-    return hasHan;
-  }
+  static bool isSourceLanguageChinese(String text) =>
+      looksLikeSimplifiedChinese(text);
 
   static bool contentTranslationActive() {
     if (!Get.isRegistered<UiTranslateService>()) return false;
