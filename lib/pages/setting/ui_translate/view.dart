@@ -416,7 +416,7 @@ Future<void> _showTranslateProviderPicker(
   BuildContext context,
   AiSettingController controller, {
   TranslateProvider? autoPick,
-) async {
+}) async {
   // 用户先选了之后，延迟回调不能再 pop —— 那时弹窗已经关了，
   // 再 pop 会把设置页本身弹掉。
   var picked = false;
