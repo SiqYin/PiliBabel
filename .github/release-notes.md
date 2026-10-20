@@ -1,8 +1,8 @@
-### PiliBabel v2.3.10
+### PiliBabel v2.3.11
 
-**Changes**
+**New**
 
-- Japanese UI labels now use fixed short forms: 已关注 renders as "フォロー中" instead of the longer "フォローしました", and 关注 renders as "フォローする" instead of "フォロー". The short form applies only when an entry is a standalone label or button; the same words inside a sentence are still translated normally.
-- The prompt revision was bumped to 6 so cached translations such as "フォローしました" are discarded and re-translated.
+- Startup health check for bilibili's built-in translation service (Index Translate). If the service is unavailable, an English dialog offers either to dismiss it or to switch to your own AI translation API. Choosing the latter walks you through Mine → Settings → AI Translation → Translation Engine and switches the engine for you.
+- Once Index Translate recovers, and if you were moved to your own API by that outage dialog, a second dialog asks whether to keep your current setup or switch back to the free built-in model. This dialog is AI-translated.
 
 Downloads are below.

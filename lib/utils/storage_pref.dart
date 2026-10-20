@@ -1870,6 +1870,25 @@ abstract final class Pref {
   static set uiTranslateOnboarded(bool value) =>
       _setting.put(SettingBoxKey.uiTranslateOnboarded, value);
 
+      /// 内置官方模型（Index-Translate）故障弹窗已被用户「明白了」过。
+      /// 官方接口恢复正常时自动清掉，所以下一次故障仍会再提示一次。
+      static bool get uiTranslateOutageDismissed => _setting.get(
+      SettingBoxKey.uiTranslateOutageDismissed,
+      defaultValue: false,
+      );
+      static set uiTranslateOutageDismissed(bool value) =>
+      _setting.put(SettingBoxKey.uiTranslateOutageDismissed, value);
+
+      /// 用户是在官方接口故障弹窗里被引导切到自备 API 的（不是自己主动换的）。
+      /// 只有它为真时，才会在官方接口恢复后提示「是否切回」；用户选择保留自备
+      /// 配置后立刻置回 false，避免每次启动都提示。
+      static bool get uiTranslateOutageSwitched => _setting.get(
+      SettingBoxKey.uiTranslateOutageSwitched,
+      defaultValue: false,
+      );
+      static set uiTranslateOutageSwitched(bool value) =>
+      _setting.put(SettingBoxKey.uiTranslateOutageSwitched, value);
+
   static int get angleDegrees =>
       _setting.get(SettingBoxKey.angleDegrees, defaultValue: 30);
 

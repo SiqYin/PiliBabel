@@ -3,6 +3,7 @@ import 'dart:math' as math;
 
 import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/services/ui_translate/onboarding.dart';
+import 'package:PiliPlus/services/ui_translate/outage_guard.dart';
 import 'package:PiliPlus/grpc/dyn.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/msg.dart';
@@ -77,6 +78,7 @@ class MainController extends GetxController
   void onReady() {
     super.onReady();
     showTranslationOnboardingIfNeeded();
+    checkBuiltinTranslateOutage();
   }
 
   @override
