@@ -359,9 +359,9 @@ class SearchPanelController<R extends SearchNumData<T>, T>
       categoryId: articleZoneType?.value.categoryId,
       pubBegin: pubBegin,
       pubEnd: pubEnd,
-      gaiaVToken: gaiaVToken,
-      onSuccess: (String gaiaVToken) {
-        this.gaiaVToken = gaiaVToken;
+      gaiaVtoken: gaiaVtoken,
+      onSuccess: (String gaiaVtoken) {
+        this.gaiaVtoken = gaiaVtoken;
         queryData(page == 1);
       },
     );
@@ -379,7 +379,7 @@ class SearchPanelController<R extends SearchNumData<T>, T>
       categoryId: articleZoneType?.value.categoryId,
       pubBegin: pubBegin,
       pubEnd: pubEnd,
-      gaiaVToken: gaiaVToken,
+      gaiaVtoken: gaiaVtoken,
     );
     if (response is Success<R> && extra is Success<R>) {
       response.response.list = _mergeSearchList(
