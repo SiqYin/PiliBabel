@@ -238,7 +238,3 @@ La police **霞鹜文楷** incluse est soumise séparément à la **SIL Open Fon
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — la police chinoise open source incluse dans l'application, sous licence SIL Open Font License 1.1
 - et bien d'autres
 - Inspiré par la « traduction d'interface par IA » officielle de bilibili.
-
-## Remarque
-
-Ce README a été rédigé par une IA et peut contenir des erreurs de vocabulaire ou de grammaire.

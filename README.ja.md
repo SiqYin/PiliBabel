@@ -238,7 +238,3 @@ PiliBabel は **GNU General Public License v3.0（GPL-3.0）** でライセン�
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai)（霞鹜文楷）—— 同梱しているオープンソースの中文字体。SIL Open Font License 1.1
 - そのほか多数
 - bilibili 公式の「AI インターフェース翻訳」に着想を得ています。
-
-## 注記
-
-この README は AI が作成したもので、用語や文法に誤りがある可能性があります。

@@ -238,7 +238,3 @@ PiliBabel 採用 **GNU General Public License v3.0（GPL-3.0）** —— 同 Pil
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai)（霞鹜文楷）—— App 內嵌嘅開源中文字體，採 SIL Open Font License 1.1 授權
 - 仲有更多
 - 靈感嚟自 B 站官方嘅「AI 介面翻譯」。
-
-## 註明
-
-呢份 README 係 AI 寫嘅，用詞同文法可能會有錯漏。

@@ -237,7 +237,3 @@ The bundled **LXGW WenKai** typeface is licensed separately under the **SIL Open
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — the open-source Chinese typeface bundled with the app, under the SIL Open Font License 1.1
 - and more
 - Inspired by bilibili's official "AI interface translation".
-
-## Примітка
-
-Цей README написано ШІ, тому можливі помилки у формулюваннях чи граматиці.

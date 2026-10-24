@@ -238,7 +238,3 @@ La tipografía **霞鹜文楷** incluida se licencia por separado bajo la **SIL 
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — la tipografía china de código abierto incluida en la aplicación, bajo la SIL Open Font License 1.1
 - y más
 - Inspirado en la «traducción de interfaz por IA» oficial de bilibili.
-
-## Nota
-
-Este README fue redactado por una IA y puede contener errores de vocabulario o gramática.
