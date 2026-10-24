@@ -1,4 +1,4 @@
-### PiliBabel v2.6.0
+### PiliBabel v2.6.1
 
 **Cache audio, and download to a folder you own**
 

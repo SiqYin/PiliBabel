@@ -792,6 +792,40 @@ Future<void> audioNormalization(
   }
 }
 
+void _showLocalPathDialog(BuildContext context, VoidCallback setState) {
+  showDialog(
+    context: context,
+    builder: (context) => SimpleDialog(
+      clipBehavior: Clip.hardEdge,
+      contentPadding: const EdgeInsets.symmetric(vertical: 12),
+      children: [
+        DialogOption(
+          onPressed: () async {
+            Get.back();
+            final path = await FilePicker.getDirectoryPath();
+            if (path == null || path.isEmpty) {
+              return;
+            }
+            await Pref.setDownloadLocalPath(path);
+            setState();
+            SmartDialog.showToast(uiTx('已设置下载到本地位置'));
+          },
+          child: Text(uiTx('选择文件夹'), style: const TextStyle(fontSize: 14)),
+        ),
+        if (Pref.downloadLocalPath != null)
+          DialogOption(
+            onPressed: () async {
+              Get.back();
+              await Pref.setDownloadLocalPath(null);
+              setState();
+            },
+            child: Text(uiTx('清除'), style: const TextStyle(fontSize: 14)),
+          ),
+      ],
+    ),
+  );
+}
+
 void _showDownPathDialog(BuildContext context, VoidCallback setState) {
   showDialog(
     context: context,
