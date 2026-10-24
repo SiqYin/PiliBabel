@@ -1,4 +1,4 @@
-### PiliBabel v2.5.0
+### PiliBabel v2.5.1
 
 **Cache audio**
 

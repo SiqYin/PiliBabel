@@ -17,6 +17,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart' as path;
+import 'package:collection/collection.dart';
 
 enum AudioCacheStatus { wait, downloading, completed, failed }
 
