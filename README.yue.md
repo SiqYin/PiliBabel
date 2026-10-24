@@ -224,7 +224,6 @@ PiliBabel 採用 **GNU General Public License v3.0（GPL-3.0）** —— 同 Pil
 
 第三方組件（各種 Flutter 套件、[`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect)、[`media-kit`](https://github.com/media-kit/media-kit)、[`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer)、[`dio`](https://pub.dev/packages/dio) 等等）照舊跟返各自嘅協議。
 
-
 內嵌嘅**霞鹜文楷**另行以 **SIL Open Font License 1.1** 授權，其授權文本隨 App 一併分發，喺 `assets/fonts/LXGWWenKai-OFL.txt`。
 
 <br/>
@@ -240,4 +239,6 @@ PiliBabel 採用 **GNU General Public License v3.0（GPL-3.0）** —— 同 Pil
 - 仲有更多
 - 靈感嚟自 B 站官方嘅「AI 介面翻譯」。
 
-> **註明。** 呢份 README 係 AI 寫嘅，用詞同文法可能會有錯漏。
+## 註明
+
+呢份 README 係 AI 寫嘅，用詞同文法可能會有錯漏。

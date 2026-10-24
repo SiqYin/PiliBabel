@@ -224,7 +224,6 @@ PiliBabel is licensed under the **GNU General Public License v3.0 (GPL-3.0)** â€
 
 Third-party components (Flutter packages, [`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect), [`media-kit`](https://github.com/media-kit/media-kit), [`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer), [`dio`](https://pub.dev/packages/dio), etc.) remain under their own licenses.
 
-
 The bundled **LXGW WenKai** typeface is licensed separately under the **SIL Open Font License 1.1**; its licence text ships inside the app as `assets/fonts/LXGWWenKai-OFL.txt`.
 
 <br/>
@@ -240,4 +239,6 @@ The bundled **LXGW WenKai** typeface is licensed separately under the **SIL Open
 - and more
 - Inspired by bilibili's official "AI interface translation".
 
-> **Note.** This README was written by AI and may contain mistakes in wording or grammar.
+## Note
+
+This README was written by AI and may contain mistakes in wording or grammar.

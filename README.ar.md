@@ -224,7 +224,6 @@ PiliBabel مشروع شخصي مدفوع بالاهتمام، ويُقدَّم *
 
 المكوّنات من طرف ثالث (حزم Flutter، [`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect)، [`media-kit`](https://github.com/media-kit/media-kit)، [`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer)، [`dio`](https://pub.dev/packages/dio) وغيرها) تبقى تحت تراخيصها الخاصة.
 
-
 خط **霞鹜文楷** المُضمَّن مرخَّص بشكل منفصل بموجب **رخصة SIL Open Font License 1.1**، ويُوزَّع نص رخصته مع التطبيق في `assets/fonts/LXGWWenKai-OFL.txt`.
 
 <br/>
@@ -240,4 +239,6 @@ PiliBabel مشروع شخصي مدفوع بالاهتمام، ويُقدَّم *
 - وغيرها الكثير
 - مستوحى من «ترجمة الواجهة بالذكاء الاصطناعي» الرسمية لدى bilibili.
 
-> **ملاحظة.** كُتب هذا الـ README بواسطة الذكاء الاصطناعي وقد يحتوي على أخطاء في المفردات أو القواعد.
+## ملاحظة
+
+كُتب هذا الـ README بواسطة الذكاء الاصطناعي وقد يحتوي على أخطاء في المفردات أو القواعد.
