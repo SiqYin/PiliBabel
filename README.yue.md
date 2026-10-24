@@ -8,7 +8,7 @@
 </div>
 <!-- lang-switch:start -->
 <div align="center">
-    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <b>粵語</b> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a></p>
+    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <b>粵語</b> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a></p>
 </div>
 <!-- lang-switch:end -->
 
@@ -63,6 +63,27 @@ PiliBabel **保留晒 PiliNara / PiliPlus 嘅全部功能**（睇文末[繼承�
 - **全世界都播得到。** PiliBabel 會優先揀 B 站按 IP 就近派落嚟嘅海外線路（全球 **Akamai**、`mirror*ov`、`cn-hk-eq-bcache`），而唔係將你釘死喺中國大陸（阿里雲 / 深圳）節點 —— 中國大陸以外嘅用戶唔會再出現「聲仲行、畫面卡死」。當然，你都可以喺設定度自己指定 CDN。
 - **Material You 風格嘅「主題同色彩」。** 淺色 / 深色 / 跟系統改用三張**即時預覽卡**嚟揀 —— 每張卡都用嗰個模式實際會套用嘅配色，預先將迷你介面畫畀你睇（「跟系統」嗰張係左上淺色、右下深色嘅對角拼接）。下面係**動態取色**（支援嘅裝置會跟系統桌布取色）、**高對比度深色**（純黑介面，夜間更護眼）同**播放頁固定深色**。色彩嗰半保留完整嘅 FlexScheme 調色板 —— 除咗**19 種色相**，仲多一個獨立嘅**「調色板風格」**，決定同一色相下所有容器色點樣衍生，同你揀邊隻色相無關。
 - **內建霞鹜文楷。** App 直接內嵌**霞鹜文楷（LXGW WenKai）**，而且係**預設字體** —— 裝完就有，唔使自己喺字體清單度搵。介面同彈幕都適用。當然仲可以改返系統字體、揀系統上任一已安裝字體，或者匯入自己嘅 `.ttf` / `.otf` / `.ttc`；升級前你若明確揀過其他字體，會原樣保留。字重同字級照樣調得。
+
+## 離線音訊快取同下載到本機（PiliBabel 獨有）
+
+上游 PiliNara / PiliPlus 冇嘅兩個功能，亦都係你想用呢個 fork 嘅主要原因。
+
+### 音訊快取（只快取音軌）
+
+- 影片播放頁右上角選單入面，「音訊快取」就喺「影片快取」下面；聽片頁頂欄喺排序 / 定時關閉 / 更多三個掣左邊都加咗「音訊快取」。
+- 音質檔位可以揀：Hi-Res 無損、杜比全景聲、192K、132K、64K，同影片畫質用同一份預設清單。
+- 檔案照原本容器寫入（`m4a` / `mp3` / `flac` / `wav` / `aac` / `ogg`），唔轉碼。
+- 快取頁分做「已快取影片」/「已快取音訊」兩個模組，仲會記住你上次揀邊個。
+- 撳已快取嘅音訊項目直接入音訊播放器，可以單條刪或者一次過刪幾條。
+
+### 下載到本機資料夾
+
+- 「下載到本機」係影片播放頁選單獨立一項，就喺「音訊快取」下面——App 內快取同存落自己資料夾係兩件事。
+- 撳開先揀「下載影片」定「下載音訊」，再揀畫質 / 音質。
+- 資料夾用系統檔案管理員揀（設定 →「下載到本機位置」），隨時可以換或者清；未設定過就直接彈個選擇器出嚟。
+- 影片用單一封裝流（`fnval=1`），落盤就係任何播放器都開得嘅 MP4。
+- 音訊保持原本格式，同 App 內快取一樣。
+- 檔案用影片標題命名，撞名唔會覆蓋舊嘅下載。
 
 ## 兩個翻譯引擎
 

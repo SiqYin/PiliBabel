@@ -8,7 +8,7 @@
 </div>
 <!-- lang-switch:start -->
 <div align="center">
-    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <b>Bahasa Melayu</b> · <a href="README.id.md">Bahasa Indonesia</a></p>
+    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <b>Bahasa Melayu</b> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a></p>
 </div>
 <!-- lang-switch:end -->
 
@@ -63,6 +63,27 @@ Dan sejak 1.0, ia berfungsi **sebaik sahaja dipasang**: model terjemahan **terbi
 - **Main balik yang berfungsi di seluruh dunia.** PiliBabel memilih nod luar negara (global **Akamai**, `mirror*ov`, `cn-hk-eq-bcache`) yang sudah ditawarkan oleh `playurl` berpenghalaan geo bilibili, bukannya memaku anda pada nod tanah besar China (Alibaba Cloud / Shenzhen) — jadi pengguna di luar tanah besar China tidak lagi mengalami «bunyi berjalan, gambar beku». Anda masih boleh menetapkan CDN secara manual dalam tetapan.
 - **Halaman "Tema & Warna" gaya Material You.** Light / dark / ikut sistem dipilih daripada **tiga kad pratonton langsung** — setiap kad melukis miniatur antara muka sebenar dengan warna yang akan digunakan mod tersebut (kad "ikut sistem" dibelah secara diagonal, light di kiri atas, dark di kanan bawah). Di bawahnya: **warna dinamik** (diambil daripada wallpaper sistem bila peranti menyokongnya), **gelap kontras tinggi** (permukaan hitam sepenuhnya, lebih nyaman pada waktu malam) dan **pemain sentiasa gelap**. Bahagian warna mengekalkan palet FlexScheme penuh — **19 warna asas** berserta **"gaya palet"** berasingan yang menentukan bagaimana setiap warna bekas dihasilkan daripada warna asas, secara bebas daripada warna asas yang anda pilih.
 - **LXGW WenKai disertakan bersama aplikasi.** Fon **霞鹜文楷 (LXGW WenKai)** telah **dibungkus dan ditetapkan sebagai lalai** — fon Cina yang hangat dan sangat mudah dibaca, ada sebaik sahaja dipasang tanpa perlu mencarinya dalam senarai. Ia digunakan pada keseluruhan antara muka *dan* pada danmaku. Anda masih boleh bertukar kepada fon sistem, memilih mana-mana fon yang telah dipasang, atau mengimport `.ttf` / `.otf` / `.ttc` sendiri; fon yang anda pilih secara jelas sebelum ini akan dikekalkan selepas naik taraf. Berat dan saiz fon masih boleh laras seperti biasa.
+
+## Cache audio luar talian & muat turun ke folder setempat (khas PiliBabel)
+
+Dua keupayaan yang tiada pada PiliNara / PiliPlus — dan sebab utama menggunakan fork ini.
+
+### Cache audio (trek audio sahaja)
+
+- Dalam menu kanan atas halaman video, *Cache audio* terletak betul-betul di bawah *Cache video*; pada bar atas halaman dengar ada juga butang *Cache audio* di sebelah kiri butang susun / pemasa tidur / lagi.
+- Pilih tahap kualiti: Hi-Res tanpa hilang, Dolby Atmos, 192K, 132K atau 64K — senarai pratetap yang sama dengan kualiti video.
+- Fail ditulis dalam bekas asalnya (`m4a` / `mp3` / `flac` / `wav` / `aac` / `ogg`), tanpa transkod.
+- Halaman cache dibahagikan kepada *Video dicache* / *Audio dicache* dan mengingati modul terakhir yang dibuka.
+- Menekan item audio yang dicache terus membuka pemain audio; boleh dipadam satu demi satu atau sekaligus.
+
+### Muat turun ke folder setempat
+
+- *Muat turun ke folder setempat* ialah entri tersendiri dalam menu halaman video, tepat di bawah *Cache audio* — cache dalam aplikasi dan simpan ke folder anda ialah dua tindakan berbeza.
+- Bila dibuka, pilih dahulu *Muat turun video* atau *Muat turun audio*, kemudian pilih kualiti (video / audio).
+- Folder dipilih melalui pengurus fail sistem (Tetapan → *Lokasi muat turun setempat*); boleh ditukar atau dipadam bila-bila masa. Jika belum ditetapkan, pemilih folder terus terbuka.
+- Video diambil sebagai satu strim mux tunggal (`fnval=1`), jadi yang tersimpan ialah MP4 yang boleh dibuka oleh mana-mana pemain.
+- Audio kekal dalam format asalnya, sama seperti cache dalam aplikasi.
+- Fail dinamakan mengikut tajuk video dan tidak akan menimpa muat turun yang sedia ada.
 
 ## Dua enjin terjemahan
 

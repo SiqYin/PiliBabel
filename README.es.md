@@ -8,7 +8,7 @@
 </div>
 <!-- lang-switch:start -->
 <div align="center">
-    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <b>Español</b> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a></p>
+    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <b>Español</b> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a></p>
 </div>
 <!-- lang-switch:end -->
 
@@ -63,6 +63,27 @@ Y desde la 1.0 funciona **nada más instalar**: el modelo de traducción viene *
 - **Reproducción que funciona en todo el mundo.** PiliBabel selecciona el nodo extranjero (global **Akamai**, `mirror*ov`, `cn-hk-eq-bcache`) que el `playurl` con enrutado geográfico de bilibili ya ofrece, en lugar de clavarte a un nodo de China continental (Alibaba Cloud / Shenzhen), así que quienes están fuera de China continental ya no sufren los bloqueos de «el audio sigue, la imagen se congela». Aun así, puedes fijar un CDN manualmente en los ajustes.
 - **Una página «Tema y color» de estilo Material You.** Claro / oscuro / seguir al sistema se eligen en **tres tarjetas de vista previa en vivo** — cada una dibuja una miniatura de la interfaz real con los colores que ese modo aplicaría (la tarjeta «seguir al sistema» va partida en diagonal, claro arriba a la izquierda, oscuro abajo a la derecha). Debajo: **color dinámico** (tomado del fondo de pantalla del sistema cuando el dispositivo lo permite), **oscuro de alto contraste** (superficies negras, más agradable de noche) y **reproductor siempre oscuro**. La mitad de color mantiene la paleta FlexScheme completa: **19 colores base** más un **«estilo de paleta»** aparte que decide cómo se deriva cada color de contenedor a partir del color base, con independencia de qué color base elijas.
 - **LXGW WenKai viene incluido.** La tipografía **霞鹜文楷 (LXGW WenKai)** está **incluida y configurada como predeterminada** — una fuente china cálida y muy legible que tienes nada más instalar, en lugar de buscarla en un selector. Se aplica a toda la interfaz *y* a los danmaku. Puedes volver a la fuente del sistema, elegir cualquier fuente instalada o importar tu propio `.ttf` / `.otf` / `.ttc`; si antes habías elegido una fuente explícitamente, se conserva tras la actualización. El peso y el tamaño siguen siendo ajustables como antes.
+
+## Caché de audio sin conexión y descarga a una carpeta local (exclusivo de PiliBabel)
+
+Dos funciones que PiliNara / PiliPlus no tienen, y el motivo principal para usar este fork.
+
+### Caché de audio (solo la pista)
+
+- En el menú de arriba a la derecha de la página de vídeo, *Caché de audio* está justo debajo de *Caché de vídeo*; en la barra superior de la página de escucha hay además un botón *Caché de audio* a la izquierda de ordenar / temporizador / más.
+- Calidad a elegir: Hi-Res sin pérdida, Dolby Atmos, 192K, 132K o 64K, la misma lista de preajustes que la calidad de vídeo.
+- El archivo se escribe en su contenedor original (`m4a` / `mp3` / `flac` / `wav` / `aac` / `ogg`), sin transcodificar.
+- La página de caché se divide en *Vídeos en caché* / *Audio en caché* y recuerda el módulo que usaste la última vez.
+- Al tocar un audio en caché se abre directamente el reproductor de audio; se pueden borrar de uno en uno o en bloque.
+
+### Descarga a una carpeta local
+
+- *Descargar a una carpeta local* es una entrada propia del menú de la página de vídeo, justo debajo de *Caché de audio*: el caché dentro de la app y el guardado en tu carpeta son dos acciones distintas.
+- Primero pregunta *Descargar vídeo* o *Descargar audio*, y después la calidad (vídeo / audio).
+- La carpeta se elige con el gestor de archivos del sistema (Ajustes → *Carpeta de descarga*); se puede cambiar o borrar en cualquier momento. Si aún no está definida, el selector se abre al momento.
+- El vídeo se obtiene como un único flujo multiplexado (`fnval=1`), así que en el disco queda un MP4 que abre cualquier reproductor.
+- El audio mantiene su formato original, igual que el caché interno.
+- Los archivos se nombran con el título del vídeo y nunca sobrescriben una descarga existente.
 
 ## Los dos motores de traducción
 
