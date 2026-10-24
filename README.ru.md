@@ -238,7 +238,3 @@ PiliBabel распространяется под **GNU General Public License v
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — открытый китайский шрифт, поставляемый с приложением, под SIL Open Font License 1.1
 - и другие
 - Вдохновлено официальным «AI interface translation» bilibili.
-
-## Примечание
-
-Этот README написан ИИ и может содержать ошибки в формулировках или грамматике.

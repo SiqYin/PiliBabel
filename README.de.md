@@ -238,7 +238,3 @@ Die mitgelieferte Schrift **霞鹜文楷** steht separat unter der **SIL Open Fo
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — die quelloffene chinesische Schrift, die der App beiliegt, unter der SIL Open Font License 1.1
 - und weitere
 - Inspiriert von bilibilis offizieller „KI-Oberflächenübersetzung“.
-
-## Hinweis
-
-Diese README wurde von einer KI verfasst und kann sprachliche oder grammatikalische Fehler enthalten.

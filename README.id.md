@@ -238,7 +238,3 @@ Fon **霞鹜文楷** yang disertakan berlisensi secara terpisah di bawah **SIL O
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — font Tionghoa sumber terbuka yang disertakan dalam aplikasi, berlisensi SIL Open Font License 1.1
 - dan masih banyak lagi
 - Terinspirasi oleh «terjemahan antarmuka AI» resmi bilibili.
-
-## Catatan
-
-README ini ditulis oleh AI dan mungkin mengandung kesalahan kata atau tata bahasa.
