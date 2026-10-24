@@ -1674,6 +1674,14 @@ abstract final class Pref {
   static bool get enableVolumeBoost =>
       _setting.get(SettingBoxKey.enableVolumeBoost, defaultValue: false);
 
+  /// 缓存页上次停留的模块：0 = 缓存视频，1 = 缓存音频。
+  /// 用户切到哪个模块退出，下次进来还是哪个。
+  static int get downloadCacheModule =>
+      _setting.get(SettingBoxKey.downloadCacheModule, defaultValue: 0);
+
+  static Future<void> setDownloadCacheModule(int value) async =>
+      await _setting.put(SettingBoxKey.downloadCacheModule, value);
+
   static String? get downloadPath => _setting.get(SettingBoxKey.downloadPath);
 
   static String? get liveCdnUrl => _setting.get(SettingBoxKey.liveCdnUrl);

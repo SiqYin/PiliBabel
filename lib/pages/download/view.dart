@@ -29,6 +29,13 @@ import 'package:collection/collection.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart'
+import 'package:PiliPlus/grpc/bilibili/app/listener/v1.pbenum.dart' show PlaylistSource;
+import 'package:PiliPlus/models_new/download/audio_cache_entry.dart';
+import 'package:PiliPlus/pages/audio/view.dart';
+import 'package:PiliPlus/pages/download/widgets/audio_cache_item.dart';
+import 'package:PiliPlus/services/download/audio_cache_service.dart';
+import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
     hide SliverGridDelegateWithMaxCrossAxisExtent;
 
 enum _DownloadTab {
@@ -65,6 +72,24 @@ class _DownloadPageState extends State<DownloadPage>
   late final TabController _tabController;
   int _tabIndex = 0;
   bool _isOpeningContinue = false;
+
+  /// 缓存模块：0 = 缓存视频，1 = 缓存音频。默认取上次停留的模块。
+  late int _cacheModule = Pref.downloadCacheModule;
+  final _audioCacheService = Get.find<AudioCacheService>();
+  final _audioSelected = <String>{};
+  bool _audioSelectMode = false;
+
+  void _setCacheModule(int value) {
+    if (_cacheModule == value) {
+      return;
+    }
+    Pref.setDownloadCacheModule(value);
+    setState(() {
+      _cacheModule = value;
+      _audioSelectMode = false;
+      _audioSelected.clear();
+    });
+  }
 
   @override
   void initState() {
@@ -495,13 +520,39 @@ class _DownloadPageState extends State<DownloadPage>
                   ]
                 : null,
             child: AppBar(
-              title: Text(uiTx('离线缓存')),
+              title: Text(uiTx('缓存')),
               actions: [
-                if (isVideoTab) ...[
+                if (_cacheModule == 1) ...[
+                  if (_audioSelectMode)
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                      onPressed: _audioSelected.isEmpty
+                          ? null
+                          : () => _confirmDeleteAudio(
+                              _audioCacheService.audioList
+                                  .where(
+                                    (e) => _audioSelected.contains(e.id),
+                                  )
+                                  .toList(),
+                            ),
+                      child: Text(uiTx('删除')),
+                    ),
+                  IconButton(
+                    tooltip: uiTx('多选'),
+                    onPressed: () => setState(() {
+                      _audioSelectMode = !_audioSelectMode;
+                      _audioSelected.clear();
+                    }),
+                    icon: const Icon(Icons.edit_note),
+                  ),
+                ] else if (isVideoTab) ...[
                   IconButton(
                     tooltip: uiTx('搜索'),
                     onPressed: () async {
                       await _downloadService.waitForInitialization;
+      await _audioCacheService.waitForInitialization;
                       if (!mounted) {
                         return;
                       }
@@ -549,24 +600,52 @@ class _DownloadPageState extends State<DownloadPage>
                 ],
                 const SizedBox(width: 6),
               ],
-              bottom: TabBar(
-                controller: _tabController,
-                tabs: [
-                  Tab(
-                    child: Obx(
-                      () => Text(uiTx('全部视频(${_controller.allVideos.length})')),
+              bottom: PreferredSize(
+                preferredSize: Size.fromHeight(
+                  _cacheModule == 1 ? 46 : 46 + kTextTabBarHeight,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(
+                      height: 46,
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 12),
+                          _moduleBtn(0, '缓存视频'),
+                          const SizedBox(width: 8),
+                          _moduleBtn(1, '缓存音频'),
+                        ],
+                      ),
                     ),
-                  ),
-                  Tab(
-                    child: Obx(
-                      () => Text(uiTx('文件夹(${_controller.folders.length})')),
-                    ),
-                  ),
-                ],
+                    if (_cacheModule == 0)
+                      TabBar(
+                        controller: _tabController,
+                        tabs: [
+                          Tab(
+                            child: Obx(
+                              () => Text(
+                                uiTx(
+                                  '全部视频(${_controller.allVideos.length})',
+                                ),
+                              ),
+                            ),
+                          ),
+                          Tab(
+                            child: Obx(
+                              () => Text(
+                                uiTx('文件夹(${_controller.folders.length})'),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                  ],
+                ),
               ),
             ),
           ),
-          body: Stack(
+          body: _cacheModule == 1 ? _buildAudioTab() : Stack(
             clipBehavior: Clip.none,
             children: [
               NotificationListener<UserScrollNotification>(
@@ -596,6 +675,162 @@ class _DownloadPageState extends State<DownloadPage>
         ),
       );
     });
+  }
+
+  Widget _moduleBtn(int value, String label) {
+    final selected = _cacheModule == value;
+    final colorScheme = Theme.of(context).colorScheme;
+    return TextButton(
+      onPressed: selected ? null : () => _setCacheModule(value),
+      style: TextButton.styleFrom(
+        visualDensity: VisualDensity.compact,
+        backgroundColor: selected ? colorScheme.primaryContainer : null,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+      ),
+      child: Text(
+        uiTx(label),
+        style: TextStyle(
+          fontSize: 13,
+          color: selected
+              ? colorScheme.onPrimaryContainer
+              : colorScheme.outline,
+          fontWeight: selected ? FontWeight.w600 : null,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAudioTab() {
+    final padding = MediaQuery.viewPaddingOf(context);
+    return Obx(() {
+      final tasks = _audioCacheService.taskList;
+      final list = _audioCacheService.audioList;
+      if (tasks.isEmpty && list.isEmpty) {
+        return Center(
+          child: Text(
+            uiTx('还没有缓存音频'),
+            style: TextStyle(color: Theme.of(context).colorScheme.outline),
+          ),
+        );
+      }
+      return ListView.builder(
+        padding: EdgeInsets.only(
+          left: padding.left,
+          right: padding.right,
+          bottom: padding.bottom + 24,
+        ),
+        itemCount: tasks.length + list.length,
+        itemBuilder: (context, index) {
+          if (index < tasks.length) {
+            return _buildAudioTask(tasks[index]);
+          }
+          final entry = list[index - tasks.length];
+          return AudioCacheItem(
+            entry: entry,
+            selectMode: _audioSelectMode,
+            selected: _audioSelected.contains(entry.id),
+            onTap: () {
+              if (_audioSelectMode) {
+                setState(() {
+                  if (!_audioSelected.remove(entry.id)) {
+                    _audioSelected.add(entry.id);
+                  }
+                });
+                return;
+              }
+              _playAudio(entry);
+            },
+            onMore: () => showAudioCacheItemMenu(
+              context: context,
+              onDelete: () => _confirmDeleteAudio([entry]),
+              onCopyPath: () => Utils.copyText(entry.filePath),
+            ),
+          );
+        },
+      );
+    });
+  }
+
+  Widget _buildAudioTask(AudioCacheTask task) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Obx(() {
+      final failed = task.status.value == AudioCacheStatus.failed;
+      final progress = task.progress;
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  const SizedBox(height: 6),
+                  LinearProgressIndicator(
+                    value: failed ? null : progress,
+                    minHeight: 3,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    failed
+                        ? uiTx('缓存失败')
+                        : '${(progress * 100).toStringAsFixed(0)}%',
+                    style: TextStyle(fontSize: 12, color: colorScheme.outline),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              visualDensity: VisualDensity.compact,
+              onPressed: () => _audioCacheService.cancelTask(task),
+              icon: Icon(Icons.close, size: 18, color: colorScheme.outline),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  Future<void> _playAudio(AudioCacheEntry entry) async {
+    await AudioPage.toAudioPage(
+      oid: entry.avid,
+      subId: [entry.cid],
+      itemType: 1,
+      from: PlaylistSource.UP_ARCHIVE,
+      audioUrl: Uri.file(entry.filePath).toString(),
+      audioQa: entry.quality,
+    );
+  }
+
+  Future<void> _confirmDeleteAudio(List<AudioCacheEntry> entries) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(uiTx('删除缓存音频？')),
+        content: Text(uiTx('本地音频文件会一起删掉，无法恢复。')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text(uiTx('取消')),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(uiTx('删除')),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await _audioCacheService.delete(entries, deleteFile: true);
+      if (mounted) {
+        setState(() => _audioSelected.clear());
+      }
+    }
   }
 
   Widget _buildAllVideosTab() {
