@@ -177,7 +177,9 @@ class AiSettingController extends GetxController {
     uiTranslateProvider.value = value;
     Pref.uiTranslateProvider = value;
     if (Get.isRegistered<UiTranslateService>()) {
-      UiTranslateService.to.resetForNewLanguage();
+      // 换引擎必须整表清空：译文缓存按语言分桶后 resetForNewLanguage 不再清译文，
+      // 而换引擎后继续命中旧译文正是「用户以为没生效」的原因（见上）。
+      UiTranslateService.to.clearCache();
       UiTranslateService.to.prewarm();
     }
   }
