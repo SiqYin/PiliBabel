@@ -64,6 +64,26 @@ And since 1.0 it does so **out of the box**: the translation model is **built in
 - **A "Theme & Colour" page, Material You style.** Light / dark / follow-system are chosen from **three live preview cards** — each one renders a miniature of the real interface in the exact colours that mode would apply (the "follow system" card is split diagonally, light over dark). Below them: **dynamic colour** (taken from the system wallpaper where the device supports it), **high-contrast dark** (true-black surfaces, easier on the eyes at night) and **always-dark player**. The colour half keeps the full FlexScheme palette — **19 seed colours** plus a separate **"palette style"** that decides how every container colour is derived from the seed, independently of which seed you pick.
 - **LXGW WenKai ships with the app.** The **LXGW WenKai (霞鹜文楷)** typeface is **bundled and set as the default** — a warm, highly legible Chinese font you have the moment you install, instead of hunting for one in a picker. It applies to the whole interface *and* to danmaku. You can still switch back to the system font, pick any installed system font, or import your own `.ttf` / `.otf` / `.ttc`; a font you had explicitly chosen before is kept across the upgrade. Weight and size stay adjustable as before.
 
+## Offline audio caching & download-to-local (unique to PiliBabel)
+
+Two capabilities upstream PiliNara / PiliPlus don't have — both aimed at actually owning your media offline.
+
+### Cache audio (audio-only offline cache)
+
+- **The track, not the video.** A *Cache audio* entry sits right below *Cache video* in the video page menu, and in the *More* menu of the listen-video page — so a 40-minute video costs a few MB instead of a few hundred.
+- **Pick the quality tier.** Hi-Res lossless, Dolby Atmos, 192K, 132K or 64K — the same preset list the video quality picker uses.
+- **Original container, no transcoding.** The file is written exactly as the CDN serves it: `m4a`, `mp3`, `flac`, `wav`, `aac` or `ogg`.
+- **Its own module.** The cache page is split into *Cached videos* / *Cached audio* and remembers which module you were on last time.
+- Tapping a cached audio item opens the audio player straight away; items delete one by one or in bulk.
+
+### Download to local folder
+
+- **Cache menu, two branches.** Hitting *Cache video* (or *Cache audio*) now asks: keep it inside the app, or write it to a folder you own?
+- **Your folder, your rules.** Pick any folder through the system file manager (Settings → *Download to local folder*), and change or clear it whenever you want. If nothing is configured yet, the app takes you straight to that setting.
+- **Directly playable files.** Video is fetched as a single muxed stream (`fnval=1`), so what lands on disk is a plain MP4 you can hand to any player — no sidecar streams to stitch together.
+- **Audio keeps its original format** — no transcoding, exactly like the in-app cache.
+- Files are named after the video title and never overwrite an existing download.
+
 ## The two translation engines
 
 | | Built-in (default) | Own API |

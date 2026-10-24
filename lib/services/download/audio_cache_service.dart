@@ -149,6 +149,9 @@ class AudioCacheService extends GetxService {
 
   /// 按流类型给扩展名：B 站 DASH 音频是 fMP4，落盘就是 m4a；
   /// 无损档给的是 FLAC，就按 flac 存。用户拿到的就是能直接播的原始格式。
+  /// 供「下载到本地」复用：按流类型取容器扩展名，保持原格式不转码。
+  static String extFromMime(String? mime) => _extFromMime(mime);
+
   static String _extFromMime(String? mime) {
     switch (mime) {
       case 'audio/mp4':
