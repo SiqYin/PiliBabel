@@ -53,6 +53,37 @@ enum _DownloadSortAction {
   reset,
 }
 
+/// 缓存音频任务的进度详情：百分比 + 速度 + 已加载/总容量，如「45% 358K/s 3.4M/12.6M」。
+/// 只含阿拉伯数字与 K/M/G/s 单位字母，各语言用户都能看懂，不做翻译。
+String _audioTaskDetailText(AudioCacheTask task, bool downloading) {
+  final buf = StringBuffer(
+    '${(task.progress * 100).toStringAsFixed(0)}%',
+  );
+  if (downloading) {
+    buf.write(' ${_formatCacheBytes(task.speed.value)}/s');
+  }
+  buf.write(' ${_formatCacheBytes(task.received.value)}');
+  final total = task.total.value;
+  if (total > 0) {
+    buf.write('/${_formatCacheBytes(total)}');
+  }
+  return buf.toString();
+}
+
+String _formatCacheBytes(int bytes) {
+  if (bytes <= 0) {
+    return '0K';
+  }
+  const units = ['K', 'M', 'G'];
+  var size = bytes / 1024;
+  var i = 0;
+  while (size >= 1024 && i < units.length - 1) {
+    size /= 1024;
+    i++;
+  }
+  return '${size.toStringAsFixed(size >= 100 || i == 0 ? 0 : 1)}${units[i]}';
+}
+
 class DownloadPage extends StatefulWidget {
   const DownloadPage({super.key});
 
@@ -768,6 +799,7 @@ class _DownloadPageState extends State<DownloadPage>
     final colorScheme = Theme.of(context).colorScheme;
     return Obx(() {
       final failed = task.status.value == AudioCacheStatus.failed;
+      final downloading = task.status.value == AudioCacheStatus.downloading;
       final progress = task.progress;
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
@@ -792,7 +824,7 @@ class _DownloadPageState extends State<DownloadPage>
                   Text(
                     failed
                         ? uiTx('缓存失败')
-                        : '${(progress * 100).toStringAsFixed(0)}%',
+                        : _audioTaskDetailText(task, downloading),
                     style: TextStyle(fontSize: 12, color: colorScheme.outline),
                   ),
                 ],

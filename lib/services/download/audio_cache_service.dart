@@ -40,6 +40,13 @@ class AudioCacheTask {
   final total = 0.obs;
   final error = RxnString();
 
+  /// 估算的下载速度（字节/秒），按约 1 秒窗口滚动更新。
+  /// 供缓存页进度文案展示「358K/s」这类纯数字加单位字母的文本。
+  final speed = 0.obs;
+
+  int _speedMarkBytes = 0;
+  int _speedMarkMs = 0;
+
   DownloadManager? manager;
 
   String get id => '${bvid}_$cid';
@@ -47,6 +54,27 @@ class AudioCacheTask {
   double get progress {
     final t = total.value;
     return t <= 0 ? 0 : (received.value / t).clamp(0.0, 1.0);
+  }
+
+  /// DownloadManager 约每秒回调一次进度，这里顺带估算速度。
+  /// 换线路丢弃断点重下时 received 会回退：速度归零并重置窗口。
+  void updateProgress(int received, int total) {
+    this.received.value = received;
+    this.total.value = total;
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    if (_speedMarkMs == 0) {
+      _speedMarkBytes = received;
+      _speedMarkMs = nowMs;
+      return;
+    }
+    final elapsed = nowMs - _speedMarkMs;
+    if (elapsed < 1000) {
+      return;
+    }
+    final delta = received - _speedMarkBytes;
+    speed.value = delta > 0 ? (delta * 1000 / elapsed).round() : 0;
+    _speedMarkBytes = received;
+    _speedMarkMs = nowMs;
   }
 
   void dispose() {
@@ -276,13 +304,12 @@ class AudioCacheService extends GetxService {
       final filePath = path.join(dir.path, '${_sanitize(title)}.$ext');
 
       task.status.value = AudioCacheStatus.downloading;
+      // 与「下载到本地」同一套开始提示；文案走 AI 翻译
+      SmartDialog.showToast(uiTxP('开始缓存音频: {0}', [title]));
       final manager = DownloadManager(
         urls: urls,
         path: filePath,
-        onReceiveProgress: (received, total) {
-          task.received.value = received;
-          task.total.value = total;
-        },
+        onReceiveProgress: task.updateProgress,
         onDone: ([Object? error]) async {
           if (error != null) {
             task.status.value = AudioCacheStatus.failed;

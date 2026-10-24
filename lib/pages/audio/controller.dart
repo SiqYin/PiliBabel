@@ -114,6 +114,11 @@ class AudioController extends GetxController
   /// 当前选中的音质。
   final Rx<AudioQuality> currentAudioQa = Pref.defaultAudioQuality.obs;
 
+  /// 当前播放的媒体是否为本地已缓存文件（从缓存音频列表进入时是 file:// 直链）。
+  /// 为 true 时页面不再提供「缓存音频」入口，避免把同一音频再缓存一遍。
+  /// 切到播放列表里的其它网络曲目后会自动恢复为 false。
+  final RxBool isFileSource = false.obs;
+
   late bool isDragging = false;
   final RxInt position = RxInt(0);
   final RxInt duration = RxInt(0);
@@ -519,6 +524,8 @@ class AudioController extends GetxController
     bool isTruncationRetry = false,
   }) async {
     _lastAudioUrl = url;
+    // file:// 直链 = 播的是缓存音频里的本地文件；此时不再提供缓存入口
+    isFileSource.value = url.startsWith('file:');
     if (!isTruncationRetry) _truncationRetries = 0;
     await _initPlayerIfNeeded();
     final extras = audioFilterExtras(volume);
