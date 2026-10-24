@@ -93,6 +93,9 @@ import 'package:hive_ce/hive.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:media_kit/media_kit.dart' hide Subtitle;
 import 'package:path/path.dart' as path;
+import 'package:PiliPlus/pages/download/utils/audio_cache_quality.dart';
+import 'package:PiliPlus/services/download/audio_cache_service.dart';
+import 'package:PiliPlus/utils/id_utils.dart';
 
 class VideoDetailController extends GetxController
     with GetTickerProviderStateMixin, BlockMixin {
@@ -2283,6 +2286,38 @@ class VideoDetailController extends GetxController
       // audioUrl 已按 currentAudioQa 选好轨道，音质一并传给听视频页，
       // 否则那边显示的音质会和实际播放的不一致。
       audioQa: currentAudioQa,
+    );
+  }
+
+  /// 缓存音频：按用户选的音质档位，把音轨单独存成原格式音频文件。
+  Future<void> onDownloadAudio(BuildContext context) async {
+    VideoDetailData? videoDetail;
+    try {
+      videoDetail = Get.find<UgcIntroController>(
+        tag: heroTag,
+      ).videoDetail.value;
+    } catch (e, s) {
+      if (kDebugMode) {
+        debugPrint('download audio: $e\n\n$s');
+      }
+    }
+    final title = videoDetail?.title;
+    if (videoDetail == null || title == null || title.isEmpty) {
+      SmartDialog.showToast(uiTx('视频信息还没加载好，稍后再试'));
+      return;
+    }
+    final quality = await showAudioCacheQualityPicker(context);
+    if (quality == null) {
+      return;
+    }
+    await Get.find<AudioCacheService>().download(
+      avid: videoDetail.aid ?? aid,
+      bvid: videoDetail.bvid ?? IdUtils.av2bv(aid),
+      cid: videoDetail.cid ?? cid.value,
+      title: title,
+      cover: cover.value,
+      durationMs: (videoDetail.duration ?? 0) * 1000,
+      quality: quality,
     );
   }
 

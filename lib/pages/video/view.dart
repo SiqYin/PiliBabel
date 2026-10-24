@@ -1870,6 +1870,12 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
           onTap: () => videoDetailController.onDownload(this.context),
           child: Text(uiTx('缓存视频')),
         ),
+      if (!videoDetailController.isFileSource &&
+          videoDetailController.isUgc)
+        PopupMenuItem(
+          onTap: () => videoDetailController.onDownloadAudio(this.context),
+          child: Text(uiTx('缓存音频')),
+        ),
       if (videoDetailController.cover.value.isNotEmpty)
         PopupMenuItem(
           onTap: () =>

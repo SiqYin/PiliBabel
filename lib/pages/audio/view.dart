@@ -708,6 +708,15 @@ class _AudioPageState extends State<AudioPage> {
               ),
               ListTile(
                 dense: true,
+                leading: const Icon(Icons.audiotrack, size: 20),
+                title: Text(uiTx('缓存音频'), style: TextStyle(fontSize: 14)),
+                onTap: () {
+                  Get.back();
+                  _controller.onDownloadAudio(context);
+                },
+              ),
+              ListTile(
+                dense: true,
                 leading: const Icon(Icons.warning_amber_rounded, size: 20),
                 title: Text(uiTx('举报'), style: TextStyle(fontSize: 14)),
                 onTap: () {

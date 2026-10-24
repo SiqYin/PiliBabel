@@ -51,6 +51,7 @@ import 'package:path/path.dart' as path;
 import 'package:path_provider/path_provider.dart';
 import 'package:screen_brightness_platform_interface/screen_brightness_platform_interface.dart';
 import 'package:window_manager/window_manager.dart' hide calcWindowPosition;
+import 'package:PiliPlus/services/download/audio_cache_service.dart';
 
 WebViewEnvironment? webViewEnvironment;
 
@@ -138,6 +139,7 @@ void main() async {
   Get
     ..lazyPut(AccountService.new)
     ..lazyPut(DownloadService.new)
+        ..lazyPut(AudioCacheService.new)
     ..put(DownloadCollectionService())
     ..put(UiTranslateService());
   HttpOverrides.global = _CustomHttpOverrides();
