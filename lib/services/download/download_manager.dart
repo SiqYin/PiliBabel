@@ -38,6 +38,13 @@ class DownloadManager {
   final void Function(int, int)? onReceiveProgress;
   final void Function([Object? error]) onDone;
 
+  /// 覆盖默认的 Referer / UA。留空时沿用播放器那一套默认值。
+  ///
+  /// 「下载到本地」取 durl 整段 MP4 时对 UA/Referer 有校验，需要用 b 站
+  /// 下载器的 UA，并且 Referer 带尾斜杠，否则会被 CDN 判 403（落盘 0B）。
+  final String? referer;
+  final String? userAgent;
+
   /// 停摆时是否应"让位"给队列中的其它下载项（有排队项则让位、否则换线）
   final bool Function()? shouldDefer;
 
@@ -106,6 +113,8 @@ class DownloadManager {
     required this.path,
     required this.onReceiveProgress,
     required this.onDone,
+    this.referer,
+    this.userAgent,
     this.shouldDefer,
   }) : urls = urls.isEmpty ? const [''] : urls {
     task = _start();
@@ -254,8 +263,8 @@ class DownloadManager {
           options: Options(
             headers: {
               'range': 'bytes=$offset-',
-              'referer': HttpString.baseUrl,
-              'user-agent': BrowserUa.pc,
+              'referer': referer ?? HttpString.baseUrl,
+              'user-agent': userAgent ?? BrowserUa.pc,
             },
             responseType: ResponseType.stream,
             receiveTimeout: const Duration(seconds: 20),

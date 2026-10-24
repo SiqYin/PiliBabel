@@ -2326,12 +2326,16 @@ class VideoDetailController extends GetxController
       if (quality == null) {
         return;
       }
+      // UP 主与封面随档案一起落盘，「下载情况」里才看得见是谁发的、封面是什么。
+      final detail = _videoDetailOrNull();
       await service.downloadVideo(
         avid: aid,
         bvid: IdUtils.av2bv(aid),
         cid: seasonCid ?? cid.value,
         title: title,
         qn: quality.code,
+        ownerName: detail?.owner?.name,
+        cover: detail?.pic,
       );
     } else {
       if (!isUgc) {
@@ -2342,12 +2346,15 @@ class VideoDetailController extends GetxController
       if (quality == null) {
         return;
       }
+      final detail = _videoDetailOrNull();
       await service.downloadAudio(
         avid: aid,
         bvid: IdUtils.av2bv(aid),
         cid: cid.value,
         title: title,
         quality: quality,
+        ownerName: detail?.owner?.name,
+        cover: detail?.pic,
       );
     }
   }

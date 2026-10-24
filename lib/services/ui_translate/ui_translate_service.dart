@@ -98,8 +98,26 @@ class UiTranslateService extends GetxService {
   /// （简体原文 → 繁体/粤语/吴语/闽南语 是实打实的转换）。
   bool get isSourceLanguage => currentLanguage.code == 'zh-CN';
 
-  /// 持久化缓存的内存副本。
-  final Map<String, String> _cache = {};
+  /// 译文缓存：**目标语言 -> (原文 -> 译文)**。
+  ///
+  /// 键里必须带目标语言。以前是「原文 -> 译文」一张平表：切换语言时虽然会整表
+  /// 清空，但**切换那一刻仍在飞的老语言请求**回来后会照样写进这张表，于是那几条
+  /// （常见是卡片上的 UP 名、标题）永远停在旧语言、还随缓存落盘，用户除了手动
+  /// 「清除缓存」没有别的办法 —— 这就是「切到 B 语言后个别文本还留在 A 语言」的
+  /// 成因。按语言分桶后，老语言的译文只会落进它自己的桶：既不会串进新语言，
+  /// 切回原语言时还能直接复用。
+  final Map<String, Map<String, String>> _cacheByLang = {};
+
+  /// 语言码与原文之间的分隔符（原文里不会出现这个控制字符）。
+  static const String _langSep = '\u0001';
+
+  static String _bucketKey(String lang, String src) => '$lang$_langSep$src';
+
+  /// 当前目标语言的缓存桶。
+  Map<String, String> get _cache => _cacheByLang.putIfAbsent(
+        currentLanguage.code,
+        () => <String, String>{},
+      );
 
   /// 反向缓存：「界面语言文本 -> 简体中文」。
   ///
@@ -237,12 +255,17 @@ class UiTranslateService extends GetxService {
 
   Future<String?> _translateToSource(String query) async {
     queryTranslateBusy.value++;
+    // 反向缓存的方向是「界面语言文本 -> 简体中文」，语言一换就不成立：
+    // 请求回来时语言已经变了的话，这条结果不能再写回。
+    final reqLang = currentLanguage.code;
     try {
       final out = await _translateChunkToSource([query]);
       final result = out.isEmpty ? '' : out.first.trim();
       if (result.isEmpty) return null;
-      _reverseCache[query] = result;
-      _schedulePersistQuery();
+      if (reqLang == currentLanguage.code) {
+        _reverseCache[query] = result;
+        _schedulePersistQuery();
+      }
       return result;
     } catch (e, st) {
       lastError.value = e.toString();
@@ -324,12 +347,15 @@ class UiTranslateService extends GetxService {
     // 6：日语下界面标签改固定短译（已关注→フォロー中、关注→フォローする）。
     // 旧译文里已经缓存了「フォローしました」这类长译法，而缓存以原文为 key、
     // 光改提示词不会自愈，必须清一次让它重译。
-    const promptRevision = 6;
+    // 7：缓存从「原文 -> 译文」平表改成「语言 + 原文 -> 译文」。旧表没有语言维度，
+    // 里面混着历史切换语言时被老语言请求写进去的坏条目、无法判断归属，只能整体
+    // 丢弃重译一次（一次性代价，换来以后切换语言不再串语言）。
+    const promptRevision = 7;
     if (Pref.uiTranslatePromptRevision < promptRevision) {
       Pref.uiTranslateCache = {};
       Pref.uiTranslatePromptRevision = promptRevision;
     }
-    _cache.addAll(Pref.uiTranslateCache);
+    _loadCache(Pref.uiTranslateCache);
     _reverseCache.addAll(Pref.uiTranslateQueryCache);
   }
 
@@ -411,12 +437,18 @@ class UiTranslateService extends GetxService {
     final now = _tx(src);
     if (now != src) return now;
     if (!enabled || !_hasTranslatableText(src)) return src;
+    // 与 _flush 同理：结果归属**发起时**的语言，不归属当前语言。
+    final reqLang = currentLanguage.code;
     try {
       final res = await _translateChunk([src]);
       final value = res.isNotEmpty ? res.first.trim() : '';
       if (value.isNotEmpty && value != src) {
-        _cache[src] = value;
-        _bumpRevisionSoon();
+        _cacheByLang.putIfAbsent(
+          reqLang,
+          () => <String, String>{},
+        )[src] = value;
+        if (reqLang == currentLanguage.code) _bumpRevisionSoon();
+        _schedulePersist();
         return value;
       }
     } catch (_) {}
@@ -448,6 +480,10 @@ class UiTranslateService extends GetxService {
       return;
     }
     _busy = true;
+    // 这一轮请求用的是**发起时**的目标语言：译文只能写进这个语言的桶。
+    // 否则用户在请求返回前切换了语言，老语言译文会以新语言的名义落进缓存，
+    // 表现为「切到 B 后个别文本还留在 A」。
+    final reqLang = currentLanguage.code;
     try {
       final batch = _pending.toList(growable: false);
       _pending.clear();
@@ -480,15 +516,21 @@ class UiTranslateService extends GetxService {
             return <String>[];
           });
           var changed = false;
+          final bucket = _cacheByLang.putIfAbsent(
+            reqLang,
+            () => <String, String>{},
+          );
           for (var j = 0; j < chunk.length && j < translated.length; j++) {
             final value = translated[j].trim();
             if (value.isNotEmpty && value != chunk[j]) {
-              _cache[chunk[j]] = value;
+              bucket[chunk[j]] = value;
               changed = true;
             }
           }
           if (changed) {
-            _bumpRevisionSoon();
+            // 语言已经换掉时不再刷新界面：这批译文属于老语言，落进它自己的桶
+            // 就够了（切回去还能复用），刷新只会白重建一轮。
+            if (reqLang == currentLanguage.code) _bumpRevisionSoon();
             _schedulePersist();
             lastError.value = null;
           }
@@ -1206,14 +1248,35 @@ class UiTranslateService extends GetxService {
         .toList(growable: false);
   }
 
-  void _persist() => Pref.uiTranslateCache = _cache;
+  /// 从持久化表还原分语言缓存；没有语言前缀的旧条目一律丢弃（见 promptRevision 7）。
+  void _loadCache(Map<String, String> raw) {
+    for (final entry in raw.entries) {
+      final i = entry.key.indexOf(_langSep);
+      if (i <= 0) continue;
+      _cacheByLang.putIfAbsent(
+        entry.key.substring(0, i),
+        () => <String, String>{},
+      )[entry.key.substring(i + 1)] = entry.value;
+    }
+  }
+
+  void _persist() {
+    final out = <String, String>{};
+    for (final bucket in _cacheByLang.entries) {
+      for (final item in bucket.value.entries) {
+        out[_bucketKey(bucket.key, item.key)] = item.value;
+      }
+    }
+    Pref.uiTranslateCache = out;
+  }
 
   void _persistQuery() => Pref.uiTranslateQueryCache = _reverseCache;
 
   /// 清空翻译缓存（下次遇到同一字符串会重新翻译）。
   void clearCache() {
-    _cache.clear();
+    _cacheByLang.clear();
     _reverseCache.clear();
+    _queryInFlight.clear();
     _pending.clear();
     lastError.value = null;
     Pref.uiTranslateCache = {};
@@ -1221,8 +1284,22 @@ class UiTranslateService extends GetxService {
     revision.value++;
   }
 
-  /// 目标语言切换后调用：清缓存以按新语言重新翻译。
-  void resetForNewLanguage() => clearCache();
+  /// 目标语言切换后调用。
+  ///
+  /// **不再整表清空**：译文缓存已按语言分桶，旧语言的译文留在自己的桶里，
+  /// 切回去还能直接复用。这里只做三件事：
+  /// 1. 丢掉「反向缓存」与在飞的检索词翻译 —— 它们的方向是「界面语言文本 ->
+  ///    简体中文」，语言一换就不成立；
+  /// 2. 清空待翻队列（这些字符串会在重建时按新语言重新入队）；
+  /// 3. 自增 revision 触发全量重建，让新语言立刻生效。
+  void resetForNewLanguage() {
+    _reverseCache.clear();
+    _queryInFlight.clear();
+    _pending.clear();
+    lastError.value = null;
+    Pref.uiTranslateQueryCache = {};
+    revision.value++;
+  }
 
   /// 已缓存的字符串条数。
   int get cachedCount => _cache.length;

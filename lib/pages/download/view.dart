@@ -37,6 +37,7 @@ import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:material_ui/material_ui.dart'
     hide SliverGridDelegateWithMaxCrossAxisExtent;
+import 'package:PiliPlus/pages/download/local_download/view.dart';
 
 enum _DownloadTab {
   videos('全部视频'),
@@ -615,6 +616,18 @@ class _DownloadPageState extends State<DownloadPage>
                           _moduleBtn(0, '缓存视频'),
                           const SizedBox(width: 8),
                           _moduleBtn(1, '缓存音频'),
+                          const SizedBox(width: 8),
+                          TextButton(
+                            onPressed: () =>
+                                Get.to(const LocalDownloadPage()),
+                            style: TextButton.styleFrom(
+                              visualDensity: VisualDensity.compact,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                              ),
+                            ),
+                            child: Text(uiTx('下载情况')),
+                          ),
                         ],
                       ),
                     ),
