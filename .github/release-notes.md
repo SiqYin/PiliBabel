@@ -1,29 +1,23 @@
-### PiliBabel v2.6.3
+### PiliBabel v2.6.4
 
-**Download-to-local actually works, and you can see what happened to every download**
+**Audio cache polish: no duplicate caching, a progress line that tells the whole story, and a start toast**
 
-**Fixed: download-to-local failed, and the exported MP4 was 0 bytes**
+**Fixed: the cache-audio button appeared while playing an already cached audio**
 
-- A `fnval=1` single muxed MP4 is signed *for its own host*. The app rewrote that host to another CDN, which the server rejects with 403 — so every candidate failed and the file that had already been created stayed at 0 bytes.
-- Host rewriting is gone: the URL the server returned is tried first, with its backup URLs as fallbacks, exactly like the mature `DownloadHttp` path does for `durl`.
-- The request now uses bilibili's own downloader User-Agent and a Referer with the trailing slash, matching the player's own headers.
-- If every line fails, the empty file is removed instead of being left behind as a fake 0-byte video.
+- Opening a cached audio from *Mine → Offline cache → Cached audio* plays the local file, but the top-right cache button was still there — tapping it cached the same audio all over again.
+- While the player is on a local cached file, the cache entry is now hidden from both the top bar and the *More* menu. It comes back automatically if you switch to another, not-yet-cached track in the playlist. (Playing cached videos was already guarded this way.)
 
-**New: Download status page**
+**Improved: the cache-audio progress row now shows speed and size**
 
-- *Mine → Offline cache* now has a third button, *Download status*, next to *Cache video* / *Cache audio*.
-- It splits into *Downloaded video* / *Downloaded audio*, and for every item shows the cover, the title, the UP name, how much has been downloaded out of the total size, and a progress bar while it is still downloading.
-- If the local file is gone, the row says so: *Local file deleted*.
-- The three-dot menu offers *Delete* (removes the local file; the row stays and becomes *Local file deleted*) and *Clean up record* (only enabled once the file is missing — that is what finally removes the row). Deleting asks for confirmation first.
+- It used to show only a percentage. It now reads like `45% 358K/s 3.4M/12.6M` — percentage, current speed, and loaded / total size — using nothing but digits and the unit letters K / M / G, so every language can read it without translation.
 
-**Fixed: translations left over from the previous language**
+**New: a start toast for cache audio**
 
-- The translation cache was a flat *source → translation* map with no language dimension. Switching language cleared it, but requests still in flight when you switched came back afterwards and were written into the cache as if they belonged to the new language — a handful of strings (often UP names or titles) stayed in the old language forever and survived restarts, leaving manual cache-clearing as the only cure.
-- The cache is now bucketed per target language, and every in-flight request writes into the language it was issued for. Switching language therefore keeps the previous language's translations available (switching back is instant) without ever mixing them into the new one.
+- *Download to local* already announced itself with a small toast when the download started; caching audio stayed silent. Caching audio now shows `Caching audio: <title>`, AI-translated like every other string.
 
-**New: Russian README**
+**Docs**
 
-- `README.ru.md`, with the same screenshots as the English one; every language version now links to it.
+- The AI-written note at the bottom of the README was removed from every language version (the Taiwanese one keeps it).
 
 Everything inherited from PiliNara / PiliPlus is unchanged.
 
