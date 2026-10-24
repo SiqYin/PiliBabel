@@ -8,7 +8,7 @@
 </div>
 <!-- lang-switch:start -->
 <div align="center">
-    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <b>日本語</b> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a> · <a href="README.ru.md">Русский</a></p>
+    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <b>日本語</b> · <a href="README.nan.md">台語</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a> · <a href="README.ru.md">Русский</a> · <a href="README.uk.md">Українська</a></p>
 </div>
 <!-- lang-switch:end -->
 
@@ -239,3 +239,5 @@ PiliBabel は **GNU General Public License v3.0（GPL-3.0）** でライセン�
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai)（霞鹜文楷）—— 同梱しているオープンソースの中文字体。SIL Open Font License 1.1
 - そのほか多数
 - bilibili 公式の「AI インターフェース翻訳」に着想を得ています。
+
+> **注記。** この README は AI が作成したもので、用語や文法に誤りがある可能性があります。

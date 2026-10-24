@@ -8,7 +8,7 @@
 </div>
 <!-- lang-switch:start -->
 <div align="center">
-    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a> · <b>Deutsch</b> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a> · <a href="README.ru.md">Русский</a></p>
+    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <a href="README.nan.md">台語</a> · <a href="README.fr.md">Français</a> · <b>Deutsch</b> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a> · <a href="README.ru.md">Русский</a> · <a href="README.uk.md">Українська</a></p>
 </div>
 <!-- lang-switch:end -->
 
@@ -239,3 +239,5 @@ Die mitgelieferte Schrift **霞鹜文楷** steht separat unter der **SIL Open Fo
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — die quelloffene chinesische Schrift, die der App beiliegt, unter der SIL Open Font License 1.1
 - und weitere
 - Inspiriert von bilibilis offizieller „KI-Oberflächenübersetzung“.
+
+> **Hinweis.** Diese README wurde von einer KI verfasst und kann sprachliche oder grammatikalische Fehler enthalten.

@@ -8,7 +8,7 @@
 </div>
 <!-- lang-switch:start -->
 <div align="center">
-    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <b>العربية</b> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a> · <a href="README.ru.md">Русский</a></p>
+    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <a href="README.nan.md">台語</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <b>العربية</b> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a> · <a href="README.ru.md">Русский</a> · <a href="README.uk.md">Українська</a></p>
 </div>
 <!-- lang-switch:end -->
 
@@ -239,3 +239,5 @@ PiliBabel مشروع شخصي مدفوع بالاهتمام، ويُقدَّم *
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — الخط الصيني مفتوح المصدر المضمَّن مع التطبيق، برخصة SIL Open Font License 1.1
 - وغيرها الكثير
 - مستوحى من «ترجمة الواجهة بالذكاء الاصطناعي» الرسمية لدى bilibili.
+
+> **ملاحظة.** كُتب هذا الـ README بواسطة الذكاء الاصطناعي وقد يحتوي على أخطاء في المفردات أو القواعد.
