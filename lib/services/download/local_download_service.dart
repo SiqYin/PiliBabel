@@ -15,6 +15,7 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart' as path;
 import 'package:collection/collection.dart';
+import 'package:PiliPlus/models/common/account_type.dart';
 
 /// 「下载到本地」：把视频 / 音频按能直接播放的格式写进用户自己选的文件夹。
 ///
@@ -179,7 +180,10 @@ class LocalDownloadService extends GetxService {
       final lower = ids.where((e) => e <= target).toList();
       final pick = lower.isNotEmpty ? lower.last : ids.first;
       final item = audios.firstWhere((e) => e.id == pick);
-      final raw = <String>[item.baseUrl, ...?item.backupUrl];
+      final raw = <String>[
+        if (item.baseUrl case final b?) b,
+        ...?item.backupUrl,
+      ];
       final mainUrl = VideoUtils.getCdnUrl(
         raw,
         isAudio: true,
