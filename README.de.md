@@ -8,7 +8,7 @@
 </div>
 <!-- lang-switch:start -->
 <div align="center">
-    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a> · <b>Deutsch</b> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a></p>
+    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a> · <b>Deutsch</b> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a></p>
 </div>
 <!-- lang-switch:end -->
 
@@ -63,6 +63,27 @@ Und seit 1.0 funktioniert das **direkt nach der Installation**: Das Übersetzung
 - **Wiedergabe, die weltweit funktioniert.** PiliBabel wählt den ausländischen Endpunkt (globales **Akamai**, `mirror*ov`, `cn-hk-eq-bcache`), den bilibilis geo-geroutetes `playurl` ohnehin anbietet, statt dich auf einen Festlandsknoten (Alibaba Cloud / Shenzhen) festzunageln — Nutzer außerhalb des chinesischen Festlands haben damit keine Hänger mehr nach dem Muster „Ton läuft, Bild steht“. Du kannst den CDN in den Einstellungen weiterhin manuell festlegen.
 - **Eine Seite „Design & Farben" im Material-You-Stil.** Hell / dunkel / Systemeinstellung werden über **drei Live-Vorschaukarten** gewählt — jede zeigt eine Miniatur der echten Oberfläche in genau den Farben, die der jeweilige Modus anwenden würde (die Karte „Systemeinstellung" ist diagonal geteilt, hell oben links, dunkel unten rechts). Darunter: **dynamische Farben** (vom System-Hintergrundbild übernommen, sofern das Gerät es unterstützt), **dunkel mit hohem Kontrast** (echt schwarze Flächen, nachts angenehmer) und **Player immer dunkel**. Die Farbhälfte behält die vollständige FlexScheme-Palette — **19 Basisfarben** sowie ein eigenständiger **„Palettenstil"**, der bestimmt, wie alle Containerfarben aus der Basisfarbe abgeleitet werden, unabhängig davon, welche Basisfarbe Sie wählen.
 - **LXGW WenKai ist mitgeliefert.** Die Schrift **霞鹜文楷 (LXGW WenKai)** ist **enthalten und als Standard gesetzt** — eine warme, sehr gut lesbare chinesische Schrift, die Sie direkt nach der Installation haben, statt sie in einer Auswahlliste zu suchen. Sie gilt für die gesamte Oberfläche *und* für die Danmaku. Sie können weiterhin zur Systemschrift wechseln, jede installierte Schrift wählen oder eine eigene `.ttf` / `.otf` / `.ttc` importieren; eine zuvor bewusst gewählte Schrift bleibt beim Update erhalten. Schriftschnitt und Größe sind wie bisher einstellbar.
+
+## Offline-Audio-Cache und Download in einen eigenen Ordner (nur PiliBabel)
+
+Zwei Funktionen, die PiliNara / PiliPlus nicht haben – und der Hauptgrund für diesen Fork.
+
+### Audio-Cache (nur die Tonspur)
+
+- Im Menü oben rechts auf der Videoseite steht *Audio-Cache* direkt unter *Video-Cache*; in der oberen Leiste der Hörseite gibt es links neben Sortieren / Sleep-Timer / Mehr ebenfalls einen *Audio-Cache*-Button.
+- Qualitätsstufe wählbar: Hi-Res lossless, Dolby Atmos, 192K, 132K oder 64K – dieselbe Voreinstellungsliste wie bei der Videoqualität.
+- Die Datei wird im Originalcontainer geschrieben (`m4a` / `mp3` / `flac` / `wav` / `aac` / `ogg`) – ohne Transkodierung.
+- Die Cache-Seite ist in *Video-Cache* / *Audio-Cache* geteilt und merkt sich das zuletzt geöffnete Modul.
+- Ein Tipp auf einen gecachten Titel öffnet direkt den Audioplayer; Löschen einzeln oder in Stapeln.
+
+### Download in einen lokalen Ordner
+
+- *In einen lokalen Ordner laden* ist ein eigener Menüpunkt auf der Videoseite, direkt unter *Audio-Cache* – In-App-Cache und Speichern in den eigenen Ordner sind zwei getrennte Aktionen.
+- Zuerst wird *Video herunterladen* oder *Audio herunterladen* gefragt, danach die Qualitätsstufe (Video- / Audioqualität).
+- Den Zielordner wählt man über den System-Dateimanager (Einstellungen → *Download-Ordner*); jederzeit änder- oder löschbar. Ist noch keiner gesetzt, öffnet sich die Ordnerauswahl direkt.
+- Videos werden als einzelner gemuxter Stream geholt (`fnval=1`) – auf der Platte landet also eine normale MP4, die jeder Player öffnen kann.
+- Audio behält sein Originalformat, genau wie der In-App-Cache.
+- Dateien werden nach dem Videotitel benannt und überschreiben nie einen vorhandenen Download.
 
 ## Die beiden Übersetzungs-Engines
 

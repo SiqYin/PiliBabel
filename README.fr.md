@@ -8,7 +8,7 @@
 </div>
 <!-- lang-switch:start -->
 <div align="center">
-    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <b>Français</b> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a></p>
+    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <b>Français</b> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a></p>
 </div>
 <!-- lang-switch:end -->
 
@@ -63,6 +63,27 @@ Et depuis la 1.0, cela fonctionne **dès l'installation** : le modèle de traduc
 - **Une lecture qui marche partout dans le monde.** PiliBabel sélectionne le point de terminaison étranger (global **Akamai**, `mirror*ov`, `cn-hk-eq-bcache`) que le `playurl` géo-routé de bilibili propose déjà, au lieu de vous épingler sur un nœud continental (Alibaba Cloud / Shenzhen) — les utilisateurs hors de Chine continentale ne subissent donc plus les blocages « le son continue, l'image se figent ». Vous pouvez toujours épingler un CDN manuellement dans les réglages.
 - **Une page « Thème et couleurs » de style Material You.** Clair / sombre / suivre le système se choisissent parmi **trois cartes d'aperçu en direct** — chacune dessine une miniature de l'interface réelle avec les couleurs que ce mode appliquerait (la carte « suivre le système » est coupée en diagonale, clair en haut à gauche, sombre en bas à droite). En dessous : **couleurs dynamiques** (issues du fond d'écran système quand l'appareil le permet), **sombre haute contrastée** (surfaces noires, plus reposantes la nuit) et **lecteur toujours sombre**. La moitié couleur conserve toute la palette FlexScheme — **19 teintes de base**, plus un **« style de palette »** distinct qui décide de la façon dont chaque couleur de conteneur est dérivée de la teinte de base, indépendamment de la teinte choisie.
 - **LXGW WenKai est fourni avec l'application.** La police **霞鹜文楷 (LXGW WenKai)** est **incluse et définie par défaut** — une police chinoise chaleureuse et très lisible, disponible dès l'installation, au lieu d'aller la chercher dans un sélecteur. Elle s'applique à toute l'interface *et* aux danmaku. Vous pouvez revenir à la police système, choisir n'importe quelle police installée, ou importer votre propre `.ttf` / `.otf` / `.ttc` ; une police choisie explicitement avant la mise à jour est conservée. Le poids et la taille restent réglables comme avant.
+
+## Cache audio hors ligne et téléchargement dans un dossier local (propre à PiliBabel)
+
+Deux fonctions absentes de PiliNara / PiliPlus — et la principale raison d'utiliser ce fork.
+
+### Cache audio (la piste seule)
+
+- Dans le menu en haut à droite de la page vidéo, *Cache audio* se trouve juste sous *Cache vidéo* ; dans la barre supérieure de la page d'écoute, un bouton *Cache audio* est placé à gauche de trier / minuterie / plus.
+- Qualité au choix : Hi-Res sans perte, Dolby Atmos, 192K, 132K ou 64K — la même liste de préréglages que la qualité vidéo.
+- Le fichier est écrit dans son conteneur d'origine (`m4a` / `mp3` / `flac` / `wav` / `aac` / `ogg`), sans transcodage.
+- La page de cache est scindée en *Vidéos en cache* / *Audio en cache* et retient le module utilisé la dernière fois.
+- Un appui sur un élément audio en cache ouvre directement le lecteur audio ; suppression à l'unité ou en lot.
+
+### Téléchargement dans un dossier local
+
+- *Télécharger dans un dossier local* est une entrée distincte du menu de la page vidéo, juste sous *Cache audio* : le cache dans l'application et l'enregistrement dans votre dossier sont deux actions séparées.
+- Elle demande d'abord *Télécharger la vidéo* ou *Télécharger l'audio*, puis la qualité (vidéo / audio).
+- Le dossier se choisit via le gestionnaire de fichiers du système (Paramètres → *Dossier de téléchargement*) ; modifiable ou effaçable à tout moment. S'il n'est pas encore défini, le sélecteur s'ouvre directement.
+- La vidéo est récupérée comme un flux multiplexé unique (`fnval=1`) : sur le disque arrive donc un MP4 que n'importe quel lecteur ouvre.
+- L'audio conserve son format d'origine, comme le cache interne.
+- Les fichiers portent le titre de la vidéo et n'écrasent jamais un téléchargement existant.
 
 ## Les deux moteurs de traduction
 

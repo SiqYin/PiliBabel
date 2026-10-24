@@ -8,7 +8,7 @@
 </div>
 <!-- lang-switch:start -->
 <div align="center">
-    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <b>Tiếng Việt</b> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a></p>
+    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <b>Tiếng Việt</b> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a></p>
 </div>
 <!-- lang-switch:end -->
 
@@ -63,6 +63,27 @@ Và từ phiên bản 1.0, việc đó chạy **ngay sau khi cài**: mô hình d
 - **Phát được ở mọi nơi trên thế giới.** PiliBabel chọn điểm biên ở nước ngoài (global **Akamai**, `mirror*ov`, `cn-hk-eq-bcache`) mà `playurl` định tuyến theo vị trí của bilibili vốn đã cung cấp, thay vì ghim bạn vào một nút ở Trung Quốc đại lục (Alibaba Cloud / Thâm Quyến) — nên người dùng ngoài Trung Quốc đại lục không còn gặp cảnh «tiếng vẫn chạy, hình đứng im». Bạn vẫn có thể chỉ định CDN thủ công trong cài đặt.
 - **Trang "Chủ đề & Màu sắc" theo phong cách Material You.** Sáng / tối / theo hệ thống được chọn từ **ba thẻ xem trước trực tiếp** — mỗi thẻ vẽ bản thu nhỏ của giao diện thật với đúng bộ màu mà chế độ đó sẽ áp dụng (thẻ "theo hệ thống" được chia theo đường chéo, sáng ở góc trên trái, tối ở góc dưới phải). Bên dưới là **màu động** (lấy từ ảnh nền hệ thống nếu thiết bị hỗ trợ), **tối tương phản cao** (nền đen tuyệt đối, dịu mắt hơn ban đêm) và **trình phát luôn tối**. Phần màu sắc giữ nguyên bảng màu FlexScheme — **19 màu gốc** cùng một **"kiểu bảng màu"** riêng biết quyết định mọi màu vùng chứa được suy ra từ màu gốc ra sao, độc lập với việc bạn chọn màu gốc nào.
 - **LXGW WenKai đi kèm sẵn trong ứng dụng.** Phông chữ **霞鹜文楷 (LXGW WenKai)** được **đóng gói và đặt làm mặc định** — một phông Trung Quốc ấm áp và rất dễ đọc, có ngay sau khi cài đặt mà không phải tìm trong danh sách. Nó áp dụng cho toàn bộ giao diện *và* cho danmaku. Bạn vẫn có thể chuyển về phông hệ thống, chọn bất kỳ phông nào đã cài, hoặc nhập phông `.ttf` / `.otf` / `.ttc` của riêng mình; nếu trước đây bạn đã chủ động chọn một phông, lựa chọn đó được giữ nguyên khi nâng cấp. Độ đậm và cỡ chữ vẫn chỉnh được như trước.
+
+## Bộ nhớ đệm âm thanh ngoại tuyến & tải về thư mục máy (riêng PiliBabel)
+
+Hai tính năng mà PiliNara / PiliPlus không có — cũng là lý do chính để dùng bản fork này.
+
+### Bộ nhớ đệm âm thanh (chỉ lưu track âm thanh)
+
+- Trong menu góc trên bên phải của trang video, *Bộ nhớ đệm âm thanh* nằm ngay dưới *Bộ nhớ đệm video*; ở thanh trên của trang nghe cũng có nút *Bộ nhớ đệm âm thanh* bên trái nút sắp xếp / hẹn giờ / thêm.
+- Chọn mức chất lượng: Hi-Res không mất dữ liệu, Dolby Atmos, 192K, 132K hoặc 64K — cùng danh sách với chất lượng video.
+- Tệp được ghi đúng định dạng gốc (`m4a` / `mp3` / `flac` / `wav` / `aac` / `ogg`), không chuyển mã.
+- Trang bộ nhớ đệm chia thành *Video đã lưu* / *Âm thanh đã lưu* và ghi nhớ mục bạn mở lần trước.
+- Chạm vào mục âm thanh đã lưu là mở luôn trình phát âm thanh; xoá từng mục hoặc xoá hàng loạt.
+
+### Tải về thư mục máy
+
+- *Tải về thư mục máy* là một mục riêng trong menu trang video, ngay dưới *Bộ nhớ đệm âm thanh* — lưu trong ứng dụng và lưu vào thư mục của bạn là hai thao tác khác nhau.
+- Mở ra sẽ hỏi trước *Tải video* hay *Tải âm thanh*, rồi hỏi chất lượng (video / âm thanh).
+- Chọn thư mục bằng trình quản lý tệp của hệ thống (Cài đặt → *Vị trí tải về máy*); đổi hoặc xoá bất cứ lúc nào. Nếu chưa đặt, hộp chọn sẽ mở ngay.
+- Video được lấy dưới dạng một luồng ghép sẵn (`fnval=1`), nên tệp trên đĩa là MP4 mà trình phát nào cũng mở được.
+- Âm thanh giữ nguyên định dạng gốc, giống bộ nhớ đệm trong ứng dụng.
+- Tệp được đặt tên theo tiêu đề video và không bao giờ ghi đè bản đã tải.
 
 ## Hai bộ máy dịch
 
