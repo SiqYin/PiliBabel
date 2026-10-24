@@ -490,7 +490,27 @@ class HeaderControlState extends State<HeaderControl>
                       MdiIcons.folderDownloadOutline,
                       size: 20,
                     ),
-                    title: Text(uiTx('离线缓存'), style: titleStyle),
+                    title: Text(uiTx('视频缓存'), style: titleStyle),
+                  ),
+                if (!isFileSource && videoDetailCtr.isUgc)
+                  ListTile(
+                    dense: true,
+                    onTap: () {
+                      Get.back();
+                      videoDetailCtr.onDownloadAudio(this.context);
+                    },
+                    leading: const Icon(Icons.music_note_outlined, size: 20),
+                    title: Text(uiTx('音频缓存'), style: titleStyle),
+                  ),
+                if (!isFileSource)
+                  ListTile(
+                    dense: true,
+                    onTap: () {
+                      Get.back();
+                      videoDetailCtr.onDownloadLocal(this.context);
+                    },
+                    leading: const Icon(Icons.save_alt, size: 20),
+                    title: Text(uiTx('下载到本地'), style: titleStyle),
                   ),
                 if (widget.videoDetailCtr.cover.value.isNotEmpty)
                   ListTile(

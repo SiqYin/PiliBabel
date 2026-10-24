@@ -148,6 +148,12 @@ class _AudioPageState extends State<AudioPage> {
               }
               return const SizedBox.shrink();
             }),
+          if (_controller.isUgc)
+            IconButton(
+              tooltip: uiTx('缓存音频'),
+              onPressed: () => _controller.onDownloadAudio(context),
+              icon: const Icon(Icons.download_outlined, size: 22),
+            ),
           Obx(() {
             UiTranslateService.to.revision.value;
               return StaticPopupMenuButton<ListOrder>(
@@ -712,7 +718,7 @@ class _AudioPageState extends State<AudioPage> {
                 title: Text(uiTx('缓存音频'), style: TextStyle(fontSize: 14)),
                 onTap: () {
                   Get.back();
-                  _controller.onCacheAudio(context);
+                  _controller.onDownloadAudio(context);
                 },
               ),
               ListTile(

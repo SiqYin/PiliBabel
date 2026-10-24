@@ -1867,14 +1867,19 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         ),
       if (!videoDetailController.isFileSource)
         PopupMenuItem(
-          onTap: () => videoDetailController.onCacheVideo(this.context),
-          child: Text(uiTx('缓存视频')),
+          onTap: () => videoDetailController.onDownload(this.context),
+          child: Text(uiTx('视频缓存')),
         ),
       if (!videoDetailController.isFileSource &&
           videoDetailController.isUgc)
         PopupMenuItem(
-          onTap: () => videoDetailController.onCacheAudio(this.context),
-          child: Text(uiTx('缓存音频')),
+          onTap: () => videoDetailController.onDownloadAudio(this.context),
+          child: Text(uiTx('音频缓存')),
+        ),
+      if (!videoDetailController.isFileSource)
+        PopupMenuItem(
+          onTap: () => videoDetailController.onDownloadLocal(this.context),
+          child: Text(uiTx('下载到本地')),
         ),
       if (videoDetailController.cover.value.isNotEmpty)
         PopupMenuItem(

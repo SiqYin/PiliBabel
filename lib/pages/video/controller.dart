@@ -2303,64 +2303,70 @@ class VideoDetailController extends GetxController
     }
   }
 
-  /// 缓存视频：先选「软件内缓存」还是「下载到本地」。
-  Future<void> onCacheVideo(BuildContext context) async {
-    final target = await showCacheTargetPicker(context);
+  /// 下载到本地：先选下载视频还是下载音频，再选画质/音质，落到用户选定的文件夹。
+  Future<void> onDownloadLocal(BuildContext context) async {
+    final target = await showLocalDownloadTargetPicker(context);
     if (target == null) {
-      return;
-    }
-    if (target == CacheTarget.inApp) {
-      await onDownload(context);
       return;
     }
     if (!await ensureLocalDownloadPath()) {
       return;
     }
-    final videoDetail = _videoDetailOrNull();
-    final title = videoDetail?.title;
-    if (videoDetail == null || title == null || title.isEmpty) {
+    if (!context.mounted) {
+      return;
+    }
+    final title = _currentVideoTitle();
+    if (title == null || title.isEmpty) {
       SmartDialog.showToast(uiTx('视频信息还没加载好，稍后再试'));
       return;
     }
-    await Get.find<LocalDownloadService>().downloadVideo(
-      avid: videoDetail.aid ?? aid,
-      bvid: videoDetail.bvid ?? IdUtils.av2bv(aid),
-      cid: videoDetail.cid ?? cid.value,
-      title: title,
-    );
+    final service = Get.find<LocalDownloadService>();
+    if (target == LocalDownloadTarget.video) {
+      final quality = await showLocalVideoQualityPicker(context);
+      if (quality == null) {
+        return;
+      }
+      await service.downloadVideo(
+        avid: aid,
+        bvid: IdUtils.av2bv(aid),
+        cid: seasonCid ?? cid.value,
+        title: title,
+        qn: quality.code,
+      );
+    } else {
+      if (!isUgc) {
+        SmartDialog.showToast(uiTx('该视频暂不支持下载音频'));
+        return;
+      }
+      final quality = await showAudioCacheQualityPicker(context);
+      if (quality == null) {
+        return;
+      }
+      await service.downloadAudio(
+        avid: aid,
+        bvid: IdUtils.av2bv(aid),
+        cid: cid.value,
+        title: title,
+        quality: quality,
+      );
+    }
   }
 
-  /// 缓存音频：先选「软件内缓存」还是「下载到本地」。
-  Future<void> onCacheAudio(BuildContext context) async {
-    final target = await showCacheTargetPicker(context);
-    if (target == null) {
-      return;
+  /// 取当前视频的标题：UGC 用视频详情，PGC 用番剧信息。
+  String? _currentVideoTitle() {
+    if (isUgc) {
+      return _videoDetailOrNull()?.title;
     }
-    if (target == CacheTarget.inApp) {
-      await onDownloadAudio(context);
-      return;
+    try {
+      return Get.find<PgcIntroController>(tag: heroTag).pgcItem.title;
+    } catch (e) {
+      if (kDebugMode) {
+        debugPrint('local download title: $e');
+      }
+      return null;
     }
-    if (!await ensureLocalDownloadPath()) {
-      return;
-    }
-    final videoDetail = _videoDetailOrNull();
-    final title = videoDetail?.title;
-    if (videoDetail == null || title == null || title.isEmpty) {
-      SmartDialog.showToast(uiTx('视频信息还没加载好，稍后再试'));
-      return;
-    }
-    final quality = await showAudioCacheQualityPicker(context);
-    if (quality == null) {
-      return;
-    }
-    await Get.find<LocalDownloadService>().downloadAudio(
-      avid: videoDetail.aid ?? aid,
-      bvid: videoDetail.bvid ?? IdUtils.av2bv(aid),
-      cid: videoDetail.cid ?? cid.value,
-      title: title,
-      quality: quality,
-    );
   }
+
 
   /// 缓存音频：按用户选的音质档位，把音轨单独存成原格式音频文件。
   Future<void> onDownloadAudio(BuildContext context) async {
