@@ -224,7 +224,6 @@ PiliBabel は **GNU General Public License v3.0（GPL-3.0）** でライセン�
 
 サードパーティのコンポーネント（各種 Flutter パッケージ、[`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect)、[`media-kit`](https://github.com/media-kit/media-kit)、[`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer)、[`dio`](https://pub.dev/packages/dio) など）は、それぞれのライセンスに従います。
 
-
 同梱の **霞鹜文楷** は **SIL Open Font License 1.1** で別途ライセンス供与されています。ライセンス本文はアプリ内の `assets/fonts/LXGWWenKai-OFL.txt` に同梱されています。
 
 <br/>
@@ -240,4 +239,6 @@ PiliBabel は **GNU General Public License v3.0（GPL-3.0）** でライセン�
 - そのほか多数
 - bilibili 公式の「AI インターフェース翻訳」に着想を得ています。
 
-> **注記。** この README は AI が作成したもので、用語や文法に誤りがある可能性があります。
+## 注記
+
+この README は AI が作成したもので、用語や文法に誤りがある可能性があります。

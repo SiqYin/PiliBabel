@@ -224,7 +224,6 @@ PiliBabel est distribué sous **GNU General Public License v3.0 (GPL-3.0)** — 
 
 Les composants tiers (paquets Flutter, [`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect), [`media-kit`](https://github.com/media-kit/media-kit), [`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer), [`dio`](https://pub.dev/packages/dio), etc.) restent sous leurs propres licences.
 
-
 La police **霞鹜文楷** incluse est soumise séparément à la **SIL Open Font License 1.1** ; son texte de licence est distribué avec l'application dans `assets/fonts/LXGWWenKai-OFL.txt`.
 
 <br/>
@@ -240,4 +239,6 @@ La police **霞鹜文楷** incluse est soumise séparément à la **SIL Open Fon
 - et bien d'autres
 - Inspiré par la « traduction d'interface par IA » officielle de bilibili.
 
-> **Remarque.** Ce README a été rédigé par une IA et peut contenir des erreurs de vocabulaire ou de grammaire.
+## Remarque
+
+Ce README a été rédigé par une IA et peut contenir des erreurs de vocabulaire ou de grammaire.

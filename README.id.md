@@ -224,7 +224,6 @@ PiliBabel dilisensikan di bawah **GNU General Public License v3.0 (GPL-3.0)** �
 
 Komponen pihak ketiga (paket Flutter, [`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect), [`media-kit`](https://github.com/media-kit/media-kit), [`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer), [`dio`](https://pub.dev/packages/dio), dan lain-lain) tetap tunduk pada lisensinya masing-masing.
 
-
 Fon **霞鹜文楷** yang disertakan berlisensi secara terpisah di bawah **SIL Open Font License 1.1**; teks lisensinya disertakan bersama aplikasi sebagai `assets/fonts/LXGWWenKai-OFL.txt`.
 
 <br/>
@@ -240,4 +239,6 @@ Fon **霞鹜文楷** yang disertakan berlisensi secara terpisah di bawah **SIL O
 - dan masih banyak lagi
 - Terinspirasi oleh «terjemahan antarmuka AI» resmi bilibili.
 
-> **Catatan.** README ini ditulis oleh AI dan mungkin mengandungi kesalahan kata atau tata bahasa.
+## Catatan
+
+README ini ditulis oleh AI dan mungkin mengandung kesalahan kata atau tata bahasa.

@@ -224,7 +224,6 @@ PiliBabel được cấp phép theo **GNU General Public License v3.0 (GPL-3.0)*
 
 Các thành phần bên thứ ba (các gói Flutter, [`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect), [`media-kit`](https://github.com/media-kit/media-kit), [`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer), [`dio`](https://pub.dev/packages/dio), v.v.) vẫn theo giấy phép riêng của chúng.
 
-
 Phông chữ **霞鹜文楷** được đóng gói được cấp phép riêng theo **SIL Open Font License 1.1**; văn bản giấy phép đi kèm trong ứng dụng tại `assets/fonts/LXGWWenKai-OFL.txt`.
 
 <br/>
@@ -240,4 +239,6 @@ Phông chữ **霞鹜文楷** được đóng gói được cấp phép riêng t
 - và nhiều dự án khác
 - Lấy cảm hứng từ «dịch giao diện bằng AI» chính thức của bilibili.
 
-> **Lưu ý.** README này do AI viết, có thể có sai sót về từ ngữ hoặc ngữ pháp.
+## Lưu ý
+
+README này do AI viết, có thể có sai sót về từ ngữ hoặc ngữ pháp.
