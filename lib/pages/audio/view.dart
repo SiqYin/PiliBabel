@@ -712,7 +712,7 @@ class _AudioPageState extends State<AudioPage> {
                 title: Text(uiTx('缓存音频'), style: TextStyle(fontSize: 14)),
                 onTap: () {
                   Get.back();
-                  _controller.onDownloadAudio(context);
+                  _controller.onCacheAudio(context);
                 },
               ),
               ListTile(

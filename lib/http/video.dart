@@ -236,6 +236,8 @@ abstract final class VideoHttp {
     // Referer）。下载器与 CDN 测速都固定用「Safari UA + Referer」发请求、
     // 而且都会改写主机，只能吃 Web 令牌，所以它们传 false。
     bool allowAppSource = true,
+    /// 1 = 单文件（视频音频已封装，可直接播放），4048 = DASH。
+    int fnval = 4048,
   }) async {
     // 直链改走**官方 APP 同源**（gRPC PlayView）。
     //
@@ -308,6 +310,7 @@ abstract final class VideoHttp {
       videoType: videoType,
       language: language,
       voiceBalance: voiceBalance,
+      fnval: fnval,
     );
   }
 
@@ -370,6 +373,7 @@ abstract final class VideoHttp {
     required VideoType videoType,
     String? language,
     bool voiceBalance = false,
+    int fnval = 4048,
   }) async {
     final dmImgStr = Utils.base64EncodeRandomString(16, 64);
     final dmCoverImgStr = Utils.base64EncodeRandomString(32, 128);
@@ -381,7 +385,7 @@ abstract final class VideoHttp {
       'cid': cid,
       'qn': qn,
       // 获取所有格式的视频
-      'fnval': 4048,
+      'fnval': fnval,
       'fourk': 1,
       'fnver': 0,
       'voice_balance': voiceBalance ? 1 : 0,

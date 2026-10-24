@@ -190,6 +190,7 @@ abstract final class SettingBoxKey {
       enableVolumeBoost = 'enableVolumeBoost',
       downloadPath = 'downloadPath',
       downloadCacheModule = 'downloadCacheModule',
+      downloadLocalPath = 'downloadLocalPath',
       followOrderType = 'followOrderType',
       enableImgMenu = 'enableImgMenu',
       showDynDispute = 'showDynDispute',

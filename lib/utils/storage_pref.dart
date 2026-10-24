@@ -1682,6 +1682,17 @@ abstract final class Pref {
   static Future<void> setDownloadCacheModule(int value) async =>
       await _setting.put(SettingBoxKey.downloadCacheModule, value);
 
+  static String? get downloadLocalPath =>
+      _setting.get(SettingBoxKey.downloadLocalPath);
+
+  static Future<void> setDownloadLocalPath(String? value) async {
+    if (value == null || value.isEmpty) {
+      await _setting.delete(SettingBoxKey.downloadLocalPath);
+      return;
+    }
+    await _setting.put(SettingBoxKey.downloadLocalPath, value);
+  }
+
   static String? get downloadPath => _setting.get(SettingBoxKey.downloadPath);
 
   static String? get liveCdnUrl => _setting.get(SettingBoxKey.liveCdnUrl);

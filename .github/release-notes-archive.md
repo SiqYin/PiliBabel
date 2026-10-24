@@ -2,6 +2,19 @@
 
 Release 正文由 `.github/release-notes.md` 提供，只放**当前这一版**的说明。
 
+### PiliBabel v2.5.1
+
+**Cache audio**
+
+- New "Cache audio" feature: save the audio track of a video (or of the listen-video page) to local storage.
+- The download page is now split into two modules - Cached videos and Cached audio - and remembers the module you were last on.
+- The entry sits right below "Cache video" in the video page menu, and in the "More" menu of the listen-video page.
+- Pick any quality from Hi-Res lossless down to 64K, mirroring the video quality presets.
+- Files are written in their original container (m4a / mp3 / flac / wav / aac / ogg) - no transcoding.
+- Tapping a cached audio item opens the audio player; items can be deleted one by one or in bulk.
+
+Downloads are below.
+
 ### PiliBabel v2.4.5
 
 - Searching in Simplified Chinese no longer goes through AI translation: the query is sent as-is, and titles in the results stay in the original language.

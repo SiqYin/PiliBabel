@@ -96,6 +96,8 @@ import 'package:path/path.dart' as path;
 import 'package:PiliPlus/pages/download/utils/audio_cache_quality.dart';
 import 'package:PiliPlus/services/download/audio_cache_service.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
+import 'package:PiliPlus/pages/download/utils/cache_target.dart';
+import 'package:PiliPlus/services/download/local_download_service.dart';
 
 class VideoDetailController extends GetxController
     with GetTickerProviderStateMixin, BlockMixin {
@@ -2286,6 +2288,77 @@ class VideoDetailController extends GetxController
       // audioUrl 已按 currentAudioQa 选好轨道，音质一并传给听视频页，
       // 否则那边显示的音质会和实际播放的不一致。
       audioQa: currentAudioQa,
+    );
+  }
+
+  /// 当前视频详情（拿不到时返回 null，不抛异常）。
+  VideoDetailData? _videoDetailOrNull() {
+    try {
+      return Get.find<UgcIntroController>(tag: heroTag).videoDetail.value;
+    } catch (e, s) {
+      if (kDebugMode) {
+        debugPrint('video detail: $e\n\n$s');
+      }
+      return null;
+    }
+  }
+
+  /// 缓存视频：先选「软件内缓存」还是「下载到本地」。
+  Future<void> onCacheVideo(BuildContext context) async {
+    final target = await showCacheTargetPicker(context);
+    if (target == null) {
+      return;
+    }
+    if (target == CacheTarget.inApp) {
+      await onDownload(context);
+      return;
+    }
+    if (!await ensureLocalDownloadPath()) {
+      return;
+    }
+    final videoDetail = _videoDetailOrNull();
+    final title = videoDetail?.title;
+    if (videoDetail == null || title == null || title.isEmpty) {
+      SmartDialog.showToast(uiTx('视频信息还没加载好，稍后再试'));
+      return;
+    }
+    await Get.find<LocalDownloadService>().downloadVideo(
+      avid: videoDetail.aid ?? aid,
+      bvid: videoDetail.bvid ?? IdUtils.av2bv(aid),
+      cid: videoDetail.cid ?? cid.value,
+      title: title,
+    );
+  }
+
+  /// 缓存音频：先选「软件内缓存」还是「下载到本地」。
+  Future<void> onCacheAudio(BuildContext context) async {
+    final target = await showCacheTargetPicker(context);
+    if (target == null) {
+      return;
+    }
+    if (target == CacheTarget.inApp) {
+      await onDownloadAudio(context);
+      return;
+    }
+    if (!await ensureLocalDownloadPath()) {
+      return;
+    }
+    final videoDetail = _videoDetailOrNull();
+    final title = videoDetail?.title;
+    if (videoDetail == null || title == null || title.isEmpty) {
+      SmartDialog.showToast(uiTx('视频信息还没加载好，稍后再试'));
+      return;
+    }
+    final quality = await showAudioCacheQualityPicker(context);
+    if (quality == null) {
+      return;
+    }
+    await Get.find<LocalDownloadService>().downloadAudio(
+      avid: videoDetail.aid ?? aid,
+      bvid: videoDetail.bvid ?? IdUtils.av2bv(aid),
+      cid: videoDetail.cid ?? cid.value,
+      title: title,
+      quality: quality,
     );
   }
 

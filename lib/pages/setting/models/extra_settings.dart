@@ -98,6 +98,13 @@ List<SettingsModel> get extraSettings => [
       defaultVal: Pref.enableDocProvider,
       onChanged: AndroidHelper.updateDocProvider,
     ),
+  NormalModel(
+    title: uiTx('下载到本地位置'),
+    getSubtitle: () =>
+        Pref.downloadLocalPath ?? uiTx('未设置，点击选择一个文件夹'),
+    leading: const Icon(Icons.save_alt),
+    onTap: _showLocalPathDialog,
+  ),
   SplitModel(
     normalModel: NormalModel.split(
       title: uiTx('空降助手'),
