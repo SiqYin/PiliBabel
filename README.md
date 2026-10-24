@@ -70,7 +70,7 @@ Two capabilities upstream PiliNara / PiliPlus don't have — both aimed at actua
 
 ### Cache audio (audio-only offline cache)
 
-- **The track, not the video.** A *Cache audio* entry sits right below *Cache video* in the video page menu, and in the *More* menu of the listen-video page — so a 40-minute video costs a few MB instead of a few hundred.
+- **The track, not the video.** A *Cache audio* entry sits right below *Cache video* in the video page menu, plus a dedicated cache-audio button in the top bar of the listen-video page.
 - **Pick the quality tier.** Hi-Res lossless, Dolby Atmos, 192K, 132K or 64K — the same preset list the video quality picker uses.
 - **Original container, no transcoding.** The file is written exactly as the CDN serves it: `m4a`, `mp3`, `flac`, `wav`, `aac` or `ogg`.
 - **Its own module.** The cache page is split into *Cached videos* / *Cached audio* and remembers which module you were on last time.
@@ -78,8 +78,9 @@ Two capabilities upstream PiliNara / PiliPlus don't have — both aimed at actua
 
 ### Download to local folder
 
-- **Cache menu, two branches.** Hitting *Cache video* (or *Cache audio*) now asks: keep it inside the app, or write it to a folder you own?
-- **Your folder, your rules.** Pick any folder through the system file manager (Settings → *Download to local folder*), and change or clear it whenever you want. If nothing is configured yet, the app takes you straight to that setting.
+- **Its own menu entry.** *Download to local folder* is a separate entry in the video page menu, right under *Cache audio* — caching inside the app and saving to a folder are two different actions.
+- **Download video or download audio.** The entry first asks which one, then asks for the quality tier (video quality / audio quality picker).
+- **Your folder, your rules.** Pick any folder through the system file manager (Settings → *Download to local folder*), and change or clear it whenever you want. If you haven't picked one yet, the folder picker opens on the spot.
 - **Directly playable files.** Video is fetched as a single muxed stream (`fnval=1`), so what lands on disk is a plain MP4 you can hand to any player — no sidecar streams to stitch together.
 - **Audio keeps its original format** — no transcoding, exactly like the in-app cache.
 - Files are named after the video title and never overwrite an existing download.

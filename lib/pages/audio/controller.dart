@@ -60,8 +60,6 @@ import 'package:PiliPlus/models_new/video/video_detail/data.dart';
 import 'package:PiliPlus/pages/download/utils/audio_cache_quality.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/controller.dart';
 import 'package:PiliPlus/services/download/audio_cache_service.dart';
-import 'package:PiliPlus/pages/download/utils/cache_target.dart';
-import 'package:PiliPlus/services/download/local_download_service.dart';
 
 class AudioController extends GetxController
     with
@@ -994,44 +992,6 @@ class AudioController extends GetxController
   bool get preInitPlayer => true;
 
   @override
-  /// 缓存音频：先选「软件内缓存」还是「下载到本地」。
-  Future<void> onCacheAudio(BuildContext context) async {
-    final target = await showCacheTargetPicker(context);
-    if (target == null) {
-      return;
-    }
-    if (target == CacheTarget.inApp) {
-      await onDownloadAudio(context);
-      return;
-    }
-    if (!await ensureLocalDownloadPath()) {
-      return;
-    }
-    VideoDetailData? detail;
-    try {
-      detail = Get.find<UgcIntroController>(tag: heroTag).videoDetail.value;
-    } catch (e, s) {
-      if (kDebugMode) {
-        debugPrint('audio download: $e\n\n$s');
-      }
-    }
-    final title = detail?.title;
-    if (detail == null || title == null || title.isEmpty) {
-      SmartDialog.showToast(uiTx('音频信息还没加载好，稍后再试'));
-      return;
-    }
-    final quality = await showAudioCacheQualityPicker(context);
-    if (quality == null) {
-      return;
-    }
-    await Get.find<LocalDownloadService>().downloadAudio(
-      avid: detail.aid ?? oid.toInt(),
-      bvid: detail.bvid ?? IdUtils.av2bv(oid.toInt()),
-      cid: detail.cid ?? subId.first.toInt(),
-      title: title,
-      quality: quality,
-    );
-  }
 
   /// 缓存音频：把当前音轨按所选音质单独存成原格式音频文件。
   Future<void> onDownloadAudio(BuildContext context) async {
