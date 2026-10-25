@@ -1,5 +1,6 @@
 import 'package:PiliPlus/models/common/video/video_quality.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/utils/connectivity_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -101,7 +102,23 @@ const List<VideoQuality> localDownloadVideoQualities = [
 ];
 
 /// 选下载视频的画质；返回 null 表示用户取消。
-Future<VideoQuality?> showLocalVideoQualityPicker(BuildContext context) {
+///
+/// 档位太多容易挑花眼：把「按用户在 音视频设置 里的默认画质 + 当前是 WiFi
+/// 还是蜂窝」推断出的档位**标蓝提示**（不代选，仍由用户自己点）。用户设置里
+/// 的档位若不在本列表（或高于全部可选档），向下取最接近的一档。
+Future<VideoQuality?> showLocalVideoQualityPicker(BuildContext context) async {
+  final isWiFi = await ConnectivityUtils.isWiFi;
+  final target = isWiFi ? Pref.defaultVideoQa : Pref.defaultVideoQaCellular;
+  // 列表本身从高到低：取不高于设置档位的最高一档；全都高于时取最低档。
+  final fit = localDownloadVideoQualities
+      .where((e) => e.code <= target)
+      .toList();
+  final recommended = fit.isNotEmpty
+      ? fit.first
+      : localDownloadVideoQualities.last;
+  if (!context.mounted) {
+    return null;
+  }
   return showModalBottomSheet<VideoQuality>(
     context: context,
     useSafeArea: true,
@@ -123,19 +140,46 @@ Future<VideoQuality?> showLocalVideoQualityPicker(BuildContext context) {
               ],
             ),
           ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+            child: Text(
+              uiTx('蓝色项是按你的播放设置与当前网络推荐的画质，仅供参考'),
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
           for (final quality in localDownloadVideoQualities)
-            ListTile(
-              dense: true,
-              title: Text(quality.desc, style: const TextStyle(fontSize: 14)),
-              // 1080P 以上的档位在服务端只有 DASH 分离流（就算登录了大会员，
-              // 单文件 MP4 也拿不到这些画质），下载会落「视频轨 + 音频轨」两个文件。
-              subtitle: quality.code > 80
-                  ? Text(
-                      uiTx('分离流下载：视频轨与音频轨两个文件'),
-                      style: const TextStyle(fontSize: 12),
-                    )
-                  : null,
-              onTap: () => Navigator.of(context).pop(quality),
+            Builder(
+              builder: (context) {
+                final colorScheme = ColorScheme.of(context);
+                final isRecommended = quality == recommended;
+                return ListTile(
+                  dense: true,
+                  title: Text(
+                    quality.desc,
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isRecommended ? colorScheme.primary : null,
+                      fontWeight: isRecommended ? FontWeight.w600 : null,
+                    ),
+                  ),
+                  trailing: isRecommended
+                      ? Icon(
+                          Icons.check_rounded,
+                          size: 20,
+                          color: colorScheme.primary,
+                        )
+                      : null,
+                  // 1080P 以上的档位在服务端只有 DASH 分离流（就算登录了大会员，
+                  // 单文件 MP4 也拿不到这些画质），下载会落「视频轨 + 音频轨」两个文件。
+                  subtitle: quality.code > 80
+                      ? Text(
+                          uiTx('分离流下载：视频轨与音频轨两个文件'),
+                          style: const TextStyle(fontSize: 12),
+                        )
+                      : null,
+                  onTap: () => Navigator.of(context).pop(quality),
+                );
+              },
             ),
           const SizedBox(height: 8),
         ],
