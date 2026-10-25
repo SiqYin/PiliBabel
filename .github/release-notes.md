@@ -1,8 +1,14 @@
 ### PiliBabel v3.0.4
 
-**The update dialog now speaks your language**
+**Overseas playback stalls, targeted: the play-4s-freeze-4s cycle**
 
-- The release notes shown in the "new version" dialog are now run through the AI translation layer: the dialog opens with the original text and refreshes automatically once the translation arrives (cached per language — each release body is translated only once).
+- The CDN speed probe now downloads **512KB** per node instead of 64KB. Overseas throttling on Bilibili edges kicks in *after* a burst allowance — a 64KB probe fits entirely inside it, so fast and throttled nodes measured the same and the probe was useless. 512KB measures sustained throughput; a throttled node (~100KB/s) now times out and gets discarded.
+- Speed results are now **persisted across sessions** (valid 7 days). They used to live in memory for 30 minutes only, so the first videos after every app start were back to guessing nodes statically. Restarting now picks up last session's measured best edge; background re-probes keep healing network changes.
+- With no measurements available, the static fallback now prefers edges in tiers: Akamai global (anycast) > Bilibili overseas upos mirrors (mirror*ov) > HK edges (cn-hk-eq-bcache / bilivideo.tv), instead of the server's own listing order.
+
+**Also**
+
+- The release notes shown in the "new version" dialog are now run through the AI translation layer: the dialog opens with the original text and refreshes automatically once the translation arrives (cached per language).
 
 Everything inherited from PiliNara / PiliPlus is unchanged.
 
