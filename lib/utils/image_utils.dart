@@ -17,6 +17,7 @@ import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/share_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
+import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:clipboard/clipboard.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
@@ -277,6 +278,28 @@ abstract final class ImageUtils {
       }
     }
     return src.http2https;
+  }
+
+  /// 预取图片（封面预取用）：把按 [thumbnailUrl] 同规格的地址提前拉进
+  /// CachedNetworkImage 的缓存，滚到那一条时直接命中，不再等网络。
+  /// 用 ImageStream 监听触发加载、首帧即断开监听（图已在缓存里）。
+  static void prefetchImages(Iterable<String?> urls, {int quality = 1}) {
+    for (final url in urls) {
+      if (url == null || url.isEmpty) {
+        continue;
+      }
+      final provider = CachedNetworkImageProvider(
+        thumbnailUrl(url, quality),
+      );
+      final stream = provider.resolve(const ImageConfiguration());
+      late final ImageStreamListener listener;
+      listener = ImageStreamListener((image, synchronousCall) {
+        stream.removeListener(listener);
+      }, onError: (_, _) {
+        stream.removeListener(listener);
+      });
+      stream.addListener(listener);
+    }
   }
 
   static Future<SaveResult?> saveByteImg({

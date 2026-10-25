@@ -6,9 +6,14 @@ import 'package:PiliPlus/models/common/rcmd_mode.dart';
 import 'package:PiliPlus/models/model_rec_video_item.dart';
 import 'package:PiliPlus/pages/common/common_list_controller.dart';
 import 'package:PiliPlus/services/logger.dart';
+import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 
 class RcmdController extends CommonListController {
+  /// 每页预取的封面数：首屏之后的条目提前拉进图片缓存，滚动时直接命中
+  /// （海外图片请求 RTT 高，预取对流畅度收益明显）。
+  static const _prefetchCovers = 10;
+
   late bool enableSaveLastData = Pref.enableSaveLastData;
   final RcmdMode rcmdMode = Pref.rcmdMode;
   bool get appRcmd => rcmdMode == RcmdMode.app;
@@ -36,9 +41,13 @@ class RcmdController extends CommonListController {
     if (rcmdMode != RcmdMode.merged) {
       // 单源模式
       _isFirstPage = (page == 0);
-      return appRcmd
+      final res = await (appRcmd
           ? VideoHttp.rcmdVideoListApp(freshIdx: page)
-          : VideoHttp.rcmdVideoList(freshIdx: page, ps: 20);
+          : VideoHttp.rcmdVideoList(freshIdx: page, ps: 20));
+      if (res case Success(:final response)) {
+        _prefetchTailCovers(response);
+      }
+      return res;
     }
 
     // 合并模式：并行请求
@@ -88,7 +97,20 @@ class RcmdController extends CommonListController {
 
     _appPage++; // App端页码自增（Web端由基类 page++ 管理）
 
+    _prefetchTailCovers(merged);
     return Success(merged);
+  }
+
+  /// 预取本批后半段的封面：首屏（两列网格约 4~6 张）立即可见不需要预取，
+  /// 之后的条目提前进缓存。不抛异常、不阻塞数据返回。
+  void _prefetchTailCovers(List<BaseRcmdVideoItemModel> list) {
+    try {
+      if (list.length > 6) {
+        ImageUtils.prefetchImages(
+          list.skip(6).take(_prefetchCovers).map((e) => e.cover),
+        );
+      }
+    } catch (_) {}
   }
 
   @override

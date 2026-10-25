@@ -317,7 +317,9 @@ class ReplyItemGrpc extends StatelessWidget {
               style: TextStyle(color: colorScheme.outline),
             ),
           },
-          TextSpan(text: voteOption.desc),
+          // desc 形如「已投"xxx"」，选项名是动态内容——整串送翻，模型会保留
+          // 引号内的选项原文、只翻译「已投」部分（与 @提及 的处理同理）。
+          TextSpan(text: uiTx(voteOption.desc)),
         ],
       ),
       style: TextStyle(
