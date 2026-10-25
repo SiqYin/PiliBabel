@@ -1,0 +1,240 @@
+<div align="center">
+    <img width="200" height="200" src="assets/images/logo/logo.png">
+    <h1>PiliBabel</h1>
+    <p><b>AI ဘာသာပြန်စွမ်းရည်ပါဝင်သော third-party Bilibili client တစ်ခု။</b></p>
+    <p>Babel — ဘာသာစကားတံတိုင်းကို ဖြိုခွဲပြီး လူတိုင်းသည် bilibili ကို မိမိကိုယ်ပိုင်ဘာသာစကားဖြင့် ခံစားနိုင်စေရန်။</p>
+    <p>bilibili ၏တရားဝင် ဘာသာစကား ၁၅၁ ဘာသာစာရင်းကို ၎င်းမကျုံ့သော အခြား ၆ ဘာသာ — Traditional Chinese၊ Simplified/Traditional Wu၊ mainland နှင့် Taiwan Hokkien၊ Zhuang — တို့နှင့်အတူ ပေါင်းစည်းထားသည်။</p>
+    <p>ဘာသာပြန်ခြင်းသည် bilibili ၏ကိုယ်ပိုင် အခမဲ့မော်ဒယ်ဖြင့် ထည့်သွင်းသည်နှင့် ချက်ချင်းအလုပ်လုပ်သည် — API key မလိုအပ်ပါ။</p>
+</div>
+<!-- lang-switch:start -->
+<div align="center">
+    <p><a href="README.md.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <a href="README.nan.md">台語</a> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a> · <a href="README.ru.md">Русский</a> · <a href="README.uk.md">Українська</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.pt.md">Português</a> · <a href="README.bn.md">বাংলা</a> · <a href="README.th.md">ไทย</a> · <a href="README.tr.md">Türkçe</a> · <a href="README.it.md">Italiano</a> · <a href="README.fa.md">فارسی</a> · <a href="README.fil.md">Filipino</a> · <a href="README.ur.md">اردو</a> · <a href="README.mr.md">मराठी</a> · <a href="README.te.md">తెలుగు</a> · <a href="README.ta.md">தமிழ்</a> · <a href="README.pa.md">ਪੰਜਾਬੀ</a> · <a href="README.gu.md">ગુજરાતી</a> · <a href="README.ha.md">Hausa</a> · <a href="README.sw.md">Kiswahili</a> · <a href="README.nl.md">Nederlands</a> · <b>မြန်မာ</b> · <a href="README.pl.md">Polski</a> · <a href="README.is.md">Íslenska</a> · <a href="README.nb.md">Norsk</a> · <a href="README.fi.md">Suomi</a> · <a href="README.sv.md">Svenska</a> · <a href="README.da.md">Dansk</a> · <a href="README.be.md">Беларуская</a> · <a href="README.ug.md">ئۇيغۇرچە</a> · <a href="README.kk.md">Қазақша</a> · <a href="README.bo.md">བོད་ཡིག</a></p>
+</div>
+<!-- lang-switch:end -->
+
+<div align="center">
+    <img src="assets/screenshots/readme_en_home.jpg" width="32%" alt="ပင်မစာမျက်နှာ" />
+    <img src="assets/screenshots/readme_en_dynamics.jpg" width="32%" alt="Dynamic များ" />
+    <img src="assets/screenshots/readme_en_mine.jpg" width="32%" alt="ကျွန်ုပ်" />
+</div>
+
+<br/>
+
+> **သတိပေးချက်။** PiliBabel သည် **တရားဝင်မဟုတ်သော၊ open-source၊ third-party** client တစ်ခုဖြစ်သည်။ ၎င်းသည် bilibili / bilibili Inc. နှင့် **ဆက်စပ်မှု၊ ထောက်ခံအာမခံမှု သို့မဟုတ် စပွန်ဆာရှိမှု မရှိပါ**။ API အားလုံးကို တရားဝင် public endpoint များမှ စုဆောင်းထားပြီး **အခပေး content တစ်ခုမျှ လော့ခ်ဖွင့်ပေးခြင်း သို့မဟုတ် ဖောက်ထွင်းခြင်း မပြုလုပ်ပါ**။ အပြည့်အစုံ [သတိပေးချက်](#သတိပေးချက်)နှင့် [လိုင်စင်](#လိုင်စင်)အပိုင်းများကို ဖတ်ပါရန်။
+
+## PiliBabel ဆိုသည်မှာ
+
+PiliBabel သည် **[PiliNara](https://github.com/Starfallan/PiliNara) အပေါ်တွင် တည်ဆောက်ထားသော လွတ်လပ်စွာရပ်တည်သည့် third-party fork တစ်ခုဖြစ်ပြီး** PiliNara ဆက်ခံရရှိသည့်အရာအားလုံးကိုပင် ဆက်ခံရရှိသည်-
+
+```
+bilibili (တရားဝင် public API)
+        ▲
+   PiliPala / PiliPalaX        — မူလပရောဂျက်
+        ▲
+   PiliPlus                    — တက်ကြွစွာဖြစ်သော fork
+        ▲
+   PiliNara                    — PiliPlus ၏ fork (ကိုယ်ပိုင် ချို့ညှိမှုများ)
+        ▲
+   PiliBabel  ← သင်ဤနေရာတွင် — PiliNara ၏ fork
+```
+
+PiliBabel သည် **PiliNara / PiliPlus ၏ လုပ်ဆောင်ချက်အားလုံးကို ထိန်းသိမ်းထားပြီး** (အောက်ဘက်နားရှိ [ဆက်ခံရရှိသော လုပ်ဆောင်ချက်မှတ်တမ်း](#ဆက်ခံရရှိသော-လုပ်ဆောင်ချက်မှတ်တမ်း-pilinara--piliplus-မှ) ကို ကြည့်ပါ) upstream client များတွင် မရှိသော **ထိပ်တန်းစွမ်းဆောင်ရည်နှစ်ခုကို ထပ်ထည့်သည်**-
+
+> **AI interface နှင့် content ဘာသာပြန်ခြင်း** — အက်ပ်တစ်ခုလုံး (UI label များ၊ ဗီဒီယိုခေါင်းစဉ်များ၊ UP နာမည်များ၊ မှတ်ချက်များ၊ dynamic များ၊ feed နှင့် တိုက်ရိုက် danmaku အပါအဝင်) ကို **သင်** ရွေးချယ်သော ဘာသာစကားဖြင့် ပုံဖော်ပြသည်။
+
+1.0 မှစတင်၍ ဤအလုပ်ကို **ထည့်သွင်းသည်နှင့် ချက်ချင်း** လုပ်ဆောင်ပေးသည်- ဘာသာပြန်မော်ဒယ်ကို **built-in အနေဖြင့် ထည့်သွင်းထားသည်**။ bilibili သည် ကိုယ်ပိုင် ဘာသာပြန်မော်ဒယ်မိသားစု [Index-Translate](https://github.com/bilibili/Index-Translate) ကို open-source ပြုထားပြီး အခမဲ့ public endpoint တစ်ခုမှ ဝန်ဆောင်မှုပေးသည်။ PiliBabel သည် ၎င်းကို ရည်ညွှန်းထားသည့်အတိုင်း ပါလာသဖြင့် အက်ပ်ကို ထည့်သွင်းသည့်အခိုက် ဘာသာပြန်ခြင်း အလုပ်လုပ်သည် — စာရင်းမသွင်းရ၊ key မလို၊ ဘေလ်မရှိ။ ကိုယ်ပိုင်မော်ဒယ်ကို အသုံးပြုလိုပါက own-API လမ်းကြောင်းသည် တစ်ချက်တည်းသော အကွာအဝေးတွင် ရှိနေဆဲဖြစ်သည်။
+
+> **တကယ်လိုက်ညီနေသော ဟက်ဒဖုန်းအသံ** — Bluetooth သို့မဟုတ် ကြိုးပါဟက်ဒဖုန်းများဖြင့် အသံသည် ရုပ်ပုံနောက်သို့ မနောက်ကျတော့ပါ။ တရားဝင်အက်ပ်က ဤအချက်ကို မှန်ကန်စွာ လုပ်ဆောင်သည်; PiliNara နှင့် PiliPlus တို့သည်မူ မူလအခြေအနေအတိုင်း မလုပ်နိုင်ပါ။ PiliBabel သည် ယခုအခါ mpv ထံမှ **AudioTrack** ကို အရင်တောင်းဆိုသည်- ၎င်းသည် အသံ output latency ကို တရားဝင် client လုပ်ဆောင်သကဲ့သို့ *တိုင်းတာ* ပေးပြီး၊ ၎င်းကို *ခန့်မှန်း*သာသော **OpenSL ES** အစားဖြစ်သည်။
+
+## အဓိက လုပ်ဆောင်ချက်များ
+
+- **ဟက်ဒဖုန်းအသံ လိုက်ညီမှု။** player သည် ယခုအခါ **OpenSL ES** အစား mpv ၏ **AudioTrack** backend ကို မူလသတ်မှတ်ချက်အဖြစ် အသုံးပြုသည် (`audiotrack,aaudio,opensles` အစဉ်အလိုက်)။ AudioTrack သည် *တိုင်းတာထားသော* output latency ကို အစီရင်ခံသည် — ဖွင့်ပြပြီးသော frame အရေအတွက်နှင့် စက်ပစ္စည်း presentation timestamp ကို ဖတ်သည် — ၎င်းသည် တရားဝင် bilibili အက်ပ်နှင့် Android ၏ကိုယ်ပိုင် `MediaSync` တို့ ရုပ်ပုံနှင့်အသံကို တစ်ပြိုင်တည်း ထိန်းသိမ်းထားသည့် နည်းလမ်းမှာပင်ဖြစ်သည်။ OpenSL ES ကမူ ၎င်းကို *ခန့်မှန်း*သာသဖြင့် Bluetooth ဟက်ဒဖုန်းများတွင် အသံနာရီ လွဲငင့်ကာ ရုပ်ပုံကို အလျင်ပြသခဲ့ရသည်။ စမ်းသပ်မှုများအရ နောက်ကျမှုမှာ လက်တွေ့အားဖြင့် ပျောက်သွားသည်။ Settings → Video → Audio output device တွင် မည်သည့်အချိန်မဆို အစဉ်ကို ပြန်စီနိုင်သည်။
+
+- **AI ဘာသာပြန်ခြင်း၊ နေရာတကာ။** Navigation tab များ၊ ဗီဒီယိုကတ်များ၊ အသေးစိတ်စာမျက်နှာများ၊ မှတ်ချက်များ၊ dynamic များနှင့် Mine / Favorites / History / Messages / Search မျက်နှာပြင်များ — အနှစ်ချက်ချက် စကန်တစ်ခုသည် **UI string ~1,650+ ကျော်** အပြင် dynamic content (ခေါင်းစဉ်များ၊ စာရေးဆရာနာမည်များ၊ လုပ်ဆောင်မှုအရေအတွက်များ) ကိုပါ ကျုံ့ဝင်သည်။
+- **Engine နှစ်ခု၊ ဆွိတ်ချိုးတစ်ခု။** *Built-in* (မူလသတ်မှတ်ချက်) သည် bilibili ၏တရားဝင် **Index-Translate-35B-A3B** အခမဲ့ endpoint ကို အသုံးပြုသည် — ပြင်ဆင်စရာမလိုပါ။ *Own API* သည် ယခင်အပြုအမူကို ထိန်းသိမ်းထားသည်- ကိုယ်ပိုင် base URL / key / model ဖြင့် OpenAI-compatible ဖြစ်သော `/chat/completions` endpoint တစ်ခုခုကို ညွှန်ပြပါ။ AI video-summary လုပ်ဆောင်ချက်နှင့် AI ဘာသာပြန်ခြင်း လုပ်ဆောင်ချက်တို့တွင် **လုံးဝသီးခြားစီဖြစ်သော** endpoint များနှင့် setting များ ရှိနေဆဲဖြစ်ပြီး နှစ်ခုစလုံးသည် **"AI features"** စာမျက်နှာတစ်ခုတည်းအောက်တွင် ရှိကြသည်။
+- **ဘာသာစကားစာရင်းတစ်ခုတည်း၊ engine နှစ်ခုစလုံးအတွက်။** ပစ်မှတ်ဘာသာစကားစာရင်းကို engine အလိုက် ခွဲခြားမထားပါ — မည်သည့် engine ကို ရွေးသည်ဖြစ်စေ စာရင်းတစ်ခုတည်းကိုသာ အသုံးပြုခွင့်ပေးသည်။ ၎င်းသည် bilibili ၏တရားဝင်မော်ဒယ်၏ **ဘာသာစကား ၁၅၁ ဘာသာ**ကို ၎င်းမကျုံ့သော **အခြား ၆ ဘာသာ** — Traditional Chinese၊ Simplified/Traditional Wu၊ mainland နှင့် Taiwan Hokkien၊ Zhuang — တို့နှင့် ပေါင်းစည်းထားသည်။ ဒေသဆိုင်ရာနှင့် စာလုံးရေးပုံ variant များကို တစ်ခုတည်းသော entry အဖြစ် မပေါင်းစပ်ဘဲ **သီးခြား entry များ** အဖြစ် ထားရှိသည် — Moroccan / Egyptian / Najdi / Levantine Arabic တို့သည် မိမိကိုယ်ပိုင် ရွေးချယ်မှုတစ်ခုစီဖြစ်ကြသကဲ့သို့ Cyrillic နှင့် Latin Serbian၊ Uzbek နှင့် Urdu တို့လည်း သီးခြားစီဖြစ်ကြသည်။
+- **ကျုံ့ဝင်မှုအကြောင်း ရိုးသားမှု။** တရားဝင်စာရင်းအတွင်းရှိ ဘာသာစကားများကို bilibili ၏မော်ဒယ်က လွှမ်းခြုံထားသည်။ စာရင်းပြင်ပရှိ အနည်းငယ် — Traditional Chinese၊ Simplified/Traditional Wu၊ mainland နှင့် Taiwan Hokkien၊ Zhuang — တို့သည်လည်း စာရင်းတွင် ဆက်လက်ပေါ်နေပြီး အမှတ်အသားပြုထားသဖြင့် ပိုကောင်းသောရလဒ်အတွက် ကိုယ်ပိုင်မော်ဒယ် လိုအပ်နိုင်ကြောင်း တစ်ချက်ကြည့်ရုံဖြင့် သိနိုင်သည်။
+- **တစ်ကြိမ်ပြန်လျှင် အမြဲတမ်းအတည်။** Source string တစ်ခုစီကို **အတိအကျ တစ်ကြိမ်တည်းသာ** ပြန်ဆိုသည်; ရလဒ်ကို စက်အတွင်း သိမ်းဆည်းထားပြီး screen တစ်ခုကို ပြန်ဖွင့်သော်လည်း **နောက်ထပ်မပြန်ဆိုတော့ပါ** — တရားဝင် client ကဲ့သို့ပင် တည်ငြိမ်၍ ခန့်မှန်းနိုင်သော ဘာသာပြန်မှုများအတွက်ဖြစ်သည်။
+- **မှတ်ချက်တစ်ခုချင်းစီအတွက် Original ⇄ Translation ဖြတ်နှိုးချိုး** (တရုတ်စကားလုံးမဟုတ်ဘဲ အိုင်ကွန်သေးသေး)။ `@mentions / [emoji] / #topics# / links` တို့ကို token များအဖြစ် ထိန်းသိမ်းထားပြီး **hyperlink ပါသော မှတ်ချက်များပါ လင့်ခ်နှိပ်နိုင်စွမ်း မပျက်စေဘဲ ဘာသာပြန်ဆဲဖြစ်သည်**။
+- **Danmaku (弹幕) ဘာသာပြန်ခြင်း** — player ၏ ညာဘက်အပေါ် control တန်းရှိ သီးခြားဖြတ်နှိုးချိုးတစ်ခုဖြစ်ပြီး **မူလသတ်မှတ်ချက်အားဖြင့် ပိတ်ထားပြီး** ၎င်းကိုယ်တိုင်၏ စာသားပါ ဘာသာပြန်ထားသော အတည်ပြုချက်တစ်ခုက ကာရံထားသည်။ ဖွင့်ပြီးပါက playhead ရှေ့ရှိ danmaku များကို **~15-စက္ကန့် batch များ** အဖြစ် ကြိုပြန်ထားသည် (အလယ်သို့ seek လုပ်ခြင်းကို အစကနေမဟုတ်ဘဲ မှန်ကန်စွာ ဆက်ဆံသည်)၊ ထို့ကြောင့် ဘာသာပြန်ရလဒ်သည် မျက်နှာပြင်ပေါ် ရောက်လာချိန်တွင် များသောအားဖြင့် အဆင်သင့်ရှိနေပြီးဖြစ်သည်။
+- **Thinking-mode ဖြတ်နှိုးချိုး** (`enable_thinking`) အရည်အသွေး-အမြန်နှုန်းအတွက်၊ အပြင် setting များတွင် **"ဘာသာပြန် စမ်းသပ်ခြင်း"** နှင့် **cache ရှင်းလင်းခြင်း** ခလုတ်များ။
+- **လျင်မြန်သော ဘာသာစကားပြောင်းလဲမှု**- တည်ရှိနေသော cache တစ်ခုကို ရည်ရွယ်၍ concurrency ကန့်သတ်ထားသော batch တောင်းဆိုမှုများ; ဘာသာစကားပြောင်းလဲသောအခါ လက်ရှိ screen ကို တစ်ကြိမ်တည်း အတင်းပြန်တည်ဆောက်သဖြင့် မဘာသာပြန်ရသေးသော စာသားကို စိုက်ကြည့်နေရသည့် အခြေအနေသို့ မရောက်တော့ပါ။ AI ဘာသာပြန်ခြင်းကို ပိတ်လိုက်ပါက UI တစ်ခုလုံးသည် မူလစာသားသို့ ပြန်ပြောင်းသွားပြီး တောင်းဆိုမှု လုံးဝမပြုလုပ်တော့ပါ။
+- **ပထမအကြိမ်ဖွင့်လှစ်မှု ကြိုဆိုခြင်း။** အက်ပ်ကို ပထမဆုံးအကြိမ် ဖွင့်သောအခါ အင်္ဂလိပ်စာ dialog တစ်ခုက ဘာသာပြန်ခြင်းကို ဖွင့်ပေးရန် အကြံပြုသည်။ လက်ခံလိုက်ပါက ဘာသာပြန်ခြင်း ပွင့်သွားပြီး built-in မော်ဒယ် ရွေးချယ်သည်၊ AI setting စာမျက်နှာ ဖွင့်ပြီး နောက်ချက်ချင်း မည်သည့်ဘာသာစကားကို လိုချင်သည်ကို မေးသည် — ထို့ကြောင့် အသုံးပြုသူအသစ်တစ်ဦးသည် ထည့်သွင်းမှုမှ ဘာသာပြန်ပြီးအက်ပ်အထိ နှစ်ချက်တည်းဖြင့် ရောက်နိုင်သည်။
+- **ကမ္ဘာအနှံ့ အလုပ်လုပ်သော ပြန်ဖွင့်ခြင်း။** PiliBabel သည် သင့်ကို mainland (Aliyun/Shenzhen) node တစ်ခုတွင် အတင်းကပ်ထားစောင်းမှုအစား bilibili ၏ geo-routed `playurl` က ရှိနှင့်ပြီးသား ပေါက်ရောက်နိုင်သော overseas edge (ကမ္ဘာ့ **Akamai**၊ `mirror*ov`၊ `cn-hk-eq-bcache`) ကို ရွေးချယ်သည် — ထို့ကြောင့် mainland China ပြင်ပ အသုံးပြုသူများသည် ထိုးရပ်တန့်ခြင်း ("အသံ ဆက်လက်ကားနေ၊ ဗီဒီယို ပိတ်သွား") မှ ကင်းလွတ်သွားသည်။ Settings တွင် CDN တစ်ခုကို လက်ဖြင့် ကပ်ထားစောင်းနိုင်ဆဲဖြစ်သည်။
+- **"Theme & Colour" စာမျက်နှာ၊ Material You စတိုင်။** Light / dark / follow-system တို့ကို **တိုက်ရိုက်ကြိုကြည့်ရှုခြင်း ကတ်သုံးရွက်** မှ ရွေးချယ်သည် — တစ်ရွက်စီသည် ထို mode အသုံးပြုလိုက်မည့် အတိအကျအရောင်များဖြင့် အမှန်တကယ့် interface ၏ သေးငယ်သောပုံကို ရေးဆွဲပြသည် ("follow system" ကတ်သည် စောင်း၍ ခွဲခြမ်းထားပြီး အနက်ရောင်အပေါ်တွင် အလင်းရောင်)။ ၎င်းတို့အောက်တွင်- **dynamic colour** (စက်က support ပြုသည့်နေရာများတွင် system wallpaper မှ ရယူသည်)၊ **high-contrast dark** (အမှန်တကယ့် အနက်ရောင်မျက်နှာပြင်များ၊ ညဘက်တွင် မျက်စအတွက် သက်သာစေသည်) နှင့် **always-dark player**။ အရောင်ဘက်တွင်မူ FlexScheme palette အပြည့်အစုံကို ထိန်းသိမ်းထားသည် — **မျိုးစေ့အရောင် ၁၉ မျိုး** အပြင် container အရောင်တိုင်းကို မျိုးစေ့မှ မည်သို့ ဆင်းသက်ရမည်ကို ဆုံးဖြတ်ပေးသော၊ သင်ရွေးသောမျိုးစေ့နှင့် လုံးဝသီးခြားဖြစ်သည့် **"palette style"** တစ်ခုပါရှိသည်။
+- **LXGW WenKai သည် အက်ပ်နှင့်အတူပါလာသည်။** **LXGW WenKai (霞鹜文楷)** စာလုံးပုံစံကို **ထည့်သွင်းထားပြီး မူလသတ်မှတ်ချက်အဖြစ် သတ်မှတ်ထားသည်** — ထည့်သွင်းသည်နှင့်တစ်ပြိုင်နက် ရရှိနိုင်သော၊ နွေးထွေး၍ ဖတ်ရလွယ်ကူလှသော တရုတ်စာလုံးပုံစံတစ်ခုဖြစ်ပြီး ရွေးချယ်မှုစာရင်းထဲတွင် ရှာဖွေနေရန် မလိုအပ်ပါ။ ၎င်းသည် interface တစ်ခုလုံး *နှင့်* danmaku ပေါ်တွင်ပါ အသုံးချသည်။ System font သို့ ပြန်ပြောင်းနိုင်ဆဲ၊ ထည့်သွင်းပြီး system font မည်သည့်ကိုမဆို ရွေးနိုင်ဆဲ၊ သို့မဟုတ် ကိုယ်ပိုင် `.ttf` / `.otf` / `.ttc` ကို တင်သွင်းနိုင်ဆဲဖြစ်သည်; ယခင်က ရည်ရွယ်ရွေးချယ်ခဲ့သော font တစ်ခုသည် upgrade ကို ကျော်လွန်၍ ထိန်းသိမ်းခြင်းခံရသည်။ အလေးချိန်နှင့်အရွယ်အစားသည် ယခင်ကဲ့သို့ပင် ချိန်ညှိနိုင်ဆဲဖြစ်သည်။
+
+## Offline အသံ cache လုပ်ခြင်းနှင့် ဒေသတွင်း folder သို့ download လုပ်ခြင်း (PiliBabel အတွက်သာ)
+
+Upstream PiliNara / PiliPlus တွင် မရှိသော စွမ်းဆောင်ရည်နှစ်ခု — နှစ်ခုစလုံးက သင့် media များကို offline အသုံးပြုခွင့် စစ်မှန်စွာ ပိုင်ဆိုင်နိုင်ရန် ရည်ရွယ်သည်။
+
+### အသံကို cache လုပ်ခြင်း (အသံသက်သက် offline cache)
+
+- **Track၊ ဗီဒီယိုမဟုတ်။** ဗီဒီယိုစာမျက်နှာ menu ရှိ *Cache video* ၏ အောက်တွင်ပင် *Cache audio* entry တစ်ခု ရှိပြီး၊ listen-video စာမျက်နှာ၏ အပေါ် bar တွင်လည်း သီးခြား cache-audio ခလုတ် ရှိသည်။
+- **အရည်အသွေးအဆင့်ကို ရွေးပါ။** Hi-Res lossless၊ Dolby Atmos၊ 192K၊ 132K သို့မဟုတ် 64K — ဗီဒီယိုအရည်အသွေး ရွေးချယ်ကိရိယာ အသုံးပြုသည့် preset စာရင်းအတူတူပင်။
+- **မူလ container၊ transcoding မရှိ။** File ကို CDN ပေးပို့သည့်အတိုင်း အတိအကျ ရေးသွင်းသည်- `m4a`၊ `mp3`၊ `flac`၊ `wav`၊ `aac` သို့မဟုတ် `ogg`။
+- **ကိုယ်ပိုင် module။** Cache စာမျက်နှာကို *Cached videos* / *Cached audio* ဟု ခွဲထားပြီး သင် နောက်ဆုံးအခါက မည်သည့် module တွင် ရှိခဲ့သည်ကို မှတ်မိထားသည်။
+- Cache ပြုလုပ်ထားသော အသံ item တစ်ခုကို တစ်ချက်နှိပ်လိုက်ပါက audio player ကို ချက်ချင်းဖွင့်ပြသည်; item များကို တစ်ခုချင်း သို့မဟုတ် အများအပြား ဖျက်နိုင်သည်။
+
+### ဒေသတွင်း folder သို့ download လုပ်ခြင်း
+
+- **ကိုယ်ပိုင် menu entry။** *Download to local folder* သည် ဗီဒီယိုစာမျက်နှာ menu တွင် *Cache audio* ၏ အောက်မှာပင် ရှိသော သီးခြား entry တစ်ခုဖြစ်သည် — အက်ပ်အတွင်း cache လုပ်ခြင်းနှင့် folder သို့ သိမ်းခြင်းသည် ကွဲပြားသော လုပ်ဆောင်ချက်နှစ်ခုဖြစ်သည်။
+- **ဗီဒီယို သို့မဟုတ် အသံ download လုပ်ခြင်း။** Entry က ပထမဦးစွာ မည်သည့်အချက်ကို လိုချင်သည်ကို မေးပြီးမှ အရည်အသွေးအဆင့်ကို မေးသည် (ဗီဒီယို / အသံ အရည်အသွေး ရွေးချယ်ကိရိယာ)။
+- **သင့် folder၊ သင့်စည်းမျဉ်း။** System file manager ဖြင့် မည်သည့် folder ကိုမဆို ရွေးပါ (Settings → *Download to local folder*)၊ နှစ်သက်သည့်အချိန်မှန်သမျှ ပြောင်းလဲ သို့မဟုတ် ရှင်းလင်းနိုင်သည်။ မရွေးရသေးပါက folder ရွေးချယ်ကိရိယာ ချက်ချင်း ပွင့်သွားမည်။
+- **တိုက်ရိုက် ဖွင့်ကြည့်နိုင်သော file များ။** ဗီဒီယိုကို စည်းစိမ့်ထားသော stream တစ်ခုတည်းအဖြစ် ရယူသည် (`fnval=1`)၊ ထို့ကြောင့် disk ပေါ်သို့ ရောက်ရှိလာသည်မှာ player တစ်ခုခုကို ပေးအပ်နိုင်သော သာမန် MP4 တစ်ခုသာဖြစ်သည် — တွဲဆက်ရမည့် sidecar stream များ မရှိပါ။
+- **အသံသည် မူလပုံစံကို ထိန်းသိမ်းထားသည်** — in-app cache ကဲ့သို့ပင် transcoding လုံးဝမရှိ။
+- File များကို ဗီဒီယိုခေါင်းစဉ်အမည်ဖြင့် မှည့်ခေါ်ထားပြီး ရှိပြီးသား download တစ်ခုကို မည်သည့်အခါမှ ထပ်မရေးပါ။
+
+## ဘာသာပြန် engine နှစ်ခု
+
+| | Built-in (မူလသတ်မှတ်ချက်) | Own API |
+|---|---|---|
+| မော်ဒယ် | bilibili **Index-Translate-35B-A3B** | OpenAI-compatible ဖြစ်သည်များအားလုံးနီးပါး |
+| Endpoint | `index-translate.bilibili.com/v1` | သင့် base URL |
+| API key | **မလိုအပ်ပါ** | သင်၏ကိုယ်ပိုင် |
+| ကုန်ကျစရိတ် | အခမဲ့ | သင့် provider က ယူသည့် အခကြေးငွေ |
+| တောင်းဆိုမှုများ | တောင်းဆိုမှုတစ်ခုလျှင် string တစ်ခု | batch အဖြစ် (တောင်းဆိုမှုတစ်ခုလျှင် ≤ 16) |
+| ထပ်ဆောင်း ဘာသာစကားများ | — | သင့်မော်ဒယ်သိသော မည်သည့်ဘာသာစကားမဆို |
+
+**Built-in engine အတွက် တောင်းဆိုမှုတစ်ခုလျှင် string တစ်ခုဖြစ်ရသည့်အကြောင်း။** Index-Translate သည် ဘာသာပြန်ခြင်းဘက်တွင် *အထူးပြုသူ* တစ်ဦးဖြစ်ပြီး ၎င်း၏တည်းဖြတ်သူများ မှတ်တမ်းတင်ထားသော ခေါ်ဆိုမှုသဘောသဘာဝမှာ single-item template တစ်ခုဖြစ်သည် ("အောက်ပါစာသားကို X ဘာသာသို့ ပြန်ဆိုပြီး ဘာသာပြန်ရလဒ်ကိုသာ ထုတ်ပေးပါ")။ ထို့ကြောင့် PiliBabel သည် ဤ engine ပေါ်တွင် own-API အသုံးပြုမှုများအတွက် အသုံးပြုသည့် နံပါတ်တပ်စာရင်း/JSON-array batch prompt အစား တောင်းဆိုမှုတစ်ခုလျှင် string တစ်ခု ပေးပို့သည်။ Endpoint သည် အခမဲ့ဖြစ်သဖြင့် batch output ကို စံချိန်ကြိုးပမ်းကြည့်ရန် အမြတ်မရှိ — ၎င်းသည် ပျက်စီးနိုင်သော နည်းလမ်းများ သိသိသာသာ လျှော့ချရန် တောင်းဆိုမှု အနည်းငယ် ပိုပေးလိုက်သည့် သဘောတူညီချက်ဖြင့် ရည်မှန်းထားသော ကူးသန်းဆက်သွယ်မှုတစ်ခုဖြစ်သည်။
+
+**0.3.x မှ အဆင့်မြှင့်တင်ခြင်း။** သင့်ကိုယ်ပိုင် API setting များ — base URL၊ key နှင့် model — ကို **သင်ပြင်ဆင်ထားသည့်အတိုင်းပင် ထားရှိသည်**။ Engine ရွေးချယ်မှုသည် မူလသတ်မှတ်ချက်အားဖြင့် built-in မော်ဒယ်ကိုသာ ရည်ညွှန်းသဖြင့် အဆင့်မြှင့်ပြီးစတွင် bilibili ၏အခမဲ့မော်ဒယ်ဖြင့် ရှိနေမည်; *Settings → AI → AI features → translation engine* ကို ဖွင့်ပြီး *Own API* သို့ ပြန်ပြောင်းလျှင် သင့်ယခင် setting သို့ ချက်ချင်း ပြန်ရောက်မည်။
+
+## AI interface ဘာသာပြန်ခြင်း လုပ်ဆောင်ပုံ (နည်းပညာ)
+
+Repository တွင် **i18n / ARB resource layer မရှိပါ** — UI string များသည် တိုက်ရိုက်ရေးသွင်းထားသော တရုတ်ဘာသာဖြစ်သည်။ Widget တိုင်းကို ပြန်ရေးသည့်အစား PiliBabel က အပေါ်တွင် ပါးလွှာသော ဘာသာပြန် layer တစ်ခု ထည့်သွင်းထားသည်-
+
+1. **အနှစ်ချက်ချက် lookup wrapper။** `lib/services/ui_translate/` သည် top-level `uiTx(String src)` တစ်ခုကို ဖော်ပြသည်။ `Text('中文')` ဖြစ်နေကျ widget စာသားသည် `Text(uiTx('中文'))` ဖြစ်သွားသည်။ Script ဖြင့်ရေးသားထားသော **codemod** တစ်ခုက ဤအရာကို ပရောဂျက်တစ်ခုလုံးသို့ အသုံးချခဲ့သည် (`tool/ui_translate_*.py`) — ခန့်မှန်း **223 file / ~1,650+ string** — လိုအပ်သည့်နေရာများတွင် ယခုအသုံးမခံတော့သော `const` keyword ကို အလိုအလျောက် ချန်လှပ်ပေးသည် (`const X<T>(...)` ကဲ့သို့ generic များနှင့် `const Positioned.fill(...)` ကဲ့သို့ dotted အမည်များ အပါအဝင်၊ ထို့အပြင် `static const` list/map ကြေညာချက်များကို `static final` သို့ ပြောင်းပေးခြင်း)။
+2. **`GetxService` core တစ်ခု** (`ui_translate_service.dart`):
+   - တည်မြဲသော **source → translation** cache တစ်ခု (GetStorage ဖြင့် ခံထားသည်)၊ ထို့ကြောင့် string တိုင်းကို တစ်ကြိမ်တည်း ပြန်ဆိုပြီး အမြဲတမ်း ပြန်အသုံးပြုနိုင်သည်;
+   - `tx()` က `RxInt revision` ကို အရင်ဖတ်ပြီးမှ ဆုံးဖြတ်သည်- ပိတ်ထားပါက → မူလအရာကို ပြန်ပေးသည်; ပစ်မှတ်သည် **Simplified Chinese (`zh-CN`)** ဖြစ်ပါက API တောင်းဆိုမှု မလုပ်ဘဲ မူလအရာကို ပြန်ပေးသည် (Bilibili ၏ source content မှာ ပြတ်သားစွာ Simplified Chinese ဖြစ်သည်)။ အခြားပစ်မှတ်အားလုံး — Traditional Chinese၊ Cantonese၊ Wu/Shanghainese၊ Hokkien/Min Nan အပါအဝင် — သည် သတ်မှတ်ထားသော engine ကို ဖြတ်သွားသည်; တရုတ်မိသားစုဝင်ဖြစ်သည်ဆိုသည်မျှဖြင့် ဘာသာပြန်ခြင်းမှ လွတ်မငြားပါ။ ထို့နောက် cache မှ ဝန်ဆောင်မှုပေး သို့မဟုတ် **queue တွင် ထည့်သည်**;
+   - Queue တွင်းရှိ string များကို **chunk အလိုက် တဖြည်းဖြည်း အသုံးချခြင်း** ပြုလုပ်သော **worker pool** တစ်ခုက ထုတ်ယူဆောင်ရွက်ပေးသည် (ပြန်လာသည့် chunk တိုင်းက `revision` ကို တက်စေသဖြင့် စာသားသည် တဖြည်းဖြည်း မွမ်းမံသည်)၊ ရလဒ်များကိုလည်း **သိမ်းဆည်းသည်** (throttle လုပ်ထားသည်)။ Batch အရွယ်အစားနှင့် concurrency တို့သည် engine အလိုက်ရှိသည်- built-in မော်ဒယ်တွင် **တောင်းဆိုမှုလျှင် ၁ ခု**၊ ကိုယ်ပိုင် API တွင် **တစ်ပြိုင်နက် ≤ 10 ဖြင့် ≤ 16**။
+3. **Engine ဖြေရှင်းခြင်း။** `TranslateProvider` (`builtin` / `custom`) က transport အသုံးပြုမည့် URL၊ key နှင့် model ကို ဆုံးဖြတ်သည်; engine နှစ်ခုစလုံးသည် အခြားနည်းဖြင့် code လမ်းကြောင်းတစ်ခုတည်းနှင့် ဘာသာစကားစာရင်းတစ်ခုတည်းကို မျှဝေအသုံးပြုသဖြင့် engine ပြောင်းခြင်းသည် setting တစ်ခုတည်းသာဖြစ်ပြီး လုပ်ဆောင်ချက်အစုံ ကွဲပြားခြင်း မဟုတ်ပါ။
+4. **Transport** သည် AI video summary နှင့် အတူတူပင် စစ်ဆေးအတည်ပြုပြီးသော **streaming** channel ကို ပြန်အသုံးပြုသည် — `AiChatService.streamChat` → `stream: true` ဖြင့် `{base}/chat/completions` (streaming ကိုသာ support ပြုသော gateway များနှင့် ကိုက်ညီသည်) — ဘာသာပြန်ခြင်းက ၎င်းကိုယ်ပိုင် `apiUrl` / `apiKey` / `model` နှင့် `enable_thinking` flag တစ်ခု အသုံးပြုနိုင်ရန် တိုးချဲ့ထားသည်။ ဤပြောင်းလဲမှုသည် **backward-compatible ဖြစ်သဖြင့်** video summary သည် မပြောင်းလဲဘဲ ဆက်လက်အလုပ်လုပ်သည်။
+5. **ကြားထည့်စာပိုဒ်များ** သည် `uiTxP(template, args)` ကို အသုံးပြုသည်- `{0}`/`{1}` placeholder များပါသော စာပိုဒ်တစ်ခုလုံးကို တည်ငြိမ်သော key တစ်ခုအဖြစ် ပြန်ဆိုသည် (prompt က မော်ဒယ်အား placeholder များကို မပြောင်းရန် တောင်းဆိုသည်)၊ ထို့နောက် တန်ဖိုးများကို ပြန်အစားထိုးသည် — ထို့ကြောင့် `"共 {0} 条"` ပုံစံ string များသည် dynamic အပိုင်းများ မပျက်စေဘဲ ပြန်ဆိုနိုင်သည်။
+6. **ဘာသာစကားဇယား** (`app_language.dart`)- `AppLanguage` တစ်ခုစီသည် ပြသမည့် ကိုယ်ပိုင်အမည်၊ script/ဒေသဆိုင်ရာ သဘောသဘာဝများကို encode လုပ်ထားသော `toModel` prompt string တစ်ခု၊ နှင့် bilibili ၏တရားဝင်စာရင်းက လွှမ်းခြုံထားမှု ရှိ/မရှိ အမှတ်အသားတစ်ခု သယ်ဆောင်ထားသည်။ Script စည်းမျဉ်းများ (Simplified/Traditional၊ နှင့် dialect-တည်ငြိမ်မှု ညွှန်ကြားချက်များ) သည် မော်ဒယ်ထံ prompt ဖြင့်သာ ရောက်ရှိပြီး client ဘက်ရှိ သေချာသော normalisation ဖြတ်သန်းမှုတစ်ခုက နောက်ပိုင်းတွင် လမ်းလွဲနေသော စာလုံးများကို ပြင်ပေးသည်။
+7. **မှတ်ချက်များ** သည် `uiTxComment(text, id)` ကို ဖြတ်သွားသည်၊ `@ / [emoji] / #topic# / link` တို့ကို မပျက်စီးသော token များအဖြစ် ထိန်းသိမ်းသည်; link ပါသော rich-text span များကို link recognizer ထိန်းသိမ်းထားချက်ဖြင့် ပြန်ဆိုပြီး မှတ်ချက်တစ်ခုချင်းစီ၏ id set က Original ⇄ Translation ဖြတ်နှိုးချိုးကို လုပ်ဆောင်စေသည်။
+8. **Danmaku** (`danmaku/view.dart`)- ၎င်း၏ toggle ဖွင့်ထားပါက position listener တစ်ခုက `[playhead, playhead + 15s]` ကို တစ်စက္ကန့်ခြင်း လှည့်ကြည့်ပြီး danmaku တစ်ခုစီ၏ content ပေါ်တွင် `uiTx()` ကို ကြိုပြင်ထားသည်၊ ထို့ကြောင့် item များသည် screen မရောက်မီ ကြိုပြန်ပြီးသားဖြစ်နေသည်; ဖွင့်လိုက်ပါက canvas ကို ရှင်းလင်းပြီး ပြန်ရေးဆွဲသည်။
+9. **သိုလှောင်ရေး key များ**- `uiTranslate{Enabled,Provider,Lang,Model,ApiUrl,ApiKey,Thinking,Cache,Onboarded}`။ **Settings UI**- AI video summary နှင့် AI translation အတွက် သီးခြား block များပါဝင်သော၊ first-level "AI features" စာမျက်နှာတစ်ခုတည်း (`lib/pages/setting/ui_translate/`)။
+
+**ကမ္ဘာ့ CDN (`VideoUtils.getCdnUrl`)။** Stream URL များကို လက်မှတ်ထိုးထားပြီး URL ၏ host ကို ပြန်ရေးသည့်အခါ 403 ဖြင့် ငြင်းပယ်ခံရသည် — ထို့ကြောင့် playback သည် host ကို မည်သည့်အခါမှ ပြန်ရေးလေ့မရှိပါ။ PiliBabel က bilibili က client ၏ IP ကို ပေးသည့် geo-routed URL ကို ပြန်ပေးပြီး candidate စာရင်းတွင် overseas edge (`*.akamaized.net`၊ `mirror(cos|ali|hw)ov`၊ `cn-hk-eq-bcache`) ပါရှိပြီးဖြစ်ပါက ၎င်းကိုသာ ဦးစားပေးသည်။ Host လဲလှယ်ခြင်း လုံခြုံသော download များတွင်မူ ကမ္ဘာ့ Akamai edge ကို ထပ်ဆောင်း ဦးစားပေးပြီး လိုင်းတစ်ခု ရပ်တန့်သွားလျှင် သို့မဟုတ် ဆက်လက်ချိတ်ဆက်ခြင်းကို ငြင်းပယ်လျှင် နောက်လက်မှတ်ထိုးထားသော candidate သို့ လှည့်သည်။ Raw `/v/resource` P2P link များသည် 404 ရှောင်ရန် ရှိပြီးသား relay သို့ ပြန်ကျသည်။
+
+**ဒီဇိုင်းရွေးချယ်စရာများ / သိရှိထားသော ကန့်သတ်ချက်များ။** String များကို resource များအဖြစ် ခွဲထုတ်ခြင်းမပြုဘဲ မူလနေရာတွင် ထပ်ရံထားသဖြင့် `Text` မဟုတ်သော string parameter အချို့နှင့် rich-text span အချို့ကို တဖြည်းဖြည်း ဆက်ဖြည့်နေဆဲဖြစ်သည်။ **logic key** များအဖြစ် တာဝန်ယူထားသော string များ (`==` ဖြင့် နှိုင်းယှဉ်ခံရသည်များ၊ `简介` ကဲ့သို့ tab အမည်များအဖြစ် အသုံးပြုခံရသည်များ သို့မဟုတ် switch များတွင် အသုံးပြုသော enum label များ) ကိုမူ အပြုအမူ မပျက်စေရန် ရည်ရွယ်ချက်ဖြင့် **အားလုံးကို တစ်ပြိုင်တည်း မရံထားပါ**။ Danmaku ဘာသာပြန်ခြင်းသည် လှုပ်ရှာနေသော canvas ပေါ်ရှိ အကောင်းဆုံး ကြိုးပမ်းမှုသာဖြစ်သည် — လွန်ကဲစွာ dense ဖြစ်နေသော danmaku အောက်တွင် ဘာသာပြန်ရလဒ် မရောက်မီ မူလအရာကို တခဏမျှ မြင်ရနိုင်သည်။ ဘာသာပြန်ခြင်းကို network လိုအပ်သည်; မရှိပါက တရုတ်ဘာသာမဟုတ်သော ပစ်မှတ်များ အသက်မဝင်ပါ။ Built-in endpoint သည် bilibili လည်ပတ်နေသော အခမဲ့ public ဝန်ဆောင်မှုတစ်ခုဖြစ်သည် — rate-limit ခံရပါက သို့မဟုတ် မရရှိနိုင်ပါက အက်ပ်က သင့်အား ဖော်ပြမည်ဖြစ်ပြီး ကိုယ်ပိုင် API သို့ ပြောင်းနိုင်သည်။
+
+## တည်ဆောက်ခြင်းနှင့် စစ်ဆေးခြင်း
+
+အက်ပ်ကို `lib/scripts/patch.ps1` နှင့် `lib/scripts/build.ps1` တို့ဖြင့် patch လုပ်ထားသော Flutter SDK နှင့် patch လုပ်ထားသော `material_ui` / `cupertino_ui` package များဖြင့် တည်ဆောက်သည် (PiliNara / PiliPlus နှင့် လုံးဝတူသည်)။ GitHub Actions က push တစ်ခုစီတိုင်း **debug APK** တစ်ခု ထုတ်ပေးသည် (`.github/workflows/ui-translate-debug.yml`)၊ ထို့အပြင် **`v*` tag တစ်ခု ထုတ်ပြန်ပါက Android၊ Windows နှင့် Linux** output များကို အလိုအလျောက် တည်ဆောက်ကာ release လုပ်ပေးသည် (`.github/workflows/release.yml`၊ `win_x64.yml`၊ `linux_x64.yml`)။
+
+<br/>
+
+## Platform များ
+- [x] Android
+- [ ] iOS
+- [ ] Pad
+- [x] Windows
+- [x] Linux
+
+PiliBabel သည် Releases မှ **Android (APK)၊ Windows နှင့် Linux** build များကို ထုတ်ပေးသည်; iOS/Pad ကိုမူ ဤ fork တွင် မထုပ်ပိုးရသေးပါ။
+
+<br/>
+
+## Download လုပ်ရန်
+
+**Releases** မှ build တစ်ခုကို ရယူပါ၊ သို့မဟုတ် repo ကို clone လုပ်ကာ သင့်စက်တွင် တည်ဆောက်ပါ။
+
+### Arch Linux
+
+Package ပြုလုပ်ပေးသည့်အတွက် [@nlsdt](https://github.com/nlsdt) အား ကျေးဇူးတင်ပါသည် (PiliNara recipe သည် PiliBabel သို့ပါ ကူးပါသည်)။
+
+```bash
+sudo pacman -S pilinara      # Arch Linux CN repository မှတစ်ဆင့်
+paru -S pilinara-bin         # သို့မဟုတ် AUR မှတစ်ဆင့်- pilinara-bin (ကြိုတည်ဆောက်ပြီး) / pilinara (source)
+```
+
+<br/>
+
+## ဆက်ခံရရှိသော လုပ်ဆောင်ချက်မှတ်တမ်း (PiliNara / PiliPlus မှ)
+
+အောက်ပါအရာအားလုံးသည် PiliNara (နှင့် တစ်ဆင့်ဆင်းသက်လာသည့် PiliPlus) မှ ဆက်ခံရရှိထားသည်များဖြစ်သည်; PiliBabel က ၎င်းတို့အပေါ်တွင် AI ဘာသာပြန် layer ကို ထပ်ထည့်သည်။
+
+**UI နှင့် platform လိုက်လျောညီစေမှု**
+- [x] client များစွာ အတူတကွ တည်ရှိနိုင်စေရန် platform အလိုက် အက်ပ်အမည် ပြောင်းထားခြင်း (PiliBabel သည် PiliNara နှင့်အတူ ထည့်သွင်းနိုင်သည်)
+- [x] Xiaomi HyperOS mini-window အောက်တွင် Flutter rendering ကို ပြင်ခြင်း ([#161086](https://github.com/flutter/flutter/issues/161086)၊ [venera#467](https://github.com/venera-app/venera/pull/467) မှတစ်ဆင့်); Android ရှိ predictive back animation
+- [x] စိတ်ကြိုက်ပြင်နိုင်သော "Mine" card အစဉ်/အရေအတွက်; history-card ကြိုကြည့်ခြင်းနှင့် "watch later" ကဏ္ဍများ
+- [x] ချိန်ညှိနိုင်သော trigger အကျယ်ဖြင့် sidebar အလိုအလျောက် ပြောင်းခြင်း; long-press / right-click မှ copy-image; MD3E style ပြန်လည်ဖန်တီးမှု အကြီးစား
+
+**Font စနစ်** — content-hash ဖြင့် ပူးတွဲချက်များ မပွားစေသော တစ်စုတစ်မှုတည်းသော import pool၊ ထို pool အတွင်းသို့ပင် ပေါင်းသွင်းထားသော danmaku font များ၊ ttc support ပါ `loadFontFromList`၊ နှင့် pure-ASCII hash family အမည်များ။
+
+**Playback၊ mini-window နှင့် quality** — in-app mini-window (ဆွဲခြင်း၊ အရွယ်အစားပြောင်းခြင်း၊ SponsorBlock skip၊ အလိုအလျောက် system PIP၊ live ကိုယ်တိုင်ကယ်တင် bar)၊ concurrent-audio playback၊ in-app အသံ 200% အထိ၊ latency စမ်းသပ်မှုပါ video CDN domain နှင့် ဒေသဆိုင်ရာ node ရွေးချယ်မှု စိတ်ကြိုက်၊ ခွဲခြားထားသော half/full-screen မူလ quality၊ swipe-up speed lock၊ tablet keyboard ထိန်းချုပ်မှု၊ live SuperChat timestamp၊ fan-intimacy အတွက် live heartbeat။
+
+**စာတန်းထိုး၊ AI နှင့် offline** — သီးခြား secondary-subtitle styling ပါ bilingual စာတန်းထိုးများ၊ AI subtitle စိစစ်ခြင်း (စိတ်ကြိုက် OpenAI-compatible endpoint၊ timestamp jump၊ template များ၊ တည်မြဲသော စကားဝိုင်းများ၊ subtitle မရှိပါက ပျော့ပျောင်းသော အရံအသုံးပြုခြင်း)၊ WEBVTT/SRT ထုတ်ယူခြင်း၊ folder စီမံခန့်ခွဲမှုနှင့် metadata တည်မြဲမှုပါ offline-cache dual view၊ download များကို အများသုံး Download folder သို့ ထုတ်ယူခြင်း (Android)။
+
+**Danmaku နှင့် ပိတ်ဆို့ခြင်း** — တိုးတက်စေထားသော merged-danmaku scaling ([Pakku.js](https://github.com/xmcp/pakku.js) စတိုင်)၊ import/export ပါ list-based visual regex ပိတ်ဆို့ခြင်း၊ SponsorBlock seek-into-segment skip၊ Gaussian-kernel high-energy တိုးတက်မှု bar။
+
+**အကြံပြုချက် / dynamic / မှတ်ချက် စိစစ်ထုတ်ခြင်း** — ခေါင်းစဉ်/UP/channel keyword များ၊ ကြာမြင့်ချိန်၊ play-count၊ like-rate၊ စောင့်ကြည့်ထားသော UP ကင်းလွတ်ခွင့်၊ unauthorized/charge-only စိစစ်ထုတ်ခြင်း၊ မျှဝေ whitelist၊ commerce/unauthorized dynamic များ၊ UP ကိုယ်တိုင်၏မှတ်ချက်နှင့် အပေါ်တွင်းကပ်မှတ်ချက် ကင်းလွတ်ခွင့်များ၊ App+Web merged-feed mode။
+
+**Dynamic၊ ရှာဖွေမှုနှင့် အသုံးပြုသူအချက်အလက်** — UP များအတွက် စိတ်ကြိုက်မှတ်စုများ၊ နာမည်နေရာ ၁၃ ခုတွင် မှတ်စုဖြင့် အမည်ပြောင်အစားထိုးခြင်း၊ သီးခြား nested-comment မျိုးတူစီခြင်း၊ ဒေသတွင်း keyword ရှာဖွေစိစစ်ခြင်း၊ b23.tv short-link jump၊ charge-only badge၊ အကြံပြုချက်အကြောင်းပြချက် ဖျောက်ခြင်း toggle၊ coin XP ပြသခြင်း။
+
+**Live တိုးတက်စေမှုများ** — fan-medal တပ်ဆင် panel၊ HLS ကို ဦးစားပေးသော DLNA cast၊ SuperChat အချိန်ပြသခြင်း၊ ကိုယ်တိုင်ကယ်တင်ရန် mini-window အောက်ဘက် control bar။
+
+**System ချိတ်ဆက်မှုနှင့် desktop** — Windows SMTC၊ Linux MPRIS (`audio_service_mpris`)၊ ပြန်တည်ဆောက်ထားသော audio-focus စီမံခန့်ခွဲမှု။
+
+<details>
+<summary>မူရင်းလုပ်ဆောင်ချက်/စစ်ဆေးစာရင်း အပြည့်အစုံ (မူရင်းအတိုင်း၊ PiliNara မှ — ဖွင့်ရန် နှိပ်ပါ)</summary>
+
+**feat**
+编辑动态 · DLNA 投屏 · 离线缓存/播放 · 点击弹幕悬停(点赞/复制/举报) · 播放音频 · 跳过番剧片头/片尾 · 安卓 `loudnorm` · Win/Mac 极验/短信登录 · 视频截取动图 · AI 原声翻译 · SuperChat · 播放课堂视频 · 发起投票 · 发布动态/评论支持富文本/表情/@用户 · 修改消息/聊天设置 · 展示折叠消息 · 查看用户图文 · 动态话题 · 直播分区 · 分享至消息 · 创建/修改/删除关注分组 · 移除粉丝 · 直播弹幕发送表情 · 收藏夹排序 · 稍后再看分类 · WebDAV 备份/恢复 · 保存评论/动态 · 高级弹幕 · 取消/置顶评论 · 记笔记 · 多账号支持 · 屏蔽带货动态/评论 · 互动视频 · 发评/动态反诈 · 高能进度条 · 滑动跳转预览缩略图 · Live Photo · 复制/移动/排序收藏夹 · 超分辨率 · 会员彩色弹幕 · 播放全部/继续/倒序 · Cookie 登录 · 显示视频分段信息 · 调节字幕/全屏弹幕大小 · 收藏夹多选删除 · 搜索用户动态 · 直播弹幕 · 修改资料 · 创建/编辑/删除收藏夹 · 评论楼中楼对话/定位/排序 · 评论点踩 · 私信发图 · 投币动画 · 取消/追番 · 取消/订阅合集 · SponsorBlock · 显示完整合集 · 三连/番剧三连动画 · 带图评论 · 视频 TAG · 筛选搜索 · 转发动态 · 合集图片 · 私信删除/置顶/撤回 · 举报 · 发布/删除/置顶动态
+
+**opt**
+专栏界面 · 私信界面 · 收藏面板 · PIP · 视频封面 · 回复界面 · 系统通知 · 评论显示 · 亮度调节 · 视频播放 · 视频 staff · 防止 bottomsheet 遮挡全屏视频
+
+**fix**
+番剧分集点赞/投币/收藏 · bugs
+
+**功能**
+推荐视频列表(app 端) · 最热视频 · 热门直播 · 番剧列表 · 黑名单屏蔽 · 无痕模式 · 游客模式；用户(粉丝/关注/拉黑、主页、关注取关、离线缓存、稍后再看、观看记录、我的收藏、站内私信)；动态(全部/投稿/番剧、评论与回复)；播放(双击快进快退、播放暂停、亮度音量、上滑全屏、手势快进、全屏方向、倍速、硬件加速、画质/音质/解码、弹幕、字幕、记忆播放、比例)；搜索(热搜、历史、默认词、投稿/番剧/直播/用户、排序与时长筛选)；视频详情(分 P 切换、点赞投币收藏、相关视频、评论身份、排序与二楼、回复、点赞、笔记图)；设置(画质/音质/解码预设、图片质量、主题、震动、高帧率、自动全屏、横屏适配)
+
+</details>
+
+<br/>
+
+## သတိပေးချက်
+
+PiliBabel သည် ပုဂ္ဂလိက၊ စိတ်ဝင်စားမှုအခြေခံ ပရောဂျက်တစ်ခုဖြစ်ပြီး **သင်ယူမှုနှင့် စမ်းသပ်မှုအတွက်သာ** ပေးထားခြင်းဖြစ်သည်; download ပြုလုပ်ပြီး **၂၄ နာရီ**အတွင်း ဖျက်ပါရန်။
+
+- PiliBabel သည် **တရားဝင်မဟုတ်သော third-party** client တစ်ခုဖြစ်ပြီး **bilibili နှင့် ဆက်စပ်မှု၊ ထောက်ခံအာမခံမှု သို့မဟုတ် စပွန်ဆာရှိမှု မရှိပါ**။
+- API အားလုံးကို တရားဝင် public endpoint များမှ စုဆောင်းထားသည်; **crack လုပ်ထားသော၊ လွန်ကဲစွာ ခွင့်ပြုချက်ပြုထားသော သို့မဟုတ် အခပေးတံခါးကို ကျော်လွန်သော content မပေးပါ**။
+- **AI ဘာသာပြန်ခြင်းသည် third-party မော်ဒယ် endpoint ပေါ်တွင် လည်ပတ်သည်။** မူလသတ်မှတ်ချက်အားဖြင့် ၎င်းသည် bilibili ၏ကိုယ်ပိုင် အခမဲ့ public Index-Translate ဝန်ဆောင်မှုဖြစ်သည်; ကိုယ်ပိုင် API သို့ ပြောင်းလိုက်ပါက ၎င်းမှာ သင်ပြင်ဆင်ထားသော endpoint ဖြစ်သည်။ ဘာသာပြန်ရလဒ် အရည်အသွေးနှင့် စည်းမျဉ်းလိုက်နာမှုတို့သည် အသုံးပြုသူနှင့် ရွေးချယ်ထားသော model provider ၏ တာဝန်ဖြစ်သည်; ဤပရောဂျက်သည် **မော်ဒယ်လည်း မ-host ထားပါ API key လည်း မထားပါ**။
+- Copyright နှင့် bilibili ၏ ဝန်ဆောင်မှုစည်းမျဉ်းများကို လေးစားပါ။ တာဝန်သိစွာ အသုံးပြုပါ။
+
+Open-source ကို စွမ်းစေမြှင့်တင်ပေးမှုအတွက် မူရင်းနှင့် upstream စာရေးဆရာများအား လေးစားစွာဖြင့်-
+- [guozhigq/pilipala](https://github.com/guozhigq/pilipala)
+- [orz12/PiliPalaX](https://github.com/orz12/PiliPalaX)
+- [bggRGjQaUbCoE/PiliPlus](https://github.com/bggRGjQaUbCoE/PiliPlus)
+- [Starfallan/PiliNara](https://github.com/Starfallan/PiliNara) — PiliBabel ၏ တိုက်ရိုက်မိခင်ပရောဂျက်
+- [bilibili/Index-Translate](https://github.com/bilibili/Index-Translate) — built-in engine ခေါ်ဆိုသော open-source ဘာသာပြန်မော်ဒယ်မိသားစု
+
+မည်သည့် content မဆို သင့်အခွင့်အရေးကို ချိုးဖောက်ပါက ဖယ်ရှားပေးရန် ကျွန်ုပ်တို့ကို ဆက်သွယ်ပါ။
+
+<br/>
+
+## လိုင်စင်
+
+PiliBabel သည် **GNU General Public License v3.0 (GPL-3.0)** အောက်တွင် လိုင်စင်ရရှိထားသည် — PiliNara၊ PiliPlus နှင့် PiliPala တို့နှင့် အတူတူပင်ဖြစ်သည်။ ၎င်းသည် ဆက်စပ်ဖန်တီးမှုတစ်ခုဖြစ်သည့်အတွက် **PiliBabel ကိုလည်း GPL-3.0 ဖြင့်သာ ဖြန့်ဖြူးရမည်ဖြစ်သည်**: ဤလိုင်စင်အားဖြင့် အသုံးပြုခွင့်၊ လေ့လာခွင့်၊ မျှဝေခွင့်နှင့် ပြင်ဆင်ခွင့်တို့ကို လွတ်လပ်စွာ ရရှိသည်၊ ဤလိုင်စင်အတူတူ၊ copyright အသိပေးချက်နှင့် ဤလိုင်စင်စာသားတို့ကို ထိန်းသိမ်းပါကသာဖြစ်သည်။ [`LICENSE`](./LICENSE) ကို ကြည့်ပါ။
+
+Third-party အစိတ်အပိုင်းများ (Flutter package များ၊ [`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect)၊ [`media-kit`](https://github.com/media-kit/media-kit)၊ [`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer)၊ [`dio`](https://pub.dev/packages/dio) စသည်တို့) သည် ၎င်းတို့၏လိုင်စင်များအောက်တွင်သာ ရှိနေဆဲဖြစ်သည်။
+
+ထည့်သွင်းထားသော **LXGW WenKai** စာလုံးပုံစံသည် **SIL Open Font License 1.1** အောက်တွင် သီးခြားလိုင်စင်ရထားပြီး ၎င်း၏လိုင်စင်စာသားသည် အက်ပ်အတွင်း `assets/fonts/LXGWWenKai-OFL.txt` အဖြစ် ပါလာသည်။
+
+<br/>
+
+## ကျေးဇူးတင်စကား
+
+- [bilibili-API-collect](https://github.com/SocialSisterYi/bilibili-API-collect)
+- [flutter_meedu_videoplayer](https://github.com/zezo357/flutter_meedu_videoplayer)
+- [media-kit](https://github.com/media-kit/media-kit)
+- [dio](https://pub.dev/packages/dio)
+- [Index-Translate](https://github.com/bilibili/Index-Translate) — bilibili ၏ open-source ဘာသာပြန်မော်ဒယ်မိသားစုနှင့် built-in engine နောက်ကွယ်ရှိ အခမဲ့ public endpoint
+- [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — အက်ပ်နှင့်အတူ ထည့်သွင်းထားသော open-source တရုတ်စာလုံးပုံစံ၊ SIL Open Font License 1.1 အောက်တွင်
+- နှင့် ပိုမိုများပြားစွာ
+- bilibili ၏တရားဝင် "AI interface translation" မှ အကြံရရှိထားသည်။
