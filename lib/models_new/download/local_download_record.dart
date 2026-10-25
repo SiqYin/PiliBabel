@@ -18,6 +18,9 @@ class LocalDownloadRecord {
     this.receivedBytes = 0,
     this.done = false,
     this.failed = false,
+    this.qn = 0,
+    this.audioQa = 0,
+    this.extraPath,
   });
 
   /// 唯一键：`<avid>-<cid>-<v|a>`，同一稿件重复下载会覆盖旧档案。
@@ -28,8 +31,12 @@ class LocalDownloadRecord {
 
   final String title;
 
-  /// 落盘的绝对路径。
+  /// 落盘的绝对路径。视频高画质（1080P60 及以上）走 DASH 分离流时，
+  /// 这里是视频轨的路径，音轨见 [extraPath]。
   final String path;
+
+  /// 分离流下载时音频轨的落盘路径（与 [path] 一起构成完整内容）。
+  final String? extraPath;
 
   final String? ownerName;
   final String? cover;
@@ -39,13 +46,38 @@ class LocalDownloadRecord {
   bool done;
   bool failed;
 
+  /// 视频下载所用画质 code（1080P=80）。旧档案为 0，重新下载时按 1080P 处理。
+  int qn;
+
+  /// 音频下载所用音质 code（见 [AudioQuality]）。旧档案为 0。
+  int audioQa;
+
+  /// 是否为 DASH 分离流（视频轨 + 音频轨两个文件）。
+  bool get splitStream => !isAudio && extraPath != null;
+
+  /// 从档案 id（`<avid>-<cid>-<v|a>`）解析出 avid；解析失败返回 0。
+  int get avid {
+    final parts = id.split('-');
+    return parts.length >= 2 ? (int.tryParse(parts[0]) ?? 0) : 0;
+  }
+
+  /// 从档案 id 解析出 cid；解析失败返回 0。
+  int get cid {
+    final parts = id.split('-');
+    return parts.length >= 2 ? (int.tryParse(parts[1]) ?? 0) : 0;
+  }
+
   /// 本地文件是否已被删除（用户自己删了、换了存储、卸载了外部存储……）。
   ///
   /// **不落盘**，每次实时判断：这样用户删掉文件后，列表下一次刷新就能显示
   /// 「本地文件已删除」，也才允许「清理档案」。
   bool get fileMissing {
     try {
-      return !File(path).existsSync();
+      if (!File(path).existsSync()) {
+        return true;
+      }
+      final extra = extraPath;
+      return extra != null && !File(extra).existsSync();
     } catch (_) {
       return true;
     }
@@ -74,6 +106,9 @@ class LocalDownloadRecord {
     'received_bytes': receivedBytes,
     'done': done,
     'failed': failed,
+    'qn': qn,
+    'audio_qa': audioQa,
+    'extra_path': extraPath,
   };
 
   static LocalDownloadRecord fromJson(Map<String, dynamic> json) =>
@@ -88,5 +123,8 @@ class LocalDownloadRecord {
         receivedBytes: json['received_bytes'] as int? ?? 0,
         done: json['done'] as bool? ?? false,
         failed: json['failed'] as bool? ?? false,
+        qn: json['qn'] as int? ?? 0,
+        audioQa: json['audio_qa'] as int? ?? 0,
+        extraPath: json['extra_path'] as String?,
       );
 }
