@@ -127,6 +127,14 @@ Future<VideoQuality?> showLocalVideoQualityPicker(BuildContext context) {
             ListTile(
               dense: true,
               title: Text(quality.desc, style: const TextStyle(fontSize: 14)),
+              // 1080P 以上的档位在服务端只有 DASH 分离流（就算登录了大会员，
+              // 单文件 MP4 也拿不到这些画质），下载会落「视频轨 + 音频轨」两个文件。
+              subtitle: quality.code > 80
+                  ? Text(
+                      uiTx('分离流下载：视频轨与音频轨两个文件'),
+                      style: const TextStyle(fontSize: 12),
+                    )
+                  : null,
               onTap: () => Navigator.of(context).pop(quality),
             ),
           const SizedBox(height: 8),

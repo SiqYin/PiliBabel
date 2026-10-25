@@ -108,6 +108,9 @@ class _LocalDownloadPageState extends State<LocalDownloadPage>
   Future<void> _showMore(LocalDownloadRecord record) async {
     // 每次打开菜单都重新判断：用户可能在别处刚把文件删掉。
     final missing = record.fileMissing;
+    // 下载失败或本地文件已删除时才提供「重新下载」：让用户在原地一键重下，
+    // 不用回视频页重新找稿件、重新选画质音质。
+    final canRedownload = record.failed || missing;
     final value = await showModalBottomSheet<int>(
       context: context,
       useSafeArea: true,
@@ -115,6 +118,14 @@ class _LocalDownloadPageState extends State<LocalDownloadPage>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            if (canRedownload)
+              ListTile(
+                dense: true,
+                leading: const Icon(Icons.download_for_offline_outlined, size: 20),
+                title: Text(uiTx('重新下载')),
+                subtitle: Text(uiTx('按当时的画质 / 音质重新下载')),
+                onTap: () => Navigator.of(sheetContext).pop(2),
+              ),
             ListTile(
               dense: true,
               leading: const Icon(Icons.delete_outline, size: 20),
@@ -135,6 +146,10 @@ class _LocalDownloadPageState extends State<LocalDownloadPage>
       ),
     );
     if (!mounted || value == null) {
+      return;
+    }
+    if (value == 2) {
+      await _service.redownload(record);
       return;
     }
     if (value == 0) {
@@ -204,6 +219,9 @@ class _LocalDownloadItem extends StatelessWidget {
         ? '${_formatSize(record.receivedBytes)} / '
               '${_formatSize(record.totalBytes)}'
         : _formatSize(record.receivedBytes);
+    // 高画质（1080P60 及以上）走 DASH 分离流，是「视频轨 + 音频轨」两个文件，
+    // 标出来让用户知道为什么文件夹里是两个文件。
+    final splitTag = record.splitStream ? ' · ${uiTx('分离流')}' : '';
     return InkWell(
       onTap: onMore,
       child: Padding(
@@ -232,7 +250,7 @@ class _LocalDownloadItem extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '$status · $sizeText',
+                    '$status · $sizeText$splitTag',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(fontSize: 12, color: colorScheme.outline),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -9,6 +10,7 @@ import 'package:PiliPlus/services/download/audio_cache_service.dart';
 import 'package:PiliPlus/services/download/download_manager.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
+import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/video_utils.dart';
 import 'package:flutter/foundation.dart';
@@ -18,6 +20,7 @@ import 'package:path/path.dart' as path;
 import 'package:collection/collection.dart';
 import 'package:PiliPlus/models/common/account_type.dart';
 import 'package:PiliPlus/models_new/download/local_download_record.dart';
+import 'package:PiliPlus/models/video/play/url.dart' show BaseItem;
 import 'package:PiliPlus/utils/storage.dart';
 
 /// 「下载到本地」：把视频 / 音频按能直接播放的格式写进用户自己选的文件夹。
@@ -42,6 +45,10 @@ class LocalDownloadService extends GetxService {
 
   /// 档案变更计数，界面 Obx 读它刷新。
   final RxInt recordsRevision = 0.obs;
+
+  /// 正在下载中的档案 id，防止同一内容被并发触发两次下载
+  /// （入口多点、重复点「重新下载」等）。
+  final Set<String> _activeIds = {};
 
   static const String _recordKey = 'localDownloadRecords';
 
@@ -101,6 +108,9 @@ class LocalDownloadService extends GetxService {
     required String path,
     String? ownerName,
     String? cover,
+    int qn = 0,
+    int audioQa = 0,
+    String? extraPath,
   }) {
     final exist = records.where((e) => e.id == id).firstOrNull;
     if (exist != null) {
@@ -113,19 +123,68 @@ class LocalDownloadService extends GetxService {
       path: path,
       ownerName: ownerName,
       cover: cover,
+      qn: qn,
+      audioQa: audioQa,
+      extraPath: extraPath,
     );
     records.insert(0, record);
     _touchRecords(save: true);
     return record;
   }
 
+  /// 重新下载一条档案：沿用当时选的画质 / 音质，不再弹选择器。
+  ///
+  /// 只在下载失败或本地文件已删除的场景由界面提供入口；这里直接按档案里的
+  /// avid / cid / 画质（旧档案没有则按 1080P / 192K 兜底）重新走一遍下载。
+  Future<void> redownload(LocalDownloadRecord record) async {
+    final avid = record.avid;
+    final cid = record.cid;
+    if (avid <= 0 || cid <= 0) {
+      SmartDialog.showToast(uiTx('该档案缺少重新下载所需的信息'));
+      return;
+    }
+    if (_activeIds.contains(record.id)) {
+      SmartDialog.showToast(uiTx('该内容正在下载'));
+      return;
+    }
+    final bvid = IdUtils.av2bv(avid);
+    if (record.isAudio) {
+      final qa = record.audioQa == 0
+          ? AudioQuality.k192
+          : AudioQuality.values
+                .where((e) => e.code == record.audioQa)
+                .firstOrNull ?? AudioQuality.k192;
+      await downloadAudio(
+        avid: avid,
+        bvid: bvid,
+        cid: cid,
+        title: record.title,
+        quality: qa,
+        ownerName: record.ownerName,
+        cover: record.cover,
+      );
+    } else {
+      await downloadVideo(
+        avid: avid,
+        bvid: bvid,
+        cid: cid,
+        title: record.title,
+        qn: record.qn == 0 ? 80 : record.qn,
+        ownerName: record.ownerName,
+        cover: record.cover,
+      );
+    }
+  }
+
   /// 删除档案对应的本地文件。档案**保留**，界面随之显示「本地文件已删除」，
   /// 再点「清理档案」才会从列表里消失。
   Future<void> deleteLocalFile(LocalDownloadRecord record) async {
     try {
-      final file = File(record.path);
-      if (file.existsSync()) {
-        await file.delete();
+      for (final p in [record.path, ?record.extraPath]) {
+        final file = File(p);
+        if (file.existsSync()) {
+          await file.delete();
+        }
       }
     } catch (e, s) {
       if (kDebugMode) {
@@ -222,7 +281,18 @@ class LocalDownloadService extends GetxService {
     return dir;
   }
 
-  /// 视频下载到本地：取 `fnval = 1` 的单文件流（已封装好的 MP4）。
+  /// 1080P（qn=80）是单文件 MP4（fnval=1 的 durl）能拿到的上限：
+  /// 1080P60 / 1080P+ / 4K / 杜比 / HDR / 8K 这些档位在服务端只有 DASH
+  /// 分离流，就算登录了大会员，走 durl 也只会拿到降级画质甚至空地址——
+  /// 这正是「选高画质下载失败」的根因。所以高于 80 的画质改走 DASH。
+  static const int _singleFileMaxQn = 80;
+
+  /// 视频下载到本地。
+  ///
+  /// - 画质 ≤ 1080P：取 `fnval = 1` 的单文件流（已封装好的 MP4，落盘即播）；
+  /// - 画质 > 1080P（1080P60、4K、杜比、HDR、8K……）：这些档位只有 DASH
+  ///   分离流，下载「视频轨 + 音频轨」两个文件（mp4 + m4a），进度合并在
+  ///   同一条档案里；两个文件都在，播放器（mpv / VLC 等）可一起播放或再合并。
   Future<bool> downloadVideo({
     required int avid,
     required String bvid,
@@ -236,6 +306,24 @@ class LocalDownloadService extends GetxService {
     if (dir == null) {
       return false;
     }
+    final id = '$avid-$cid-v';
+    if (_activeIds.contains(id)) {
+      SmartDialog.showToast(uiTx('该内容正在下载'));
+      return false;
+    }
+    if (qn > _singleFileMaxQn) {
+      return _downloadVideoDash(
+        avid: avid,
+        bvid: bvid,
+        cid: cid,
+        title: title,
+        qn: qn,
+        ownerName: ownerName,
+        cover: cover,
+        dir: dir,
+      );
+    }
+    _activeIds.add(id);
     final isLogin = Accounts.get(AccountType.video).isLogin;
     final res = await VideoHttp.videoUrl(
       avid: avid,
@@ -251,6 +339,7 @@ class LocalDownloadService extends GetxService {
       final durl = response.durl?.firstOrNull;
       final url = durl?.url;
       if (durl == null || url == null || url.isEmpty) {
+        _activeIds.remove(id);
         SmartDialog.showToast(uiTx('没有拿到可下载的视频流'));
         return false;
       }
@@ -262,12 +351,13 @@ class LocalDownloadService extends GetxService {
       final ext = _videoExt(url);
       final filePath = uniquePath(dir, sanitize(title), ext);
       final record = _upsertRecord(
-        id: '$avid-$cid-v',
+        id: id,
         isAudio: false,
         title: title,
         path: filePath,
         ownerName: ownerName,
         cover: cover,
+        qn: qn,
       );
       await _start(
         urls: urls,
@@ -279,8 +369,193 @@ class LocalDownloadService extends GetxService {
       );
       return true;
     }
+    _activeIds.remove(id);
     SmartDialog.showToast(uiTx('取流失败，无法下载到本地'));
     return false;
+  }
+
+  /// 高画质（> 1080P）的视频下载：DASH 取流，落「视频轨 + 音频轨」两个文件。
+  Future<bool> _downloadVideoDash({
+    required int avid,
+    required String bvid,
+    required int cid,
+    required String title,
+    required int qn,
+    String? ownerName,
+    String? cover,
+    required String dir,
+  }) async {
+    final id = '$avid-$cid-v';
+    _activeIds.add(id);
+    final isLogin = Accounts.get(AccountType.video).isLogin;
+    // fnval 默认 4048（DASH），fourk=1 已由请求层固定携带。
+    final res = await VideoHttp.videoUrl(
+      avid: avid,
+      bvid: bvid,
+      cid: cid,
+      qn: qn,
+      tryLook: !isLogin && Pref.p1080,
+      videoType: VideoType.ugc,
+      allowAppSource: false,
+    );
+    if (res case Success(:final response)) {
+      final videos = response.dash?.video;
+      if (videos == null || videos.isEmpty) {
+        _activeIds.remove(id);
+        SmartDialog.showToast(uiTx('没有拿到可下载的视频流'));
+        return false;
+      }
+      // 档位选择：优先不高于所选 qn 的最高档，都高于时退到最低档（与音频一致）。
+      final fit = videos.where((e) => e.id <= qn).toList();
+      final takeHighest = fit.isNotEmpty;
+      final pool = takeHighest ? fit : videos;
+      final video = pool.reduce(
+        (a, b) => takeHighest ? (a.id > b.id ? a : b) : (a.id < b.id ? a : b),
+      );
+      if (video.id != qn) {
+        SmartDialog.showToast(
+          uiTxP('所选画质不可用，已按 {0} 下载', [video.quality.shortDesc]),
+        );
+      }
+      // 音轨取当前账号可用的最高档（Hi-Res > 杜比 > 320K > …，列表已按此序）。
+      final audio = response.dash?.audio
+          ?.reduce((a, b) => a.id > b.id ? a : b);
+
+      String mainUrlOf(BaseItem item, {bool isAudio = false}) {
+        return VideoUtils.getCdnUrl(
+          item.playUrls,
+          isAudio: isAudio,
+          preferAkamai: VideoUtils.downloadPreferAkamai,
+        );
+      }
+
+      final videoMain = mainUrlOf(video);
+      final videoUrls = <String>[
+        videoMain,
+        ...video.playUrls.where((u) => u != videoMain),
+      ];
+      final videoPath = uniquePath(
+        dir,
+        '${sanitize(title)} (${sanitize(video.quality.shortDesc)})',
+        'mp4',
+      );
+      String? audioPath;
+      List<String>? audioUrls;
+      if (audio?.baseUrl?.isNotEmpty == true) {
+        final audioMain = mainUrlOf(audio!, isAudio: true);
+        audioUrls = <String>[
+          audioMain,
+          ...audio.playUrls.where((u) => u != audioMain),
+        ];
+        audioPath = uniquePath(
+          dir,
+          '${sanitize(title)} (${sanitize(audio.quality)})',
+          AudioCacheService.extFromMime(audio.mimeType),
+        );
+      }
+      final record = _upsertRecord(
+        id: id,
+        isAudio: false,
+        title: title,
+        path: videoPath,
+        ownerName: ownerName,
+        cover: cover,
+        qn: qn,
+        extraPath: audioPath,
+      );
+      await _startSplitStreams(
+        videoUrls: videoUrls,
+        videoPath: videoPath,
+        audioUrls: audioUrls,
+        audioPath: audioPath,
+        title: title,
+        record: record,
+      );
+      return true;
+    }
+    _activeIds.remove(id);
+    SmartDialog.showToast(uiTx('取流失败，无法下载到本地'));
+    return false;
+  }
+
+  /// 分离流下载：先视频轨、后音频轨，串行执行，进度合并到同一条档案。
+  Future<void> _startSplitStreams({
+    required List<String> videoUrls,
+    required String videoPath,
+    required List<String>? audioUrls,
+    required String? audioPath,
+    required String title,
+    required LocalDownloadRecord record,
+  }) async {
+    SmartDialog.showToast(uiTxP('开始下载到本地: {0}', [title]));
+
+    /// 下载一条轨。[baseBytes] 是已完成轨的实际字节数，进度在此基础上累加。
+    Future<bool> runTrack(
+      List<String> urls,
+      String filePath,
+      int baseBytes,
+    ) async {
+      final completer = Completer<bool>();
+      DownloadManager(
+        urls: urls,
+        path: filePath,
+        onReceiveProgress: (received, total) {
+          if (total > 0) {
+            record.totalBytes = baseBytes + total;
+          }
+          record.receivedBytes = baseBytes + received;
+          _touchRecords(save: false);
+        },
+        onDone: ([Object? error]) {
+          if (error != null) {
+            if (kDebugMode) {
+              debugPrint('local download (split) failed: $error');
+            }
+          }
+          completer.complete(error == null);
+        },
+      );
+      return completer.future;
+    }
+
+    final videoOk = await runTrack(videoUrls, videoPath, 0);
+    if (!videoOk) {
+      record.failed = true;
+      _deleteIfEmpty(videoPath);
+      if (audioPath != null) {
+        _deleteIfEmpty(audioPath);
+      }
+      _touchRecords(save: true);
+      _activeIds.remove(record.id);
+      SmartDialog.showToast(uiTxP('{0} 下载失败', [title]));
+      return;
+    }
+    final videoBytes = () {
+      try {
+        return File(videoPath).lengthSync();
+      } catch (_) {
+        return record.receivedBytes;
+      }
+    }();
+    if (audioUrls != null && audioPath != null) {
+      final audioOk = await runTrack(audioUrls, audioPath, videoBytes);
+      if (!audioOk) {
+        record.failed = true;
+        _deleteIfEmpty(audioPath);
+        _touchRecords(save: true);
+        _activeIds.remove(record.id);
+        SmartDialog.showToast(uiTxP('{0} 下载失败', [title]));
+        return;
+      }
+    }
+    record.done = true;
+    record.failed = false;
+    if (record.totalBytes > 0) {
+      record.receivedBytes = record.totalBytes;
+    }
+    _touchRecords(save: true);
+    _activeIds.remove(record.id);
+    SmartDialog.showToast(uiTxP('{0} 已下载到本地', [title]));
   }
 
   /// 音频下载到本地：沿用原始容器，不转码。
@@ -299,6 +574,12 @@ class LocalDownloadService extends GetxService {
     if (dir == null) {
       return false;
     }
+    final id = '$avid-$cid-a';
+    if (_activeIds.contains(id)) {
+      SmartDialog.showToast(uiTx('该内容正在下载'));
+      return false;
+    }
+    _activeIds.add(id);
     final isLogin = Accounts.get(AccountType.video).isLogin;
     final res = await VideoHttp.videoUrl(
       avid: avid,
@@ -310,10 +591,14 @@ class LocalDownloadService extends GetxService {
           ? VideoType.ugc
           : (isLogin ? VideoType.pgc : VideoType.ugc),
       allowAppSource: false,
+      // 4048（DASH 全家桶）不含 4096（Hi-Res 无损位）：不补这一位，取流结果里
+      // 永远不会有 Hi-Res（30251）轨，「下载 Hi-Res」会静默退化成 320K。
+      fnval: 4048 | 4096,
     );
     if (res case Success(:final response)) {
       final audios = response.dash?.audio;
       if (audios == null || audios.isEmpty) {
+        _activeIds.remove(id);
         SmartDialog.showToast(uiTx('该视频没有可用的音频流'));
         return false;
       }
@@ -321,6 +606,14 @@ class LocalDownloadService extends GetxService {
       final ids = audios.map((e) => e.id).toList()..sort();
       final lower = ids.where((e) => e <= target).toList();
       final pick = lower.isNotEmpty ? lower.last : ids.first;
+      if (pick != target) {
+        final picked = AudioQuality.values
+            .where((e) => e.code == pick)
+            .firstOrNull;
+        SmartDialog.showToast(
+          uiTxP('所选音质不可用，已按 {0} 下载', [picked?.desc ?? '$pick']),
+        );
+      }
       final item = audios.firstWhere((e) => e.id == pick);
       final raw = <String>[
         if (item.baseUrl case final b?) b,
@@ -339,12 +632,13 @@ class LocalDownloadService extends GetxService {
       final ext = AudioCacheService.extFromMime(item.mimeType);
       final filePath = uniquePath(dir, sanitize(title), ext);
       final record = _upsertRecord(
-        id: '$avid-$cid-a',
+        id: id,
         isAudio: true,
         title: title,
         path: filePath,
         ownerName: ownerName,
         cover: cover,
+        audioQa: pick,
       );
       await _start(
         urls: urls,
@@ -354,6 +648,7 @@ class LocalDownloadService extends GetxService {
       );
       return true;
     }
+    _activeIds.remove(id);
     SmartDialog.showToast(uiTx('取流失败，无法下载到本地'));
     return false;
   }
@@ -381,6 +676,7 @@ class LocalDownloadService extends GetxService {
         _touchRecords(save: false);
       },
       onDone: ([Object? error]) {
+        _activeIds.remove(record.id);
         if (error != null) {
           if (kDebugMode) {
             debugPrint('local download failed: $error');
