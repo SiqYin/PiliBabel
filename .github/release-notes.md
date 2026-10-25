@@ -1,3 +1,13 @@
+### PiliBabel v3.0.4
+
+**The update dialog now speaks your language**
+
+- The release notes shown in the "new version" dialog are now run through the AI translation layer: the dialog opens with the original text and refreshes automatically once the translation arrives (cached per language — each release body is translated only once).
+
+Everything inherited from PiliNara / PiliPlus is unchanged.
+
+Downloads are below.
+
 ### PiliBabel v3.0.3
 
 **Fixed: the "server error" popup on every single video**

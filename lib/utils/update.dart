@@ -70,70 +70,75 @@ abstract final class Update {
                   onPressed: () => onDownload(data, ext: ext, url: url),
                   child: Text(text),
                 );
-            return AlertDialog(
-              title: Text(uiTx('🎉 发现新版本 ')),
-              content: SizedBox(
-                height: 280,
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '${data['tag_name']}',
-                        style: const TextStyle(fontSize: 20),
-                      ),
-                      const SizedBox(height: 8),
-                      Text('${data['body']}'),
-                      TextButton(
-                        onPressed: () => PageUtils.launchURL(
-                          '${Constants.sourceCodeUrl}/commits/main',
+            // 整个弹窗包在 Obx 里：Release 说明正文（data['body']）走 uiTx——
+            // 弹窗先以原文出现，译文在后台翻好后随 revision 自动刷新；
+            // 缓存按语言持久化，同一版本的正文只翻译一次。
+            return Obx(
+              () => AlertDialog(
+                title: Text(uiTx('🎉 发现新版本 ')),
+                content: SizedBox(
+                  height: 280,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${data['tag_name']}',
+                          style: const TextStyle(fontSize: 20),
                         ),
-                        child: Text(uiTx("点此查看完整更新(即commit)内容"),
-                          style: TextStyle(color: colorScheme.primary),
+                        const SizedBox(height: 8),
+                        Text('${uiTx(data['body'] ?? '')}'),
+                        TextButton(
+                          onPressed: () => PageUtils.launchURL(
+                            '${Constants.sourceCodeUrl}/commits/main',
+                          ),
+                          child: Text(uiTx("点此查看完整更新(即commit)内容"),
+                            style: TextStyle(color: colorScheme.primary),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
-              actions: [
-                if (isAuto)
+                actions: [
+                  if (isAuto)
+                    TextButton(
+                      onPressed: () {
+                        SmartDialog.dismiss();
+                        GStorage.setting.put(
+                          SettingBoxKey.skipVersion,
+                          data['tag_name'],
+                        );
+                      },
+                      child: Text(uiTx('不再提醒'),
+                        style: TextStyle(color: colorScheme.outline),
+                      ),
+                    ),
                   TextButton(
-                    onPressed: () {
-                      SmartDialog.dismiss();
-                      GStorage.setting.put(
-                        SettingBoxKey.skipVersion,
-                        data['tag_name'],
-                      );
-                    },
-                    child: Text(uiTx('不再提醒'),
+                    onPressed: SmartDialog.dismiss,
+                    child: Text(uiTx('取消'),
                       style: TextStyle(color: colorScheme.outline),
                     ),
                   ),
-                TextButton(
-                  onPressed: SmartDialog.dismiss,
-                  child: Text(uiTx('取消'),
-                    style: TextStyle(color: colorScheme.outline), 
-                  ),
-                ),
-                if (Platform.isWindows) ...[
-                  downloadBtn('zip', ext: 'zip'),
-                  downloadBtn('exe', ext: 'exe'),
-                ] else if (Platform.isLinux) ...[
-                  downloadBtn('rpm', ext: 'rpm'),
-                  downloadBtn('deb', ext: 'deb'),
-                  downloadBtn('targz', ext: 'tar.gz'),
-                ] else if (Platform.isAndroid) ...[
-                  if (bestAsset != null)
-                    downloadBtn(
-                      uiTxP('下载 APK ({0})', [bestAsset['name']]),
-                      url: bestAsset['browser_download_url'],
-                    )
-                  else
+                  if (Platform.isWindows) ...[
+                    downloadBtn('zip', ext: 'zip'),
+                    downloadBtn('exe', ext: 'exe'),
+                  ] else if (Platform.isLinux) ...[
+                    downloadBtn('rpm', ext: 'rpm'),
+                    downloadBtn('deb', ext: 'deb'),
+                    downloadBtn('targz', ext: 'tar.gz'),
+                  ] else if (Platform.isAndroid) ...[
+                    if (bestAsset != null)
+                      downloadBtn(
+                        uiTxP('下载 APK ({0})', [bestAsset['name']]),
+                        url: bestAsset['browser_download_url'],
+                      )
+                    else
+                      downloadBtn('Github'),
+                  ] else
                     downloadBtn('Github'),
-                ] else
-                  downloadBtn('Github'),
-              ],
+                ],
+              ),
             );
           },
         );
