@@ -8,7 +8,7 @@
 </div>
 <!-- lang-switch:start -->
 <div align="center">
-    <p><a href="README.md.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <b>台語</b> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a> · <a href="README.ru.md">Русский</a> · <a href="README.uk.md">Українська</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.pt.md">Português</a> · <a href="README.bn.md">বাংলা</a> · <a href="README.th.md">ไทย</a> · <a href="README.tr.md">Türkçe</a> · <a href="README.it.md">Italiano</a> · <a href="README.fa.md">فارسی</a> · <a href="README.fil.md">Filipino</a> · <a href="README.ur.md">اردو</a> · <a href="README.mr.md">मराठी</a> · <a href="README.te.md">తెలుగు</a> · <a href="README.ta.md">தமிழ்</a> · <a href="README.pa.md">ਪੰਜਾਬੀ</a> · <a href="README.gu.md">ગુજરાતી</a> · <a href="README.ha.md">Hausa</a> · <a href="README.sw.md">Kiswahili</a> · <a href="README.nl.md">Nederlands</a> · <a href="README.my.md">မြန်မာ</a> · <a href="README.pl.md">Polski</a> · <a href="README.is.md">Íslenska</a> · <a href="README.nb.md">Norsk</a> · <a href="README.fi.md">Suomi</a> · <a href="README.sv.md">Svenska</a> · <a href="README.da.md">Dansk</a> · <a href="README.be.md">Беларуская</a> · <a href="README.ug.md">ئۇيغۇرچە</a> · <a href="README.kk.md">Қазақша</a> · <a href="README.bo.md">བོད་ཡིག</a></p>
+    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <b>台語</b> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a> · <a href="README.ru.md">Русский</a> · <a href="README.uk.md">Українська</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.pt.md">Português</a> · <a href="README.bn.md">বাংলা</a> · <a href="README.th.md">ไทย</a> · <a href="README.tr.md">Türkçe</a> · <a href="README.it.md">Italiano</a> · <a href="README.fa.md">فارسی</a> · <a href="README.fil.md">Filipino</a> · <a href="README.ur.md">اردو</a> · <a href="README.mr.md">मराठी</a> · <a href="README.te.md">తెలుగు</a> · <a href="README.ta.md">தமிழ்</a> · <a href="README.pa.md">ਪੰਜਾਬੀ</a> · <a href="README.gu.md">ગુજરાતી</a> · <a href="README.ha.md">Hausa</a> · <a href="README.sw.md">Kiswahili</a> · <a href="README.nl.md">Nederlands</a> · <a href="README.my.md">မြန်မာ</a> · <a href="README.pl.md">Polski</a> · <a href="README.is.md">Íslenska</a> · <a href="README.nb.md">Norsk</a> · <a href="README.fi.md">Suomi</a> · <a href="README.sv.md">Svenska</a> · <a href="README.da.md">Dansk</a> · <a href="README.be.md">Беларуская</a> · <a href="README.ug.md">ئۇيغۇرچە</a> · <a href="README.kk.md">Қазақша</a> · <a href="README.bo.md">བོད་ཡིག</a></p>
 </div>
 <!-- lang-switch:end -->
 
@@ -52,7 +52,7 @@ PiliBabel 保留 PiliNara / PiliPlus **所有的功能**（請看後壁的[繼�
 
 - **AI 翻譯，逐位攏有。** 導覽列、影片卡、詳細頁、評論、動態，閣有「我的」/「收藏」/「歷史」/「訊息」/「搜尋」攏有；全域處理蓋著**超過 ~1650 條介面字**，加減動態內容（標題、UP 主名、互動數字）。
 
-- **兩个引擎，一个開關。** *內建*（預設）用 bilibili 官方模型 **Index-Translate-35B-A3B** 的免費入口仔 —— 免設定。*自訂 API* 保留進前的做法：任何 OpenAI 相容的 `/chat/completions` 入口，家己的 base URL / Key / 模型。AI 影片摘要佮 AI 翻譯是**完全分開**的入口佮設定，兩項攏囥佇仝一頁**「AI 功能」**。
+- **兩个引擎，一个開關。** *內建*（預設）用 bilibili 官方模型 **Index-Translate-35B-A3B** 的免費入口仔 —— 免設定。*自訂 API* 保留進前的做法：任何 OpenAI 相容的 `/chat/completions` 入口，家己的 base URL / Key / 模型。AI 影片摘要佮 AI 翻譯是**完全分開**的入口佮設定，兩項攏囥佇仝一頁「**AI 功能**」。
 
 - **兩種引擎，仝一份言語清單。** 目標言語的清單無分引擎 —— 揀佗一个引擎，看的是仝一份清單。伊共 bilibili 官方模型**支援的 151 種言語**佮**官方無的 6 種**（傳統華語、簡體佮傳統吳語、中國大陸佮台灣的閩南語、壯語）囥做伙。地區佮文字版本是**分開的項目**，無合做一个：摩洛哥 / 埃及 / 納吉德 / 黎凡特阿拉伯語逐个算一个，塞爾維亞語、烏茲別克語、烏爾都語的斯拉夫／拉丁、西里爾／拉丁嘛是按呢。
 
@@ -62,9 +62,9 @@ PiliBabel 保留 PiliNara / PiliPlus **所有的功能**（請看後壁的[繼�
 
 - **每一條評論攏有「原文 ⇄ 翻譯」開關**（是一个細細的圖示，毋是華語字）。`@標記 / [表情符號] / #主題# / 連結` 攏照原樣保留做完整的記號，**有連結的評論嘛會翻譯，而且連結猶原會使揤**。
 
-- **彈幕翻譯** —— 佇播放器倒手爿的頂懸控制列有一个獨立開關，**預設是關的**，而且有一个確認視窗，彼个視窗的文字嘛會翻譯。開了後，佇播放位置的頭前會**一逝一逝（逐逝約 15 秒）**先翻譯，跳到中間嘛處理會著（毋是對頭開始），所以彈幕走出來的時，翻譯通常已經好矣。
+- **彈幕翻譯** —— 佇播放器倒手爿的頂懸控制列有一个獨立開關，**預設是關的**，而且有一个確認視窗，彼个視窗的文字嘛會翻譯。開了後，佇播放位置的頭前會**一逝一逝**（逐逝約 15 秒）先翻譯，跳到中間嘛處理會著（毋是對頭開始），所以彈幕走出來的時，翻譯通常已經好矣。
 
-- **思考模式開關**（`enable_thinking`），予你佇品質佮速度中間揀；設定頁閣有**「測試翻譯」**佮**清除快取**兩个掣。
+- **思考模式開關**（`enable_thinking`），予你佇品質佮速度中間揀；設定頁閣有「**測試翻譯**」佮**清除快取**兩个掣。
 
 - **換言語真緊**：分批請求 + 限制並行 + 永久快取；換言語的時，目前的畫面會強制重畫一遍，予你袂一直看著未翻譯的字。共 AI 翻譯關起來，規个介面就還原轉去原文，而且**完全袂發任何請求**。
 
@@ -72,9 +72,9 @@ PiliBabel 保留 PiliNara / PiliPlus **所有的功能**（請看後壁的[繼�
 
 - **全世界攏順的播放。** PiliBabel 揀 bilibili 的 `playurl` 照地理路線建議的海外節點（全球 **Akamai**、`mirror*ov`、`cn-hk-eq-bcache`），毋是硬縛佇中國大陸的節點（阿里雲／深圳）—— 所以中國大陸以外的用戶袂閣搪著「有聲無影」。CDN 嘛會使佇設定頁手動固定。
 
-- **Material You 風的「主題佮色彩」頁。** 光／暗／綴系統用**三張會動的預覽卡**來揀 —— 逐張共真實介面的縮圖用彼个模式會用的色畫出來（「綴系統」彼張對角切開：光的疊佇暗的頂懸）。下跤閣有：**動態色彩**（佇支援的裝置提系統桌布的色彩）、**高對比的暗主題**（真正烏的背景，暗時較順目）、佮**播放器永遠暗色**。色彩的彼半爿保留 FlexScheme 全套 —— **19 種基本色**，閣有一个獨立的**「配色風格」**，決定基本色欲按怎生出所有的容器色，佮你揀佗一个基本色無關係。
+- **Material You 風的「主題佮色彩」頁。** 光／暗／綴系統用**三張會動的預覽卡**來揀 —— 逐張共真實介面的縮圖用彼个模式會用的色畫出來（「綴系統」彼張對角切開：光的疊佇暗的頂懸）。下跤閣有：**動態色彩**（佇支援的裝置提系統桌布的色彩）、**高對比的暗主題**（真正烏的背景，暗時較順目）、佮**播放器永遠暗色**。色彩的彼半爿保留 FlexScheme 全套 —— **19 種基本色**，閣有一个獨立的「**配色風格**」，決定基本色欲按怎生出所有的容器色，佮你揀佗一个基本色無關係。
 
-- **LXGW WenKai 隨應用程式來。** 字體 **LXGW WenKai（霞鹜文楷）**是**內建而且預設**的 —— 一个燒烙、清清楚楚的華文字體，裝好就有，免去字體清單內面揣。伊會用在規个介面**佮**彈幕。你嘛會使換轉去系統字體、揀任何系統內底的字體，抑是家己匯入 `.ttf` / `.otf` / `.ttc`；進前明確揀過的字體，升級的時會保留。字重佮字大小照舊會使調。
+- **LXGW WenKai 隨應用程式來。** 字體 **LXGW WenKai**（霞鹜文楷）是**內建而且預設**的 —— 一个燒烙、清清楚楚的華文字體，裝好就有，免去字體清單內面揣。伊會用在規个介面**佮**彈幕。你嘛會使換轉去系統字體、揀任何系統內底的字體，抑是家己匯入 `.ttf` / `.otf` / `.ttc`；進前明確揀過的字體，升級的時會保留。字重佮字大小照舊會使調。
 
 ## 離線音訊快取佮下載到本機（PiliBabel 獨有）
 
