@@ -1033,6 +1033,16 @@ abstract final class VideoHttp {
         'season_id': ?seasonId,
         'ep_id': ?epId,
       }),
+      options: Options(
+        headers: {
+          // 全局 UA 是浏览器（Safari/Mac），但这个接口的风控校验的是完整
+          // 浏览器指纹：缺 Referer 会被判为"伪装浏览器"直接拒掉（每个视频
+          // 必现，表现为进视频页先弹"服务器异常"+URL，播放因走 APP 同源
+          // 不受影响，但字幕/分段/续播信息全丢）。桌面 web 请求这个接口
+          // 时带的就是视频页 Referer，这里对齐。
+          'referer': 'https://www.bilibili.com/',
+        },
+      ),
     );
     if (res.data['code'] == 0) {
       return Success(PlayInfoData.fromJson(res.data['data']));

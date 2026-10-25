@@ -1,3 +1,15 @@
+### PiliBabel v3.0.3
+
+**Fixed: the "server error" popup on every single video**
+
+- Opening a video fired a request for player metadata (subtitle list, chapter timeline, resume position). That request was missing a Referer header — and with the app's User-Agent now presenting a browser fingerprint, a browser UA **without** a Referer is exactly what the server-side risk control treats as a spoofed browser and rejects. Result: one scary "server error + URL" toast per video, and the metadata (resume position, subtitles, chapters) silently lost every time.
+- The request now sends the same Referer the desktop web uses.
+- Belt and braces: this metadata is non-fatal (playback itself goes through the app-source gRPC path), so if the server still rejects it, the failure now degrades silently instead of popping a toast on every video.
+
+Everything inherited from PiliNara / PiliPlus is unchanged.
+
+Downloads are below.
+
 ### PiliBabel v3.0.2
 
 **The overseas performance release: closing the gap with the official app at the transport layer**

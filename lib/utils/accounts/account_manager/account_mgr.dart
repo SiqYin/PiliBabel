@@ -172,6 +172,10 @@ class AccountManager extends Interceptor {
       'hdslb.com',
       'biliimg.com',
       'site/getCoin',
+      // 播放器增强信息（字幕/分段/续播）：非致命，失败已有静默降级
+      // （播放走 APP 同源 gRPC 不受影响）。服务端风控拒掉时若不豁免，
+      // 会变成每进一个视频必弹一次「服务器异常+URL」的恐吓弹窗。
+      'x/player/wbi/v2',
     ];
     String url = err.requestOptions.uri.toString();
     if (kDebugMode) debugPrint('🌹🌹ApiInterceptor: $url\n$err');
