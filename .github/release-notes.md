@@ -1,4 +1,4 @@
-### PiliBabel v3.0.0
+### PiliBabel v3.0.1
 
 **The overseas performance release: closing the gap with the official app at the transport layer**
 
