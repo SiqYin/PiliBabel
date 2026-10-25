@@ -2,13 +2,13 @@
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
     <p><b>有 AI 翻譯功能的第三方嗶哩嗶哩（Bilibili）客戶端。</b></p>
-    <p>巴別塔 —— 拍破語言的高牆，予逐家用家己的語言享受 bilibili。</p>
-    <p>有 151 種 bilibili 官方支援的語言，閣加 6 種官方無的：傳統華語、簡體佮傳統吳語、中國大陸佮台灣的閩南語，閣有壯語。</p>
+    <p>巴別塔 —— 拍破言語的高牆，予逐家用家己的言語享受 bilibili。</p>
+    <p>有 151 種 bilibili 官方支援的言語，閣加 6 種官方無的：傳統華語、簡體佮傳統吳語、中國大陸佮台灣的閩南語，閣有壯語。</p>
     <p>內建 B 站官方的免費翻譯模型，裝好就用，免 API Key。</p>
 </div>
 <!-- lang-switch:start -->
 <div align="center">
-    <p><a href="README.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <b>台語</b> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a> · <a href="README.ru.md">Русский</a> · <a href="README.uk.md">Українська</a></p>
+    <p><a href="README.md.md">English</a> · <a href="README.zh.md">中文</a> · <a href="README.yue.md">粵語</a> · <a href="README.ja.md">日本語</a> · <b>台語</b> · <a href="README.fr.md">Français</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ko.md">한국어</a> · <a href="README.ar.md">العربية</a> · <a href="README.vi.md">Tiếng Việt</a> · <a href="README.ms.md">Bahasa Melayu</a> · <a href="README.id.md">Bahasa Indonesia</a> · <a href="README.mn.md">Монгол</a> · <a href="README.ru.md">Русский</a> · <a href="README.uk.md">Українська</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.pt.md">Português</a> · <a href="README.bn.md">বাংলা</a> · <a href="README.th.md">ไทย</a> · <a href="README.tr.md">Türkçe</a> · <a href="README.it.md">Italiano</a> · <a href="README.fa.md">فارسی</a> · <a href="README.fil.md">Filipino</a> · <a href="README.ur.md">اردو</a> · <a href="README.mr.md">मराठी</a> · <a href="README.te.md">తెలుగు</a> · <a href="README.ta.md">தமிழ்</a> · <a href="README.pa.md">ਪੰਜਾਬੀ</a> · <a href="README.gu.md">ગુજરાતી</a> · <a href="README.ha.md">Hausa</a> · <a href="README.sw.md">Kiswahili</a> · <a href="README.nl.md">Nederlands</a> · <a href="README.my.md">မြန်မာ</a> · <a href="README.pl.md">Polski</a> · <a href="README.is.md">Íslenska</a> · <a href="README.nb.md">Norsk</a> · <a href="README.fi.md">Suomi</a> · <a href="README.sv.md">Svenska</a> · <a href="README.da.md">Dansk</a> · <a href="README.be.md">Беларуская</a> · <a href="README.ug.md">ئۇيغۇرچە</a> · <a href="README.kk.md">Қазақша</a> · <a href="README.bo.md">བོད་ཡིག</a></p>
 </div>
 <!-- lang-switch:end -->
 
@@ -24,7 +24,7 @@
 
 ## PiliBabel 是啥物？
 
-PiliBabel 是一个**獨立、綴佇 [PiliNara](https://github.com/Starfallan/PiliNara) 頂面的第三方分支**，伊繼承 PiliNara 所繼承的全部：
+PiliBabel 是一个**獨立、綴佇 [PiliNara](https://github.com/Starfallan/PiliNara) 頂懸的第三方分支**，伊繼承 PiliNara 所繼承的全部：
 
 ```
 bilibili (官方公開 API)
@@ -40,7 +40,7 @@ bilibili (官方公開 API)
 
 PiliBabel 保留 PiliNara / PiliPlus **所有的功能**（請看後壁的[繼承功能清單](#繼承功能清單來自-pilinara--piliplus)），閣加怹無的**兩項關鍵功能**：
 
-> **用 AI 翻譯介面佮內容** —— 規个應用程式（介面字、影片標題、UP 主名、評論、動態、搜揣，連咧走的彈幕）攏會用**你家己揀的語言**顯示出來。
+> **用 AI 翻譯介面佮內容** —— 規个應用程式（介面字、影片標題、UP 主名、評論、動態、搜揣，連咧走的彈幕）攏會用**你家己揀的言語**顯示出來。
 
 而且對 1.0 版開始，**裝好就用**：翻譯模型是**內建**的。bilibili 共怹家己的翻譯模型 [Index-Translate](https://github.com/bilibili/Index-Translate) 開源，閣提供免費的公開入口仔。PiliBabel 預設就按呢設定好矣，所以裝好就會使翻譯 —— 免註冊、免 Key、免開錢。若你想欲用家己的模型，「自訂 API」彼條路嘛是一揤就會使。
 
@@ -54,9 +54,9 @@ PiliBabel 保留 PiliNara / PiliPlus **所有的功能**（請看後壁的[繼�
 
 - **兩个引擎，一个開關。** *內建*（預設）用 bilibili 官方模型 **Index-Translate-35B-A3B** 的免費入口仔 —— 免設定。*自訂 API* 保留進前的做法：任何 OpenAI 相容的 `/chat/completions` 入口，家己的 base URL / Key / 模型。AI 影片摘要佮 AI 翻譯是**完全分開**的入口佮設定，兩項攏囥佇仝一頁**「AI 功能」**。
 
-- **兩種引擎，仝一份語言清單。** 目標語言的清單無分引擎 —— 揀佗一个引擎，看的是仝一份清單。伊共 bilibili 官方模型**支援的 151 種語言**佮**官方無的 6 種**（傳統華語、簡體佮傳統吳語、中國大陸佮台灣的閩南語、壯語）囥做伙。地區佮文字版本是**分開的項目**，無合做一个：摩洛哥 / 埃及 / 納吉德 / 黎凡特阿拉伯語逐个算一个，塞爾維亞語、烏茲別克語、烏爾都語的斯拉夫／拉丁、西里爾／拉丁嘛是按呢。
+- **兩種引擎，仝一份言語清單。** 目標言語的清單無分引擎 —— 揀佗一个引擎，看的是仝一份清單。伊共 bilibili 官方模型**支援的 151 種言語**佮**官方無的 6 種**（傳統華語、簡體佮傳統吳語、中國大陸佮台灣的閩南語、壯語）囥做伙。地區佮文字版本是**分開的項目**，無合做一个：摩洛哥 / 埃及 / 納吉德 / 黎凡特阿拉伯語逐个算一个，塞爾維亞語、烏茲別克語、烏爾都語的斯拉夫／拉丁、西里爾／拉丁嘛是按呢。
 
-- **蓋的範圍講清楚。** 官方清單內面的語言，模型攏蓋會著。官方無的彼幾種 —— 傳統華語、簡體佮傳統吳語、中國大陸佮台灣的閩南語、壯語 —— 嘛囥佇清單內面閣加註記，予你隨知影：欲有較好的結果，可能著用家己的模型。
+- **蓋的範圍講清楚。** 官方清單內面的言語，模型攏蓋會著。官方無的彼幾種 —— 傳統華語、簡體佮傳統吳語、中國大陸佮台灣的閩南語、壯語 —— 嘛囥佇清單內面閣加註記，予你隨知影：欲有較好的結果，可能著用家己的模型。
 
 - **翻一遍就定去矣。** 每一條原文**干焦翻一遍**，結果囥佇本機，後擺開仝一个畫面**袂閣翻** —— 佮官方客戶端仝一个原則，予翻譯穩定、袂亂振動。
 
@@ -66,13 +66,13 @@ PiliBabel 保留 PiliNara / PiliPlus **所有的功能**（請看後壁的[繼�
 
 - **思考模式開關**（`enable_thinking`），予你佇品質佮速度中間揀；設定頁閣有**「測試翻譯」**佮**清除快取**兩个掣。
 
-- **換語言真緊**：分批請求 + 限制並行 + 永久快取；換語言的時，目前的畫面會強制重畫一遍，予你袂一直看著未翻譯的字。共 AI 翻譯關起來，規个介面就還原轉去原文，而且**完全袂發任何請求**。
+- **換言語真緊**：分批請求 + 限制並行 + 永久快取；換言語的時，目前的畫面會強制重畫一遍，予你袂一直看著未翻譯的字。共 AI 翻譯關起來，規个介面就還原轉去原文，而且**完全袂發任何請求**。
 
-- **頭一擺開起來有提示。** 頭一擺開應用程式的時，有一个英文視窗問你欲毋欲開翻譯。若應好，就會開翻譯、揀內建模型、開 AI 設定頁，隨問你欲佗一个語言 —— 按呢新用戶對裝好到有一个翻譯好的應用程式，兩揤爾爾。
+- **頭一擺開起來有提示。** 頭一擺開應用程式的時，有一个英文視窗問你欲毋欲開翻譯。若應好，就會開翻譯、揀內建模型、開 AI 設定頁，隨問你欲佗一个言語 —— 按呢新用戶對裝好到有一个翻譯好的應用程式，兩揤爾爾。
 
 - **全世界攏順的播放。** PiliBabel 揀 bilibili 的 `playurl` 照地理路線建議的海外節點（全球 **Akamai**、`mirror*ov`、`cn-hk-eq-bcache`），毋是硬縛佇中國大陸的節點（阿里雲／深圳）—— 所以中國大陸以外的用戶袂閣搪著「有聲無影」。CDN 嘛會使佇設定頁手動固定。
 
-- **Material You 風的「主題佮色彩」頁。** 光／暗／綴系統用**三張會動的預覽卡**來揀 —— 逐張共真實介面的縮圖用彼个模式會用的色畫出來（「綴系統」彼張對角切開：光的疊佇暗的頂面）。下跤閣有：**動態色彩**（佇支援的裝置提系統桌布的色彩）、**高對比的暗主題**（真正烏的背景，暗時較順目）、佮**播放器永遠暗色**。色彩的彼半爿保留 FlexScheme 全套 —— **19 種基本色**，閣有一个獨立的**「配色風格」**，決定基本色欲按怎生出所有的容器色，佮你揀佗一个基本色無關係。
+- **Material You 風的「主題佮色彩」頁。** 光／暗／綴系統用**三張會動的預覽卡**來揀 —— 逐張共真實介面的縮圖用彼个模式會用的色畫出來（「綴系統」彼張對角切開：光的疊佇暗的頂懸）。下跤閣有：**動態色彩**（佇支援的裝置提系統桌布的色彩）、**高對比的暗主題**（真正烏的背景，暗時較順目）、佮**播放器永遠暗色**。色彩的彼半爿保留 FlexScheme 全套 —— **19 種基本色**，閣有一个獨立的**「配色風格」**，決定基本色欲按怎生出所有的容器色，佮你揀佗一个基本色無關係。
 
 - **LXGW WenKai 隨應用程式來。** 字體 **LXGW WenKai（霞鹜文楷）**是**內建而且預設**的 —— 一个燒烙、清清楚楚的華文字體，裝好就有，免去字體清單內面揣。伊會用在規个介面**佮**彈幕。你嘛會使換轉去系統字體、揀任何系統內底的字體，抑是家己匯入 `.ttf` / `.otf` / `.ttc`；進前明確揀過的字體，升級的時會保留。字重佮字大小照舊會使調。
 
@@ -106,15 +106,15 @@ PiliBabel 保留 PiliNara / PiliPlus **所有的功能**（請看後壁的[繼�
 | API Key | **免** | 你的 |
 | 開銷 | 免費 | 照你的供應商 |
 | 請求 | 一个請求一條 | 分批（一擺 ≤ 16 條） |
-| 加語言 | — | 你的模型識的語言 |
+| 加言語 | — | 你的模型識的言語 |
 
-**為啥物內建引擎是一條一个請求。** Index-Translate 是一个**專家**，伊的作者共呼叫做紀錄的是單項的模板（「共下面這段翻做 X，干焦輸出翻譯」）。所以佇彼个引擎頂面，PiliBabel 是一條一个請求，毋是用自訂 API 彼套有編號清單佮 JSON 陣列的分批 prompt。彼个入口仔是免費的，用分批的輸出無啥通贏 —— 這是刻意的交換：加幾个請求，換來較少機會出錯。
+**為啥物內建引擎是一條一个請求。** Index-Translate 是一个**專家**，伊的作者共呼叫做紀錄的是單項的模板（「共下面這段翻做 X，干焦輸出翻譯」）。所以佇彼个引擎頂懸，PiliBabel 是一條一个請求，毋是用自訂 API 彼套有編號清單佮 JSON 陣列的分批 prompt。彼个入口仔是免費的，用分批的輸出無啥通贏 —— 這是刻意的交換：加幾个請求，換來較少機會出錯。
 
-**對 0.3.x 升級。** 你自訂 API 的設定 —— base URL、Key、模型 —— **攏照你原本輸入的保留**。只是預設引擎是內建模型，所以升級了後頭一擺開起來會佇免費的 bilibili 模型頂面；開 *設定 → AI → AI 功能 → 翻譯引擎*，換轉去 *自訂 API* 就會隨轉去進前的設定。
+**對 0.3.x 升級。** 你自訂 API 的設定 —— base URL、Key、模型 —— **攏照你原本輸入的保留**。只是預設引擎是內建模型，所以升級了後頭一擺開起來會佇免費的 bilibili 模型頂懸；開 *設定 → AI → AI 功能 → 翻譯引擎*，換轉去 *自訂 API* 就會隨轉去進前的設定。
 
 ## AI 介面翻譯是按怎運作的（技術細節）
 
-這个 repo **無 i18n / ARB 彼層** —— 介面字是拍死佇華語內面的。PiliBabel 無共逐个 widget 重寫，是佇頂面加一層薄薄的翻譯層：
+這个 repo **無 i18n / ARB 彼層** —— 介面字是拍死佇華語內面的。PiliBabel 無共逐个 widget 重寫，是佇頂懸加一層薄薄的翻譯層：
 
 1. **全域的搜揣包裝。** `lib/services/ui_translate/` 提供一个上層函式 `uiTx(String src)`。本來是 `Text('中文')` 的文字，變成 `Text(uiTx('中文'))`。一个**程式碼改寫腳本**共伊套佇規个專案（`tool/ui_translate_*.py`）—— 差不多 **223 个檔案 / ~1650+ 條** —— 自動共會拍死 `const` 的所在提掉（包含 `const X<T>(...)` 這種泛型佮 `const Positioned.fill(...)` 這種有點的號名，`static const` 的串列佮對照表改成 `static final`）。
 
@@ -123,13 +123,13 @@ PiliBabel 保留 PiliNara / PiliPlus **所有的功能**（請看後壁的[繼�
    - `tx()` 先讀 `RxInt revision`，才判斷：關起來 → 還原原文；目標是**簡體華語（`zh-CN`）** → 直接還原原文，無發 API（bilibili 的內容大部份本來就是簡體華語）。其他目標 —— 包含傳統華語、粵語、吳語佮閩南語 —— 攏照你設定的引擎走；屬華語家族無代表免翻譯。紲落去就是對快取抑是入**排隊**；
    - 排隊的字由一个**工人池**處理，**一段一段照順序套用**（逐段轉來的部份會共 `revision` 加一，所以文字是漸漸換過去），結果**寫落去保存**（有節流）。批的大小佮並行數照引擎：內建模型**一个請求一條**，自訂 API **一擺 ≤ 16 條、上濟 10 條咧飛**。
 
-3. **引擎的選擇。** `TranslateProvider`（`builtin` / `custom`）決定傳輸用佗一个 URL、Key 佮模型；其他的部份，兩種引擎共用仝一份程式碼佮仝一份語言清單，所以換引擎是一个設定爾爾，袂變成無仝的功能。
+3. **引擎的選擇。** `TranslateProvider`（`builtin` / `custom`）決定傳輸用佗一个 URL、Key 佮模型；其他的部份，兩種引擎共用仝一份程式碼佮仝一份言語清單，所以換引擎是一个設定爾爾，袂變成無仝的功能。
 
 4. **傳輸**用仝一條經過驗證的**串流**管線，佮 AI 影片摘要仝款 —— `AiChatService.streamChat` → `{base}/chat/completions`，`stream: true`（相容干焦支援串流的閘道）—— 閣擴充予翻譯用**家己的** `apiUrl` / `apiKey` / `model` 佮 `enable_thinking` 開關。這个改變**向後相容**，所以影片摘要免改照舊會走。
 
 5. **有替代字的字**用 `uiTxP(template, args)`：規句有 `{0}`/`{1}` 替代位的句子，用做一个完整的記號去翻譯（prompt 會要求模型共替代位留落來），才共值囥轉去 —— 按呢 `"共 {0} 條"` 這種字翻譯起來袂變形。
 
-6. **語言表**（`app_language.dart`）：逐个 `AppLanguage` 有一个予人看的家己的名、一个 `toModel` 的 prompt 字（交代文字佮地區的慣例），閣有一个講伊敢是 bilibili 官方清單有蓋的。寫法規則（簡體佮傳統的差別、方言一致性的指示）是透過 prompt 到模型的，了後才由一个客戶端的確定性正規化步驟共走精的字改掉。
+6. **言語表**（`app_language.dart`）：逐个 `AppLanguage` 有一个予人看的家己的名、一个 `toModel` 的 prompt 字（交代文字佮地區的慣例），閣有一个講伊敢是 bilibili 官方清單有蓋的。寫法規則（簡體佮傳統的差別、方言一致性的指示）是透過 prompt 到模型的，了後才由一个客戶端的確定性正規化步驟共走精的字改掉。
 
 7. **評論**走 `uiTxComment(text, id)`，共 `@ / [表情符號] / #主題# / 連結` 當做完整的記號保留；有連結的格式化文字會翻譯，連結的辨識嘛留落來，逐个評論的 id 集合咧管「原文 ⇄ 翻譯」開關。
 
@@ -175,7 +175,7 @@ paru -S pilinara-bin         # 抑是對 AUR：pilinara-bin（現成的建置）
 
 ## 繼承功能清單（來自 PiliNara / PiliPlus）
 
-下跤全部是對 PiliNara 搬過來的（嘛所以是綴 PiliPlus 來的）；PiliBabel 佇頂面加一層 AI 翻譯。
+下跤全部是對 PiliNara 搬過來的（嘛所以是綴 PiliPlus 來的）；PiliBabel 佇頂懸加一層 AI 翻譯。
 
 **介面佮各平台的適應**
 - [x] 應用程式照平台改名，予幾个客戶端會使做伙蹛（PiliBabel 會使佮 PiliNara 做伙裝）
