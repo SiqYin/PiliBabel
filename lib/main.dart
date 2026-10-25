@@ -184,6 +184,10 @@ void main() async {
   // 首次启动识别一次、7 天后自动重识；不阻塞启动，失败静默退回默认策略。
   unawaited(CdnRegionResolver.ensureDetected());
 
+  // 连接预热：提前对 api / app 两个主域名建连（DNS+TCP+TLS，HTTP/2 下后续
+  // 请求直接复用），省掉首屏每路请求的握手往返。不阻塞启动，失败静默。
+  unawaited(Request.prewarm());
+
   SmartDialog.config.toast = SmartConfigToast(displayType: .onlyRefresh);
 
   // ESC 全平台注册：平板/手机外接键盘也可用（PageRoute 默认不消费 escape）

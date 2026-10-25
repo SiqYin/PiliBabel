@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:PiliPlus/http/api.dart';
+import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/retry_interceptor.dart';
@@ -56,6 +57,29 @@ class Request {
     final res = await UserHttp.getCoin();
     if (res case Success(:final response)) {
       GlobalData().coins = response;
+    }
+  }
+
+  /// 启动预热：提前对两个主域名各建一条连接（完成 DNS + TCP + TLS，HTTP/2 下
+  /// 后续所有请求直接复用）。官方 APP 启动即建长连接，海外高 RTT 下这能省掉
+  /// 首屏每路请求 2~3 个 RTT 的握手成本。响应内容无所谓（404 也可以），
+  /// 要的只是连接进池。延迟 1.5 秒避开启动峰值，失败静默。
+  static Future<void> prewarm() async {
+    await Future.delayed(const Duration(milliseconds: 1500));
+    for (final host in const [
+      HttpString.apiBaseUrl,
+      HttpString.appBaseUrl,
+    ]) {
+      try {
+        await Request()
+            .get(
+              '$host/',
+              options: Options(
+                validateStatus: (_) => true,
+              ),
+            )
+            .timeout(const Duration(seconds: 8));
+      } catch (_) {}
     }
   }
 
@@ -209,7 +233,10 @@ class Request {
       receiveTimeout: const Duration(milliseconds: 10000),
       //Http请求头.
       headers: {
-        'user-agent': 'Dart/3.6 (dart:io)', // Http2Adapter不会自动添加标头
+        // 用真实浏览器 UA 而不是裸 Dart UA：Web 接口的风控把「Dart/3.6」
+        // 视为明显的非浏览器特征（海外 IP + 裸客户端 UA 极易被降速/412）。
+        // 选 Safari/Mac 款与播放器的 Web 指纹保持一致。Http2Adapter不会自动添加标头
+        'user-agent': BrowserUa.pc,
         if (!_enableHttp2) 'connection': 'keep-alive',
         'accept-encoding': 'br,gzip',
       },

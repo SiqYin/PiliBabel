@@ -1316,8 +1316,12 @@ abstract final class Pref {
   static bool get enableSystemProxy =>
       _setting.get(SettingBoxKey.enableSystemProxy, defaultValue: false);
 
+  /// HTTP/2 多路复用：海外高 RTT 下，HTTP/1.1 的每个并发请求都要单独建连
+  /// （TCP+TLS 握手 2~3 个 RTT），官方 APP 的请求全部走 HTTP/2 长连接复用——
+  /// 这是海外「评论/首页/动态全领域都慢」的最大单一原因，因此默认开启。
+  /// 已显式关闭过的用户设置不受影响。
   static bool get enableHttp2 =>
-      _setting.get(SettingBoxKey.enableHttp2, defaultValue: false);
+      _setting.get(SettingBoxKey.enableHttp2, defaultValue: true);
 
   static ReplySortType get replySortType =>
       ReplySortType.values[_setting.get(
