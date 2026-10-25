@@ -46,6 +46,27 @@ abstract final class VideoUtils {
     caseSensitive: false,
   );
 
+  /// B 站海外 upos 镜像（mirror*ov）。
+  static final _mirrorOvRegex = RegExp(
+    r'mirror(?:cos|ali|hw)ov\.',
+    caseSensitive: false,
+  );
+
+  /// 海外候选的静态优先级（越小越优先）：Akamai 全球边缘（anycast，海外各洲
+  /// 一般都近）> mirror*ov（B 站海外 upos 镜像）> 其它（cn-hk-eq-bcache 香港
+  /// 边缘、bilivideo.tv——对欧美方向常被限速）。服务器按它自己的调度下发候选
+  /// 顺序，对第三方客户端未必友好。
+  static int _overseasTier(String url) {
+    final host = hostOf(url) ?? '';
+    if (host.endsWith('akamaized.net')) {
+      return 0;
+    }
+    if (_mirrorOvRegex.hasMatch(host)) {
+      return 1;
+    }
+    return 2;
+  }
+
   /// 从候选直链中挑一条"海外可用"的现成地址（不改写主机，避免签名失效）。
   ///
   /// 开了 [Pref.cdnSpeedTest]（默认开）时优先用实测最快的：B 站下发的海外候选
@@ -81,6 +102,8 @@ abstract final class VideoUtils {
         return best;
       }
     }
+    // 无实测结果（冷启动首次播放等）：按静态优先级挑，Akamai 最优先
+    candidates.sort((a, b) => _overseasTier(a).compareTo(_overseasTier(b)));
     return candidates.first;
   }
 
