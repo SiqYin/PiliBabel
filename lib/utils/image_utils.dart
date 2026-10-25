@@ -17,7 +17,10 @@ import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/share_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
-import 'package:cached_network_image_ce/cached_network_image.dart';
+// 本文件有自己的 CacheManager（PiliPlus/utils/cache_manager.dart），
+// 与 cached_network_image_ce 导出的同名类冲突，hide 掉后者。
+import 'package:cached_network_image_ce/cached_network_image.dart'
+    hide CacheManager;
 import 'package:clipboard/clipboard.dart';
 import 'package:dio/dio.dart';
 import 'package:file_picker/file_picker.dart';
