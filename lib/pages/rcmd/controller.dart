@@ -39,12 +39,13 @@ class RcmdController extends CommonListController {
   @override
   Future<LoadingState> customGetData() async {
     if (rcmdMode != RcmdMode.merged) {
-      // 单源模式
+      // 单源模式：App / Web 两源的元素类型不同，三元合并后按运行时类型判断。
       _isFirstPage = (page == 0);
       final res = await (appRcmd
           ? VideoHttp.rcmdVideoListApp(freshIdx: page)
           : VideoHttp.rcmdVideoList(freshIdx: page, ps: 20));
-      if (res case Success(:final response)) {
+      if (res case Success(:final response)
+          when response is List<BaseRcmdVideoItemModel>) {
         _prefetchTailCovers(response);
       }
       return res;
