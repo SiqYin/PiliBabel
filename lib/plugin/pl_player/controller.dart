@@ -202,6 +202,24 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   int _switchesSinceQuality = 0; // 本轮已连续换线几次（决定何时该降码率）
   bool _escalationExhausted = false; // 线路换遍且已到最低画质：不再自动动作
 
+  /// 首次加载超时自愈。
+  ///
+  /// 与 [_stallTicks] 的饿死判据是**两回事**：那条判据必须"位置真正推进过"
+  /// 才启用（[_startedPlaying]，避免把开播时的正常缓冲误判成停摆）。于是
+  /// 「首条直链根本不可用（403 / TLS 失败 / 0 吞吐）」这种故障没有任何人管 ——
+  /// 用户看到的就是黑屏 + 0% 一直挂着、永远不自动调整。
+  ///
+  /// 这里专门补上：从开播起计时，超过阈值仍未出画就按「换线（必须探测通过）
+  /// → 重取播放地址 → 放弃并切成可点的错误态」三级阶梯自愈，每级之间有
+  /// 冷却、总次数封顶，绝不无限重开。
+  int _initialLoadTicks = 0;
+  int _initialLoadStage = 0; // 0=未动作 1=已换线 2=已重取地址 3=已放弃
+
+  /// 用户**主动**暂停（区别于 mpv 的 cache-pause：后者由缓冲抽干触发，
+  /// playerStatus 同样会变成 paused，无法区分）。首次加载自愈据此跳过，
+  /// 避免用户暂停在加载中时被后台换线。
+  bool _userPaused = false;
+
   /// 视频+音频合成一条 mpv EDL（与打开时的格式保持一致）
   String dashEdl(String video, String? audio, {required bool fileSource}) {
     if (audio == null || audio.isEmpty) {
@@ -1456,6 +1474,13 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   static const int _recoverCooldownSec = 25;
   static const int _recoverWindowSec = 600;
 
+  /// 首次加载超时阶梯：首次等待 [_initialLoadTimeoutSec]，之后每级再等
+  /// [_initialLoadRetrySec]。三级都失败即切成可点的错误态（不再无限重开）。
+  /// 首次给 14 秒是刻意留宽容度：海外弱网的首帧本来就可能慢，太急会误伤。
+  static const int _initialLoadTimeoutSec = 14;
+  static const int _initialLoadRetrySec = 16;
+  static const int _initialLoadStageMax = 3;
+
   /// 窗口内自动动作次数上限。降档改成**逐级**之后需要的动作变多
   /// （4K→720P 是 4 级台阶，前面还可能先换几次线），8 次会在降到目标前就被
   /// 卡住，所以放宽到 14；梯子用尽仍会置 [_escalationExhausted] 彻底停手。
@@ -1550,6 +1575,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     _lowerPromptCount = 0;
     _livenessPos = position.value;
     _startPos = position.value; // 开播前先记下起始位置
+    _initialLoadTicks = 0;
+    _initialLoadStage = 0;
     _stallTimer = Timer.periodic(
       const Duration(seconds: _stallTickSec),
       (_) => _checkPlaybackStall(),
@@ -1575,6 +1602,13 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   }
 
   void _checkPlaybackStall() {
+    // ⓪ 首次加载超时自愈：必须放在最前面。
+    //
+    // 下面的饿死判据要「位置推进过」才启用（[_startedPlaying]），而这里要治的
+    // 恰恰是「位置从来没有推进」——黑屏 + 0% 一直挂着那种。两个开关都关掉的
+    // 分支也会提前 return，所以这条检查必须在分支之前，且**不受那两个开关约束**：
+    // 「永远加载不出来」是故障自愈，不是替用户决定画质或线路偏好。
+    _checkInitialLoadHang();
     // 两件事分开控制，且**都默认关闭**（改画质/换线路都由用户自己决定）：
     //  * 「带宽不足时自动降画质」——"播 1~2 秒卡 3~4 秒"（吞吐 < 码率）的真正解法；
     //  * 「卡顿时自动换线」（实验）——历史上"视频轨死掉 + 重载黑屏"就是盲目换线
@@ -1681,6 +1715,78 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 最近一个吞吐窗口测得的「内容推进 ÷ 实际经过」，1.0 = 完全跟得上。
   /// 硬饿死分支没有自己的窗口数据，就用这个最近值来算目标档位。
   double _lastEffRatio = 1.0;
+
+  /// 「一直没有开播」的看门狗：黑屏 + 0% 时按三级阶梯自愈。
+  ///
+  /// 只统计「确实在等数据」的拍子：数据源必须是网络流、不是直播/纯音频、
+  /// 没有在拖进度、用户没有主动暂停、当前不在其它自动动作里。判定用的是
+  /// [_startedPlaying]（位置从未推进），一旦出画就永久退出这条路径。
+  void _checkInitialLoadHang() {
+    if (_startedPlaying ||
+        _initialLoadStage >= _initialLoadStageMax ||
+        _switchingLine ||
+        _userPaused ||
+        isLive ||
+        onlyPlayAudio.value ||
+        isSeeking.value ||
+        dataSource is! NetworkSource ||
+        _videoPlayerController == null) {
+      _initialLoadTicks = 0;
+      return;
+    }
+    // 仍在加载：mpv 报缓冲中，或数据层还在 loading。两者都不成立说明
+    // 播放器处于别的不明状态，交给下方原有逻辑。
+    if (!isBuffering.value && dataStatus.value != DataStatus.loading) {
+      _initialLoadTicks = 0;
+      return;
+    }
+    _initialLoadTicks++;
+    final needSec = _initialLoadStage == 0
+        ? _initialLoadTimeoutSec
+        : _initialLoadRetrySec;
+    if (_initialLoadTicks * _stallTickSec < needSec) {
+      return;
+    }
+    _initialLoadTicks = 0;
+    _initialLoadStage++;
+    unawaited(_recoverInitialLoadHang());
+  }
+
+  /// 首载超时的三级恢复：换线（须探测通过）→ 重取播放地址 → 切成可点重试的错误态。
+  Future<void> _recoverInitialLoadHang() async {
+    if (_switchingLine) {
+      return;
+    }
+    _switchingLine = true;
+    try {
+      if (_initialLoadStage == 1) {
+        // 换一条**探得通**的候选：首载失败时盲目切到另一条死线等于继续黑屏。
+        if (await _switchToNextLine(
+          toast: uiTx('加载超时，已切换到备用线路'),
+          requireProbe: true,
+        )) {
+          return;
+        }
+        // 候选全不可用：直接进入下一级（重取地址），不必再等一个周期
+        _initialLoadStage = 2;
+      }
+      if (_initialLoadStage == 2) {
+        SmartDialog.showToast(uiTx('加载超时，正在重新获取播放地址'));
+        await onNeedsPlayerInit?.call();
+        return;
+      }
+      // 三级阶梯用尽：明确切成错误态。指示器会显示「加载失败，点击重试」，
+      // 用户至少有一个可点的出口，而不是对着 0% 无限干等。
+      dataStatus.value = DataStatus.error;
+    } catch (_) {
+      // 自愈动作失败不向外抛（本方法由 unawaited 调用）
+    } finally {
+      // 留出重新建连/缓冲的窗口，期间不再判定，避免连环重开
+      await Future.delayed(const Duration(seconds: 8));
+      _switchingLine = false;
+      _initialLoadTicks = 0;
+    }
+  }
 
   /// 视频轨「假活」检测：位置在推进（音频正常）但不再输出新画面。
   ///
@@ -2445,6 +2551,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 播放视频
   Future<void> play({bool repeat = false, bool hideControls = true}) async {
     if (_playerCount == 0) return;
+    _userPaused = false;
     // 播放时自动隐藏控制条
     final showControlsOnNextPlay = _consumeShowControlsOnNextPlay();
     controls = !hideControls || showControlsOnNextPlay;
@@ -2479,6 +2586,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   Future<void> pause({bool notify = true, bool isInterrupt = false}) async {
     await _videoPlayerController?.pause();
     playerStatus.value = PlayerStatus.paused;
+    // 记「用户主动暂停」：首载超时自愈据此跳过，避免用户暂停在加载中时被后台换线。
+    // 系统级打断（音频焦点等）不算用户意图。
+    if (!isInterrupt) {
+      _userPaused = true;
+    }
 
     // 主动暂停时让出音频焦点
     if (!isInterrupt) {
