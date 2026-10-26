@@ -290,7 +290,7 @@ class Request {
       unawaited(DnsProxy.instance.restart());
       // 主机健康度与并发闸门也绑在旧网络上，一起重置
       HostHealth.instance.reset();
-      HostLimiter.reset();
+      HostLimiter.instance.reset();
     } catch (_) {}
   }
 
