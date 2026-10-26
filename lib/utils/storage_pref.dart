@@ -1463,10 +1463,22 @@ abstract final class Pref {
   static set useAppPlayUrl(bool value) =>
       _setting.put(SettingBoxKey.useAppPlayUrl, value);
 
-  static Map<String, String> initBuffer([double playbackSpeed = 1.0]) {
+  static Map<String, String> initBuffer([
+    double playbackSpeed = 1.0,
+    int? videoBitrate,
+  ]) {
     final bufSec = Pref.bufferSec * playbackSpeed;
     // 前向缓冲直接决定能不能扛住限速抖动：太小 → 缓存被抽干 → 周期性卡顿。
-    final bufSiz = (Pref.bufferSize * 0x100000).toStringAsFixed(0);
+    var bufBytes = Pref.bufferSize * 0x100000;
+    // 高码率自适应：固定 32MB 对 4K（20~40Mbps）只够 6~13 秒前向缓冲，官方
+    // 约 30 秒。这里按「码率 × 20 秒」给足，但不低于用户设定的缓冲大小。
+    if (videoBitrate != null && videoBitrate > 0) {
+      final adaptive = videoBitrate / 8 * 20;
+      if (adaptive > bufBytes) {
+        bufBytes = adaptive;
+      }
+    }
+    final bufSiz = bufBytes.toStringAsFixed(0);
     // 起播阈值给一个上限：默认值算出来是 10.6 秒，意味着要等十秒出头才出画，
     // 官方 APP 的首帧要快得多。夹到 6 秒 —— 既明显缩短起播等待，又保留足够
     // 余量，不至于一开播就被抽干。
