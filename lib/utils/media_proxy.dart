@@ -134,7 +134,7 @@ class MediaProxy {
               false);
       final contentType =
           probe?.headers.contentType?.toString() ?? 'application/octet-stream';
-      await probe?.stream.drain<void>();
+      await probe?.drain<void>();
 
       final last = total == null
           ? null
@@ -164,7 +164,7 @@ class MediaProxy {
         final r = await _open(client, upstream, 'bytes=$s-$e');
         if (r == null) {
           for (final p in parts) {
-            unawaited(p.stream.drain<void>().catchError((_) {}));
+            unawaited(p.drain<void>().catchError((_) {}));
           }
           await _redirect(resp, upstream);
           return;
@@ -181,7 +181,7 @@ class MediaProxy {
       );
       resp.headers.contentLength = length;
       for (final p in parts) {
-        await resp.addStream(p.stream);
+        await resp.addStream(p);
       }
     } catch (_) {
       // 客户端拖动/断开、上游中断：能关就关，什么都不用做
@@ -202,7 +202,7 @@ class MediaProxy {
     String contentType,
   ) async {
     final range = (start > 0 || end != null)
-        ? 'bytes=$start-${end == null ? '' : end}'
+        ? 'bytes=$start-${end ?? ''}'
         : null;
     final res = await _open(client, upstream, range);
     if (res == null) {
@@ -226,7 +226,7 @@ class MediaProxy {
     if (len >= 0) {
       resp.headers.contentLength = len;
     }
-    await resp.addStream(res.stream);
+    await resp.addStream(res);
   }
 
   static Future<void> _redirect(HttpResponse resp, Uri upstream) async {
