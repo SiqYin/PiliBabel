@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart'
     show RefreshIndicatorState;
 import 'package:PiliPlus/http/loading_state.dart';
+import 'package:PiliPlus/utils/net_status.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:flutter/widgets.dart' show GlobalKey, ScrollController;
@@ -92,8 +93,50 @@ abstract class CommonController<R, T> extends GetxController
     return onRefresh();
   }
 
+  /// 网络恢复后自动补拉（A5.2）：页面落到错误态就挂上监听，拿到数据就解除。
+  /// 用 loadingState 驱动，所有子类（列表页、搜索、评论等）自动获得这个行为；
+  /// 用户正常浏览时不会被网络波动打扰。
+  void Function()? _netRestoreRetry;
+
+  void armNetRestoreRetry() {
+    _netRestoreRetry ??= _onNetRestore;
+    NetStatus.restored.removeListener(_netRestoreRetry!);
+    NetStatus.restored.addListener(_netRestoreRetry!);
+  }
+
+  void disarmNetRestoreRetry() {
+    final retry = _netRestoreRetry;
+    if (retry != null) {
+      NetStatus.restored.removeListener(retry);
+    }
+  }
+
+  void _onNetRestore() {
+    if (isClosed) return;
+    if (loadingState.value is Error) {
+      onReload();
+    }
+  }
+
+  @override
+  void onInit() {
+    super.onInit();
+    try {
+      ever(loadingState, (LoadingState state) {
+        if (state is Error) {
+          armNetRestoreRetry();
+        } else if (state is Success) {
+          disarmNetRestoreRetry();
+        }
+      });
+    } catch (_) {
+      // loadingState 由子类延迟初始化时先跳过自动补拉，不影响页面本身
+    }
+  }
+
   @override
   void onClose() {
+    disarmNetRestoreRetry();
     scrollController.dispose();
     super.onClose();
   }
