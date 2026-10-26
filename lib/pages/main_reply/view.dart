@@ -143,6 +143,10 @@ class _MainReplyPageState extends State<MainReplyPage>
                       ),
                     );
                   } else {
+                    // 距末尾还有 6 项就预取下一页（原先只在页脚那一次触发）
+                    if (index >= response.length - 6) {
+                      _controller.onLoadMore();
+                    }
                     return ReplyItemGrpc(
                       replyItem: response[index],
                       replyLevel: 1,
