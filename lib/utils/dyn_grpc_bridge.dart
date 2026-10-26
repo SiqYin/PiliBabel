@@ -17,7 +17,7 @@ import 'package:PiliPlus/grpc/bilibili/app/dynamic/v2.pb.dart'
 /// 认不出的卡片类型、或转换中出现任何意外，一律返回 null —— 调用方整页回退 REST，
 /// 绝不出现「半页 gRPC、半页空白」这种状态。
 abstract final class DynGrpcBridge {
-  /// 只列确认能对齐的卡片类型；其余（转发、直播、付费等）整页回退 REST。
+  /// 只列确认能对齐的卡片类型；其余（付费、直播预约等）整页回退 REST。
   static const Set<String> _supported = {
     'AV',
     'DRAW',
@@ -25,6 +25,8 @@ abstract final class DynGrpcBridge {
     'ARTICLE',
     'COURSES',
     'PGC',
+    'FORWARD',
+    'LIVE_RCMD',
   };
 
   /// 这些字段在 web 结构里是数字，proto3 JSON 会输出成字符串，这里还原
@@ -125,6 +127,24 @@ abstract final class DynGrpcBridge {
         modules.addAll(json);
       }
     }
+    // 转发卡：原动态在 module_dynamic.major.dyn_forward.item，web 结构把它放在 orig
+    Map<String, dynamic>? orig;
+    final major = modules['module_dynamic'];
+    if (major is Map<String, dynamic>) {
+      final m = major['major'];
+      if (m is Map<String, dynamic>) {
+        final fw = m['dyn_forward'];
+        if (fw is Map<String, dynamic>) {
+          final inner = fw['item'];
+          if (inner is Map<String, dynamic>) {
+            orig = _item(inner);
+            if (orig == null) {
+              return null;
+            }
+          }
+        }
+      }
+    }
     final ext = _map(item['extend']);
     final author = modules['module_author'];
     final basic = author is Map<String, dynamic>
@@ -139,6 +159,7 @@ abstract final class DynGrpcBridge {
       'type': type,
       'modules': modules,
       'basic': ?basic,
+      'orig': ?orig,
     };
   }
 
