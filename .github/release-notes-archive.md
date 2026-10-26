@@ -2,6 +2,70 @@
 
 Release 正文由 `.github/release-notes.md` 提供，只放**当前这一版**的说明。
 
+### PiliBabel v3.0.4
+
+**Overseas playback stalls, targeted: the play-4s-freeze-4s cycle**
+
+- The CDN speed probe now downloads **512KB** per node instead of 64KB. Overseas throttling on Bilibili edges kicks in *after* a burst allowance — a 64KB probe fits entirely inside it, so fast and throttled nodes measured the same and the probe was useless. 512KB measures sustained throughput; a throttled node (~100KB/s) now times out and gets discarded.
+- Speed results are now **persisted across sessions** (valid 7 days). They used to live in memory for 30 minutes only, so the first videos after every app start were back to guessing nodes statically. Restarting now picks up last session's measured best edge; background re-probes keep healing network changes.
+- With no measurements available, the static fallback now prefers edges in tiers: Akamai global (anycast) > Bilibili overseas upos mirrors (mirror*ov) > HK edges (cn-hk-eq-bcache / bilivideo.tv), instead of the server's own listing order.
+
+**Also**
+
+- The release notes shown in the "new version" dialog are now run through the AI translation layer: the dialog opens with the original text and refreshes automatically once the translation arrives (cached per language).
+
+Everything inherited from PiliNara / PiliPlus is unchanged.
+
+Downloads are below.
+
+### PiliBabel v3.0.3
+
+**Fixed: the "server error" popup on every single video**
+
+- Opening a video fired a request for player metadata (subtitle list, chapter timeline, resume position). That request was missing a Referer header — and with the app's User-Agent now presenting a browser fingerprint, a browser UA **without** a Referer is exactly what the server-side risk control treats as a spoofed browser and rejects. Result: one scary "server error + URL" toast per video, and the metadata (resume position, subtitles, chapters) silently lost every time.
+- The request now sends the same Referer the desktop web uses.
+- Belt and braces: this metadata is non-fatal (playback itself goes through the app-source gRPC path), so if the server still rejects it, the failure now degrades silently instead of popping a toast on every video.
+
+Everything inherited from PiliNara / PiliPlus is unchanged.
+
+Downloads are below.
+
+### PiliBabel v3.0.2
+
+**The overseas performance release: closing the gap with the official app at the transport layer**
+
+If you use PiliBabel outside mainland China, this release targets the single biggest reason it felt slower than the official app in *every* network area — video loading, comments, feed refresh, dynamics:
+
+**HTTP/2 multiplexing is now on by default**
+
+- Every request the app makes — including the app-API feeds and gRPC comments — used to run over HTTP/1.1, where each concurrent request builds its own connection: on a high-latency overseas link that's 2–3 extra round trips before the first byte of every single request.
+- The official app multiplexes everything over a few long-lived HTTP/2 connections. PiliBabel now does the same, app-wide. This is the change that makes comments, feeds, dynamics and playback startup feel dramatically closer to the official client abroad.
+- Users who explicitly turned HTTP/2 off in settings keep their choice.
+
+**Connection pre-warm on launch**
+
+- 1.5 seconds after startup the app quietly opens connections to `api.bilibili.com` and `app.bilibili.com` (DNS + TCP + TLS), so your first feed refresh and everything after reuse warm connections instead of paying handshake costs again.
+
+**A real browser User-Agent on web endpoints**
+
+- Web-facing requests previously identified themselves as a bare `Dart/3.6` client — an obvious non-browser fingerprint that overseas IPs get rate-limited on. They now present a standard browser UA, matching the player's web fingerprint.
+
+**Feed cover prefetch**
+
+- Each page of the home feed prefetches the next ~10 covers into the image cache, so scrolling hits warm cache instead of waiting on overseas image requests.
+
+**Also fixed**
+
+- Vote badges in comments ("voted 'xxx'") now go through AI translation, matching the already-translated red/blue team prefixes.
+
+**A note on dynamics**
+
+- Migrating the dynamics feed to the gRPC endpoint was evaluated and deliberately skipped: the accessible gRPC dynamics API serves plain-text bodies (no rich text / emotes), which would *downgrade* content. The dynamics endpoint already sits on the main API domain and benefits from everything above.
+
+Everything inherited from PiliNara / PiliPlus is unchanged.
+
+Downloads are below.
+
 ### PiliBabel v2.6.6
 
 **The quality pickers now point you at the tier you probably want**
