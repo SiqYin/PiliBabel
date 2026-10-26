@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:PiliPlus/http/api.dart';
 import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/models/common/video/cdn_type.dart';
@@ -16,7 +18,10 @@ import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
 abstract final class CdnRegionResolver {
   /// 识别结果的有效期。用户可能出差/换网络，过期后重新识别一次；
   /// 期间不重复请求。
-  static const Duration _ttl = Duration(days: 7);
+  ///
+  /// 取 1 天而不是 7 天：VPN、出差、运营商换出口都会让判定失真，失真的代价是
+  /// 「每隔几秒卡一下」这种极难自查的问题，而重新识别只是一次 zone 请求。
+  static const Duration _ttl = Duration(days: 1);
 
   /// 上次识别到的地区；从未识别过或存档损坏时为 null。
   static CdnRegion? get detected => CdnRegion.fromName(
@@ -60,6 +65,22 @@ abstract final class CdnRegionResolver {
       return detected;
     }
     return detect();
+  }
+
+  /// 把识别结果标记为过期（切网 / 测速全灭 / 手动触发时调用）。
+  ///
+  /// 只清掉时间戳，**保留旧值**作兜底：新识别失败时 `effective` 仍能退回上一次
+  /// 的地区，不至于在弱网下反而退化成默认策略。下一次 [ensureDetected] 会重新识别。
+  static void invalidate() {
+    try {
+      GStorage.localCache.delete(LocalCacheKey.detectedCdnRegionTime);
+    } catch (_) {}
+  }
+
+  /// 切网等「地区几乎肯定变了」的场景：标记过期并立即重新识别一次（不阻塞调用方）。
+  static void invalidateAndRedetect() {
+    invalidate();
+    unawaited(ensureDetected());
   }
 
   /// 查询一次并落缓存。返回识别结果；失败返回 null（不清掉旧值）。
