@@ -153,6 +153,20 @@ paru -S pilinara-bin         # o tramite AUR: pilinara-bin (precompilato) / pili
 
 <br/>
 
+## Cronologia delle modifiche: 2.6.x → 3.3.4
+
+- **2.6.x** — cache audio (moduli separati per video e audio, memorizza l'ultima scelta, voci nella pagina video, in quella solo audio e nel lettore audio; formato originale conservato; qualità selezionabile) e download sul dispositivo (voce di menu dedicata: prima video/audio, poi la qualità; senza cartella impostata si apre il selettore di sistema).
+
+- **3.0.x** — autoriparazione della rete all'estero: stato per host con passaggio tra principale e riserva, risoluzione DNS con cache, preriscaldamento delle connessioni, raffreddamento dopo il controllo di rischio (412), rilevamento della regione con scelta manuale, test di velocità CDN condiviso con il livello API.
+
+- **3.1.0** — buffer in avanti adattato al bitrate della traccia video, più correzioni a lettore e audio.
+
+- **3.2.0** — base di rete nello stile dell'app ufficiale: impronta della richiesta (buvid/fp/session_id/env), failover degli host gRPC, interceptor dei tentativi, limite di richieste simultanee per host, precaricamento del primo feed all'avvio a freddo, parametri ufficiali degli eventi del feed, ordine dei candidati CDN con ripiego estero; precaricamento della seconda pagina del feed, coda limitata per le copertine, precaricamento degli URL di riproduzione; audio e commenti sulla stessa base.
+
+- **3.3.0–3.3.3** — rendering delle dinamiche (P3) via gRPC, poi correzioni: errore di compilazione sulla durata del buffer nella pagina audio e mancata conversione di tipo nel precaricamento dei commenti, che faceva fallire ogni tentativo all'istante.
+
+- **3.3.4** — schede dinamiche per contenuti a pagamento, mini-app, raccolte di argomenti e abbonamenti; risolto il primo schermo della home senza copertine; allineamento con PiliNara (barra di stato, ripresa dei download dopo la chiusura del processo, aggiornamento di media-kit, aggiramento del video nero su Wayland, scelta della qualità audio durante la cache); verifica della traduzione AI per tutti i testi di interfaccia aggiunti da 3.0.5; questa cronologia.
+
 ## Registro delle funzionalità ereditate (da PiliNara / PiliPlus)
 
 Tutto ciò che segue arriva da PiliNara (e, per transitività, PiliPlus); PiliBabel aggiunge sopra il livello di traduzione IA.

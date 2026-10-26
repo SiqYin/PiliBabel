@@ -153,6 +153,16 @@ paru -S pilinara-bin         # ya da AUR aracılığıyla: pilinara-bin (öncede
 
 <br/>
 
+## Değişiklik günlüğü: 2.6.x → 3.3.4
+
+- **2.6.x** — ses önbelleği (video ve ses için ayrı modüller, son seçimi hatırlar, video sayfası, yalnızca ses sayfası ve ses oynatıcıda girişler; özgün biçim korunur; kalite seçilebilir) ve cihaza indirme (ayrı menü öğesi: önce video/ses, sonra kalite; klasör ayarlı değilse sistem dosya seçicisi açılır).
+
+- **3.0.x–3.1.0** — yurt dışında ağın kendini onarması: her ana makinenin sağlığı ve birincil/yedek arasında geçiş, önbellekli DNS çözümlemesi, bağlantıları önceden ısıtma, risk denetiminden (412) sonra soğuma, bölge algılama ve elle seçim, CDN hız testinin API katmanıyla paylaşılması; oynatıcının ileri arabelleği artık video izinin bit hızına uyuyor.
+
+- **3.2.0–3.3.3** — resmî uygulama tarzında ağ temeli: istek parmak izi (buvid/fp/session_id/env), gRPC ana makine yedeklemesi, yeniden deneme arabulucusu, ana makine başına eşzamanlı istek sınırı, soğuk başlatmada ilk akışı önceden yükleme, resmî akış olay parametreleri, yurt dışı yedekli CDN aday sırası; ikinci sayfayı önceden yükleme, sınırlı kapak ön yükleme kuyruğu, oynatma adreslerini önceden yükleme; ardından dynamics (P3) için gRPC çizimi ve düzeltmeler: ses sayfasındaki arabellek süresi derleme hatası ve yorumların ön yüklenmesindeki tür dönüşümü hatası (her yeniden deneme anında başarısız oluyordu).
+
+- **3.3.4** — ücretli gönderiler, mini uygulamalar, konu kümeleri ve abonelikler için dynamics kartları; ana sayfanın ilk ekranında hiç kapak görünmemesi sorunu giderildi; PiliNara'daki değişiklikler alındı (durum çubuğu, süreç kapatıldıktan sonra indirmenin sürmesi, media-kit güncellemesi, Wayland'de siyah videoyu aşma, önbelleğe alırken ses kalitesi seçimi); 3.0.5'ten beri eklenen tüm arayüz metinleri için AI çeviri denetimi; bu günlük.
+
 ## Devralınan özellik günlüğü (PiliNara / PiliPlus)
 
 Aşağıdaki her şey PiliNara'dan (ve dolaylı olarak PiliPlus'tan) devralınmıştır; PiliBabel üstüne yapay zekâ çeviri katmanını ekler.
