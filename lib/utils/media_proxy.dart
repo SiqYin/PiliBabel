@@ -235,6 +235,21 @@ class MediaProxy {
     await resp.close();
   }
 
+  /// 上游请求头：B 站直链必须带 Referer，否则 CDN 会 403；带不上就退回 302 回源
+  static void _applyHeaders(HttpClientRequest req, Uri uri) {
+    req.headers.set(
+      HttpHeaders.userAgentHeader,
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
+      '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    );
+    final host = uri.host;
+    if (host.endsWith('bilivideo.com') ||
+        host.endsWith('bilivideo.cn') ||
+        host.endsWith('bilibili.com')) {
+      req.headers.set(HttpHeaders.refererHeader, 'https://www.bilibili.com');
+    }
+  }
+
   static Future<HttpClientResponse?> _open(
     HttpClient client,
     Uri uri,
@@ -242,6 +257,7 @@ class MediaProxy {
   ) async {
     try {
       final req = await client.getUrl(uri);
+      _applyHeaders(req, uri);
       if (range != null) {
         req.headers.set(HttpHeaders.rangeHeader, range);
       }

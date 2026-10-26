@@ -52,6 +52,7 @@ import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
+import 'package:PiliPlus/utils/media_proxy.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:PiliPlus/utils/video_utils.dart';
@@ -1128,6 +1129,10 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       _videoBitrate = videoBitrate;
       if (dataSource is NetworkSource) {
         _prewarmMediaHosts(dataSource);
+        // E2 媒体层多连接代理：只在用户开启时才起本机代理（默认关；起不来就直连）
+        if (Pref.mediaProxyConns > 1) {
+          MediaProxy.ensureStarted().ignore();
+        }
       }
       _autoPlay = autoplay;
       // 初始化视频倍速
@@ -1464,9 +1469,15 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     }
     _startStallWatchdog();
 
-    String video = dataSource.videoSource;
+    // E2 媒体层多连接代理：视频轨与音频轨都过代理（DASH 双轨分别包），
+    // 关闭或代理不可用时 MediaProxy.wrap 原样返回
+    String video = MediaProxy.wrap(dataSource.videoSource);
     if (dataSource.audioSource case final audio? when (audio.isNotEmpty)) {
-      video = dashEdl(video, audio, fileSource: isFileSource);
+      video = dashEdl(
+        video,
+        MediaProxy.wrap(audio),
+        fileSource: isFileSource,
+      );
       audioFilterExtras(volume, map: extras);
     }
 
