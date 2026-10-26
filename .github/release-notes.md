@@ -1,4 +1,4 @@
-### PiliBabel v3.3.1
+### PiliBabel v3.3.2
 
 **Follow-up round on the network foundation, the home feed, audio and comments.**
 
