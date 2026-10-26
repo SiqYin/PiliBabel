@@ -1,6 +1,9 @@
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show ReplyInfo, DetailListReply, Mode;
+import 'dart:async';
+
 import 'package:PiliPlus/grpc/reply.dart';
+import 'package:PiliPlus/utils/connectivity_utils.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/pages/common/reply_controller.dart';
@@ -73,6 +76,9 @@ class VideoReplyReplyController extends ReplyController
     paginationReply = data.paginationReply;
     isEnd = data.cursor.isEnd;
 
+    // D2.2：这一页解析完（paginationReply 已更新）就顺手预取下一页
+    unawaited(_prefetchNextPage());
+
     // reply2Reply // isDialogue.not
     if (data is DetailListReply) {
       count.value = data.root.count.toInt();
@@ -120,23 +126,90 @@ class VideoReplyReplyController extends ReplyController
     });
   }
 
+  /// D2.2 楼中楼分页预取缓存：键 = oid|type|root|dialog|offset，最多留 2 条
+  static final Map<String, LoadingState> _pageCache = <String, LoadingState>{};
+
+  String? _pageKey() {
+    final offset = paginationReply?.nextOffset;
+    if (offset == null || offset.isEmpty) {
+      return null;
+    }
+    return '$oid|$replyType|$rpid|${dialog ?? ''}|$offset';
+  }
+
+  /// D2.2 楼中楼下一页预取：这一页拿到后顺手把下一页取回来，用户往下翻时
+  /// 直接命中，不再等一次往返。只在 WiFi 下做（蜂窝不做额外请求），失败静默。
+  Future<void> _prefetchNextPage() async {
+    try {
+      if (isEnd) {
+        return;
+      }
+      final offset = paginationReply?.nextOffset;
+      if (offset == null || offset.isEmpty) {
+        return;
+      }
+      if (!await ConnectivityUtils.isWiFi) {
+        return;
+      }
+      final key = _pageKey();
+      if (key == null || _pageCache.containsKey(key)) {
+        return;
+      }
+      final res = dialog != null
+          ? await ReplyGrpc.dialogList(
+              type: replyType,
+              oid: oid,
+              root: rpid,
+              dialog: dialog!,
+              offset: offset,
+            )
+          : await ReplyGrpc.detailList(
+              type: replyType,
+              oid: oid,
+              root: rpid,
+              rpid: id ?? 0,
+              mode: mode,
+              offset: offset,
+            );
+      if (res case Success()) {
+        if (_pageCache.length >= 2) {
+          _pageCache.remove(_pageCache.keys.first);
+        }
+        _pageCache[key] = res;
+      }
+    } catch (_) {
+      // 预取失败不影响当前阅读
+    }
+  }
+
   @override
-  Future<LoadingState> customGetData() => dialog != null
-      ? ReplyGrpc.dialogList(
-          type: replyType,
-          oid: oid,
-          root: rpid,
-          dialog: dialog!,
-          offset: paginationReply?.nextOffset,
-        )
-      : ReplyGrpc.detailList(
-          type: replyType,
-          oid: oid,
-          root: rpid,
-          rpid: id ?? 0,
-          mode: mode,
-          offset: paginationReply?.nextOffset,
-        );
+  Future<LoadingState> customGetData() async {
+    // D2.2：命中预取的下一页就直接用
+    final key = _pageKey();
+    if (key != null) {
+      final cached = _pageCache.remove(key);
+      if (cached != null) {
+        return cached;
+      }
+    }
+    if (dialog != null) {
+      return ReplyGrpc.dialogList(
+        type: replyType,
+        oid: oid,
+        root: rpid,
+        dialog: dialog!,
+        offset: paginationReply?.nextOffset,
+      );
+    }
+    return ReplyGrpc.detailList(
+      type: replyType,
+      oid: oid,
+      root: rpid,
+      rpid: id ?? 0,
+      mode: mode,
+      offset: paginationReply?.nextOffset,
+    );
+  }
 
   @override
   Future<void> onReload() {
