@@ -60,6 +60,9 @@ abstract final class HttpTimeout {
   /// 发送超时：POST 体积较大时用
   static const Duration send = Duration(seconds: 30);
 
+  /// 下载/大文件流的间隔超时：断点续传要能容忍慢速链路
+  static const Duration download = Duration(seconds: 20);
+
   /// 单主机并发上限：超出排队
   static const int maxConcurrentPerHost = 8;
 

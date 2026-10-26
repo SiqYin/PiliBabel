@@ -1213,8 +1213,8 @@ class VideoDetailController extends GetxController
     queryVideoUrl(fromReset: true);
   }
 
-  Future<LoadingState<PlayUrlModel>> _getVideoUrl(int quality) {
-    return VideoHttp.videoUrl(
+  Future<LoadingState<PlayUrlModel>> _getVideoUrl(int quality) async {
+    final result = await VideoHttp.videoUrl(
       cid: cid.value,
       bvid: bvid,
       qn: quality,
@@ -1225,6 +1225,19 @@ class VideoDetailController extends GetxController
       language: currLang.value,
       voiceBalance: plPlayerController.enableAudioNormalization,
     );
+    // A4.3 首帧优先：冷启动时先给候选一个有限预算的探测窗口（与播放器初始化
+    // 重叠，不额外拖起播），选流就能直接落到实测最快的那条，少一次失败重试。
+    if (result case Success(:final response)) {
+      final dash = response.dash;
+      if (dash != null) {
+        final urls = <String>[
+          for (final v in dash.video ?? const []) ...v.playUrls,
+          for (final a in dash.audio ?? const []) ...a.playUrls,
+        ];
+        await VideoUtils.awaitColdProbe(urls);
+      }
+    }
+    return result;
   }
 
   Future<void> _supplementVideoQualities() async {

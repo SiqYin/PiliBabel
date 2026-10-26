@@ -187,7 +187,17 @@ abstract final class CdnSpeedTest {
   static Future<void> _run(List<String> targets) async {
     final result = <String, double>{};
     final probeBytes = await _probeBytesNow();
-    await Future.wait(targets.map((url) => _probe(url, result, probeBytes)));
+    // 每探完一台就写进评分并刷新时间戳：起播侧只等一个有限预算，先回来的
+    // 先算数（A4.3 首帧优先），而不是等整轮跑完才有分可用。
+    await Future.wait(
+      targets.map(
+        (url) => _probe(url, result, probeBytes).whenComplete(() {
+          if (result.isEmpty) return;
+          _score.addAll(result);
+          _testedAt = DateTime.now();
+        }),
+      ),
+    );
     if (result.isEmpty) {
       // 一轮探测全军覆没：网络环境很可能已经变了（也可能只是直链签名过期）。
       // 把地区判定标记过期并重新识别一次；10 分钟内不重复触发，避免请求风暴。

@@ -107,6 +107,25 @@ abstract final class VideoUtils {
     return candidates.first;
   }
 
+  /// A4.3 首帧优先：冷启动（还没有任何实测分）时，给候选一个有限预算的探测窗口，
+  /// 谁先回来就用谁，再交给播放器；已有实测分、或超出预算就直接返回，不拖起播。
+  ///
+  /// 调用点放在取流回来之后、选流之前，等待正好与播放器初始化重叠，等于不额外
+  /// 增加起播延迟；超预算时用已经探到的那部分分（CdnSpeedTest 每探完一台就落分）。
+  static Future<void> awaitColdProbe(
+    Iterable<String> urls, {
+    Duration budget = const Duration(milliseconds: 1500),
+  }) async {
+    if (!Pref.cdnSpeedTest || CdnSpeedTest.hasResult) return;
+    final candidates = urls.where((e) => e.isNotEmpty).toList(growable: false);
+    if (candidates.isEmpty) return;
+    try {
+      await CdnSpeedTest.test(candidates).timeout(budget);
+    } catch (_) {
+      // 超预算：带着已有结果往下走
+    }
+  }
+
   /// 下载专用：把 B 站**大陆** upos 镜像直链改写成 Akamai 全球边缘，作为额外候选线路。
   /// 大陆镜像对境外访问常被限速到 100KB/s 上下，而这条主机改写对下载是安全的
   /// （上游「自定义 CDN 节点」也是同理会改写主机）；**播放侧绝不可这样改写**
