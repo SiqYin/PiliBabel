@@ -33,6 +33,7 @@ import 'package:PiliPlus/models_new/live/live_superchat/data.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:PiliPlus/utils/app_sign.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/wbi_sign.dart';
 import 'package:crypto/crypto.dart';
 import 'package:dio/dio.dart';
@@ -235,8 +236,8 @@ abstract final class LiveHttp {
       options: Options(
         headers: {
           'buvid': LoginHttp.buvid,
-          'fp_local': '1111111111111111111111111111111111111111111111111111111111111111',
-          'fp_remote': '1111111111111111111111111111111111111111111111111111111111111111',
+          'fp_local': Pref.fpLocal,
+          'fp_remote': Pref.fpRemote,
           'session_id': '11111111',
           'env': 'prod',
           'app-key': 'android',
@@ -313,8 +314,8 @@ abstract final class LiveHttp {
       options: Options(
         headers: {
           'buvid': LoginHttp.buvid,
-          'fp_local': '1111111111111111111111111111111111111111111111111111111111111111',
-          'fp_remote': '1111111111111111111111111111111111111111111111111111111111111111',
+          'fp_local': Pref.fpLocal,
+          'fp_remote': Pref.fpRemote,
           'session_id': '11111111',
           'env': 'prod',
           'app-key': 'android',

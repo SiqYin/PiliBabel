@@ -370,7 +370,9 @@ abstract final class LocalCacheKey {
       cdnNodeRegion = 'cdnNodeRegion',
       detectedCdnRegion = 'detectedCdnRegion',
       detectedCdnRegionTime = 'detectedCdnRegionTime',
-      cdnSpeedScores = 'cdnSpeedScores';
+      cdnSpeedScores = 'cdnSpeedScores',
+      fpLocal = 'fpLocal',
+      fpRemote = 'fpRemote';
 }
 
 abstract final class VideoBoxKey {

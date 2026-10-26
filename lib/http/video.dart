@@ -132,8 +132,8 @@ abstract final class VideoHttp {
       options: Options(
         headers: {
           'buvid': LoginHttp.buvid,
-          'fp_local': '1111111111111111111111111111111111111111111111111111111111111111',
-          'fp_remote': '1111111111111111111111111111111111111111111111111111111111111111',
+          'fp_local': Pref.fpLocal,
+          'fp_remote': Pref.fpRemote,
           'session_id': '11111111',
           'env': 'prod',
           'app-key': 'android_hd',
