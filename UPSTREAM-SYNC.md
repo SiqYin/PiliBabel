@@ -7,6 +7,10 @@ This file records the PiliNara commit each sync of PiliBabel was based on.
 | --- | --- | --- | --- | --- | --- |
 | 2026-10-26 | main | `b5694ccdaf6064b3bf582bfe7991936d508740b8` | 2026-10-24 20:21 | v3.3.4 | 逐项挑选并入（未做整包 merge） |
 
+## 同步方式（固定策略）
+
+只做挑选式并入：从上游最新版里挑出能合的内容，单独摘进本仓库；本仓库是独立项目，
+不做整包 merge，也不出专门的同步版。上游的整包重构与本仓库已有功能冲突时，以本仓库为准。
 ## 当前基准（v3.3.4）
 
 - 上游仓库：Starfallan/PiliNara（本仓库远端名 `upstream`）
