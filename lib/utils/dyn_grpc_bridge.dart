@@ -17,16 +17,64 @@ import 'package:PiliPlus/grpc/bilibili/app/dynamic/v2.pb.dart'
 /// 认不出的卡片类型、或转换中出现任何意外，一律返回 null —— 调用方整页回退 REST，
 /// 绝不出现「半页 gRPC、半页空白」这种状态。
 abstract final class DynGrpcBridge {
-  /// 只列确认能对齐的卡片类型；其余（付费、直播预约等）整页回退 REST。
-  static const Set<String> _supported = {
-    'AV',
-    'DRAW',
-    'WORD',
-    'ARTICLE',
-    'COURSES',
-    'PGC',
-    'FORWARD',
-    'LIVE_RCMD',
+  /// gRPC 卡片类型枚举名（去掉下划线、转小写）-> web 的 DYNAMIC_TYPE_* 字面量。
+  /// 只列 App 渲染器真正支持、且 gRPC 结构与 web 结构能对齐的类型；
+  /// 付费卡、小程序、话题集等没有对应渲染器的类型整页回退 REST。
+  static const Map<String, String> _types = {
+    'dynav': 'DYNAMIC_TYPE_AV',
+    'dyndraw': 'DYNAMIC_TYPE_DRAW',
+    'dynword': 'DYNAMIC_TYPE_WORD',
+    'dynarticle': 'DYNAMIC_TYPE_ARTICLE',
+    'dyncoursseason': 'DYNAMIC_TYPE_COURSES_SEASON',
+    'dyncoursbatch': 'DYNAMIC_TYPE_COURSES_SEASON',
+    'dyncoursbatchup': 'DYNAMIC_TYPE_COURSES_SEASON',
+    'dynpgc': 'DYNAMIC_TYPE_PGC',
+    'dynforward': 'DYNAMIC_TYPE_FORWARD',
+    'dynlivercmd': 'DYNAMIC_TYPE_LIVE_RCMD',
+    'dyncommonlive': 'DYNAMIC_TYPE_LIVE',
+    'dynugcseason': 'DYNAMIC_TYPE_UGC_SEASON',
+    'dynmedialist': 'DYNAMIC_TYPE_MEDIALIST',
+    'dynmusic': 'DYNAMIC_TYPE_MUSIC',
+    'dyncommon': 'DYNAMIC_TYPE_COMMON_SQUARE',
+    'dynsubscriptionnew': 'DYNAMIC_TYPE_SUBSCRIPTION_NEW',
+  };
+
+  /// gRPC 的 module_dynamic 是扁平字段（dynArchive / dynDraw / ...），
+  /// web 结构是 module_dynamic.major.{archive, draw, ...}，这里补上 major 包装。
+  static const Map<String, String> _majors = {
+    'dyn_archive': 'archive',
+    'dyn_pgc': 'pgc',
+    'dyn_cour_season': 'courses',
+    'dyn_cour_batch': 'courses',
+    'dyn_cour_batch_up': 'courses',
+    'dyn_draw': 'draw',
+    'dyn_article': 'article',
+    'dyn_music': 'music',
+    'dyn_common': 'common',
+    'dyn_common_live': 'live',
+    'dyn_medialist': 'medialist',
+    'dyn_live_rcmd': 'live_rcmd',
+    'dyn_ugc_season': 'ugc_season',
+    'dyn_subscription_new': 'subscription_new',
+  };
+
+  /// major.type：App 只在列表内搜索匹配时用到，按 web 字面量给出
+  static const Map<String, String> _majorTypes = {
+    'dyn_archive': 'MAJOR_TYPE_ARCHIVE',
+    'dyn_pgc': 'MAJOR_TYPE_PGC',
+    'dyn_cour_season': 'MAJOR_TYPE_COURSES',
+    'dyn_cour_batch': 'MAJOR_TYPE_COURSES',
+    'dyn_cour_batch_up': 'MAJOR_TYPE_COURSES',
+    'dyn_draw': 'MAJOR_TYPE_DRAW',
+    'dyn_article': 'MAJOR_TYPE_ARTICLE',
+    'dyn_music': 'MAJOR_TYPE_MUSIC',
+    'dyn_common': 'MAJOR_TYPE_COMMON',
+    'dyn_common_live': 'MAJOR_TYPE_LIVE',
+    'dyn_medialist': 'MAJOR_TYPE_MEDIALIST',
+    'dyn_live_rcmd': 'MAJOR_TYPE_LIVE_RCMD',
+    'dyn_ugc_season': 'MAJOR_TYPE_UGC_SEASON',
+    'dyn_subscription_new': 'MAJOR_TYPE_SUBSCRIPTION_NEW',
+    'dyn_forward': 'MAJOR_TYPE_FORWARD',
   };
 
   /// 这些字段在 web 结构里是数字，proto3 JSON 会输出成字符串，这里还原
@@ -127,20 +175,38 @@ abstract final class DynGrpcBridge {
         modules.addAll(json);
       }
     }
-    // 转发卡：原动态在 module_dynamic.major.dyn_forward.item，web 结构把它放在 orig
+
     Map<String, dynamic>? orig;
-    final major = modules['module_dynamic'];
-    if (major is Map<String, dynamic>) {
-      final m = major['major'];
-      if (m is Map<String, dynamic>) {
-        final fw = m['dyn_forward'];
-        if (fw is Map<String, dynamic>) {
-          final inner = fw['item'];
-          if (inner is Map<String, dynamic>) {
-            orig = _item(inner);
-            if (orig == null) {
-              return null;
-            }
+    final dyn = modules['module_dynamic'];
+    if (dyn is Map<String, dynamic>) {
+      // 扁平 dyn* 字段收成 web 的 major 结构（一张卡只会命中一个）
+      final major = <String, dynamic>{};
+      for (final e in _majors.entries) {
+        final v = dyn[e.key];
+        if (v != null) {
+          major[e.value] = v;
+          major['type'] = _majorTypes[e.key];
+          break;
+        }
+      }
+      if (major.isNotEmpty) {
+        dyn['major'] = major;
+      }
+      // 动态正文：gRPC 放在 module_desc.desc，App 从 module_dynamic.desc 读
+      if (dyn['desc'] == null) {
+        final md = modules['module_desc'];
+        if (md is Map<String, dynamic> && md['desc'] is Map<String, dynamic>) {
+          dyn['desc'] = md['desc'];
+        }
+      }
+      // 转发卡：原动态在 module_dynamic.dyn_forward.item，web 结构把它放在 orig
+      final fw = dyn['dyn_forward'];
+      if (fw is Map<String, dynamic>) {
+        final inner = fw['item'];
+        if (inner is Map<String, dynamic>) {
+          orig = _item(inner);
+          if (orig == null) {
+            return null;
           }
         }
       }
@@ -167,15 +233,8 @@ abstract final class DynGrpcBridge {
     if (raw == null || raw.isEmpty) {
       return null;
     }
-    // proto 枚举名可能是 dyn_av / dynAv / DYN_AV，统一成 AV 再拼 web 字面量
-    var s = raw.replaceAll('_', '').toUpperCase();
-    if (s.startsWith('DYN')) {
-      s = s.substring(3);
-    }
-    if (!_supported.contains(s)) {
-      return null;
-    }
-    return 'DYNAMIC_TYPE_$s';
+    // proto 枚举名可能是 dyn_av / dynAv / DYN_AV
+    return _types[raw.replaceAll('_', '').toLowerCase()];
   }
 
   static Map<String, dynamic>? _map(dynamic v) {
