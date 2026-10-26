@@ -143,16 +143,20 @@ class DnsResolver {
     if (addresses == null || addresses.isEmpty) {
       addresses = await _dohLookup(host);
     }
-    final ok = addresses != null && addresses.isNotEmpty;
-    if (!ok) {
+    if (addresses == null || addresses.isEmpty) {
       failCount++;
       if (kDebugMode) debugPrint('DnsResolver failed: $host');
+      _cache[host] = _DnsEntry(
+        const <InternetAddress>[],
+        DateTime.now().add(_ttlFailure),
+      );
+      return null;
     }
     _cache[host] = _DnsEntry(
-      ok ? addresses! : const <InternetAddress>[],
-      DateTime.now().add(ok ? _ttlSuccess : _ttlFailure),
+      addresses,
+      DateTime.now().add(_ttlSuccess),
     );
-    return ok ? addresses : null;
+    return addresses;
   }
 
   static Future<List<InternetAddress>?> _systemLookup(String host) async {
