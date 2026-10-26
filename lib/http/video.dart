@@ -102,6 +102,7 @@ abstract final class VideoHttp {
     final params = {
       // B4.1 对齐官方 feed 参数：open_event 是本次进程第一次取 feed 才置 1
       'open_event': coldStart ? 1 : FeedColdStart.consumeOpenEvent(),
+      'login_event': FeedColdStart.consumeLoginEvent(),
       'build': 2001100,
       'c_locale': 'zh_CN',
       'channel': 'master',

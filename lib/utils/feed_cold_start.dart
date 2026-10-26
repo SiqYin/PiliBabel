@@ -29,6 +29,23 @@ class FeedColdStart {
   /// B4.1 官方 feed 的 open_event：本次进程内第一次取 feed 才置 1，之后都置 0。
   static bool _openEventPending = true;
 
+  /// B4.1 官方 feed 参数 login_event：登录成功后的第一次取 feed 置 1，
+  /// 之后都置 0。只由取 feed 的地方消费，其它请求不会把它用掉。
+  static bool _loginPending = false;
+
+  /// 登录成功后调用（会话级，不做持久化）
+  static void markLogin() {
+    _loginPending = true;
+  }
+
+  static int consumeLoginEvent() {
+    if (!_loginPending) {
+      return 0;
+    }
+    _loginPending = false;
+    return 1;
+  }
+
   static int consumeOpenEvent() {
     if (_openEventPending) {
       _openEventPending = false;
