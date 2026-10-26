@@ -30,6 +30,7 @@ import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/play_url_prefetch.dart';
+import 'package:PiliPlus/utils/reply_prefetch.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/url_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -544,6 +545,12 @@ abstract final class PageUtils {
         PlayUrlPrefetch.prefetch(bvid: prefetchBvid, cid: cid);
       }
     }
+    // D1 首屏评论预取（对标官方 Chronos）：点开即取，与播放地址、视频信息并行。
+    // 番剧用 epId 当 oid，UGC 用 aid；取不到就不预取。
+    ReplyPrefetch.prefetch(
+      oid: videoType == VideoType.pugv ? (epId ?? aid ?? 0) : (aid ?? 0),
+      type: videoType.replyType,
+    );
     final arguments = {
       'aid': aid ?? IdUtils.bv2av(bvid!),
       'bvid': bvid ?? IdUtils.av2bv(aid!),

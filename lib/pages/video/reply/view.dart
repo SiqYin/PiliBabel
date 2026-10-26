@@ -187,8 +187,9 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
                   ),
                 );
               } else {
-                // 距末尾还有 6 项就预取下一页（原先只在页脚那一次触发）
-                if (index >= response.length - 6) {
+                // D2.1 距末尾还有若干项就预取下一页（原先只在页脚那一次触发）：
+                // 深度按网络类型调，WiFi 更深、蜂窝更浅
+                if (index >= response.length - _videoReplyController.prefetchDepth) {
                   _videoReplyController.onLoadMore();
                 }
                 return ReplyItemGrpc(
