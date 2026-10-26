@@ -187,6 +187,10 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
                   ),
                 );
               } else {
+                // 距末尾还有 6 项就预取下一页（原先只在页脚那一次触发）
+                if (index >= response.length - 6) {
+                  _videoReplyController.onLoadMore();
+                }
                 return ReplyItemGrpc(
                   replyItem: response[index],
                   replyLevel: widget.replyLevel,
