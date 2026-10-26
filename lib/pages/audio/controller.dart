@@ -372,11 +372,18 @@ class AudioController extends GetxController
 
   Future<bool> _queryPlayUrl() async {
     _querySponsorBlock();
-    final res = await AudioGrpc.audioPlayUrl(
-      itemType: itemType,
-      oid: oid,
-      subId: subId,
-    );
+    // C2 切集预取：命中就用预取结果，不再重新取流；没命中照常请求
+    final cached = _prefetchCache.remove(_prefetchKey(itemType, oid, subId));
+    final LoadingState<PlayURLResp> res;
+    if (cached != null) {
+      res = Success(cached);
+    } else {
+      res = await AudioGrpc.audioPlayUrl(
+        itemType: itemType,
+        oid: oid,
+        subId: subId,
+      );
+    }
     if (res case Success(:final response)) {
       // 必须回传解析结果：之前这里无条件 return true，导致取流失败被上层
       // playIndex/playNext 当成成功，继续跑后续状态更新。
@@ -556,7 +563,8 @@ class AudioController extends GetxController
               ? (desktopVolume.value * 100).toString()
               : (Pref.enableAppVolume ? 100.0 : Pref.playerVolume).toString(),
           'volume-max': kMaxVolume.toString(),
-          ...Pref.initBuffer(),
+          // C1.1 音频走专用缓存档（按时长给足，不按视频码率那套放大）
+          ...Pref.initAudioBuffer(),
         },
       ),
     );
@@ -932,6 +940,50 @@ class AudioController extends GetxController
         _updateCurrItem(audioItem);
       }
     });
+    // C2.1 切集预取：切到这一集的同时把下一集的取流结果先取回来
+    unawaited(_prefetchNext(index));
+  }
+
+  /// C2 切集预取缓存：键是 itemType|oid|subId，最多留 2 条，防止无限增长
+  static final Map<String, PlayURLResp> _prefetchCache =
+      <String, PlayURLResp>{};
+
+  static String _prefetchKey(int itemType, Int64 oid, List<Int64> subId) =>
+      '$itemType|$oid|${subId.join(',')}';
+
+  /// C2.1 对标官方 NativePreloaderEventListener：对下一条音频做预取（取流结果连同
+  /// 头部信息一起缓存），切过去时 [_queryPlayUrl] 直接命中，不再重新取流。
+  /// 只预取一条（当前集的下一集），失败静默，绝不影响正在播的这一集。
+  Future<void> _prefetchNext(int index) async {
+    try {
+      final list = playlist;
+      if (list == null || index + 1 >= list.length) {
+        return;
+      }
+      final nextItem = list[index + 1];
+      final item = nextItem.item;
+      final nextOid = item.oid;
+      final nextSubId =
+          item.subId.isNotEmpty ? item.subId : [nextItem.parts.first.subId];
+      final nextType = item.itemType;
+      final key = _prefetchKey(nextType, nextOid, nextSubId);
+      if (_prefetchCache.containsKey(key)) {
+        return;
+      }
+      final res = await AudioGrpc.audioPlayUrl(
+        itemType: nextType,
+        oid: nextOid,
+        subId: nextSubId,
+      );
+      if (res case Success(:final response)) {
+        if (_prefetchCache.length >= 2) {
+          _prefetchCache.remove(_prefetchCache.keys.first);
+        }
+        _prefetchCache[key] = response;
+      }
+    } catch (_) {
+      // 预取失败不影响当前播放
+    }
   }
 
   void setSpeed(double speed) {

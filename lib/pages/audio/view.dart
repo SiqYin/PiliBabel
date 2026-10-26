@@ -894,7 +894,8 @@ class _AudioPageState extends State<AudioPage> {
         total: _controller.duration.value,
         baseBarColor: baseBarColor,
         progressBarColor: primary,
-        bufferedBarColor: Colors.transparent,
+        // C1.2 暴露缓存统计：把已缓存的那一段画出来，用户能直接看出「够不够播」
+        bufferedBarColor: primary.withAlpha(90),
         thumbColor: primary,
         thumbGlowColor: thumbGlowColor,
         thumbGlowRadius: 0,
