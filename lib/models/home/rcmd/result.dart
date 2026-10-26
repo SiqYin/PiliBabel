@@ -17,7 +17,9 @@ class RcmdVideoItemAppModel extends BaseRcmdVideoItemModel {
     aid = json['player_args']?['aid'] ?? parseIntOrNull(json['param']);
     bvid = json['bvid'] ?? IdUtils.av2bv(aid!);
     cid = json['player_args']?['cid'];
-    cover = json['cover'];
+    // 冷启动首屏与正常 feed 的封面字段位置不完全一致：顶层 cover 缺失时
+    // 依次退回 args.cover / pic，避免首屏整屏没有封面。
+    cover = json['cover'] ?? json['args']?['cover'] ?? json['pic'];
     stat = RcmdStat.fromJson(json);
     // 改用player_args中的duration作为原始数据（秒数）
     duration = json['player_args']?['duration'] ?? 0;
