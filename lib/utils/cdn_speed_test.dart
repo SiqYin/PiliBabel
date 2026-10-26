@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/utils/cdn_region.dart';
+import 'package:PiliPlus/utils/connectivity_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 
@@ -30,6 +31,14 @@ abstract final class CdnSpeedTest {
   /// 测出持续吞吐；被限速的节点（约 100KB/s）拉满 512KB 需要 5 秒以上，会直接
   /// 撞上探测超时被判「不可用」——这正是想要的结果。
   static const int _probeBytes = 512 * 1024;
+
+  /// 蜂窝网络下的采样量。
+  ///
+  /// 一轮最多探 6 条地址，按 512KB 算就是 3MB —— 对流量用户是白烧的钱，蜂窝下
+  /// 还更容易撞上运营商的突发额度。蜂窝下降采样到 128KB（一轮约 0.75MB）。
+  /// 代价是测出来的持续吞吐更粗糙：被限速的节点不再会因为超时被判死，而是靠
+  /// 评分排在快节点后面，择优结论仍然成立。
+  static const int _probeBytesCellular = 128 * 1024;
 
   /// 单条地址的探测超时。海外慢节点本来就是要被淘汰的，超时即视为不可用。
   static const Duration _probeTimeout = Duration(seconds: 6);
@@ -177,7 +186,8 @@ abstract final class CdnSpeedTest {
 
   static Future<void> _run(List<String> targets) async {
     final result = <String, double>{};
-    await Future.wait(targets.map((url) => _probe(url, result)));
+    final probeBytes = await _probeBytesNow();
+    await Future.wait(targets.map((url) => _probe(url, result, probeBytes)));
     if (result.isEmpty) {
       // 一轮探测全军覆没：网络环境很可能已经变了（也可能只是直链签名过期）。
       // 把地区判定标记过期并重新识别一次；10 分钟内不重复触发，避免请求风暴。
@@ -196,7 +206,19 @@ abstract final class CdnSpeedTest {
     _persist();
   }
 
-  static Future<void> _probe(String url, Map<String, double> out) async {
+  /// 本轮探测的采样量：蜂窝网络下降低采样（见 [_probeBytesCellular]）。
+  static Future<int> _probeBytesNow() async {
+    if (await ConnectivityUtils.isCellular) {
+      return _probeBytesCellular;
+    }
+    return _probeBytes;
+  }
+
+  static Future<void> _probe(
+    String url,
+    Map<String, double> out,
+    int probeBytes,
+  ) async {
     final host = _hostOf(url);
     if (host == null) {
       return;
@@ -204,7 +226,7 @@ abstract final class CdnSpeedTest {
     final client = HttpClient()..connectionTimeout = _probeTimeout;
     try {
       final request = await client.getUrl(Uri.parse(url)).timeout(_probeTimeout);
-      request.headers.set(HttpHeaders.rangeHeader, 'bytes=0-$_probeBytes');
+      request.headers.set(HttpHeaders.rangeHeader, 'bytes=0-$probeBytes');
       request.headers.set(HttpHeaders.userAgentHeader, BrowserUa.pc);
       // 直链签名与请求指纹绑定，这里只读不改，Referer 保持不设。
       final watch = Stopwatch()..start();
@@ -219,7 +241,7 @@ abstract final class CdnSpeedTest {
           firstByteMs = watch.elapsedMicroseconds / 1000.0;
         }
         received += chunk.length;
-        if (received >= _probeBytes) {
+        if (received >= probeBytes) {
           break;
         }
       }
