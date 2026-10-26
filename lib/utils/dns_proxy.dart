@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:PiliPlus/utils/dns_resolver.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -153,15 +154,17 @@ class DnsProxy {
           closeAll();
           return;
         }
-        _pipe(
-          up,
-          client,
-          closeAll,
-          touch,
-          onError: () {
-            failCount++;
-            closeAll();
-          },
+        unawaited(
+          _pump(
+            up,
+            client,
+            closeAll,
+            touch,
+            onError: () {
+              failCount++;
+              closeAll();
+            },
+          ),
         );
         if (rest.isNotEmpty) {
           up.add(rest);
@@ -173,38 +176,31 @@ class DnsProxy {
     );
   }
 
-  /// 单方向搬运，带背压：暂停来源、累积到阈值再 flush，避免大响应把内存撑爆。
-  void _pipe(
+  /// 单方向搬运。await for 自带背压：上游不吐完就不读下一块，累积到阈值再 flush，
+  /// 避免大响应把内存撑爆；socket 被销毁时流自然结束，循环随之退出。
+  Future<void> _pump(
     Stream<List<int>> from,
     IOSink to,
     void Function() onClose,
     void Function() touch, {
     required void Function() onError,
-  }) {
+  }) async {
     var pending = 0;
-    late StreamSubscription<List<int>> sub;
-    sub = from.listen(
-      (chunk) async {
+    try {
+      await for (final chunk in from) {
         touch();
-        sub.pause();
-        try {
-          to.add(chunk);
-          pending += chunk.length;
-          if (pending >= _flushThreshold) {
-            await to.flush();
-            pending = 0;
-          }
-        } catch (_) {
-          onError();
-          return;
-        } finally {
-          sub.resume();
+        to.add(chunk);
+        pending += chunk.length;
+        if (pending >= _flushThreshold) {
+          await to.flush();
+          pending = 0;
         }
-      },
-      onError: (Object _) => onError(),
-      onDone: onClose,
-      cancelOnError: true,
-    );
+      }
+    } catch (_) {
+      onError();
+      return;
+    }
+    onClose();
   }
 
   /// 处理一条代理请求。CONNECT 走隧道；绝对 URI 形式改写请求行后转发。
