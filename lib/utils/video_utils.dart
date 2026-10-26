@@ -10,6 +10,7 @@ import 'package:PiliPlus/utils/cdn_region.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
+import 'package:PiliPlus/utils/host_health.dart';
 
 abstract final class VideoUtils {
   static CDNService cdnService = Pref.defaultCDNService;
@@ -243,13 +244,21 @@ abstract final class VideoUtils {
     }
     // 有实测结果时优先实测最优。测速只在海外分支触发过，所以大陆用户的
     // _score 为空、bestOf 返回 null，行为与改动前完全一致。
+    // C2.2：主机健康度（含 A4.2 从测速共享进来的实测速率）也纳入选流。
+    // 音频与视频走的是同一个 _firstUsable，所以两边共用同一套候选结论：
+    // 正在冷却的主机（412 / 连续失败）先排除，除非全都在冷却。
+    final healthy = usable.where((url) {
+      final host = hostOf(url);
+      return host == null || !HostHealth.instance.isCoolingDown(host);
+    }).toList();
+    final pool = healthy.isEmpty ? usable : healthy;
     if (Pref.cdnSpeedTest) {
-      final best = CdnSpeedTest.bestOf(usable);
+      final best = CdnSpeedTest.bestOf(pool);
       if (best != null) {
         return best;
       }
     }
-    return usable.first;
+    return pool.first;
   }
 
   /// [customHost] 显式指定自定义节点（节点测速用）；未传时按 [applyCustomCDN]

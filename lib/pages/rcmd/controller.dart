@@ -13,6 +13,7 @@ import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/play_url_prefetch.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/feed_next_page.dart';
+import 'package:PiliPlus/utils/feed_idx.dart';
 
 class RcmdController extends CommonListController {
   /// 每页预取的封面数：首屏之后的条目提前拉进图片缓存，滚动时直接命中
@@ -234,6 +235,8 @@ class RcmdController extends CommonListController {
     isEnd = false;
     // B3.2：刷新即推进代次并清掉预取，在飞的旧预取回来会被代次挡掉。
     FeedNextPage.bumpGeneration();
+    // B4.1：刷新后从页码 0 重新开始，丢掉上一轮记住的服务端 idx。
+    FeedIdx.clear();
     return queryData();
   }
 }

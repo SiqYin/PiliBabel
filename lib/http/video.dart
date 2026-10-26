@@ -47,6 +47,7 @@ import 'package:PiliPlus/utils/wbi_sign.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show compute;
 import 'package:protobuf/protobuf.dart';
+import 'package:PiliPlus/utils/feed_idx.dart';
 
 /// view层根据 status 判断渲染逻辑
 abstract final class VideoHttp {
@@ -118,7 +119,7 @@ abstract final class VideoHttp {
       'fourk': 1,
       'guidance': 0,
       'https_url_req': 0,
-      'idx': freshIdx,
+      'idx': FeedIdx.pick(freshIdx),
       'mobi_app': 'android_hd',
       'network': 'wifi',
       'platform': 'android',
@@ -161,6 +162,10 @@ abstract final class VideoHttp {
           : res.data['data']['items'];
       if (raw is! List) {
         return Success(list);
+      }
+      // B4.1：记住服务端返回的最后一条 idx，供下一次「加载更多」使用。
+      if (!coldStart && raw.isNotEmpty) {
+        FeedIdx.record((raw.last as Map?)?['idx']);
       }
       for (final i in raw) {
         final upMid = safeToInt(i['args']?['up_id']);
