@@ -153,6 +153,20 @@ paru -S pilinara-bin         # oder über AUR: pilinara-bin (vorgebaut) / pilina
 
 <br/>
 
+## Änderungsverlauf: 2.6.x → 3.3.4
+
+- **2.6.x** — Audio-Cache (getrennte Module für Video und Audio, letzte Auswahl wird gemerkt, Einstiege auf der Videoseite, der Nur-Audio-Seite und im Audioplayer; Originalformat bleibt erhalten; wählbare Qualität) und Download auf das Gerät (eigener Menüpunkt: erst Video/Audio, dann Qualität; ohne eingestellten Ordner öffnet sich die Systemdateiauswahl).
+
+- **3.0.x** — Selbstheilung im Auslandsnetz: Zustand je Host mit Umschaltung zwischen Haupt- und Ausweichroute, DNS-Auflösung mit Cache, Vorwärmen der Verbindungen, Abkühlung nach Risikokontrolle (412), Regionserkennung mit manueller Auswahl, CDN-Geschwindigkeitstest gemeinsam mit der API-Ebene.
+
+- **3.1.0** — adaptiver Vorwärtspuffer nach Bitrate der Videospur sowie Korrekturen an Player und Audio.
+
+- **3.2.0** — Netzwerkgrundlage im Stil der offiziellen App: Anfrage-Fingerabdruck (buvid/fp/session_id/env), gRPC-Host-Failover, Retry-Interceptor, Nebenläufigkeitsgrenze je Host, Vorladen des ersten Feeds beim Kaltstart, offizielle Feed-Ereignisparameter, CDN-Reihenfolge mit Ausweichrouten; Vorladen der zweiten Feed-Seite, begrenzte Warteschlange für Titelbilder, Vorladen der Wiedergabe-URLs; Audio und Kommentare laufen auf derselben Grundlage.
+
+- **3.3.0–3.3.3** — Dynamik-Darstellung (P3) über gRPC, danach Korrekturen: Kompilierfehler bei der Pufferlänge auf der Audioseite und ein Typfehler beim Vorladen der Kommentare, durch den jeder Wiederholungsversuch sofort scheiterte.
+
+- **3.3.4** — Dynamik-Karten für Bezahlkarten, Mini-Apps, Themensammlungen und Abos; der Startbildschirm ohne Titelbilder ist behoben; Abgleich mit PiliNara (Statusleiste, Fortsetzen des Downloads nach Prozessende, media-kit-Aktualisierung, Umgehung des schwarzen Bildes unter Wayland, wählbare Tonqualität beim Cachen); Prüfung der AI-Übersetzung für alle seit 3.0.5 hinzugefügten Oberflächentexte; dieser Änderungsverlauf.
+
 ## Verzeichnis der übernommenen Funktionen (aus PiliNara / PiliPlus)
 
 Alles Folgende stammt aus PiliNara (und mittelbar aus PiliPlus); PiliBabel legt die KI-Übersetzungsschicht darüber.

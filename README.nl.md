@@ -153,6 +153,16 @@ paru -S pilinara-bin         # of via AUR: pilinara-bin (voorgebouwd) / pilinara
 
 <br/>
 
+## Wijzigingslog: 2.6.x → 3.3.4
+
+- **2.6.x** — audiocache (aparte modules voor video en audio, onthoudt de laatste keuze, ingangen op de videopagina, de alleen-audio-pagina en in de audiospeler; oorspronkelijk formaat blijft behouden; kwaliteit kiesbaar) en downloaden naar het apparaat (eigen menu-item: eerst video/audio, dan kwaliteit; zonder ingestelde map opent de systeem-bestandskiezer).
+
+- **3.0.x–3.1.0** — zelfherstellend netwerk in het buitenland: gezondheid per host met omschakeling tussen primair en reserve, DNS-resolutie met cache, voorverwarmen van verbindingen, afkoeling na risicocontrole (412), regiodetectie met handmatige keuze, CDN-snelheidstest gedeeld met de API-laag; de voorwaartse buffer van de speler volgt nu de bitrate van de videospoor.
+
+- **3.2.0–3.3.3** — netwerkbasis in de stijl van de officiële app: vingerafdruk van verzoeken (buvid/fp/session_id/env), failover van gRPC-hosts, retry-interceptor, limiet op gelijktijdige verzoeken per host, voorladen van de eerste feed bij een koude start, officiële feed-gebeurtenisparameters, volgorde van CDN-kandidaten met buitenlandse reserves; voorladen van de tweede pagina, begrensde wachtrij voor het voorladen van omslagen, voorladen van afspeel-URL's; daarna weergave van dynamics (P3) via gRPC en correcties: compileerfout in de buffertijd op de audiopagina en typefout bij het voorladen van reacties waardoor elke nieuwe poging direct mislukte.
+
+- **3.3.4** — dynamics-kaarten voor betaalde berichten, mini-apps, themaverzamelingen en abonnementen; het probleem waarbij het eerste scherm van de startpagina helemaal geen omslagen toonde is opgelost; wijzigingen van PiliNara overgenomen (statusbalk, download hervatten na het sluiten van het proces, update van media-kit, zwarte video in Wayland omzeild, keuze van audiokwaliteit bij cachen); controle van AI-vertaling voor alle interfacetekst die sinds 3.0.5 is toegevoegd; deze log.
+
 ## Log van overgeërfde functies (van PiliNara / PiliPlus)
 
 Alles hieronder komt over van PiliNara (en, overgedragen, PiliPlus); PiliBabel voegt er de AI-vertaallaag bovenop toe.

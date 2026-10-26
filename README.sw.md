@@ -153,6 +153,16 @@ paru -S pilinara-bin         # au kupitia AUR: pilinara-bin (iliyojengwa tayari)
 
 <br/>
 
+## Kumbukumbu ya mabadiliko: 2.6.x → 3.3.4
+
+- **2.6.x** — akiba ya sauti (moduli tofauti za video na sauti, hukumbuka chaguo la mwisho, viingilio kwenye ukurasa wa video, ukurasa wa sauti pekee na kicheza sauti; muundo asili unahifadhiwa; ubora unachaguliwa) na kupakua kwenye kifaa (kitu cha menyu cha pekee: kwanza video/sauti, kisha ubora; bila folda iliyowekwa hufunguka kichagua faili cha mfumo).
+
+- **3.0.x–3.1.0** — kujirekebisha kwa mtandao nje ya nchi: afya ya kila mwenyeji na kubadili kati ya msingi na akiba, utatuzi wa DNS na akiba, kuwasha mapema miunganisho, kupoa baada ya udhibiti wa hatari (412), kutambua eneo na kuchagua kwa mkono, jaribio la kasi la CDN linashirikiwa na tabaka la API; buffer ya mbele ya kicheza hufuata bitrate ya video.
+
+- **3.2.0–3.3.3** — msingi wa mtandao kwa mtindo wa programu rasmi: alama ya kidole ya ombi (buvid/fp/session_id/env), kubadili wenyeji wa gRPC, kikwazo cha kujaribu tena, kikomo cha maombi ya wakati mmoja kwa mwenyeji, kupakia mapema feed ya kwanza wakati wa kuanza baridi, vigezo rasmi vya matukio ya feed, mpangilio wa wateule wa CDN na mbadala wa nje; kupakia mapema ukurasa wa pili, foleni yenye kikomo ya kupakia mapema majalada, kupakia mapema URL za kucheza; kisha kuonyesha dynamics (P3) kwa gRPC na marekebisho: hitilafu ya kuandaa muda wa buffer kwenye ukurasa wa sauti na hitilafu ya kubadili aina katika kupakia mapema maoni iliyofanya kila jaribio jipya kushindwa papo hapo.
+
+- **3.3.4** — kadi za dynamics kwa machapisho ya malipo, programu ndogo, seti za mada na usajili; imerekebishwa tatizo la skrini ya kwanza ya nyumbani kutokuwa na majalada kabisa; mabadiliko kutoka PiliNara yameingizwa (upau wa hali, kuendelea kupakua baada ya mchakato kufungwa, sasisho la media-kit, kuepuka video nyeusi katika Wayland, kuchagua ubora wa sauti wakati wa kuhifadhi); ukaguzi wa tafsiri ya AI kwa maandishi yote ya kiolesura yaliyoongezwa tangu 3.0.5; kumbukumbu hii.
+
 ## Kumbukumbu za vipengele vilivyorithiwa (kutoka PiliNara / PiliPlus)
 
 Kila kitu hapa chini kimerithiwa kutoka PiliNara (na, kwa urithi, PiliPlus); PiliBabel inaongeza safu ya tafsiri ya AI juu yake.

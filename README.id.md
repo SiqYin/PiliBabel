@@ -153,6 +153,16 @@ paru -S pilinara-bin         # atau lewat AUR: pilinara-bin (siap pakai) / pilin
 
 <br/>
 
+## Catatan perubahan: 2.6.x → 3.3.4
+
+- **2.6.x** — cache audio (modul terpisah untuk video dan audio, mengingat pilihan terakhir, tersedia pintasan di halaman video, halaman khusus audio, dan pemutar audio; format asli dipertahankan; kualitas dapat dipilih) dan unduh ke perangkat (item menu tersendiri: pilih video/audio lalu kualitas; bila folder belum diatur, pemilih berkas sistem akan terbuka).
+
+- **3.0.x–3.1.0** — pemulihan jaringan otomatis di luar negeri: kesehatan tiap host dengan peralihan utama/cadangan, resolusi DNS dengan cache, pemanasan koneksi, pendinginan setelah kontrol risiko (412), deteksi wilayah dengan pilihan manual, uji kecepatan CDN yang dipakai bersama lapisan API; buffer maju pemutar kini mengikuti bitrate jalur video.
+
+- **3.2.0–3.3.3** — fondasi jaringan bergaya aplikasi resmi: sidik jari permintaan (buvid/fp/session_id/env), failover host gRPC, interceptor percobaan ulang, batas permintaan bersamaan per host, pramuat feed pertama saat cold start, parameter peristiwa feed resmi, urutan kandidat CDN dengan cadangan luar negeri; pramuat halaman kedua, antrean pramuat sampul yang terbatas, pramuat URL pemutaran; lalu perenderan dynamics (P3) via gRPC dan perbaikan: galat kompilasi durasi buffer di halaman audio dan galat konversi tipe pada pramuat komentar yang membuat setiap percobaan ulang gagal seketika.
+
+- **3.3.4** — kartu dynamics untuk postingan berbayar, mini-app, kumpulan topik, dan langganan; diperbaiki masalah layar pertama beranda yang tidak menampilkan sampul sama sekali; perubahan dari PiliNara ikut diambil (bilah status, unduhan lanjut setelah proses ditutup, pembaruan media-kit, menghindari video hitam di Wayland, pemilihan kualitas audio saat menyimpan cache); audit terjemahan AI untuk seluruh teks antarmuka yang ditambahkan sejak 3.0.5; catatan ini.
+
 ## Daftar fitur warisan (dari PiliNara / PiliPlus)
 
 Semua di bawah ini diwarisi dari PiliNara (dan, secara transitif, PiliPlus); PiliBabel menambahkan lapisan terjemahan AI di atasnya.

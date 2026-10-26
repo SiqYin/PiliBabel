@@ -153,6 +153,16 @@ paru -S pilinara-bin         # o sa pamamagitan ng AUR: pilinara-bin (prebuilt) 
 
 <br/>
 
+## Talaan ng pagbabago: 2.6.x → 3.3.4
+
+- **2.6.x** — cache ng audio (hiwalay na module para sa video at audio, natatandaan ang huling pinili, may pasukan sa pahina ng video, sa pahinang audio lamang at sa audio player; pinapanatili ang orihinal na format; mapipili ang kalidad) at pag-download sa device (sariling item sa menu: video/audio muna, tapos ang kalidad; kung walang nakatakdang folder, bubukas ang file picker ng system).
+
+- **3.0.x–3.1.0** — kusang pag-ayos ng network sa ibang bansa: kalagayan ng bawat host at paglipat sa pangunahin at reserba, paglutas ng DNS na may cache, paunang pag-init ng koneksyon, paglamig matapos ang risk control (412), pagkilala sa rehiyon na may manu-manong pagpili, speed test ng CDN na ibinabahagi sa API layer; ang forward buffer ng player ay umaayon na sa bitrate ng video track.
+
+- **3.2.0–3.3.3** — pundasyon ng network na tulad ng opisyal na app: fingerprint ng request (buvid/fp/session_id/env), failover ng gRPC host, retry interceptor, limitasyon ng sabay na request bawat host, paunang pag-load ng unang feed sa cold start, opisyal na parameter ng feed event, pagkakasunod ng CDN candidate na may banyagang reserba; paunang pag-load ng ikalawang pahina, may hangganang pila para sa cover, paunang pag-load ng play URL; pagkatapos, pag-render ng dynamics (P3) sa gRPC at mga pag-aayos: error sa pag-compile ng tagal ng buffer sa pahina ng audio at error sa type conversion sa paunang pag-load ng komento na agad nagpapabigo sa bawat pagsubok muli.
+
+- **3.3.4** — mga dynamic card para sa bayad na post, mini-app, topic set at subscription; naayos ang pagkawala ng lahat ng cover sa unang screen ng home; isinama ang mga pagbabago mula sa PiliNara (status bar, pagpapatuloy ng download matapos isara ang proseso, update ng media-kit, pag-iwas sa itim na video sa Wayland, pagpili ng kalidad ng audio habang nag-cache); audit ng AI translation para sa lahat ng tekstong idinagdag sa interface mula 3.0.5; ang talaang ito.
+
 ## Talaan ng namana na tampok (mula sa PiliNara / PiliPlus)
 
 Ang lahat ng nasa ibaba ay dala-dala mula sa PiliNara (at, sa pagpapaabot, mula sa PiliPlus); ang PiliBabel ay nagdaragdag ng AI translation layer sa ibabaw.

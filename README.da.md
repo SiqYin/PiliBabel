@@ -153,6 +153,16 @@ paru -S pilinara-bin         # eller via AUR: pilinara-bin (præ-bygget) / pilin
 
 <br/>
 
+## Ændringslog: 2.6.x → 3.3.4
+
+- **2.6.x** — lydcache (adskilte moduler til video og lyd, husker sidste valg, indgange på videosiden, på lydsiden og i afspilleren; originalformatet bevares; kvalitet kan vælges) og download til enheden (eget menupunkt: først video/lyd, derefter kvalitet; uden en valgt mappe åbnes systemets filvælger).
+
+- **3.0.x–3.1.0** — selvhelbredende netværk i udlandet: helbred pr. vært med skift mellem primær og reserve, DNS-opslag med cache, forvarmning af forbindelser, afkøling efter risikokontrol (412), regionsgenkendelse med manuelt valg, CDN-hastighedstest delt med API-laget; afspillerens fremadgående buffer følger nu videosporens bitrate.
+
+- **3.2.0–3.3.3** — netværksfundament i den officielle apps stil: anmodningsfingeraftryk (buvid/fp/session_id/env), failover for gRPC-værter, retry-interceptor, grænse for samtidige anmodninger pr. vært, forudindlæsning af første feed ved kold start, officielle feed-hændelsesparametre, CDN-kandidaternes rækkefølge med udenlandske reserver; forudindlæsning af anden side, afgrænset kø til forudindlæsning af forsider, forudindlæsning af afspilnings-URL'er; derefter gengivelse af dynamik (P3) via gRPC samt rettelser: kompileringsfejl i buffertiden på lydsiden og typefejl i forudindlæsningen af kommentarer, som fik hvert nyt forsøg til at fejle øjeblikkeligt.
+
+- **3.3.4** — dynamikkort til betalte opslag, mini-apps, emnesamlinger og abonnementer; fejlen hvor hjemmeskærmens første side mistede alle forsider er rettet; opdateringer fra PiliNara er hentet ind (statuslinje, genoptagelse af download efter procesafslutning, opdatering af media-kit, omgåelse af sort video i Wayland, valg af lydkvalitet ved cache); AI-oversættelsesrevision af al grænsefladetekst tilføjet siden 3.0.5; denne log.
+
 ## Arvet funktionslog (fra PiliNara / PiliPlus)
 
 Alt nedenfor er arvet fra PiliNara (og, indirekte, PiliPlus); PiliBabel tilføjer AI-oversættelseslaget oven på.

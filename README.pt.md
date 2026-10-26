@@ -153,6 +153,20 @@ paru -S pilinara-bin         # ou via AUR: pilinara-bin (pré-compilado) / pilin
 
 <br/>
 
+## Histórico de alterações: 2.6.x → 3.3.4
+
+- **2.6.x** — cache de áudio (módulos separados de vídeo e áudio, memoriza a última escolha, entradas na página de vídeo, na de somente áudio e no reprodutor de áudio; formato original preservado; qualidade selecionável) e download para o dispositivo (item de menu próprio: primeiro vídeo/áudio, depois a qualidade; sem pasta definida abre o seletor do sistema).
+
+- **3.0.x** — autorrecuperação da rede no exterior: estado por host com troca entre principal e reserva, resolução de DNS com cache, pré-aquecimento de conexões, resfriamento após controle de risco (412), deteção de região com escolha manual, teste de velocidade de CDN partilhado com a camada de API.
+
+- **3.1.0** — buffer de avanço adaptado ao bitrate da faixa de vídeo, além de correções no reprodutor e no áudio.
+
+- **3.2.0** — base de rede no estilo da aplicação oficial: impressão digital do pedido (buvid/fp/session_id/env), comutação de hosts gRPC, interceptor de novas tentativas, limite de pedidos simultâneos por host, pré-carregamento do primeiro feed no arranque a frio, parâmetros oficiais de eventos do feed, ordem dos candidatos CDN com alternativa no exterior; pré-carregamento da segunda página do feed, fila limitada de pré-carregamento de capas, pré-carregamento de URL de reprodução; áudio e comentários na mesma base.
+
+- **3.3.0–3.3.3** — renderização de dinâmicas (P3) por gRPC e, depois, correções: erro de compilação na duração do buffer da página de áudio e falha de conversão de tipo no pré-carregamento de comentários que fazia cada nova tentativa falhar de imediato.
+
+- **3.3.4** — cartões de dinâmica para publicações pagas, miniaplicações, coleções de tópicos e subscrições; corrigida a ausência total de capas no primeiro ecrã inicial; sincronização com o PiliNara (barra de estado, retoma de downloads após terminar o processo, atualização do media-kit, contorno do vídeo preto em Wayland, escolha de qualidade de áudio ao guardar em cache); auditoria de tradução AI de todos os textos de interface adicionados desde 3.0.5; este histórico.
+
 ## Registro de recursos herdados (do PiliNara / PiliPlus)
 
 Tudo abaixo é herdado do PiliNara (e, por transitividade, do PiliPlus); o PiliBabel adiciona a camada de tradução por IA por cima.

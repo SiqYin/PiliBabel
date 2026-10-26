@@ -153,6 +153,16 @@ paru -S pilinara-bin         # lub przez AUR: pilinara-bin (skompilowany) / pili
 
 <br/>
 
+## Dziennik zmian: 2.6.x → 3.3.4
+
+- **2.6.x** — pamięć podręczna dźwięku (osobne moduły dla wideo i dźwięku, zapamiętuje ostatni wybór, wejścia na stronie wideo, stronie tylko dźwięku i w odtwarzaczu; zachowany oryginalny format; wybór jakości) oraz pobieranie na urządzenie (osobna pozycja menu: najpierw wideo/dźwięk, potem jakość; bez ustawionego folderu otwiera się systemowy wybór plików).
+
+- **3.0.x–3.1.0** — samonaprawa sieci za granicą: stan każdego hosta z przełączaniem główny/zapasowy, rozwiązywanie DNS z pamięcią podręczną, wstępne rozgrzewanie połączeń, ochładzanie po kontroli ryzyka (412), rozpoznawanie regionu z ręcznym wyborem, test szybkości CDN współdzielony z warstwą API; bufor wyprzedzający odtwarzacza dostosowuje się do przepływności ścieżki wideo.
+
+- **3.2.0–3.3.3** — podstawa sieciowa w stylu oficjalnej aplikacji: odcisk żądania (buvid/fp/session_id/env), przełączanie hostów gRPC, interceptор ponowień, limit równoczesnych żądań na host, wstępne wczytanie pierwszego strumienia przy zimnym starcie, oficjalne parametry zdarzeń strumienia, kolejność kandydatów CDN z zagranicznym zapasem; wstępne wczytanie drugiej strony, ograniczona kolejka wstępnego wczytywania okładek, wstępne wczytywanie adresów odtwarzania; następnie renderowanie dynamiki (P3) przez gRPC oraz poprawki: błąd kompilacji długości bufora na stronie dźwięku i błąd konwersji typu przy wstępnym wczytywaniu komentarzy, przez który każda ponowna próba kończyła się natychmiastowym niepowodzeniem.
+
+- **3.3.4** — karty dynamiki dla wpisów płatnych, mini-aplikacji, zestawów tematów i subskrypcji; naprawiono brak okładek na pierwszym ekranie strony głównej; włączono zmiany z PiliNara (pasek stanu, wznawianie pobierania po zamknięciu procesu, aktualizacja media-kit, obejście czarnego obrazu w Wayland, wybór jakości dźwięku przy zapisie do pamięci podręcznej); audyt tłumaczenia AI dla wszystkich tekstów interfejsu dodanych od 3.0.5; ten dziennik.
+
 ## Dziennik odziedziczonych funkcji (z PiliNara / PiliPlus)
 
 Wszystko poniżej pochodzi z PiliNara (i, przenośnie, PiliPlus); PiliBabel dodaje na wierzchu warstwę tłumaczenia AI.
