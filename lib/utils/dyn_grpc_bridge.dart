@@ -1,15 +1,19 @@
+import 'package:PiliPlus/grpc/bilibili/app/dynamic/v1.pb.dart'
+    show DynVideoReqReply;
 import 'package:PiliPlus/grpc/bilibili/app/dynamic/v2.pb.dart'
-    show DynAllReply, DynSpaceRsp, DynamicItem, DynamicType;
+    show DynAllReply, DynSpaceRsp;
 
 /// E3.2 动态 gRPC 响应 -> App 现有模型能吃的 web 结构。
 ///
 /// App 的动态 UI 与解析器（DynamicsDataModel / DynamicItemModel）建立在
-/// web-dynamic 的 modules 结构上，而 gRPC（DynAll / DynSpace）返回的动态卡是
-/// 同源结构：同样是一串 modules，只是键名是 proto 的 lowerCamelCase、数值型 ID 是
-/// 字符串、卡片类型是 proto 枚举名。这里只做三件确定的事：
+/// web-dynamic 的 modules 结构上，而 gRPC（DynAll / DynVideo / DynSpace）返回的
+/// 动态卡是同源结构：同样是一串 modules，只是键名是 proto 的 lowerCamelCase、
+/// 数值型 ID 是字符串、卡片类型是 proto 枚举名。这里只做三件确定的事：
 ///   1. 键名统一转成下划线风格（moduleAuthor -> module_author）；
 ///   2. 卡片类型枚举名转成 web 的 DYNAMIC_TYPE_* 字面量；
 ///   3. 已知的数值字段把字符串还原成数字（proto3 JSON 把 int64 输出成字符串）。
+/// 实现走 proto3Json 再统一改键名，所以 v1（DynVideo）与 v2（DynAll/DynSpace）
+/// 两个命名空间共用同一套转换。
 /// 认不出的卡片类型、或转换中出现任何意外，一律返回 null —— 调用方整页回退 REST，
 /// 绝不出现「半页 gRPC、半页空白」这种状态。
 abstract final class DynGrpcBridge {
@@ -47,22 +51,49 @@ abstract final class DynGrpcBridge {
     'count',
   };
 
+  /// 动态主 feed（全部等标签页）
   static Map<String, dynamic>? fromDynAll(DynAllReply reply) {
-    final l = reply.dynamicList;
-    return _page(l.list, l.historyOffset, l.hasMore);
+    final j = _map(reply.toProto3Json());
+    if (j == null) {
+      return null;
+    }
+    final list = j['dynamic_list'];
+    if (list is! Map<String, dynamic>) {
+      return null;
+    }
+    return _page(list['list'], list['history_offset'], _truthy(list['has_more']));
   }
 
-  static Map<String, dynamic>? fromDynSpace(DynSpaceRsp rsp) =>
-      _page(rsp.list, rsp.historyOffset, rsp.hasMore);
+  /// 动态页的视频标签页（v1 命名空间）
+  static Map<String, dynamic>? fromDynVideo(DynVideoReqReply reply) {
+    final j = _map(reply.toProto3Json());
+    if (j == null) {
+      return null;
+    }
+    return _page(j['list'], j['history_offset'], _truthy(j['has_more']));
+  }
+
+  /// 空间页动态
+  static Map<String, dynamic>? fromDynSpace(DynSpaceRsp rsp) {
+    final j = _map(rsp.toProto3Json());
+    if (j == null) {
+      return null;
+    }
+    return _page(rsp.list.isEmpty ? null : j['list'], j['history_offset'],
+        _truthy(j['has_more']));
+  }
 
   static Map<String, dynamic>? _page(
-    Iterable<DynamicItem> list,
-    String offset,
+    dynamic rawList,
+    dynamic offset,
     bool hasMore,
   ) {
+    if (rawList is! List) {
+      return null;
+    }
     final items = <Map<String, dynamic>>[];
-    for (final item in list) {
-      final w = _item(item);
+    for (final raw in rawList) {
+      final w = _item(_map(raw));
       if (w == null) {
         return null;
       }
@@ -70,30 +101,31 @@ abstract final class DynGrpcBridge {
     }
     return {
       'items': items,
-      'offset': offset,
+      'offset': offset is String ? offset : '',
       'has_more': hasMore,
     };
   }
 
-  static Map<String, dynamic>? _item(DynamicItem item) {
-    final type = _typeName(item.cardType);
+  static Map<String, dynamic>? _item(Map<String, dynamic>? item) {
+    if (item == null) {
+      return null;
+    }
+    final type = _typeName(item['card_type']?.toString());
     if (type == null) {
       return null;
     }
     final modules = <String, dynamic>{};
-    for (final m in item.modules) {
-      final raw = m.toProto3Json();
-      if (raw is! Map) {
-        continue;
+    if (item['modules'] case final List rawModules) {
+      for (final m in rawModules) {
+        final json = _map(m);
+        if (json == null) {
+          continue;
+        }
+        json.remove('module_type');
+        modules.addAll(json);
       }
-      final json = _snake(raw);
-      if (json is! Map<String, dynamic>) {
-        continue;
-      }
-      json.remove('module_type');
-      modules.addAll(json);
     }
-    final ext = item.extend;
+    final ext = _map(item['extend']);
     final author = modules['module_author'];
     final basic = author is Map<String, dynamic>
         ? <String, dynamic>{
@@ -103,16 +135,19 @@ abstract final class DynGrpcBridge {
           }
         : null;
     return {
-      'id_str': ext.dynIdStr,
+      'id_str': ext?['dyn_id_str'] ?? '',
       'type': type,
       'modules': modules,
       'basic': ?basic,
     };
   }
 
-  static String? _typeName(DynamicType t) {
+  static String? _typeName(String? raw) {
+    if (raw == null || raw.isEmpty) {
+      return null;
+    }
     // proto 枚举名可能是 dyn_av / dynAv / DYN_AV，统一成 AV 再拼 web 字面量
-    var s = t.name.replaceAll('_', '').toUpperCase();
+    var s = raw.replaceAll('_', '').toUpperCase();
     if (s.startsWith('DYN')) {
       s = s.substring(3);
     }
@@ -120,6 +155,11 @@ abstract final class DynGrpcBridge {
       return null;
     }
     return 'DYNAMIC_TYPE_$s';
+  }
+
+  static Map<String, dynamic>? _map(dynamic v) {
+    final s = _snake(v);
+    return s is Map<String, dynamic> ? s : null;
   }
 
   static dynamic _snake(dynamic v) {
@@ -150,6 +190,16 @@ abstract final class DynGrpcBridge {
       buf.write(lower);
     }
     return buf.toString();
+  }
+
+  static bool _truthy(dynamic v) {
+    if (v is bool) {
+      return v;
+    }
+    if (v is int) {
+      return v != 0;
+    }
+    return false;
   }
 
   static dynamic _asInt(dynamic v) {

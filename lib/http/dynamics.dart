@@ -47,26 +47,36 @@ abstract final class DynamicsHttp {
     // 类型不支持、转换或解析失败都自动回退下面的网页接口，不会出现半页内容。
     // 「关注 UP」标签用的是 host_mid，DynAll 不覆盖，仍走网页接口。
     if (Pref.dynUseGrpc && type != .up) {
-      final g = await DynGrpc.dynAll(
-        offset: offset,
-        page: (offset == null || offset.isEmpty) ? 1 : 2,
-        localTime: 8,
-        from: 'dynamic',
-      );
-      if (g case Success(:final response)) {
-        final web = DynGrpcBridge.fromDynAll(response);
-        if (web != null) {
-          try {
-            return Success(
-              DynamicsDataModel.fromJson(
-                web,
-                type: type,
-                tempBannedList: tempBannedList,
-              ),
-            );
-          } catch (_) {
-            // 解析不了就落到网页接口
-          }
+      final page = (offset == null || offset.isEmpty) ? 1 : 2;
+      Map<String, dynamic>? web;
+      if (type == .video) {
+        // 视频标签页走 DynVideo（官方在 v1 命名空间）
+        final g = await DynGrpc.dynVideo(offset: offset, page: page);
+        if (g case Success(:final response)) {
+          web = DynGrpcBridge.fromDynVideo(response);
+        }
+      } else {
+        final g = await DynGrpc.dynAll(
+          offset: offset,
+          page: page,
+          localTime: 8,
+          from: 'dynamic',
+        );
+        if (g case Success(:final response)) {
+          web = DynGrpcBridge.fromDynAll(response);
+        }
+      }
+      if (web != null) {
+        try {
+          return Success(
+            DynamicsDataModel.fromJson(
+              web,
+              type: type,
+              tempBannedList: tempBannedList,
+            ),
+          );
+        } catch (_) {
+          // 解析不了就落到网页接口
         }
       }
     }
