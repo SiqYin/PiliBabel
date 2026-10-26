@@ -128,10 +128,6 @@ class DownloadService extends GetxService {
     return result;
   }
 
-  void downloadVideo(
-    Part page,
-    VideoDetailData? videoDetail,
-    ugc.EpisodeItem? videoArc,
   void downloadVideo({
     required int index,
     required Part page,
@@ -139,10 +135,8 @@ class DownloadService extends GetxService {
     ugc.EpisodeItem? videoArc,
     required VideoQuality videoQuality,
     AudioQuality? audioQuality,
-    SeasonInfo? seasonInfo,
     String? autoFolderTitle,
     String? autoFolderSourceKey,
-  }) {
   }) {
     final cid = page.cid!;
     if (downloadList.indexWhere((e) => e.cid == cid) != -1) {
