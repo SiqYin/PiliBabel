@@ -34,6 +34,9 @@ class MemberDynamicsController
   }
 
   @override
+  bool handleError(String? errMsg) => keepLastDataOnError(errMsg);
+
+  @override
   List<DynamicItemModel>? getDataList(DynamicsDataModel response) {
     offset = response.offset?.isNotEmpty == true ? response.offset! : '-1';
     if (response.hasMore == false) {
