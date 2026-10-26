@@ -116,7 +116,7 @@ abstract final class DynGrpc {
       DynSpaceReq(
         hostUid: Int64(uid),
         page: Int64(page),
-        offset: offset,
+        historyOffset: offset,
         localTime: localTime,
         from: from,
       ),
