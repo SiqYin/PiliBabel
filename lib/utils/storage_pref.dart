@@ -1422,6 +1422,10 @@ abstract final class Pref {
   static double get bufferSize =>
       _setting.get(SettingBoxKey.bufferSize, defaultValue: 32.0);
 
+  /// E2 媒体层多连接代理：0=关闭（默认）、1/2/4 条并发分片
+  static int get mediaProxyConns =>
+      _setting.get(SettingBoxKey.mediaProxyConns, defaultValue: 0);
+
   static double get bufferSec =>
       _setting.get(SettingBoxKey.bufferSec, defaultValue: 16.0);
 

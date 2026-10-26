@@ -20,6 +20,7 @@ abstract final class SettingBoxKey {
       autoPlayAdjust = 'autoPlayAdjust',
       autoLowerQuality = 'autoLowerQuality',
       useAppPlayUrl = 'useAppPlayUrl',
+      mediaProxyConns = 'mediaProxyConns',
       hardwareDecoding = 'hardwareDecoding',
       videoSync = 'videoSync',
       autosync = 'autosync',
