@@ -64,6 +64,7 @@ abstract final class NetError {
       DioExceptionType.connectionTimeout => NetErrorKind.connectTimeout,
       DioExceptionType.sendTimeout => NetErrorKind.sendTimeout,
       DioExceptionType.receiveTimeout => NetErrorKind.receiveTimeout,
+      DioExceptionType.transformTimeout => NetErrorKind.receiveTimeout,
       DioExceptionType.badCertificate => NetErrorKind.tls,
       DioExceptionType.badResponse => NetErrorKind.unknown,
       DioExceptionType.cancel => NetErrorKind.cancelled,

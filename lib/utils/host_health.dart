@@ -34,12 +34,15 @@ class HostHealth {
 
   void _record(String host, bool ok) {
     if (host.isEmpty) return;
-    final q = _samples.putIfAbsent(host, Queue<bool>.new);
-    q.addLast(ok);
+    final q = _samples.putIfAbsent(host, Queue<bool>.new)..addLast(ok);
+    _trim(q);
+    if (ok) _riskUntil.remove(host);
+  }
+
+  static void _trim(Queue<bool> q) {
     while (q.length > window) {
       q.removeFirst();
     }
-    if (ok) _riskUntil.remove(host);
   }
 
   /// 撞上风控：官方 APP 的做法是重新激活设备指纹再重试，这里额外给主机加冷却，
@@ -81,14 +84,16 @@ class HostHealth {
   /// 分数相同则保持传入顺序（也就是配置顺序）。
   List<String> ordered(List<String> hosts) {
     if (hosts.length < 2) return List<String>.of(hosts);
-    final indexed = <(int, String)>[
-      for (var i = 0; i < hosts.length; i++) (i, hosts[i]),
-    ];
-    indexed.sort((a, b) {
-      final byScore = _score(b.$2).compareTo(_score(a.$2));
-      return byScore != 0 ? byScore : a.$1.compareTo(b.$1);
+    // 原始顺序做同分时的兜底（也就是配置顺序）
+    final order = <String, int>{
+      for (var i = 0; i < hosts.length; i++) hosts[i]: i,
+    };
+    return List<String>.of(hosts)..sort((a, b) {
+      final byScore = _score(b).compareTo(_score(a));
+      return byScore != 0
+          ? byScore
+          : (order[a] ?? 0).compareTo(order[b] ?? 0);
     });
-    return <String>[for (final e in indexed) e.$2];
   }
 
   String primaryOf(List<String> hosts) => ordered(hosts).first;
@@ -147,8 +152,8 @@ class HostLimiter {
       return true;
     }
     final completer = Completer<void>();
-    final q = _waiting.putIfAbsent(host, Queue<Completer<void>>.new);
-    q.addLast(completer);
+    final q = _waiting.putIfAbsent(host, Queue<Completer<void>>.new)
+      ..addLast(completer);
     try {
       await completer.future.timeout(waitTimeout);
       // 被 release 让位：槽位已经算在我头上
