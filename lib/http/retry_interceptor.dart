@@ -1,3 +1,7 @@
+import 'package:PiliPlus/http/constants.dart';
+import 'package:PiliPlus/utils/dns_resolver.dart';
+import 'package:PiliPlus/utils/host_health.dart';
+import 'package:PiliPlus/utils/net_error.dart';
 import 'package:dio/dio.dart';
 import 'package:http2/http2.dart';
 
@@ -60,6 +64,18 @@ class RetryInterceptor extends Interceptor {
       // 和 5xx 全都变成「点一下没反应」。改为带退避重试，上限沿用 retryCount；
       // 412 额外刷新一次设备指纹（官方 APP 的自愈方式就是这个）。
       final status = err.response!.statusCode;
+      if (status != null) {
+        final host = err.requestOptions.uri.host;
+        if (HttpString.isPolicyHost(host)) {
+          // 412 额外给主机加冷却（A5.3）：冷却期内优先走备选主机，
+          // 避免反复撞同一台
+          if (status == 412) {
+            HostHealth.instance.recordRiskControl(host);
+          } else if (status == 429 || status >= 500) {
+            HostHealth.instance.recordFailure(host);
+          }
+        }
+      }
       if (status != null &&
           _retryableStatus(status) &&
           err.requestOptions.data is! Stream) {
@@ -67,7 +83,7 @@ class RetryInterceptor extends Interceptor {
         if (rt < _count) {
           err.requestOptions.extra['_rt'] = rt + 1;
           Future.delayed(
-            Duration(milliseconds: (rt + 1) * _delay),
+            Duration(milliseconds: _backoff(rt)),
             () => _retryAfterStatus(err, handler, status),
           );
           return;
@@ -80,22 +96,35 @@ class RetryInterceptor extends Interceptor {
         case DioExceptionType.connectionTimeout:
         case DioExceptionType.sendTimeout:
         case DioExceptionType.unknown:
-          if ((err.requestOptions.extra['_rt'] ??= 0) < _count &&
-              err.error
-                  is! TransportConnectionException // 网络中断, 此时请求可能已经被服务器所接收
-                  ) {
-            Future.delayed(
-              Duration(
-                milliseconds: ++err.requestOptions.extra['_rt'] * _delay,
-              ),
-              () => _client
-                  .fetch(err.requestOptions)
-                  .then(handler.resolve)
-                  .onError<DioException>((error, _) => handler.reject(error)),
-            );
-          } else {
-            handler.next(err);
+          final options = err.requestOptions;
+          final kind = NetError.classify(err);
+          final host = options.uri.host;
+          if (HttpString.isPolicyHost(host)) {
+            HostHealth.instance.recordFailure(host);
           }
+          if (err.error is TransportConnectionException) {
+            // 网络中断, 此时请求可能已经被服务器所接收
+            return handler.next(err);
+          }
+          // 解析可能拿到坏 IP：作废这一台的解析结果，下次重新解析
+          // （主机失败换解析、解析失败换主机，两条路互相解耦）
+          if (NetError.isHostSwitchable(kind) && host.isNotEmpty) {
+            DnsResolver.invalidateHost(host);
+          }
+          final rt = options.extra['_rt'] ??= 0;
+          if (rt >= _count) {
+            return handler.next(err);
+          }
+          options.extra['_rt'] = rt + 1;
+          // 先换主机（仅 gRPC 主机组内），再原样退避重试
+          _switchHostIfPossible(options, kind);
+          Future.delayed(
+            Duration(milliseconds: _backoff(rt)),
+            () => _client
+                .fetch(options)
+                .then(handler.resolve)
+                .onError<DioException>((error, _) => handler.reject(error)),
+          );
           return;
         default:
           return handler.next(err);
@@ -135,6 +164,56 @@ class RetryInterceptor extends Interceptor {
     try {
       await _onRiskControl?.call();
     } catch (_) {}
+  }
+
+  /// 成功一次就记一次：主机健康度（A2.4）靠这里积累样本。
+  @override
+  void onResponse(Response response, ResponseInterceptorHandler handler) {
+    final host = response.requestOptions.uri.host;
+    if (HttpString.isPolicyHost(host)) {
+      HostHealth.instance.recordSuccess(host);
+    }
+    handler.next(response);
+  }
+
+  /// 指数退避（A3.3）：delay、2×delay、4×delay…，上限 8 秒。
+  /// 等间隔重试会把请求堆在一起，弱网下反而把链路压垮。
+  int _backoff(int attempt) {
+    final base = _delay <= 0 ? 500 : _delay;
+    final shift = attempt < 0 ? 0 : (attempt > 4 ? 4 : attempt);
+    final value = base << shift;
+    return value > 8000 ? 8000 : value;
+  }
+
+  /// 换主机重发（A2.3）：只对 gRPC 请求、且主机落在 grpc.biliapi.net /
+  /// app.bilibili.com 这一组时生效。
+  /// 直链（CDN）与 Web 接口一律不换：直链签名与主机绑定，换了必然失效；
+  /// api.bilibili.com 与 app.bilibili.com 的接口面也不通用。
+  static bool _switchHostIfPossible(RequestOptions options, NetErrorKind kind) {
+    if (!NetError.isHostSwitchable(kind)) return false;
+    if (options.extra['_hostSwitched'] == true) return false;
+    final uri = options.uri;
+    final alternatives = HttpString.grpcAlternatives(
+      uri.host,
+      isGrpc: _isGrpcRequest(options),
+    );
+    if (alternatives == null) return false;
+    final next = HostHealth.instance.nextOf(alternatives, uri.host);
+    if (next == null || next == uri.host) return false;
+    options
+      ..baseUrl = '${uri.scheme}://$next'
+      ..path = uri.path.isEmpty ? '/' : uri.path
+      ..queryParameters = uri.queryParametersAll;
+    options.extra['_hostSwitched'] = true;
+    return true;
+  }
+
+  static bool _isGrpcRequest(RequestOptions options) {
+    const grpc = 'application/grpc';
+    final contentType = options.contentType;
+    if (contentType != null && contentType.startsWith(grpc)) return true;
+    final header = options.headers['content-type'];
+    return header is String && header.startsWith(grpc);
   }
 
   RetryInterceptor copyWith({Dio? client, int? count, int? delay}) => .new(

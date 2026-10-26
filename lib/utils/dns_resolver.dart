@@ -123,6 +123,13 @@ class DnsResolver {
     _inflight.clear();
   }
 
+  /// 单主机作废：连接层失败时调用，下次请求重新解析（可能换到另一个 IP）。
+  static void invalidateHost(String host) {
+    final key = _normalize(host);
+    _cache.remove(key);
+    _inflight.remove(key);
+  }
+
   static String stats() =>
       'hit=$hitCount stale=$staleHitCount miss=$missCount doh=$dohCount fail=$failCount cache=${_cache.length}';
 

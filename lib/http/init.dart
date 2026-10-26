@@ -15,6 +15,9 @@ import 'package:PiliPlus/utils/cdn_region.dart';
 import 'package:PiliPlus/utils/cdn_speed_test.dart';
 import 'package:PiliPlus/utils/dns_proxy.dart';
 import 'package:PiliPlus/utils/dns_resolver.dart';
+import 'package:PiliPlus/http/host_limiter.dart';
+import 'package:PiliPlus/utils/host_health.dart';
+import 'package:PiliPlus/utils/net_status.dart';
 import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/login_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -80,6 +83,8 @@ class Request {
     for (final host in const [
       HttpString.apiBaseUrl,
       HttpString.appBaseUrl,
+      // gRPC 原生主机也建一条：官方启动即与 gRPC 主机建长连接
+      HttpString.grpcBaseUrl,
     ]) {
       try {
         await Request()
@@ -169,8 +174,11 @@ class Request {
 
   static void _onConnectivityChanged(List<ConnectivityResult> result) {
     if (listEquals(result, const [ConnectivityResult.none])) {
+      NetStatus.notifyOffline();
       return;
     }
+    // 网络恢复：通知页面补拉（页面只在自身处于错误态时才补拉）
+    NetStatus.notifyRestored();
     _networkChangeDebounce?.cancel();
     _networkChangeDebounce = Timer(
       const Duration(milliseconds: 500),
@@ -197,12 +205,14 @@ class Request {
     final http11Adapter = IOHttpClientAdapter(
       createHttpClient: enableSystemProxy
           ? () => HttpClient()
-              ..idleTimeout = const Duration(seconds: 15)
+              ..idleTimeout = HttpTimeout.idle
+              ..maxConnectionsPerHost = HttpTimeout.maxConnectionsPerHost
               ..autoUncompress = false
               ..findProxy = ((_) => 'PROXY $systemProxyHost:$systemProxyPort')
               ..badCertificateCallback = (cert, host, port) => true
           : () => HttpClient()
-              ..idleTimeout = const Duration(seconds: 15)
+              ..idleTimeout = HttpTimeout.idle
+              ..maxConnectionsPerHost = HttpTimeout.maxConnectionsPerHost
               ..autoUncompress = false, // Http2Adapter没有自动解压, 统一行为
     );
 
@@ -214,7 +224,7 @@ class Request {
         : 0;
     final connectionManager = _enableHttp2
         ? ConnectionManager(
-            idleTimeout: const Duration(seconds: 15),
+            idleTimeout: HttpTimeout.idle,
             onClientCreate: enableSystemProxy
                 ? (_, config) => config
                     ..proxy = Uri(
@@ -274,6 +284,9 @@ class Request {
       // 才不会拿着旧 IP 去连
       DnsResolver.invalidate();
       unawaited(DnsProxy.instance.restart());
+      // 主机健康度与并发闸门也绑在旧网络上，一起重置
+      HostHealth.instance.reset();
+      HostLimiter.reset();
     } catch (_) {}
   }
 
@@ -286,9 +299,11 @@ class Request {
       //请求基地址,可以包含子路径
       baseUrl: HttpString.apiBaseUrl,
       //连接服务器超时时间，单位是毫秒.
-      connectTimeout: const Duration(milliseconds: 10000),
+      connectTimeout: HttpTimeout.connect,
       //响应流上前后两次接受到数据的间隔，单位为毫秒。
-      receiveTimeout: const Duration(milliseconds: 10000),
+      receiveTimeout: HttpTimeout.receive,
+      // 发送超时：POST 体积较大时用（A3.2 超时分层）
+      sendTimeout: HttpTimeout.send,
       //Http请求头.
       headers: {
         // 用真实浏览器 UA 而不是裸 Dart UA：Web 接口的风控把「Dart/3.6」
@@ -320,6 +335,9 @@ class Request {
         ),
       );
     }
+
+    // 并发闸门（A3.4）：同一主机的并发请求超过上限就排队，避免抢带宽拖慢首帧
+    dio.interceptors.add(HostLimiterInterceptor());
 
     // 日志拦截器 输出请求、响应内容
     if (kDebugMode) {
