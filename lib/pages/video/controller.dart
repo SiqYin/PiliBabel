@@ -1150,6 +1150,8 @@ class VideoDetailController extends GetxController
       height: firstVideo.height,
       volume: volume,
       autoFullScreenFlag: autoFullScreenFlag,
+      // 当前视频轨码率：播放器据此把前向缓冲放大到「码率 × 20 秒」
+      videoBitrate: firstVideo.bandWidth,
     );
 
     // 检查 controller 是否已关闭，如果已关闭则跳过后续的资源加载操作

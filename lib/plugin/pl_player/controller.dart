@@ -114,6 +114,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   late double lastPlaybackSpeed = 1.0;
   final RxDouble _playbackSpeed = Pref.playSpeedDefault.obs;
+
+  /// 当前视频轨码率（bit/s），null 表示未知（退回用户设定的固定缓冲）。
+  int? _videoBitrate;
   late final RxDouble _longPressSpeed = Pref.longPressSpeedDefault.obs;
 
   final RxDouble volume = RxDouble(
@@ -1086,6 +1089,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     VoidCallback? onInit,
     Volume? volume,
     bool autoFullScreenFlag = false,
+    // 当前视频轨码率（bit/s）：用于按码率自适应前向缓冲
+    int? videoBitrate,
   }) async {
     try {
       _processing = true;
@@ -1120,6 +1125,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       this.width = width;
       this.height = height;
       this.dataSource = dataSource;
+      _videoBitrate = videoBitrate;
       _autoPlay = autoplay;
       // 初始化视频倍速
       // _playbackSpeed.value = speed;
@@ -1358,7 +1364,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   static const String _lavfReconnect =
       'reconnect=1,reconnect_streamed=1,reconnect_delay_max=10';
 
-  late final buffer = Pref.initBuffer(_playbackSpeed.value);
+  /// 前向缓冲：按当前视频轨码率自适应，所以每次打开媒体都要重算 —— 不能再
+  /// 缓存（`late final`），否则同一个播放器实例换到 4K 视频时还在用 360P 的
+  /// 缓冲大小。
+  Map<String, String> get buffer =>
+      Pref.initBuffer(_playbackSpeed.value, _videoBitrate);
   late final liveBuffer = Pref.initLiveBuffer();
 
   // 配置播放器
