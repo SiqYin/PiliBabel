@@ -7,6 +7,7 @@ import 'package:PiliPlus/utils/cdn_region.dart';
 import 'package:PiliPlus/utils/connectivity_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
+import 'package:PiliPlus/utils/host_health.dart';
 
 /// CDN 节点实测择优。
 ///
@@ -194,6 +195,8 @@ abstract final class CdnSpeedTest {
         (url) => _probe(url, result, probeBytes).whenComplete(() {
           if (result.isEmpty) return;
           _score.addAll(result);
+    // A4.2：测速结果同步进主机健康度，接口层的选主机也能用上这份实测速率。
+    result.forEach(HostHealth.instance.recordSpeed);
           _testedAt = DateTime.now();
         }),
       ),
@@ -212,6 +215,8 @@ abstract final class CdnSpeedTest {
     // 合并而不是整体替换：这一轮没测到的老主机保留上一次的评分，避免因为一次
     // 探测抖动把已知可用的节点丢掉。
     _score.addAll(result);
+    // A4.2：测速结果同步进主机健康度，接口层的选主机也能用上这份实测速率。
+    result.forEach(HostHealth.instance.recordSpeed);
     _testedAt = DateTime.now();
     _persist();
   }

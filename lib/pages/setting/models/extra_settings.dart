@@ -216,6 +216,13 @@ List<SettingsModel> get extraSettings => [
     defaultVal: true,
   ),
   SwitchModel(
+    title: uiTx('DNS 加密兜底解析'),
+    subtitle: uiTx('系统解析失败时再用 DNS over HTTPS 试一次；正常解析不受影响'),
+    leading: const Icon(Icons.dns),
+    setKey: SettingBoxKey.dnsDoh,
+    defaultVal: true,
+  ),
+  SwitchModel(
     title: uiTx('评论点赞/点踩按钮交换位置'),
     subtitle: uiTx('交换后：点赞在左，点踩在右（与官方客户端一致）'),
     leading: Icon(Icons.swap_horiz),
