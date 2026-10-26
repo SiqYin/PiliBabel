@@ -73,11 +73,31 @@ class HostHealth {
     return ok / q.length;
   }
 
+  /// A4.2：CDN 测速结果（字节/毫秒）与接口层共用一份，测速不再只服务播放。
+  final Map<String, double> _speed = <String, double>{};
+
+  void recordSpeed(String host, double bytesPerMs) {
+    if (bytesPerMs <= 0) return;
+    _speed[host] = bytesPerMs;
+  }
+
+  double? speedOf(String host) => _speed[host];
+
   double _score(String host) {
     if (isCoolingDown(host)) return -1;
     final rate = successRate(host);
-    if (rate == null || samples(host) < minSamples) return unknownScore;
-    return rate;
+    final base = (rate == null || samples(host) < minSamples)
+        ? unknownScore
+        : rate;
+    final speed = _speed[host];
+    if (speed == null || speed <= 0) return base;
+    // 速率按当前候选里的峰值归一化，最多贡献 0.3 的权重：
+    // 成功率仍是主项，一次测速不足以推翻健康度结论。
+    var peak = speed;
+    for (final v in _speed.values) {
+      if (v > peak) peak = v;
+    }
+    return base + 0.3 * (speed / peak);
   }
 
   /// 按健康度给候选主机排序：冷却中的排最后，其余按成功率降序；
@@ -110,6 +130,7 @@ class HostHealth {
   void reset() {
     _samples.clear();
     _riskUntil.clear();
+    _speed.clear();
   }
 
   String stats() {

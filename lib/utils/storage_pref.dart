@@ -1430,6 +1430,11 @@ abstract final class Pref {
   static bool get dynUseGrpc =>
       _setting.get(SettingBoxKey.dynUseGrpc, defaultValue: true);
 
+  /// A1.3 DNS over HTTPS 兜底：系统解析失败时，是否再用 DoH 试一次。
+  /// 默认开启——它只在系统解析失败后才介入，正常路径不受影响。
+  static bool get dnsDoh =>
+      _setting.get(SettingBoxKey.dnsDoh, defaultValue: true);
+
   static double get bufferSec =>
       _setting.get(SettingBoxKey.bufferSec, defaultValue: 16.0);
 

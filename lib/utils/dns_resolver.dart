@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
+import 'package:PiliPlus/utils/storage_pref.dart';
 
 /// 自解析层，对标官方客户端的 HTTPDNS。
 ///
@@ -50,6 +51,22 @@ class DnsResolver {
   static int missCount = 0;
   static int dohCount = 0;
   static int failCount = 0;
+  // A1.4：解析耗时与系统解析失败次数（DoH 只在系统失败后介入）
+  static int resolveCount = 0;
+  static int systemFailCount = 0;
+  static double totalResolveMs = 0;
+  static double lastResolveMs = 0;
+  static double slowestResolveMs = 0;
+
+  /// A1.3：DoH 开关（设置项「DNS 加密兜底解析」，默认开）。
+  /// 读设置失败时按开启处理，保证极端情况下解析仍能兜底。
+  static bool get _dohEnabled {
+    try {
+      return Pref.dnsDoh;
+    } catch (_) {
+      return true;
+    }
+  }
 
   static bool isDohHost(String host) => _dohHosts.contains(_normalize(host));
 
@@ -130,8 +147,14 @@ class DnsResolver {
     _inflight.remove(key);
   }
 
-  static String stats() =>
-      'hit=$hitCount stale=$staleHitCount miss=$missCount doh=$dohCount fail=$failCount cache=${_cache.length}';
+  static String stats() {
+    final avg = resolveCount == 0 ? 0.0 : totalResolveMs / resolveCount;
+    return 'hit=$hitCount stale=$staleHitCount miss=$missCount doh=$dohCount '
+        'fail=$failCount sysFail=$systemFailCount cache=${_cache.length} '
+        'resolve=$resolveCount avg=${avg.toStringAsFixed(1)}ms '
+        'last=${lastResolveMs.toStringAsFixed(1)}ms '
+        'slow=${slowestResolveMs.toStringAsFixed(1)}ms';
+  }
 
   static void logStats() {
     if (kDebugMode) debugPrint('DnsResolver $stats()');
@@ -146,24 +169,41 @@ class DnsResolver {
   }
 
   static Future<List<InternetAddress>?> _doResolve(String host) async {
-    var addresses = await _systemLookup(host);
-    if (addresses == null || addresses.isEmpty) {
-      addresses = await _dohLookup(host);
-    }
-    if (addresses == null || addresses.isEmpty) {
-      failCount++;
-      if (kDebugMode) debugPrint('DnsResolver failed: $host');
+    final watch = Stopwatch()..start();
+    try {
+      var addresses = await _systemLookup(host);
+      if (addresses == null || addresses.isEmpty) {
+        systemFailCount++;
+        if (_dohEnabled) {
+          addresses = await _dohLookup(host);
+        }
+      }
+      if (addresses == null || addresses.isEmpty) {
+        failCount++;
+        if (kDebugMode) debugPrint('DnsResolver failed: $host');
+        _cache[host] = _DnsEntry(
+          const <InternetAddress>[],
+          DateTime.now().add(_ttlFailure),
+        );
+        return null;
+      }
       _cache[host] = _DnsEntry(
-        const <InternetAddress>[],
-        DateTime.now().add(_ttlFailure),
+        addresses,
+        DateTime.now().add(_ttlSuccess),
       );
-      return null;
+      return addresses;
+    } finally {
+      _recordResolveTime(watch);
     }
-    _cache[host] = _DnsEntry(
-      addresses,
-      DateTime.now().add(_ttlSuccess),
-    );
-    return addresses;
+  }
+
+  /// A1.4：记一次解析耗时（成功、失败、超时都会走到这里）。
+  static void _recordResolveTime(Stopwatch watch) {
+    final ms = watch.elapsedMicroseconds / 1000.0;
+    resolveCount++;
+    totalResolveMs += ms;
+    lastResolveMs = ms;
+    if (ms > slowestResolveMs) slowestResolveMs = ms;
   }
 
   static Future<List<InternetAddress>?> _systemLookup(String host) async {

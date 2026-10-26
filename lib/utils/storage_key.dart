@@ -22,6 +22,7 @@ abstract final class SettingBoxKey {
       useAppPlayUrl = 'useAppPlayUrl',
       mediaProxyConns = 'mediaProxyConns',
       dynUseGrpc = 'dynUseGrpc',
+      dnsDoh = 'dnsDoh',
       hardwareDecoding = 'hardwareDecoding',
       videoSync = 'videoSync',
       autosync = 'autosync',
