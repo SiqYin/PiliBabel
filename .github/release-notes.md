@@ -1,17 +1,13 @@
-### PiliBabel v3.3.3
+### PiliBabel v3.3.4
 
-**Hotfix: the comment section could not load.**
+**Dynamics cards, a home-feed cover fix, and an upstream sync.**
 
-- Opening a video and scrolling to the comments showed a load failure, and tapping retry failed again immediately, every time, no matter how often you tapped. Video playback itself was fine.
+- The dynamics (P3) timeline now renders four card types that were previously dropped or shown as blanks: paid/charging posts, applets, topic sets, and subscription cards.
+- Fixed the home feed's first screen showing no covers at all. The cold-start prefetch entries are consumed as the first page, and those entries do not always carry a top-level `cover`; the cover is now read from the item's `args`/`pic` fallbacks, and a prefetch page that yields no cover at all is treated as a miss so the normal feed request runs instead.
+- Upstream PiliNara changes are in: the status bar going dark when the app opens, downloads that were waiting resuming after the process is killed, the media-kit and companion package upgrade, the Wayland black-video workaround, and selectable audio quality when caching a video.
+- AI-translation audit of every interface string added since 3.0.5. One string was missing: the "audio quality" label and the quality menu items in the download panel now go through the same AI translation path as the rest of the UI.
+- The README changelog was rewritten from scratch for all 44 language versions, covering everything from 2.6.x through 3.3.4.
 
-The cause was in the first-page comment prefetch. When the prefetch result was handed to the reply controller, the code built `Success(cached)` and cast it to `LoadingState<R>`; since `cached` is typed `MainListReply?`, that produced a `Success<MainListReply?>` which cannot be cast to `LoadingState<MainListReply>` at runtime. The cast therefore threw the instant the prefetch resolved - before any network work - which is exactly the "instant failure" behaviour. On top of that the prefetch cache was never consumed, so every retry hit the same cached entry and threw again.
-
-Two changes:
-
-- A prefetch result whose type does not match the controller's expected type is now treated as a miss and falls back to a normal request instead of throwing.
-- The prefetch cache is now single-use: a hit removes the entry, so a retry (or a pull-to-refresh) always issues a real request instead of replaying a stale result.
-
-Everything from v3.3.2 is included as well: DNS resolution instrumentation and the encrypted-DNS fallback switch, the host table, speed scores shared with the connection layer, second-screen feed prefetch with generation-based de-duplication, feed `idx` semantics, the audio page's buffered range and cache statistics, host health in stream selection, and the "load more replies" wording.
+Everything from v3.3.3 is included as well: the comment-section hotfix (the first-page prefetch was casting `Success<MainListReply?>` to `LoadingState<MainListReply>`, so the cast threw before any network work and every retry replayed the same broken cache entry), the v3.3.2 DNS resolution instrumentation and encrypted-DNS fallback switch, the host table, speed scores shared with the connection layer, second-screen feed prefetch with generation-based de-duplication, feed `idx` semantics, the audio page's buffered range and cache statistics, host health in stream selection, and the "load more replies" wording.
 
 Downloads are below.
-
