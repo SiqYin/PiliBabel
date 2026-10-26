@@ -38,6 +38,7 @@ import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/recommend_filter.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
+import 'package:PiliPlus/utils/feed_cold_start.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/subtitle_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -96,8 +97,11 @@ abstract final class VideoHttp {
   // 添加额外的loginState变量模拟未登录状态
   static Future<LoadingState<List<RcmdVideoItemAppModel>>> rcmdVideoListApp({
     required int freshIdx,
+    bool coldStart = false,
   }) async {
     final params = {
+      // B4.1 对齐官方 feed 参数：open_event 是本次进程第一次取 feed 才置 1
+      'open_event': coldStart ? 1 : FeedColdStart.consumeOpenEvent(),
       'build': 2001100,
       'c_locale': 'zh_CN',
       'channel': 'master',
@@ -127,7 +131,7 @@ abstract final class VideoHttp {
       'voice_balance': 0,
     };
     final res = await Request().get(
-      Api.recommendListApp,
+      coldStart ? Api.feedColdStart : Api.recommendListApp,
       queryParameters: params,
       options: Options(
         headers: {
@@ -149,7 +153,15 @@ abstract final class VideoHttp {
     if (res.data['code'] == 0) {
       final list = <RcmdVideoItemAppModel>[];
       final bool removeBlockedRcmd = Pref.removeBlockedRcmd;
-      for (final i in res.data['data']['items']) {
+      // B4.2 冷启动接口与首页 feed 同构，兼容两种字段名；解析不出来就返回空，
+      // 调用方会退回正常首页请求，不会因此显示空列表。
+      final raw = coldStart
+          ? (res.data['data']?['items'] ?? res.data['data']?['item'])
+          : res.data['data']['items'];
+      if (raw is! List) {
+        return Success(list);
+      }
+      for (final i in raw) {
         final upMid = safeToInt(i['args']?['up_id']);
         final isWhitelisted = RecommendFilter.isWhitelisted(upMid);
         // 屏蔽推广和拉黑用户

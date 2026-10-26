@@ -29,6 +29,7 @@ import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/play_url_prefetch.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/url_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -534,6 +535,15 @@ abstract final class PageUtils {
     bool isVertical = false,
     Dimension? dimension,
   }) {
+    // B1 播放地址预取：点开卡片的那一刻就发请求，详情页取流时命中直接复用，
+    // 省掉一次完整往返。只对 UGC 点播做（番剧/直播取流参数不同），失败静默、
+    // 不阻塞跳转。
+    if (videoType == VideoType.ugc && cid > 0) {
+      final prefetchBvid = bvid ?? (aid != null ? IdUtils.av2bv(aid) : null);
+      if (prefetchBvid != null) {
+        PlayUrlPrefetch.prefetch(bvid: prefetchBvid, cid: cid);
+      }
+    }
     final arguments = {
       'aid': aid ?? IdUtils.bv2av(bvid!),
       'bvid': bvid ?? IdUtils.av2bv(aid!),

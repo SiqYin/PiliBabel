@@ -286,23 +286,53 @@ abstract final class ImageUtils {
   /// 预取图片（封面预取用）：把按 [thumbnailUrl] 同规格的地址提前拉进
   /// CachedNetworkImage 的缓存，滚到那一条时直接命中，不再等网络。
   /// 用 ImageStream 监听触发加载、首帧即断开监听（图已在缓存里）。
+  ///
+  /// B2 对标官方 ImagePreloadTask：改成**有界队列 + 空闲逐个发起**，不再一次性
+  /// 全 resolve——一次性拉几十张封面会跟首屏渲染、滚动抢带宽和主线程。同一地址
+  /// 重复入队会被忽略，队列也不会无界增长。
+  static const int _prefetchConcurrency = 2;
+  static const Duration _prefetchGap = Duration(milliseconds: 40);
+  static final List<String> _prefetchQueue = <String>[];
+  static final Set<String> _prefetchInflight = <String>{};
+  static int _prefetchRunning = 0;
+
   static void prefetchImages(Iterable<String?> urls, {int quality = 1}) {
     for (final url in urls) {
       if (url == null || url.isEmpty) {
         continue;
       }
-      final provider = CachedNetworkImageProvider(
-        thumbnailUrl(url, quality),
-      );
-      final stream = provider.resolve(const ImageConfiguration());
-      late final ImageStreamListener listener;
-      listener = ImageStreamListener((image, synchronousCall) {
-        stream.removeListener(listener);
-      }, onError: (_, _) {
-        stream.removeListener(listener);
-      });
-      stream.addListener(listener);
+      final target = thumbnailUrl(url, quality);
+      if (target.isEmpty || !_prefetchInflight.add(target)) {
+        continue;
+      }
+      _prefetchQueue.add(target);
     }
+    _pumpPrefetch();
+  }
+
+  /// 空闲执行：先让出当前事件循环（首屏渲染、滚动那一批任务先跑），再发下一张。
+  static void _pumpPrefetch() {
+    if (_prefetchRunning >= _prefetchConcurrency || _prefetchQueue.isEmpty) {
+      return;
+    }
+    final url = _prefetchQueue.removeAt(0);
+    _prefetchRunning++;
+    Future<void>.delayed(_prefetchGap, () => _resolvePrefetch(url));
+  }
+
+  static void _resolvePrefetch(String url) {
+    final provider = CachedNetworkImageProvider(url);
+    final stream = provider.resolve(const ImageConfiguration());
+    late final ImageStreamListener listener;
+    void finish() {
+      stream.removeListener(listener);
+      _prefetchInflight.remove(url);
+      _prefetchRunning--;
+      _pumpPrefetch();
+    }
+
+    listener = ImageStreamListener((_, _) => finish(), onError: (_, _) => finish());
+    stream.addListener(listener);
   }
 
   static Future<SaveResult?> saveByteImg({

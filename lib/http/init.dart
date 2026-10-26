@@ -15,6 +15,7 @@ import 'package:PiliPlus/utils/cdn_region.dart';
 import 'package:PiliPlus/utils/cdn_speed_test.dart';
 import 'package:PiliPlus/utils/dns_proxy.dart';
 import 'package:PiliPlus/utils/dns_resolver.dart';
+import 'package:PiliPlus/utils/feed_cold_start.dart';
 import 'package:PiliPlus/http/host_limiter.dart';
 import 'package:PiliPlus/utils/host_health.dart';
 import 'package:PiliPlus/utils/net_status.dart';
@@ -72,6 +73,9 @@ class Request {
   /// 首屏每路请求 2~3 个 RTT 的握手成本。响应内容无所谓（404 也可以），
   /// 要的只是连接进池。延迟 1.5 秒避开启动峰值，失败静默。
   static Future<void> prewarm() async {
+    // B4.2 首页冷启动首屏：与官方一样在启动阶段先把首屏 feed 取回来（账号就绪
+    // 后才发），用户点开首页直接命中。失败静默，不影响任何正常加载。
+    FeedColdStart.warm();
     await Future.delayed(const Duration(milliseconds: 1500));
     // 顺手把解析也预热掉：结果进缓存后，后面的请求不用再等解析
     DnsResolver.warm(const [

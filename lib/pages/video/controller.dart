@@ -77,6 +77,7 @@ import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
+import 'package:PiliPlus/utils/play_url_prefetch.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/theme_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -1214,6 +1215,23 @@ class VideoDetailController extends GetxController
   }
 
   Future<LoadingState<PlayUrlModel>> _getVideoUrl(int quality) async {
+    // B1：命中预取就直接用（预取还在飞就等它，不再发第二次请求）。画质、语言、
+    // 音量均衡、试看必须完全一致才算命中；预取失败返回 null，照原样走下面的
+    // 正式请求，行为与没有预取时完全一致。
+    final prefetched = PlayUrlPrefetch.take(
+      bvid: bvid,
+      cid: cid.value,
+      qn: quality,
+      language: currLang.value,
+      voiceBalance: plPlayerController.enableAudioNormalization,
+      tryLook: plPlayerController.tryLook,
+    );
+    if (prefetched != null) {
+      final cached = await prefetched;
+      if (cached != null) {
+        return Success(cached);
+      }
+    }
     final result = await VideoHttp.videoUrl(
       cid: cid.value,
       bvid: bvid,
