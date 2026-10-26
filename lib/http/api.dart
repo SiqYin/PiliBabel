@@ -4,6 +4,9 @@ abstract final class Api {
   // 推荐视频
   static const String recommendListApp =
       '${HttpString.appBaseUrl}/x/v2/feed/index';
+  /// B4.2 官方冷启动首屏（App 侧）：启动即取一次，首页第一屏直接用，缩短首屏
+  static const String feedColdStart =
+      '${HttpString.appBaseUrl}/x/v2/feed/coldstart';
   static const String recommendListWeb =
       '/x/web-interface/wbi/index/top/feed/rcmd';
 
