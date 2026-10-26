@@ -19,7 +19,8 @@ import 'package:PiliPlus/grpc/bilibili/app/dynamic/v2.pb.dart'
 abstract final class DynGrpcBridge {
   /// gRPC 卡片类型枚举名（去掉下划线、转小写）-> web 的 DYNAMIC_TYPE_* 字面量。
   /// 只列 App 渲染器真正支持、且 gRPC 结构与 web 结构能对齐的类型；
-  /// 付费卡、小程序、话题集等没有对应渲染器的类型整页回退 REST。
+  /// 付费卡、小程序、话题集、订阅卡已补上渲染器（E4），其余没有对应
+  /// 渲染器的类型仍然整页回退 REST。
   static const Map<String, String> _types = {
     'dynav': 'DYNAMIC_TYPE_AV',
     'dyndraw': 'DYNAMIC_TYPE_DRAW',
@@ -37,6 +38,10 @@ abstract final class DynGrpcBridge {
     'dynmusic': 'DYNAMIC_TYPE_MUSIC',
     'dyncommon': 'DYNAMIC_TYPE_COMMON_SQUARE',
     'dynsubscriptionnew': 'DYNAMIC_TYPE_SUBSCRIPTION_NEW',
+    'dynapplet': 'DYNAMIC_TYPE_APPLET',
+    'dyntopicset': 'DYNAMIC_TYPE_TOPIC_SET',
+    'dynsubscription': 'DYNAMIC_TYPE_SUBSCRIPTION',
+    'dynchargingarchive': 'DYNAMIC_TYPE_CHARGING',
   };
 
   /// gRPC 的 module_dynamic 是扁平字段（dynArchive / dynDraw / ...），
@@ -56,6 +61,10 @@ abstract final class DynGrpcBridge {
     'dyn_live_rcmd': 'live_rcmd',
     'dyn_ugc_season': 'ugc_season',
     'dyn_subscription_new': 'subscription_new',
+    'dyn_applet': 'applet',
+    'dyn_topic_set': 'topic_set',
+    'dyn_subscription': 'subscription',
+    'dyn_charging_archive': 'charging',
   };
 
   /// major.type：App 只在列表内搜索匹配时用到，按 web 字面量给出
@@ -75,6 +84,10 @@ abstract final class DynGrpcBridge {
     'dyn_ugc_season': 'MAJOR_TYPE_UGC_SEASON',
     'dyn_subscription_new': 'MAJOR_TYPE_SUBSCRIPTION_NEW',
     'dyn_forward': 'MAJOR_TYPE_FORWARD',
+    'dyn_applet': 'MAJOR_TYPE_APPLET',
+    'dyn_topic_set': 'MAJOR_TYPE_TOPIC_SET',
+    'dyn_subscription': 'MAJOR_TYPE_SUBSCRIPTION',
+    'dyn_charging_archive': 'MAJOR_TYPE_CHARGING',
   };
 
   /// 这些字段在 web 结构里是数字，proto3 JSON 会输出成字符串，这里还原
