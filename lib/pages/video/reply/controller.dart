@@ -36,13 +36,21 @@ class VideoReplyController extends ReplyController<MainListReply>
   }
 
   @override
-  Future<LoadingState<MainListReply>> customGetData() => ReplyGrpc.mainList(
-    oid: isPugv ? videoCtr.epId! : aid,
-    type: videoType.replyType,
-    mode: mode,
-    cursorNext: cursorNext,
-    offset: paginationReply?.nextOffset,
-  );
+  Future<LoadingState<MainListReply>> customGetData() async {
+    final oid = isPugv ? videoCtr.epId! : aid;
+    // D1：首屏命中评论预取就直接用，不再等一次完整往返
+    final cached = await prefetchedFirstPage(oid, videoType.replyType);
+    if (cached != null) {
+      return cached;
+    }
+    return ReplyGrpc.mainList(
+      oid: oid,
+      type: videoType.replyType,
+      mode: mode,
+      cursorNext: cursorNext,
+      offset: paginationReply?.nextOffset,
+    );
+  }
 
   @override
   void onClose() {

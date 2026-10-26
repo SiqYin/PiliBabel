@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show MainListReply, ReplyInfo, SubjectControl, Mode;
@@ -8,6 +10,9 @@ import 'package:PiliPlus/models/common/reply/reply_sort_type.dart';
 import 'package:PiliPlus/pages/common/common_list_controller.dart';
 import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/pages/video/reply_new/view.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/utils/connectivity_utils.dart';
+import 'package:PiliPlus/utils/reply_prefetch.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
 import 'package:PiliPlus/utils/reply_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -42,12 +47,36 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
       _enableCommAntifraud || _biliSendCommAntifraud;
   dynamic get sourceId;
 
+  /// D2.1 分页预取深度：WiFi 更深（6 项）、蜂窝更浅（2 项），
+  /// 与蜂窝降采样一致，避免在流量网络上多拉一页评论。
+  int prefetchDepth = 2;
+
   @override
   void onInit() {
     super.onInit();
     final cacheSortType = Pref.replySortType;
     sortType = cacheSortType.obs;
     mode = cacheSortType == .time ? Mode.MAIN_LIST_TIME : Mode.MAIN_LIST_HOT;
+    ConnectivityUtils.isWiFi.then((isWiFi) {
+      prefetchDepth = isWiFi ? 6 : 2;
+    });
+  }
+
+  /// D1 首屏评论预取命中：命中返回预取结果，没命中返回 null。
+  /// 子类在 customGetData 里先调它，把 [oid] 与 [type] 传进来。
+  Future<LoadingState<R>?> prefetchedFirstPage(int oid, int type) async {
+    if (cursorNext != null || paginationReply != null) {
+      return null;
+    }
+    final cached = await ReplyPrefetch.takeFirstPage(
+      oid: oid,
+      type: type,
+      mode: mode,
+    );
+    if (cached == null) {
+      return null;
+    }
+    return Success(cached) as LoadingState<R>;
   }
 
   @override
@@ -79,7 +108,25 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
   }
 
   @override
-  bool handleError(String? errMsg) => keepLastDataOnError(errMsg);
+  bool handleError(String? errMsg) {
+    // D3.2 刷新失败保留上次数据，并给一条能被 AI 翻译的提示。
+    // 不用服务端/网络层的原始错误串：那常常是给开发者看的英文或堆栈片段，
+    // 用户看不懂，也翻译不了。
+    if (loadingState.value case Success(:final response)) {
+      if (response == null || response.isEmpty) {
+        return false;
+      }
+      unawaited(_toastKeepLastData());
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> _toastKeepLastData() async {
+    SmartDialog.showToast(
+      await UiTranslateService.to.txAsync('评论刷新失败，已保留上次内容'),
+    );
+  }
 
   @override
   Future<void> onRefresh() {
