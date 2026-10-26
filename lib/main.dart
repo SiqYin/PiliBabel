@@ -22,6 +22,8 @@ import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:PiliPlus/utils/calc_window_position.dart';
 import 'package:PiliPlus/utils/cdn_region.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
+import 'package:PiliPlus/utils/dns_proxy.dart';
+import 'package:PiliPlus/utils/dns_resolver.dart';
 import 'package:PiliPlus/utils/extension/core_palettes_ext.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
 import 'package:PiliPlus/utils/font_utils.dart';
@@ -174,6 +176,16 @@ void main() async {
     );
     await setupServiceLocator();
   }
+
+  // 自解析层（对标官方 HTTPDNS）：官方把解析收在自研网络引擎与自家 HTTPDNS 里，
+  // Flutter 侧没有 DNS 钩子，所以用本机解析代理拿到同等控制力——先起来再建连接池，
+  // 池子里才会把 HTTP/2 通道也指向它。起不来就不设代理，退回系统解析，不影响请求。
+  await DnsProxy.instance.start();
+  DnsResolver.warm(const [
+    'api.bilibili.com',
+    'app.bilibili.com',
+    'grpc.biliapi.net',
+  ]);
 
   Request();
   Request.setCookie();
@@ -478,6 +490,23 @@ class _CustomHttpOverrides extends HttpOverrides {
     //   ..idleTimeout = const Duration(seconds: 15);
     if (kDebugMode || Pref.badCertificateCallback) {
       client.badCertificateCallback = (cert, host, port) => true;
+    }
+    // 解析统一收口：dart:io 的 HttpClient 没有可注入的 DNS 钩子（HTTP/2 的
+    // ConnectionManager 更是自己建 socket），所以用 findProxy 把请求交给本机
+    // 解析代理，由它按自解析结果连上游。TLS 端到端不变，SNI/Host/直链签名不受影响。
+    final spec = DnsProxy.proxySpec;
+    if (spec != null) {
+      client.findProxy = (uri) {
+        final host = uri.host;
+        if (host.isEmpty ||
+            host == 'localhost' ||
+            host == '127.0.0.1' ||
+            host == '::1' ||
+            DnsResolver.isDohHost(host)) {
+          return 'DIRECT';
+        }
+        return spec;
+      };
     }
     return client;
   }
