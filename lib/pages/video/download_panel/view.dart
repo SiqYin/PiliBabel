@@ -150,14 +150,14 @@ class _DownloadPanelState extends State<DownloadPanel> {
                         .map(
                           (e) => PopupMenuItem(
                             value: e,
-                            child: Text(e.desc),
+                            child: Text(uiTx(e.desc)),
                           ),
                         )
                         .toList(),
                     child: _buildPopupMenuChild(_quality.desc),
                   ),
                 ),
-                Text('音质', style: textStyle),
+                Text(uiTx('音质'), style: textStyle),
                 Builder(
                   builder: (context) => PopupMenuButton<AudioQuality>(
                     initialValue: _audioQuality,
@@ -169,7 +169,7 @@ class _DownloadPanelState extends State<DownloadPanel> {
                         .map(
                           (e) => PopupMenuItem(
                             value: e,
-                            child: Text(e.desc),
+                            child: Text(uiTx(e.desc)),
                           ),
                         )
                         .toList(),
