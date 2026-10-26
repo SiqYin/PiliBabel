@@ -357,7 +357,6 @@ class _DownloadPanelState extends State<DownloadPanel> {
             videoArc: parent,
             videoQuality: _quality,
             audioQuality: _audioQuality,
-            seasonInfo: widget.videoDetail?.seasonInfo(index),
             autoFolderTitle: autoFolderInfo?.title,
             autoFolderSourceKey: autoFolderInfo?.sourceKey,
           );
@@ -370,7 +369,6 @@ class _DownloadPanelState extends State<DownloadPanel> {
             videoArc: episode,
             videoQuality: _quality,
             audioQuality: _audioQuality,
-            seasonInfo: widget.videoDetail?.seasonInfo(index),
             autoFolderTitle: autoFolderInfo?.title,
             autoFolderSourceKey: autoFolderInfo?.sourceKey,
           );
