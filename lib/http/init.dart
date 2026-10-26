@@ -126,6 +126,20 @@ class Request {
     } catch (_) {}
   }
 
+  /// 412（风控）重试前刷新设备指纹：清掉「已激活」标记后重跑一遍激活请求，
+  /// 它会重新生成并写回 buvid3/buvid4。失败静默——重试本身照常进行。
+  static Future<void> _refreshBuvidForRetry() async {
+    try {
+      for (final a in Accounts.account.values) {
+        a.activated = false;
+      }
+      for (final a in Accounts.accountMode) {
+        a.activated = false;
+      }
+      await Accounts.refresh();
+    } catch (_) {}
+  }
+
   static Dio _cloneHttp11Dio() {
     final h11 = dio.clone(
       httpClientAdapter:
@@ -268,7 +282,12 @@ class Request {
     // 先于其他Interceptor
     if (Pref.retryCount != 0) {
       dio.interceptors.add(
-        RetryInterceptor(dio, Pref.retryCount, Pref.retryDelay),
+        RetryInterceptor(
+          dio,
+          Pref.retryCount,
+          Pref.retryDelay,
+          onRiskControl: _refreshBuvidForRetry,
+        ),
       );
     }
 
