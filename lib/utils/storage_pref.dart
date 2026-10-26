@@ -1426,6 +1426,10 @@ abstract final class Pref {
   static int get mediaProxyConns =>
       _setting.get(SettingBoxKey.mediaProxyConns, defaultValue: 0);
 
+  /// E3 动态接口：true=走 gRPC（与官方 App 同源），失败自动回退网页接口
+  static bool get dynUseGrpc =>
+      _setting.get(SettingBoxKey.dynUseGrpc, defaultValue: true);
+
   static double get bufferSec =>
       _setting.get(SettingBoxKey.bufferSec, defaultValue: 16.0);
 

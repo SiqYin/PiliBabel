@@ -6,6 +6,7 @@ import 'package:PiliPlus/common/widgets/pair.dart';
 import 'package:PiliPlus/http/api.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/error_msg.dart';
+import 'package:PiliPlus/grpc/dyn.dart';
 import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/reply.dart';
@@ -29,6 +30,8 @@ import 'package:PiliPlus/models_new/dynamic/dyn_topic_top/topic_item.dart';
 import 'package:PiliPlus/models_new/followee_votes/vote.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/dyn_grpc_bridge.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/wbi_sign.dart';
 import 'package:dio/dio.dart';
 
@@ -40,6 +43,34 @@ abstract final class DynamicsHttp {
     Set<int>? tempBannedList,
     DynamicsTabType type = .all,
   }) async {
+    // E3.2 动态主 feed 走 gRPC（对标官方）：拿到动态卡转成现有 web 结构直接渲染；
+    // 类型不支持、转换或解析失败都自动回退下面的网页接口，不会出现半页内容。
+    // 「关注 UP」标签用的是 host_mid，DynAll 不覆盖，仍走网页接口。
+    if (Pref.dynUseGrpc && type != .up) {
+      final g = await DynGrpc.dynAll(
+        offset: offset,
+        page: (offset == null || offset.isEmpty) ? 1 : 2,
+        localTime: 8,
+        from: 'dynamic',
+      );
+      if (g case Success(:final response)) {
+        final web = DynGrpcBridge.fromDynAll(response);
+        if (web != null) {
+          try {
+            return Success(
+              DynamicsDataModel.fromJson(
+                web,
+                type: type,
+                tempBannedList: tempBannedList,
+              ),
+            );
+          } catch (_) {
+            // 解析不了就落到网页接口
+          }
+        }
+      }
+    }
+
     Map<String, dynamic> data = {
       if (type == .up) 'host_mid': hostMid else 'type': type.name,
       'offset': ?offset,
