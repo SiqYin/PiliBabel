@@ -14,6 +14,37 @@ abstract final class HttpString {
   /// app.bilibili.com」，这里保持同样的顺序，实际顺序再按实测健康度调整。
   static const List<String> grpcHosts = [grpcBaseUrl, appBaseUrl];
 
+  /// A2.1 主机清单表：主机 / 用途 / 是否走 gRPC / 是否参与故障切换。
+  /// 这份表是「主机清单」的唯一登记处：新增主机先在这里写清用途，
+  /// 再决定它要不要进 [grpcHosts] 这类参与切换的列表。
+  static const List<HttpHostInfo> hostTable = [
+    HttpHostInfo(
+      'grpc.biliapi.net',
+      '官方原生 gRPC 主机（动态、播放、评论等 App 侧接口）',
+      grpc: true,
+      switchable: true,
+    ),
+    HttpHostInfo(
+      'app.bilibili.com',
+      'App 侧主机：gRPC 的 Failover，同时挂 REST 接口（首页 feed 等）',
+      grpc: true,
+      switchable: true,
+    ),
+    HttpHostInfo(
+      'api.bilibili.com',
+      'Web 侧接口主机（gRPC 路径是 404，不参与 gRPC 切换）',
+    ),
+    HttpHostInfo('api.live.bilibili.com', '直播接口'),
+    HttpHostInfo('api.vc.bilibili.com', '私信/会话接口'),
+    HttpHostInfo('passport.bilibili.com', '账号登录'),
+    HttpHostInfo('message.bilibili.com', '消息接口'),
+    HttpHostInfo('t.bilibili.com', '动态分享页'),
+    HttpHostInfo('space.bilibili.com', '空间'),
+    HttpHostInfo('account.bilibili.com', '账号相关'),
+    HttpHostInfo('mall.bilibili.com', '会员购'),
+    HttpHostInfo('www.bilibili.com', 'Web 主站'),
+  ];
+
   /// 该主机是否属于可互换的 gRPC 主机组。
   static bool isGrpcHost(String host) =>
       host == 'grpc.biliapi.net' || host == 'app.bilibili.com';
@@ -71,4 +102,20 @@ abstract final class HttpTimeout {
 
   /// HTTP/1.1 空闲连接回收时间
   static const Duration idle = Duration(seconds: 15);
+}
+
+
+/// A2.1 主机清单表的行：用途、是否走 gRPC、是否参与故障切换。
+class HttpHostInfo {
+  const HttpHostInfo(
+    this.host,
+    this.purpose, {
+    this.grpc = false,
+    this.switchable = false,
+  });
+
+  final String host;
+  final String purpose;
+  final bool grpc;
+  final bool switchable;
 }
