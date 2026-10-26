@@ -125,6 +125,9 @@ class ReplyPrefetch {
       return null;
     }
     hit++;
+    // 一次性消费：命中即取走。否则下拉刷新/失败重试会反复拿到同一份旧结果
+    // （预取失败时就是反复秒失败，根本不会重新请求）。
+    _cache.remove(key);
     return entry.future;
   }
 }

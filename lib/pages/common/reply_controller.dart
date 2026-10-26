@@ -76,7 +76,15 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
     if (cached == null) {
       return null;
     }
-    return Success(cached) as LoadingState<R>;
+    // 这里以前是 `Success(cached) as LoadingState<R>`：cached 的静态类型是
+    // MainListReply?，构造出来的是 Success<MainListReply?>，运行期转不成
+    // LoadingState<MainListReply>，于是拿到预取结果的瞬间抛类型错误——
+    // 表现就是评论区「秒失败」，而且重试每次命中同一个缓存、每次都秒失败。
+    // 类型对不上就当没命中，退回正常请求，绝不抛错。
+    if (cached is! R) {
+      return null;
+    }
+    return Success<R>(cached);
   }
 
   @override
