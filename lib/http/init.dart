@@ -13,6 +13,8 @@ import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:PiliPlus/utils/accounts/account_manager/account_mgr.dart';
 import 'package:PiliPlus/utils/cdn_region.dart';
 import 'package:PiliPlus/utils/cdn_speed_test.dart';
+import 'package:PiliPlus/utils/dns_proxy.dart';
+import 'package:PiliPlus/utils/dns_resolver.dart';
 import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/login_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -68,6 +70,13 @@ class Request {
   /// 要的只是连接进池。延迟 1.5 秒避开启动峰值，失败静默。
   static Future<void> prewarm() async {
     await Future.delayed(const Duration(milliseconds: 1500));
+    // 顺手把解析也预热掉：结果进缓存后，后面的请求不用再等解析
+    DnsResolver.warm(const [
+      'api.bilibili.com',
+      'app.bilibili.com',
+      'grpc.biliapi.net',
+      'i0.hdslb.com',
+    ]);
     for (final host in const [
       HttpString.apiBaseUrl,
       HttpString.appBaseUrl,
@@ -197,6 +206,12 @@ class Request {
               ..autoUncompress = false, // Http2Adapter没有自动解压, 统一行为
     );
 
+    // 本机解析代理：HTTP/2 通道的 socket 由 ConnectionManager 自己建，只有把代理
+    // 交给它，自解析才能覆盖到默认开启的 HTTP/2 主链路。用户自己开了系统代理时
+    // 让位（proxySpec 返回 null），交回原有的系统代理链路。
+    final dnsProxyPort = !enableSystemProxy && DnsProxy.instance.available
+        ? DnsProxy.instance.port
+        : 0;
     final connectionManager = _enableHttp2
         ? ConnectionManager(
             idleTimeout: const Duration(seconds: 15),
@@ -208,6 +223,17 @@ class Request {
                       port: systemProxyPort,
                     )
                     ..onBadCertificate = (_) => true
+                : dnsProxyPort > 0
+                ? (_, config) {
+                    config.proxy = Uri(
+                      scheme: 'http',
+                      host: '127.0.0.1',
+                      port: dnsProxyPort,
+                    );
+                    if (Pref.badCertificateCallback) {
+                      config.onBadCertificate = (_) => true;
+                    }
+                  }
                 : Pref.badCertificateCallback
                 ? (_, config) => config.onBadCertificate = (_) => true
                 : null,
@@ -244,6 +270,10 @@ class Request {
     try {
       CdnSpeedTest.reset();
       CdnRegionResolver.invalidateAndRedetect();
+      // 解析结果与代理都绑在旧网络上，一起作废重建，新网络下的第一条请求
+      // 才不会拿着旧 IP 去连
+      DnsResolver.invalidate();
+      unawaited(DnsProxy.instance.restart());
     } catch (_) {}
   }
 
