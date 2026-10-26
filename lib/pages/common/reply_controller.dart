@@ -81,10 +81,16 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
     // LoadingState<MainListReply>，于是拿到预取结果的瞬间抛类型错误——
     // 表现就是评论区「秒失败」，而且重试每次命中同一个缓存、每次都秒失败。
     // 类型对不上就当没命中，退回正常请求，绝不抛错。
-    if (cached is! R) {
+    // 不能写成 `Success<R>(cached)`：cached 的静态类型是 MainListReply?，而 R 是
+    // 子类声明的类型参数，Dart 不会把 MainListReply? 提升成 R（R 的上界是 Object?，
+    // 不满足 `is` 提升要求 T <: S），于是这一行在 kernel_snapshot 阶段编译不过，
+    // v3.3.3 的 APK 就是死在这里。先装进 Object? 再判类型，此时 R <: Object? 成立，
+    // 提升可以正常发生。
+    final Object? boxed = cached;
+    if (boxed is! R) {
       return null;
     }
-    return Success<R>(cached);
+    return Success<R>(boxed);
   }
 
   @override
