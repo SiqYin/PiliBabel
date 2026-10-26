@@ -210,6 +210,12 @@ List<SettingsModel> get extraSettings => [
     onTap: _showReplyLengthDialog,
   ),
   SwitchModel(
+    title: uiTx('动态走 gRPC 接口'),
+    subtitle: uiTx('与官方 App 同源的动态接口；遇到暂不支持的内容类型会自动回退到网页接口'),
+    setKey: SettingBoxKey.dynUseGrpc,
+    defaultVal: true,
+  ),
+  SwitchModel(
     title: uiTx('评论点赞/点踩按钮交换位置'),
     subtitle: uiTx('交换后：点赞在左，点踩在右（与官方客户端一致）'),
     leading: Icon(Icons.swap_horiz),
