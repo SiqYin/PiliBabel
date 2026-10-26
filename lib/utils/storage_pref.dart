@@ -1611,6 +1611,29 @@ abstract final class Pref {
     return buvid;
   }
 
+  /// 设备指纹 fp_local：每安装生成一次、之后固定不变的 64 位十六进制串。
+  ///
+  /// 此前这两个请求头是硬编码的全 1 占位串，所有用户完全一致 —— 属于风控最
+  /// 容易命中的特征。官方 APP 每个安装都不一样，这里对齐这个行为，但**不改
+  /// 协议**（仍然是同样两个头、同样的长度）。
+  static String get fpLocal => _fingerprintOf(LocalCacheKey.fpLocal);
+
+  /// 设备指纹 fp_remote：与 fp_local 各自独立生成，同样每安装固定。
+  static String get fpRemote => _fingerprintOf(LocalCacheKey.fpRemote);
+
+  static String _fingerprintOf(String key) {
+    String? value = _localCache.get(key);
+    if (value == null) {
+      const chars = '0123456789abcdef';
+      value = List.generate(
+        64,
+        (_) => chars[Utils.random.nextInt(chars.length)],
+      ).join();
+      _localCache.put(key, value);
+    }
+    return value;
+  }
+
   static bool get showMemberShop =>
       _setting.get(SettingBoxKey.showMemberShop, defaultValue: false);
 
