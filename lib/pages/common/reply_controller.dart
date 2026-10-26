@@ -79,6 +79,9 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
   }
 
   @override
+  bool handleError(String? errMsg) => keepLastDataOnError(errMsg);
+
+  @override
   Future<void> onRefresh() {
     cursorNext = null;
     subjectControl = null;
