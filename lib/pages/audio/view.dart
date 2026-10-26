@@ -756,7 +756,12 @@ class _AudioPageState extends State<AudioPage> {
                     // C1.2：暴露已缓存时长与占全长的比例。
                     // 官方用的是 ijk 的缓存字节统计，字节数需要内核侧支持，
                     // 这里先给播放器实际缓冲到的时间（音质档位决定了它对应多少字节）。
-                    final bufferedSec = (player.buffered.value / 1000).round();
+                    // media_kit 的缓冲时长在 player.state.buffer（不是 pl_player
+                    // 控制器的 buffered），单位 Duration。
+                    final bufferedSec =
+                        ((_controller.player?.state.buffer.inMilliseconds ?? 0) /
+                                1000)
+                            .round();
                     final total = _controller.duration.value;
                     final percent = total <= 0
                         ? 0
@@ -915,7 +920,8 @@ class _AudioPageState extends State<AudioPage> {
         progress: _controller.position.value,
         total: _controller.duration.value,
         // C1.2：把播放器已经缓冲到的位置画成已缓存段（此前音频页没传 buffered）。
-        buffered: _controller.player?.buffered.value ?? 0,
+        buffered:
+            _controller.player?.state.buffer.inMilliseconds ?? 0,
         baseBarColor: baseBarColor,
         progressBarColor: primary,
         // C1.2 暴露缓存统计：把已缓存的那一段画出来，用户能直接看出「够不够播」
