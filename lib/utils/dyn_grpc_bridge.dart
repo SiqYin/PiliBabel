@@ -106,7 +106,7 @@ abstract final class DynGrpcBridge {
       'id_str': ext.dynIdStr,
       'type': type,
       'modules': modules,
-      if (basic != null) 'basic': basic,
+      'basic': ?basic,
     };
   }
 
@@ -126,7 +126,10 @@ abstract final class DynGrpcBridge {
     if (v is Map) {
       final out = <String, dynamic>{};
       v.forEach((k, val) {
-        out[_snakeKey(k.toString())] = _snake(val);
+        final key = _snakeKey(k.toString());
+        final value = _snake(val);
+        // proto3 JSON 把 int64 输出成字符串，web 结构里这些字段是数字
+        out[key] = _numeric.contains(key) ? _asInt(value) : value;
       });
       return out;
     }
