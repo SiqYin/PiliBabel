@@ -11,6 +11,8 @@ import 'package:PiliPlus/http/user.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:PiliPlus/utils/accounts/account_manager/account_mgr.dart';
+import 'package:PiliPlus/utils/cdn_region.dart';
+import 'package:PiliPlus/utils/cdn_speed_test.dart';
 import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/login_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -149,7 +151,7 @@ class Request {
     _networkChangeDebounce?.cancel();
     _networkChangeDebounce = Timer(
       const Duration(milliseconds: 500),
-      _resetAdaptersForNetworkChange,
+      _onNetworkChanged,
     );
   }
 
@@ -219,6 +221,18 @@ class Request {
     } catch (_) {}
   }
 
+  /// 换网后的自愈：重建连接池 + 作废旧网络下的 CDN 评分 + 地区识别重新判定。
+  ///
+  /// 只重建池是不够的：旧的实测评分和地区判定同样绑在旧网络上，一起作废才能
+  /// 让下一波取流按新网络重新挑选节点。
+  static void _onNetworkChanged() {
+    _resetAdaptersForNetworkChange();
+    try {
+      CdnSpeedTest.reset();
+      CdnRegionResolver.invalidateAndRedetect();
+    } catch (_) {}
+  }
+
   /*
    * config it and create
    */
@@ -275,7 +289,9 @@ class Request {
         return status != null && status >= 200 && status < 300;
       };
 
-    if (Platform.isIOS) _watchConnectivity();
+    // 网络变化自愈全平台启用：此前只有 iOS 监听，Android/桌面在 WiFi↔蜂窝、
+    // VPN 开关后继续复用已死的旧连接，是「点进去一直 0%」的典型诱因之一。
+    _watchConnectivity();
   }
 
   /*

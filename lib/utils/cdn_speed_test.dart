@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:PiliPlus/http/browser_ua.dart';
+import 'package:PiliPlus/utils/cdn_region.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 
@@ -46,6 +47,9 @@ abstract final class CdnSpeedTest {
   static final Map<String, double> _score = <String, double>{};
 
   static DateTime? _testedAt;
+
+  /// 上一次「一轮探测全军覆没」的时间，用于给地区重识别节流。
+  static DateTime? _lastEmptyAt;
   static Future<void>? _running;
   static bool _loaded = false;
 
@@ -93,6 +97,20 @@ abstract final class CdnSpeedTest {
           'scores': _score,
         }),
       );
+    } catch (_) {}
+  }
+
+  /// 网络切换后调用：换网后节点快慢完全不同，旧评分只会误导挑选。
+  ///
+  /// 内存评分与持久化存档一起清掉，并把 [_loaded] 置真，避免下一次
+  /// [_ensureLoaded] 又把旧网络的结果装回来。
+  static void reset() {
+    _score.clear();
+    _testedAt = null;
+    _running = null;
+    _loaded = true;
+    try {
+      GStorage.localCache.delete(LocalCacheKey.cdnSpeedScores);
     } catch (_) {}
   }
 
@@ -161,6 +179,14 @@ abstract final class CdnSpeedTest {
     final result = <String, double>{};
     await Future.wait(targets.map((url) => _probe(url, result)));
     if (result.isEmpty) {
+      // 一轮探测全军覆没：网络环境很可能已经变了（也可能只是直链签名过期）。
+      // 把地区判定标记过期并重新识别一次；10 分钟内不重复触发，避免请求风暴。
+      final now = DateTime.now();
+      final last = _lastEmptyAt;
+      if (last == null || now.difference(last) > const Duration(minutes: 10)) {
+        _lastEmptyAt = now;
+        CdnRegionResolver.invalidateAndRedetect();
+      }
       return;
     }
     // 合并而不是整体替换：这一轮没测到的老主机保留上一次的评分，避免因为一次
