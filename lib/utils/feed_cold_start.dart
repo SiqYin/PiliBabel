@@ -89,6 +89,12 @@ class FeedColdStart {
       miss++;
       return null;
     }
+    // 冷启动接口返回的条目若一个封面都解析不出来，首屏会整屏没有封面。
+    // 这种结果按未命中处理，退回正常首页请求：多一次往返，也不能让首屏缺封面。
+    if (!items.any((e) => (e.cover ?? '').isNotEmpty)) {
+      miss++;
+      return null;
+    }
     hit++;
     return items;
   }
