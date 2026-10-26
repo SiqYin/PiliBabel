@@ -1,7 +1,7 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async' show Completer, StreamSubscription, Timer, unawaited;
 import 'dart:convert' show ascii, utf8;
-import 'dart:io' show Platform;
+import 'dart:io' show InternetAddress, Platform;
 import 'dart:math' show max, min;
 import 'dart:ui' as ui;
 
@@ -1126,6 +1126,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       this.height = height;
       this.dataSource = dataSource;
       _videoBitrate = videoBitrate;
+      if (dataSource is NetworkSource) {
+        _prewarmMediaHosts(dataSource);
+      }
       _autoPlay = autoplay;
       // 初始化视频倍速
       // _playbackSpeed.value = speed;
@@ -1361,8 +1364,45 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     }
   }
 
+  /// lavf（ffmpeg 的 http 协议）侧的媒体流参数。
+  ///
+  /// * `reconnect*`：断流自动重连，海外抖动必备。
+  /// * `multiple_requests=1`：允许在**同一条**连接上发多次 Range 请求，
+  ///   换线/重开时不必重新握手（此前只开单次请求，重连等于重来一遍）。
   static const String _lavfReconnect =
-      'reconnect=1,reconnect_streamed=1,reconnect_delay_max=10';
+      'reconnect=1,reconnect_streamed=1,reconnect_delay_max=10,'
+      'multiple_requests=1';
+
+  /// 已经做过 DNS 预热的媒体域名（同一域名只解析一次）。
+  static final Set<String> _warmedHosts = <String>{};
+
+  /// 媒体域名 DNS 预热。
+  ///
+  /// 视频与音频直链常落在不同域名（甚至不同 CDN），提前把两个域名的解析做掉，
+  /// mpv 建连时就不用再等一次 DNS 往返——海外这一步往往几十到上百毫秒。
+  /// 只做解析、不发请求，既不与取流抢带宽，也不影响直链签名。
+  static void _prewarmMediaHosts(NetworkSource src) {
+    final urls = <String?>[
+      src.videoSource,
+      src.audioSource,
+      ...src.videoUrls,
+      ...src.audioUrls,
+    ];
+    for (final url in urls) {
+      if (url == null || url.isEmpty) {
+        continue;
+      }
+      final host = Uri.tryParse(url)?.host;
+      if (host == null || host.isEmpty || !_warmedHosts.add(host)) {
+        continue;
+      }
+      unawaited(() async {
+        try {
+          await InternetAddress.lookup(host);
+        } catch (_) {}
+      }());
+    }
+  }
 
   /// 前向缓冲：按当前视频轨码率自适应，所以每次打开媒体都要重算 —— 不能再
   /// 缓存（`late final`），否则同一个播放器实例换到 4K 视频时还在用 360P 的
@@ -1407,7 +1447,11 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         ...liveBuffer
       else
         ...buffer,
-      if (dataSource is NetworkSource) 'stream-lavf-o': _lavfReconnect,
+      if (dataSource is NetworkSource) ...{
+        'stream-lavf-o': _lavfReconnect,
+        // keep-alive：同一域名复用 TCP/TLS 连接，重开/换线不再重新握手
+        'http-persistent': 'yes',
+      },
     };
 
     if (dataSource case NetworkSource(:final videoUrls) when videoUrls.length > 1) {
