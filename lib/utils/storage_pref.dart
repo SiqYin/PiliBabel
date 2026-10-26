@@ -1507,6 +1507,26 @@ abstract final class Pref {
     };
   }
 
+  /// C1.1 音频专用缓存档（对标官方 ijk 的音频缓存那套 FFP_PROP_INT64_AUDIO_CACHED_*）：
+  /// 音频码率远低于视频（Hi-Res 也就 2Mbps 上下），按视频那套「码率 × 20 秒」算出来的
+  /// 字节数对音频没有意义。这里按**时长**给足：默认缓存 60 秒音频在 2Mbps 下约 15MB，
+  /// 换来切集、往回拖、弱网都不重新缓冲；字节上限固定 64MB（Hi-Res 也够四分钟以上），
+  /// 不随视频缓冲设置放大，避免听音频时白占内存。
+  static Map<String, String> initAudioBuffer([double playbackSpeed = 1.0]) {
+    final userSec = Pref.bufferSec * playbackSpeed;
+    final bufSec = userSec > 60 ? userSec : 60.0;
+    return {
+      'cache': 'yes',
+      'cache-secs': bufSec.toStringAsFixed(3),
+      'demuxer-hysteresis-secs': (Pref.bufferSec / 1.5)
+          .clamp(1.0, 6.0)
+          .toStringAsFixed(3),
+      'demuxer-max-bytes': (64 * 0x100000).toStringAsFixed(0),
+      // 音频体积小，回退缓存给足，往回拖不重新取流
+      'demuxer-max-back-bytes': (16 * 0x100000).toStringAsFixed(0),
+    };
+  }
+
   static String get audioOutput => _setting.get(
     SettingBoxKey.audioOutput,
     defaultValue: AudioOutput.defaultValue,
