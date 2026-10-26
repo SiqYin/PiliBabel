@@ -18,6 +18,7 @@ import 'package:PiliPlus/utils/cdn_region.dart';
 import 'package:PiliPlus/utils/filtering_text.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
+import 'package:PiliPlus/utils/media_proxy.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/video_utils.dart';
 import 'package:flutter/foundation.dart';
@@ -243,6 +244,14 @@ List<SettingsModel> get videoSettings => [
     getSubtitle: () =>
         '当前：${Pref.bufferSec}s。实际缓冲为二者最小值。对于直播流，该选项无效（此选项即mpv的--cache-secs）',
     onTap: _showBufferSecDialog,
+  ),
+  NormalModel(
+    title: uiTx('媒体层多连接代理'),
+    leading: const Icon(Icons.multiple_stop_outlined),
+    getSubtitle: () => Pref.mediaProxyConns <= 1
+        ? uiTx('已关闭（默认）：内核单连接拉流。开启后由 App 把视频流拆成多条连接并发下载，弱网或高延迟下起播更快')
+        : '${uiTx('当前')}：${Pref.mediaProxyConns} ${uiTx('条连接')}',
+    onTap: _showMediaProxyDialog,
   ),
   NormalModel(
     title: uiTx('自动同步'),
@@ -564,6 +573,35 @@ Future<void> _showAudioOutputDialog(
       SettingBoxKey.audioOutput,
       res.join(','),
     );
+    setState();
+  }
+}
+
+Future<void> _showMediaProxyDialog(
+  BuildContext context,
+  VoidCallback setState,
+) async {
+  final res = await showDialog<String>(
+    context: context,
+    builder: (context) => SelectDialog<String>(
+      title: uiTx('媒体层多连接代理'),
+      value: '${Pref.mediaProxyConns}',
+      values: const [
+        ('0', '关闭（默认）'),
+        ('1', '1 条连接'),
+        ('2', '2 条连接'),
+        ('4', '4 条连接'),
+      ].map((e) => (e.$1, uiTx(e.$2))).toList(),
+    ),
+  );
+  if (res != null) {
+    await GStorage.setting.put(
+      SettingBoxKey.mediaProxyConns,
+      int.tryParse(res) ?? 0,
+    );
+    if (Pref.mediaProxyConns > 1) {
+      await MediaProxy.ensureStarted();
+    }
     setState();
   }
 }
