@@ -222,7 +222,11 @@ class Request {
     // 本机解析代理：HTTP/2 通道的 socket 由 ConnectionManager 自己建，只有把代理
     // 交给它，自解析才能覆盖到默认开启的 HTTP/2 主链路。用户自己开了系统代理时
     // 让位（proxySpec 返回 null），交回原有的系统代理链路。
-    final dnsProxyPort = !enableSystemProxy && DnsProxy.instance.available
+    //
+    // Pref.netDirect（默认开）时不用本机代理：自解析隧道每条连接都要重新解析+建连+
+    // TLS 且不复用上游，实测比直连慢 2~3 倍；全程 HTTPS+SNI 下自解析收益很小。
+    final dnsProxyPort =
+        !Pref.netDirect && !enableSystemProxy && DnsProxy.instance.available
         ? DnsProxy.instance.port
         : 0;
     final connectionManager = _enableHttp2
@@ -254,6 +258,9 @@ class Request {
         : null;
     return (http11Adapter, connectionManager);
   }
+
+  /// 供设置项调用：切换「网络直连」后立即重建连接池，不必重启 App。
+  static void resetAdapters() => _resetAdaptersForNetworkChange();
 
   @pragma('vm:notify-debugger-on-exception')
   static void _resetAdaptersForNetworkChange() {

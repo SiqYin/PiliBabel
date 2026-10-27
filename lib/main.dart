@@ -494,6 +494,11 @@ class _CustomHttpOverrides extends HttpOverrides {
     // 解析统一收口：dart:io 的 HttpClient 没有可注入的 DNS 钩子（HTTP/2 的
     // ConnectionManager 更是自己建 socket），所以用 findProxy 把请求交给本机
     // 解析代理，由它按自解析结果连上游。TLS 端到端不变，SNI/Host/直链签名不受影响。
+    //
+    // 但自解析隧道有硬性开销：每条 CONNECT 都要重新自解析 + 建连 + TLS，上游连接
+    // 也不复用，实测整体比直连慢 2~3 倍。全程 HTTPS + SNI 的前提下自解析的抗劫持
+    // 收益很小，所以默认直连（Pref.netDirect）优先保证速度；需要时可在设置里切回。
+    if (Pref.netDirect) return client;
     final spec = DnsProxy.proxySpec;
     if (spec != null) {
       client.findProxy = (uri) {
