@@ -248,3 +248,8 @@ PiliBabel **GNU General Public License v3.0 (GPL-3.0)** лицензиясы б�
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — қосымшамен бірге жүретін, SIL Open Font License 1.1 астындағы ашық кодты қытай қарпі
 - және тағы басқа
 - bilibili-дің ресми «AI интерфейс аудармасынан» шабыттандырылған.
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

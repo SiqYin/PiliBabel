@@ -248,3 +248,8 @@ Phông chữ **霞鹜文楷** được đóng gói được cấp phép riêng t
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — phông chữ Trung Quốc mã nguồn mở được đóng gói trong ứng dụng, theo giấy phép SIL Open Font License 1.1
 - và nhiều dự án khác
 - Lấy cảm hứng từ «dịch giao diện bằng AI» chính thức của bilibili.
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

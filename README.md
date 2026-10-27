@@ -221,6 +221,8 @@ PiliBabel is a personal, interest-driven project, provided **for learning and te
 - **AI translation runs on a third-party model endpoint.** By default that is bilibili's own free public Index-Translate service; if you switch to your own API, it is the endpoint you configured. Translation quality and compliance are the responsibility of the user and the chosen model provider; this project hosts **no model and no API key**.
 - Respect copyright and bilibili's Terms of Service. Use responsibly.
 
+> **Documentation language note.** This README and its translations are written and maintained with the help of AI translation tooling. Technical statements are reviewed against the source code, but wording may differ slightly between language versions; if anything looks inconsistent, the English README is the reference.
+
 With respect to the original and upstream authors for their open-source dedication:
 - [guozhigq/pilipala](https://github.com/guozhigq/pilipala)
 - [orz12/PiliPalaX](https://github.com/orz12/PiliPalaX)
