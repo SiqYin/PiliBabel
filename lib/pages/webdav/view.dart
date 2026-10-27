@@ -56,7 +56,7 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
               controller: _uriCtr,
               decoration: InputDecoration(
                 labelText: uiTx('地址'),
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 20),
@@ -64,7 +64,7 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
               controller: _usernameCtr,
               decoration: InputDecoration(
                 labelText: uiTx('用户'),
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 20),
@@ -88,7 +88,7 @@ class _WebDavSettingPageState extends State<WebDavSettingPage> {
               controller: _directoryCtr,
               decoration: InputDecoration(
                 labelText: uiTx('路径'),
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 20),

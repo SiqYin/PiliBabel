@@ -487,7 +487,7 @@ class _PayCoinsPageState extends State<PayCoinsPage>
                             ),
                           ),
                           Text(uiTx(' 同时点赞'),
-                            style: TextStyle(color: Colors.white),
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ],
                       ),
