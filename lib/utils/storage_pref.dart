@@ -1450,6 +1450,15 @@ abstract final class Pref {
   static bool get dnsDoh =>
       _setting.get(SettingBoxKey.dnsDoh, defaultValue: true);
 
+  /// 数据请求是否直连（绕开本机 DnsProxy 自解析隧道）。
+  ///
+  /// 默认开启：自解析隧道(DnsProxy)的每条 CONNECT 都要重新自解析 + 建连 + TLS，
+  /// 且上游连接不复用，实测比直连慢 2~3 倍；自解析的收益（抗 DNS 劫持）在
+  /// 已经全程 HTTPS + SNI 的场景下基本没有实际意义。保留开关是为了遇到
+  /// 「直连被墙、自解析能通」的极端网络时能一键切回去。
+  static bool get netDirect =>
+      _setting.get(SettingBoxKey.netDirect, defaultValue: true);
+
   static double get bufferSec =>
       _setting.get(SettingBoxKey.bufferSec, defaultValue: 16.0);
 

@@ -12,6 +12,7 @@ import 'package:PiliPlus/common/widgets/image_grid/image_grid_view.dart'
     show ImageGridView, ImageModel;
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/http/fav.dart';
+import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/audio_normalization.dart';
 import 'package:PiliPlus/models/common/dm_chart_source.dart';
@@ -221,6 +222,15 @@ List<SettingsModel> get extraSettings => [
     leading: const Icon(Icons.dns),
     setKey: SettingBoxKey.dnsDoh,
     defaultVal: true,
+  ),
+  SwitchModel(
+    title: uiTx('网络直连（关闭后走自解析代理）'),
+    subtitle: uiTx('默认直连速度更快；若你的网络下直连不通、只有自解析能访问，可关掉本项改用自解析代理'),
+    leading: const Icon(Icons.speed),
+    setKey: SettingBoxKey.netDirect,
+    defaultVal: true,
+    // 切换后立刻重建连接池，不必重启 App 才生效
+    onChanged: (_) => Request.resetAdapters(),
   ),
   SwitchModel(
     title: uiTx('评论点赞/点踩按钮交换位置'),
