@@ -3,6 +3,7 @@ import 'package:PiliPlus/common/skeleton/video_reply.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
+import 'package:PiliPlus/common/widgets/loading_widget/empty_placeholder.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/mini_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -201,9 +202,12 @@ mixin CommonDynPageMixin<T extends StatefulWidget>
           );
         }
 
-        final child = HttpError(
-          errMsg: uiTx('还没有评论'),
-          onReload: controller.onReload,
+        // 请求成功但没有条目 = 确实没有评论，不是加载失败，不给重试按钮
+        final replyCount = controller.count.value;
+        final child = EmptyPlaceholder(
+          msg: replyCount > 0
+              ? uiTx('${NumUtils.numFormat(replyCount)}条评论')
+              : uiTx('0条评论'),
         );
         if (controller.voteCard case final voteCard?) {
           return SliverMainAxisGroup(

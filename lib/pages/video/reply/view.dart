@@ -3,6 +3,7 @@ import 'package:PiliPlus/common/skeleton/video_reply.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
+import 'package:PiliPlus/common/widgets/loading_widget/empty_placeholder.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/mini_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
@@ -16,6 +17,7 @@ import 'package:PiliPlus/pages/video/reply/vote/reply_vote_item.dart';
 import 'package:PiliPlus/pages/video/reply/widgets/reply_item_grpc.dart';
 import 'package:PiliPlus/pages/video/reply_reply/view.dart';
 import 'package:PiliPlus/utils/feed_back.dart';
+import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
@@ -215,9 +217,16 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
           );
         }
 
-        final child = HttpError(
-          errMsg: uiTx('还没有评论'),
-          onReload: _videoReplyController.onReload,
+        // 请求成功但没有条目 = 这个视频确实没有评论，不是加载失败。
+        // 空态不能再带「点击重试」：点一次还是 0 条，只会让人以为是坏了。
+        // 文案用真实计数（subjectControl.count），不是写死的 0：某些稿件服务端
+        // 会给出非零总数却不下发任何条目（如「评论已关闭」/精选筛选后为空），
+        // 那种情况显示真实条数比硬写 0 条更准确。
+        final replyCount = _videoReplyController.count.value;
+        final child = EmptyPlaceholder(
+          msg: replyCount > 0
+              ? uiTx('${NumUtils.numFormat(replyCount)}条评论')
+              : uiTx('0条评论'),
         );
         if (_videoReplyController.voteCard case final voteCard?) {
           return SliverMainAxisGroup(
