@@ -10,7 +10,7 @@ import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 class MemberFavItem extends StatelessWidget {
-  const MemberFavItem({super.key, required this.item});
+  const MemberFavItem(this.item, {super.key});
 
   final SpaceFavItemModel item;
 
