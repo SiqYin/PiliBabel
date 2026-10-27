@@ -142,10 +142,8 @@ class _MemberOpusState extends State<MemberOpus>
     );
   }
 
-  late final gridDelegate = SliverWaterfallFlowDelegateWithMaxCrossAxisExtent(
-    maxCrossAxisExtent: Grid.smallCardWidth,
-    mainAxisSpacing: Style.safeSpace,
-    crossAxisSpacing: Style.safeSpace,
+  late final gridDelegate = SliverSimpleGridDelegateWithMaxCrossAxisExtent(
+    maxCrossAxisExtent: Grid.smallCardWidth.toDouble(),
   );
 
   Widget _buildBody(LoadingState<List<OpusFlowItem>?> loadingState) {
