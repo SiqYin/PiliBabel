@@ -2,6 +2,7 @@ import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models_new/download/audio_cache_entry.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:get/get.dart';
 
 /// 缓存音频列表里的一项。
 class AudioCacheItem extends StatelessWidget {

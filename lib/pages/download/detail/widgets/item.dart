@@ -326,14 +326,19 @@ CoverTranslateButton(cover: entry.cover),
                         left: 0,
                         bottom: 0,
                         child: Obx(
-                          () => Text(
-                            '${CacheManager.formatSize(entry.totalBytes)}${entry.ownerName != null ? '  ${uiTx(entry.ownerName)}' : ''}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              height: 1.6,
-                              color: outline,
-                            ),
-                          ),
+                          () {
+                            // 先在局部捕获 ownerName：直接内联在字符串里做 != null 判断不会提升
+                            // getter 类型（String?），uiTx 需要 String，这里显式绑定一次。
+                            final owner = entry.ownerName;
+                            return Text(
+                              '${CacheManager.formatSize(entry.totalBytes)}${owner != null ? '  ${uiTx(owner)}' : ''}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                height: 1.6,
+                                color: outline,
+                              ),
+                            );
+                          },
                         ),
                       ),
                       if (showMoreButton)
