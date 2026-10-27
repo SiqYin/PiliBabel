@@ -19,10 +19,7 @@ import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 class VideoCardVMemberHome extends StatelessWidget {
   final SpaceArchiveItem videoItem;
 
-  const VideoCardVMemberHome({
-    super.key,
-    required this.videoItem,
-  });
+  const VideoCardVMemberHome(this.videoItem, {super.key});
 
   Future<void> onPushDetail() async {
     String? goto = videoItem.goto;

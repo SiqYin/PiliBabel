@@ -65,7 +65,7 @@ class _MemberComicState extends State<MemberComic>
                   if (index == response.length - 1) {
                     _controller.onLoadMore();
                   }
-                  return MemberComicItem(item: response[index]);
+                  return MemberComicItem(response[index]);
                 },
                 itemCount: response.length,
               )
