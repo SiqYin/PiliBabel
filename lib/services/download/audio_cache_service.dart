@@ -261,6 +261,9 @@ class AudioCacheService extends GetxService {
           ? VideoType.ugc
           : (isLogin ? VideoType.pgc : VideoType.ugc),
       allowAppSource: false,
+      // 4048（DASH 全家桶）不含 4096（Hi-Res 无损位）：不补这一位，取流结果里
+      // 永远不会有 Hi-Res（30251）轨，用户选了 Hi-Res 也会静默退化成 320K。
+      fnval: 4048 | 4096,
     );
     if (res case Success(:final response)) {
       final audios = response.dash?.audio;

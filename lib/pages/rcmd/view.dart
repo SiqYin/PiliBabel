@@ -73,7 +73,10 @@ class _RcmdPageState extends State<RcmdPage>
             ? SliverGrid.builder(
                 gridDelegate: gridDelegate,
                 itemBuilder: (context, index) {
-                  if (index == response.length - 1) {
+                  // 距末尾还有 6 项就预取下一页：此前只在最后一项构建时才触发，
+                  // 等于「滚到底才开始一次网络往返」，海外 RTT 高时必然看到白块。
+                  // 基类 queryData 自带 isLoading 在途去重，多触发几次不会重复请求。
+                  if (index >= response.length - 6) {
                     controller.onLoadMore();
                   }
                   if (controller.lastRefreshAt != null) {

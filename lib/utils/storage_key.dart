@@ -20,6 +20,9 @@ abstract final class SettingBoxKey {
       autoPlayAdjust = 'autoPlayAdjust',
       autoLowerQuality = 'autoLowerQuality',
       useAppPlayUrl = 'useAppPlayUrl',
+      mediaProxyConns = 'mediaProxyConns',
+      dynUseGrpc = 'dynUseGrpc',
+      dnsDoh = 'dnsDoh',
       hardwareDecoding = 'hardwareDecoding',
       videoSync = 'videoSync',
       autosync = 'autosync',
@@ -370,7 +373,9 @@ abstract final class LocalCacheKey {
       cdnNodeRegion = 'cdnNodeRegion',
       detectedCdnRegion = 'detectedCdnRegion',
       detectedCdnRegionTime = 'detectedCdnRegionTime',
-      cdnSpeedScores = 'cdnSpeedScores';
+      cdnSpeedScores = 'cdnSpeedScores',
+      fpLocal = 'fpLocal',
+      fpRemote = 'fpRemote';
 }
 
 abstract final class VideoBoxKey {

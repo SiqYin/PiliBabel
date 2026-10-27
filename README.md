@@ -153,6 +153,20 @@ paru -S pilinara-bin         # or via AUR: pilinara-bin (prebuilt) / pilinara (s
 
 <br/>
 
+## Changelog: 2.6.x → 3.3.4
+
+- **2.6.x** — offline audio caching (separate video/audio modules, remembers the last choice, entries on the video page, the audio-only page and the audio player; original format kept; selectable quality) and download-to-local (its own menu item, video/audio first then quality, system file picker when no folder is set).
+
+- **3.0.x** — overseas network self-healing: per-host health tracking with primary/backup switching, DNS resolution with caching, connection prewarm, risk-control (412) cooldown, region detection with manual override, CDN speed test shared with the API layer.
+
+- **3.1.0** — adaptive forward buffer driven by the video track bitrate, plus player and audio fixes.
+
+- **3.2.0** — the official-app-style network foundation: request fingerprint (buvid/fp/session_id/env), gRPC host failover, retry interceptor, per-host concurrency limiter, cold-start feed prewarm, official feed event parameters, CDN candidate ordering with overseas fallbacks; feed next-page prefetch, a bounded cover prefetch queue, play-url prefetch; audio and comment paths moved onto the same foundation.
+
+- **3.3.0–3.3.3** — dynamics (P3) gRPC rendering, then fixes: the audio page's buffered-duration compile error, and the comment area's prefetch type-cast crash that made every retry fail instantly.
+
+- **3.3.4** — dynamic cards for charging / applet / topic-set / subscription; the home first screen losing every cover fixed; upstream PiliNara sync (black status bar, download resume after the process is killed, media-kit update, Wayland black-video workaround, selectable audio quality when caching); AI-translation audit of all interface text added since 3.0.5; this changelog.
+
 ## Inherited feature log (from PiliNara / PiliPlus)
 
 Everything below is carried over from PiliNara (and, transitively, PiliPlus); PiliBabel adds the AI translation layer on top.

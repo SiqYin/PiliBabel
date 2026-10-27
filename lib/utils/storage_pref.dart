@@ -1422,6 +1422,19 @@ abstract final class Pref {
   static double get bufferSize =>
       _setting.get(SettingBoxKey.bufferSize, defaultValue: 32.0);
 
+  /// E2 媒体层多连接代理：0=关闭（默认）、1/2/4 条并发分片
+  static int get mediaProxyConns =>
+      _setting.get(SettingBoxKey.mediaProxyConns, defaultValue: 0);
+
+  /// E3 动态接口：true=走 gRPC（与官方 App 同源），失败自动回退网页接口
+  static bool get dynUseGrpc =>
+      _setting.get(SettingBoxKey.dynUseGrpc, defaultValue: true);
+
+  /// A1.3 DNS over HTTPS 兜底：系统解析失败时，是否再用 DoH 试一次。
+  /// 默认开启——它只在系统解析失败后才介入，正常路径不受影响。
+  static bool get dnsDoh =>
+      _setting.get(SettingBoxKey.dnsDoh, defaultValue: true);
+
   static double get bufferSec =>
       _setting.get(SettingBoxKey.bufferSec, defaultValue: 16.0);
 
@@ -1463,10 +1476,22 @@ abstract final class Pref {
   static set useAppPlayUrl(bool value) =>
       _setting.put(SettingBoxKey.useAppPlayUrl, value);
 
-  static Map<String, String> initBuffer([double playbackSpeed = 1.0]) {
+  static Map<String, String> initBuffer([
+    double playbackSpeed = 1.0,
+    int? videoBitrate,
+  ]) {
     final bufSec = Pref.bufferSec * playbackSpeed;
     // 前向缓冲直接决定能不能扛住限速抖动：太小 → 缓存被抽干 → 周期性卡顿。
-    final bufSiz = (Pref.bufferSize * 0x100000).toStringAsFixed(0);
+    var bufBytes = Pref.bufferSize * 0x100000;
+    // 高码率自适应：固定 32MB 对 4K（20~40Mbps）只够 6~13 秒前向缓冲，官方
+    // 约 30 秒。这里按「码率 × 20 秒」给足，但不低于用户设定的缓冲大小。
+    if (videoBitrate != null && videoBitrate > 0) {
+      final adaptive = videoBitrate / 8 * 20;
+      if (adaptive > bufBytes) {
+        bufBytes = adaptive;
+      }
+    }
+    final bufSiz = bufBytes.toStringAsFixed(0);
     // 起播阈值给一个上限：默认值算出来是 10.6 秒，意味着要等十秒出头才出画，
     // 官方 APP 的首帧要快得多。夹到 6 秒 —— 既明显缩短起播等待，又保留足够
     // 余量，不至于一开播就被抽干。
@@ -1492,6 +1517,26 @@ abstract final class Pref {
       'demuxer-max-bytes': (Pref.bufferSize.clamp(2.0, 8.0) * 0x200000)
           .toStringAsFixed(0),
       'demuxer-max-back-bytes': '0',
+    };
+  }
+
+  /// C1.1 音频专用缓存档（对标官方 ijk 的音频缓存那套 FFP_PROP_INT64_AUDIO_CACHED_*）：
+  /// 音频码率远低于视频（Hi-Res 也就 2Mbps 上下），按视频那套「码率 × 20 秒」算出来的
+  /// 字节数对音频没有意义。这里按**时长**给足：默认缓存 60 秒音频在 2Mbps 下约 15MB，
+  /// 换来切集、往回拖、弱网都不重新缓冲；字节上限固定 64MB（Hi-Res 也够四分钟以上），
+  /// 不随视频缓冲设置放大，避免听音频时白占内存。
+  static Map<String, String> initAudioBuffer([double playbackSpeed = 1.0]) {
+    final userSec = Pref.bufferSec * playbackSpeed;
+    final bufSec = userSec > 60 ? userSec : 60.0;
+    return {
+      'cache': 'yes',
+      'cache-secs': bufSec.toStringAsFixed(3),
+      'demuxer-hysteresis-secs': (Pref.bufferSec / 1.5)
+          .clamp(1.0, 6.0)
+          .toStringAsFixed(3),
+      'demuxer-max-bytes': (64 * 0x100000).toStringAsFixed(0),
+      // 音频体积小，回退缓存给足，往回拖不重新取流
+      'demuxer-max-back-bytes': (16 * 0x100000).toStringAsFixed(0),
     };
   }
 
@@ -1597,6 +1642,29 @@ abstract final class Pref {
       _localCache.put(LocalCacheKey.buvid, buvid);
     }
     return buvid;
+  }
+
+  /// 设备指纹 fp_local：每安装生成一次、之后固定不变的 64 位十六进制串。
+  ///
+  /// 此前这两个请求头是硬编码的全 1 占位串，所有用户完全一致 —— 属于风控最
+  /// 容易命中的特征。官方 APP 每个安装都不一样，这里对齐这个行为，但**不改
+  /// 协议**（仍然是同样两个头、同样的长度）。
+  static String get fpLocal => _fingerprintOf(LocalCacheKey.fpLocal);
+
+  /// 设备指纹 fp_remote：与 fp_local 各自独立生成，同样每安装固定。
+  static String get fpRemote => _fingerprintOf(LocalCacheKey.fpRemote);
+
+  static String _fingerprintOf(String key) {
+    String? value = _localCache.get(key);
+    if (value == null) {
+      const chars = '0123456789abcdef';
+      value = List.generate(
+        64,
+        (_) => chars[Utils.random.nextInt(chars.length)],
+      ).join();
+      _localCache.put(key, value);
+    }
+    return value;
   }
 
   static bool get showMemberShop =>

@@ -81,7 +81,7 @@ class DetailItem extends StatelessWidget {
     final theme = Theme.of(context);
     final outline = theme.colorScheme.outline;
     final cid = entry.source?.cid ?? entry.pageData?.cid;
-    final canDel = onDelete != null || onDeleteRequested != null;
+    final canActInPlace = entry.isCompleted || onDelete != null;
     final enableMultiSelect = controller.enableMultiSelect.value;
     void onLongPress() {
       if (enableMultiSelect) {
@@ -95,7 +95,7 @@ class DetailItem extends StatelessWidget {
       child: InkWell(
         onTap: enableTap
             ? () async {
-                if (!canDel) {
+                if (!canActInPlace) {
                   Get.to(const DownloadingPage());
                   return;
                 }

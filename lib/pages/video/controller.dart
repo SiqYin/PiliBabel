@@ -64,11 +64,11 @@ import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/services/download/download_collection_service.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
 import 'package:PiliPlus/services/pip_overlay_service.dart';
+import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/connectivity_utils.dart';
 import 'package:PiliPlus/utils/danmaku_density_trend.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
-import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/extension/nested_scroll_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
@@ -77,6 +77,7 @@ import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
+import 'package:PiliPlus/utils/play_url_prefetch.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/theme_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -894,12 +895,12 @@ class VideoDetailController extends GetxController
     VideoItem? bestVideo;
     int bestIndex = preferCodecs.length;
     for (final video in videoList) {
-      final c = video.codecs!;
-      if (currentCodes.any(c.startsWith)) {
+      final codecs = video.codecs!;
+      if (currentCodes.any(codecs.startsWith)) {
         return video;
       }
       for (int i = 0; i < bestIndex; i++) {
-        if (preferCodecs[i].codes.any(c.startsWith)) {
+        if (preferCodecs[i].codes.any(codecs.startsWith)) {
           bestIndex = i;
           bestVideo = video;
           break;
@@ -1150,6 +1151,8 @@ class VideoDetailController extends GetxController
       height: firstVideo.height,
       volume: volume,
       autoFullScreenFlag: autoFullScreenFlag,
+      // 当前视频轨码率：播放器据此把前向缓冲放大到「码率 × 20 秒」
+      videoBitrate: firstVideo.bandWidth,
     );
 
     // 检查 controller 是否已关闭，如果已关闭则跳过后续的资源加载操作
@@ -1211,8 +1214,25 @@ class VideoDetailController extends GetxController
     queryVideoUrl(fromReset: true);
   }
 
-  Future<LoadingState<PlayUrlModel>> _getVideoUrl(int quality) {
-    return VideoHttp.videoUrl(
+  Future<LoadingState<PlayUrlModel>> _getVideoUrl(int quality) async {
+    // B1：命中预取就直接用（预取还在飞就等它，不再发第二次请求）。画质、语言、
+    // 音量均衡、试看必须完全一致才算命中；预取失败返回 null，照原样走下面的
+    // 正式请求，行为与没有预取时完全一致。
+    final prefetched = PlayUrlPrefetch.take(
+      bvid: bvid,
+      cid: cid.value,
+      qn: quality,
+      language: currLang.value,
+      voiceBalance: plPlayerController.enableAudioNormalization,
+      tryLook: plPlayerController.tryLook,
+    );
+    if (prefetched != null) {
+      final cached = await prefetched;
+      if (cached != null) {
+        return Success(cached);
+      }
+    }
+    final result = await VideoHttp.videoUrl(
       cid: cid.value,
       bvid: bvid,
       qn: quality,
@@ -1223,6 +1243,19 @@ class VideoDetailController extends GetxController
       language: currLang.value,
       voiceBalance: plPlayerController.enableAudioNormalization,
     );
+    // A4.3 首帧优先：冷启动时先给候选一个有限预算的探测窗口（与播放器初始化
+    // 重叠，不额外拖起播），选流就能直接落到实测最快的那条，少一次失败重试。
+    if (result case Success(:final response)) {
+      final dash = response.dash;
+      if (dash != null) {
+        final urls = <String>[
+          for (final v in dash.video ?? const []) ...v.playUrls,
+          for (final a in dash.audio ?? const []) ...a.playUrls,
+        ];
+        await VideoUtils.awaitColdProbe(urls);
+      }
+    }
+    return result;
   }
 
   Future<void> _supplementVideoQualities() async {
@@ -1353,7 +1386,8 @@ class VideoDetailController extends GetxController
           displayTime: const Duration(seconds: 3),
         );
       }
-      if (data.dash == null) {
+      final dash = data.dash;
+      if (dash == null) {
         if (data.durl case final durl?) {
           // it will cause all files to be opened simultaneously
           if (durl.length > 1) {
@@ -1407,56 +1441,32 @@ class VideoDetailController extends GetxController
         }
       }
 
-      // if (kDebugMode) debugPrint("allVideosList:${allVideosList}");
       final cacheVideoQa = plPlayerController.cacheVideoQa!;
-      final targetVideoQa = data.findAvailableVideoQuality(cacheVideoQa);
-      currentVideoQa.value = VideoQuality.fromCode(targetVideoQa);
-
-      /// 优先顺序 设置中指定解码格式 -> 当前可选的首个解码格式
-      final supportFormats = data.supportFormats!;
-
-      // 根据画质选编码格式
-      currentDecodeFormats = VideoUtils.selectCodec(
-        supportFormats
-            .firstWhere(
-              (e) => e.quality == targetVideoQa,
-              orElse: () => supportFormats.first,
-            )
-            .codecs!,
+      final (
+        int targetQuality,
+        FormatItem targetFormat,
+        VideoDecodeFormatType targetDecode,
+        VideoItem targetVideo,
+      ) = VideoUtils.findTargetVideo(
+        dash.video!,
+        cacheVideoQa,
+        response.acceptQuality,
+        response.supportFormats!,
         preferCodecs,
       );
-
-      /// 取出符合当前画质的videoList
-      final videosList = data.dash!.video!
-          .where((e) => e.quality.code == targetVideoQa)
-          .toList();
-
-      /// 取出符合当前解码格式的videoItem
-      firstVideo = videosList.firstWhere(
-        (e) => currentDecodeFormats.codes.any(e.codecs!.startsWith),
-        orElse: () => videosList.first,
-      );
+      firstVideo = targetVideo;
+      currentDecodeFormats = targetDecode;
+      currentVideoQa.value = VideoQuality.fromCode(targetQuality);
       _setVideoHeight();
 
       videoUrl = _pickUrl(firstVideo.playUrls);
       videoUrlCandidates = firstVideo.playUrls.toList();
-
-      /// 优先顺序 设置中指定质量 -> 当前可选的最高质量
       AudioItem? firstAudio;
-      final audioList = data.dash?.audio;
+      final audioList = dash.audio;
       if (audioList != null && audioList.isNotEmpty) {
-        final audioIds = audioList.map((map) => map.id).toList();
-        int closestNumber = audioIds.findClosestTarget(
-          (e) => e <= plPlayerController.cacheAudioQa,
-          (a, b) => a > b ? a : b,
-        );
-        if (!audioIds.contains(plPlayerController.cacheAudioQa) &&
-            audioIds.any((e) => e > plPlayerController.cacheAudioQa)) {
-          closestNumber = AudioQuality.k192.code;
-        }
-        firstAudio = audioList.firstWhere(
-          (e) => e.id == closestNumber,
-          orElse: () => audioList.first,
+        firstAudio = VideoUtils.findTargetAudio(
+          audioList,
+          plPlayerController.cacheAudioQa,
         );
         audioUrl = _pickUrl(firstAudio.playUrls, isAudio: true);
         audioUrlCandidates = firstAudio.playUrls.toList();

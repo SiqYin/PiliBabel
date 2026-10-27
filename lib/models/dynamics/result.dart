@@ -902,6 +902,10 @@ class DynamicMajorModel {
     this.music,
     this.blocked,
     this.medialist,
+    this.applet,
+    this.topicSet,
+    this.subscription,
+    this.charging,
   });
 
   DynamicArchiveModel? archive;
@@ -920,6 +924,10 @@ class DynamicMajorModel {
   Medialist? medialist;
 
   SubscriptionNew? subscriptionNew;
+  DynamicApplet? applet;
+  DynamicTopicSet? topicSet;
+  DynamicSubscription? subscription;
+  DynamicChargingArchive? charging;
 
   DynamicMajorModel.fromJson(Map<String, dynamic> json) {
     archive = json['archive'] != null
@@ -961,6 +969,18 @@ class DynamicMajorModel {
     subscriptionNew = json['subscription_new'] == null
         ? null
         : SubscriptionNew.fromJson(json['subscription_new']);
+    applet = json['applet'] == null
+        ? null
+        : DynamicApplet.fromJson(json['applet']);
+    topicSet = json['topic_set'] == null
+        ? null
+        : DynamicTopicSet.fromJson(json['topic_set']);
+    subscription = json['subscription'] == null
+        ? null
+        : DynamicSubscription.fromJson(json['subscription']);
+    charging = json['charging'] == null
+        ? null
+        : DynamicChargingArchive.fromJson(json['charging']);
   }
 }
 
@@ -1401,5 +1421,82 @@ class Stat {
   Stat.fromJson(Map<String, dynamic> json) {
     danmu = json['danmaku'];
     play = json['play'];
+  }
+}
+
+
+/// E4：小程序卡（gRPC 的 MdlDynApplet）
+class DynamicApplet {
+  String? uri;
+  String? title;
+  String? subTitle;
+  String? cover;
+  String? icon;
+  String? label;
+  String? buttonTitle;
+
+  DynamicApplet.fromJson(Map<String, dynamic> json) {
+    uri = json['uri'];
+    title = json['title'];
+    subTitle = json['sub_title'] ?? json['subTitle'];
+    cover = json['cover'];
+    icon = json['icon'];
+    label = json['label'];
+    buttonTitle = json['button_title'] ?? json['buttonTitle'];
+  }
+}
+
+/// E4：话题集卡（gRPC 的 MdlDynTopicSet）
+class DynamicTopicSet {
+  String? title;
+  String? cover;
+  String? uri;
+  String? coverLeftText1;
+  String? coverLeftText2;
+  String? coverLeftText3;
+  String? inlineUrl;
+
+  DynamicTopicSet.fromJson(Map<String, dynamic> json) {
+    title = json['title'];
+    cover = json['cover'];
+    uri = json['uri'];
+    coverLeftText1 = json['cover_left_text_1'] ?? json['coverLeftText1'];
+    coverLeftText2 = json['cover_left_text_2'] ?? json['coverLeftText2'];
+    coverLeftText3 = json['cover_left_text_3'] ?? json['coverLeftText3'];
+    inlineUrl = json['inline_url'] ?? json['inlineURL'] ?? json['inlineUrl'];
+  }
+}
+
+/// E4：订阅卡（gRPC 的 MdlDynSubscription）
+class DynamicSubscription {
+  String? uri;
+  String? title;
+  String? cover;
+  String? adTitle;
+  String? tips;
+
+  DynamicSubscription.fromJson(Map<String, dynamic> json) {
+    uri = json['uri'];
+    title = json['title'];
+    cover = json['cover'];
+    adTitle = json['ad_title'] ?? json['adTitle'];
+    tips = json['tips'];
+  }
+}
+
+/// E4：付费卡（gRPC 的 MdlDynChargingArchive）
+class DynamicChargingArchive {
+  bool? hasPermission;
+  bool? canInline;
+  String? chargingBundleName;
+  String? archiveCover;
+  String? archiveTitle;
+
+  DynamicChargingArchive.fromJson(Map<String, dynamic> json) {
+    hasPermission = json['has_permission'] ?? json['hasPermission'];
+    canInline = json['can_inline'] ?? json['canInline'];
+    chargingBundleName = json['charging_bundle_name'] ?? json['chargingBundleName'];
+    archiveCover = json['archive_cover'] ?? json['archiveCover'];
+    archiveTitle = json['archive_title'] ?? json['archiveTitle'];
   }
 }

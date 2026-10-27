@@ -153,6 +153,16 @@ paru -S pilinara-bin         # eller via AUR: pilinara-bin (forhåndsbygd) / pil
 
 <br/>
 
+## Endringslogg: 2.6.x → 3.3.4
+
+- **2.6.x** — lydcache (egne moduler for video og lyd, husker siste valg, innganger på videosiden, lydsiden og i spilleren; originalformatet beholdes; kvalitet kan velges) og nedlasting til enheten (eget menypunkt: først video/lyd, deretter kvalitet; uten valgt mappe åpnes systemets filvelger).
+
+- **3.0.x–3.1.0** — selvhelbredende nettverk i utlandet: tilstand per vert med bytte mellom primær og reserve, DNS-oppslag med cache, forvarming av tilkoblinger, avkjøling etter risikokontroll (412), regionsgjenkjenning med manuelt valg, CDN-hastighetstest delt med API-laget; spillerens fremoverbuffer følger nå bitraten til videosporet.
+
+- **3.2.0–3.3.3** — nettverksgrunnlag i den offisielle appens stil: forespørselsavtrykk (buvid/fp/session_id/env), failover for gRPC-verter, retry-interceptor, grense for samtidige forespørsler per vert, forhåndslasting av første feed ved kaldstart, offisielle feed-hendelsesparametere, rekkefølge for CDN-kandidater med utenlandske reserver; forhåndslasting av andre side, begrenset kø for forhåndslasting av omslag, forhåndslasting av avspillings-URL-er; deretter gjengivelse av dynamics (P3) via gRPC og rettelser: kompileringsfeil i buffertiden på lydsiden og typefeil i forhåndslastingen av kommentarer, som gjorde at hvert nytt forsøk feilet umiddelbart.
+
+- **3.3.4** — dynamikkort for betalte innlegg, mini-apper, emnesamlinger og abonnementer; feilen der hjemskjermens første side mistet alle omslag er rettet; endringer fra PiliNara er hentet inn (statuslinje, gjenoppta nedlasting etter at prosessen lukkes, oppdatering av media-kit, omgå svart video i Wayland, valg av lydkvalitet ved cache); revisjon av AI-oversettelse for all grensesnitttekst lagt til siden 3.0.5; denne loggen.
+
 ## Arvet funksjonslogg (fra PiliNara / PiliPlus)
 
 Alt nedenfor er arvet fra PiliNara (og, indirekte, PiliPlus); PiliBabel legger AI-oversettelseslaget på toppen.

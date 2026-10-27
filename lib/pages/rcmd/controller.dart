@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 
 import 'package:PiliPlus/http/loading_state.dart';
@@ -6,8 +7,13 @@ import 'package:PiliPlus/models/common/rcmd_mode.dart';
 import 'package:PiliPlus/models/model_rec_video_item.dart';
 import 'package:PiliPlus/pages/common/common_list_controller.dart';
 import 'package:PiliPlus/services/logger.dart';
+import 'package:PiliPlus/utils/connectivity_utils.dart';
+import 'package:PiliPlus/utils/feed_cold_start.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
+import 'package:PiliPlus/utils/play_url_prefetch.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:PiliPlus/utils/feed_next_page.dart';
+import 'package:PiliPlus/utils/feed_idx.dart';
 
 class RcmdController extends CommonListController {
   /// 每页预取的封面数：首屏之后的条目提前拉进图片缓存，滚动时直接命中
@@ -25,6 +31,9 @@ class RcmdController extends CommonListController {
   int _appPage = 0;
   bool _isFirstPage = false;
 
+  /// B3：首屏预取播放地址的条数（前 N 条最可能被点开）
+  static const int _prefetchPlayUrl = 2;
+
   @override
   bool get isEnd => false;
 
@@ -41,20 +50,39 @@ class RcmdController extends CommonListController {
     if (rcmdMode != RcmdMode.merged) {
       // 单源模式：App / Web 两源经三元合并后静态类型即 List<BaseRcmdVideoItemModel>。
       _isFirstPage = (page == 0);
-      final res = await (appRcmd
-          ? VideoHttp.rcmdVideoListApp(freshIdx: page)
-          : VideoHttp.rcmdVideoList(freshIdx: page, ps: 20));
+      // B4.2 首页第一屏优先吃冷启动预取结果（90 秒内有效），命中省一次往返
+      final cold = page == 0 ? FeedColdStart.take() : null;
+      // B3.1 / B3.2：第二屏若已预取且代次有效，直接用预取结果；
+      // 页码不符、已过期或刷新过代次，take 返回 null，走正常请求。
+      final prefetched = page > 0 ? FeedNextPage.take(page) : null;
+      final LoadingState<List<BaseRcmdVideoItemModel>> res;
+      if (cold != null) {
+        res = Success(cold);
+      } else if (prefetched != null) {
+        res = Success(prefetched as List<BaseRcmdVideoItemModel>);
+      } else {
+        res = await (appRcmd
+            ? VideoHttp.rcmdVideoListApp(freshIdx: page)
+            : VideoHttp.rcmdVideoList(freshIdx: page, ps: 20));
+      }
       if (res case Success(:final response)) {
         _prefetchTailCovers(response);
+        if (page == 0 && prefetched == null) {
+          _prefetchNextPage(0);
+        }
       }
       return res;
     }
 
     // 合并模式：并行请求
     _isFirstPage = (page == 0 && _appPage == 0);
+    // B4.2 合并模式下 App 那一路同样优先吃冷启动预取结果
+    final cold = _appPage == 0 ? FeedColdStart.take() : null;
     final results = await Future.wait([
       VideoHttp.rcmdVideoList(freshIdx: page, ps: 20),
-      VideoHttp.rcmdVideoListApp(freshIdx: _appPage),
+      cold != null
+          ? Future.value(Success(cold))
+          : VideoHttp.rcmdVideoListApp(freshIdx: _appPage),
     ]);
 
     // 静默降级：一个成功就展示
@@ -113,6 +141,65 @@ class RcmdController extends CommonListController {
     } catch (_) {}
   }
 
+  /// B3 卡片资源预加载（对标官方 feedsState changed start updatePreload）：首屏数据
+  /// 一到就把最可能被点开的前两条播放地址先取回来，用户点开直接命中预取结果。
+  /// 只在 WiFi 下做——蜂窝不发额外请求，省流量优先；失败静默，绝不影响列表。
+  /// B3.1：首屏成功之后，后台把第二屏的接口数据取回来放进 FeedNextPage。
+  /// 失败静默——预取只是加速，拿不到就走正常请求。
+  void _prefetchNextPage(int freshIdx) {
+    try {
+      final gen = FeedNextPage.generation;
+      unawaited(() async {
+        try {
+          final res = appRcmd
+              ? await VideoHttp.rcmdVideoListApp(freshIdx: freshIdx + 1)
+              : await VideoHttp.rcmdVideoList(
+                  freshIdx: freshIdx + 1,
+                  ps: 20,
+                );
+          if (res case Success(:final response)) {
+            if (response.isNotEmpty) {
+              FeedNextPage.put(
+                freshIdx: freshIdx + 1,
+                data: response,
+                generation: gen,
+              );
+            }
+          }
+        } catch (_) {}
+      }());
+    } catch (_) {}
+  }
+
+  void _prefetchTopPlayUrl(List dataList) {
+    try {
+      final items = dataList
+          .whereType<BaseRcmdVideoItemModel>()
+          .take(_prefetchPlayUrl)
+          .toList(growable: false);
+      if (items.isEmpty) {
+        return;
+      }
+      unawaited(
+        ConnectivityUtils.isWiFi.then((isWiFi) {
+          if (!isWiFi) {
+            return;
+          }
+          for (final item in items) {
+            final bvid = item.bvid;
+            final cid = item.cid;
+            if (bvid == null || cid == null || cid <= 0) {
+              continue;
+            }
+            PlayUrlPrefetch.prefetch(bvid: bvid, cid: cid);
+          }
+        }),
+      );
+    } catch (_) {
+      // 预取失败不影响列表
+    }
+  }
+
   @override
   bool handleError(String? errMsg) {
     return enableSaveLastData;
@@ -120,6 +207,11 @@ class RcmdController extends CommonListController {
 
   @override
   void handleListResponse(List dataList) {
+    // B3：首屏到手即预取前两条播放地址（PlayUrlPrefetch 按 key 去重，
+    // 下拉刷新不会重复取）
+    if (_isFirstPage) {
+      _prefetchTopPlayUrl(dataList);
+    }
     if (enableSaveLastData && _isFirstPage) {
       if (loadingState.value case Success(:final response)) {
         if (response != null && response.isNotEmpty) {
@@ -141,6 +233,10 @@ class RcmdController extends CommonListController {
     page = 0;
     _appPage = 0; // 重置 App 端页码
     isEnd = false;
+    // B3.2：刷新即推进代次并清掉预取，在飞的旧预取回来会被代次挡掉。
+    FeedNextPage.bumpGeneration();
+    // B4.1：刷新后从页码 0 重新开始，丢掉上一轮记住的服务端 idx。
+    FeedIdx.clear();
     return queryData();
   }
 }

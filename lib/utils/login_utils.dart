@@ -10,6 +10,7 @@ import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
+import 'package:PiliPlus/utils/feed_cold_start.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:collection/collection.dart';
@@ -44,6 +45,8 @@ abstract final class LoginUtils {
   }
 
   static Future<void> onLoginMain() async {
+    // B4.1 官方 feed 参数 login_event：登录后的第一次取 feed 置 1
+    FeedColdStart.markLogin();
     final account = Accounts.main;
     final res = await UserHttp.userInfo();
     if (res case Success(:final response)) {

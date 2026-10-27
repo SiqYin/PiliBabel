@@ -38,6 +38,7 @@ import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/recommend_filter.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
+import 'package:PiliPlus/utils/feed_cold_start.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/subtitle_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -46,6 +47,7 @@ import 'package:PiliPlus/utils/wbi_sign.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show compute;
 import 'package:protobuf/protobuf.dart';
+import 'package:PiliPlus/utils/feed_idx.dart';
 
 /// view层根据 status 判断渲染逻辑
 abstract final class VideoHttp {
@@ -96,8 +98,12 @@ abstract final class VideoHttp {
   // 添加额外的loginState变量模拟未登录状态
   static Future<LoadingState<List<RcmdVideoItemAppModel>>> rcmdVideoListApp({
     required int freshIdx,
+    bool coldStart = false,
   }) async {
     final params = {
+      // B4.1 对齐官方 feed 参数：open_event 是本次进程第一次取 feed 才置 1
+      'open_event': coldStart ? 1 : FeedColdStart.consumeOpenEvent(),
+      'login_event': FeedColdStart.consumeLoginEvent(),
       'build': 2001100,
       'c_locale': 'zh_CN',
       'channel': 'master',
@@ -113,7 +119,7 @@ abstract final class VideoHttp {
       'fourk': 1,
       'guidance': 0,
       'https_url_req': 0,
-      'idx': freshIdx,
+      'idx': FeedIdx.pick(freshIdx),
       'mobi_app': 'android_hd',
       'network': 'wifi',
       'platform': 'android',
@@ -127,13 +133,13 @@ abstract final class VideoHttp {
       'voice_balance': 0,
     };
     final res = await Request().get(
-      Api.recommendListApp,
+      coldStart ? Api.feedColdStart : Api.recommendListApp,
       queryParameters: params,
       options: Options(
         headers: {
           'buvid': LoginHttp.buvid,
-          'fp_local': '1111111111111111111111111111111111111111111111111111111111111111',
-          'fp_remote': '1111111111111111111111111111111111111111111111111111111111111111',
+          'fp_local': Pref.fpLocal,
+          'fp_remote': Pref.fpRemote,
           'session_id': '11111111',
           'env': 'prod',
           'app-key': 'android_hd',
@@ -149,7 +155,19 @@ abstract final class VideoHttp {
     if (res.data['code'] == 0) {
       final list = <RcmdVideoItemAppModel>[];
       final bool removeBlockedRcmd = Pref.removeBlockedRcmd;
-      for (final i in res.data['data']['items']) {
+      // B4.2 冷启动接口与首页 feed 同构，兼容两种字段名；解析不出来就返回空，
+      // 调用方会退回正常首页请求，不会因此显示空列表。
+      final raw = coldStart
+          ? (res.data['data']?['items'] ?? res.data['data']?['item'])
+          : res.data['data']['items'];
+      if (raw is! List) {
+        return Success(list);
+      }
+      // B4.1：记住服务端返回的最后一条 idx，供下一次「加载更多」使用。
+      if (!coldStart && raw.isNotEmpty) {
+        FeedIdx.record((raw.last as Map?)?['idx']);
+      }
+      for (final i in raw) {
         final upMid = safeToInt(i['args']?['up_id']);
         final isWhitelisted = RecommendFilter.isWhitelisted(upMid);
         // 屏蔽推广和拉黑用户

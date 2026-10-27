@@ -1,4 +1,3 @@
-import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 part of 'package:PiliPlus/pages/dynamics/widgets/content_panel.dart';
 
 Widget dynTextMenuBuilder(

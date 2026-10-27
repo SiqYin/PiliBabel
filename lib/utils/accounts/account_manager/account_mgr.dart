@@ -56,7 +56,10 @@ class AccountManager extends Interceptor {
       );
     }
 
-    final isApp = path.startsWith(HttpString.appBaseUrl);
+    // grpc.biliapi.net 也是 App 侧主机：gRPC 请求必须走 App 那套头
+    // （access_key 在 grpcHeaders 里），不能被当成 Web 请求加 Cookie。
+    final isApp = path.startsWith(HttpString.appBaseUrl) ||
+        path.startsWith(HttpString.grpcBaseUrl);
 
     if (isApp && options.responseType == ResponseType.bytes) {
       options.headers.addAll(account.grpcHeaders);
@@ -244,6 +247,7 @@ class AccountManager extends Interceptor {
     final account = options.extra['account'] as Account;
     if (account is NoAccount ||
         path.startsWith(HttpString.appBaseUrl) ||
+        path.startsWith(HttpString.grpcBaseUrl) ||
         _skipCookie(path)) {
       return null;
     }
