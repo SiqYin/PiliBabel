@@ -42,6 +42,7 @@ import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
+import 'package:PiliPlus/utils/media_proxy.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/share_utils.dart';
@@ -534,7 +535,20 @@ class AudioController extends GetxController
     isFileSource.value = url.startsWith('file:');
     if (!isTruncationRetry) _truncationRetries = 0;
     await _initPlayerIfNeeded();
-    final extras = audioFilterExtras(volume);
+    // 音频也走多连接分片（E2）：先确保本机代理就绪，再拼地址；起不来就直连。
+    if (!isFileSource.value && Pref.mediaProxyConns > 1) {
+      await MediaProxy.ensureStarted();
+    }
+    // 音频 extras：在音量归一化之外补上媒体流参数（E2）。
+    // lavf 重连：音频一播几十分钟，断流要能自己接上；此前完全没配，
+    // 断一次就得重开。走本机代理时这些参数同样作用于代理请求。
+    final extras = <String, String>{
+      'stream-lavf-o':
+          'reconnect=1,reconnect_streamed=1,reconnect_delay_max=2,'
+          'multiple_requests=1',
+      'http-persistent': 'yes',
+    };
+    audioFilterExtras(volume, map: extras);
     _tokenOrigin = tokenOrigin;
     final isApp = tokenOrigin == _TokenOrigin.app;
     player
@@ -546,9 +560,16 @@ class AudioController extends GetxController
         // 空值等于「不发 Referer」，正是 APP 同源直链要求的指纹。
         referer: isApp ? '' : HttpString.baseUrl,
       )
-      ..open(Media(url, start: _start, extras: extras));
+      ..open(Media(_mediaUrl(url), start: _start, extras: extras));
     _start = null;
   }
+
+  /// 音频源与视频共用同一套传输优化（E2）：多连接分片。
+  ///
+  /// 音频此前完全没接 MediaProxy，单连接顺序拉流在高延迟线路上很容易被播放追上
+  /// （表现为卡一下）、拖动到未缓存位置要数秒甚至超时。`MediaProxy.wrap` 在关闭、
+  /// 只连一条、异常或非 http 源时原样返回，所以这里可以直接用。
+  String _mediaUrl(String url) => MediaProxy.wrap(url);
 
   Future<void> _initPlayerIfNeeded() async {
     if (_hasInit) return;

@@ -1,11 +1,15 @@
-### PiliBabel v3.3.13
+### PiliBabel v3.3.14
 
-**Faster loading: data requests now go direct by default instead of through the in-app self-resolver proxy.**
+**Smoother playback: audio and video now use multi-connection segmented transfer by default, closer to the official app's "keep buffering ahead while playing, seek instantly" behavior.**
 
-**Problem.** Since v3.3.0 every request was routed through the app's local DNS-resolver proxy (DnsProxy, a 127.0.0.1 CONNECT tunnel). Each tunnel connection re-runs self-resolution, re-connects, and re-does the TLS handshake, and upstream connections are not reused — measured at roughly **2–3× slower** than v3.0.5's direct connections.
+**Problem.** The player used a single TCP connection to pull the stream sequentially. On high-latency links one connection can't saturate the available bandwidth, so the buffer gets drained by playback and you get periodic stalls; seeking to a not-yet-buffered position had to re-pull on that same single connection, taking several seconds — sometimes timing out and triggering a line switch. The official app uses multi-connection segmentation to saturate bandwidth, keeping the buffer ahead of the playhead.
 
-**Fix.** Data requests now connect directly by default (`Pref.netDirect`, on by default): neither the HTTP/2 connection pool nor the global HttpClient is pointed at the local proxy anymore, and image downloads keep an explicit `findProxy = DIRECT` as a second safeguard. With HTTPS + SNI everywhere, self-resolution's anti-hijacking benefit is marginal while the direct-connection speed win is substantial.
+**Fix.** `MediaProxy` (an in-app local proxy that splits one GET into 2–4 concurrent range requests, aborts in-flight upstream connections on seek, and falls back with a 302 to the source on any error) now defaults to **2 connections instead of 0**, and applies to both video and audio.
 
-**Revertible.** A new setting, "Network direct connection (turn off to use the self-resolver proxy)", lets you switch back if your network can only reach the service through self-resolution. Switching rebuilds the connection pool immediately — no app restart needed.
+**Audio wired up.** Audio previously didn't use this proxy at all; it now does. Audio was also missing lavf reconnect parameters (a dropped stream could only be restarted by reopening), which is now fixed.
+
+**Faster reconnect.** `reconnect_delay_max` lowered from 10s to 2s, so a dropped connection no longer means waiting up to 10 seconds.
+
+You can still turn "media multi-connection proxy" off in Settings.
 
 Downloads are below.

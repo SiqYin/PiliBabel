@@ -76,13 +76,17 @@ class Request {
     // 后才发），用户点开首页直接命中。失败静默，不影响任何正常加载。
     FeedColdStart.warm();
     await Future.delayed(const Duration(milliseconds: 1500));
-    // 顺手把解析也预热掉：结果进缓存后，后面的请求不用再等解析
-    DnsResolver.warm(const [
-      'api.bilibili.com',
-      'app.bilibili.com',
-      'grpc.biliapi.net',
-      'i0.hdslb.com',
-    ]);
+    // 顺手把解析也预热掉：结果进缓存后，后面的请求不用再等解析。
+    // 直连模式（Pref.netDirect）下请求不经自解析代理，解析缓存用不上，跳过即可，
+    // 免得在启动时白跑一次 DoH/解析。
+    if (!Pref.netDirect) {
+      DnsResolver.warm(const [
+        'api.bilibili.com',
+        'app.bilibili.com',
+        'grpc.biliapi.net',
+        'i0.hdslb.com',
+      ]);
+    }
     for (final host in const [
       HttpString.apiBaseUrl,
       HttpString.appBaseUrl,
