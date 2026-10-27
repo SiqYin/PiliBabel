@@ -25,13 +25,20 @@ class MainReplyController extends ReplyController<MainListReply> {
   }
 
   @override
-  Future<LoadingState<MainListReply>> customGetData() => ReplyGrpc.mainList(
-    type: replyType,
-    oid: oid,
-    mode: mode,
-    cursorNext: cursorNext,
-    offset: paginationReply?.nextOffset,
-  );
+  Future<LoadingState<MainListReply>> customGetData() async {
+    // D1：首屏命中评论预取就直接用
+    final cached = await prefetchedFirstPage(oid, replyType);
+    if (cached != null) {
+      return cached;
+    }
+    return ReplyGrpc.mainList(
+      type: replyType,
+      oid: oid,
+      mode: mode,
+      cursorNext: cursorNext,
+      offset: paginationReply?.nextOffset,
+    );
+  }
 
   @override
   List<ReplyInfo>? getDataList(MainListReply response) => response.replies;

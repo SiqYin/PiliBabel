@@ -2,7 +2,10 @@ import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io';
 
 import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/grpc/dyn.dart';
 import 'package:PiliPlus/http/api.dart';
+import 'package:PiliPlus/utils/dyn_grpc_bridge.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/error_msg.dart';
@@ -441,6 +444,26 @@ abstract final class MemberHttp {
     String? offset,
     required int mid,
   }) async {
+    // E3.2 空间页动态走 gRPC（对标官方 DynSpace）；类型不支持或解析失败
+    // 自动回退下面的网页接口
+    if (Pref.dynUseGrpc) {
+      final g = await DynGrpc.dynSpace(
+        uid: mid,
+        page: (offset == null || offset.isEmpty) ? 1 : 2,
+        offset: offset,
+      );
+      if (g case Success(:final response)) {
+        final web = DynGrpcBridge.fromDynSpace(response);
+        if (web != null) {
+          try {
+            return Success(DynamicsDataModel.fromJson(web));
+          } catch (_) {
+            // 解析不了就落到网页接口
+          }
+        }
+      }
+    }
+
     String dmImgStr = Utils.base64EncodeRandomString(16, 64);
     String dmCoverImgStr = Utils.base64EncodeRandomString(32, 128);
     final params = await WbiSign.makSign({

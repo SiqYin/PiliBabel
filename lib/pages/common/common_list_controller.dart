@@ -1,5 +1,6 @@
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/pages/common/common_controller.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 
 abstract class CommonListController<R, T> extends CommonController<R, T> {
@@ -18,6 +19,25 @@ abstract class CommonListController<R, T> extends CommonController<R, T> {
   }
 
   void checkIsEnd(int length) {}
+
+  /// 「刷新失败保留上次数据」的通用实现，子类在 [handleError] 里直接 return 它。
+  ///
+  /// 刷新失败（网络抖动、风控拦截、海外线路抖动）时不清空已经加载出来的列表，
+  /// 只弹一条提示——对齐首页推荐流的「保留上次内容」。
+  ///
+  /// 首次加载没有旧数据时不保留，仍然正常报错，避免页面卡在加载态。
+  bool keepLastDataOnError(String? errMsg) {
+    if (loadingState.value case Success(:final response)) {
+      if (response == null || response.isEmpty) {
+        return false;
+      }
+      if (errMsg != null && errMsg.isNotEmpty) {
+        SmartDialog.showToast(errMsg);
+      }
+      return true;
+    }
+    return false;
+  }
 
   @override
   Future<void> queryData([bool isRefresh = true]) async {

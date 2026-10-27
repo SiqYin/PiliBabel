@@ -153,6 +153,16 @@ paru -S pilinara-bin         # hoặc qua AUR: pilinara-bin (dựng sẵn) / pil
 
 <br/>
 
+## Nhật ký thay đổi: 2.6.x → 3.3.4
+
+- **2.6.x** — bộ nhớ đệm âm thanh (mô-đun riêng cho video và âm thanh, ghi nhớ lựa chọn gần nhất, có lối vào ở trang video, trang chỉ âm thanh và trình phát âm thanh; giữ nguyên định dạng gốc; chọn được chất lượng) và tải về thiết bị (mục menu riêng: chọn video/âm thanh trước rồi chọn chất lượng; nếu chưa đặt thư mục sẽ mở trình chọn tệp của hệ thống).
+
+- **3.0.x–3.1.0** — mạng tự phục hồi khi ở nước ngoài: theo dõi tình trạng từng máy chủ và chuyển giữa chính và dự phòng, phân giải DNS kèm bộ nhớ đệm, làm nóng kết nối trước, hạ nhiệt sau khi bị kiểm soát rủi ro (412), nhận diện khu vực và chọn thủ công, bài đo tốc độ CDN dùng chung với tầng API; bộ đệm tiến của trình phát nay theo tốc độ bit của luồng video.
+
+- **3.2.0–3.3.3** — nền tảng mạng theo phong cách ứng dụng chính thức: dấu vân tay yêu cầu (buvid/fp/session_id/env), chuyển máy chủ gRPC khi lỗi, bộ chặn thử lại, giới hạn yêu cầu đồng thời mỗi máy chủ, tải trước luồng đầu khi khởi động lạnh, tham số sự kiện luồng chính thức, thứ tự ứng viên CDN kèm phương án dự phòng nước ngoài; tải trước trang thứ hai, hàng đợi tải trước ảnh bìa có giới hạn, tải trước URL phát; sau đó hiển thị dynamics (P3) qua gRPC và các sửa lỗi: lỗi biên dịch thời lượng bộ đệm ở trang âm thanh và lỗi chuyển kiểu khi tải trước bình luận khiến mọi lần thử lại thất bại ngay lập tức.
+
+- **3.3.4** — thẻ dynamics cho bài đăng trả phí, ứng dụng nhỏ, bộ chủ đề và đăng ký; đã sửa lỗi màn hình đầu trang chủ không hiện ảnh bìa nào; đưa các thay đổi từ PiliNara vào (thanh trạng thái, tiếp tục tải sau khi đóng tiến trình, cập nhật media-kit, tránh màn hình đen trên Wayland, chọn chất lượng âm thanh khi lưu đệm); rà soát dịch AI cho toàn bộ văn bản giao diện thêm từ 3.0.5; nhật ký này.
+
 ## Danh sách tính năng kế thừa (từ PiliNara / PiliPlus)
 
 Toàn bộ phần dưới đây được kế thừa từ PiliNara (và xa hơn nữa là PiliPlus); PiliBabel phủ thêm lớp dịch bằng AI lên trên.

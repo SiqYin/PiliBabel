@@ -153,6 +153,16 @@ paru -S pilinara-bin         # eller via AUR: pilinara-bin (förbyggt) / pilinar
 
 <br/>
 
+## Ändringslogg: 2.6.x → 3.3.4
+
+- **2.6.x** — ljudcache (separata moduler för video och ljud, kommer ihåg senaste valet, ingångar på videosidan, ljudsidan och i ljudspelaren; originalformatet behålls; kvalitet kan väljas) och nedladdning till enheten (eget menyalternativ: först video/ljud, sedan kvalitet; utan vald mapp öppnas systemets filväljare).
+
+- **3.0.x–3.1.0** — självläkande nätverk utomlands: hälsa per värd med växling mellan primär och reserv, DNS-uppslagning med cache, förvärmning av anslutningar, nedkylning efter riskkontroll (412), regionsigenkänning med manuellt val, CDN-hastighetstest delat med API-lagret; spelarens framåtbuffert följer nu videospårets bitrate.
+
+- **3.2.0–3.3.3** — nätverksgrund i den officiella appens stil: förfrågningsavtryck (buvid/fp/session_id/env), redundans för gRPC-värdar, återförsöksinterceptor, gräns för samtidiga förfrågningar per värd, förladdning av första flödet vid kallstart, officiella parametrar för flödeshändelser, ordning för CDN-kandidater med utländska reserver; förladdning av andra sidan, begränsad kö för förladdning av omslag, förladdning av uppspelningsadresser; därefter rendering av dynamics (P3) via gRPC samt rättelser: kompileringsfel i buffertiden på ljudsidan och typfel i förladdningen av kommentarer som gjorde att varje nytt försök misslyckades direkt.
+
+- **3.3.4** — dynamics-kort för betalda inlägg, miniappar, ämnessamlingar och prenumerationer; felet där startsidans första skärm saknade alla omslag är åtgärdat; ändringar från PiliNara har hämtats in (statusfält, återuppta nedladdning efter att processen stängts, uppdatering av media-kit, kringgående av svart video i Wayland, val av ljudkvalitet vid cachning); granskning av AI-översättning för all gränssnittstext som lagts till sedan 3.0.5; denna logg.
+
 ## Ärvd funktionslogg (från PiliNara / PiliPlus)
 
 Allt nedan ärvs från PiliNara (och, indirekt, PiliPlus); PiliBabel lägger AI-översättningslagret ovanpå.

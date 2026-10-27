@@ -5,6 +5,7 @@ import 'package:PiliPlus/grpc/bilibili/rpc.pb.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/http/loading_state.dart';
+import 'package:PiliPlus/utils/host_health.dart';
 import 'package:archive/archive.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, compute;
@@ -59,7 +60,9 @@ abstract final class GrpcReq {
     bool isolate = false,
   }) async {
     final response = await Request().post<Uint8List>(
-      HttpString.appBaseUrl + url,
+      // 主备主机按实测健康度排（A2.4）：默认顺序就是官方那套——原生 gRPC 走
+      // grpc.biliapi.net，app.bilibili.com 作 Failover。
+      HostPicker.grpcPrimary() + url,
       data: compressProtobuf(request.writeToBuffer()),
       options: options,
     );

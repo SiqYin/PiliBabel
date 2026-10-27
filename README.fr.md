@@ -153,6 +153,20 @@ paru -S pilinara-bin         # ou via AUR : pilinara-bin (précompilé) / pilina
 
 <br/>
 
+## Journal des modifications : 2.6.x → 3.3.4
+
+- **2.6.x** — cache audio (modules séparés vidéo/audio, mémorisation du dernier choix, entrées sur la page vidéo, la page audio seule et le lecteur audio ; format d'origine conservé ; qualité au choix) et téléchargement sur l'appareil (entrée de menu distincte : d'abord vidéo/audio, puis la qualité ; sélecteur de fichiers système si aucun dossier n'est défini).
+
+- **3.0.x** — auto-réparation du réseau à l'étranger : suivi de l'état par hôte avec bascule principal/secours, résolution DNS avec cache, préchauffage des connexions, refroidissement après contrôle (412), détection de région avec choix manuel, test de débit CDN partagé avec la couche API.
+
+- **3.1.0** — mémoire tampon avant adaptée au débit de la piste vidéo, ainsi que des corrections du lecteur et de l'audio.
+
+- **3.2.0** — socle réseau aligné sur l'application officielle : empreinte de requête (buvid/fp/session_id/env), bascule des hôtes gRPC, intercepteur de réessai, limite de requêtes simultanées par hôte, préchargement du premier flux au démarrage à froid, paramètres d'événement officiels du feed, ordre des candidats CDN avec repli à l'étranger ; préchargement de la deuxième page du flux, file d'attente bornée pour les vignettes, préchargement des URL de lecture ; audio et commentaires sur le même socle.
+
+- **3.3.0–3.3.3** — rendu des dynamiques (P3) via gRPC, puis corrections : erreur de compilation sur la durée de la mémoire tampon de la page audio et plantage de conversion de type lors du préchargement des commentaires, qui faisait échouer chaque nouvelle tentative instantanément.
+
+- **3.3.4** — cartes de dynamique pour les publications payantes, les mini-applications, les ensembles de sujets et les abonnements ; correction de l'absence totale de vignettes sur le premier écran d'accueil ; reprise des évolutions de PiliNara (barre d'état, reprise du téléchargement après fermeture du processus, mise à jour de media-kit, contournement de l'écran noir sous Wayland, choix de la qualité audio lors de la mise en cache) ; audit de la traduction AI pour tous les textes d'interface ajoutés depuis 3.0.5 ; ce journal.
+
 ## Journal des fonctionnalités héritées (de PiliNara / PiliPlus)
 
 Tout ce qui suit provient de PiliNara (et, transitivement, de PiliPlus) ; PiliBabel ajoute la couche de traduction par IA par-dessus.

@@ -153,6 +153,16 @@ paru -S pilinara-bin         # tai AUR:sta: pilinara-bin (esirakennettu) / pilin
 
 <br/>
 
+## Muutoshistoria: 2.6.x → 3.3.4
+
+- **2.6.x** — äänen välimuisti (erilliset moduulit videolle ja äänelle, viimeisin valinta muistetaan, sisäänkäynnit videon sivulla, pelkän äänen sivulla ja soittimessa; alkuperäinen muoto säilyy; laatu valittavissa) ja lataus laitteelle (oma valikkokohta: ensin video/ääni, sitten laatu; ilman asetettua kansiota avautuu järjestelmän tiedostovalitsin).
+
+- **3.0.x–3.1.0** — itsensä korjaava verkko ulkomailla: isäntäkohtainen kunto ja vaihto ensisijaisen ja varayhteyden välillä, DNS-selvitys välimuistilla, yhteyksien esilämmitys, jäähdytys riskivalvonnan (412) jälkeen, alueen tunnistus ja manuaalinen valinta, CDN-nopeustesti jaettuna API-kerroksen kanssa; soittimen eteenpäinpuskuri mukautuu videoraidan bittinopeuteen.
+
+- **3.2.0–3.3.3** — virallisen sovelluksen tyylinen verkkoalus: pyynnön sormenjälki (buvid/fp/session_id/env), gRPC-isäntien vikasieto, uudelleenyrityksen sieppaaja, isäntäkohtainen samanaikaisten pyyntöjen raja, ensimmäisen syötteen esilataus kylmäkäynnistyksessä, viralliset syötetapahtuman parametrit, CDN-ehdokkaiden järjestys ulkomaisin varavaihtoehdoin; toisen sivun esilataus, rajoitettu kansikuvien esilatausjono, toistourl-osoitteiden esilataus; sen jälkeen dynamiikan (P3) gRPC-piirto sekä korjaukset: äänisivun puskurin keston käännösvirhe ja kommenttien esilatauksen tyyppivirhe, jonka vuoksi jokainen uusi yritys epäonnistui heti.
+
+- **3.3.4** — dynamiikkakortit maksullisille julkaisuille, minisovelluksille, aihekokoelmille ja tilauksille; kotisivun ensimmäisen näkymän kansikuvien puuttuminen korjattu; PiliNaran muutokset otettu mukaan (tilapalkki, latauksen jatkaminen prosessin sulkemisen jälkeen, media-kit-päivitys, mustan videon kierto Waylandissa, äänenlaadun valinta välimuistiin tallennettaessa); AI-käännösten tarkastus kaikelle 3.0.5:n jälkeen lisätylle käyttöliittymätekstille; tämä historia.
+
 ## Peritty ominaisuuslista (PiliNaralta / PiliPluselta)
 
 Alla oleva kaikki on peritty PiliNaralta (ja välillisesti PiliPluselta); PiliBabel lisää päälle tekoälykäännöskerroksen.

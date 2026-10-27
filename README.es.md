@@ -153,6 +153,20 @@ paru -S pilinara-bin         # o vía AUR: pilinara-bin (precompilado) / pilinar
 
 <br/>
 
+## Historial de cambios: 2.6.x → 3.3.4
+
+- **2.6.x** — caché de audio (módulos separados de vídeo y audio, recuerda la última elección, entradas en la página de vídeo, la de solo audio y el reproductor de audio; se conserva el formato original; calidad seleccionable) y descarga al dispositivo (elemento de menú propio: primero vídeo/audio y luego la calidad; si no hay carpeta configurada se abre el selector del sistema).
+
+- **3.0.x** — autorreparación de la red en el extranjero: estado por host con conmutación principal/respaldo, resolución DNS con caché, precalentamiento de conexiones, enfriamiento tras el control de riesgo (412), detección de región con elección manual, prueba de velocidad de CDN compartida con la capa de API.
+
+- **3.1.0** — búfer de avance adaptado al bitrate de la pista de vídeo, además de correcciones del reproductor y del audio.
+
+- **3.2.0** — base de red al estilo de la app oficial: huella de petición (buvid/fp/session_id/env), conmutación de hosts gRPC, interceptor de reintentos, límite de peticiones simultáneas por host, precarga del primer feed en arranque en frío, parámetros oficiales de eventos del feed, orden de candidatos CDN con respaldo en el extranjero; precarga de la segunda página del feed, cola acotada de precarga de portadas, precarga de URL de reproducción; audio y comentarios sobre la misma base.
+
+- **3.3.0–3.3.3** — representación de dinámicas (P3) por gRPC y, después, correcciones: error de compilación en la duración del búfer de la página de audio y fallo de conversión de tipo en la precarga de comentarios que hacía que cada reintento fallara al instante.
+
+- **3.3.4** — tarjetas de dinámica para publicaciones de pago, miniaplicaciones, colecciones de temas y suscripciones; corregida la ausencia total de portadas en la primera pantalla de inicio; sincronización con PiliNara (barra de estado, reanudación de descargas tras cerrar el proceso, actualización de media-kit, solución al vídeo en negro en Wayland, selección de calidad de audio al cachear); auditoría de traducción AI de todos los textos de interfaz añadidos desde 3.0.5; este historial.
+
 ## Registro de funciones heredadas (de PiliNara / PiliPlus)
 
 Todo lo siguiente proviene de PiliNara (y, de forma transitiva, de PiliPlus); PiliBabel añade encima la capa de traducción por IA.

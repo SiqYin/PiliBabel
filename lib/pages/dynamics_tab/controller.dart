@@ -66,6 +66,9 @@ class DynamicsTabController
   }
 
   @override
+  bool handleError(String? errMsg) => keepLastDataOnError(errMsg);
+
+  @override
   Future<void> onReload() {
     scrollController.jumpToTop();
     return super.onReload();

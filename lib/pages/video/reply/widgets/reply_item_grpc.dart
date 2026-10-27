@@ -742,9 +742,17 @@ class ReplyItemGrpc extends StatelessWidget {
                               ),
                             ),
                           ),
+                        // D4.2：展开更多回复的文案与官方对齐——
+                        // 还没展开时给总数，已展开一部分时给「剩余多少条」，
+                        // 点一下继续加载下一页。
                         TextSpan(
-                          text:
-                              '${uiTx('共')}${replyItem.count}${uiTx('条回复')}',
+                          text: replies.isEmpty
+                              ? uiTxP('共 {0} 条回复，点击展开', [
+                                  '${replyItem.count}',
+                                ])
+                              : uiTxP('展开剩余 {0} 条回复', [
+                                  '${replyItem.count - replies.length}',
+                                ]),
                           style: TextStyle(
                             color: colorScheme.primary,
                           ),

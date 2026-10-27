@@ -1,5 +1,10 @@
 import 'package:PiliPlus/grpc/bilibili/app/dynamic/v1.pb.dart'
-    show DynRedReq, TabOffset, DynRedReply;
+    show
+        DynRedReq,
+        TabOffset,
+        DynRedReply,
+        DynVideoReq,
+        DynVideoReqReply;
 import 'package:PiliPlus/grpc/bilibili/app/dynamic/v2.pb.dart'
     show
         OpusType,
@@ -9,7 +14,11 @@ import 'package:PiliPlus/grpc/bilibili/app/dynamic/v2.pb.dart'
         LikeListReply,
         RepostListReq,
         RepostListRsp,
-        RepostType;
+        RepostType,
+        DynAllReq,
+        DynAllReply,
+        DynSpaceReq,
+        DynSpaceRsp;
 import 'package:PiliPlus/grpc/grpc_req.dart';
 import 'package:PiliPlus/grpc/url.dart';
 import 'package:PiliPlus/http/loading_state.dart';
@@ -39,6 +48,80 @@ abstract final class DynGrpc {
       DynRedReply.fromBuffer,
     );
     return res.dataOrNull?.dynRedItem.count.toInt();
+  }
+
+  /// E3.1 动态主 feed（全部/视频等标签页）走 gRPC，参数与官方 App 同源：
+  /// page 从 1 开始，翻页带 offset（服务端下发），localTime 为时区偏移。
+  static Future<LoadingState<DynAllReply>> dynAll({
+    String? offset,
+    int? page,
+    int? localTime,
+    String? from,
+    int? coldStart,
+    String? updateBaseline,
+  }) {
+    return GrpcReq.request(
+      GrpcUrl.dynAll,
+      DynAllReq(
+        offset: offset,
+        page: page,
+        localTime: localTime,
+        from: from,
+        coldStart: coldStart,
+        updateBaseline: updateBaseline,
+      ),
+      DynAllReply.fromBuffer,
+    );
+  }
+
+  /// E3.1 动态视频标签页（DynVideo，官方在 v1 命名空间）
+  static Future<LoadingState<DynVideoReqReply>> dynVideo({
+    String? offset,
+    int? page,
+    int? refreshType,
+    int qn = 32,
+    int fnver = 0,
+    int fnval = 4048,
+    int forceHost = 2,
+    int fourk = 1,
+    String? updateBaseline,
+  }) {
+    return GrpcReq.request(
+      GrpcUrl.dynVideo,
+      DynVideoReq(
+        offset: offset,
+        page: page,
+        refreshType: refreshType,
+        qn: qn,
+        fnver: fnver,
+        fnval: fnval,
+        forceHost: forceHost,
+        fourk: fourk,
+        updateBaseline: updateBaseline,
+      ),
+      DynVideoReqReply.fromBuffer,
+    );
+  }
+
+  /// E3.1 空间页动态（DynSpace）走 gRPC，参数与官方一致
+  static Future<LoadingState<DynSpaceRsp>> dynSpace({
+    required int uid,
+    int page = 1,
+    String? offset,
+    int localTime = 8,
+    String from = 'space',
+  }) {
+    return GrpcReq.request(
+      GrpcUrl.dynSpace,
+      DynSpaceReq(
+        hostUid: Int64(uid),
+        page: Int64(page),
+        historyOffset: offset,
+        localTime: localTime,
+        from: from,
+      ),
+      DynSpaceRsp.fromBuffer,
+    );
   }
 
   static Future<LoadingState<OpusDetailResp>> opusDetail({

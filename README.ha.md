@@ -153,6 +153,16 @@ paru -S pilinara-bin         # ko ta hanyar AUR: pilinara-bin (wanda aka riga ak
 
 <br/>
 
+## Tarihin canje-canje: 2.6.x → 3.3.4
+
+- **2.6.x** — ajiyar sauti (sassan daban na bidiyo da sauti, yana tuna zaɓi na ƙarshe, hanyoyin shiga a shafin bidiyo, shafin sauti kawai da na'urar kunna sauti; ana kiyaye ainihin tsarin fayil; za a iya zaɓar inganci) da saukewa cikin na'urar (wani abu na menu daban: da farko bidiyo/sauti sannan inganci; idan ba a saita babban fayil ba, mai zaɓen fayil na tsarin zai buɗe).
+
+- **3.0.x–3.1.0** — gyaran hanyar sadarwa da kansa a ƙasashen waje: lafiyar kowane uwar garke da sauya tsakanin na farko da na ajiya, warware DNS da ajiya, dumama hanyoyin sadarwa, sanyi bayan kula da haɗari (412), gano yanki da zaɓi da hannu, gwajin saurin CDN da aka raba da Layer ɗin API; buffer na gaba na mai kunnawa yana daidaita da bitrate na bidiyo.
+
+- **3.2.0–3.3.3** — tushen hanyar sadarwa irin na manhajar hukuma: sawun buƙata (buvid/fp/session_id/env), sauya uwar garken gRPC idan ya gaza, mai kama sake gwadawa, iyakar buƙatu a lokaci ɗaya kan kowace uwar garke, riga-kafin loda farkon feed a farkon buɗewa, sigogin abubuwan da suka faru na feed na hukuma, jerin 'yan takarar CDN da madadin ƙasashen waje; riga-kafin shafi na biyu, layin jira mai iyaka na riga-kafin hotunan murfi, riga-kafin hanyoyin kunna bidiyo; sannan nuna dynamics (P3) ta gRPC da gyare-gyare: kuskuren haɗawa kan tsawon buffer a shafin sauti da kuskuren sauya nau'i a riga-kafin tsokaci wanda ya sa kowane sake gwadawa ya gaza nan take.
+
+- **3.3.4** — katunan dynamics na rubuce-rubucen da ake biya, ƙananan manhajoji, tarin jigogi da bin diddigin biyan kuɗi; an gyara matsalar rashin hotunan murfi gaba ɗaya a shafin farko na gida; an shigo da canje-canjen PiliNara (sandunan matsayi, ci gaba da saukewa bayan an rufe tsari, sabunta media-kit, guje wa bidiyo baƙi a Wayland, zaɓin ingancin sauti yayin ajiya); binciken fassarar AI kan duk rubutun fuska da aka ƙara tun 3.0.5; wannan tarihi.
+
 ## Rahoton fasalolin da aka gada (daga PiliNara / PiliPlus)
 
 Abin da ke ƙasa duk ana ɗauke shi daga PiliNara (kuma, ta hanyar, PiliPlus); PiliBabel ta ƙara layin fassara na AI a saman.

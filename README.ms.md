@@ -153,6 +153,16 @@ paru -S pilinara-bin         # atau melalui AUR: pilinara-bin (siap bina) / pili
 
 <br/>
 
+## Senarai perubahan: 2.6.x → 3.3.4
+
+- **2.6.x** — cache audio (modul berasingan untuk video dan audio, mengingati pilihan terakhir, ada pintasan pada halaman video, halaman audio sahaja dan pemain audio; format asal dikekalkan; kualiti boleh dipilih) dan muat turun ke peranti (item menu tersendiri: pilih video/audio dahulu, kemudian kualiti; jika folder belum ditetapkan, pemilih fail sistem akan terbuka).
+
+- **3.0.x–3.1.0** — pemulihan rangkaian automatik di luar negara: kesihatan setiap hos dengan pertukaran utama/sandaran, penyelesaian DNS dengan cache, pemanasan sambungan, penyejukan selepas kawalan risiko (412), pengesanan wilayah dengan pilihan manual, ujian kelajuan CDN dikongsi dengan lapisan API; penimbal ke hadapan pemain kini mengikut bitrate trek video.
+
+- **3.2.0–3.3.3** — asas rangkaian bergaya aplikasi rasmi: cap jari permintaan (buvid/fp/session_id/env), failover hos gRPC, interceptor cuba semula, had permintaan serentak setiap hos, pramuat suapan pertama semasa permulaan sejuk, parameter peristiwa suapan rasmi, susunan calon CDN dengan sandaran luar negara; pramuat halaman kedua, baris gilir pramuat kulit hadapan yang terhad, pramuat URL main; kemudian pemaparan dynamics (P3) melalui gRPC dan pembaikan: ralat kompilasi tempoh penimbal pada halaman audio dan ralat penukaran jenis dalam pramuat komen yang menyebabkan setiap cubaan semula gagal serta-merta.
+
+- **3.3.4** — kad dynamics untuk kiriman berbayar, aplikasi mini, set topik dan langganan; dibaiki masalah skrin pertama laman utama yang langsung tiada kulit hadapan; perubahan daripada PiliNara diambil masuk (bar status, muat turun bersambung selepas proses ditutup, kemas kini media-kit, mengelak video hitam dalam Wayland, pemilihan kualiti audio semasa cache); audit terjemahan AI untuk semua teks antara muka yang ditambah sejak 3.0.5; senarai ini.
+
 ## Log ciri yang diwarisi (daripada PiliNara / PiliPlus)
 
 Semua di bawah diwarisi daripada PiliNara (dan, secara tidak langsung, PiliPlus); PiliBabel menambah lapisan terjemahan AI di atasnya.

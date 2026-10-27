@@ -43,8 +43,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           flutter analyze --no-pub > /tmp/an.txt 2>&1 || true
-          tail -c 55000 /tmp/an.txt > /tmp/an_tail.txt
-          printf '### flutter analyze output\n\n```\n%s\n```\n' "$(cat /tmp/an_tail.txt)" > /tmp/body.md
+          grep -E 'error( .|$)' /tmp/an.txt > /tmp/an_err.txt || true
+          grep -cE 'error( .|$)' /tmp/an.txt > /tmp/an_cnt.txt || true
+          tail -c 20000 /tmp/an_err.txt > /tmp/an_err_tail.txt
+          printf '### flutter analyze errors: %s\n\n```\n%s\n```\n' "$(cat /tmp/an_cnt.txt)" "$(cat /tmp/an_err_tail.txt)" > /tmp/body.md
           gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/comments" -F body=@/tmp/body.md || true
           echo "---- tail ----"
           tail -n 80 /tmp/an.txt

@@ -267,7 +267,7 @@ class DownloadManager {
               'user-agent': userAgent ?? BrowserUa.pc,
             },
             responseType: ResponseType.stream,
-            receiveTimeout: const Duration(seconds: 20),
+            receiveTimeout: HttpTimeout.download,
             // 注意：不能把 416 当成功——它的响应体是错误文本，会被写进文件
             // 污染断点（音频小而常续传，最易中招 → 表现为"一直断连"）。
             validateStatus: (status) =>

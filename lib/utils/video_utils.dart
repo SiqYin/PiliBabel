@@ -1,8 +1,11 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 
+import 'package:PiliPlus/models/common/video/audio_quality.dart';
 import 'package:PiliPlus/models/common/video/cdn_type.dart';
 import 'package:PiliPlus/models/common/video/video_decode_type.dart';
+import 'package:PiliPlus/models/video/play/url.dart'
+    show AudioItem, VideoItem, FormatItem;
 import 'package:PiliPlus/models_new/live/live_room_play_info/codec.dart';
 import 'package:PiliPlus/utils/cdn_node_store.dart';
 import 'package:PiliPlus/utils/cdn_speed_test.dart';
@@ -10,6 +13,7 @@ import 'package:PiliPlus/utils/cdn_region.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
+import 'package:PiliPlus/utils/host_health.dart';
 
 abstract final class VideoUtils {
   static CDNService cdnService = Pref.defaultCDNService;
@@ -105,6 +109,25 @@ abstract final class VideoUtils {
     // 无实测结果（冷启动首次播放等）：按静态优先级挑，Akamai 最优先
     candidates.sort((a, b) => _overseasTier(a).compareTo(_overseasTier(b)));
     return candidates.first;
+  }
+
+  /// A4.3 首帧优先：冷启动（还没有任何实测分）时，给候选一个有限预算的探测窗口，
+  /// 谁先回来就用谁，再交给播放器；已有实测分、或超出预算就直接返回，不拖起播。
+  ///
+  /// 调用点放在取流回来之后、选流之前，等待正好与播放器初始化重叠，等于不额外
+  /// 增加起播延迟；超预算时用已经探到的那部分分（CdnSpeedTest 每探完一台就落分）。
+  static Future<void> awaitColdProbe(
+    Iterable<String> urls, {
+    Duration budget = const Duration(milliseconds: 1500),
+  }) async {
+    if (!Pref.cdnSpeedTest || CdnSpeedTest.hasResult) return;
+    final candidates = urls.where((e) => e.isNotEmpty).toList(growable: false);
+    if (candidates.isEmpty) return;
+    try {
+      await CdnSpeedTest.test(candidates).timeout(budget);
+    } catch (_) {
+      // 超预算：带着已有结果往下走
+    }
   }
 
   /// 下载专用：把 B 站**大陆** upos 镜像直链改写成 Akamai 全球边缘，作为额外候选线路。
@@ -224,13 +247,21 @@ abstract final class VideoUtils {
     }
     // 有实测结果时优先实测最优。测速只在海外分支触发过，所以大陆用户的
     // _score 为空、bestOf 返回 null，行为与改动前完全一致。
+    // C2.2：主机健康度（含 A4.2 从测速共享进来的实测速率）也纳入选流。
+    // 音频与视频走的是同一个 _firstUsable，所以两边共用同一套候选结论：
+    // 正在冷却的主机（412 / 连续失败）先排除，除非全都在冷却。
+    final healthy = usable.where((url) {
+      final host = hostOf(url);
+      return host == null || !HostHealth.instance.isCoolingDown(host);
+    }).toList();
+    final pool = healthy.isEmpty ? usable : healthy;
     if (Pref.cdnSpeedTest) {
-      final best = CdnSpeedTest.bestOf(usable);
+      final best = CdnSpeedTest.bestOf(pool);
       if (best != null) {
         return best;
       }
     }
-    return usable.first;
+    return pool.first;
   }
 
   /// [customHost] 显式指定自定义节点（节点测速用）；未传时按 [applyCustomCDN]
@@ -418,5 +449,76 @@ abstract final class VideoUtils {
       }
     }
     return VideoDecodeFormatType.fromString(codecs.first);
+  }
+
+  static int _findAvailableVideoQuality(
+    List<VideoItem> videoList,
+    List<int>? acceptQuality,
+    int preferQuality,
+  ) {
+    if (acceptQuality != null && acceptQuality.isNotEmpty) {
+      return acceptQuality.findTargetMedia((e) => e, preferQuality);
+    }
+
+    return videoList
+        .findTargetMedia((e) => e.quality.code, preferQuality)
+        .quality
+        .code;
+  }
+
+  static (
+    int targetQuality,
+    FormatItem targetFormat,
+    VideoDecodeFormatType targetDecode,
+    VideoItem targetVideo,
+  )
+  findTargetVideo(
+    List<VideoItem> videoList,
+    int preferQuality,
+    List<int>? acceptQuality,
+    List<FormatItem> supportFormats,
+    List<VideoDecodeFormatType> preferCodecs,
+  ) {
+    assert(videoList.isNotEmpty);
+
+    final targetQuality = _findAvailableVideoQuality(
+      videoList,
+      acceptQuality,
+      preferQuality,
+    );
+
+    final targetFormat = supportFormats.firstWhere(
+      (e) => e.quality == targetQuality,
+      orElse: () => supportFormats.first,
+    );
+
+    final targetDecode = VideoUtils.selectCodec(
+      targetFormat.codecs!,
+      preferCodecs,
+    );
+
+    final targetQaVideoList = videoList
+        .where((e) => e.quality.code == targetQuality)
+        .toList();
+
+    final targetVideo = targetQaVideoList.firstWhere(
+      (e) => targetDecode.codes.any(e.codecs!.startsWith),
+      orElse: () => targetQaVideoList.first,
+    );
+
+    return (targetQuality, targetFormat, targetDecode, targetVideo);
+  }
+
+  static AudioItem findTargetAudio(
+    List<AudioItem> audioList,
+    int preferQuality,
+  ) {
+    assert(audioList.isNotEmpty);
+
+    final preferredRank = AudioQuality.fromCode(preferQuality).rank;
+    return audioList.findTargetMedia(
+      (audio) => AudioQuality.fromCode(audio.id).rank,
+      preferredRank,
+    );
   }
 }

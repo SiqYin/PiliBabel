@@ -12,4 +12,16 @@ abstract final class ConnectivityUtils {
       return true;
     }
   }
+
+  /// 是否正在使用蜂窝网络（仅移动端有意义，其余平台恒为 false）。
+  static Future<bool> get isCellular async {
+    try {
+      return PlatformUtils.isMobile &&
+          (await Connectivity().checkConnectivity()).contains(
+            ConnectivityResult.mobile,
+          );
+    } catch (_) {
+      return false;
+    }
+  }
 }

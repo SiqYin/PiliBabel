@@ -153,6 +153,16 @@ paru -S pilinara-bin         # eða í gegnum AUR: pilinara-bin (forbyggð) / pi
 
 <br/>
 
+## Breytingaskrá: 2.6.x → 3.3.4
+
+- **2.6.x** — hljóðskyndiminni (aðskildir einingar fyrir myndband og hljóð, man síðustu val, inngangar á myndbandssíðu, hljóðsíðu og í hljóðspilara; upprunalegt snið varðveitt; gæði valanleg) og niðurhal í tækið (sér valmyndaratriði: fyrst myndband/hljóð, svo gæði; ef engin mappa er stillt opnast skráarval kerfisins).
+
+- **3.0.x–3.1.0** — sjálflögrun netkerfis erlendis: heilsa hvers hýsils með skiptingu milli aðal- og varaleiðar, DNS-upplausn með skyndiminni, forhitun tenginga, kæling eftir áhættustýringu (412), svæðisgreining með handvirkri vali, CDN-hraðapróf deilt með API-laginu; frambuffur spilarans fylgir nú bitahraða myndbandsrásar.
+
+- **3.2.0–3.3.3** — netgrunnur í stíl opinberu appinnar: fingrafar beiðni (buvid/fp/session_id/env), varaskipti gRPC-hýsla, endurtekningarsía, takmörk samhliða beiðna á hvern hýsil, forhleðsla fyrstu straums við kalt ræsingar, opinberir viðburðarfæribreytur straums, röð CDN-frambjóðenda með erlendum varaleiðum; forhleðsla annarrar síðu, takmörkuð biðröð fyrir forhleðslu forsíðumynda, forhleðsla spilunarslóða; síðan teikning dynamics (P3) um gRPC og lagfæringar: þýðingarvilla á lengd buffurs á hljóðsíðu og tegundarvilla í forhleðslu athugasemda sem gerði hverja tilraun að falla samstundis.
+
+- **3.3.4** — dynamics-spjöld fyrir greiddar færslur, smáforrit, efnasöfn og áskriftir; löguð vandamál þar sem forsíðumyndir birtust alls ekki á fyrstu skjá heimasíðu; breytingar frá PiliNara teknar inn (stöðustika, niðurhal heldur áfram eftir að ferli lokast, uppfærsla media-kit, sniðganga svarts myndbands í Wayland, val á hljóðgæðum við skyndiminni); endurskoðun AI-þýðinga á öllum viðmótstexta sem bætt var við frá 3.0.5; þessi skrá.
+
 ## Erfða eiginleikayfirlit (frá PiliNara / PiliPlus)
 
 Allt sem fyrir neðan er erfð frá PiliNara (og, í öðru lagi, frá PiliPlus); PiliBabel bætir gervigreindarþýðingarlagerinu ofan á.

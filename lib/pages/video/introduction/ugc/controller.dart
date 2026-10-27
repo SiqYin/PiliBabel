@@ -45,11 +45,35 @@ import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
+import 'package:PiliPlus/utils/net_status.dart';
 import 'package:get/get.dart';
 
 class UgcIntroController extends CommonIntroController with ReloadMixin {
   late final RxBool expand;
   final RxBool status = true.obs;
+
+  /// 网络恢复后自动补拉（A5.2）：详情页没拿到数据时挂上监听，网络恢复就重查
+  /// 一次，用户不用手动下拉。
+  bool _introLoaded = false;
+  void Function()? _netRestoreRetry;
+
+  void _armNetRestoreRetry() {
+    _netRestoreRetry ??= _onNetRestore;
+    NetStatus.restored.removeListener(_netRestoreRetry!);
+    NetStatus.restored.addListener(_netRestoreRetry!);
+  }
+
+  void _disarmNetRestoreRetry() {
+    final retry = _netRestoreRetry;
+    if (retry != null) {
+      NetStatus.restored.removeListener(retry);
+    }
+  }
+
+  void _onNetRestore() {
+    if (isClosed || _introLoaded) return;
+    queryVideoIntro();
+  }
 
   // up主粉丝数
   final Rx<MemberCardInfoData> userStat = MemberCardInfoData().obs;
@@ -116,6 +140,8 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
           ..listOrder = videoDetail.value.listOrder;
       }
       videoDetail.value = response;
+      _introLoaded = true;
+      _disarmNetRestoreRetry();
       try {
         if (videoDetailCtr.cover.value.isEmpty ||
             (videoDetailCtr.videoUrl.isNullOrEmpty &&
@@ -137,6 +163,9 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
     } else {
       res.toast();
       status.value = false;
+      // 网络恢复后自动补拉（A5.2）
+      _introLoaded = false;
+      _armNetRestoreRetry();
     }
 
     if (isLogin) {
@@ -564,6 +593,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
         '[UgcIntroController] onClose() called, isEnteringPip: $isEnteringPip',
       );
     }
+    _disarmNetRestoreRetry();
     if (isEnteringPip) return;
     super.onClose();
   }
