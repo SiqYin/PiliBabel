@@ -97,6 +97,17 @@ class DnsProxy {
     Socket? upstream;
     Timer? idle;
 
+    /// 头部已经解析完、但上游 socket 还没就绪这段时间里收到的字节。
+    ///
+    /// 不能直接丢：CONNECT 分支里 `_dispatch` 会先回 200 再返回上游 socket，
+    /// 客户端一看到 200 就立刻发 TLS ClientHello，而这些字节可能比
+    /// `await _dispatch(...)` 的返回更早到达（`client.listen` 的回调是 async，
+    /// 事件循环不会等它）。以前这里 `if (up == null) return;` 直接丢包，
+    /// 表现就是经本机代理的 HTTPS 请求偶发握手失败——GitHub 更新检查正好走
+    /// 这条链路（HTTP/2 通道由 ConnectionManager 统一指向本代理）。
+    /// 现在先攒起来，等上游就绪后按序补发。
+    final pending = <List<int>>[];
+
     void touch() {
       idle?.cancel();
       idle = Timer(_idleTimeout, () {
@@ -122,7 +133,11 @@ class DnsProxy {
         touch();
         if (headerParsed) {
           final up = upstream;
-          if (up == null) return;
+          if (up == null) {
+            // 上游还没就绪：先攒着，稍后补发（见 pending 的注释）
+            pending.add(chunk);
+            return;
+          }
           up.add(chunk);
           return;
         }
@@ -166,9 +181,15 @@ class DnsProxy {
             },
           ),
         );
+        // 补发顺序必须严格按到达先后，否则 TLS 握手会错位：
+        // 先发与头部同一批到达的 rest，再发上游就绪前攒下的 pending。
         if (rest.isNotEmpty) {
           up.add(rest);
         }
+        for (final queued in pending) {
+          up.add(queued);
+        }
+        pending.clear();
       },
       onError: (Object _) => closeAll(),
       onDone: closeAll,
