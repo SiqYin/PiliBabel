@@ -1,9 +1,14 @@
 ### PiliBabel v3.3.15
 
-**Stability follow-up and documentation completion.**
+**Urgent fix for the seek-to-unbuffered-position crash/black-screen introduced in v3.3.14**, plus stability follow-up and documentation completion.
 
-**Media proxy now hard-wired to direct connections.** Since v3.3.14 enabled multi-connection segmented transfer by default, the upstream connections opened by `MediaProxy` were still subject to the global `HttpOverrides`. If you manually turned off "network direct connection" (routing through the self-resolver proxy), each of the N concurrent range requests would have become its own tunnel through the in-app DNS proxy — risking overwhelming that proxy and starving data requests (the same class of failure as v3.3.11). Its upstream client now sets `findProxy = DIRECT` explicitly, fully decoupling it from the data path.
+**Seeking caused a crash / stuck-at-99% / "poor network" line switch jumping back to 00:00 (introduced in v3.3.14).** Two causes:
 
-**README documentation completed (backlog items 84–86).** All 44 language READMEs now carry a note that the documentation is written and maintained with AI translation tooling, with the English version as the reference. Also verified that the "offline audio caching / download to local" sections exist in every language version.
+1. `MediaProxy`'s segmented requests previously only rejected responses with status ≥400 — they never verified that each range request actually returned **206 + the requested byte range**. bilibili's CDN occasionally answers a range request with **200 full content** (i.e. ignores the Range header), which made the whole file land in one segment, so the bytes written didn't match `Content-Length` / `Content-Range`. The player failed to parse it, treated it as a network problem, switched lines, and jumped back to 00:00. Range responses are now strictly validated as 206; if validation fails the request falls back to a plain single-connection pass-through.
+2. Seeking re-issues a Range request for the same media URL while the old request is still reading upstream (stuck at "99%" or black screen), competing for bandwidth and pushing the new request into a timeout. Requests are now mutually exclusive per upstream URL: a new request terminates the older one for the same media URL.
+
+**Media proxy upstream hard-wired to direct connections.** `MediaProxy`'s upstream client now explicitly sets `findProxy = DIRECT`, so turning off "network direct connection" can't turn its N concurrent range requests into N tunnels through the in-app resolver proxy (the same class of failure as v3.3.11).
+
+**README documentation completed (backlog items 84–86).** All 44 language READMEs now carry an AI-translation note; also verified the offline audio cache / download-to-local sections exist in every language.
 
 Downloads are below.

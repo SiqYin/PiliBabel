@@ -27,6 +27,9 @@ class MediaProxy {
   static int _port = 0;
   static Future<void>? _starting;
 
+  /// 每个上游媒体地址当前在飞的请求（拖动时用来终止旧请求）。
+  static final Map<String, HttpClient> _active = <String, HttpClient>{};
+
   /// 小于这个长度不值得分片（一次往返就够了）
   static const int _minSplitBytes = 256 * 1024;
 
@@ -113,6 +116,13 @@ class MediaProxy {
     final client = HttpClient()
       ..connectionTimeout = const Duration(seconds: 8)
       ..findProxy = ((_) => 'DIRECT');
+    // 拖动时内核会为同一个媒体地址重新发 Range 请求，旧请求往往还挂在
+    // 「99% / 一直黑屏」的状态上继续读上游，和新请求抢带宽，甚至抢到把新请求
+    // 拖到超时、被内核判成「网络差 → 自动换线 → 跳回 00:00」。
+    // 这里按「同一上游地址」互斥：新请求起来时直接终止同类旧请求。
+    HttpClient? previous;
+    // 提到 try 外：finally 清理登记表时要用
+    Uri? upstream;
     try {
       final q = request.uri.queryParameters;
       if (_token == null || q['t'] != _token) {
@@ -126,13 +136,24 @@ class MediaProxy {
         await resp.close();
         return;
       }
-      final upstream = Uri.parse(utf8.decode(base64Url.decode(raw)));
+      final upstreamUri = Uri.parse(utf8.decode(base64Url.decode(raw)));
+      upstream = upstreamUri;
+
+      // 终止同一上游地址的旧请求（拖动发起的同名请求）
+      previous = _active[upstreamUri.path];
+      _active[upstreamUri.path] = client;
+      if (previous != null && !identical(previous, client)) {
+        try {
+          previous.close(force: true);
+        } catch (_) {}
+      }
+
       final (start, end) = _parseRange(
         request.headers.value(HttpHeaders.rangeHeader),
       );
 
       // 先探一次拿总长度（bytes=0-0 很便宜），顺便确认上游支不支持 Range
-      final probe = await _open(client, upstream, 'bytes=0-0');
+      final probe = await _open(client, upstreamUri, 'bytes=0-0');
       final total = probe == null ? null : _totalOf(probe);
       final acceptRanges = probe != null &&
           (probe.headers.value(HttpHeaders.acceptRangesHeader)?.contains(
@@ -154,7 +175,7 @@ class MediaProxy {
           length == null ||
           length <= _minSplitBytes) {
         // 不分片：整体回源（保持内核原本的单连接行为）
-        await _pipeSingle(resp, client, upstream, start, end, contentType);
+        await _pipeSingle(resp, client, upstreamUri, start, end, contentType);
         return;
       }
 
@@ -168,15 +189,27 @@ class MediaProxy {
           break;
         }
         final e = min(lastByte, s + chunk - 1);
-        final r = await _open(client, upstream, 'bytes=$s-$e');
-        if (r == null) {
+        final r = await _open(client, upstreamUri, 'bytes=$s-$e');
+        // 关键校验：分段请求必须真的拿到 206 + 对应区间。
+        // B 站 CDN 偶尔对带 Range 的请求回 200 全量（等于忽略 Range），
+        // 若不加校验就会把整个文件塞进其中一段 → 回吐的字节数与
+        // Content-Length/Content-Range 对不上 → 内核解析失败、被判定为
+        // 「网络差」而自动换线并跳回 00:00（拖动 seek 崩溃的直接原因）。
+        if (r == null || r.statusCode != HttpStatus.partialContent) {
+          if (r != null) unawaited(r.drain<void>().catchError((_) {}));
           for (final p in parts) {
             unawaited(p.drain<void>().catchError((_) {}));
           }
-          await _redirect(resp, upstream);
+          // 分段拿不到可靠区间就整体回源，交给内核按单连接处理
+          await _pipeSingle(resp, client, upstreamUri, start, end, contentType);
           return;
         }
         parts.add(r);
+      }
+
+      if (parts.isEmpty) {
+        await _pipeSingle(resp, client, upstreamUri, start, end, contentType);
+        return;
       }
 
       resp.statusCode = HttpStatus.partialContent;
@@ -196,6 +229,11 @@ class MediaProxy {
         await resp.close();
       } catch (_) {}
     } finally {
+      // 只有仍是最新一个请求时才摘掉登记，避免把后到的请求误删
+      final key = upstream?.path;
+      if (key != null && identical(_active[key], client)) {
+        _active.remove(key);
+      }
       client.close(force: true);
     }
   }
