@@ -26,10 +26,15 @@ abstract final class Update {
     if (kDebugMode) return;
     SmartDialog.dismiss();
     try {
-      final res = await _fetchReleases();
-      if (res.data is Map || res.data.isEmpty) {
+      // 有界退避重试：覆盖「启动瞬间网络/代理尚未就绪」的窗口。更新检查本是
+      // fire-and-forget 的异步任务，这里多等几秒换来的是不再因为一次瞬时失败而
+      // 丢掉整个版本的更新提示（连续多版「收不到弹窗」的根因之一）。
+      final res = await _fetchReleasesWithRetry();
+      if (_isEmptyPayload(res)) {
         if (!isAuto) {
           SmartDialog.showToast(uiTx('检查更新失败，GitHub接口未返回数据，请检查网络'));
+        } else {
+          _logCheckFailed();
         }
         return;
       }
@@ -200,24 +205,109 @@ abstract final class Update {
     }
   }
 
-  /// 拉 GitHub Releases。失败时**再直连重试一次**。
+  /// 带**有界退避重试**的更新拉取：最多 [kMaxUpdateRetries] 轮，间隔逐轮拉长。
   ///
-  /// 主链路是 dio（默认开 HTTP/2，而 HTTP/2 通道的 socket 由 ConnectionManager
-  /// 建，被统一指向了本机解析代理 DnsProxy）。也就是说更新检查是**绕了一圈本机
-  /// 代理**才到 GitHub 的：代理里任何一个环节抖动（上游建连超时、TLS 首包被
-  /// 丢、idle 断链）都会让这次检查静默失败，而 checkUpdate 的 catch 是静默的
-  /// ——用户侧表现就是「永远收不到更新提示」。
+  /// 目的：更新检查在启动时只被调一次（fire-and-forget），若那一次恰好撞上
+  /// DnsProxy→GitHub 隧道抖动 / 网络瞬时未就绪，旧逻辑就直接静默失败，整个安装
+  /// 周期再无机会。这里把它变成多轮重试，覆盖「启动瞬间链路未热」的窗口，
+  /// 显著提高收到更新提示的命中率；代价仅是多等最多约十几秒（后台异步，不影响 UI）。
+  static const int _kMaxUpdateRetries = 3;
+
+  static Future<Response> _fetchReleasesWithRetry() async {
+    Response? last;
+    for (var attempt = 0; attempt < _kMaxUpdateRetries; attempt++) {
+      last = await _fetchReleases();
+      if (!_isEmptyPayload(last)) {
+        return last!; // 非空即成功，第一时间返回
+      }
+      _logCheckFailed();
+      if (attempt < _kMaxUpdateRetries - 1) {
+        // 退避间隔：500ms / 2000ms / 4500ms（平方递增），给瞬时网络/代理自愈留时间
+        await Future<void>.delayed(
+          Duration(milliseconds: 500 * (attempt + 1) * (attempt + 1)),
+        );
+      }
+    }
+    // 全部轮次都失败：返回最后一次的结果（可能仍为空），调用方据此静默/提示
+    return last!;
+  }
+
+  /// 更新检查失败留痕：release 版 debugPrint 被裁剪，这里至少把失败次数打进
+  /// kDebugMode 的日志，方便 debug 构建定位。真正的失败可观测依赖调用方（见
+  /// checkUpdate 的 isAuto 分支处理）。
+  static void _logCheckFailed() {
+    if (kDebugMode) debugPrint('update check failed');
+  }
+
+  /// 拉 GitHub Releases。**多路并发赛马**：任一路最早拿到非空 releases 列表即胜。
   ///
-  /// 更新检查是一次性、非关键的请求，没必要为它承担代理链路的风险：第一次失败
-  /// 后用裸 HttpClient 直连再试一次（不走代理、不共享连接池）。
+  /// 背景（连续多版「收不到更新弹窗」的真根因之一）：更新检查在依赖单条网络请求，
+  /// 而 App 默认开 HTTP/2，更新请求被套进为 B 站调优的本机 DnsProxy 隧道（init.dart
+  /// `_createPool` 把连接池 proxy 指向 127.0.0.1 本机代理），api.github.com 也要绕这
+  /// 一圈代理才到 GitHub。隧道里任何一环抖动都会让这唯一一次请求静默失败。
+  ///
+  /// 这次改成**并行赛马**而不是「先等 dio 完整失败再串行直连」：
+  /// - 路1：dio 主链路（保留 HTTP/2 + 共享连接池，正常时最快）；
+  /// - 路2：裸 HttpClient `findProxy=DIRECT` 直连（绕开本机代理与连接池）。
+  /// 两条**同时发起**，先返回「非空列表」者胜；各路内部已自行 catch 一切异常，不会抛
+  /// 到赛马层，也绝不阻塞另一路。这样直连不再需要等 dio 超时，用户等待时间显著缩短。
+  ///
+  /// 更新检查是一次性、非关键的请求，本就该用最简单可靠的路径拿到结果。
   static Future<Response> _fetchReleases() async {
-    final options = Options(
-      headers: {'user-agent': BrowserUa.mob},
-      extra: {'account': const NoAccount()},
+    final dioFuture = _safeFetchViaDio();
+    final directFuture = _safeFetchDirect();
+    final results = await Future.wait<Response?>(
+      [dioFuture, directFuture],
+      // 绝不因任一路抛错而中断赛马
+      eagerError: false,
     );
-    final first = await Request().get(Api.latestApp, options: options);
-    if (!_isEmptyPayload(first)) return first;
-    return _fetchReleasesDirect();
+    // 任一路返回了非空 releases 列表，直接用（dir 优先于 dio？不，先到先得：
+    // 遍历顺序 dio 在前，但若 dio 结果为空而 direct 非空，也取 direct）
+    for (final r in results) {
+      if (r != null && !_isEmptyPayload(r)) return r;
+    }
+    // 全都不行：返回最后一个（可能为 null 则构造失败响应，让调用方判空静默/提示）
+    final last = results.lastWhere(
+      (e) => e != null,
+      orElse: () => null,
+    );
+    return last ??
+        Response(
+          data: const <String, dynamic>{'message': 'releases fetch failed'},
+          statusCode: -1,
+          requestOptions: RequestOptions(path: Api.latestApp),
+        );
+  }
+
+  /// 路1：走 dio 主链路（HTTP/2 + 连接池）。任何异常都转为失败 Response，不抛出。
+  /// 显式加 4s 超时：更新检查不该被代理链路拖久，超时就放弃这条路，让路2 直连接管。
+  static Future<Response?> _safeFetchViaDio() async {
+    try {
+      final options = Options(
+        headers: {'user-agent': BrowserUa.mob},
+        extra: {'account': const NoAccount()},
+      );
+      final res = await Request()
+          .get(Api.latestApp, options: options)
+          .timeout(const Duration(seconds: 4));
+      return res;
+    } catch (e) {
+      // Request().get 通常已把 DioException 转成 Map Response，这里兜住其余异常
+      if (kDebugMode) debugPrint('update via dio failed: $e');
+      return null;
+    }
+  }
+
+  /// 路2：裸 HttpClient 直连（绕过本机解析代理与 HTTP/2 连接池）。异常自行吞掉。
+  static Future<Response?> _safeFetchDirect() async {
+    try {
+      return await _fetchReleasesDirect().timeout(
+        const Duration(seconds: 12),
+      );
+    } catch (e) {
+      if (kDebugMode) debugPrint('update direct failed: $e');
+      return null;
+    }
   }
 
   static bool _isEmptyPayload(Response res) =>

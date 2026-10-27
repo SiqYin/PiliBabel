@@ -1,10 +1,10 @@
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/style.dart';
-import 'package:PiliPlus/common/widgets/image/retry_network_image.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:material_ui/material_ui.dart';
 
 class NetworkImgLayer extends StatelessWidget {
@@ -70,9 +70,7 @@ class NetworkImgLayer extends StatelessWidget {
     } else {
       memCacheHeight = height.cacheSize(context);
     }
-    // 首载失败自动重试：此前 errorBuilder 直接落回占位图就再也不动，
-    // 一张图抖动一次就要用户自己下拉刷新/重进页面才可能出来。
-    return RetryNetworkImage(
+    return CachedNetworkImage(
       imageUrl: ImageUtils.thumbnailUrl(src, quality),
       width: width,
       height: height,
@@ -83,11 +81,10 @@ class NetworkImgLayer extends StatelessWidget {
       fadeOutDuration: fadeOutDuration,
       fadeInDuration: fadeInDuration,
       filterQuality: FilterQuality.low,
-      placeholder: () =>
+      placeholder: (_, _) =>
           getPlaceHolder?.call() ??
           _placeholder(context, isEmote: isEmote, isAvatar: isAvatar),
-      errorPlaceholder: () =>
-          getPlaceHolder?.call() ??
+      errorBuilder: (_, _, _) =>
           _placeholder(context, isEmote: isEmote, isAvatar: isAvatar),
       colorBlendMode: reduce ? BlendMode.modulate : null,
       color: reduce ? reduceLuxColor : null,
