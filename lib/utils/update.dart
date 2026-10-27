@@ -88,7 +88,7 @@ abstract final class Update {
                           style: const TextStyle(fontSize: 20),
                         ),
                         const SizedBox(height: 8),
-                        Text('${uiTx(data['body'] ?? '')}'),
+                        Text(uiTx(data['body'] ?? '')),
                         TextButton(
                           onPressed: () => PageUtils.launchURL(
                             '${Constants.sourceCodeUrl}/commits/main',

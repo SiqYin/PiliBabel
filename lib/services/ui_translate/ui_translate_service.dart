@@ -9,7 +9,6 @@ import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
-import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/io.dart';
@@ -803,12 +802,12 @@ class UiTranslateService extends GetxService {
     final fallback = imageUrl.startsWith('http://')
         ? 'https://${imageUrl.substring(7)}'
         : imageUrl;
-    final _candidateUrls = [_smallImageUrl(imageUrl), fallback];
+    final candidateUrls = [_smallImageUrl(imageUrl), fallback];
     // 两轮尝试：先全部直连（app 里的封面图就是直连加载的，实测能通），再全部
     // 走系统代理兜底。之前一律走代理，代理到图床这一段不通时就一直失败，
     // 表现就是封面正常、只有图片翻译报 Network is unreachable。
-    for (var _i = 0; _i < _candidateUrls.length * 2; _i++) {
-      final url = _candidateUrls[_i % _candidateUrls.length];
+    for (var idx = 0; idx < candidateUrls.length * 2; idx++) {
+      final url = candidateUrls[idx % candidateUrls.length];
       final client =
           _i < _candidateUrls.length ? _uiTxDirectClient() : _uiTxClient();
       try {

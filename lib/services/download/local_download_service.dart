@@ -548,8 +548,9 @@ class LocalDownloadService extends GetxService {
         return;
       }
     }
-    record.done = true;
-    record.failed = false;
+    record
+      ..done = true
+      ..failed = false;
     if (record.totalBytes > 0) {
       record.receivedBytes = record.totalBytes;
     }
@@ -616,7 +617,7 @@ class LocalDownloadService extends GetxService {
       }
       final item = audios.firstWhere((e) => e.id == pick);
       final raw = <String>[
-        if (item.baseUrl case final b?) b,
+        ?item.baseUrl,
         ...?item.backupUrl,
       ];
       final mainUrl = VideoUtils.getCdnUrl(
@@ -687,8 +688,9 @@ class LocalDownloadService extends GetxService {
           SmartDialog.showToast(uiTxP('{0} 下载失败', [title]));
           return;
         }
-        record.done = true;
-        record.failed = false;
+        record
+          ..done = true
+          ..failed = false;
         if (record.totalBytes > 0) {
           record.receivedBytes = record.totalBytes;
         }

@@ -240,7 +240,7 @@ class ReplyItemGrpc extends StatelessWidget {
                     ),
                     if (replyItem.replyControl.hasLocation())
                       Text(
-                        ' • ${uiTx(replyItem.replyControl.location ?? '')}',
+                        ' • ${uiTx(replyItem.replyControl.location)}',
                         style: TextStyle(
                           fontSize: 11,
                           color: colorScheme.outline,
@@ -678,7 +678,7 @@ class ReplyItemGrpc extends StatelessWidget {
                             ),
                             style: TextStyle(color: colorScheme.primary),
                             recognizer: NoDeadlineTapGestureRecognizer()
-                              ..onTap = () async {
+                              ..onTap = () {
                                 feedBack();
                                 Get.toNamed(
                                   '/member?mid=${childReply.member.mid}',
@@ -825,7 +825,7 @@ class ReplyItemGrpc extends StatelessWidget {
         TextSpan(
           text: isCv
               ? uiTxComment('[笔记] ', id)
-              : uiTxComment(url.title ?? '', id),
+              : uiTxComment(url.title, id),
           style: TextStyle(color: colorScheme.primary),
           recognizer: NoDeadlineTapGestureRecognizer()
             ..onTap = () {

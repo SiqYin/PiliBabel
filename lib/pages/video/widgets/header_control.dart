@@ -2047,7 +2047,7 @@ class HeaderControlState extends State<HeaderControl>
                         barrierLabel: 'dismiss',
                         barrierColor: Colors.black54,
                         transitionDuration: const Duration(milliseconds: 220),
-                        pageBuilder: (ctx, _, __) => Obx(
+                        pageBuilder: (ctx, _, _) => Obx(
                           () => AlertDialog(
                             content: Text(
                               uiTx(UiTranslateService.danmakuTranslateWarning),
