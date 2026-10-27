@@ -81,11 +81,13 @@ class AudioCacheItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    entry.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 14, height: 1.25),
+                  Obx(
+                    () => Text(
+                      uiTx(entry.title),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 14, height: 1.25),
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -102,13 +104,15 @@ class AudioCacheItem extends StatelessWidget {
                   if (entry.ownerName case final name?)
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.outline,
+                      child: Obx(
+                        () => Text(
+                          uiTx(name),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.outline,
+                          ),
                         ),
                       ),
                     ),
