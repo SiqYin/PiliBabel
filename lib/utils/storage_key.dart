@@ -23,6 +23,8 @@ abstract final class SettingBoxKey {
       mediaProxyConns = 'mediaProxyConns',
       dynUseGrpc = 'dynUseGrpc',
       dnsDoh = 'dnsDoh',
+      liveBufferSize = 'liveBufferSize',
+      liveBufferSec = 'liveBufferSec',
       hardwareDecoding = 'hardwareDecoding',
       videoSync = 'videoSync',
       autosync = 'autosync',

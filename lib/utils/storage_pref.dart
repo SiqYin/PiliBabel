@@ -1476,6 +1476,14 @@ abstract final class Pref {
   static set useAppPlayUrl(bool value) =>
       _setting.put(SettingBoxKey.useAppPlayUrl, value);
 
+  /// 直播流前向缓冲区大小（MB），0 表示跟随 [bufferSize] 的两倍
+  static double get liveBufferSize =>
+      _setting.get(SettingBoxKey.liveBufferSize, defaultValue: 0.0);
+
+  /// 直播流缓冲时长上限（s），0 表示不限制
+  static double get liveBufferSec =>
+      _setting.get(SettingBoxKey.liveBufferSec, defaultValue: 0.0);
+
   static Map<String, String> initBuffer([
     double playbackSpeed = 1.0,
     int? videoBitrate,
@@ -1509,15 +1517,40 @@ abstract final class Pref {
     };
   }
 
-  static Map<String, String> initLiveBuffer() {
-    // 直播没有回看窗口，前向缓冲越大只会让画面越落后于直播；这里单独夹紧在
-    // 2~8MB 档（4~16MB），不跟随点播那个更大的缓冲默认值。
-    return {
+  /// 直播流无后向缓冲，全部给前向（mpv 的 --demuxer-max-bytes 与
+  /// --demuxer-max-back-bytes）。未单独设置时沿用本仓库既有默认：
+  /// 前向缓冲按 [bufferSize] 夹紧在 2~8MB 后取两倍（即 4~16MB），
+  /// 不跟随点播那个更大的缓冲默认值。
+  static Map<String, String> initLiveBuffer() => buildLiveBuffer(
+    sizeMb: liveBufferSize,
+    sec: liveBufferSec,
+    fallbackSizeMb: bufferSize.clamp(2.0, 8.0),
+  );
+
+  /// 构造直播流使用的 mpv 额外参数。
+  ///
+  /// [sizeMb] 为前向缓冲大小（MB），小于等于 0 时使用
+  /// [fallbackSizeMb]（缺省为 [bufferSize]）的两倍；
+  /// [sec] 为缓冲时长上限（s），小于等于 0 时不限制。
+  @visibleForTesting
+  static Map<String, String> buildLiveBuffer({
+    double sizeMb = 0,
+    double sec = 0,
+    double? fallbackSizeMb,
+  }) {
+    final effectiveSizeMb = sizeMb > 0
+        ? sizeMb
+        : (fallbackSizeMb ?? bufferSize) * 2;
+    final buffer = <String, String>{
       'cache': 'yes',
-      'demuxer-max-bytes': (Pref.bufferSize.clamp(2.0, 8.0) * 0x200000)
-          .toStringAsFixed(0),
+      'demuxer-max-bytes': (effectiveSizeMb * 0x100000).toStringAsFixed(0),
       'demuxer-max-back-bytes': '0',
     };
+    if (sec > 0) {
+      buffer['cache-secs'] = sec.toStringAsFixed(3);
+      buffer['demuxer-hysteresis-secs'] = (sec / 1.5).toStringAsFixed(3);
+    }
+    return buffer;
   }
 
   /// C1.1 音频专用缓存档（对标官方 ijk 的音频缓存那套 FFP_PROP_INT64_AUDIO_CACHED_*）：
