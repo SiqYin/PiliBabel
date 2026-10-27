@@ -1437,9 +1437,14 @@ abstract final class Pref {
   static double get bufferSize =>
       _setting.get(SettingBoxKey.bufferSize, defaultValue: 32.0);
 
-  /// E2 媒体层多连接代理：0=关闭（默认）、1/2/4 条并发分片
+  /// E2 媒体层多连接代理：0=关闭、1=不分片直连、2/4=并发分片。
+  ///
+  /// **默认 2**（向官方靠拢）：单连接顺序拉流在高延迟线路上吃不满带宽，缓存会被
+  /// 播放追上而周期性卡顿，拖动到未缓存位置也只能单连接重拉（数秒甚至超时换线）。
+  /// MediaProxy 把一次 GET 拆成 2 段并发、拖动时断旧连接、异常自动 302 回源，
+  /// 因此默认开启的风险可控；仍可在设置里调回 0 关闭。
   static int get mediaProxyConns =>
-      _setting.get(SettingBoxKey.mediaProxyConns, defaultValue: 0);
+      _setting.get(SettingBoxKey.mediaProxyConns, defaultValue: 2);
 
   /// E3 动态接口：true=走 gRPC（与官方 App 同源），失败自动回退网页接口
   static bool get dynUseGrpc =>

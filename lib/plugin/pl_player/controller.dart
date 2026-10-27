@@ -1372,10 +1372,12 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// lavf（ffmpeg 的 http 协议）侧的媒体流参数。
   ///
   /// * `reconnect*`：断流自动重连，海外抖动必备。
+  /// * `reconnect_delay_max=2`：重连等待上限压到 2 秒。原来是 10 秒——一旦断流
+  ///   就干等最多 10 秒，表现就是「卡一下被进度条追上」，和官方几乎无感的差距来源。
   /// * `multiple_requests=1`：允许在**同一条**连接上发多次 Range 请求，
   ///   换线/重开时不必重新握手（此前只开单次请求，重连等于重来一遍）。
   static const String _lavfReconnect =
-      'reconnect=1,reconnect_streamed=1,reconnect_delay_max=10,'
+      'reconnect=1,reconnect_streamed=1,reconnect_delay_max=2,'
       'multiple_requests=1';
 
   /// 已经做过 DNS 预热的媒体域名（同一域名只解析一次）。

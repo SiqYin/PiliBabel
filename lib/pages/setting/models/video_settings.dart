@@ -249,8 +249,8 @@ List<SettingsModel> get videoSettings => [
     title: uiTx('媒体层多连接代理'),
     leading: const Icon(Icons.multiple_stop_outlined),
     getSubtitle: () => Pref.mediaProxyConns <= 1
-        ? uiTx('已关闭（默认）：内核单连接拉流。开启后由 App 把视频流拆成多条连接并发下载，弱网或高延迟下起播更快')
-        : '${uiTx('当前')}：${Pref.mediaProxyConns} ${uiTx('条连接')}',
+        ? uiTx('已关闭：内核单连接拉流。开启后由 App 把音视频流拆成多条连接并发下载，弱网或高延迟下起播/拖动更快')
+        : '${uiTx('当前')}：${Pref.mediaProxyConns} ${uiTx('条连接')}（${uiTx('视频与音频都生效，默认开启')}）',
     onTap: _showMediaProxyDialog,
   ),
   NormalModel(
