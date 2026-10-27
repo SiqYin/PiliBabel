@@ -201,7 +201,7 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
                 ),
             ],
             child: AppBar(
-              title: Obx(() => Text(_controller.title.value)),
+              title: Obx(() => Text(uiTx(_controller.title.value))),
               actions: [
                 IconButton(
                   tooltip: uiTx('多选'),
@@ -305,7 +305,7 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
                           entries: [entry],
                         ),
                         deleteLabel: uiTx('移出文件夹'),
-                        deleteConfirmText: '确定从当前文件夹移除？',
+                        deleteConfirmText: uiTx('确定从当前文件夹移除？'),
                         controller: _controller,
                         playContext: DownloadVideoPlayContext.folder(
                           widget.folderId,

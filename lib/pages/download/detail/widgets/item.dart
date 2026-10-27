@@ -275,41 +275,47 @@ CoverTranslateButton(cover: entry.cover),
                       spacing: 5,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          showTitle ? entry.title : entry.showTitle,
-                          textAlign: TextAlign.start,
-                          style: TextStyle(
-                            fontSize: theme.textTheme.bodyMedium!.fontSize,
-                            height: 1.42,
-                            letterSpacing: 0.3,
+                        Obx(
+                          () => Text(
+                            showTitle ? uiTx(entry.title) : uiTx(entry.showTitle),
+                            textAlign: TextAlign.start,
+                            style: TextStyle(
+                              fontSize: theme.textTheme.bodyMedium!.fontSize,
+                              height: 1.42,
+                              letterSpacing: 0.3,
+                            ),
+                            maxLines: showTitle
+                                ? entry.ep != null
+                                      ? 1
+                                      : 2
+                                : 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: showTitle
-                              ? entry.ep != null
-                                    ? 1
-                                    : 2
-                              : 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
                         if (showTitle) ...[
                           if (entry.pageData?.part case final part?)
                             if (part != entry.title)
-                              Text(
-                                part,
-                                maxLines: 1,
+                              Obx(
+                                () => Text(
+                                  uiTx(part),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                          if (entry.ep?.showTitle case final showTitle?)
+                            Obx(
+                              () => Text(
+                                uiTx(showTitle),
+                                maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
-                              ),
-                          if (entry.ep?.showTitle case final showTitle?)
-                            Text(
-                              showTitle,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
                         ],
@@ -319,12 +325,14 @@ CoverTranslateButton(cover: entry.cover),
                       Positioned(
                         left: 0,
                         bottom: 0,
-                        child: Text(
-                          '${CacheManager.formatSize(entry.totalBytes)}${entry.ownerName != null ? '  ${entry.ownerName}' : ''}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            height: 1.6,
-                            color: outline,
+                        child: Obx(
+                          () => Text(
+                            '${CacheManager.formatSize(entry.totalBytes)}${entry.ownerName != null ? '  ${uiTx(entry.ownerName)}' : ''}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              height: 1.6,
+                              color: outline,
+                            ),
                           ),
                         ),
                       ),
@@ -414,14 +422,15 @@ CoverTranslateButton(cover: entry.cover),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              statusMsg,
+            // 状态文案接 AI 翻译：包在 Obx 里读 revision，译文异步回落后自动刷新。
+            Obx(() => Text(
+              uiTx(statusMsg),
               style: TextStyle(
                 fontSize: 12,
                 height: 1,
                 color: color,
               ),
-            ),
+            )),
             Text(
               progressStr,
               style: TextStyle(
@@ -570,9 +579,11 @@ CoverTranslateButton(cover: entry.cover),
                 if (canDel)
                   CustomPopupMenuItem<void>(
                     height: 38,
-                    child: Text(
-                      deleteLabel,
-                      style: const TextStyle(fontSize: 13),
+                    child: Obx(
+                      () => Text(
+                        uiTx(deleteLabel),
+                        style: const TextStyle(fontSize: 13),
+                      ),
                     ),
                     onTap: () {
                       if (onDeleteRequested != null) {

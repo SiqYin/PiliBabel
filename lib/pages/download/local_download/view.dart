@@ -207,21 +207,10 @@ class _LocalDownloadItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final missing = record.fileMissing;
-    final String status;
-    if (record.failed) {
-      status = uiTx('下载失败');
-    } else if (record.done) {
-      status = uiTx('已下载');
-    } else {
-      status = uiTx('下载中');
-    }
     final sizeText = record.totalBytes > 0
         ? '${_formatSize(record.receivedBytes)} / '
               '${_formatSize(record.totalBytes)}'
         : _formatSize(record.receivedBytes);
-    // 高画质（1080P60 及以上）走 DASH 分离流，是「视频轨 + 音频轨」两个文件，
-    // 标出来让用户知道为什么文件夹里是两个文件。
-    final splitTag = record.splitStream ? ' · ${uiTx('分离流')}' : '';
     return InkWell(
       onTap: onMore,
       child: Padding(
@@ -242,18 +231,39 @@ class _LocalDownloadItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    record.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 14, height: 1.25),
+                  Obx(
+                    () => Text(
+                      uiTx(record.title),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 14, height: 1.25),
+                    ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    '$status · $sizeText$splitTag',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12, color: colorScheme.outline),
+                  Obx(
+                    () {
+                      // 状态与「分离流」标签都在 Obx 里调用 uiTx，译文异步回落后自动刷新。
+                      final String status;
+                      if (record.failed) {
+                        status = uiTx('下载失败');
+                      } else if (record.done) {
+                        status = uiTx('已下载');
+                      } else {
+                        status = uiTx('下载中');
+                      }
+                      final splitTag = record.splitStream
+                          ? ' · ${uiTx('分离流')}'
+                          : '';
+                      return Text(
+                        '$status · $sizeText$splitTag',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.outline,
+                        ),
+                      );
+                    },
                   ),
                   if (!record.done && !record.failed)
                     Padding(
@@ -266,13 +276,15 @@ class _LocalDownloadItem extends StatelessWidget {
                   if (record.ownerName case final name?)
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.outline,
+                      child: Obx(
+                        () => Text(
+                          uiTx(name),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.outline,
+                          ),
                         ),
                       ),
                     ),

@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'dart:async' show Completer;
 import 'dart:convert' show json, utf8;
 import 'dart:io' show HttpClient, HttpStatus, Platform;
 
@@ -239,7 +240,7 @@ abstract final class Update {
     if (kDebugMode) debugPrint('update check failed');
   }
 
-  /// 拉 GitHub Releases。**多路并发赛马**：任一路最早拿到非空 releases 列表即胜。
+  /// 拉 GitHub Releases。**多路并发赛马**：任一路**最早拿到非空 releases 列表即胜**。
   ///
   /// 背景（连续多版「收不到更新弹窗」的真根因之一）：更新检查在依赖单条网络请求，
   /// 而 App 默认开 HTTP/2，更新请求被套进为 B 站调优的本机 DnsProxy 隧道（init.dart
@@ -249,34 +250,52 @@ abstract final class Update {
   /// 这次改成**并行赛马**而不是「先等 dio 完整失败再串行直连」：
   /// - 路1：dio 主链路（保留 HTTP/2 + 共享连接池，正常时最快）；
   /// - 路2：裸 HttpClient `findProxy=DIRECT` 直连（绕开本机代理与连接池）。
-  /// 两条**同时发起**，先返回「非空列表」者胜；各路内部已自行 catch 一切异常，不会抛
-  /// 到赛马层，也绝不阻塞另一路。这样直连不再需要等 dio 超时，用户等待时间显著缩短。
   ///
-  /// 更新检查是一次性、非关键的请求，本就该用最简单可靠的路径拿到结果。
+  /// 实现为**真正的先到先得**：用 [Completer]，任一路返回非空结果就立刻 complete 返回，
+  /// 不等另一路 settle。注意不能用 `Future.wait`——它要等**所有** future 完成，只要直连
+  /// 那路慢（甚至挂到 15s 超时），即使 dio 半秒就返回也会被拖到十几秒才弹窗。这正是
+  /// 「进 APP 后 5~10 秒才弹更新」的根因，这里把它修成极速：谁先有数据谁胜。
   static Future<Response> _fetchReleases() async {
-    final dioFuture = _safeFetchViaDio();
-    final directFuture = _safeFetchDirect();
-    final results = await Future.wait<Response?>(
-      [dioFuture, directFuture],
-      // 绝不因任一路抛错而中断赛马
-      eagerError: false,
-    );
-    // 任一路返回了非空 releases 列表，直接用（dir 优先于 dio？不，先到先得：
-    // 遍历顺序 dio 在前，但若 dio 结果为空而 direct 非空，也取 direct）
-    for (final r in results) {
-      if (r != null && !_isEmptyPayload(r)) return r;
+    final completer = Completer<Response>();
+    var done = false;
+    void settle(Response? r) {
+      if (done) return; // 已有人胜出，忽略其余晚到结果
+      if (r != null && !_isEmptyPayload(r)) {
+        done = true;
+        completer.complete(r);
+      }
     }
-    // 全都不行：返回最后一个（可能为 null 则构造失败响应，让调用方判空静默/提示）
-    final last = results.lastWhere(
-      (e) => e != null,
-      orElse: () => null,
-    );
-    return last ??
+
+    void fail() {
+      if (done) return;
+      done = true;
+      completer.complete(
         Response(
           data: const <String, dynamic>{'message': 'releases fetch failed'},
           statusCode: -1,
           requestOptions: RequestOptions(path: Api.latestApp),
-        );
+        ),
+      );
+    }
+
+    var settled = 0;
+    final total = 2;
+    void onSettled(Response? r) {
+      settle(r);
+      settled++;
+      // 两路都到齐且都是空：没有可用结果，按失败处理
+      if (settled == total && !done) fail();
+    }
+
+    _safeFetchViaDio().then(
+      onSettled,
+      onError: (_) => onSettled(null),
+    );
+    _safeFetchDirect().then(
+      onSettled,
+      onError: (_) => onSettled(null),
+    );
+    return completer.future;
   }
 
   /// 路1：走 dio 主链路（HTTP/2 + 连接池）。任何异常都转为失败 Response，不抛出。

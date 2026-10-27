@@ -81,7 +81,7 @@ class DownloadFolderCard extends StatelessWidget {
                     ),
                     const Spacer(),
                     Text(
-                      count == 0 ? '空文件夹' : '本地离线缓存',
+                      uiTx(count == 0 ? '空文件夹' : '本地离线缓存'),
                       style: TextStyle(
                         fontSize: 12,
                         color: Theme.of(context).colorScheme.outline,
