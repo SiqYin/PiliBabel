@@ -1,19 +1,16 @@
-### PiliBabel v3.3.8
+### PiliBabel v3.3.9
 
-**Faster cover loading, translated comment-sort labels, and a genuinely reliable update prompt.**
+**This is an update-check test release. No app code or content changed from v3.3.8.**
 
-Images:
+This version is published on purpose so that installing it on a device running an older build will let you verify whether the update prompt appears: with v3.3.9 installed, the app should find this newer v3.3.9 release (or a newer one once it exists) and show the update dialog.
 
-- **Cover loading is back to the v3.0.5 approach.** The home feed's first-screen covers were taking ~10 seconds to all appear — not failing, just being throttled. The 10s delay was introduced in v3.0.0, when cover prefetch was switched from "resolve everything immediately" to a bounded queue delivering at most 2 concurrent images 40 ms apart, so the first-screen covers queued behind that slow pacing. Prefetch is now the old foreach immediate-resolve implementation again. Home covers, dynamic covers, emotes and uploader avatars all follow this path. The comment section is not affected.
+Why the update prompt was being missed, and what v3.3.8 fixed:
 
-Comments:
+- The old check ran once, over a single request, and silently swallowed any failure — if that one request hit a transient network/proxy hiccup at startup, the update prompt would never appear for the whole session.
+- v3.3.8 changed the check to race the main link against a direct connection (whichever returns data first) and retry with backoff (500 ms / 2000 ms / 4500 ms), so a momentary blip no longer hides an available update.
 
-- **Comment-sort labels are translated again.** The "Hottest comments / Newest" and "Hottest / Newest" labels in the top corners of every comment entry (video comments, the comment detail page, main reply list, and the dynamics comment section) are now routed through the AI translation again.
+v3.3.9 keeps that behavior exactly — only the version number and release notes differ from v3.3.8.
 
-Updates:
-
-- **The update prompt is actually reliable now.** The previous check was called once, over a single request, and silently swallowed any failure — if that one request hit a transient network/proxy hiccup at startup, you would never see the update prompt for the whole session. It now races the main link against a direct connection (whichever returns data first) and retries with backoff, so a momentary blip no longer hides an available update.
-
-The empty-comment-section fixes from v3.3.7 are kept as is.
+If you are already on v3.3.8, this test build intentionally will not change anything in the app; it exists so an older install can confirm it detects and prompts for the new v3.3.9 (or newer) release.
 
 Downloads are below.
