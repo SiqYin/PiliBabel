@@ -147,6 +147,9 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
     cursorNext = null;
     subjectControl = null;
     paginationReply = null;
+    // onReload（点「点击重试」）也走这里：先把预取结果作废，
+    // 保证这次一定真的重新请求首屏，而不是又命中同一份旧结果。
+    ReplyPrefetch.clear();
     return super.onRefresh();
   }
 

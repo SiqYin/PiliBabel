@@ -130,6 +130,12 @@ class ReplyPrefetch {
     _cache.remove(key);
     return entry.future;
   }
+
+  /// 用户主动重试 / 下拉刷新时调用：丢掉已经攒下的预取结果。
+  /// 否则失败重试可能反复命中同一份旧结果，表现就是「点重试只闪一下，界面不变」。
+  static void clear() {
+    _cache.clear();
+  }
 }
 
 class _Entry {
