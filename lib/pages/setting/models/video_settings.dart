@@ -235,14 +235,14 @@ List<SettingsModel> get videoSettings => [
     title: uiTx('缓冲大小'),
     leading: const Icon(Icons.storage_outlined),
     getSubtitle: () =>
-        '当前：${Pref.bufferSize}MB。同时为前向和后向缓冲区大小。对于直播流，无后向缓冲大小，全部转给前向（此选项即mpv的--demuxer-max-bytes，--demuxer-max-back-bytes）',
+        '${uiTx('当前')}：${Pref.bufferSize}MB。${uiTx('点播视频的前向和后向缓冲区大小（此选项即 mpv 的 --demuxer-max-bytes，--demuxer-max-back-bytes）。直播流请设置下方的直播缓冲大小')}',
     onTap: _showBufferSizeDialog,
   ),
   NormalModel(
     title: uiTx('缓冲时长'),
     leading: const Icon(Icons.av_timer),
     getSubtitle: () =>
-        '当前：${Pref.bufferSec}s。实际缓冲为二者最小值。对于直播流，该选项无效（此选项即mpv的--cache-secs）',
+        '${uiTx('当前')}：${Pref.bufferSec}s。${uiTx('点播视频的实际缓冲为大小与时长二者的最小值（此选项即 mpv 的 --cache-secs）。直播流该选项无效，请设置下方的直播缓冲时长')}',
     onTap: _showBufferSecDialog,
   ),
   NormalModel(
@@ -252,6 +252,22 @@ List<SettingsModel> get videoSettings => [
         ? uiTx('已关闭（默认）：内核单连接拉流。开启后由 App 把视频流拆成多条连接并发下载，弱网或高延迟下起播更快')
         : '${uiTx('当前')}：${Pref.mediaProxyConns} ${uiTx('条连接')}',
     onTap: _showMediaProxyDialog,
+  ),
+  NormalModel(
+    title: uiTx('直播缓冲大小'),
+    leading: const Icon(Icons.storage_outlined),
+    getSubtitle: () => Pref.liveBufferSize > 0
+        ? '${uiTx('当前')}：${Pref.liveBufferSize}MB'
+        : '${uiTx('当前')}：${uiTx('跟随缓冲大小')}（${(Pref.bufferSize * 2).toStringAsFixed(0)}MB）。${uiTx('仅对直播流生效，小于等于 0 时使用缓冲大小的 2 倍（此选项即 mpv 的 --demuxer-max-bytes）')}',
+    onTap: _showLiveBufferSizeDialog,
+  ),
+  NormalModel(
+    title: uiTx('直播缓冲时长'),
+    leading: const Icon(Icons.av_timer),
+    getSubtitle: () => Pref.liveBufferSec > 0
+        ? '${uiTx('当前')}：${Pref.liveBufferSec}s'
+        : '${uiTx('当前')}：${uiTx('不限制')}。${uiTx('仅对直播流生效，大于 0 时可限制直播缓冲时长以降低延迟（此选项即 mpv 的 --cache-secs）')}',
+    onTap: _showLiveBufferSecDialog,
   ),
   NormalModel(
     title: uiTx('自动同步'),
@@ -759,5 +775,25 @@ void _showBufferSecDialog(BuildContext context, VoidCallback setState) =>
       key: SettingBoxKey.bufferSec,
       defVal: Pref.bufferSec,
       title: uiTx('缓冲时长'),
+      suffix: 's',
+    );
+
+void _showLiveBufferSizeDialog(BuildContext context, VoidCallback setState) =>
+    _showDecimalDialog(
+      context,
+      setState,
+      key: SettingBoxKey.liveBufferSize,
+      defVal: Pref.liveBufferSize,
+      title: uiTx('直播缓冲大小'),
+      suffix: 'MB',
+    );
+
+void _showLiveBufferSecDialog(BuildContext context, VoidCallback setState) =>
+    _showDecimalDialog(
+      context,
+      setState,
+      key: SettingBoxKey.liveBufferSec,
+      defVal: Pref.liveBufferSec,
+      title: uiTx('直播缓冲时长'),
       suffix: 's',
     );
