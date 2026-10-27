@@ -32,13 +32,16 @@ class _ReplySettingState extends State<ReplySetting> {
         if (!mounted || list.isEmpty) {
           return;
         }
-        final firstItem = list.first;
-        if (firstItem case NormalModel(:final onTap)) {
-          onTap?.call(context, () {
-            if (mounted) {
-              setState(() {});
-            }
-          });
+        // 关键词过滤不一定在首位（上游分栏后首项是「显示视频评论」），按标题定位
+        for (final item in list) {
+          if (item is NormalModel && item.effectiveTitle == uiTx('评论关键词过滤')) {
+            item.onTap?.call(context, () {
+              if (mounted) {
+                setState(() {});
+              }
+            });
+            break;
+          }
         }
       });
     }
