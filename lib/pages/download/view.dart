@@ -830,6 +830,13 @@ class _DownloadPageState extends State<DownloadPage>
                 ],
               ),
             ),
+            if (failed)
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                tooltip: uiTx('重新缓存'),
+                onPressed: () => _audioCacheService.retryTask(task),
+                icon: Icon(Icons.refresh, size: 18, color: colorScheme.primary),
+              ),
             IconButton(
               visualDensity: VisualDensity.compact,
               onPressed: () => _audioCacheService.cancelTask(task),
