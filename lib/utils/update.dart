@@ -242,7 +242,7 @@ abstract final class Update {
       final res = await req.close().timeout(const Duration(seconds: 15));
       if (res.statusCode != HttpStatus.ok) {
         return Response(
-          data: const <String, dynamic>{'message': 'http ${res.statusCode}'},
+          data: <String, dynamic>{'message': 'http ${res.statusCode}'},
           statusCode: res.statusCode,
           requestOptions: RequestOptions(path: Api.latestApp),
         );
