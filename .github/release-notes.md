@@ -1,16 +1,15 @@
-### PiliBabel v3.3.9
+### PiliBabel v3.3.10
 
-**This is an update-check test release. No app code or content changed from v3.3.8.**
+This release addresses the issues reported after v3.3.8 / v3.3.9. No code has been removed compared to the test release — this is a regular feature/fix update on top of v3.3.9.
 
-This version is published on purpose so that installing it on a device running an older build will let you verify whether the update prompt appears: with v3.3.9 installed, the app should find this newer v3.3.9 release (or a newer one once it exists) and show the update dialog.
+**1. Update prompt appears much sooner.** The update check previously raced two network paths but used `Future.wait`, which waits for the slowest path (the direct connection can take up to ~15s) — that is why the dialog only popped about 5–10 seconds after entering the app. It now truly settles on whichever path returns data first, so an available update is announced promptly.
 
-Why the update prompt was being missed, and what v3.3.8 fixed:
+**2. Comment-sort wording AI translation hardened.** Strings such as 「最热评论/最新评论」 (Hottest/Newest) and 「最热/最新」 are now in the translation pre-warm cache so they don't show the untranslated text on first view. If a language other than Simplified Chinese is the target and these still appear in Chinese, please report it — it likely means that entry point wasn't routed through the translator and I'll track it down one by one.
 
-- The old check ran once, over a single request, and silently swallowed any failure — if that one request hit a transient network/proxy hiccup at startup, the update prompt would never appear for the whole session.
-- v3.3.8 changed the check to race the main link against a direct connection (whichever returns data first) and retry with backoff (500 ms / 2000 ms / 4500 ms), so a momentary blip no longer hides an available update.
+**3. AI translation enabled across the cache / download screens.** Local video titles, uploader (UP) names, status text of in-progress downloads (including 「获取播放地址」/Get play URL), folder empty-state and folder titles, audio-cache items, and the delete-cache confirmation dialog are all now translated.
 
-v3.3.9 keeps that behavior exactly — only the version number and release notes differ from v3.3.8.
+**4. Download no longer freezes on "获取播放地址".** The play-url fetch now has a hard 45-second timeout per attempt, retries, and finally fails with a clear "Get play URL failed" toast instead of hanging silently with no feedback.
 
-If you are already on v3.3.8, this test build intentionally will not change anything in the app; it exists so an older install can confirm it detects and prompts for the new v3.3.9 (or newer) release.
+**5. Homepage covers load more reliably.** Cover pre-fetch no longer skips the first screen's lazy-loading; the whole batch is pre-fetched concurrently, reducing the case where many covers stay blank until you pull-to-refresh.
 
 Downloads are below.
