@@ -2539,8 +2539,16 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
     Future<void> seek() async {
       if (isSeek) {
-        /// 拖动进度条调节时，不等待第一帧，防止抖动
-        await _videoPlayerController?.stream.buffer.first;
+        /// 拖动进度条调节时，不等待第一帧，防止抖动。
+        ///
+        /// 但这个等待必须有上限：拖动到未缓存位置时，缓冲事件可能长时间不来
+        /// （界面就是卡在「99%」或黑屏），原来无超时的 await 会让 seek 永远不
+        /// 执行，用户看到的正是「拖过去以后一直不动」。给 600ms 上限，
+        /// 到点照样执行 seek，由内核自己去取新位置的数据。
+        await _videoPlayerController?.stream.buffer.first.timeout(
+          const Duration(milliseconds: 600),
+          onTimeout: () => const Duration.zero,
+        );
       }
       danmakuController?.clear();
       try {
