@@ -47,25 +47,22 @@ void showReplyCopyDialog(
                       ),
                       onConfirm: () {
                         final currentStored = Pref.banWordForReply;
-                        final existingKeywords = currentStored.isEmpty
-                            ? <String>[]
-                            : currentStored.split('\n');
+                        final existingKeywords = Pref.parseBanWordItems(
+                          currentStored,
+                        );
                         if (existingKeywords.contains(escapedText)) {
                           SmartDialog.showToast(uiTx('该关键词已在过滤列表中'));
                           return;
                         }
-                        final newStored = currentStored.isEmpty
-                            ? escapedText
-                            : '$currentStored\n$escapedText';
+                        final newStored = [
+                          ...existingKeywords,
+                          escapedText,
+                        ].join('\n');
                         GStorage.setting.put(
                           SettingBoxKey.banWordForReply,
                           newStored,
                         );
-                        final newPattern = Pref.parseBanWordToRegex(newStored);
-                        ReplyGrpc.replyRegExp = RegExp(
-                          newPattern,
-                          caseSensitive: true,
-                        );
+                        ReplyGrpc.replyRegExp = Pref.compileBanWord(newStored);
                         ReplyGrpc.enableFilter = true;
                         SmartDialog.showToast(uiTx('已保存'));
                       },

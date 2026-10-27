@@ -67,7 +67,7 @@ List<SettingsModel> get recommendSettings => [
     key: SettingBoxKey.banWordForRecommend,
     onChanged: (value) {
       RecommendFilter.rcmdRegExp = value;
-      RecommendFilter.enableFilter = value.pattern.isNotEmpty;
+      RecommendFilter.enableFilter = value.isNotEmpty;
     },
   ),
   getListBanWordModel(
@@ -75,7 +75,7 @@ List<SettingsModel> get recommendSettings => [
     key: SettingBoxKey.banWordForRecommendUpName,
     onChanged: (value) {
       RecommendFilter.rcmdUpNameRegExp = value;
-      RecommendFilter.enableUpNameFilter = value.pattern.isNotEmpty;
+      RecommendFilter.enableUpNameFilter = value.isNotEmpty;
     },
   ),
   getListBanWordModel(
@@ -83,7 +83,7 @@ List<SettingsModel> get recommendSettings => [
     key: SettingBoxKey.banWordForZone,
     onChanged: (value) {
       VideoHttp.zoneRegExp = value;
-      VideoHttp.enableFilter = value.pattern.isNotEmpty;
+      VideoHttp.enableFilter = value.isNotEmpty;
     },
   ),
   getListUidWithNameModel(

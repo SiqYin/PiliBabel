@@ -51,11 +51,8 @@ import 'package:PiliPlus/utils/feed_idx.dart';
 
 /// view层根据 status 判断渲染逻辑
 abstract final class VideoHttp {
-  static RegExp zoneRegExp = RegExp(
-    Pref.parseBanWordToRegex(Pref.banWordForZone),
-    caseSensitive: false,
-  );
-  static bool enableFilter = zoneRegExp.pattern.isNotEmpty;
+  static List<RegExp> zoneRegExp = Pref.compileBanWord(Pref.banWordForZone);
+  static bool enableFilter = zoneRegExp.isNotEmpty;
 
   // 首页推荐视频
   static Future<LoadingState<List<RcmdVideoItemModel>>> rcmdVideoList({
