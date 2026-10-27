@@ -35,7 +35,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 
-part 'widgets/live_item.dart';
+import 'package:PiliPlus/pages/member_home/widgets/live_item.dart';
 
 class MemberHome extends StatefulWidget {
   const MemberHome({super.key, this.heroTag});
@@ -150,7 +150,7 @@ class _MemberHomeState extends State<MemberHome>
       return SliverToBoxAdapter(
         child: Padding(
           padding: const .only(top: 20),
-          child: _LiveItem(
+          child: LiveItem(
             color: colorScheme.surfaceContainerHigh,
             child: GestureDetector(
               behavior: .opaque,

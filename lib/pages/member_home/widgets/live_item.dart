@@ -1,9 +1,10 @@
-part of 'package:PiliPlus/pages/member_home/view.dart';
+import 'package:material_ui/material_ui.dart';
 
 const _maxWith = 400.0;
 
-class _LiveItem extends SingleChildRenderObjectWidget {
-  const _LiveItem({
+class LiveItem extends SingleChildRenderObjectWidget {
+  const LiveItem({
+    super.key,
     required this.color,
     required Widget super.child,
   });
@@ -21,12 +22,8 @@ class _LiveItem extends SingleChildRenderObjectWidget {
   }
 }
 
-class _RenderLiveItem extends RenderBox
-    with RenderObjectWithChildMixin<RenderBox>
-    implements MouseTrackerAnnotation {
-  _RenderLiveItem({
-    required this._color,
-  });
+class _RenderLiveItem extends RenderProxyBox {
+  _RenderLiveItem({required Color color}) : _color = color;
 
   Color _color;
   Color get color => _color;
@@ -36,78 +33,22 @@ class _RenderLiveItem extends RenderBox
     markNeedsPaint();
   }
 
-  Offset _offset = .zero;
-
   @override
   void performLayout() {
     final maxWidth = constraints.maxWidth;
-
-    final double width;
-    final BoxConstraints childConstraints;
     if (maxWidth > _maxWith) {
-      width = _maxWith;
-      _offset = Offset((maxWidth - _maxWith) / 2, 0);
-      childConstraints = BoxConstraints.tightFor(width: width);
+      child?.layout(BoxConstraints.tightFor(width: _maxWith), parentUsesSize: true);
     } else {
-      width = maxWidth;
-      _offset = .zero;
-      childConstraints = constraints;
+      child?.layout(constraints, parentUsesSize: true);
     }
-    final childSize =
-        (child!..layout(childConstraints, parentUsesSize: true)).size;
-    size = constraints.constrainDimensions(maxWidth, childSize.height);
+    size = constraints.constrainDimensions(maxWidth, child?.size.height ?? 0);
   }
 
   @override
   void paint(PaintingContext context, Offset offset) {
-    final paint = Paint()..color = _color;
-    if (_offset != .zero) {
-      offset += _offset;
-      context.canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          offset & Size(_maxWith, size.height),
-          Style.imgRadius,
-        ),
-        paint,
-      );
-    } else {
-      context.canvas.drawRect(offset & size, paint);
+    context.canvas.drawRect(offset & size, Paint()..color = _color);
+    if (child != null) {
+      context.paintChild(child!, offset);
     }
-    context.paintChild(child!, offset);
   }
-
-  @override
-  bool hitTest(BoxHitTestResult result, {required Offset position}) {
-    return result.addWithPaintOffset(
-      offset: _offset.dx == 0 ? null : _offset,
-      position: position,
-      hitTest: (result, position) {
-        final isHit = child!.hitTest(result, position: position);
-        if (isHit) {
-          result.add(BoxHitTestEntry(this, position));
-        }
-        return isHit;
-      },
-    );
-  }
-
-  @override
-  void applyPaintTransform(covariant RenderObject child, Matrix4 transform) {
-    if (_offset.dx != 0) {
-      transform.translate(_offset.dx, 0.0, 0.0);
-    }
-    super.applyPaintTransform(child, transform);
-  }
-
-  @override
-  MouseCursor get cursor => SystemMouseCursors.click;
-
-  @override
-  PointerEnterEventListener? onEnter;
-
-  @override
-  PointerExitEventListener? onExit;
-
-  @override
-  bool get validForMouseTracker => false;
 }
