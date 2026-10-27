@@ -343,6 +343,10 @@ class AudioCacheService extends GetxService {
           audioList.insert(0, entry);
           await _writeIndex();
           task.status.value = AudioCacheStatus.completed;
+          // 完成的任务必须从进行中列表移除：留着它，下载页顶部会永远挂着一条
+          // 100% 的进度条；而删除那条任务会连本地音频文件一起删掉，已经登记的
+          // 缓存条目就变成无声、拖进度回 00:00 并跳到下一 P。
+          taskList.remove(task);
           SmartDialog.showToast(uiTx('音频缓存完成'));
         },
       );
@@ -359,9 +363,12 @@ class AudioCacheService extends GetxService {
   Future<void> cancelTask(AudioCacheTask task) async {
     final manager = task.manager;
     task.manager = null;
+    // 已完成的任务，文件已经登记进 audioList，这里只解绑不能删文件，
+    // 否则那条缓存会变成有记录没文件（播放无声）。
+    final completed = task.status.value == AudioCacheStatus.completed;
     taskList.remove(task);
     if (manager != null) {
-      await manager.cancel(isDelete: true);
+      await manager.cancel(isDelete: !completed);
     }
   }
 
