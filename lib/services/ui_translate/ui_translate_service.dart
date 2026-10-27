@@ -809,7 +809,7 @@ class UiTranslateService extends GetxService {
     for (var idx = 0; idx < candidateUrls.length * 2; idx++) {
       final url = candidateUrls[idx % candidateUrls.length];
       final client =
-          _i < _candidateUrls.length ? _uiTxDirectClient() : _uiTxClient();
+          idx < candidateUrls.length ? _uiTxDirectClient() : _uiTxClient();
       try {
         final img = await client.get<List<int>>(
           url,
