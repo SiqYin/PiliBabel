@@ -353,7 +353,7 @@ class _HorizontalMemberPageState extends State<HorizontalMemberPage> {
               onPressed: () => Get.toNamed('/member?mid=${widget.mid}'),
               child: Text(uiTx('查看主页'),
                 maxLines: 1,
-                style: TextStyle(fontSize: 14),
+                style: const TextStyle(fontSize: 14),
               ),
             ),
           ),

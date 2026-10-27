@@ -788,7 +788,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                   height: 35,
                   value: '',
                   child: Text(uiTx("关闭翻译"),
-                    style: TextStyle(color: Colors.white, fontSize: 13),
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
                   ),
                 ),
                 ...list.map(
@@ -840,7 +840,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                       height: 35,
                       onTap: () => videoDetailController.setSubtitle(0),
                       child: Text(uiTx("关闭字幕"),
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 13,
                         ),
@@ -2266,7 +2266,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                       Text(
                         '$percent%',
                         // tabularFigures 让数字等宽，百分比跳动时不会左右抖
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
                           fontFeatures: const [FontFeature.tabularFigures()],

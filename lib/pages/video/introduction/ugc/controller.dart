@@ -394,7 +394,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
             ListTile(
               dense: true,
               title: Text(uiTx('分享至消息'),
-                style: TextStyle(fontSize: 14),
+                style: const TextStyle(fontSize: 14),
               ),
               onTap: () {
                 Get.back();
