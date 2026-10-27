@@ -87,7 +87,7 @@ List<SettingsModel> get recommendSettings => [
     },
   ),
   getListUidWithNameModel(
-    title: uiTx('屏蔽用户'),
+    title: uiTx('推荐屏蔽用户'),
     getUidsMap: () => Pref.recommendBlockedMids,
     setUidsMap: (uidsMap) {
       Pref.recommendBlockedMids = uidsMap;
@@ -99,7 +99,7 @@ List<SettingsModel> get recommendSettings => [
     },
   ),
   getListUidWithNameModel(
-    title: uiTx('白名单用户'),
+    title: uiTx('推荐白名单用户'),
     leading: const Icon(Icons.person_add_alt_1_outlined),
     emptySubtitle: uiTx('点击添加白名单用户'),
     countSubtitleBuilder: (count) => uiTxP('已加入白名单 {0} 个用户', [count]),

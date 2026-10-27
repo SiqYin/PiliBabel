@@ -26,16 +26,18 @@ class _DynamicsSettingState extends State<DynamicsSetting> {
     super.initState();
     if (widget.autoOpenKeywordFilter) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted || list.isEmpty) {
+        if (!mounted) {
           return;
         }
-        final firstItem = list.first;
-        if (firstItem case NormalModel(:final onTap)) {
-          onTap?.call(context, () {
-            if (mounted) {
-              setState(() {});
-            }
-          });
+        for (final item in list) {
+          if (item is NormalModel && item.effectiveTitle == uiTx('动态关键词过滤')) {
+            item.onTap?.call(context, () {
+              if (mounted) {
+                setState(() {});
+              }
+            });
+            break;
+          }
         }
       });
     }

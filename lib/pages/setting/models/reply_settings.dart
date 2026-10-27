@@ -9,7 +9,7 @@ import 'package:material_ui/material_ui.dart';
 
 List<SettingsModel> get replySettings => [
   getListBanWordModel(
-    title: uiTx('关键词过滤'),
+    title: uiTx('评论关键词过滤'),
     key: SettingBoxKey.banWordForReply,
     onChanged: (value) {
       ReplyGrpc.replyRegExp = value;
@@ -17,7 +17,7 @@ List<SettingsModel> get replySettings => [
     },
   ),
   getListUidWithNameModel(
-    title: uiTx('屏蔽用户'),
+    title: uiTx('评论屏蔽用户'),
     getUidsMap: () => Pref.replyBlockedMids,
     setUidsMap: (mids) {
       Pref.replyBlockedMids = mids;
@@ -26,7 +26,7 @@ List<SettingsModel> get replySettings => [
     onUpdate: () {},
   ),
   getListUidWithNameModel(
-    title: uiTx('白名单用户'),
+    title: uiTx('评论白名单用户'),
     leading: const Icon(Icons.person_add_alt_1_outlined),
     emptySubtitle: uiTx('点击添加白名单用户'),
     countSubtitleBuilder: (count) => '已加入白名单 $count 个用户',

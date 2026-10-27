@@ -9,7 +9,7 @@ import 'package:material_ui/material_ui.dart';
 
 List<SettingsModel> get dynamicsSettings => [
   getListBanWordModel(
-    title: uiTx('关键词过滤'),
+    title: uiTx('动态关键词过滤'),
     key: SettingBoxKey.banWordForDyn,
     onChanged: (value) {
       DynamicsDataModel.banWordForDyn = value;
@@ -17,7 +17,7 @@ List<SettingsModel> get dynamicsSettings => [
     },
   ),
   getListUidModel(
-    title: uiTx('屏蔽用户'),
+    title: uiTx('动态屏蔽用户'),
     getUids: () => Pref.dynamicsBlockedMids,
     setUids: (uids) {
       Pref.dynamicsBlockedMids = uids;
@@ -29,7 +29,7 @@ List<SettingsModel> get dynamicsSettings => [
     },
   ),
   getListUidWithNameModel(
-    title: uiTx('白名单用户'),
+    title: uiTx('动态白名单用户'),
     leading: const Icon(Icons.person_add_alt_1_outlined),
     emptySubtitle: uiTx('点击添加白名单用户'),
     countSubtitleBuilder: (count) => '已加入白名单 $count 个用户',
@@ -69,4 +69,16 @@ List<SettingsModel> get dynamicsSettings => [
       DynamicsDataModel.removeOnlyFansVideoDyn = value;
     },
   ),
+  SwitchModel(
+    title: uiTx('屏蔽动态视频'),
+    subtitle: uiTx('过滤动态流中的动态视频（信息密度较低，仅非 UP 页生效）'),
+    leading: const Icon(Icons.smart_display_outlined),
+    setKey: SettingBoxKey.removeDynVideoDyn,
+    defaultVal: false,
+    onChanged: (value) {
+      DynamicsDataModel.removeDynVideoDyn = value;
+    },
+  ),
+
+
 ];
