@@ -28,12 +28,28 @@ class AudioCacheTask {
     required this.cid,
     required this.title,
     required this.quality,
+    this.avid,
+    this.cover,
+    this.ownerName,
+    this.ownerId,
+    this.durationMs = 0,
+    this.seasonId,
+    this.epId,
   });
 
   final String bvid;
   final int cid;
   final String title;
   final AudioQuality quality;
+
+  /// 失败重试要用到的原始参数（见 AudioCacheService.retryTask）。
+  final int? avid;
+  final String? cover;
+  final String? ownerName;
+  final int? ownerId;
+  final int durationMs;
+  final String? seasonId;
+  final int? epId;
 
   final status = AudioCacheStatus.wait.obs;
   final received = 0.obs;
@@ -245,6 +261,13 @@ class AudioCacheService extends GetxService {
       cid: cid,
       title: title,
       quality: quality,
+      avid: avid,
+      cover: cover,
+      ownerName: ownerName,
+      ownerId: ownerId,
+      durationMs: durationMs,
+      seasonId: seasonId,
+      epId: epId,
     );
     taskList.insert(0, task);
 
@@ -373,6 +396,22 @@ class AudioCacheService extends GetxService {
   }
 
   void removeTask(AudioCacheTask task) => taskList.remove(task);
+
+  /// 失败的任务重试：用任务上缓存的原始参数重新走一遍 download。
+  /// 原来的失败任务只是留在列表里，用户没有任何重新缓存的入口。
+  Future<bool> retryTask(AudioCacheTask task) => download(
+        avid: task.avid ?? 0,
+        bvid: task.bvid,
+        cid: task.cid,
+        title: task.title,
+        cover: task.cover ?? '',
+        ownerName: task.ownerName,
+        ownerId: task.ownerId,
+        durationMs: task.durationMs,
+        seasonId: task.seasonId,
+        epId: task.epId,
+        quality: task.quality,
+      );
 
   /// 删除缓存。[deleteFile] 为 true 时连本地音频文件一起删。
   Future<void> delete(
