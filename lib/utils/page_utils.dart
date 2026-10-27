@@ -247,7 +247,7 @@ abstract final class PageUtils {
           '/dynamicDetail',
           arguments: {
             'item': item,
-            if (onUpdate != null) 'onUpdate': onUpdate,
+            ?'onUpdate': onUpdate,
             if (viewComment) 'viewComment': true,
           },
         );

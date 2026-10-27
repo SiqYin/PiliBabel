@@ -20,7 +20,6 @@ import 'package:PiliPlus/models_new/video/video_detail/data.dart';
 import 'package:PiliPlus/models_new/video/video_detail/episode.dart' as ugc;
 import 'package:PiliPlus/models_new/video/video_detail/page.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
-import 'package:PiliPlus/pages/danmaku/controller.dart';
 import 'package:PiliPlus/services/download/download_manager.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/cache_manager.dart';
@@ -48,7 +47,7 @@ class DownloadService extends GetxService {
   final _danmakuLock = Lock();
 
   final flagNotifier = SetNotifier();
-  final completedEntryNotifier = Set<ValueChanged<BiliDownloadEntryInfo>>();
+  final completedEntryNotifier = <ValueChanged<BiliDownloadEntryInfo>>{};
   final waitDownloadQueue = RxList<BiliDownloadEntryInfo>();
   final downloadList = <BiliDownloadEntryInfo>[];
 
@@ -436,7 +435,7 @@ class DownloadService extends GetxService {
   void _warnIfSetupSlow(int gen) {
     Timer(const Duration(seconds: 12), () {
       if (gen == _setupGen && _setupDepth > 0) {
-        SmartDialog.showToast('${uiTx('缓存建立中，阶段：')}${_phase}');
+        SmartDialog.showToast('${uiTx('缓存建立中，阶段：')}$_phase');
       }
     });
   }

@@ -336,8 +336,9 @@ class PipOverlayService {
     // 若 controller 已由 GetX 关闭，页面已离栈，此时再执行完整清理。
     if (shouldResetState && _savedController is VideoDetailController) {
       final ctrl = _savedController as VideoDetailController;
-      ctrl.isEnteringPip = false;
-      ctrl.cancelBlockListener();
+      ctrl
+        ..isEnteringPip = false
+        ..cancelBlockListener();
       if (ctrl.isClosed) {}
       for (final controller in _savedControllers.values) {
         _setEnteringPipFlag(controller, false);

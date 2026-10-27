@@ -322,7 +322,7 @@ abstract final class ImageUtils {
 
   static void _resolvePrefetch(String url) {
     final provider = CachedNetworkImageProvider(url);
-    final stream = provider.resolve(const ImageConfiguration());
+    final stream = provider.resolve(ImageConfiguration.empty);
     late final ImageStreamListener listener;
     void finish() {
       stream.removeListener(listener);

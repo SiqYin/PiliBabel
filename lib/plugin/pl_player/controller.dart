@@ -1888,7 +1888,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     try {
       final raw = _videoPlayerController
           ?.getProperty('estimated-vf-fps')
-          ?.trim();
+          .trim();
       if (raw != null && raw.isNotEmpty) {
         vfps = double.tryParse(raw) ?? -1;
       }
@@ -2276,7 +2276,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
             audio.isNotEmpty)
         ? src.audioUrls[next % src.audioUrls.length]
         : audio;
-    final at = player.state.position ?? Duration.zero;
+    final at = player.state.position;
     try {
       await player.open(
         Media(
