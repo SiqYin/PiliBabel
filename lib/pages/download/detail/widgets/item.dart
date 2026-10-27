@@ -463,6 +463,18 @@ CoverTranslateButton(cover: entry.cover),
             showStaticPositionMenu<void>(
               context: menuContext,
               items: [
+                if (entry.status == DownloadStatus.failDownload ||
+                    entry.status == DownloadStatus.failDownloadAudio ||
+                    entry.status == DownloadStatus.failDanmaku ||
+                    entry.status == DownloadStatus.failPlayUrl)
+                  CustomPopupMenuItem<void>(
+                    height: 38,
+                    child: Text(
+                      uiTx('重新缓存'),
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    onTap: () => downloadService.startDownload(entry),
+                  ),
                 CustomPopupMenuItem<void>(
                   height: 38,
                   child: Text(uiTx('查看详情页'), style: TextStyle(fontSize: 13)),

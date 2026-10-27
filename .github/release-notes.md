@@ -1,14 +1,12 @@
-### PiliBabel v3.3.4
+### PiliBabel v3.3.5
 
-**Dynamics cards, a home-feed cover fix, and an upstream sync.**
+**Comment-section recovery, cached-audio fixes, and a cleaner analyze baseline.**
 
-- The dynamics (P3) timeline now renders four card types that were previously dropped or shown as blanks: paid/charging posts, applets, topic sets, and subscription cards.
-- Fixed the home feed's first screen showing no covers at all. The cold-start prefetch entries are consumed as the first page, and those entries do not always carry a top-level `cover`; the cover is now read from the item's `args`/`pic` fallbacks, and a prefetch page that yields no cover at all is treated as a miss so the normal feed request runs instead.
-- Upstream PiliNara changes are in: the status bar going dark when the app opens, downloads that were waiting resuming after the process is killed, the media-kit and companion package upgrade, the Wayland black-video workaround, and selectable audio quality when caching a video.
-- AI-translation audit of every interface string added since 3.0.5. One string was missing: the "audio quality" label and the quality menu items in the download panel now go through the same AI translation path as the rest of the UI.
-- The README changelog was rewritten from scratch for all 44 language versions, covering everything from 2.6.x through 3.3.4.
-- Upstream sync baseline for this release: Starfallan/PiliNara at commit `b5694ccd` (2026-10-24). The baseline is written down in `UPSTREAM-SYNC.md` so the next sync knows where to start.
+- The comment section no longer fails silently. Every request error now carries the gRPC status, `bili-status-code`, the HTTP status and the request URL, so a failure shows a real reason instead of an empty "tap to retry". The `oid` is read from the live player state on every request - a stale `0` snapshot made the server answer `-400 invalid oid` forever - and a manual retry now clears the prefetched first page instead of replaying the same broken entry.
+- Cached audio is fixed. A finished cache task stayed in the in-progress list forever, which left a stuck 100% progress bar at the top of the download page; deleting that row then deleted the audio file that the finished entry still points at, so the cached track went silent, snapped back to 00:00 and rolled over to the next part. Finished tasks are removed from the list now, and an already-finished task is only unbound, never deleted. A failed audio-cache task can also be retried in place with the new "re-cache" action, and a failed video-cache entry exposes the same action in its menu.
+- Analyze baseline: 16 warnings and a batch of low-risk infos were cleared (dead code, unused imports, cascade invocations, null-aware elements, missing `const` constructors and so on), plus two structural fixes in the member pages - the live-item widget is a standalone file again and the member-works grid uses a simple max-extent delegate.
+- Selective upstream picking from the latest upstream: the per-item keyword-filter compilation, the storage keys/prefs, the result model and the member home/opus pages, merged item by item - still no wholesale merge.
 
-Everything from v3.3.3 is included as well: the comment-section hotfix (the first-page prefetch was casting `Success<MainListReply?>` to `LoadingState<MainListReply>`, so the cast threw before any network work and every retry replayed the same broken cache entry), the v3.3.2 DNS resolution instrumentation and encrypted-DNS fallback switch, the host table, speed scores shared with the connection layer, second-screen feed prefetch with generation-based de-duplication, feed `idx` semantics, the audio page's buffered range and cache statistics, host health in stream selection, and the "load more replies" wording.
+Everything from v3.3.4 is included as well: the dynamic (P3) cards, the home-feed cover fix, and the upstream sync recorded at `b5694ccd`.
 
 Downloads are below.
