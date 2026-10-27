@@ -248,3 +248,8 @@ PiliBabel تحت **پروانهٔ عمومی همگانی GNU نسخهٔ 3.0 (GP
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — قلم متن‌باز چینی همراه‌شده با برنامه، تحت پروانهٔ آزاد قلم SIL نسخهٔ 1.1
 - و موارد دیگر
 - الهام‌گرفته از «ترجمهٔ رابط کاربری هوش مصنوعی» رسمی bilibili.
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

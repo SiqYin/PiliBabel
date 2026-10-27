@@ -104,8 +104,15 @@ class MediaProxy {
 
   static Future<void> _handle(HttpRequest request) async {
     final resp = request.response;
-    // 每个请求独占一个 HttpClient：拖动时强制关掉它，在飞的上游连接一并断掉
-    final client = HttpClient()..connectionTimeout = const Duration(seconds: 8);
+    // 每个请求独占一个 HttpClient：拖动时强制关掉它，在飞的上游连接一并断掉。
+    //
+    // 显式 findProxy=DIRECT：本代理本身就在做「一次 GET → N 段并发上行」，如果它
+    // 建的上游连接又被全局 HttpOverrides 指回本机 DnsProxy，就会变成
+    // 「qn 段并发 × 每条一个 CONNECT 隧道」，把解析代理挤爆、反过来拖死数据请求
+    // （3.3.11 事故的同型风险）。媒体直链的域名用系统解析足够，这里必须直连。
+    final client = HttpClient()
+      ..connectionTimeout = const Duration(seconds: 8)
+      ..findProxy = ((_) => 'DIRECT');
     try {
       final q = request.uri.queryParameters;
       if (_token == null || q['t'] != _token) {

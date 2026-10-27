@@ -248,3 +248,8 @@ Den medfølgende skrifttypen **LXGW WenKai** er lisensiert separat under **SIL O
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — den åpne kinesiske skrifttypen som er pakket med appen, under SIL Open Font License 1.1
 - og mer
 - Inspirert av bilibilis offisielle «AI-grensesnittoversettelse».
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。
