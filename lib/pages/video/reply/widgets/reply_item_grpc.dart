@@ -513,24 +513,31 @@ class ReplyItemGrpc extends StatelessWidget {
           const SizedBox(width: 2),
         ],
         if (replyControl.cardLabels.isNotEmpty) ...[
-          // 这个标签是服务端下发的中文（如「UP主觉得很赞」「相互关注」），经 AI 翻译后
-          // 可能显著变长（一条评论同时带两个标签时尤其明显）。此前它是个无约束的
-          // Text，在 Row 里会按内容宽度铺开，把后面的 Spacer 和右侧的点赞等按钮
-          // 一起挤出屏幕 —— 用户就点不到按钮了。
-          // 用 Expanded 把它限制在剩余空间内；超长时**允许折两行**（和「我的」页
-          // 「离线缓存」等处的做法一致），而不是一行省略，免得译文本就被截断丢失。
-          // 两行仍放不下时再走省略号兜底。
+          // 这些标签是服务端下发的中文（如「UP主觉得很赞」「相互关注」），经 AI 翻译后
+          // 可能显著变长。两条要求：
+          //   1) 不能把右侧的点赞等按钮挤出屏幕（用 Expanded 限制在剩余空间内）；
+          //   2) **每个标签各自独立折行**，绝不能把多个标签拼成一个字符串再折行 ——
+          //      拼接后折行会跨标签断开，出现「いいねしま／した 相互フォロー」这种
+          //      把一个词劈成两半、后面又跟着另一个标签的怪样子。
+          // 所以这里用纵向 Column 逐个渲染，每个标签最多两行（不够长就不折），
+          // 两行仍放不下才省略号兜底。
           Expanded(
-            child: Text(
-              // 逐条翻译而不是先拼接：拼接会让「A+B」这种组合各自成为独立缓存 key。
-              dialogBtn != null
-                  ? uiTx(replyControl.cardLabels.first.textContent)
-                  : replyControl.cardLabels
-                        .map((e) => uiTx(e.textContent))
-                        .join('  '),
-              style: textStyle.copyWith(color: colorScheme.secondary),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (final label
+                    in dialogBtn != null
+                        ? replyControl.cardLabels.take(1)
+                        : replyControl.cardLabels)
+                  Text(
+                    // 逐条翻译而不是先拼接：拼接会让「A+B」这种组合各自成为独立缓存 key。
+                    uiTx(label.textContent),
+                    style: textStyle.copyWith(color: colorScheme.secondary),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+              ],
             ),
           ),
           const SizedBox(width: 2),
