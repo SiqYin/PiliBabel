@@ -3,6 +3,7 @@ import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/models_new/fav/fav_folder/list.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/bili_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -69,7 +70,7 @@ CoverTranslateButton(cover: item.cover),
               return Text(
                 ' ${uiTx(item.title)}',
                 overflow: TextOverflow.fade,
-                maxLines: 1,
+                maxLines: Pref.videoTitleFull ? 2 : 1,
               );
             },
           ),

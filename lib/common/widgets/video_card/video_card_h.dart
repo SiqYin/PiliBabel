@@ -110,12 +110,21 @@ class VideoCardH extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: .start,
                 children: [
-                  AspectRatio(
-                    aspectRatio: Style.aspectRatio,
-                    child: LayoutBuilder(
-                      builder: (context, boxConstraints) {
-                        final double maxWidth = boxConstraints.maxWidth;
-                        final double maxHeight = boxConstraints.maxHeight;
+                  // 封面高度必须固定，不能跟着格子高度走。
+                  //
+                  // 这里是横向卡片：封面用 AspectRatio，而 Row 给子项的宽度是无限的，
+                  // AspectRatio 会**按可用高度**反推宽度。格子高度一旦因为「标题展开
+                  // 四行」而加高（110 → 148），封面就会跟着放大、把右侧文字挤成细条。
+                  // 所以把封面钉死成原来的高度（旧格子 110 - 上下 padding 各 5 = 100），
+                  // 多出来的高度只留给右侧内容区的标题。
+                  SizedBox(
+                    height: 100,
+                    child: AspectRatio(
+                      aspectRatio: Style.aspectRatio,
+                      child: LayoutBuilder(
+                        builder: (context, boxConstraints) {
+                          final double maxWidth = boxConstraints.maxWidth;
+                          final double maxHeight = boxConstraints.maxHeight;
 
                         final progress = videoItem.progress;
 
@@ -173,6 +182,7 @@ class VideoCardH extends StatelessWidget {
                         );
                       },
                     ),
+                  ),
                   ),
                   const SizedBox(width: 10),
                   content(theme),

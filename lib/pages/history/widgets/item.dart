@@ -288,7 +288,10 @@ class HistoryItem extends StatelessWidget {
               height: 1.42,
               letterSpacing: 0.3,
             ),
-            maxLines: Pref.videoTitleFull ? 4 : 2,
+            // 保留原设计：多分 P 的历史条目平时只给 1 行、其它给 2 行；
+            // 打开「标题完全显示」后各自翻倍（1→2、2→4）。
+            maxLines:
+                (item.videos! > 1 ? 1 : 2) * (Pref.videoTitleFull ? 2 : 1),
             overflow: TextOverflow.ellipsis,
           ),
           if (item.history.business == 'pgc' &&

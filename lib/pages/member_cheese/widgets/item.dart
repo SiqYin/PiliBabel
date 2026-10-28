@@ -9,6 +9,7 @@ import 'package:PiliPlus/models_new/space/space_cheese/item.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 
 class MemberCheeseItem extends StatelessWidget {
@@ -30,7 +31,7 @@ class MemberCheeseItem extends StatelessWidget {
       children: [
         Text(
           uiTx(item.title!),
-          maxLines: 2,
+          maxLines: Pref.videoTitleFull ? 4 : 2,
           overflow: TextOverflow.ellipsis,
         ),
         if (item.status != null) ...[
