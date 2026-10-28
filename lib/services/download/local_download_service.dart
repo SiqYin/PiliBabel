@@ -494,7 +494,7 @@ class LocalDownloadService extends GetxService {
       List<String> urls,
       String filePath,
       int baseBytes,
-    ) async {
+    ) {
       final completer = Completer<bool>();
       DownloadManager(
         urls: urls,

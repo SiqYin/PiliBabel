@@ -255,7 +255,7 @@ abstract final class Update {
   /// 不等另一路 settle。注意不能用 `Future.wait`——它要等**所有** future 完成，只要直连
   /// 那路慢（甚至挂到 15s 超时），即使 dio 半秒就返回也会被拖到十几秒才弹窗。这正是
   /// 「进 APP 后 5~10 秒才弹更新」的根因，这里把它修成极速：谁先有数据谁胜。
-  static Future<Response> _fetchReleases() async {
+  static Future<Response> _fetchReleases() {
     final completer = Completer<Response>();
     var done = false;
     void settle(Response? r) {
