@@ -72,7 +72,7 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
     await Future.delayed(const Duration(milliseconds: 450));
     if (!mounted) return;
     final sectionContext = _aiSectionKey.currentContext;
-    if (sectionContext != null) {
+    if (sectionContext != null && sectionContext.mounted) {
       await Scrollable.ensureVisible(
         sectionContext,
         duration: const Duration(milliseconds: 550),
