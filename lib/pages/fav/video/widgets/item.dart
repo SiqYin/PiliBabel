@@ -5,6 +5,7 @@ import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models_new/fav/fav_folder/list.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/bili_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -85,6 +86,8 @@ CoverTranslateButton(cover: item.cover),
                 style: const TextStyle(
                   letterSpacing: 0.3,
                 ),
+                maxLines: Pref.videoTitleFull ? 4 : 2,
+                overflow: TextOverflow.ellipsis,
               );
             },
           ),

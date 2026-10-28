@@ -7,7 +7,16 @@ import 'package:flutter/rendering.dart';
 import 'package:material_ui/material_ui.dart';
 
 mixin GridMixin {
-  late final gridDelegate = Grid.videoCardHDelegate();
+  /// 复用 VideoCardH 的网格统一用这个 delegate。
+  ///
+  /// `mainAxisExtent` 必须跟随「视频标题是否展开成 4 行」一起加高：卡片里标题区
+  /// 用的是 `Pref.videoTitleFull ? 4 : 2`，而固定 110 只够放 3 行多一点 —— 4 行标题
+  /// 的第 4 行会被格子裁掉、只露出最上面一点（搜索结果就是这个问题）。
+  /// 其它网格（推荐流、直播、成员页等）早就在各自 delegate 里加了同样的 38px 补偿，
+  /// 只有这里漏了，导致所有共用 GridMixin 的页面（搜索、收藏、历史…）一起出问题。
+  late final gridDelegate = Grid.videoCardHDelegate(
+    mainAxisExtent: 110 + (Pref.videoTitleFull ? 38 : 0),
+  );
 
   Widget get gridSkeleton => SliverGrid(
     gridDelegate: gridDelegate,

@@ -439,12 +439,25 @@ class UiTranslateService extends GetxService {
     // → 不需要翻译，原样返回：既省 token，也不会把专有名词译歪。
     // 只在「文字与语言一一对应」时才这么判（见 looksLikeNativeScript）。
     if (looksLikeNativeScript(src, currentLanguage.nativeScript)) return src;
+    // 人工固定译名优先于缓存与模型：钉住的译法必须始终生效。
+    final pinned = _pinnedTranslations[src]?[currentLanguage.code];
+    if (pinned != null) return pinned;
     final hit = _cache[src];
     if (hit != null) return hit;
     // 尚未翻译：先显示原文，排进待翻队列。
     if (_pending.add(src)) _scheduleFlush();
     return src;
   }
+
+  /// 人工固定的译名。结构：原文 → { 目标语言代码 → 固定译文 }。
+  ///
+  /// 有些界面词条的译法是有明确口径的，交给模型自由发挥会出现语气/长度都不对的
+  /// 结果（例：「关注的人」在日语里官方口径就是「フォロー中」，模型可能给出
+  /// 「フォローしている人」这类又长又不地道的说法）。钉住之后：
+  /// 命中即直接返回，不走缓存、不发请求，也不会被模型结果覆盖。
+  static const Map<String, Map<String, String>> _pinnedTranslations = {
+    '关注的人': {'ja': 'フォロー中'},
+  };
 
   /// 与 [tx] 同源，但**等译文真正到齐再返回**。
   ///

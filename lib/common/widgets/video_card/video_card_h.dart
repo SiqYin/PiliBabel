@@ -247,7 +247,9 @@ class VideoCardH extends StatelessWidget {
                   letterSpacing: 0.3,
                   color: isClicked ? theme.colorScheme.outline : null,
                 ),
-                maxLines: 2,
+                // 与未翻译路径保持一致：也要跟随「标题展开」设置，
+                // 否则开了翻译就永远只有 2 行，和关翻译时看到的行数不一样。
+                maxLines: Pref.videoTitleFull ? 4 : 2,
                 overflow: .ellipsis,
               );
             }),

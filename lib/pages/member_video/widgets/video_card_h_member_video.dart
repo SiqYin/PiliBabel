@@ -15,6 +15,7 @@ import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/extension/dimension_ext.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 
 // 视频卡片 - 水平布局
@@ -229,7 +230,7 @@ class VideoCardHMemberVideo extends StatelessWidget {
                 letterSpacing: 0.3,
                 color: isCurr ? theme.colorScheme.primary : null,
               ),
-              maxLines: 2,
+              maxLines: Pref.videoTitleFull ? 4 : 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),

@@ -15,6 +15,7 @@ import 'package:PiliPlus/pages/later/controller.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -225,7 +226,7 @@ class VideoCardHLater extends StatelessWidget {
                           height: 1.42,
                           letterSpacing: 0.3,
                         ),
-                        maxLines: 2,
+                        maxLines: Pref.videoTitleFull ? 4 : 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
