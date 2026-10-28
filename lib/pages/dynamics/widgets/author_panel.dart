@@ -421,8 +421,8 @@ class AuthorPanel extends StatelessWidget {
                   onBlock?.call();
                   try {
                     final mid = moduleAuthor.mid!;
-                    final blockedMids = Pref.dynamicsBlockedMids;
-                    blockedMids.add(mid);
+                    final blockedMids = Pref.dynamicsBlockedMids
+                      ..add(mid);
                     Pref.dynamicsBlockedMids = blockedMids;
                     GlobalData().dynamicsBlockedMids = blockedMids;
                     DynamicsDataModel.dynamicsBlockedMids = blockedMids;

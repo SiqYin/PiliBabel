@@ -200,10 +200,10 @@ class _ViewPointSegmentProgressBar
     renderObject
       ..height = height
       ..segments = segments
-      ..onSeek = onSeek;
-    // segments 没变时上面的 setter 不会触发重绘，这里显式标脏，
-    // 保证译文到位后进度条上的分段名跟着重画。
-    renderObject.markNeedsPaint();
+      ..onSeek = onSeek
+      // segments 没变时上面的 setter 不会触发重绘，这里显式标脏，
+      // 保证译文到位后进度条上的分段名跟着重画。
+      ..markNeedsPaint();
   }
 }
 

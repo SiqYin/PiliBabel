@@ -111,7 +111,8 @@ class _VoteDecorationPainter extends BoxPainter {
   }
 
   double _calculateAdjustedSide(BorderSide side) {
-    if (side.color.alpha == 255 && side.style == .solid) {
+    // color.alpha 已废弃；a 是 0~1 的浮点，1.0 等价于原来的 255（完全不透明）
+    if (side.color.a == 1.0 && side.style == .solid) {
       return side.strokeInset;
     }
     return 0;
