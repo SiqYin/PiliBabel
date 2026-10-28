@@ -84,7 +84,7 @@ class VideoCardHMemberVideo extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AspectRatio(
+                  SizedBox(height: 100, child: AspectRatio(
                     aspectRatio: Style.aspectRatio,
                     child: LayoutBuilder(
                       builder: (context, boxConstraints) {
@@ -189,7 +189,7 @@ class VideoCardHMemberVideo extends StatelessWidget {
                         );
                       },
                     ),
-                  ),
+                  )),
                   const SizedBox(width: 10),
                   content(context, theme),
                 ],

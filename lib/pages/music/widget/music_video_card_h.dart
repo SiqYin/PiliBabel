@@ -65,7 +65,7 @@ class MusicVideoCardH extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AspectRatio(
+              SizedBox(height: 100, child: AspectRatio(
                 aspectRatio: Style.aspectRatio,
                 child: LayoutBuilder(
                   builder: (context, boxConstraints) {
@@ -94,7 +94,7 @@ CoverTranslateButton(cover: videoItem.cover),
                     );
                   },
                 ),
-              ),
+              )),
               const SizedBox(width: 10),
               content(context),
             ],

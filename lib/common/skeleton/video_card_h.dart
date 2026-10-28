@@ -14,12 +14,19 @@ class VideoCardHSkeleton extends StatelessWidget {
         child: Row(
           crossAxisAlignment: .start,
           children: [
-            AspectRatio(
-              aspectRatio: Style.aspectRatio,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: Style.mdRadius,
+            // 必须与 VideoCardH 的真实封面同高（100）：
+            // 骨架屏在 Row 里用 AspectRatio，宽度是按可用高度反推的；格子高度会随
+            // 「标题完全显示」加高，若不钉死高度，加载时就会先闪出一个大尺寸占位块，
+            // 等真实卡片出来再缩回正常尺寸。
+            SizedBox(
+              height: 100,
+              child: AspectRatio(
+                aspectRatio: Style.aspectRatio,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: Style.mdRadius,
+                  ),
                 ),
               ),
             ),

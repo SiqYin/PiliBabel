@@ -43,7 +43,7 @@ class MemberArticleItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (item.originImageUrls?.firstOrNull?.isNotEmpty == true) ...[
-                AspectRatio(
+                SizedBox(height: 100, child: AspectRatio(
                   aspectRatio: Style.aspectRatio,
                   child: LayoutBuilder(
                     builder:
@@ -58,7 +58,7 @@ CoverTranslateButton(cover: item.originImageUrls!.first),
 ]);
                         },
                   ),
-                ),
+                )),
                 const SizedBox(width: 10),
               ],
               Expanded(
