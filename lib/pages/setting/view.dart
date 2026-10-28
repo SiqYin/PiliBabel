@@ -53,61 +53,61 @@ class _SettingPageState extends State<SettingPage> {
   /// 于是关闭 AI 翻译后**永远回不到原文**。译文统一留给渲染时那层 `Obx`
   /// 去取，那里会跟着 `revision` 刷新，开关翻译都能立刻跟上。
   static final List<_SettingsModel> _items = [
-    _SettingsModel(
+    const _SettingsModel(
       type: SettingType.privacySetting,
       subtitle: '黑名单',
       icon: Icon(Icons.privacy_tip_outlined),
     ),
-    _SettingsModel(
+    const _SettingsModel(
       type: SettingType.recommendSetting,
       subtitle: '推荐来源（web/app）、刷新保留内容、过滤器',
       icon: Icon(Icons.explore_outlined),
     ),
-    _SettingsModel(
+    const _SettingsModel(
       type: SettingType.dynamicsSetting,
       subtitle: '关键词过滤、屏蔽用户、带货动态屏蔽',
       icon: Icon(Icons.dynamic_feed_outlined),
     ),
-    _SettingsModel(
+    const _SettingsModel(
       type: SettingType.aiTranslateSetting,
       subtitle: '翻译引擎、应用语言与界面翻译',
       icon: Icon(Icons.auto_awesome),
     ),
-    _SettingsModel(
+    const _SettingsModel(
       type: SettingType.themeSetting,
       subtitle: '主题模式、动态取色、高对比度深色、调色板与配色风格',
       icon: Icon(Icons.palette_outlined),
     ),
-    _SettingsModel(
+    const _SettingsModel(
       type: SettingType.fontSetting,
       subtitle: '内置霞鹜文楷、系统字体与自定义字体，字重与字号',
       icon: Icon(Icons.text_fields),
     ),
-    _SettingsModel(
+    const _SettingsModel(
       type: SettingType.videoSetting,
       subtitle: '画质、音质、解码、缓冲、音频输出等',
       icon: Icon(Icons.video_settings_outlined),
     ),
-    _SettingsModel(
+    const _SettingsModel(
       type: SettingType.playSetting,
       subtitle: '双击/长按、全屏、后台播放、弹幕、字幕、底部进度条等',
       icon: Icon(Icons.touch_app_outlined),
     ),
-    _SettingsModel(
+    const _SettingsModel(
       type: SettingType.styleSetting,
       subtitle: '横屏适配（平板）、侧栏、列宽、首页、动态红点、主题、字号、图片、帧率等',
       icon: Icon(Icons.style_outlined),
     ),
-    _SettingsModel(
+    const _SettingsModel(
       type: SettingType.extraSetting,
       subtitle: '震动、搜索、收藏、ai视频总结、评论、代理、更新检查等',
       icon: Icon(Icons.extension_outlined),
     ),
-    _SettingsModel(
+    const _SettingsModel(
       type: SettingType.webdavSetting,
       icon: Icon(MdiIcons.databaseCogOutline),
     ),
-    _SettingsModel(
+    const _SettingsModel(
       type: SettingType.about,
       icon: Icon(Icons.info_outline),
     ),

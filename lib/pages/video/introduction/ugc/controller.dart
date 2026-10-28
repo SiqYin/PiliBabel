@@ -327,7 +327,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
           ListTile(
             dense: true,
             title: Text(uiTx('复制链接'),
-              style: TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: 14),
             ),
             onTap: () {
               Get.back();
@@ -347,7 +347,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
           ListTile(
             dense: true,
             title: Text(uiTx('其它app打开'),
-              style: TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: 14),
             ),
             onTap: () {
               Get.back();
@@ -357,7 +357,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
           ListTile(
             dense: true,
             title: Text(uiTx('分享视频'),
-              style: TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: 14),
             ),
             onTap: () {
               Get.back();
@@ -372,7 +372,7 @@ class UgcIntroController extends CommonIntroController with ReloadMixin {
             ListTile(
               dense: true,
               title: Text(uiTx('分享至动态'),
-                style: TextStyle(fontSize: 14),
+                style: const TextStyle(fontSize: 14),
               ),
               onTap: () {
                 Get.back();

@@ -18,8 +18,8 @@ class RetryInterceptor extends Interceptor {
     this._client,
     this._count,
     this._delay, {
-    Future<void> Function()? onRiskControl,
-  }) : _onRiskControl = onRiskControl;
+    this._onRiskControl,
+  });
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {

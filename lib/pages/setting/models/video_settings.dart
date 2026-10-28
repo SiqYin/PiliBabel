@@ -32,14 +32,14 @@ List<SettingsModel> get videoSettings => [
   SwitchModel(
     title: uiTx('开启硬解'),
     subtitle: uiTx('以较低功耗播放视频，若异常卡死请关闭'),
-    leading: Icon(Icons.flash_on_outlined),
+    leading: const Icon(Icons.flash_on_outlined),
     setKey: SettingBoxKey.enableHA,
     defaultVal: true,
   ),
   SwitchModel(
     title: uiTx('免登录1080P'),
     subtitle: uiTx('免登录查看1080P视频'),
-    leading: Icon(Icons.hd_outlined),
+    leading: const Icon(Icons.hd_outlined),
     setKey: SettingBoxKey.p1080,
     defaultVal: true,
   ),
@@ -100,7 +100,7 @@ List<SettingsModel> get videoSettings => [
   ),
   SwitchModel(
     title: uiTx('CDN 测速'),
-    leading: Icon(Icons.speed),
+    leading: const Icon(Icons.speed),
     subtitle: uiTx('测速通过模拟加载视频实现，注意流量消耗，结果仅供参考'),
     setKey: SettingBoxKey.cdnSpeedTest,
     defaultVal: true,

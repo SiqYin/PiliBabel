@@ -315,7 +315,7 @@ class _DownloadPageState extends State<DownloadPage>
       return [
         CustomPopupMenuItem<void>(
           height: 38,
-          child: Text(uiTx('添加到文件夹'), style: TextStyle(fontSize: 13)),
+          child: Text(uiTx('添加到文件夹'), style: const TextStyle(fontSize: 13)),
           onTap: () async {
             final selectedIds = await showDownloadFolderPickerDialog(
               context: context,
@@ -353,7 +353,7 @@ class _DownloadPageState extends State<DownloadPage>
       ),
       CustomPopupMenuItem<void>(
         height: 38,
-        child: Text(uiTx('添加到其他文件夹'), style: TextStyle(fontSize: 13)),
+        child: Text(uiTx('添加到其他文件夹'), style: const TextStyle(fontSize: 13)),
         onTap: () async {
           final selectedIds = await showDownloadFolderPickerDialog(
             context: context,
@@ -389,7 +389,7 @@ class _DownloadPageState extends State<DownloadPage>
               CustomPopupMenuItem(
                 value: 0,
                 height: 38,
-                child: Text(uiTx('重命名'), style: TextStyle(fontSize: 13)),
+                child: Text(uiTx('重命名'), style: const TextStyle(fontSize: 13)),
               ),
               CustomPopupMenuItem(
                 value: 1,
@@ -885,7 +885,7 @@ class _DownloadPageState extends State<DownloadPage>
     if (confirmed == true) {
       await _audioCacheService.delete(entries, deleteFile: true);
       if (mounted) {
-        setState(() => _audioSelected.clear());
+        setState(_audioSelected.clear);
       }
     }
   }

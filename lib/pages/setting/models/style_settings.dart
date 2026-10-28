@@ -45,14 +45,14 @@ List<SettingsModel> get styleSettings => [
   if (PlatformUtils.isDesktop) ...[
     SwitchModel(
       title: uiTx('显示窗口标题栏'),
-      leading: Icon(Icons.window),
+      leading: const Icon(Icons.window),
       setKey: SettingBoxKey.showWindowTitleBar,
       defaultVal: true,
       needReboot: true,
     ),
     SwitchModel(
       title: uiTx('显示托盘图标'),
-      leading: Icon(Icons.donut_large_rounded),
+      leading: const Icon(Icons.donut_large_rounded),
       setKey: SettingBoxKey.showTrayIcon,
       defaultVal: true,
       needReboot: true,
@@ -76,7 +76,7 @@ List<SettingsModel> get styleSettings => [
   SwitchModel(
     title: uiTx('改用侧边栏'),
     subtitle: uiTx('开启后底栏与顶栏被替换，且相关设置失效'),
-    leading: Icon(Icons.chrome_reader_mode_outlined),
+    leading: const Icon(Icons.chrome_reader_mode_outlined),
     setKey: SettingBoxKey.useSideBar,
     defaultVal: false,
     needReboot: true,
@@ -105,14 +105,14 @@ List<SettingsModel> get styleSettings => [
     SwitchModel(
       title: uiTx('预测性返回动画'),
       subtitle: uiTx('开启后侧滑返回可原生预览上一页及桌面，需将页面过渡动画设为Native'),
-      leading: Icon(Icons.swipe_left_outlined),
+      leading: const Icon(Icons.swipe_left_outlined),
       setKey: SettingBoxKey.enablePredictiveBack,
       defaultVal: true,
       needReboot: true,
     ),
   SwitchModel(
     title: uiTx('优化平板导航栏'),
-    leading: Icon(Icons.auto_fix_high),
+    leading: const Icon(Icons.auto_fix_high),
     setKey: SettingBoxKey.optTabletNav,
     defaultVal: true,
     needReboot: true,
@@ -120,7 +120,7 @@ List<SettingsModel> get styleSettings => [
   SwitchModel(
     title: uiTx('MD3样式底栏'),
     subtitle: uiTx('Material You设计规范底栏，关闭可变窄'),
-    leading: Icon(Icons.design_services_outlined),
+    leading: const Icon(Icons.design_services_outlined),
     setKey: SettingBoxKey.enableMYBar,
     defaultVal: true,
     needReboot: true,
@@ -128,14 +128,14 @@ List<SettingsModel> get styleSettings => [
   SwitchModel(
     title: uiTx('首页背景渐变'),
     subtitle: uiTx('主框架背景由纯色改为渐变色'),
-    leading: Icon(Icons.gradient_outlined),
+    leading: const Icon(Icons.gradient_outlined),
     setKey: SettingBoxKey.enableGradientBg,
     defaultVal: false,
     needReboot: true,
   ),
   SwitchModel(
     title: uiTx('悬浮底栏'),
-    leading: Icon(MdiIcons.soundbar),
+    leading: const Icon(MdiIcons.soundbar),
     setKey: SettingBoxKey.floatingNavBar,
     defaultVal: false,
     needReboot: true,
@@ -149,13 +149,13 @@ List<SettingsModel> get styleSettings => [
   ),
   SwitchModel(
     title: uiTx('播放页移除安全边距'),
-    leading: Icon(Icons.fit_screen_outlined),
+    leading: const Icon(Icons.fit_screen_outlined),
     setKey: SettingBoxKey.removeSafeArea,
     defaultVal: false,
   ),
   SwitchModel(
     title: uiTx('视频播放页使用深色主题'),
-    leading: Icon(Icons.dark_mode_outlined),
+    leading: const Icon(Icons.dark_mode_outlined),
     setKey: SettingBoxKey.darkVideoPage,
     defaultVal: false,
   ),
@@ -182,20 +182,20 @@ List<SettingsModel> get styleSettings => [
   SwitchModel(
     title: uiTx('动态页UP主列表显示“我”置顶'),
     subtitle: uiTx('用于快速查看个人的动态'),
-    leading: Icon(Icons.push_pin_outlined),
+    leading: const Icon(Icons.push_pin_outlined),
     setKey: SettingBoxKey.dynamicsShowSelfUp,
     defaultVal: true,
   ),
   SwitchModel(
     title: uiTx('动态页显示所有已关注UP主'),
-    leading: Icon(Icons.people_alt_outlined),
+    leading: const Icon(Icons.people_alt_outlined),
     setKey: SettingBoxKey.dynamicsShowAllFollowedUp,
     defaultVal: false,
     needReboot: true,
   ),
   SwitchModel(
     title: uiTx('动态页展开正在直播UP列表'),
-    leading: Icon(Icons.live_tv),
+    leading: const Icon(Icons.live_tv),
     setKey: SettingBoxKey.expandDynLivePanel,
     defaultVal: false,
     needReboot: true,
@@ -335,7 +335,7 @@ List<SettingsModel> get styleSettings => [
   ),
   NormalModel(
     title: uiTx('滑动动画弹簧参数'),
-    leading: Icon(Icons.chrome_reader_mode_outlined),
+    leading: const Icon(Icons.chrome_reader_mode_outlined),
     onTap: _showSpringDialog,
   ),
   NormalModel(
@@ -475,7 +475,7 @@ void _showUiScaleDialog(
               decoration: InputDecoration(
                 labelText: uiTx('缩放比例'),
                 hintText: '0.50 - 2.00',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
               onChanged: (value) {
                 final parsed = double.tryParse(value);

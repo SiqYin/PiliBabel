@@ -491,7 +491,7 @@ CoverTranslateButton(cover: entry.cover),
                   ),
                 CustomPopupMenuItem<void>(
                   height: 38,
-                  child: Text(uiTx('查看详情页'), style: TextStyle(fontSize: 13)),
+                  child: Text(uiTx('查看详情页'), style: const TextStyle(fontSize: 13)),
                   onTap: () {
                     if (entry.ep case final ep?) {
                       if (ep.from == VideoType.pugv.name) {
@@ -521,7 +521,7 @@ CoverTranslateButton(cover: entry.cover),
                   CustomPopupMenuItem<void>(
                     height: 38,
                     child: Text(uiTx('打开本地文件夹'),
-                      style: TextStyle(fontSize: 13),
+                      style: const TextStyle(fontSize: 13),
                     ),
                     onTap: () async {
                       try {
@@ -553,7 +553,7 @@ CoverTranslateButton(cover: entry.cover),
                 if (canDel && Platform.isAndroid)
                   CustomPopupMenuItem<void>(
                     height: 38,
-                    child: Text(uiTx('导出'), style: TextStyle(fontSize: 13)),
+                    child: Text(uiTx('导出'), style: const TextStyle(fontSize: 13)),
                     onTap: () async {
                       if (!await ImageUtils.checkPermissionDependOnSdkInt()) {
                         return;
@@ -605,7 +605,7 @@ CoverTranslateButton(cover: entry.cover),
                 if (canDel)
                   CustomPopupMenuItem<void>(
                     height: 38,
-                    child: Text(uiTx('更新弹幕'), style: TextStyle(fontSize: 13)),
+                    child: Text(uiTx('更新弹幕'), style: const TextStyle(fontSize: 13)),
                     onTap: () async {
                       final res = await downloadService.downloadDanmaku(
                         entry: entry,

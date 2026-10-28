@@ -128,12 +128,12 @@ class MedalWall extends StatelessWidget {
                           color: colorScheme.btnColor,
                         ),
                         child: Text(uiTx('佩戴中'),
-                          style: TextStyle(
+                          style: const TextStyle(
                             height: 1,
                             fontSize: 10,
                             color: Colors.white,
                           ),
-                          strutStyle: StrutStyle(
+                          strutStyle: const StrutStyle(
                             height: 1,
                             leading: 0,
                             fontSize: 10,

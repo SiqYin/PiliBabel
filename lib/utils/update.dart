@@ -279,7 +279,7 @@ abstract final class Update {
     }
 
     var settled = 0;
-    final total = 2;
+    const total = 2;
     void onSettled(Response? r) {
       settle(r);
       settled++;
