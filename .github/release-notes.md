@@ -1,17 +1,15 @@
-### PiliBabel v3.3.17
+### PiliBabel v3.3.18
 
-**Code-quality cleanup (backlog item 68 — the analyzer tail): static-analysis warnings reduced from 42 to 0, errors remain 0.**
+**Continuing the analyzer-tail cleanup (backlog item 68): cascade style and deprecated APIs in our own code — behaviour fully unchanged.**
 
-No behaviour or UI change — this release only removes analyzer findings:
+- `segment_progress_bar`: `markNeedsPaint()` folded into the cascade above it
+- `author_panel`: `blockedMids.add(mid)` folded into the cascade
+- `vote_decoration`: deprecated `color.alpha` (0–255) → `color.a == 1.0` (0–1, equivalent)
 
-- **16 unused imports, 3 duplicate imports** — each verified to be genuinely unreferenced before removal
-- **5 dead_code + 5 dead_null_aware_expression** — `x` could no longer be null yet code still wrote `x ?? ''`; the never-taken branch is gone
-- **5 unnecessary non-null assertions** — redundant `!` markers
-- **2 invalid_use_of_protected / visible_for_testing_member** — the download page called `ChangeNotifier.notifyListeners()` directly; now done through a small subclass exposing `notify()`
-- **1 override_on_non_overriding_member** — the audio page's `onDownloadAudio` was mislabelled `@override`
-- **1 unused_element** — the comment area's `_buildTranslateBtn` had no remaining callers (dead code), removed
-- **1 each** of unused_field, unused_local_variable, unused_element_parameter, invalid_null_aware_operator, unawaited_return_in_try_block
+**Deliberately left alone, recorded here for future reference:**
 
-> During cleanup CI caught one mistake of mine: removing an import left a dangling `hide` continuation in `member_opus`, producing two errors. Fixed and re-verified back to zero.
+- The 11 `cascade_invocations` and 23 `deprecated_member_use` findings under `lib/common/widgets/flutter/`: those files are copies of Flutter SDK sources (they carry the Flutter Authors copyright header). Editing them would add merge cost on every Flutter upgrade, and the only gain is a quieter analyzer.
+- `onReorder` → `onReorderItem` (download folder management / download sorting): the new callback auto-corrects `newIndex`, whereas the old one expects the caller to do it. Swapping them would **change the resulting order**, so it's a behaviour change — not worth doing just to silence a lint.
+- `LinearProgressIndicator.year2023: true`: a product appearance choice (2023 vs 2024 progress styling); changing it to satisfy a lint would alter the UI.
 
 Downloads are below.

@@ -2,6 +2,24 @@
 
 按 Keep a Changelog 的思路编写,留个记录,方便知道每次更新都改了什么,也方便用户查看更新内容.
 
+## 3.3.18
+
+**继续收 analyze 尾巴（清单第 68 条）：自有代码的级联写法与废弃 API，行为完全等价。**
+
+- `segment_progress_bar`：`markNeedsPaint()` 并入上方的级联调用
+- `author_panel`：`blockedMids.add(mid)` 并入级联
+- `vote_decoration`：`color.alpha`（0~255，已废弃）改为 `color.a == 1.0`（0~1，等价）
+
+**以下刻意不改**，理由记在这里以备日后查阅：
+
+- `lib/common/widgets/flutter/` 下 11 处 `cascade_invocations`、23 处 `deprecated_member_use`：
+  这些是从 Flutter SDK 源码复制来的文件（带 Flutter Authors 版权头），改动会在
+  升级 Flutter 时增加合并成本，收益只是消掉 lint。
+- `onReorder` → `onReorderItem`（下载文件夹管理 / 下载排序）：新回调会自动修正
+  `newIndex`，旧回调需要我们算。直接替换会**改变排序结果**，属行为变更，不为消 lint 而动。
+- `LinearProgressIndicator.year2023: true`：这是产品外观选择（2023 vs 2024 进度条样式），
+  为消 lint 改它会改变 UI。
+
 ## 3.3.17
 
 **代码质量清理（清单第 68 条 analyze 尾巴）：静态分析 warnings 42 → 0，errors 保持 0。**
