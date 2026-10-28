@@ -155,6 +155,7 @@ docs/*
 !docs/danmaku_font_scaling.md
 !docs/inapp_pip_implementation.md
 !docs/known-differences-vs-official.md
+!docs/backlog-verification.md
 test*.dart
 
 AGENTS.md
