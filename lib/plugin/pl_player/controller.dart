@@ -2547,7 +2547,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         /// 到点照样执行 seek，由内核自己去取新位置的数据。
         await _videoPlayerController?.stream.buffer.first.timeout(
           const Duration(milliseconds: 600),
-          onTimeout: () => const Duration.zero,
+          onTimeout: () => Duration.zero,
         );
       }
       danmakuController?.clear();
