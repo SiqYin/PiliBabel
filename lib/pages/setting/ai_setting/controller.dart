@@ -251,7 +251,6 @@ class AiSettingController extends GetxController {
   }
 
   void reorderTemplate(int oldIndex, int newIndex) {
-    if (newIndex > oldIndex) newIndex--;
     final item = templates.removeAt(oldIndex);
     templates.insert(newIndex, item);
     _saveTemplates();

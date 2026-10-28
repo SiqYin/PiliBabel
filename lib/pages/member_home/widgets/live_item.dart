@@ -14,17 +14,17 @@ class LiveItem extends SingleChildRenderObjectWidget {
 
   @override
   RenderObject createRenderObject(BuildContext context) {
-    return _RenderLiveItem(color: color);
+    return RenderLiveItem(color: color);
   }
 
   @override
-  void updateRenderObject(BuildContext context, _RenderLiveItem renderObject) {
+  void updateRenderObject(BuildContext context, RenderLiveItem renderObject) {
     renderObject.color = color;
   }
 }
 
-class _RenderLiveItem extends RenderProxyBox {
-  _RenderLiveItem({required this._color});
+class RenderLiveItem extends RenderProxyBox {
+  RenderLiveItem({required this._color});
 
   Color _color;
   Color get color => _color;

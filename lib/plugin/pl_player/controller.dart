@@ -3475,6 +3475,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     }
 
     final completer = _autoAudioRestoreCompleter = Completer<bool>();
+    // ignore: cancel_subscriptions — 该订阅由 _finishAutoAudioRestoreWait 统一 cancel
+    // （见下方 _autoAudioRestoreSubscription?.cancel()），不在这里就地取消。
     final subscription = player.stream.videoParams.listen((_) {
       if (!_isAutoAudioRestoreCurrent(restoreGeneration)) {
         _finishAutoAudioRestoreWait(false);

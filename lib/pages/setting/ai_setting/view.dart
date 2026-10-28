@@ -182,7 +182,7 @@ class AiSettingPage extends StatelessWidget {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: controller.templates.length,
-                      onReorder: controller.reorderTemplate,
+                      onReorderItem: controller.reorderTemplate,
                       itemBuilder: (context, index) {
                         final t = controller.templates[index];
                         return Card(

@@ -339,7 +339,6 @@ class PipOverlayService {
       ctrl
         ..isEnteringPip = false
         ..cancelBlockListener();
-      if (ctrl.isClosed) {}
       for (final controller in _savedControllers.values) {
         _setEnteringPipFlag(controller, false);
       }

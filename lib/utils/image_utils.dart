@@ -298,7 +298,7 @@ abstract final class ImageUtils {
       final provider = CachedNetworkImageProvider(
         thumbnailUrl(url, quality),
       );
-      final stream = provider.resolve(const ImageConfiguration());
+      final stream = provider.resolve(ImageConfiguration.empty);
       late final ImageStreamListener listener;
       listener = ImageStreamListener((image, synchronousCall) {
         stream.removeListener(listener);

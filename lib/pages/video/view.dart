@@ -553,10 +553,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         // 同样刷新 ReplyController
         if (videoDetailController.showReply) {
           try {
-            final replyController = Get.find<VideoReplyController>(
-              tag: heroTag,
-            );
-            replyController.update();
+            Get.find<VideoReplyController>(tag: heroTag).update();
             _logSponsorBlock('Forced UI refresh for VideoReplyController');
           } catch (e) {
             _logSponsorBlock('Failed to refresh VideoReplyController: $e');
@@ -2953,27 +2950,27 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     final additionalControllers = <String, dynamic>{};
     if (videoDetailController.showReply) {
       try {
-        final replyController = Get.find<VideoReplyController>(tag: heroTag);
-        replyController.isEnteringPip = true;
+        final replyController = Get.find<VideoReplyController>(tag: heroTag)
+          ..isEnteringPip = true;
         additionalControllers['reply'] = replyController;
       } catch (_) {}
     }
     if (videoDetailController.isFileSource) {
       try {
-        final intro = Get.find<LocalIntroController>(tag: heroTag);
-        intro.isEnteringPip = true;
+        final intro = Get.find<LocalIntroController>(tag: heroTag)
+          ..isEnteringPip = true;
         additionalControllers['intro'] = intro;
       } catch (_) {}
     } else if (videoDetailController.isUgc) {
       try {
-        final intro = Get.find<UgcIntroController>(tag: heroTag);
-        intro.isEnteringPip = true;
+        final intro = Get.find<UgcIntroController>(tag: heroTag)
+          ..isEnteringPip = true;
         additionalControllers['intro'] = intro;
       } catch (_) {}
     } else {
       try {
-        final intro = Get.find<PgcIntroController>(tag: heroTag);
-        intro.isEnteringPip = true;
+        final intro = Get.find<PgcIntroController>(tag: heroTag)
+          ..isEnteringPip = true;
         additionalControllers['intro'] = intro;
       } catch (_) {}
     }
