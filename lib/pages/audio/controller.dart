@@ -1124,9 +1124,6 @@ class AudioController extends GetxController
 enum _TokenOrigin {
   /// 官方 APP 同源直链（gRPC `Listener/PlayURL` 或 `PlayView`）。
   app,
-
-  /// Web 令牌（`/x/player/wbi/playurl`）。
-  web,
 }
 
 extension on DashItem {
