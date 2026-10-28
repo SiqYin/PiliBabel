@@ -64,6 +64,20 @@ jobs:
           head -c 30000 /tmp/an_warn.txt > /tmp/an_warn_tail.txt
           head -c 30000 /tmp/an_info.txt > /tmp/an_info_tail.txt
 
+          # 定向提取「有正确性意义」的 lint 明细（清单第 68 条点名的那批）
+          {
+            for rule in use_build_context_synchronously avoid_void_async \
+                        unnecessary_async cancel_subscriptions \
+                        no_leading_underscores_for_local_identifiers \
+                        package_names unnecessary_parenthesis \
+                        unnecessary_import prefer_initializing_formals \
+                        library_private_types_in_public_api \
+                        constant_identifier_names; do
+              echo "### $rule"
+              grep -E " $rule\$" /tmp/an_info.txt /tmp/an_warn.txt 2>/dev/null || echo "  (none)"
+            done
+          } > /tmp/an_targeted.txt 2>&1 || true
+
           {
             echo "### flutter analyze summary"
             echo ""
@@ -89,6 +103,11 @@ jobs:
             echo "#### infos 明细"
             echo '```'
             head -c 30000 /tmp/an_info_tail.txt 2>/dev/null || true
+            echo '```'
+            echo ""
+            echo "#### 定向规则明细（正确性相关）"
+            echo '```'
+            head -c 20000 /tmp/an_targeted.txt 2>/dev/null || true
             echo '```'
           } > /tmp/body.md
 
