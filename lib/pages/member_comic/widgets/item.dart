@@ -5,6 +5,7 @@ import 'package:PiliPlus/common/widgets/image/image_save.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models_new/space/space_archive/item.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -88,6 +89,8 @@ CoverTranslateButton(cover: item.cover),
           ),
         ),
       ),
+    maxLines: Pref.videoTitleFull ? 4 : 2,
+    overflow: TextOverflow.ellipsis,
     );
   }
 }

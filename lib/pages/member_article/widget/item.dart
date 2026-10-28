@@ -8,6 +8,7 @@ import 'package:PiliPlus/models/common/stat_type.dart';
 import 'package:PiliPlus/models_new/space/space_article/item.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 
 class MemberArticleItem extends StatelessWidget {
@@ -69,7 +70,7 @@ CoverTranslateButton(cover: item.originImageUrls!.first),
                       Expanded(
                         child: Text(
                           uiTx(item.title!),
-                          maxLines: 2,
+                          maxLines: Pref.videoTitleFull ? 4 : 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: theme.textTheme.bodyMedium!.fontSize,

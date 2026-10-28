@@ -9,14 +9,12 @@ import 'package:material_ui/material_ui.dart';
 mixin GridMixin {
   /// 复用 VideoCardH 的网格统一用这个 delegate。
   ///
-  /// `mainAxisExtent` 必须跟随「视频标题是否展开成 4 行」一起加高：卡片里标题区
-  /// 用的是 `Pref.videoTitleFull ? 4 : 2`，而固定 110 只够放 3 行多一点 —— 4 行标题
-  /// 的第 4 行会被格子裁掉、只露出最上面一点（搜索结果就是这个问题）。
-  /// 其它网格（推荐流、直播、成员页等）早就在各自 delegate 里加了同样的 38px 补偿，
-  /// 只有这里漏了，导致所有共用 GridMixin 的页面（搜索、收藏、历史…）一起出问题。
-  late final gridDelegate = Grid.videoCardHDelegate(
-    mainAxisExtent: 110 + (Pref.videoTitleFull ? 38 : 0),
-  );
+  /// 高度补偿（`+ (Pref.videoTitleFull ? 38 : 0)`）放在 delegate 内部统一处理，
+  /// 这样所有调用方（GridMixin、搜索「全部」页…）都会自动跟随「标题两行/四行」开关，
+  /// 不会再出现某个页面漏加补偿、第 4 行被格子裁掉的情况。
+  /// 注意：VideoCardH 里的封面是固定高度的，多出来的高度只给右侧标题区，
+  /// 所以这里加高不会把封面撑大。
+  late final gridDelegate = Grid.videoCardHDelegate();
 
   Widget get gridSkeleton => SliverGrid(
     gridDelegate: gridDelegate,
@@ -30,11 +28,16 @@ mixin GridMixin {
 abstract final class Grid {
   static final double smallCardWidth = Pref.smallCardWidth;
 
+  /// 复用 VideoCardH 的网格统一用这个 delegate。
+  ///
+  /// 高度补偿（`+ 38`）写在这里，所有调用方（GridMixin、搜索「全部」页…）自动跟随
+  /// 「标题完全显示」开关，不会再出现某页漏加补偿、第 4 行被格子裁掉。
+  /// 前提：VideoCardH 的封面高度已固定，加高只会把空间给右侧标题区，不会撑大封面。
   static SliverGridDelegateWithMaxCrossAxisExtent videoCardHDelegate({
     double mainAxisExtent = 110,
   }) => SliverGridDelegateWithMaxCrossAxisExtent(
     mainAxisSpacing: 2,
-    mainAxisExtent: mainAxisExtent,
+    mainAxisExtent: mainAxisExtent + (Pref.videoTitleFull ? 38 : 0),
     maxCrossAxisExtent: Grid.smallCardWidth * 2,
   );
 }

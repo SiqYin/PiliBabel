@@ -1,18 +1,18 @@
-### PiliBabel v3.3.22
+### PiliBabel v3.3.23
 
-**Fix: video-title line count didn't consistently follow the "expand title (2 → 4 lines)" toggle; search-result titles were clipped.**
+**Urgent fix for the oversized-cover regression in v3.3.22, plus title line counts now follow each screen's original design by doubling.**
 
-**Symptom.** Video titles in search results were stuck at roughly two lines even with "2 lines → 4 lines" enabled — occasionally showing three-and-a-bit lines with only the top sliver of the 4th line visible.
+**Regression.** v3.3.22 added grid height allowance (+38 px) to fit 4-line titles. But `VideoCardH` is a horizontal card and its cover uses `AspectRatio`: a `Row` gives children unbounded width, so `AspectRatio` derives its width **from the available height**. Raising the cell height therefore enlarged the cover, squeezing the title/uploader into a narrow strip on the right.
+**Fix:** the cover height is now pinned to its original 100 px (old cell 110 − 5 px padding top and bottom), so any extra cell height goes to the content column only. Cover size is decoupled from cell height from now on.
 
-**Two root causes.**
-1. The shared `GridMixin` grid delegate had a fixed `mainAxisExtent` of 110, while the card renders its title area with `Pref.videoTitleFull ? 4 : 2`. 110 px only fits a little over three lines, so the 4th line was clipped by the cell. Every other grid (recommended feed, live, member pages, …) had long since added the same 38 px allowance in its own delegate — only this shared one was missing it, so every page using `GridMixin` (search, favourites, history, watch-later, …) was affected together.
-2. Inside `VideoCardH`, the "translated title" branch hard-coded `maxLines: 2` and ignored the toggle.
+**Title line rule is now "double" rather than always four lines**, matching each screen's original design:
+- screens that defaulted to **2 lines** → **4 lines** when "show full title" is on
+- screens that defaulted to **1 line** → **2 lines** when it is on
 
-**Fix.**
-- `GridMixin`'s delegate now adds `+ (Pref.videoTitleFull ? 38 : 0)`.
-- `VideoCardH`'s translated branch now uses `maxLines: Pref.videoTitleFull ? 4 : 2`.
-- After auditing the whole app, the remaining video-title renderers were wired to the toggle too (favourite detail, favourite videos, history, watch later, member contributions, subscriptions, subscription detail, music, member-home favourites — 9 places), adding `TextOverflow.ellipsis` where it was missing.
+Applied across: home/recommended horizontal cards, search (including its "All" tab), favourite detail, favourite videos, history (keeping the original "multi-part ⇒ 1 line" behaviour and doubling it), watch later, member contributions, subscriptions, subscription detail, music, member home, the Mine page, bangumi cards, comics, mall, articles, audio, and courses.
 
-**Also:** the comment label "关注的人" is now pinned to the Japanese translation "フォロー中" via a new "pinned translation" mechanism — on a hit it returns immediately, bypassing both the cache and any model request.
+**The height allowance now lives inside `Grid.videoCardHDelegate()`**, so every caller — including the search "All" tab — follows it automatically and no screen can be left with a clipped 4th line.
+
+The Japanese label "关注的人" remains pinned to "フォロー中".
 
 Downloads are below.
