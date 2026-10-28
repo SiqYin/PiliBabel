@@ -15,7 +15,6 @@ import 'package:PiliPlus/pages/member_opus/widgets/space_opus_item_grpc.dart';
 import 'package:PiliPlus/utils/grid.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
-    hide SliverWaterfallFlowDelegateWithMaxCrossAxisExtent;
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 class MemberOpus extends StatefulWidget {
