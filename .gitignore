@@ -154,6 +154,7 @@ test.dart
 docs/*
 !docs/danmaku_font_scaling.md
 !docs/inapp_pip_implementation.md
+!docs/known-differences-vs-official.md
 test*.dart
 
 AGENTS.md
