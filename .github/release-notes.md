@@ -1,13 +1,19 @@
-### PiliBabel v3.3.25
+### PiliBabel v3.4.0
 
-**Fix: the "show full title" toggle did not take effect on some screens until the app was restarted.**
+**Wrap-up release for this whole round (3.0.5 → 3.4.0).** No new features — this is the version that closes the round.
 
-**Cause.** `GridMixin`'s `gridDelegate` was a `late final` field, evaluated once using whatever `Pref.videoTitleFull` was at that moment. Screens such as search, favourites, history and watch-later use `AutomaticKeepAliveClientMixin`, so their `State` stays alive — after switching the toggle in Settings they kept using the old cell height and the old title line count. That is exactly the "I flipped the switch and nothing happened, I had to restart" behaviour.
+The round's theme was overseas-network experience, parity with the official app, and landing the AI translation layer. What 3.4.0 itself does:
 
-**Fix.** `gridDelegate` is now a **getter**, re-evaluated on every build against the current setting. As soon as a screen rebuilds (pull-to-refresh, returning from another page, list re-layout) the new setting applies, instead of being stuck on the old value forever.
+- **Analyzer brought to zero** — `flutter analyze` reports **0 errors / 0 warnings**. The 373 remaining *infos* are noise that was deliberately kept, with the reasoning itemised in `docs/outstanding.md`.
+- **Documentation closed out** — all 44 language READMEs carry an AI-translation note; the English and Chinese README changelogs are brought up to 3.4.0; what is outstanding, what is blocked, what was deliberately not done, and how the app knowingly differs from the official client are documented in `docs/outstanding.md` and `docs/known-differences-vs-official.md`.
+- **Repository tidied** — every temporary `diag/**` diagnostic branch deleted; only `feat/ai-ui-translate` and `main` remain on the remote (plus the local working branch `work/v3.3.7-fixes`).
+- **Explicitly not doing**: swapping the player kernel (decided for this round), migrating the home feed / main search / dynamics main feed to gRPC (missing proto definitions, or the gRPC payload degrades rich text).
 
-Also added a missing `@override` annotation (audio player controller's `onClose`).
+The three changes from this round that matter most to users:
+1. **Image pipeline now connects directly** — fixes "covers only appear after a pull-to-refresh" and removes the tunnel-flooding failure that had taken the whole data layer down.
+2. **Data requests connect directly by default** — noticeably faster loading than 3.0.5, with a switch to revert.
+3. **Audio and video use multi-connection segmented transfer by default** — the buffer keeps ahead of the playhead, seeking is much faster, and it no longer crashes or hangs.
 
-**Note — the remaining analyzer "info" items were deliberately left alone.** The `Object? boxed` in `reply_controller` exists specifically to work around a compiler problem seen in v3.3.3; the lambda and initializing-formal suggestions in `retry_interceptor` / `live_room` involve signature types. Changing them just to silence a lint would risk regressions.
+See the README's "Changelog: 2.6.x → 3.4.0" and the individual 3.3.x entries below for the full itemisation.
 
 Downloads are below.
