@@ -88,7 +88,7 @@ class MemberCheeseItem extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AspectRatio(
+              SizedBox(height: 100, child: AspectRatio(
                 aspectRatio: Style.aspectRatio,
                 child: LayoutBuilder(
                   builder: (context, boxConstraints) {
@@ -119,7 +119,7 @@ CoverTranslateButton(cover: item.cover),
                     return child;
                   },
                 ),
-              ),
+              )),
               const SizedBox(width: 10),
               Expanded(child: child),
             ],

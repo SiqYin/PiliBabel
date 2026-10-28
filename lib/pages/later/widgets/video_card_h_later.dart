@@ -86,7 +86,7 @@ class VideoCardHLater extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
-              AspectRatio(
+              SizedBox(height: 100, child: AspectRatio(
                 aspectRatio: Style.aspectRatio,
                 child: LayoutBuilder(
                   builder: (context, boxConstraints) {
@@ -169,7 +169,7 @@ class VideoCardHLater extends StatelessWidget {
                     );
                   },
                 ),
-              ),
+              )),
               const SizedBox(width: 10),
               content(context, theme),
             ],

@@ -43,7 +43,7 @@ class MemberAudioItem extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AspectRatio(
+              SizedBox(height: 100, child: AspectRatio(
                 aspectRatio: 1,
                 child: LayoutBuilder(
                   builder:
@@ -61,7 +61,7 @@ CoverTranslateButton(cover: item.cover),
 ]);
                       },
                 ),
-              ),
+              )),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(

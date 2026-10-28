@@ -43,7 +43,7 @@ class ArticleListItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (item.imageUrls?.isNotEmpty == true)
-                AspectRatio(
+                SizedBox(height: 100, child: AspectRatio(
                   aspectRatio: Style.aspectRatio,
                   child: LayoutBuilder(
                     builder: (context, boxConstraints) {
@@ -57,7 +57,7 @@ CoverTranslateButton(cover: item.imageUrls!.first),
 ]);
                     },
                   ),
-                ),
+                )),
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
