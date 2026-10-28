@@ -1,16 +1,13 @@
-### PiliBabel v3.3.24
+### PiliBabel v3.3.25
 
-**Completes what v3.3.23 missed: the loading skeleton and several custom cards still had covers enlarged by the taller grid cell.**
+**Fix: the "show full title" toggle did not take effect on some screens until the app was restarted.**
 
-**Symptom.** With "show full video title" enabled, cover sizes were correct, but while loading a **large placeholder block would flash first** and then snap back to the normal size.
+**Cause.** `GridMixin`'s `gridDelegate` was a `late final` field, evaluated once using whatever `Pref.videoTitleFull` was at that moment. Screens such as search, favourites, history and watch-later use `AutomaticKeepAliveClientMixin`, so their `State` stays alive — after switching the toggle in Settings they kept using the old cell height and the old title line count. That is exactly the "I flipped the switch and nothing happened, I had to restart" behaviour.
 
-**Cause.** v3.3.23 only pinned the cover height of the real card (`VideoCardH`). The **skeleton** (`VideoCardHSkeleton`) and several custom cards still used `Row + AspectRatio`, and `AspectRatio` derives its width **from the available height** — so a taller cell made them bigger.
+**Fix.** `gridDelegate` is now a **getter**, re-evaluated on every build against the current setting. As soon as a screen rebuilds (pull-to-refresh, returning from another page, list re-layout) the new setting applies, instead of being stuck on the old value forever.
 
-**Fix.** Those covers are now all pinned to their original height (100):
-- the skeleton `VideoCardHSkeleton`
-- favourite-detail card, watch-later card, member-contribution card, music card, subscription-detail card
-- the member pages' comics / audio / articles / article-list / course cards
+Also added a missing `@override` annotation (audio player controller's `onClose`).
 
-The skeleton and the real cards now match exactly, so nothing jumps during loading. The remaining vertical cards (which derive height from width) are unaffected and needed no change.
+**Note — the remaining analyzer "info" items were deliberately left alone.** The `Object? boxed` in `reply_controller` exists specifically to work around a compiler problem seen in v3.3.3; the lambda and initializing-formal suggestions in `retry_interceptor` / `live_room` involve signature types. Changing them just to silence a lint would risk regressions.
 
 Downloads are below.

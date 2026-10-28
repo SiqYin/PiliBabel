@@ -1100,6 +1100,7 @@ class AudioController extends GetxController
     );
   }
 
+  @override
   void onClose() {
     shutdownTimerService
       ..onPause = null

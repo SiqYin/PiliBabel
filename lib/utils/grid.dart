@@ -14,7 +14,13 @@ mixin GridMixin {
   /// 不会再出现某个页面漏加补偿、第 4 行被格子裁掉的情况。
   /// 注意：VideoCardH 里的封面是固定高度的，多出来的高度只给右侧标题区，
   /// 所以这里加高不会把封面撑大。
-  late final gridDelegate = Grid.videoCardHDelegate();
+  /// 注意这里是 **getter 而不是 `late final`**：`late final` 只会在首次访问时算一次，
+  /// 而不少使用 GridMixin 的页面带 `AutomaticKeepAliveClientMixin`（搜索、收藏、历史…），
+  /// State 一直活着，于是用户在设置里切换「标题完全显示」后，网格仍拿着旧的
+  /// mainAxisExtent —— 表现就是「点了开关没反应，非得重启」。
+  /// 改成 getter 后每次构建都按当前设置取新值，开关能立即生效。
+  SliverGridDelegateWithMaxCrossAxisExtent get gridDelegate =>
+      Grid.videoCardHDelegate();
 
   Widget get gridSkeleton => SliverGrid(
     gridDelegate: gridDelegate,
