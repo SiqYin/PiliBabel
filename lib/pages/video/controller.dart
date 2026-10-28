@@ -664,7 +664,7 @@ class VideoDetailController extends GetxController
         mediaList: mediaList,
         onChangeEpisode: (episode, {bool manual = false}) async {
           try {
-            return Get.find<UgcIntroController>(
+            return await Get.find<UgcIntroController>(
               tag: heroTag,
             ).onChangeEpisode(episode, manual: manual);
           } catch (_) {}

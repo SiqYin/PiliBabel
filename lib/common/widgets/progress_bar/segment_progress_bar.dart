@@ -176,7 +176,6 @@ class ViewPointSegmentProgressBar extends StatelessWidget {
 class _ViewPointSegmentProgressBar
     extends BaseSegmentProgressBar<ViewPointSegment> {
   const _ViewPointSegmentProgressBar({
-    super.key,
     super.height,
     required super.segments,
     this.onSeek,

@@ -88,7 +88,6 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
       await SmartDialog.show(
         animationType: SmartAnimationType.centerFade_otherSlide,
         builder: (context) {
-          final colorScheme = ColorScheme.of(context);
           return AlertDialog(
             title: Text(uiTx('图片翻译')),
             content: SizedBox(
