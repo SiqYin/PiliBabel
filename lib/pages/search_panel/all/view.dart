@@ -9,6 +9,7 @@ import 'package:PiliPlus/pages/search_panel/pgc/widgets/item.dart';
 import 'package:PiliPlus/pages/search_panel/user/widgets/item.dart';
 import 'package:PiliPlus/pages/search_panel/view.dart';
 import 'package:PiliPlus/utils/grid.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/waterfall.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
@@ -59,7 +60,9 @@ class _SearchAllPanelState
           }
           return switch (list[index]) {
             SearchVideoItemModel e => SizedBox(
-              height: 120,
+              // 与其它网格一致：跟随「标题完全显示」加高，多出来的高度只给标题区
+              // （VideoCardH 的封面高度是固定的，不会跟着变高）。
+              height: 120 + (Pref.videoTitleFull ? 38 : 0),
               child: VideoCardH(videoItem: e),
             ),
             List<SearchPgcItemModel> e =>
