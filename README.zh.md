@@ -3,7 +3,7 @@
     <h1>PiliBabel</h1>
     <p><b>具備 AI 翻譯功能的第三方嗶哩嗶哩（Bilibili）客戶端。</b></p>
     <p>巴別塔 —— 打破語言的高牆，讓每個人都能用屬於自己的語言享受 Bilibili。</p>
-    <p>含 4 種中國少數民族語言與 3 種漢語方言的翻譯。</p>
+    <p>將 bilibili 官方支援的 151 種語言，再加上官方未收錄的 6 種 —— 繁體中文、簡體吳語、繁體吳語、大陸閩南語、臺灣閩南語與壯語 —— 整合成一份清單。</p>
     <p>內建 B 站官方免費翻譯模型，裝好即用，無需 API Key。</p>
 </div>
 <!-- lang-switch:start -->
@@ -252,6 +252,7 @@ PiliBabel 採用 **GNU General Public License v3.0（GPL-3.0）** —— 與 Pil
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai)（霞鹜文楷）—— App 內嵌的開源中文字體，採 SIL Open Font License 1.1 授權
 - 以及更多
 - 靈感來自 B 站官方的「AI 介面翻譯」。
+
 <br/>
 
 ---
