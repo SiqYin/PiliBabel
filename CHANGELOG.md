@@ -2,6 +2,22 @@
 
 按 Keep a Changelog 的思路编写,留个记录,方便知道每次更新都改了什么,也方便用户查看更新内容.
 
+## 3.3.17
+
+**代码质量清理（清单第 68 条 analyze 尾巴）：静态分析 warnings 42 → 0，errors 保持 0。**
+
+不改变任何界面与功能行为，纯粹收掉静态分析告警：
+
+- **unused_import 16 处、duplicate_import 3 处**：逐一核对确认确实未被引用后移除
+- **dead_code / dead_null_aware_expression 各 5 处**：`x` 已非空却仍写 `x ?? ''`，删掉永远不执行的分支
+- **unnecessary_non_null_assertion 5 处**：多余的非空断言 `!`
+- **invalid_use_of_protected / visible_for_testing_member 2 处**：下载页直接用 `ChangeNotifier.notifyListeners()`，改为子类暴露 `notify()`
+- **override_on_non_overriding_member 1 处**：音频页 `onDownloadAudio` 误标 `@override`
+- **unused_element 1 处**：评论区 `_buildTranslateBtn` 已无调用方（遗留死代码），删除
+- **unused_field / unused_local_variable / unused_element_parameter / invalid_null_aware_operator / unawaited_return_in_try_block 各 1 处**
+
+> 清理期间 CI 抓到一处我误删 import 导致 `member_opus` 留下悬空的 `hide` 续行（2 个 error），已修复并复验归零。
+
 ## 3.3.16
 
 **拖动 seek 加固：seek 等待不再可能无限挂起。**
