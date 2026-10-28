@@ -1,15 +1,11 @@
-### PiliBabel v3.3.18
+### PiliBabel v3.3.19
 
-**Continuing the analyzer-tail cleanup (backlog item 68): cascade style and deprecated APIs in our own code — behaviour fully unchanged.**
+**Fix: long translated comment labels used to push the like button off-screen, making it unclickable.**
 
-- `segment_progress_bar`: `markNeedsPaint()` folded into the cascade above it
-- `author_panel`: `blockedMids.add(mid)` folded into the cascade
-- `vote_decoration`: deprecated `color.alpha` (0–255) → `color.a == 1.0` (0–1, equivalent)
+**Symptom.** When a comment carried labels such as "UP主觉得很赞" (liked by the uploader) and "相互关注" (mutual follow) at the same time, the AI-translated text grew long enough to push the like button on the right out of the visible area — so it could not be tapped.
 
-**Deliberately left alone, recorded here for future reference:**
+**Cause.** The label `Text` had no width constraint inside its `Row`. Long text simply expanded to its content width, pushing the following `Spacer` and the trailing buttons past the right edge of the screen.
 
-- The 11 `cascade_invocations` and 23 `deprecated_member_use` findings under `lib/common/widgets/flutter/`: those files are copies of Flutter SDK sources (they carry the Flutter Authors copyright header). Editing them would add merge cost on every Flutter upgrade, and the only gain is a quieter analyzer.
-- `onReorder` → `onReorderItem` (download folder management / download sorting): the new callback auto-corrects `newIndex`, whereas the old one expects the caller to do it. Swapping them would **change the resulting order**, so it's a behaviour change — not worth doing just to silence a lint.
-- `LinearProgressIndicator.year2023: true`: a product appearance choice (2023 vs 2024 progress styling); changing it to satisfy a lint would alter the UI.
+**Fix.** The label is now wrapped in `Expanded`, so it is constrained to the remaining space. When it overflows it is allowed to wrap to **two lines** (matching how the "Mine" page handles e.g. "offline cache") rather than being truncated to a single ellipsized line, so the translation isn't lost; only if it still doesn't fit in two lines does it fall back to an ellipsis. The trailing buttons now always stay on screen and remain tappable.
 
 Downloads are below.

@@ -513,21 +513,30 @@ class ReplyItemGrpc extends StatelessWidget {
           const SizedBox(width: 2),
         ],
         if (replyControl.cardLabels.isNotEmpty) ...[
-          Text(
-            // cardLabels 是服务端下发的中文标签（如「UP主觉得很赞」），需经 uiTx 翻译。
-            // 外层 Obx 已无条件读过 revision，所以译文到达后会跟着刷新。
-            // 逐条翻译而不是先拼接：拼接会让「A+B」这种组合各自成为独立缓存 key。
-            dialogBtn != null
-                ? uiTx(replyControl.cardLabels.first.textContent)
-                : replyControl.cardLabels
-                      .map((e) => uiTx(e.textContent))
-                      .join('  '),
-            style: textStyle.copyWith(color: colorScheme.secondary),
+          // 这个标签是服务端下发的中文（如「UP主觉得很赞」「相互关注」），经 AI 翻译后
+          // 可能显著变长（一条评论同时带两个标签时尤其明显）。此前它是个无约束的
+          // Text，在 Row 里会按内容宽度铺开，把后面的 Spacer 和右侧的点赞等按钮
+          // 一起挤出屏幕 —— 用户就点不到按钮了。
+          // 用 Expanded 把它限制在剩余空间内；超长时**允许折两行**（和「我的」页
+          // 「离线缓存」等处的做法一致），而不是一行省略，免得译文本就被截断丢失。
+          // 两行仍放不下时再走省略号兜底。
+          Expanded(
+            child: Text(
+              // 逐条翻译而不是先拼接：拼接会让「A+B」这种组合各自成为独立缓存 key。
+              dialogBtn != null
+                  ? uiTx(replyControl.cardLabels.first.textContent)
+                  : replyControl.cardLabels
+                        .map((e) => uiTx(e.textContent))
+                        .join('  '),
+              style: textStyle.copyWith(color: colorScheme.secondary),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
           const SizedBox(width: 2),
-        ],
+        ] else
+          const Spacer(),
         ?dialogBtn,
-        const Spacer(),
         ZanButtonGrpc(replyItem: replyItem),
         const SizedBox(width: 5),
       ],
