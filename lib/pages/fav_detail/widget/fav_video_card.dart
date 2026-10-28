@@ -18,6 +18,7 @@ import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -173,7 +174,7 @@ class FavVideoCardH extends StatelessWidget {
                     style: const TextStyle(
                       letterSpacing: 0.3,
                     ),
-                    maxLines: 2,
+                    maxLines: Pref.videoTitleFull ? 4 : 2,
                     overflow: TextOverflow.ellipsis,
                   );
                 },

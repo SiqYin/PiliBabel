@@ -17,6 +17,7 @@ import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -287,7 +288,7 @@ class HistoryItem extends StatelessWidget {
               height: 1.42,
               letterSpacing: 0.3,
             ),
-            maxLines: item.videos! > 1 ? 1 : 2,
+            maxLines: Pref.videoTitleFull ? 4 : 2,
             overflow: TextOverflow.ellipsis,
           ),
           if (item.history.business == 'pgc' &&
