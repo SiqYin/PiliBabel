@@ -23,7 +23,6 @@ import 'package:flutter_inappwebview/flutter_inappwebview.dart' as web;
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
-import 'package:material_ui/material_ui.dart';
 
 class LoginPageController extends GetxController
     with GetSingleTickerProviderStateMixin {

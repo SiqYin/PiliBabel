@@ -129,7 +129,7 @@ class VideoCardH extends StatelessWidget {
                             ),
                             if (videoItem.badge case final badge?)
                               PBadge(
-                                text: uiTx(badge ?? ''),
+                                text: uiTx(badge),
                                 top: 6.0,
                                 right: 6.0,
                                 type: switch (badge) {

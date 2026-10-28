@@ -887,7 +887,7 @@ class VideoDetailController extends GetxController
 
     if (videoList.isEmpty) {
       final fallback = allVideos.first;
-      currentVideoQa.value = VideoQuality.fromCode(fallback.id!);
+      currentVideoQa.value = VideoQuality.fromCode(fallback.id);
       return fallback;
     }
 

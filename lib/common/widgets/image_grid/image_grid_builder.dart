@@ -214,11 +214,11 @@ class RenderImageGrid extends RenderBox
             // 才有机会拿到点击。此前只把子节点自身加进结果、从不调用子节点的
             // hitTest，子级手势全被网格自己的 TapGestureRecognizer 吞掉，
             // 表现就是点翻译按钮却打开了图片大图。
-            if (child!.hitTest(result, position: transformed)) {
+            if (child.hitTest(result, position: transformed)) {
               return true;
             }
             // 子节点自己不接受命中（普通图片没有手势）时，维持原逻辑
-            result.add(BoxHitTestEntry(child!, transformed));
+            result.add(BoxHitTestEntry(child, transformed));
             return true;
           }
           return false;

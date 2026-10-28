@@ -1070,8 +1070,6 @@ class AudioController extends GetxController
   @override
   bool get preInitPlayer => true;
 
-  @override
-
   /// 缓存音频：把当前音轨按所选音质单独存成原格式音频文件。
   Future<void> onDownloadAudio(BuildContext context) async {
     VideoDetailData? detail;

@@ -44,13 +44,13 @@ TextSpan? richNode(
       if (title != null && title.isNotEmpty) {
         if (richTextNodes == null || richTextNodes.isEmpty) {
           return TextSpan(
-            text: uiTx(title ?? ''),
+            text: uiTx(title),
             style: const TextStyle(fontWeight: FontWeight.bold),
           );
         } else {
           spanChildren.add(
             TextSpan(
-              text: '${uiTx(title ?? '')}\n',
+              text: '${uiTx(title)}\n',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           );
