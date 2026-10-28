@@ -73,7 +73,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
               keyboardType: const .numberWithOptions(decimal: true),
               decoration: InputDecoration(
                 labelText: uiTx('自定义倍速'),
-                border: OutlineInputBorder(borderRadius: .all(.circular(6))),
+                border: const OutlineInputBorder(borderRadius: .all(.circular(6))),
               ),
               onChanged: (value) => initialValue = value,
               inputFormatters: FilteringText.decimal,

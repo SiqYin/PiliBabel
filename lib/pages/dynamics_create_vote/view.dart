@@ -69,7 +69,7 @@ class _CreateVotePageState extends State<CreateVotePage> {
         ),
         children: [
           Text(uiTx('投票类型'),
-            style: TextStyle(fontSize: 14),
+            style: const TextStyle(fontSize: 14),
           ),
           const SizedBox(height: 12),
           _buildType(theme),
@@ -161,9 +161,9 @@ class _CreateVotePageState extends State<CreateVotePage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.add, size: 16),
+                          const Icon(Icons.add, size: 16),
                           Text(uiTx(' 添加选项'),
-                            style: TextStyle(fontSize: 13),
+                            style: const TextStyle(fontSize: 13),
                           ),
                         ],
                       ),

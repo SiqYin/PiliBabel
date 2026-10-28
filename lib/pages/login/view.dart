@@ -323,7 +323,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     children: [
                       Padding(
-                        padding: EdgeInsets.fromLTRB(25, 0, 25, 10),
+                        padding: const EdgeInsets.fromLTRB(25, 0, 25, 10),
                         child: Text(uiTx("试试扫码、手机号登录，或选择")),
                       ),
                       ListTile(
@@ -504,7 +504,7 @@ class _LoginPageState extends State<LoginPage> {
                   child: TextField(
                     controller: _loginPageCtr.smsCodeTextController,
                     decoration: InputDecoration(
-                      prefixIcon: Icon(Icons.sms_outlined),
+                      prefixIcon: const Icon(Icons.sms_outlined),
                       border: InputBorder.none,
                       labelText: uiTx('验证码'),
                     ),
@@ -584,22 +584,22 @@ class _LoginPageState extends State<LoginPage> {
                       Tab(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: [Icon(Icons.password), Text(uiTx(' 密码'))],
+                          children: [const Icon(Icons.password), Text(uiTx(' 密码'))],
                         ),
                       ),
                       Tab(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: [Icon(Icons.sms_outlined), Text(uiTx(' 短信'))],
+                          children: [const Icon(Icons.sms_outlined), Text(uiTx(' 短信'))],
                         ),
                       ),
                       Tab(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
-                          children: [Icon(Icons.qr_code), Text(uiTx(' 扫码'))],
+                          children: [const Icon(Icons.qr_code), Text(uiTx(' 扫码'))],
                         ),
                       ),
-                      Tab(
+                      const Tab(
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
@@ -623,10 +623,10 @@ class _LoginPageState extends State<LoginPage> {
               UiTranslateService.to.revision.value;
               return TabBar(
               tabs: [
-                Tab(icon: Icon(Icons.password), text: uiTx('密码')),
-                Tab(icon: Icon(Icons.sms_outlined), text: uiTx('短信')),
-                Tab(icon: Icon(Icons.qr_code), text: uiTx('扫码')),
-                Tab(icon: Icon(Icons.cookie_outlined), text: 'Cookie'),
+                Tab(icon: const Icon(Icons.password), text: uiTx('密码')),
+                Tab(icon: const Icon(Icons.sms_outlined), text: uiTx('短信')),
+                Tab(icon: const Icon(Icons.qr_code), text: uiTx('扫码')),
+                const Tab(icon: Icon(Icons.cookie_outlined), text: 'Cookie'),
               ],
               controller: _loginPageCtr.tabController,
             );

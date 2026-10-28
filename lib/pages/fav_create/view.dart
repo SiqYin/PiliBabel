@@ -211,7 +211,7 @@ class _CreateFavPageState extends State<CreateFavPage> {
                                     _pickImg(context, theme);
                                   },
                                   child: Text(uiTx('替换封面'),
-                                    style: TextStyle(fontSize: 14),
+                                    style: const TextStyle(fontSize: 14),
                                   ),
                                 ),
                                 DialogOption(
@@ -221,7 +221,7 @@ class _CreateFavPageState extends State<CreateFavPage> {
                                     (context as Element).markNeedsBuild();
                                   },
                                   child: Text(uiTx('移除封面'),
-                                    style: TextStyle(fontSize: 14),
+                                    style: const TextStyle(fontSize: 14),
                                   ),
                                 ),
                               ],
@@ -282,7 +282,7 @@ CoverTranslateButton(cover: _cover),
                         ),
                         TextSpan(
                           text: uiTx('名称'),
-                          style: TextStyle(fontSize: 14),
+                          style: const TextStyle(fontSize: 14),
                         ),
                       ],
                     ),

@@ -85,7 +85,7 @@ class SearchArticleController
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 const SizedBox(height: 10),
-                Text(uiTx('排序'), style: TextStyle(fontSize: 16)),
+                Text(uiTx('排序'), style: const TextStyle(fontSize: 16)),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
@@ -111,7 +111,7 @@ class SearchArticleController
                   ).toList(),
                 ),
                 const SizedBox(height: 20),
-                Text(uiTx('分区'), style: TextStyle(fontSize: 16)),
+                Text(uiTx('分区'), style: const TextStyle(fontSize: 16)),
                 const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,

@@ -502,8 +502,8 @@ class _PresetDropdown extends StatelessWidget {
 class _MergePreset {
   const _MergePreset({
     required this.value,
-    required String label,
-  }) : _label = label;
+    required this._label,
+  });
 
   final int value;
 

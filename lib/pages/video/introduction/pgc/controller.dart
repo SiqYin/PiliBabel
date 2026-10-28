@@ -30,7 +30,6 @@ import 'package:PiliPlus/utils/share_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:collection/collection.dart';
-import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
@@ -145,21 +144,21 @@ class PgcIntroController extends CommonIntroController {
         contentPadding: const EdgeInsets.symmetric(vertical: 12),
         children: [
           DialogOption(
-            child: Text(uiTx('复制链接'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('复制链接'), style: const TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               Utils.copyText(videoUrl);
             },
           ),
           DialogOption(
-            child: Text(uiTx('其它app打开'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('其它app打开'), style: const TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               PageUtils.launchURL(videoUrl);
             },
           ),
           DialogOption(
-            child: Text(uiTx('分享视频'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('分享视频'), style: const TextStyle(fontSize: 14)),
             onPressed: () {
               final item = pgcItem.episodes?.firstWhereOrNull(
                 (item) => item.epId == epId,
@@ -173,7 +172,7 @@ class PgcIntroController extends CommonIntroController {
           ),
           if (isLogin)
             DialogOption(
-              child: Text(uiTx('分享至动态'), style: TextStyle(fontSize: 14)),
+              child: Text(uiTx('分享至动态'), style: const TextStyle(fontSize: 14)),
               onPressed: () {
                 Get.back();
                 final item = pgcItem.episodes?.firstWhereOrNull(
@@ -213,7 +212,7 @@ class PgcIntroController extends CommonIntroController {
           if (isLogin)
             DialogOption(
               child: Text(uiTx('分享至消息'),
-                style: TextStyle(fontSize: 14),
+                style: const TextStyle(fontSize: 14),
               ),
               onPressed: () {
                 Get.back();

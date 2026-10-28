@@ -385,8 +385,8 @@ class _MemberPageState extends State<MemberPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.remove_circle_outline_outlined, size: 19),
-                  SizedBox(width: 10),
+                  const Icon(Icons.remove_circle_outline_outlined, size: 19),
+                  const SizedBox(width: 10),
                   Text(uiTx('移除粉丝')),
                 ],
               ),
@@ -411,8 +411,8 @@ class _MemberPageState extends State<MemberPage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.add_box_outlined, size: 19),
-                SizedBox(width: 10),
+                const Icon(Icons.add_box_outlined, size: 19),
+                const SizedBox(width: 10),
                 Text(uiTx('添加至桌面')),
               ],
             ),
@@ -455,8 +455,8 @@ class _MemberPageState extends State<MemberPage> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.extension_outlined, size: 19),
-                SizedBox(width: 10),
+                const Icon(Icons.extension_outlined, size: 19),
+                const SizedBox(width: 10),
                 Text(uiTx('网页投稿')),
               ],
             ),
@@ -477,8 +477,8 @@ class _MemberPageState extends State<MemberPage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.upcoming_outlined, size: 19),
-                    SizedBox(width: 10),
+                    const Icon(Icons.upcoming_outlined, size: 19),
+                    const SizedBox(width: 10),
                     Text(uiTx('大会员经验')),
                   ],
                 ),
@@ -488,8 +488,8 @@ class _MemberPageState extends State<MemberPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.devices, size: 18),
-                  SizedBox(width: 10),
+                  const Icon(Icons.devices, size: 18),
+                  const SizedBox(width: 10),
                   Text(uiTx('登录设备')),
                 ],
               ),
@@ -502,8 +502,8 @@ class _MemberPageState extends State<MemberPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.login, size: 18),
-                  SizedBox(width: 10),
+                  const Icon(Icons.login, size: 18),
+                  const SizedBox(width: 10),
                   Text(uiTx('登录记录')),
                 ],
               ),
@@ -516,8 +516,8 @@ class _MemberPageState extends State<MemberPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(FontAwesomeIcons.b, size: 16),
-                  SizedBox(width: 10),
+                  const Icon(FontAwesomeIcons.b, size: 16),
+                  const SizedBox(width: 10),
                   Text(uiTx('硬币记录')),
                 ],
               ),
@@ -530,8 +530,8 @@ class _MemberPageState extends State<MemberPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.linear_scale, size: 18),
-                  SizedBox(width: 10),
+                  const Icon(Icons.linear_scale, size: 18),
+                  const SizedBox(width: 10),
                   Text(uiTx('经验记录')),
                 ],
               ),
@@ -541,8 +541,8 @@ class _MemberPageState extends State<MemberPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.settings_outlined, size: 19),
-                  SizedBox(width: 10),
+                  const Icon(Icons.settings_outlined, size: 19),
+                  const SizedBox(width: 10),
                   Text(uiTx('空间设置')),
                 ],
               ),
@@ -554,8 +554,8 @@ class _MemberPageState extends State<MemberPage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.more_time_outlined, size: 19),
-                    SizedBox(width: 10),
+                    const Icon(Icons.more_time_outlined, size: 19),
+                    const SizedBox(width: 10),
                     Text(uiTx('关注时间')),
                   ],
                 ),

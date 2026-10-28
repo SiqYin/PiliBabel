@@ -819,21 +819,21 @@ class AudioController extends GetxController
         contentPadding: const EdgeInsets.symmetric(vertical: 12),
         children: [
           DialogOption(
-            child: Text(uiTx('复制链接'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('复制链接'), style: const TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               Utils.copyText(audioUrl);
             },
           ),
           DialogOption(
-            child: Text(uiTx('其它app打开'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('其它app打开'), style: const TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               PageUtils.launchURL(audioUrl);
             },
           ),
           DialogOption(
-            child: Text(uiTx('分享视频'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('分享视频'), style: const TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               if (audioItem.value case DetailItem(:final arc, :final owner)) {
@@ -847,7 +847,7 @@ class AudioController extends GetxController
           ),
           if (isLogin)
             DialogOption(
-              child: Text(uiTx('分享至动态'), style: TextStyle(fontSize: 14)),
+              child: Text(uiTx('分享至动态'), style: const TextStyle(fontSize: 14)),
               onPressed: () {
                 Get.back();
                 if (audioItem.value case DetailItem(:final arc, :final owner)) {
@@ -868,7 +868,7 @@ class AudioController extends GetxController
             ),
           if (isUgc && isLogin)
             DialogOption(
-              child: Text(uiTx('分享至消息'), style: TextStyle(fontSize: 14)),
+              child: Text(uiTx('分享至消息'), style: const TextStyle(fontSize: 14)),
               onPressed: () {
                 Get.back();
                 if (audioItem.value case DetailItem(:final arc, :final owner)) {

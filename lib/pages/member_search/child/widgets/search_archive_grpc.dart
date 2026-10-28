@@ -149,8 +149,8 @@ CoverTranslateButton(cover: arc.pic),
                   child: Row(
                     spacing: 6,
                     children: [
-                      Icon(MdiIcons.clockTimeEightOutline, size: 16),
-                      Text(uiTx('稍后再看'), style: TextStyle(fontSize: 13)),
+                      const Icon(MdiIcons.clockTimeEightOutline, size: 16),
+                      Text(uiTx('稍后再看'), style: const TextStyle(fontSize: 13)),
                     ],
                   ),
                 ),

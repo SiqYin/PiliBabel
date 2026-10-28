@@ -2269,7 +2269,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 12,
-                          fontFeatures: const [FontFeature.tabularFigures()],
+                          fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
                     ],

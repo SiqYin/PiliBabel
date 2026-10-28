@@ -246,7 +246,7 @@ class _UpowerRankPageState extends State<UpowerRankPage>
                             ),
                             TextSpan(
                               text: uiTx(' 天'),
-                              style: TextStyle(fontSize: 13),
+                              style: const TextStyle(fontSize: 13),
                             ),
                           ],
                         ),

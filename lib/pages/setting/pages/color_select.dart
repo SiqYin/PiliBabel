@@ -146,9 +146,9 @@ class _ColorSelectPageState extends State<ColorSelectPage> {
                 leading: const Icon(Icons.palette_outlined),
                 trailing: Switch(
                   value: ctr.dynamicColor.value,
-                  onChanged: (val) => _onChanged(val),
+                  onChanged: _onChanged,
                 ),
-                onTap: () => _onChanged(),
+                onTap: _onChanged,
               ),
             ),
           // 译文是异步回来的，标题与开关文案都要裹在 Obx 里才会跟着刷新。

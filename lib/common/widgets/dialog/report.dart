@@ -82,7 +82,7 @@ Future<void> autoWrapReportDialog(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Padding(
-                        padding: .only(left: 22, right: 22, bottom: 5),
+                        padding: const .only(left: 22, right: 22, bottom: 5),
                         child: Text(uiTx('请选择举报的理由：')),
                       ),
                       RadioGroup(
@@ -112,10 +112,10 @@ Future<void> autoWrapReportDialog(
                             autofocus: isContentRequired,
                             decoration: InputDecoration(
                               labelText: uiTx('为帮助审核人员更快处理，请补充问题类型和出现位置等详细信息'),
-                              border: OutlineInputBorder(),
-                              contentPadding: .all(10),
-                              labelStyle: TextStyle(fontSize: 14),
-                              floatingLabelStyle: TextStyle(fontSize: 14),
+                              border: const OutlineInputBorder(),
+                              contentPadding: const .all(10),
+                              labelStyle: const TextStyle(fontSize: 14),
+                              floatingLabelStyle: const TextStyle(fontSize: 14),
                             ),
                             onChanged: (value) => reasonDesc = value,
                             validator: (value) =>

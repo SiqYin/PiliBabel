@@ -24,7 +24,7 @@ class LiveItem extends SingleChildRenderObjectWidget {
 }
 
 class _RenderLiveItem extends RenderProxyBox {
-  _RenderLiveItem({required Color color}) : _color = color;
+  _RenderLiveItem({required this._color});
 
   Color _color;
   Color get color => _color;
@@ -38,7 +38,7 @@ class _RenderLiveItem extends RenderProxyBox {
   void performLayout() {
     final maxWidth = constraints.maxWidth;
     if (maxWidth > _maxWith) {
-      child?.layout(BoxConstraints.tightFor(width: _maxWith), parentUsesSize: true);
+      child?.layout(const BoxConstraints.tightFor(width: _maxWith), parentUsesSize: true);
     } else {
       child?.layout(constraints, parentUsesSize: true);
     }

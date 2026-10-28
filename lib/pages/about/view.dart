@@ -151,12 +151,12 @@ class _AboutPageState extends State<AboutPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'About PiliBabel',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                 ),
-                SizedBox(height: 6),
-                Text(
+                const SizedBox(height: 6),
+                const Text(
                   'PiliBabel is an independent, open-source, third-party '
                   'Bilibili client — a fork of PiliNara (which is itself a '
                   'fork of PiliPlus → PiliPala). It keeps everything those '
@@ -165,8 +165,8 @@ class _AboutPageState extends State<AboutPage> {
                   'language.',
                   style: TextStyle(fontSize: 13, height: 1.5),
                 ),
-                SizedBox(height: 10),
-                Text(
+                const SizedBox(height: 10),
+                const Text(
                   '• Translate once: every string is translated exactly once '
                   'and cached locally, so it never re-translates on reopen.\n'
                   '• Bring your own model: point it at any OpenAI-compatible '
@@ -180,7 +180,7 @@ class _AboutPageState extends State<AboutPage> {
                   'danmaku.',
                   style: TextStyle(fontSize: 13, height: 1.6),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Text(
                   'Unofficial — not affiliated with or endorsed by bilibili. '
                   'For learning & testing; delete within 24 hours. Licensed '
@@ -219,14 +219,14 @@ Commit Hash: ${BuildConfig.commitHash}''',
                 ? null
                 : () => Utils.copyText(BuildConfig.commitHash),
           ),
-          ListTile(
+          const ListTile(
             title: Text(
               'PiliBabel is an independent third-party fork of PiliNara '
               '(itself a fork of PiliPlus). It adds AI interface & content '
               'translation so the whole app speaks your language.',
-              style: const TextStyle(fontSize: 13, height: 1.5),
+              style: TextStyle(fontSize: 13, height: 1.5),
             ),
-            leading: const Icon(Icons.translate),
+            leading: Icon(Icons.translate),
           ),
           Divider(
             thickness: 1,

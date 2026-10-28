@@ -33,7 +33,7 @@ class HistoryCardItem extends StatelessWidget {
 
   bool get _isVideo => !_isArticle && !_isLive && !_isPgc && !_isCheese;
 
-  void _onTap() async {
+  Future<void> _onTap() async {
     final business = item.history.business;
     if (_isArticle) {
       PageUtils.toDupNamed(

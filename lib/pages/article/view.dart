@@ -289,7 +289,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
               spacing: 10,
               mainAxisSize: .min,
               children: [
-                Icon(Icons.share_outlined, size: 19),
+                const Icon(Icons.share_outlined, size: 19),
                 Text(uiTx('分享')),
               ],
             ),
@@ -300,7 +300,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
               spacing: 10,
               mainAxisSize: .min,
               children: [
-                Icon(Icons.copy_rounded, size: 19),
+                const Icon(Icons.copy_rounded, size: 19),
                 Text(uiTx('复制链接')),
               ],
             ),
@@ -339,7 +339,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                 spacing: 10,
                 mainAxisSize: .min,
                 children: [
-                  Icon(Icons.forward_to_inbox, size: 19),
+                  const Icon(Icons.forward_to_inbox, size: 19),
                   Text(uiTx('分享至消息')),
                 ],
               ),

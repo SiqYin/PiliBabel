@@ -275,7 +275,7 @@ class _DownloadFolderPageState extends State<DownloadFolderPage> {
                   if (_controller.entries.isEmpty) {
                     return SliverToBoxAdapter(
                       child: Padding(
-                        padding: EdgeInsets.symmetric(vertical: 48),
+                        padding: const EdgeInsets.symmetric(vertical: 48),
                         child: Center(
                           child: Text(uiTx('文件夹里还没有视频')),
                         ),

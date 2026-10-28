@@ -339,12 +339,12 @@ class LiveRoomChatPanel extends StatelessWidget {
         CustomPopupMenuItem(
           height: 38,
           onTap: () => Utils.copyText(Utils.jsonEncoder.convert(item.toJson())),
-          child: Text(uiTx('复制弹幕信息'), style: TextStyle(fontSize: 13)),
+          child: Text(uiTx('复制弹幕信息'), style: const TextStyle(fontSize: 13)),
         ),
         CustomPopupMenuItem(
           height: 38,
           onTap: () => Get.toNamed('/member?mid=${item.extra.mid}'),
-          child: Text(uiTx('去TA的个人空间'), style: TextStyle(fontSize: 13)),
+          child: Text(uiTx('去TA的个人空间'), style: const TextStyle(fontSize: 13)),
         ),
         if (liveRoomController.isLogin) ...[
           CustomPopupMenuItem(
@@ -370,7 +370,7 @@ class LiveRoomChatPanel extends StatelessWidget {
               }
             },
             child: Text(uiTx('屏蔽发送者'),
-              style: TextStyle(fontSize: 13),
+              style: const TextStyle(fontSize: 13),
             ),
           ),
           CustomPopupMenuItem(
@@ -382,7 +382,7 @@ class LiveRoomChatPanel extends StatelessWidget {
               extra: item.extra,
             ),
             child: Text(uiTx('举报选中弹幕'),
-              style: TextStyle(fontSize: 13),
+              style: const TextStyle(fontSize: 13),
             ),
           ),
         ],

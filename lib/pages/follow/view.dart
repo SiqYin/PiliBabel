@@ -137,7 +137,7 @@ class _FollowPageState extends State<FollowPage>
                     spacing: 10,
                     mainAxisSize: .min,
                     children: [
-                      Icon(Icons.block, size: 19),
+                      const Icon(Icons.block, size: 19),
                       Text(uiTx('黑名单管理')),
                     ],
                   ),
@@ -255,7 +255,7 @@ class _FollowPageState extends State<FollowPage>
                 },
               );
             },
-            child: Text(uiTx('修改名称'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('修改名称'), style: const TextStyle(fontSize: 14)),
           ),
           DialogOption(
             onPressed: () {
@@ -267,7 +267,7 @@ class _FollowPageState extends State<FollowPage>
                 onConfirm: () => _followController.onDelTag(index, item.tagid!),
               );
             },
-            child: Text(uiTx('删除分组'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('删除分组'), style: const TextStyle(fontSize: 14)),
           ),
         ],
       ),

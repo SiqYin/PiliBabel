@@ -110,7 +110,7 @@ List<SettingsModel> get extraSettings => [
     normalModel: NormalModel.split(
       title: uiTx('空降助手'),
       subtitle: uiTx('点击配置'),
-      leading: Icon(CustomIcons.shield_play_arrow),
+      leading: const Icon(CustomIcons.shield_play_arrow),
     ),
     switchModel: SwitchModel.split(
       defaultVal: false,
@@ -137,7 +137,7 @@ List<SettingsModel> get extraSettings => [
     normalModel: NormalModel.split(
       title: uiTx('检查未读动态'),
       subtitle: uiTx('点击设置检查周期(min)'),
-      leading: Icon(Icons.notifications_none),
+      leading: const Icon(Icons.notifications_none),
     ),
     switchModel: SwitchModel.split(
       defaultVal: true,
@@ -148,37 +148,37 @@ List<SettingsModel> get extraSettings => [
   ),
   SwitchModel(
     title: uiTx('显示视频分段信息'),
-    leading: Icon(CustomIcons.view_headline_rotate_90),
+    leading: const Icon(CustomIcons.view_headline_rotate_90),
     setKey: SettingBoxKey.showViewPoints,
     defaultVal: true,
   ),
   SwitchModel(
     title: uiTx('视频页显示相关视频'),
-    leading: Icon(MdiIcons.motionPlayOutline),
+    leading: const Icon(MdiIcons.motionPlayOutline),
     setKey: SettingBoxKey.showRelatedVideo,
     defaultVal: true,
   ),
   SwitchModel(
     title: uiTx('显示视频评论'),
-    leading: Icon(MdiIcons.commentTextOutline),
+    leading: const Icon(MdiIcons.commentTextOutline),
     setKey: SettingBoxKey.showVideoReply,
     defaultVal: true,
   ),
   SwitchModel(
     title: uiTx('显示番剧评论'),
-    leading: Icon(MdiIcons.commentTextOutline),
+    leading: const Icon(MdiIcons.commentTextOutline),
     setKey: SettingBoxKey.showBangumiReply,
     defaultVal: true,
   ),
   SwitchModel(
     title: uiTx('默认展开视频简介'),
-    leading: Icon(Icons.expand_more),
+    leading: const Icon(Icons.expand_more),
     setKey: SettingBoxKey.alwaysExpandIntroPanel,
     defaultVal: false,
   ),
   SwitchModel(
     title: uiTx('横屏自动展开视频简介'),
-    leading: Icon(Icons.expand_more),
+    leading: const Icon(Icons.expand_more),
     setKey: SettingBoxKey.expandIntroPanelH,
     defaultVal: false,
   ),
@@ -235,7 +235,7 @@ List<SettingsModel> get extraSettings => [
   SwitchModel(
     title: uiTx('评论点赞/点踩按钮交换位置'),
     subtitle: uiTx('交换后：点赞在左，点踩在右（与官方客户端一致）'),
-    leading: Icon(Icons.swap_horiz),
+    leading: const Icon(Icons.swap_horiz),
     setKey: SettingBoxKey.swapReplyLikeDislike,
     defaultVal: false,
   ),
@@ -251,7 +251,7 @@ List<SettingsModel> get extraSettings => [
   ),
   SwitchModel(
     title: uiTx('显示视频警告/争议信息'),
-    leading: Icon(Icons.warning_amber_rounded),
+    leading: const Icon(Icons.warning_amber_rounded),
     setKey: SettingBoxKey.showArgueMsg,
     defaultVal: true,
   ),
@@ -265,20 +265,20 @@ List<SettingsModel> get extraSettings => [
   SwitchModel(
     title: uiTx('分P/合集：倒序播放从首集开始播放'),
     subtitle: uiTx('开启则自动切换为倒序首集，否则保持当前集'),
-    leading: Icon(MdiIcons.sort),
+    leading: const Icon(MdiIcons.sort),
     setKey: SettingBoxKey.reverseFromFirst,
     defaultVal: true,
   ),
   SwitchModel(
     title: uiTx('禁用 SSL 证书验证'),
     subtitle: uiTx('谨慎开启，禁用容易受到中间人攻击'),
-    leading: Icon(Icons.security),
+    leading: const Icon(Icons.security),
     needReboot: true,
     setKey: SettingBoxKey.badCertificateCallback,
   ),
   SwitchModel(
     title: uiTx('显示继续播放分P提示'),
-    leading: Icon(Icons.local_parking),
+    leading: const Icon(Icons.local_parking),
     setKey: SettingBoxKey.continuePlayingPart,
     defaultVal: true,
   ),
@@ -290,14 +290,14 @@ List<SettingsModel> get extraSettings => [
   ),
   SwitchModel(
     title: uiTx('使用外部浏览器打开链接'),
-    leading: Icon(Icons.open_in_browser),
+    leading: const Icon(Icons.open_in_browser),
     setKey: SettingBoxKey.openInBrowser,
     defaultVal: false,
   ),
   SwitchModel(
     title: uiTx('点击当前页时回顶并刷新'),
     subtitle: uiTx('关闭后保持原有回顶/重复点击刷新行为'),
-    leading: Icon(Icons.vertical_align_top),
+    leading: const Icon(Icons.vertical_align_top),
     setKey: SettingBoxKey.enableCurrentPageRefresh,
     defaultVal: false,
   ),
@@ -318,7 +318,7 @@ List<SettingsModel> get extraSettings => [
   ),
   SwitchModel(
     title: uiTx('显示会员彩色弹幕'),
-    leading: Icon(MdiIcons.gradientHorizontal),
+    leading: const Icon(MdiIcons.gradientHorizontal),
     setKey: SettingBoxKey.showVipDanmaku,
     defaultVal: true,
   ),
@@ -347,7 +347,7 @@ List<SettingsModel> get extraSettings => [
   SwitchModel(
     title: uiTx('显示热门推荐'),
     subtitle: uiTx('热门页面显示每周必看等推荐内容入口'),
-    leading: Icon(Icons.local_fire_department_outlined),
+    leading: const Icon(Icons.local_fire_department_outlined),
     setKey: SettingBoxKey.showHotRcmd,
     defaultVal: false,
     needReboot: true,
@@ -381,26 +381,26 @@ List<SettingsModel> get extraSettings => [
   SwitchModel(
     title: uiTx('提前初始化播放器'),
     subtitle: uiTx('相对减少手动播放加载时间'),
-    leading: Icon(Icons.play_circle_outlined),
+    leading: const Icon(Icons.play_circle_outlined),
     setKey: SettingBoxKey.preInitPlayer,
     defaultVal: false,
   ),
   SwitchModel(
     title: uiTx('首页切换页面动画'),
-    leading: Icon(Icons.home_outlined),
+    leading: const Icon(Icons.home_outlined),
     setKey: SettingBoxKey.mainTabBarView,
     defaultVal: false,
     needReboot: true,
   ),
   SwitchModel(
     title: uiTx('搜索建议'),
-    leading: Icon(Icons.search),
+    leading: const Icon(Icons.search),
     setKey: SettingBoxKey.searchSuggestion,
     defaultVal: true,
   ),
   SwitchModel(
     title: uiTx('记录搜索历史'),
-    leading: Icon(Icons.history),
+    leading: const Icon(Icons.history),
     setKey: SettingBoxKey.recordSearchHistory,
     defaultVal: true,
   ),
@@ -421,7 +421,7 @@ List<SettingsModel> get extraSettings => [
   SwitchModel(
     title: uiTx('显示视频推荐理由'),
     subtitle: uiTx('显示首页视频卡片下方的已关注，x万点赞的标签'),
-    leading: Icon(Icons.label_outline),
+    leading: const Icon(Icons.label_outline),
     setKey: SettingBoxKey.showRcmdReason,
     defaultVal: true,
   ),
@@ -435,7 +435,7 @@ List<SettingsModel> get extraSettings => [
   ),
   SwitchModel(
     title: uiTx('滑动跳转预览视频缩略图'),
-    leading: Icon(Icons.preview_outlined),
+    leading: const Icon(Icons.preview_outlined),
     setKey: SettingBoxKey.showSeekPreview,
     defaultVal: true,
   ),
@@ -448,7 +448,7 @@ List<SettingsModel> get extraSettings => [
   ),
   SwitchModel(
     title: uiTx('记录评论'),
-    leading: Icon(Icons.message_outlined),
+    leading: const Icon(Icons.message_outlined),
     setKey: SettingBoxKey.saveReply,
     defaultVal: true,
     needReboot: true,
@@ -456,14 +456,14 @@ List<SettingsModel> get extraSettings => [
   SwitchModel(
     title: uiTx('发评反诈'),
     subtitle: uiTx('发送评论后检查评论是否可见'),
-    leading: Icon(CustomIcons.shield_reply),
+    leading: const Icon(CustomIcons.shield_reply),
     setKey: SettingBoxKey.enableCommAntifraud,
     defaultVal: false,
   ),
   if (Platform.isAndroid)
     SwitchModel(
       title: uiTx('使用「哔哩发评反诈」检查评论'),
-      leading: Icon(
+      leading: const Icon(
         FontAwesomeIcons.b,
         size: 22,
       ),
@@ -473,7 +473,7 @@ List<SettingsModel> get extraSettings => [
   SwitchModel(
     title: uiTx('发布/转发动态反诈'),
     subtitle: uiTx('发布/转发动态后检查动态是否可见'),
-    leading: Icon(CustomIcons.shield_published),
+    leading: const Icon(CustomIcons.shield_published),
     setKey: SettingBoxKey.enableCreateDynAntifraud,
     defaultVal: false,
   ),
@@ -493,32 +493,32 @@ List<SettingsModel> get extraSettings => [
   ),
   SwitchModel(
     title: uiTx('启用双指缩小视频'),
-    leading: Icon(Icons.pinch),
+    leading: const Icon(Icons.pinch),
     setKey: SettingBoxKey.enableShrinkVideoSize,
     defaultVal: true,
   ),
   SwitchModel(
     title: uiTx('启用双指旋转画面'),
     subtitle: uiTx('双指缩放时可旋转画面，松手自动吸附到直角'),
-    leading: Icon(Icons.rotate_90_degrees_ccw),
+    leading: const Icon(Icons.rotate_90_degrees_ccw),
     setKey: SettingBoxKey.enablePinchRotate,
     defaultVal: true,
   ),
   SwitchModel(
     title: uiTx('动态/专栏详情页展示底部操作栏'),
-    leading: Icon(Icons.more_horiz),
+    leading: const Icon(Icons.more_horiz),
     setKey: SettingBoxKey.showDynActionBar,
     defaultVal: true,
   ),
   SwitchModel(
     title: uiTx('启用拖拽字幕调整底部边距'),
-    leading: Icon(MdiIcons.dragVariant),
+    leading: const Icon(MdiIcons.dragVariant),
     setKey: SettingBoxKey.enableDragSubtitle,
     defaultVal: false,
   ),
   SwitchModel(
     title: uiTx('展示追番时间表'),
-    leading: Icon(MdiIcons.chartTimelineVariantShimmer),
+    leading: const Icon(MdiIcons.chartTimelineVariantShimmer),
     setKey: SettingBoxKey.showPgcTimeline,
     defaultVal: true,
     needReboot: true,
@@ -551,14 +551,14 @@ List<SettingsModel> get extraSettings => [
   SwitchModel(
     title: uiTx('大家都在搜'),
     subtitle: uiTx('是否展示「大家都在搜」'),
-    leading: Icon(Icons.data_thresholding_outlined),
+    leading: const Icon(Icons.data_thresholding_outlined),
     setKey: SettingBoxKey.enableHotKey,
     defaultVal: true,
   ),
   SwitchModel(
     title: uiTx('搜索发现'),
     subtitle: uiTx('是否展示「搜索发现」'),
-    leading: Icon(Icons.search_outlined),
+    leading: const Icon(Icons.search_outlined),
     setKey: SettingBoxKey.enableSearchRcmd,
     defaultVal: true,
   ),
@@ -582,7 +582,7 @@ List<SettingsModel> get extraSettings => [
   SwitchModel(
     title: uiTx('快速收藏'),
     subtitle: uiTx('点击设置默认收藏夹\n点按收藏至默认，长按选择文件夹'),
-    leading: Icon(Icons.bookmark_add_outlined),
+    leading: const Icon(Icons.bookmark_add_outlined),
     setKey: SettingBoxKey.enableQuickFav,
     onTap: _showFavDialog,
     defaultVal: false,
@@ -598,27 +598,27 @@ List<SettingsModel> get extraSettings => [
   SwitchModel(
     title: uiTx('启用AI总结'),
     subtitle: uiTx('视频详情页开启AI总结'),
-    leading: Icon(Icons.engineering_outlined),
+    leading: const Icon(Icons.engineering_outlined),
     setKey: SettingBoxKey.enableAi,
     defaultVal: false,
   ),
   SwitchModel(
     title: uiTx('消息页禁用"收到的赞"功能'),
     subtitle: uiTx('禁止打开入口，降低网络社交依赖'),
-    leading: Icon(Icons.beach_access_outlined),
+    leading: const Icon(Icons.beach_access_outlined),
     setKey: SettingBoxKey.disableLikeMsg,
     defaultVal: false,
   ),
   SwitchModel(
     title: uiTx('默认展示评论区'),
     subtitle: uiTx('在视频详情页默认切换至评论区页（仅Tab型布局）'),
-    leading: Icon(Icons.mode_comment_outlined),
+    leading: const Icon(Icons.mode_comment_outlined),
     setKey: SettingBoxKey.defaultShowComment,
     defaultVal: false,
   ),
   SwitchModel(
     title: uiTx('启用HTTP/2'),
-    leading: Icon(Icons.swap_horizontal_circle_outlined),
+    leading: const Icon(Icons.swap_horizontal_circle_outlined),
     setKey: SettingBoxKey.enableHttp2,
     defaultVal: false,
     needReboot: true,
@@ -626,13 +626,13 @@ List<SettingsModel> get extraSettings => [
   NormalModel(
     title: uiTx('连接重试次数'),
     subtitle: uiTx('为0时禁用'),
-    leading: Icon(Icons.repeat),
+    leading: const Icon(Icons.repeat),
     onTap: _showReplyCountDialog,
   ),
   NormalModel(
     title: uiTx('连接重试间隔'),
     subtitle: uiTx('实际间隔 = 间隔 * 第x次重试'),
-    leading: Icon(Icons.more_time_outlined),
+    leading: const Icon(Icons.more_time_outlined),
     onTap: _showReplyDelayDialog,
   ),
   PopupModel(
@@ -687,9 +687,9 @@ List<SettingsModel> get extraSettings => [
     normalModel: NormalModel.split(
       title: uiTx('设置代理'),
       subtitle: uiTx('设置代理 host:port'),
-      leading: Icon(Icons.airplane_ticket_outlined),
+      leading: const Icon(Icons.airplane_ticket_outlined),
     ),
-    switchModel: SwitchModel.split(
+    switchModel: const SwitchModel.split(
       defaultVal: false,
       setKey: SettingBoxKey.enableSystemProxy,
       onTap: _showProxyDialog,
@@ -717,7 +717,7 @@ List<SettingsModel> get extraSettings => [
   SwitchModel(
     title: uiTx('检测预发布版本更新'),
     subtitle: uiTx('检查更新时同时包含 pre-release 版本'),
-    leading: Icon(Icons.preview_outlined),
+    leading: const Icon(Icons.preview_outlined),
     setKey: SettingBoxKey.preReleaseUpdate,
     defaultVal: false,
   ),
@@ -861,7 +861,7 @@ void _showDownPathDialog(BuildContext context, VoidCallback setState) {
             Get.back();
             Utils.copyText(downloadPath);
           },
-          child: Text(uiTx('复制'), style: TextStyle(fontSize: 14)),
+          child: Text(uiTx('复制'), style: const TextStyle(fontSize: 14)),
         ),
         DialogOption(
           onPressed: () {
@@ -873,7 +873,7 @@ void _showDownPathDialog(BuildContext context, VoidCallback setState) {
             Get.find<DownloadService>().initDownloadList();
             GStorage.setting.delete(SettingBoxKey.downloadPath);
           },
-          child: Text(uiTx('重置'), style: TextStyle(fontSize: 14)),
+          child: Text(uiTx('重置'), style: const TextStyle(fontSize: 14)),
         ),
         DialogOption(
           onPressed: () async {
@@ -885,7 +885,7 @@ void _showDownPathDialog(BuildContext context, VoidCallback setState) {
             Get.find<DownloadService>().initDownloadList();
             GStorage.setting.put(SettingBoxKey.downloadPath, path);
           },
-          child: Text(uiTx('设置新路径'), style: TextStyle(fontSize: 14)),
+          child: Text(uiTx('设置新路径'), style: const TextStyle(fontSize: 14)),
         ),
       ],
     ),
@@ -1253,7 +1253,7 @@ void _showProxyDialog(BuildContext context) {
             decoration: InputDecoration(
               isDense: true,
               labelText: uiTx('请输入Host，使用 . 分割'),
-              border: OutlineInputBorder(
+              border: const OutlineInputBorder(
                 borderRadius: BorderRadius.all(Radius.circular(6)),
               ),
             ),
@@ -1266,7 +1266,7 @@ void _showProxyDialog(BuildContext context) {
             decoration: InputDecoration(
               isDense: true,
               labelText: uiTx('请输入Port'),
-              border: OutlineInputBorder(borderRadius: .all(.circular(6))),
+              border: const OutlineInputBorder(borderRadius: .all(.circular(6))),
             ),
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             onChanged: (e) => systemProxyPort = e,
