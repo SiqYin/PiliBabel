@@ -68,7 +68,11 @@ CoverTranslateButton(cover: item.cover),
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(uiTx(item.title)),
+                    Text(
+                      uiTx(item.title),
+                      maxLines: Pref.videoTitleFull ? 4 : 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                     if (item.styles != null) ...[
                       const SizedBox(height: 6),
                       Text(
@@ -89,8 +93,6 @@ CoverTranslateButton(cover: item.cover),
           ),
         ),
       ),
-    maxLines: Pref.videoTitleFull ? 4 : 2,
-    overflow: TextOverflow.ellipsis,
     );
   }
 }
