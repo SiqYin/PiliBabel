@@ -67,7 +67,7 @@ CoverTranslateButton(cover: item.cover),
             () {
               UiTranslateService.to.revision.value;
               return Text(
-                ' ${uiTx(item.title ?? '')}',
+                ' ${uiTx(item.title)}',
                 overflow: TextOverflow.fade,
                 maxLines: 1,
               );

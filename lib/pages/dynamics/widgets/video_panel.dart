@@ -65,7 +65,7 @@ CoverTranslateButton(cover: cover),
               ),
               if (video.badge?.text case final badge?)
                 PBadge(
-                  text: uiTx(badge ?? ''),
+                  text: uiTx(badge),
                   top: 8.0,
                   right: 10.0,
                   bottom: null,

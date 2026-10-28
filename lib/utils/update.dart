@@ -219,7 +219,7 @@ abstract final class Update {
     for (var attempt = 0; attempt < _kMaxUpdateRetries; attempt++) {
       last = await _fetchReleases();
       if (!_isEmptyPayload(last)) {
-        return last!; // 非空即成功，第一时间返回
+        return last; // 非空即成功，第一时间返回
       }
       _logCheckFailed();
       if (attempt < _kMaxUpdateRetries - 1) {

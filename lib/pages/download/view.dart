@@ -99,7 +99,12 @@ class _DownloadPageState extends State<DownloadPage>
   late final _folderSelectController = Get.put(
     DownloadFolderSelectController(_controller),
   );
-  final _progress = ChangeNotifier();
+  /// 仅用来给下载进度条做重建通知。
+  ///
+  /// `ChangeNotifier.notifyListeners()` 是 protected，外部直接调用会触发
+  /// invalid_use_of_protected_member / invalid_use_of_visible_for_testing_member。
+  /// 用一层子类把它包成公开的 `notify()` 即可，语义不变。
+  final _progress = _NotifyingChangeNotifier();
 
   late final TabController _tabController;
   int _tabIndex = 0;
@@ -253,7 +258,7 @@ class _DownloadPageState extends State<DownloadPage>
       if (!mounted) {
         return;
       }
-      _progress.notifyListeners();
+      _progress.notify();
       await _controller.refreshContinueTarget();
     } finally {
       if (mounted) {
@@ -1052,4 +1057,10 @@ class _DownloadPageState extends State<DownloadPage>
       ),
     );
   }
+}
+
+/// 暴露 [ChangeNotifier.notifyListeners] 的私有包装：该类本身是 protected，
+/// 外部直接调用会触发 analyze 的 invalid_use_of_* 提示。
+final class _NotifyingChangeNotifier extends ChangeNotifier {
+  void notify() => notifyListeners();
 }

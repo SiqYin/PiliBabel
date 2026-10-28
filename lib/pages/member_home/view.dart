@@ -3,7 +3,6 @@ import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart'
     show platformAlwaysClampingPhysics;
 import 'package:PiliPlus/utils/page_utils.dart' show PageUtils;
-import 'dart:math';
 
 
 import 'package:PiliPlus/common/style.dart';
@@ -32,7 +31,6 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
-import 'package:flutter/gestures.dart';
 import 'package:flutter/rendering.dart';
 
 import 'package:PiliPlus/pages/member_home/widgets/live_item.dart';

@@ -13,10 +13,8 @@ import 'package:PiliPlus/pages/member_opus/controller.dart';
 import 'package:PiliPlus/pages/member_opus/widgets/collection_item.dart';
 import 'package:PiliPlus/pages/member_opus/widgets/space_opus_item_grpc.dart';
 import 'package:PiliPlus/utils/grid.dart';
-import 'package:PiliPlus/utils/waterfall.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
-import 'package:waterfall_flow/waterfall_flow.dart'
     hide SliverWaterfallFlowDelegateWithMaxCrossAxisExtent;
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
