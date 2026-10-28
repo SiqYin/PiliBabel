@@ -43,6 +43,11 @@ Future<void> showTranslationOnboardingIfNeeded() async {
     _showing = false;
     return;
   }
+  // 上面有一次 await（等待首个路由稳定），context 可能已失效，弹窗前再确认一次。
+  if (!context.mounted) {
+    _showing = false;
+    return;
+  }
 
   if (usedBefore) {
     await _showUpgradeNotice(context);
