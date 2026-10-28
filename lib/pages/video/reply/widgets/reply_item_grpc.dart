@@ -514,28 +514,31 @@ class ReplyItemGrpc extends StatelessWidget {
         ],
         if (replyControl.cardLabels.isNotEmpty) ...[
           // 这些标签是服务端下发的中文（如「UP主觉得很赞」「相互关注」），经 AI 翻译后
-          // 可能显著变长。两条要求：
+          // 可能显著变长。三条要求：
           //   1) 不能把右侧的点赞等按钮挤出屏幕（用 Expanded 限制在剩余空间内）；
-          //   2) **每个标签各自独立折行**，绝不能把多个标签拼成一个字符串再折行 ——
-          //      拼接后折行会跨标签断开，出现「いいねしま／した 相互フォロー」这种
-          //      把一个词劈成两半、后面又跟着另一个标签的怪样子。
-          // 所以这里用纵向 Column 逐个渲染，每个标签最多两行（不够长就不折），
-          // 两行仍放不下才省略号兜底。
+          //   2) 多个标签必须**保持左右并排**（官方就是左「UP主觉得很赞」、右「相互关注」），
+          //      不能做成上下堆叠；
+          //   3) 但**每个标签各自独立折行**，绝不能拼成一个字符串再折 —— 拼接后折行会
+          //      跨标签断开，出现「いいねしま／した 相互フォロー」这种把词劈开的怪样子。
+          // 所以这里用横向 Row，每个标签是一个独立的 Flexible + Text（各自最多两行，
+          // 译文不长就不折），标签之间留间距。
           Expanded(
-            child: Column(
+            child: Row(
+              spacing: 8,
               mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 for (final label
                     in dialogBtn != null
                         ? replyControl.cardLabels.take(1)
                         : replyControl.cardLabels)
-                  Text(
-                    // 逐条翻译而不是先拼接：拼接会让「A+B」这种组合各自成为独立缓存 key。
-                    uiTx(label.textContent),
-                    style: textStyle.copyWith(color: colorScheme.secondary),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  Flexible(
+                    child: Text(
+                      // 逐条翻译而不是先拼接：拼接会让「A+B」这种组合各自成为独立缓存 key。
+                      uiTx(label.textContent),
+                      style: textStyle.copyWith(color: colorScheme.secondary),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
               ],
             ),
