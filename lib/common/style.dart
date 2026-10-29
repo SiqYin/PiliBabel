@@ -20,6 +20,14 @@ abstract final class Style {
   /// 把封面钉死成这个常量后，容器怎么加高都只影响右侧文字区，封面尺寸恒定。
   /// 所有横向卡片都应使用它，不要各自再算「容器高 - padding」。
   static const cardHCoverHeight = 100.0;
+
+  /// 给「同一组件被两种高度网格复用」用的封面高度。
+  ///
+  /// 典型是下载页的 `DetailItem`：它既出现在硬编码 `mainAxisExtent: 100` 的网格
+  /// （缓存视频 / 文件夹），也出现在走 `GridMixin`、会随标题开关加高到 148 的网格
+  /// （正在缓存 / 下载搜索）。这种情况**必须按最矮的容器**算，否则在高的那两页
+  /// 封面就会变大。100 - 上下内边距各 5 = 90。
+  static const cardHCoverHeightCompact = 90.0;
   static const imgMaxRatio = 2.6;
   static const bottomSheetRadius = BorderRadius.vertical(top: .circular(28));
   static const dialogFixedConstraints = BoxConstraints.tightFor(width: 420);
