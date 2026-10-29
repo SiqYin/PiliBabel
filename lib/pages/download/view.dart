@@ -655,25 +655,47 @@ class _DownloadPageState extends State<DownloadPage>
                   children: [
                     SizedBox(
                       height: 46,
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 12),
-                          _moduleBtn(0, '缓存视频'),
-                          const SizedBox(width: 8),
-                          _moduleBtn(1, '缓存音频'),
-                          const SizedBox(width: 8),
-                          TextButton(
-                            onPressed: () =>
-                                Get.to(const LocalDownloadPage()),
-                            style: TextButton.styleFrom(
-                              visualDensity: VisualDensity.compact,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                              ),
+                      // 横向可滚动：这三项译文（尤其「下载情况」）在某些语言下会明显
+                      // 变长，固定 Row 会把最右侧文字挤出屏幕且无法查看。改成横向
+                      // 滚动后，放得下就正常显示，放不下可以左右滑。
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.only(right: 12),
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 12),
+                            _moduleBtn(0, '缓存视频'),
+                            const SizedBox(width: 8),
+                            _moduleBtn(1, '缓存音频'),
+                            const SizedBox(width: 8),
+                            // 「下载情况」是入口而非模块切换项，配色要与未选中的
+                            // 模块按钮完全一致（此前用默认 TextButton 主题色，会显示
+                            // 成主题蓝，看起来像被选中）。
+                            Builder(
+                              builder: (context) {
+                                final colorScheme =
+                                    Theme.of(context).colorScheme;
+                                return TextButton(
+                                  onPressed: () =>
+                                      Get.to(const LocalDownloadPage()),
+                                  style: TextButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    uiTx('下载情况'),
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: colorScheme.outline,
+                                    ),
+                                  ),
+                                );
+                              },
                             ),
-                            child: Text(uiTx('下载情况')),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     if (_cacheModule == 0)
