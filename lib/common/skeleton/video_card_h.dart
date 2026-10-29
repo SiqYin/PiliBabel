@@ -19,7 +19,7 @@ class VideoCardHSkeleton extends StatelessWidget {
             // 「标题完全显示」加高，若不钉死高度，加载时就会先闪出一个大尺寸占位块，
             // 等真实卡片出来再缩回正常尺寸。
             SizedBox(
-              height: 100,
+              height: Style.cardHCoverHeight,
               child: AspectRatio(
                 aspectRatio: Style.aspectRatio,
                 child: DecoratedBox(
