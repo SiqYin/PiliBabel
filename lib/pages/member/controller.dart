@@ -167,7 +167,7 @@ class MemberController extends CommonDataController<SpaceData, SpaceData?>
       SpaceTab2(title: uiTx('收藏'), param: 'favorite'),
       SpaceTab2(title: uiTx('追番'), param: 'bangumi'),
     ];
-    tabs = tab2!.map((item) => Tab(text: uiTx(item.title))).toList();
+    tabs = tab2!.map((item) => Tab(text: uiTx(item.title ?? ''))).toList();
     tabController?.dispose();
     tabController = TabController(
       vsync: this,
