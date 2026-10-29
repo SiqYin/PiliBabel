@@ -37,7 +37,7 @@ class SeasonSeriesCard extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AspectRatio(
+              SizedBox(height: 100, child: AspectRatio(
                 aspectRatio: Style.aspectRatio,
                 child: LayoutBuilder(
                   builder: (BuildContext context, BoxConstraints boxConstraints) {
@@ -64,7 +64,7 @@ CoverTranslateButton(cover: item.meta!.cover),
                     );
                   },
                 ),
-              ),
+              )),
               const SizedBox(width: 10),
               content(context),
             ],

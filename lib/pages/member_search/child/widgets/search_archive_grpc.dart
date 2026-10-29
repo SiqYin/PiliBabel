@@ -76,7 +76,7 @@ class SearchArchiveGrpc extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  AspectRatio(
+                  SizedBox(height: 100, child: AspectRatio(
                     aspectRatio: Style.aspectRatio,
                     child: LayoutBuilder(
                       builder: (context, boxConstraints) {
@@ -112,7 +112,7 @@ CoverTranslateButton(cover: arc.pic),
                         );
                       },
                     ),
-                  ),
+                  )),
                   const SizedBox(width: 10),
                   content(context, regTitle),
                 ],

@@ -374,7 +374,7 @@ class _MemberPageState extends State<MemberPage> {
                 const Icon(Icons.block, size: 19),
                 const SizedBox(width: 10),
                 Text(
-                  _userController.relation.value != 128 ? '加入黑名单' : '移除黑名单',
+                  uiTx(_userController.relation.value != 128 ? '加入黑名单' : '移除黑名单'),
                 ),
               ],
             ),
@@ -400,7 +400,7 @@ class _MemberPageState extends State<MemberPage> {
               const Icon(Icons.share_outlined, size: 19),
               const SizedBox(width: 10),
               Text(
-                _userController.account.mid != _mid ? '分享UP主' : '分享我的主页',
+                uiTx(_userController.account.mid != _mid ? '分享UP主' : '分享我的主页'),
               ),
             ],
           ),
@@ -652,9 +652,11 @@ class _MemberPageState extends State<MemberPage> {
     if (res case Success(:final response)) {
       if (response.mtime == null) return;
       _cacheFollowTime =
-          '关注时间: ${DateFormatUtils.longFormatDs.format(
-            DateTime.fromMillisecondsSinceEpoch(response.mtime! * 1000),
-          )}';
+          uiTxP('关注时间: {0}', [
+            DateFormatUtils.longFormatDs.format(
+              DateTime.fromMillisecondsSinceEpoch(response.mtime! * 1000),
+            ),
+          ]);
       onShow();
     } else {
       res.toast();

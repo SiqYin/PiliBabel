@@ -53,7 +53,7 @@ class SearchArticleItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               if (item.imageUrls?.isNotEmpty == true)
-                AspectRatio(
+                SizedBox(height: 100, child: AspectRatio(
                   aspectRatio: Style.aspectRatio,
                   child: LayoutBuilder(
                     builder: (context, boxConstraints) {
@@ -69,7 +69,7 @@ CoverTranslateButton(cover: item.imageUrls?.firstOrNull),
 ]);
                     },
                   ),
-                ),
+                )),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(

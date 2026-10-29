@@ -17,7 +17,7 @@ class FavPgcItemSkeleton extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(
+            SizedBox(height: 100, child: AspectRatio(
               aspectRatio: 3 / 4,
               child: LayoutBuilder(
                 builder: (context, boxConstraints) {
@@ -31,7 +31,7 @@ class FavPgcItemSkeleton extends StatelessWidget {
                   );
                 },
               ),
-            ),
+            )),
             const SizedBox(width: 10),
             Expanded(
               child: Column(

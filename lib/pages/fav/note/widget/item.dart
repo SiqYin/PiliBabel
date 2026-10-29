@@ -54,7 +54,7 @@ class FavNoteItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (item.pic?.isNotEmpty == true)
-                AspectRatio(
+                SizedBox(height: 100, child: AspectRatio(
                   aspectRatio: Style.aspectRatio,
                   child: LayoutBuilder(
                     builder: (context, boxConstraints) {
@@ -79,7 +79,7 @@ CoverTranslateButton(cover: item.pic),
                       );
                     },
                   ),
-                ),
+                )),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
