@@ -48,6 +48,7 @@ class DownloadPanel extends StatefulWidget {
     required this.heroTag,
     this.ugcIntroController,
     required this.cidSet,
+    this.isAudio = false,
   });
 
   final int index;
@@ -59,6 +60,9 @@ class DownloadPanel extends StatefulWidget {
   final String heroTag;
   final UgcIntroController? ugcIntroController;
   final Set<int> cidSet;
+
+  /// 这个面板是「缓存视频」还是「缓存音频」——决定「查看缓存」跳到哪个模块。
+  final bool isAudio;
 
   @override
   State<DownloadPanel> createState() => _DownloadPanelState();
@@ -640,7 +644,11 @@ CoverTranslateButton(cover: cover),
           _buildBottomBtn(
             text: uiTx('查看缓存'),
             onTap: () => Navigator.of(context).push(
-              GetPageRoute(page: () => const DownloadPage()),
+              GetPageRoute(
+                page: () => DownloadPage(
+                  initialCacheModule: widget.isAudio ? 1 : 0,
+                ),
+              ),
             ),
           ),
         ],

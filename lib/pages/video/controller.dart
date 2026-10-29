@@ -2346,6 +2346,7 @@ class VideoDetailController extends GetxController
         qn: quality.code,
         ownerName: detail?.owner?.name,
         cover: detail?.pic,
+        collectionName: _collectionFolderName(),
       );
     } else {
       if (!isUgc) {
@@ -2365,9 +2366,34 @@ class VideoDetailController extends GetxController
         quality: quality,
         ownerName: detail?.owner?.name,
         cover: detail?.pic,
+        collectionName: _collectionFolderName(),
       );
     }
   }
+
+  /// 当前视频所属「合集 / 多 P」的名字，用于在下载目录下建同名子文件夹。
+  ///
+  /// 合集（ugc_season）优先用合集标题；普通多 P 视频退而用视频标题，
+  /// 这样同一视频的各分 P 会落进同一个文件夹。都不是则返回 null（直接放所选目录）。
+  String? _collectionFolderName() {
+    if (!isUgc) {
+      return null;
+    }
+    final detail = _videoDetailOrNull();
+    if (detail == null) {
+      return null;
+    }
+    final seasonTitle = detail.ugcSeason?.title;
+    if (seasonTitle != null && seasonTitle.trim().isNotEmpty) {
+      return seasonTitle;
+    }
+    final pages = detail.pages;
+    if (pages != null && pages.length > 1) {
+      return detail.title;
+    }
+    return null;
+  }
+
 
   /// 取当前视频的标题：UGC 用视频详情，PGC 用番剧信息。
   String? _currentVideoTitle() {
@@ -2386,7 +2412,14 @@ class VideoDetailController extends GetxController
 
 
   /// 缓存音频：按用户选的音质档位，把音轨单独存成原格式音频文件。
-  Future<void> onDownloadAudio(BuildContext context) async {
+  /// 缓存音频：与「缓存视频」共用同一个面板，只是默认落到音频档位。
+  ///
+  /// 这样面板里的「查看缓存」能带着「这是音频」的上下文跳过去，
+  /// 缓存界面打开时直接停在「缓存音频」模块，而不是上次停留的模块。
+  Future<void> onDownloadAudio(BuildContext context) =>
+      onDownload(context, isAudio: true);
+
+  Future<void> onDownloadAudioLegacy(BuildContext context) async {
     VideoDetailData? videoDetail;
     try {
       videoDetail = Get.find<UgcIntroController>(
@@ -2417,7 +2450,11 @@ class VideoDetailController extends GetxController
     );
   }
 
-  Future<void> onDownload(BuildContext context) async {
+  /// 缓存视频 / 缓存音频共用的面板入口。
+  ///
+  /// [isAudio] 决定面板里默认选中音频档位，也决定面板内「查看缓存」跳到
+  /// 缓存界面的哪个模块（缓存视频 / 缓存音频）。
+  Future<void> onDownload(BuildContext context, {bool isAudio = false}) async {
     VideoDetailData? videoDetail;
     List<ugc.BaseEpisodeItem>? episodes;
     UgcIntroController? ugcIntroController;
@@ -2494,6 +2531,7 @@ class VideoDetailController extends GetxController
               heroTag: heroTag,
               ugcIntroController: ugcIntroController,
               cidSet: cidSet,
+              isAudio: isAudio,
             ),
           );
         },

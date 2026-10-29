@@ -82,6 +82,13 @@ class DetailItem extends StatelessWidget {
     final outline = theme.colorScheme.outline;
     final cid = entry.source?.cid ?? entry.pageData?.cid;
     final canActInPlace = entry.isCompleted || onDelete != null;
+    // 缓存失败的四种状态（下载 / 音频 / 弹幕 / 取播放地址）。
+    // 失败条目点一下应当直接重试；「重新缓存」菜单项也依赖这个判断。
+    final isFailed =
+        entry.status == DownloadStatus.failDownload ||
+        entry.status == DownloadStatus.failDownloadAudio ||
+        entry.status == DownloadStatus.failDanmaku ||
+        entry.status == DownloadStatus.failPlayUrl;
     final enableMultiSelect = controller.enableMultiSelect.value;
     void onLongPress() {
       if (enableMultiSelect) {
@@ -95,6 +102,17 @@ class DetailItem extends StatelessWidget {
       child: InkWell(
         onTap: enableTap
             ? () async {
+                // 缓存失败的条目：点击直接重试，而不是跳到「正在缓存」页 ——
+                // 那个页面只显示排队中的任务，失败项在那里什么也做不了，
+                // 用户会以为「点了没反应、也没有重新下载按钮」。
+                if (isFailed) {
+                  if (enableMultiSelect) {
+                    (onSelect ?? controller.onSelect).call(entry);
+                    return;
+                  }
+                  downloadService.startDownload(entry);
+                  return;
+                }
                 if (!canActInPlace) {
                   Get.to(const DownloadingPage());
                   return;
@@ -148,10 +166,15 @@ class DetailItem extends StatelessWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  AspectRatio(
-                    aspectRatio: Style.aspectRatio,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
+                  // 封面高度固定：这里是横向 Row，AspectRatio 会按可用高度反推宽度，
+                  // 而「正在缓存 / 缓存列表」用的是 GridMixin 网格，格子会随「标题完全
+                  // 显示」加高，不钉死高度封面就会跟着变大。
+                  SizedBox(
+                    height: 100,
+                    child: AspectRatio(
+                      aspectRatio: Style.aspectRatio,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
                         final cover = File(
                           path.join(entry.entryDirPath, PathUtils.coverName),
                         );
@@ -193,12 +216,52 @@ CoverTranslateButton(cover: entry.cover),
                       },
                     ),
                   ),
+                  ),
                   if (entry.videoQuality case final videoQuality?)
                     PBadge(
                       text: VideoQuality.fromCode(videoQuality).shortDesc,
                       right: 6.0,
                       top: 6.0,
                       type: PBadgeType.gray,
+                    ),
+                  // 失败时在封面上直接放一个可见的「重试」按钮：
+                  // 之前失败只有藏在右上角菜单里的「重新缓存」，用户根本发现不了，
+                  // 反馈就是「没有重新下载的按钮」。
+                  if (isFailed)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Material(
+                        color: Colors.black54,
+                        borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(6),
+                        ),
+                        child: InkWell(
+                          onTap: () => downloadService.startDownload(entry),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.refresh,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  uiTx('重新缓存'),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   if (progress != null)
                     ListenableBuilder(
@@ -477,10 +540,7 @@ CoverTranslateButton(cover: entry.cover),
             showStaticPositionMenu<void>(
               context: menuContext,
               items: [
-                if (entry.status == DownloadStatus.failDownload ||
-                    entry.status == DownloadStatus.failDownloadAudio ||
-                    entry.status == DownloadStatus.failDanmaku ||
-                    entry.status == DownloadStatus.failPlayUrl)
+                if (isFailed)
                   CustomPopupMenuItem<void>(
                     height: 38,
                     child: Text(
