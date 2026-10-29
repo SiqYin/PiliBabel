@@ -1,14 +1,10 @@
-### PiliBabel v3.4.1
+### PiliBabel v3.4.2
 
-**Three cache/download fixes, plus automatic collection sub-folders for local downloads.**
+**Root-cause fix for the "video cover grows" family of bugs, plus two layout defects on the cache screen.**
 
-- **Failed cache items can be retried now.** Previously, tapping a failed item jumped to the "Currently caching" page — which only lists queued tasks, so a failed entry could do nothing there — while "Re-cache" was buried in the top-right menu. The result was exactly "there is no re-download button and tapping does nothing". Now:
-  - tapping a failed item **re-caches it directly**;
-  - the cover shows a **visible "Re-cache" button**, no menu needed.
-- **Covers in "Currently caching / cache list" no longer grow.** `DetailItem`'s cover is also a `Row` + `AspectRatio` (width derived from available height), so it grew when "show full title" made the grid cell taller. It is now pinned to its original height.
-- **The cache/download pages open on the tab that matches the entry point.**
-  - "Cache video" → the cache screen opens on **Cached videos**; "Cache audio" → **Cached audio**. (Previously it always reused whatever module you last visited, so tapping "cache audio" could land on audio and tapping "cache video" could also land on audio.)
-  - "Download video / Download audio" → the download screen opens on the matching tab.
-- **Automatic collection sub-folders.** When downloading to a local folder, if the video belongs to a collection (`ugc_season`), a sub-folder named after the **collection title** is created inside your chosen folder; a plain multi-part video uses the video title instead. Later episodes of the same collection land in the same folder automatically. Collection names are sanitised (illegal characters such as `\ / : * ? " < > |` removed, over-long names truncated).
+- **The cover-height contract is now a single constant** (`Style.cardHCoverHeight`). The root cause: in a horizontal card the cover uses `AspectRatio`, and a `Row` gives children unbounded width — so `AspectRatio` derives its **width from the available height**. Grid `mainAxisExtent` in turn grows by 38 when "show full title" is on, which meant **every card had to remember to pin its own cover height**. That contract was duplicated across 20+ files, so it could only be fixed one reported card at a time. 26 horizontal cards and skeletons now use the shared constant: extra cell height goes to the text column only, and cover size is constant.
+- **Cache screen: "cover shrank but the text column didn't narrow back".** `DetailItem` (cached videos / currently caching / folders) lives in a grid whose `mainAxisExtent` is a fixed 100, so it never needed a fixed-height box; an extra `SizedBox` taller than the available height (100 − 5 px padding top and bottom = 90) squeezed the cover while the row still allocated the old width to the text column. Removed — proportions are correct again.
+- **Module bar scrolls horizontally.** "Cache video / Cache audio / Download status" get noticeably longer in some languages; a fixed `Row` pushed the right-most label off-screen with no way to see it. It now scrolls sideways when needed.
+- **"Download status" is no longer tinted with the theme colour.** It is an entry point, not a module switch, so it now uses exactly the same styling as an unselected module button (`colorScheme.outline`, 13 px) instead of looking selected.
 
 Downloads are below.
