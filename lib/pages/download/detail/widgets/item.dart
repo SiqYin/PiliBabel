@@ -73,6 +73,16 @@ class DetailItem extends StatelessWidget {
   final bool showMoreButton;
   //
   final MultiSelectBase controller;
+
+  /// 缓存失败（下载 / 音频 / 弹幕 / 取播放地址四种失败状态）。
+  ///
+  /// 放在类级别而不是 build 里：右上角菜单的方法也要用同一个判断，
+  /// 之前在 build 内定义局部变量，菜单方法里引用不到会编译报错。
+  bool get isFailed =>
+      entry.status == DownloadStatus.failDownload ||
+      entry.status == DownloadStatus.failDownloadAudio ||
+      entry.status == DownloadStatus.failDanmaku ||
+      entry.status == DownloadStatus.failPlayUrl;
   final bool? checked;
   final ValueChanged<BiliDownloadEntryInfo>? onSelect;
 
@@ -82,13 +92,6 @@ class DetailItem extends StatelessWidget {
     final outline = theme.colorScheme.outline;
     final cid = entry.source?.cid ?? entry.pageData?.cid;
     final canActInPlace = entry.isCompleted || onDelete != null;
-    // 缓存失败的四种状态（下载 / 音频 / 弹幕 / 取播放地址）。
-    // 失败条目点一下应当直接重试；「重新缓存」菜单项也依赖这个判断。
-    final isFailed =
-        entry.status == DownloadStatus.failDownload ||
-        entry.status == DownloadStatus.failDownloadAudio ||
-        entry.status == DownloadStatus.failDanmaku ||
-        entry.status == DownloadStatus.failPlayUrl;
     final enableMultiSelect = controller.enableMultiSelect.value;
     void onLongPress() {
       if (enableMultiSelect) {
