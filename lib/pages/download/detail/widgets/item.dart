@@ -169,16 +169,19 @@ class DetailItem extends StatelessWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // 封面高度交给外层决定：本 widget 用在「缓存视频 / 文件夹 /
-                  // 正在缓存」等网格里，那些网格的 mainAxisExtent 是固定值（100），
-                  // 不随「标题完全显示」变化，所以这里不需要再钉死高度。
-                  // 之前额外套了一个固定高度的 SizedBox，比格子可用高度
-                  // （100 - 上下内边距各 5 = 90）还高，导致封面被压缩、
-                  // 右侧文字栏宽度却没跟着变 —— 正是「封面变小但文字栏没缩回」的原因。
-                  AspectRatio(
-                    aspectRatio: Style.aspectRatio,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
+                  // 封面高度**必须**自己钉死，理由：
+                  // 本 widget 同时被两种网格使用 ——「缓存视频 / 文件夹」是硬编码
+                  // mainAxisExtent: 100，而「正在缓存 / 下载搜索」走 GridMixin，
+                  // 后者会随「标题完全显示」加高到 148。横向卡片里封面是 AspectRatio，
+                  // 在 Row 中按可用高度反推宽度，所以只要不固定，在 GridMixin 那两页
+                  // 封面就会变大（这就是「改了又大回来」的原因）。
+                  // 取值必须按**最矮**的容器算：100 - 上下内边距各 5 = 90。
+                  SizedBox(
+                    height: Style.cardHCoverHeightCompact,
+                    child: AspectRatio(
+                      aspectRatio: Style.aspectRatio,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
                         final cover = File(
                           path.join(entry.entryDirPath, PathUtils.coverName),
                         );
@@ -219,6 +222,7 @@ CoverTranslateButton(cover: entry.cover),
 ]);
                       },
                     ),
+                  ),
                   ),
                   if (entry.videoQuality case final videoQuality?)
                     PBadge(
