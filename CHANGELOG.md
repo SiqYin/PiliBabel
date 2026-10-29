@@ -9,8 +9,17 @@
 这一轮从 3.0.5 一路做到 3.4.0，主线是「海外网络体验 + 对标官方 + AI 翻译落地」。
 3.4.0 本身不含新功能，只做收尾与定版：
 
-- **静态分析归零**：`flutter analyze` → **errors 0 / warnings 0**（infos 373 为评估后
-  刻意保留的噪音，明细与理由见 `docs/outstanding.md`）。
+- **静态分析归零**：`flutter analyze` → **errors 0 / warnings 0**（infos 从 373 降到 53，
+  剩余全部为评估后刻意保留的噪音，明细与理由见 `docs/outstanding.md`）。
+  其中借助 CI 的 `dart fix --apply` 批量修掉了 296 处 `prefer_const_constructors` 等有官方修正的项，
+  其余（缓存/列表的级联写法、匿名类型、onReorder 迁移、cancel_subscriptions 等）逐处手工处理。
+- **视频封面尺寸补漏（第二批）**：历史记录、收藏（视频/番剧/专栏/笔记）、成员收藏、
+  成员搜索、系列、排行榜、搜索专栏、订阅、评论搜索、番剧骨架等 **13 处**卡片封面此前仍会
+  随「标题完全显示」把格子加高而变大，现已统一固定回原始高度；封面尺寸不再受开关影响。
+- **UP 主主页翻译补齐**：大会员 / 年度大会员标识、个性签名、「xx 人为 TA 充电」
+  「xx 人加入大航海」、IP 属地与 UP 主自定义分类标签（同属服务端下发的 spaceTag）、
+  「主页 / 动态 / 投稿」等 Tab 标题、关注按钮各状态文案、关注时间、
+  「等 N 人也关注了 TA」——现在都走 `uiTx` / `uiTxP`。
 - **文档闭环**：44 份语言 README 全部带 AI 翻译声明；中英 README 的更新记录补到 3.4.0；
   剩余待办、阻塞项、刻意不做项、与官方 APP 的行为差异，分别写入
   `docs/outstanding.md` 与 `docs/known-differences-vs-official.md`。

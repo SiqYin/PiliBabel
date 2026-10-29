@@ -43,7 +43,7 @@ class FavArticleItem extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (item.cover != null) ...[
-                    AspectRatio(
+                    SizedBox(height: 100, child: AspectRatio(
                       aspectRatio: Style.aspectRatio,
                       child: LayoutBuilder(
                         builder: (context, boxConstraints) {
@@ -57,7 +57,7 @@ CoverTranslateButton(cover: item.cover!.url),
 ]);
                         },
                       ),
-                    ),
+                    )),
                     const SizedBox(width: 10),
                   ],
                   Expanded(

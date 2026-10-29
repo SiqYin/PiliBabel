@@ -64,7 +64,7 @@ class MemberFavItem extends StatelessWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  AspectRatio(
+                  SizedBox(height: 100, child: AspectRatio(
                     aspectRatio: Style.aspectRatio,
                     child: LayoutBuilder(
                       builder: (context, constraints) => Stack(children: [
@@ -76,7 +76,7 @@ NetworkImgLayer(
 CoverTranslateButton(cover: item.cover),
 ]),
                     ),
-                  ),
+                  )),
                   if (item.type == 21)
                     PBadge(
                       right: 6,
