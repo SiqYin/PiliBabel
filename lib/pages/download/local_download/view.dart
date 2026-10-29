@@ -17,7 +17,11 @@ import 'package:material_ui/material_ui.dart';
 /// 「清理档案」只在本地文件已经不存在时可用，点掉才从列表里消失。
 /// 样式对齐「缓存视频 / 缓存音频」两个界面。
 class LocalDownloadPage extends StatefulWidget {
-  const LocalDownloadPage({super.key});
+  const LocalDownloadPage({super.key, this.initialAudio = false});
+
+  /// 打开时默认停在哪个标签：false = 下载视频，true = 下载音频。
+  /// 从「下载视频 / 下载音频」入口进来时显式指定，点哪个就落到哪个。
+  final bool initialAudio;
 
   @override
   State<LocalDownloadPage> createState() => _LocalDownloadPageState();
@@ -43,6 +47,7 @@ class _LocalDownloadPageState extends State<LocalDownloadPage>
   late final TabController _tabController = TabController(
     length: 2,
     vsync: this,
+    initialIndex: widget.initialAudio ? 1 : 0,
   );
 
   @override

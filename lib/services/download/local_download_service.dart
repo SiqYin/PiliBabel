@@ -260,14 +260,19 @@ class LocalDownloadService extends GetxService {
     return file.path;
   }
 
-  String? _targetDir() {
+  String? _targetDir({String? collectionName}) {
     final dir = Pref.downloadLocalPath;
     if (dir == null || dir.isEmpty) {
       SmartDialog.showToast(uiTx('还没设置下载到本地的位置'));
       return null;
     }
+    // 合集/多 P 视频：在所选目录下建一个以合集名命名的子文件夹，
+    // 这样同一合集里后续追加下载的其它分集会自动落进同一个文件夹。
+    // 合集名会做一次文件名净化（去掉路径分隔符等非法字符），避免建目录失败。
+    final sub = _sanitizeFolderName(collectionName);
+    final target = sub == null ? dir : path.join(dir, sub);
     try {
-      final d = Directory(dir);
+      final d = Directory(target);
       if (!d.existsSync()) {
         d.createSync(recursive: true);
       }
@@ -278,7 +283,30 @@ class LocalDownloadService extends GetxService {
       SmartDialog.showToast(uiTx('下载位置不可用，请重新选择'));
       return null;
     }
-    return dir;
+    return target;
+  }
+
+  /// 把合集名净化成安全的目录名；没有可用字符时返回 null（表示不建子目录）。
+  static String? _sanitizeFolderName(String? raw) {
+    if (raw == null) {
+      return null;
+    }
+    var name = raw.trim();
+    if (name.isEmpty) {
+      return null;
+    }
+    // Windows / macOS / Linux 都不允许的字符，统一换成下划线
+    name = name.replaceAll(RegExp(r'[\\/:*?"<>|\x00-\x1f]'), '_');
+    // 去掉首尾的点与空格（Windows 不允许以点结尾）
+    name = name.replaceAll(RegExp(r'^[.\s]+|[.\s]+$'), '');
+    if (name.isEmpty) {
+      return null;
+    }
+    // 目录名过长会触发文件系统限制，截断到 80 个字符
+    if (name.length > 80) {
+      name = name.substring(0, 80);
+    }
+    return name;
   }
 
   /// 1080P（qn=80）是单文件 MP4（fnval=1 的 durl）能拿到的上限：
@@ -301,8 +329,9 @@ class LocalDownloadService extends GetxService {
     int qn = 80,
     String? ownerName,
     String? cover,
+    String? collectionName,
   }) async {
-    final dir = _targetDir();
+    final dir = _targetDir(collectionName: collectionName);
     if (dir == null) {
       return false;
     }
@@ -570,8 +599,9 @@ class LocalDownloadService extends GetxService {
     required AudioQuality quality,
     String? ownerName,
     String? cover,
+    String? collectionName,
   }) async {
-    final dir = _targetDir();
+    final dir = _targetDir(collectionName: collectionName);
     if (dir == null) {
       return false;
     }

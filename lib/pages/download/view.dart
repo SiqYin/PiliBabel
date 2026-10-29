@@ -85,7 +85,14 @@ String _formatCacheBytes(int bytes) {
 }
 
 class DownloadPage extends StatefulWidget {
-  const DownloadPage({super.key});
+  const DownloadPage({super.key, this.initialCacheModule});
+
+  /// 打开时默认停在哪个模块：0 = 缓存视频，1 = 缓存音频。
+  ///
+  /// 为 null 时沿用「记住上次停留的模块」（Pref.downloadCacheModule）。
+  /// 从视频页的「视频缓存 / 音频缓存」入口进来时会显式指定，
+  /// 让用户点哪个就落到哪个模块，而不是被上次的选择带偏。
+  final int? initialCacheModule;
 
   @override
   State<DownloadPage> createState() => _DownloadPageState();
@@ -110,8 +117,10 @@ class _DownloadPageState extends State<DownloadPage>
   int _tabIndex = 0;
   bool _isOpeningContinue = false;
 
-  /// 缓存模块：0 = 缓存视频，1 = 缓存音频。默认取上次停留的模块。
-  late int _cacheModule = Pref.downloadCacheModule;
+  /// 缓存模块：0 = 缓存视频，1 = 缓存音频。
+  /// 调用方显式指定时优先用它，否则沿用上次停留的模块。
+  late int _cacheModule =
+      widget.initialCacheModule ?? Pref.downloadCacheModule;
   final _audioCacheService = Get.find<AudioCacheService>();
   final _audioSelected = <String>{};
   bool _audioSelectMode = false;
