@@ -64,7 +64,7 @@ class MemberFavItem extends StatelessWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  SizedBox(height: 100, child: AspectRatio(
+                  SizedBox(height: Style.cardHCoverHeight, child: AspectRatio(
                     aspectRatio: Style.aspectRatio,
                     child: LayoutBuilder(
                       builder: (context, constraints) => Stack(children: [

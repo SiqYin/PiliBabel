@@ -118,7 +118,7 @@ class VideoCardH extends StatelessWidget {
                   // 所以把封面钉死成原来的高度（旧格子 110 - 上下 padding 各 5 = 100），
                   // 多出来的高度只留给右侧内容区的标题。
                   SizedBox(
-                    height: 100,
+                    height: Style.cardHCoverHeight,
                     child: AspectRatio(
                       aspectRatio: Style.aspectRatio,
                       child: LayoutBuilder(

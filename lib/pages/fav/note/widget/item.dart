@@ -54,7 +54,7 @@ class FavNoteItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (item.pic?.isNotEmpty == true)
-                SizedBox(height: 100, child: AspectRatio(
+                SizedBox(height: Style.cardHCoverHeight, child: AspectRatio(
                   aspectRatio: Style.aspectRatio,
                   child: LayoutBuilder(
                     builder: (context, boxConstraints) {

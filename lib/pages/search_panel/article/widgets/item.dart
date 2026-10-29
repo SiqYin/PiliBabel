@@ -53,7 +53,7 @@ class SearchArticleItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: <Widget>[
               if (item.imageUrls?.isNotEmpty == true)
-                SizedBox(height: 100, child: AspectRatio(
+                SizedBox(height: Style.cardHCoverHeight, child: AspectRatio(
                   aspectRatio: Style.aspectRatio,
                   child: LayoutBuilder(
                     builder: (context, boxConstraints) {

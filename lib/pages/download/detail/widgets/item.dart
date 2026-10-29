@@ -171,9 +171,10 @@ class DetailItem extends StatelessWidget {
                 children: [
                   // 封面高度交给外层决定：本 widget 用在「缓存视频 / 文件夹 /
                   // 正在缓存」等网格里，那些网格的 mainAxisExtent 是固定值（100），
-                  // 不随「标题完全显示」变化，所以这里**不需要**再钉死高度。
-                  // 之前额外套了 SizedBox(height: 100)，比格子可用高度（100 - 上下
-                  // 内边距各 5 = 90）还高，导致封面被压缩、右侧文字栏宽度却没跟着变。
+                  // 不随「标题完全显示」变化，所以这里不需要再钉死高度。
+                  // 之前额外套了一个固定高度的 SizedBox，比格子可用高度
+                  // （100 - 上下内边距各 5 = 90）还高，导致封面被压缩、
+                  // 右侧文字栏宽度却没跟着变 —— 正是「封面变小但文字栏没缩回」的原因。
                   AspectRatio(
                     aspectRatio: Style.aspectRatio,
                     child: LayoutBuilder(

@@ -43,7 +43,7 @@ class MemberComicItem extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 100, child: AspectRatio(
+              SizedBox(height: Style.cardHCoverHeight, child: AspectRatio(
                 aspectRatio: 3 / 4,
                 child: LayoutBuilder(
                   builder:

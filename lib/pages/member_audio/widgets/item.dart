@@ -43,7 +43,7 @@ class MemberAudioItem extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(height: 100, child: AspectRatio(
+              SizedBox(height: Style.cardHCoverHeight, child: AspectRatio(
                 aspectRatio: 1,
                 child: LayoutBuilder(
                   builder:
