@@ -169,15 +169,15 @@ class DetailItem extends StatelessWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  // 封面高度固定：这里是横向 Row，AspectRatio 会按可用高度反推宽度，
-                  // 而「正在缓存 / 缓存列表」用的是 GridMixin 网格，格子会随「标题完全
-                  // 显示」加高，不钉死高度封面就会跟着变大。
-                  SizedBox(
-                    height: 100,
-                    child: AspectRatio(
-                      aspectRatio: Style.aspectRatio,
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
+                  // 封面高度交给外层决定：本 widget 用在「缓存视频 / 文件夹 /
+                  // 正在缓存」等网格里，那些网格的 mainAxisExtent 是固定值（100），
+                  // 不随「标题完全显示」变化，所以这里**不需要**再钉死高度。
+                  // 之前额外套了 SizedBox(height: 100)，比格子可用高度（100 - 上下
+                  // 内边距各 5 = 90）还高，导致封面被压缩、右侧文字栏宽度却没跟着变。
+                  AspectRatio(
+                    aspectRatio: Style.aspectRatio,
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
                         final cover = File(
                           path.join(entry.entryDirPath, PathUtils.coverName),
                         );
@@ -218,7 +218,6 @@ CoverTranslateButton(cover: entry.cover),
 ]);
                       },
                     ),
-                  ),
                   ),
                   if (entry.videoQuality case final videoQuality?)
                     PBadge(
