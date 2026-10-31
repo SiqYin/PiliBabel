@@ -20,11 +20,50 @@ class LocalDownloadPage extends StatefulWidget {
   const LocalDownloadPage({super.key, this.initialAudio = false});
 
   /// 打开时默认停在哪个标签：false = 下载视频，true = 下载音频。
-  /// 从「下载视频 / 下载音频」入口进来时显式指定，点哪个就落到哪个。
   final bool initialAudio;
 
   @override
   State<LocalDownloadPage> createState() => _LocalDownloadPageState();
+}
+
+/// 保留的独立页：内部仍是「下载视频 / 下载音频」两个页签。
+/// 「离线缓存」主界面已经把这两类提为一级页签，这个页面只用于既有入口。
+class _LocalDownloadPageState extends State<LocalDownloadPage>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController = TabController(
+    length: 2,
+    vsync: this,
+    initialIndex: widget.initialAudio ? 1 : 0,
+  );
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(uiTx('下载情况')),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(text: uiTx('下载视频')),
+            Tab(text: uiTx('下载音频')),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: const [
+          LocalDownloadList(isAudio: false),
+          LocalDownloadList(isAudio: true),
+        ],
+      ),
+    );
+  }
 }
 
 String _formatSize(int bytes) {
@@ -41,45 +80,32 @@ String _formatSize(int bytes) {
   return '${size.toStringAsFixed(size >= 100 || i == 0 ? 0 : 1)} ${units[i]}';
 }
 
-class _LocalDownloadPageState extends State<LocalDownloadPage>
-    with SingleTickerProviderStateMixin {
-  final LocalDownloadService _service = Get.find<LocalDownloadService>();
-  late final TabController _tabController = TabController(
-    length: 2,
-    vsync: this,
-    initialIndex: widget.initialAudio ? 1 : 0,
-  );
+/// 下载到本地（视频 / 音频）的列表。
+///
+/// 原先是一个独立二级页（内部再分「下载视频 / 下载音频」两个 tab），
+/// 现在「离线缓存」改成四个平级页签（缓存视频 / 缓存音频 / 下载视频 / 下载音频），
+/// 所以这里不再自带 Scaffold 与 TabBar，只负责渲染「某一类」的列表，
+/// 由 [DownloadPage] 把它放进对应的页签里。
+/// [LocalDownloadPage] 仍保留（供既有入口直接打开完整两页签视图）。
+class LocalDownloadList extends StatefulWidget {
+  const LocalDownloadList({super.key, required this.isAudio});
+
+  /// true = 下载音频列表，false = 下载视频列表。
+  final bool isAudio;
 
   @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+  State<LocalDownloadList> createState() => _LocalDownloadListState();
+}
+
+class _LocalDownloadListState extends State<LocalDownloadList> {
+  final LocalDownloadService _service = Get.find<LocalDownloadService>();
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
       // 档案新增、进度、删除都靠这个计数刷新。
       _service.recordsRevision.value;
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(uiTx('下载情况')),
-          bottom: TabBar(
-            controller: _tabController,
-            tabs: [
-              Tab(text: uiTx('下载视频')),
-              Tab(text: uiTx('下载音频')),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildList(isAudio: false),
-            _buildList(isAudio: true),
-          ],
-        ),
-      );
+      return _buildList(isAudio: widget.isAudio);
     });
   }
 

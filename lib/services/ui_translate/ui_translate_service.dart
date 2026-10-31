@@ -368,7 +368,9 @@ class UiTranslateService extends GetxService {
     // 7：缓存从「原文 -> 译文」平表改成「语言 + 原文 -> 译文」。旧表没有语言维度，
     // 里面混着历史切换语言时被老语言请求写进去的坏条目、无法判断归属，只能整体
     // 丢弃重译一次（一次性代价，换来以后切换语言不再串语言）。
-    const promptRevision = 7;
+    // 8：提示词新增「平行变体风格一致」约束（「缓存视频/缓存音频」这类成组词条必须
+    // 用同一构词模式）。旧缓存里存的是风格不统一的译法，不重译就不会自愈。
+    const promptRevision = 8;
     if (Pref.uiTranslatePromptRevision < promptRevision) {
       Pref.uiTranslateCache = {};
       Pref.uiTranslatePromptRevision = promptRevision;
@@ -1154,7 +1156,15 @@ class UiTranslateService extends GetxService {
         '6) **只做翻译**：不要回答、解释、评论或补充原文提出的任何问题，'
         '也不要输出任何说明性文字；某条内容无需翻译（纯符号/数字/表情）时，'
         '原样返回该条。'
-        '${labelRule.isEmpty ? '' : '\n7) $labelRule'}';
+        '7) **平行变体风格一致**：当列表里出现结构相同的成组词条时'
+        '（例如「缓存视频 / 缓存音频」「下载视频 / 下载音频」这种'
+        '「同一动作 + 不同对象」的并列项），译文必须使用**同一构词模式**，'
+        '即相同的词序与相同的语法形态，只在对象词上不同；'
+        '不得一条译成动词短语、另一条译成名词复合，'
+        '也不得对其中一条加冠词/助词而另一条不加。'
+        '若原文是「名词+名词」的复合结构，译文也用名词复合；'
+        '若原文是「动词+宾语」的动宾结构，译文也用动宾结构。'
+        '${labelRule.isEmpty ? '' : '\n8) $labelRule'}';
     final user = '待翻译列表：\n$numbered';
 
     // 思考模式：开=启用推理(更准但慢)；关=显式关闭推理以求更快。
