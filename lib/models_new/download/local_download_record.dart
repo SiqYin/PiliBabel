@@ -33,10 +33,14 @@ class LocalDownloadRecord {
 
   /// 落盘的绝对路径。视频高画质（1080P60 及以上）走 DASH 分离流时，
   /// 这里是视频轨的路径，音轨见 [extraPath]。
-  final String path;
+  ///
+  /// 不是 final：分离流下载完成后会用 FFmpeg 把两个轨合并成一个 MP4，
+  /// 届时这里改为指向合并后的文件、并把 [extraPath] 置空。
+  String path;
 
   /// 分离流下载时音频轨的落盘路径（与 [path] 一起构成完整内容）。
-  final String? extraPath;
+  /// 合并成功后置为 null（音频已并入 [path]）。
+  String? extraPath;
 
   final String? ownerName;
   final String? cover;
