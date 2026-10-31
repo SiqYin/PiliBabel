@@ -1,15 +1,9 @@
-### PiliBabel v3.4.3
+### PiliBabel v3.4.4
 
-**Fixes a regression introduced in v3.4.2: cache-screen covers grew again.**
+**High-quality downloads are now merged into a single playable video, and the false "file deleted" warning during downloads is fixed.**
 
-**Cause.** In v3.4.2 I removed the fixed cover height from `DetailItem` on the grounds that "its grid uses a fixed `mainAxisExtent` of 100". **That premise was wrong** — `DetailItem` is reused by two different grids:
-- "Cached videos / Folders": hard-coded `mainAxisExtent: 100`
-- "Currently caching / Download search": uses `GridMixin`, which grows to 148 when "show full title" is enabled
-
-With no fixed height, it derived its cover from the available height again on the latter two pages, so the cover grew back.
-
-**Fix.** `DetailItem` again pins its own cover height, computed against the **shortest** container: `100 − 5 px padding top and bottom = 90`. A new constant `Style.cardHCoverHeightCompact` documents this, so a future change can't re-break it by reasoning about only one of the two containers.
-
-**Full audit included.** Every horizontal-card cover was scanned: the other 26 are already pinned; the 9 unpinned ones were verified to be **vertical** cards (cover inside a `Column`, width-driven, unaffected by container height), and only `DownloadFolderCard` sits in a `Row` — but it is used solely by the fixed-height-100 grid, so it is safe.
+- **High-quality downloads (1080P60 / 4K / HDR / Dolby / 8K) are merged automatically.** At those tiers bilibili only serves a DASH **split stream**, so the files on disk used to be "video track + audio track" — neither playable on its own, and users would wonder why an extra audio file appeared. Once both tracks finish downloading, the FFmpeg bundled inside the app performs a **container-level remux (`-c copy`, no re-encoding)** into a single MP4 with the index moved to the front (`-movflags +faststart`), playable by double-clicking; the two split files are then deleted. If merging fails, the split tracks are kept and the app says so explicitly — never "you downloaded it and got nothing". **No quality tier is restricted**; every tier remains selectable.
+- **FFmpeg ships inside the app** via `ffmpeg_kit_flutter_new_min` (smallest variant, no GPL components). On Android it goes into the APK's native libraries, on Windows/Linux into the installer — **users never have to install ffmpeg themselves**, and behaviour is identical on all three platforms. (Android minSdk raised to 24 accordingly; Linux builds now install `libjson-glib-dev`.)
+- **No more false "local file deleted" while downloading.** `fileMissing` checks the file live, and during a download the file hasn't been written yet, so it was always true — the UI showed a progress bar and a red "file deleted" line at the same time. A new `shouldCheckIntegrity` (only when done or failed) gates the check; both the red line and the "re-download / clean record" menu now use it.
 
 Downloads are below.
