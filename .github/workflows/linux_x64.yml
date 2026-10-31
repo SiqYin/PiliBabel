@@ -30,7 +30,9 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev libayatana-appindicator3-dev webkit2gtk-4.1 libasound2-dev libmpv-dev
+          # libjson-glib-dev：ffmpeg_kit_flutter_new_min 的 Linux 构建必需，
+          # 少了它 Linux 端会直接构建失败。
+          sudo apt-get install -y libgtk-3-dev libayatana-appindicator3-dev webkit2gtk-4.1 libasound2-dev libmpv-dev libjson-glib-dev
         shell: bash
 
       - name: Setup flutter

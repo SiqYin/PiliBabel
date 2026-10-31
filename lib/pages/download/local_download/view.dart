@@ -112,7 +112,7 @@ class _LocalDownloadPageState extends State<LocalDownloadPage>
 
   Future<void> _showMore(LocalDownloadRecord record) async {
     // 每次打开菜单都重新判断：用户可能在别处刚把文件删掉。
-    final missing = record.fileMissing;
+    final missing = record.fileMissingAndSettled;
     // 下载失败或本地文件已删除时才提供「重新下载」：让用户在原地一键重下，
     // 不用回视频页重新找稿件、重新选画质音质。
     final canRedownload = record.failed || missing;
@@ -211,7 +211,9 @@ class _LocalDownloadItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final missing = record.fileMissing;
+    // 下载进行中不做完整性检测：文件要等写完才落盘，中途必然「不存在」，
+    // 否则会出现「进度条在走、同时又提示本地文件已删除」的怪状。
+    final missing = record.fileMissingAndSettled;
     final sizeText = record.totalBytes > 0
         ? '${_formatSize(record.receivedBytes)} / '
               '${_formatSize(record.totalBytes)}'

@@ -83,6 +83,21 @@ class LocalDownloadRecord {
     }
   }
 
+  /// 是否应当显示「本地文件已删除」这类完整性告警。
+  ///
+  /// **下载进行中绝不能做这个检测**：文件要等下载写完才落盘，中途 `fileMissing`
+  /// 必然为 true，界面就会一边显示进度、一边红字说「文件已删除」（实际文件的
+  /// 下载还在进行）。
+  /// 只有两种情况需要检测：下载**已完成**（万一之后被用户删了/存储丢了），
+  /// 或者下载**已失败**（此时没有文件才说明确实不可用）。
+  bool get shouldCheckIntegrity => done || failed;
+
+  /// 需要显示「本地文件已删除」时的值；下载进行中恒为 false。
+  bool get fileMissingAndSettled => shouldCheckIntegrity && fileMissing;
+
+  /// 下载失败（fail）后若文件其实不在，同样属于不可用。
+  bool get isUnusable => shouldCheckIntegrity && (failed || fileMissing);
+
   /// 下载进度 0~1；总大小未知时按「完成与否」给值，界面显示已下载字节数。
   double get progress {
     if (totalBytes <= 0) {

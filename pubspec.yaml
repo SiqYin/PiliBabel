@@ -34,6 +34,13 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
+  # 下载到本地时，用 FFmpeg 把 DASH 分离流（视频轨 + 音频轨）**无转码合并**成
+  # 一个可直接播放的 MP4。用 `_min` 变体：只做容器层 remux（-c copy），不需要
+  # x264/x265 这类编码器，因此体积最小、且不含任何 GPL 组件。
+  # 原生库随 App 打包（Android 进 APK 的 .so，Windows/Linux 进安装包的 dll/so），
+  # 用户机器上不需要另外安装 ffmpeg。
+  ffmpeg_kit_flutter_new_min: ^3.6.7
+
   app_links: ^7.1.1
   archive: ^4.0.0
   audio_service:
