@@ -87,11 +87,12 @@ String _formatCacheBytes(int bytes) {
 class DownloadPage extends StatefulWidget {
   const DownloadPage({super.key, this.initialCacheModule});
 
-  /// 打开时默认停在哪个模块：0 = 缓存视频，1 = 缓存音频。
+  /// 打开时默认停在哪个一级页签：
+  /// 0 = 缓存视频，1 = 缓存音频，2 = 下载视频，3 = 下载音频。
   ///
-  /// 为 null 时沿用「记住上次停留的模块」（Pref.downloadCacheModule）。
-  /// 从视频页的「视频缓存 / 音频缓存」入口进来时会显式指定，
-  /// 让用户点哪个就落到哪个模块，而不是被上次的选择带偏。
+  /// 为 null 时沿用「记住上次停留的页签」（Pref.downloadCacheModule）。
+  /// 从视频页的「视频缓存 / 音频缓存 / 下载视频 / 下载音频」入口进来时会显式指定，
+  /// 让用户点哪个就落到哪个，而不是被上次的选择带偏。
   final int? initialCacheModule;
 
   @override
@@ -648,16 +649,18 @@ class _DownloadPageState extends State<DownloadPage>
               ],
               bottom: PreferredSize(
                 preferredSize: Size.fromHeight(
-                  _cacheModule == 1 ? 46 : 46 + kTextTabBarHeight,
+                  // 缓存视频那一页还有「全部视频 / 文件夹」二级 TabBar，
+                  // 其余三页没有，所以高度要按当前模块给。
+                  _cacheModule == 0 ? 46 + kTextTabBarHeight : 46,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
                       height: 46,
-                      // 横向可滚动：这三项译文（尤其「下载情况」）在某些语言下会明显
-                      // 变长，固定 Row 会把最右侧文字挤出屏幕且无法查看。改成横向
-                      // 滚动后，放得下就正常显示，放不下可以左右滑。
+                      // 横向可滚动：这四项译文在某些语言下会明显变长，固定 Row 会把
+                      // 最右侧文字挤出屏幕且无法查看。改成横向滚动后放得下正常显示、
+                      // 放不下可以左右滑。
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
                         padding: const EdgeInsets.only(right: 12),
@@ -668,32 +671,9 @@ class _DownloadPageState extends State<DownloadPage>
                             const SizedBox(width: 8),
                             _moduleBtn(1, '缓存音频'),
                             const SizedBox(width: 8),
-                            // 「下载情况」是入口而非模块切换项，配色要与未选中的
-                            // 模块按钮完全一致（此前用默认 TextButton 主题色，会显示
-                            // 成主题蓝，看起来像被选中）。
-                            Builder(
-                              builder: (context) {
-                                final colorScheme =
-                                    Theme.of(context).colorScheme;
-                                return TextButton(
-                                  onPressed: () =>
-                                      Get.to(const LocalDownloadPage()),
-                                  style: TextButton.styleFrom(
-                                    visualDensity: VisualDensity.compact,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                    ),
-                                  ),
-                                  child: Text(
-                                    uiTx('下载情况'),
-                                    style: TextStyle(
-                                      fontSize: 13,
-                                      color: colorScheme.outline,
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
+                            _moduleBtn(2, '下载视频'),
+                            const SizedBox(width: 8),
+                            _moduleBtn(3, '下载音频'),
                           ],
                         ),
                       ),
@@ -725,33 +705,42 @@ class _DownloadPageState extends State<DownloadPage>
               ),
             ),
           ),
-          body: _cacheModule == 1 ? _buildAudioTab() : Stack(
-            clipBehavior: Clip.none,
-            children: [
-              NotificationListener<UserScrollNotification>(
-                onNotification: (notification) {
-                  if (_tabIndex != 0) {
+          body: switch (_cacheModule) {
+            // 1 = 缓存音频
+            1 => _buildAudioTab(),
+            // 2 = 下载视频，3 = 下载音频（原本是「下载情况」二级页里的两个页签，
+            // 现在提到一级，直接复用同一套列表组件）
+            2 => const LocalDownloadList(isAudio: false),
+            3 => const LocalDownloadList(isAudio: true),
+            // 0 = 缓存视频（内部还有「全部视频 / 文件夹」二级页签）
+            _ => Stack(
+              clipBehavior: Clip.none,
+              children: [
+                NotificationListener<UserScrollNotification>(
+                  onNotification: (notification) {
+                    if (_tabIndex != 0) {
+                      return false;
+                    }
+                    final direction = notification.direction;
+                    if (direction == .forward) {
+                      showFab();
+                    } else if (direction == .reverse) {
+                      hideFab();
+                    }
                     return false;
-                  }
-                  final direction = notification.direction;
-                  if (direction == .forward) {
-                    showFab();
-                  } else if (direction == .reverse) {
-                    hideFab();
-                  }
-                  return false;
-                },
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildAllVideosTab(),
-                    _buildFoldersTab(),
-                  ],
+                  },
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildAllVideosTab(),
+                      _buildFoldersTab(),
+                    ],
+                  ),
                 ),
-              ),
-              _buildContinueFab(),
-            ],
-          ),
+                _buildContinueFab(),
+              ],
+            ),
+          },
         ),
       );
     });
