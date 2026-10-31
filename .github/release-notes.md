@@ -1,9 +1,13 @@
-### PiliBabel v3.4.4
+### PiliBabel v3.4.5
 
-**High-quality downloads are now merged into a single playable video, and the false "file deleted" warning during downloads is fixed.**
+**Fixes the leftover silent video after merging in v3.4.4: a folder used to end up with both "xxx (1080P+).mp4" (silent) and "xxx (合并).mp4" (with sound).**
 
-- **High-quality downloads (1080P60 / 4K / HDR / Dolby / 8K) are merged automatically.** At those tiers bilibili only serves a DASH **split stream**, so the files on disk used to be "video track + audio track" — neither playable on its own, and users would wonder why an extra audio file appeared. Once both tracks finish downloading, the FFmpeg bundled inside the app performs a **container-level remux (`-c copy`, no re-encoding)** into a single MP4 with the index moved to the front (`-movflags +faststart`), playable by double-clicking; the two split files are then deleted. If merging fails, the split tracks are kept and the app says so explicitly — never "you downloaded it and got nothing". **No quality tier is restricted**; every tier remains selectable.
-- **FFmpeg ships inside the app** via `ffmpeg_kit_flutter_new_min` (smallest variant, no GPL components). On Android it goes into the APK's native libraries, on Windows/Linux into the installer — **users never have to install ffmpeg themselves**, and behaviour is identical on all three platforms. (Android minSdk raised to 24 accordingly; Linux builds now install `libjson-glib-dev`.)
-- **No more false "local file deleted" while downloading.** `fileMissing` checks the file live, and during a download the file hasn't been written yet, so it was always true — the UI showed a progress bar and a red "file deleted" line at the same time. A new `shouldCheckIntegrity` (only when done or failed) gates the check; both the red line and the "re-download / clean record" menu now use it.
+**Cause.** The merged output was given a **new name** via `uniquePath` (`title (合并).mp4`), and only then did the code try to delete the original video track. The deletion was a single `deleteSync`, but the downloader had only just closed its write handle — on some platforms (especially Windows) the file is briefly still held open. The delete failed, the failure was silently swallowed, and the silent original video stayed behind. Hence two files.
+
+**Fix.**
+1. Merging now writes to a **temporary file** and only moves it into place after a non-empty check, so a half-written output can never be left behind.
+2. Deleting the split tracks now **retries** (up to 6 attempts, 150 ms apart) to let the holding process release the handle.
+3. After a successful delete, the merged file is **renamed to the original video's name** (quality suffix preserved, e.g. `title (1080P+).mp4`) — so the folder ends up with exactly **one** file, named consistently with single-file tiers, and no stray "(合并)" file.
+4. If the original video track genuinely cannot be deleted (extreme locking), the merged file is kept and its path returned — better an extra file than losing the one the user can actually play.
 
 Downloads are below.

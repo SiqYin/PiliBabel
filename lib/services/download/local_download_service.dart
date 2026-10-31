@@ -627,11 +627,11 @@ class LocalDownloadService extends GetxService {
     required String audioPath,
     required String title,
   }) async {
-    final mergedPath = uniquePath(
-      path.dirname(videoPath),
-      '{0} (合并)'.replaceAll('{0}', sanitize(title)),
-      'mp4',
-    );
+    // 先输出到临时文件，成功后再改名成「原视频文件名」。
+    // 这样最终目录里**只有一个**文件、名字也和单文件档位一致（如「标题 (1080P+).mp4」），
+    // 不会出现「原无声视频 + 标题 (合并).mp4」两份。
+    final dir = path.dirname(videoPath);
+    final tmpPath = path.join(dir, '.merge_${DateTime.now().microsecondsSinceEpoch}.tmp.mp4');
     try {
       // -map 0:v + -map 1:a：明确取视频文件的视频流、音频文件的音频流。
       // -c copy 不转码；-movflags +faststart 把索引放到文件头，
@@ -641,7 +641,7 @@ class LocalDownloadService extends GetxService {
           '-movflags +faststart "{2}"'
               .replaceAll('{0}', videoPath)
               .replaceAll('{1}', audioPath)
-              .replaceAll('{2}', mergedPath);
+              .replaceAll('{2}', tmpPath);
       final session = await FFmpegKit.execute(cmd);
       final rc = await session.getReturnCode();
       if (!ReturnCode.isSuccess(rc)) {
@@ -649,26 +649,84 @@ class LocalDownloadService extends GetxService {
           final output = await session.getOutput();
           debugPrint('merge audio/video failed: rc=$rc\n$output');
         }
+        _tryDeleteFile(tmpPath);
         return null;
       }
-      final mergedFile = File(mergedPath);
-      if (!mergedFile.existsSync() || mergedFile.lengthSync() <= 0) {
+      final tmpFile = File(tmpPath);
+      if (!tmpFile.existsSync() || tmpFile.lengthSync() <= 0) {
+        _tryDeleteFile(tmpPath);
         return null;
       }
-      // 合并成功才删分轨，避免合并失败还把原始文件弄丢。
-      for (final p in [videoPath, audioPath]) {
-        try {
-          final f = File(p);
-          if (f.existsSync()) f.deleteSync();
-        } catch (_) {}
+      // 合并产物已经在临时文件里。接下来要把它放到最终位置：
+      // 先删掉原来的视频轨与音频轨，再把临时文件改名为原视频文件名。
+      // 删除带重试：下载器刚关掉句柄时，某些平台（尤其 Windows）可能短暂占用文件，
+      // 之前一次 deleteSync 失败就被静默吞掉，于是「无声视频」被留了下来。
+      final videoDeleted = await _tryDeleteWithRetry(videoPath);
+      // 音频轨无论如何都不该留下来（内容已并入合并文件）。
+      await _tryDeleteWithRetry(audioPath);
+      if (!videoDeleted) {
+        // 原视频轨删不掉（被占用等）：退回「保留两份但明确命名」的做法，
+        // 至少不能把用户能播的合并文件丢掉。
+        if (kDebugMode) debugPrint('merge: cannot delete video track $videoPath');
+        return tmpPath;
       }
-      return mergedPath;
+      // 视频轨已删除；把合并产物改名成视频轨原本的名字（保留画质后缀，方便辨认）。
+      try {
+        final target = File(videoPath);
+        if (target.existsSync()) {
+          // 极端情况下同名文件又出现（并发/重试），加序号避免覆盖。
+          final alt = uniquePath(dir, path.basenameWithoutExtension(videoPath), 'mp4');
+          await tmpFile.rename(alt);
+          return alt;
+        }
+        await tmpFile.rename(videoPath);
+        return videoPath;
+      } catch (e) {
+        if (kDebugMode) debugPrint('merge: rename failed: $e');
+        return tmpPath;
+      }
     } catch (e, s) {
       if (kDebugMode) debugPrint('merge audio/video error: $e\n$s');
+      _tryDeleteFile(tmpPath);
       return null;
     }
   }
 
+  /// 尽力删除一个文件；失败不抛出（调用方通常已有兜底逻辑）。
+  void _tryDeleteFile(String p) {
+    try {
+      final f = File(p);
+      if (f.existsSync()) f.deleteSync();
+    } catch (_) {}
+  }
+
+  /// 带重试的删除。
+  ///
+  /// 合并完成后要删掉原来的视频轨/音频轨，但下载器刚关掉写句柄的那一瞬间，
+  /// 部分平台（尤其 Windows）会短暂占用文件，单次 delete 会失败。
+  /// 之前那次失败被静默吞掉，结果「无声的原视频」被留在了目录里 —— 用户会同时
+  /// 看到「xxx (1080P+).mp4」（无声）和「xxx (合并).mp4」（有声）。
+  /// 这里重试几次并留出短暂间隔，成功返回 true。
+  Future<bool> _tryDeleteWithRetry(String p, {int attempts = 6}) async {
+    for (var i = 0; i < attempts; i++) {
+      try {
+        final f = File(p);
+        if (!f.existsSync()) {
+          return true;
+        }
+        f.deleteSync();
+        return true;
+      } catch (_) {
+        // 让出一点时间给占用方释放句柄
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+      }
+    }
+    try {
+      return !File(p).existsSync();
+    } catch (_) {
+      return false;
+    }
+  }
 
   /// 音频下载到本地：沿用原始容器，不转码。
   Future<bool> downloadAudio({
