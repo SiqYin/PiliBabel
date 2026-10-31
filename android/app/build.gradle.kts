@@ -29,7 +29,9 @@ android {
 
     defaultConfig {
         applicationId = "com.example.pilibabel"
-        minSdk = flutter.minSdkVersion
+        // ffmpeg_kit_flutter_new_min 要求 Android API 24+（自带预编译 .so，
+        // 用来把下载到本地的 DASH 分离流无转码合并成一个 MP4）。
+        minSdk = maxOf(flutter.minSdkVersion, 24)
         targetSdk = 37
         versionCode = flutter.versionCode
         versionName = flutter.versionName

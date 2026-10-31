@@ -13,6 +13,8 @@ import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/video_utils.dart';
+import 'package:ffmpeg_kit_flutter_new_min/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new_min/return_code.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
@@ -463,7 +465,7 @@ class LocalDownloadService extends GetxService {
         videoMain,
         ...video.playUrls.where((u) => u != videoMain),
       ];
-      final videoPath = uniquePath(
+      var videoPath = uniquePath(
         dir,
         '${sanitize(title)} (${sanitize(video.quality.shortDesc)})',
         'mp4',
@@ -576,6 +578,27 @@ class LocalDownloadService extends GetxService {
         SmartDialog.showToast(uiTxP('{0} 下载失败', [title]));
         return;
       }
+      // 两个轨都下好之后合并成一个 MP4：用户要的是「一个能直接播放的视频」，
+      // 而不是「一个没声音的视频 + 一个单独的音频」。合并走 FFmpeg 的容器层
+      // remux（-c copy），不重新编码，所以既快又无损。
+      final mergedPath = await _mergeAudioVideo(
+        videoPath: videoPath,
+        audioPath: audioPath,
+        title: title,
+      );
+      if (mergedPath != null) {
+        // 合并成功：档案指向合并后的 MP4，并且不再有分离的音频轨。
+        record
+          ..path = mergedPath
+          ..extraPath = null;
+        videoPath = mergedPath;
+        _touchRecords(save: true);
+      } else {
+        // 合并失败不能让用户什么也拿不到：保留两个分轨，并明确告知。
+        SmartDialog.showToast(
+          uiTxP('{0} 已下载，但音视频合并失败，已保留分离的视频与音频文件', [title]),
+        );
+      }
     }
     record
       ..done = true
@@ -587,6 +610,65 @@ class LocalDownloadService extends GetxService {
     _activeIds.remove(record.id);
     SmartDialog.showToast(uiTxP('{0} 已下载到本地', [title]));
   }
+
+  /// 把 DASH 分离的视频轨与音频轨合并成一个可双击播放的 MP4。
+  ///
+  /// 走的是 FFmpeg 的**容器层 remux**（-c copy）：不重新编码，所以几乎不耗 CPU、
+  /// 画质音质完全无损，几秒钟就能完成（只受磁盘读写速度影响）。
+  ///
+  /// 成功时返回合并后的文件路径，并删掉两个临时分轨；
+  /// 失败（或缺某一路）返回 null —— 由调用方保留原文件并给出提示，
+  /// 绝不让用户「下载完却什么也没有」。
+  ///
+  /// 注意：FFmpeg 是本 App 打包进去的原生库（ffmpeg_kit_flutter_new_min），
+  /// 不依赖用户机器上已安装 ffmpeg，因此 Android / Windows / Linux 三端行为一致。
+  Future<String?> _mergeAudioVideo({
+    required String videoPath,
+    required String audioPath,
+    required String title,
+  }) async {
+    final mergedPath = uniquePath(
+      path.dirname(videoPath),
+      '{0} (合并)'.replaceAll('{0}', sanitize(title)),
+      'mp4',
+    );
+    try {
+      // -map 0:v + -map 1:a：明确取视频文件的视频流、音频文件的音频流。
+      // -c copy 不转码；-movflags +faststart 把索引放到文件头，
+      // 让播放器/网页能立刻开始播（而不是下完整文件才能看）。
+      final cmd =
+          '-y -i "{0}" -i "{1}" -map 0:v:0 -map 1:a:0 -c copy '
+          '-movflags +faststart "{2}"'
+              .replaceAll('{0}', videoPath)
+              .replaceAll('{1}', audioPath)
+              .replaceAll('{2}', mergedPath);
+      final session = await FFmpegKit.execute(cmd);
+      final rc = await session.getReturnCode();
+      if (!ReturnCode.isSuccess(rc)) {
+        if (kDebugMode) {
+          final output = await session.getOutput();
+          debugPrint('merge audio/video failed: rc=$rc\n$output');
+        }
+        return null;
+      }
+      final mergedFile = File(mergedPath);
+      if (!mergedFile.existsSync() || mergedFile.lengthSync() <= 0) {
+        return null;
+      }
+      // 合并成功才删分轨，避免合并失败还把原始文件弄丢。
+      for (final p in [videoPath, audioPath]) {
+        try {
+          final f = File(p);
+          if (f.existsSync()) f.deleteSync();
+        } catch (_) {}
+      }
+      return mergedPath;
+    } catch (e, s) {
+      if (kDebugMode) debugPrint('merge audio/video error: $e\n$s');
+      return null;
+    }
+  }
+
 
   /// 音频下载到本地：沿用原始容器，不转码。
   Future<bool> downloadAudio({
