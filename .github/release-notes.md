@@ -10,4 +10,8 @@
 3. After a successful delete, the merged file is **renamed to the original video's name** (quality suffix preserved, e.g. `title (1080P+).mp4`) — so the folder ends up with exactly **one** file, named consistently with single-file tiers, and no stray "(合并)" file.
 4. If the original video track genuinely cannot be deleted (extreme locking), the merged file is kept and its path returned — better an extra file than losing the one the user can actually play.
 
+**No "(合并)" in the exported filename.** The merged output finally uses the **video's own title** (quality suffix preserved, e.g. `title (1080P+).mp4`). The parenthesis marker was only an internal implementation detail and has no business appearing in a filename the user sees.
+
+**Smaller APK.** Bundling FFmpeg had pushed the APK from 75.9 MB to 105.2 MB. The `_min` variant is already the smallest feature set, but it ships `.so` files for five CPU architectures by default. It is now limited to the two a phone actually needs — `arm64-v8a` (modern devices) and `armeabi-v7a` (older 32-bit ones) — dropping x86/x86_64, which only emulators and a handful of ChromeOS devices use. This should save well over ten megabytes. Desktop builds (Windows/Linux) are unaffected.
+
 Downloads are below.
