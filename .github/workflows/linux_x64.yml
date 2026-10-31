@@ -119,6 +119,13 @@ jobs:
 
           printf "生成 spec 文件...\n"
           cat > "$RPM_BUILD_ROOT/SPECS/pilibabel.spec" <<EOF
+          # 关闭调试包与 debuginfo 剥离：%install 阶段 rpmbuild 会调 find-debuginfo，
+          # 它依赖 eu-strip（elfutils），而 CI 镜像未必带；而这个包只是把 Flutter
+          # 产物打成 rpm，根本不需要调试符号分离。关掉后打包不再依赖外部工具。
+          %global debug_package %{nil}
+          %define _enable_debug_packages 0
+          %define __strip /bin/true
+
           Name:           pilibabel
           Version:        ${{ env.version }}
           Release:        1%{?dist}
