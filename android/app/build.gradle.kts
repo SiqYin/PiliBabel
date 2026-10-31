@@ -35,6 +35,18 @@ android {
         targetSdk = 37
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // 只打包手机真正会用到的两种架构，显著缩小 APK。
+        //
+        // FFmpeg 的 _min 变体已经是最小功能集，但它默认会给 arm64-v8a /
+        // armeabi-v7a / x86 / x86_64 全都塞进 .so，而加入 FFmpeg 后 APK 从
+        // 75.9MB 涨到 105.2MB，多出来的 29MB 基本都在这里。
+        // x86/x86_64 只有模拟器和极少数 ChromeOS 设备用得上，普通手机
+        // 只需要 arm64-v8a（现代机型）+ armeabi-v7a（老 32 位机型）。
+        // 丢掉这两种能省下 FFmpeg 原生库体积的一半以上。
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
     }
 
     packagingOptions.jniLibs.useLegacyPackaging = true
