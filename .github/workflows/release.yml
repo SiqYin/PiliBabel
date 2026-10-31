@@ -106,7 +106,7 @@ jobs:
           code=1
           for attempt in 1 2 3 4; do
             echo "### 尝试 $attempt/4：flutter build apk"
-            flutter build apk --release --split-debug-info=split-debug --dart-define-from-file=pili_release.json --pub > build.log 2>&1
+            flutter build apk --release --target-platform android-arm,android-arm64 --split-debug-info=split-debug --dart-define-from-file=pili_release.json --pub > build.log 2>&1
             code=$?
             if [ "$code" -eq 0 ]; then break; fi
             echo "::warning title=BuildRetry::第 $attempt 次 flutter build 失败（exit=$code）"
