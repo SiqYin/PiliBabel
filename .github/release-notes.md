@@ -1,11 +1,11 @@
-### PiliBabel v3.4.8
+### PiliBabel v3.4.9
 
-**Diagnostic release: a failed play-url fetch now shows the server's actual reason instead of a bare generic message.**
+**Fixes `-400 请求错误` when downloading video/audio to a local folder: play-url parameters now come from the authoritative video-detail response.**
 
-In v3.4.7 the failure toast contained only "failed to fetch stream, cannot download locally" with no cause at all — because all three fetch paths only matched the `Success` case and **discarded the code / message the server returned**.
+The v3.4.8 diagnostic release revealed the real error: `错误(-400): 请求错误` — meaning the **request parameters themselves were invalid**, not a login or risk-control problem.
 
-This release adds `_fetchErrReason`, which appends `Error.errMsg` to the message, e.g. "failed to fetch stream, cannot download locally: 错误(-404): …". A failure now immediately tells you whether it is a login/session problem, risk control, a video with no audio stream, or a bad URL — no more guessing.
+**Root cause.** The working "cache audio" path uses the authoritative values returned by the video-detail API (`videoDetail.aid / bvid / cid`). "Download to local" instead used page state — `aid`, `bvid`, and `seasonCid ?? cid.value`. Here `seasonCid` is the **item selected inside a collection**, which is not always the cid currently being played. Whenever the two fall out of sync (just switched part, just tapped a collection entry, detail not loaded yet), `cid` no longer matches `bvid`, and the server rejects the request with `-400 请求错误`.
 
-Everything else (bangumi parameter fix, persistent failed records for retry, 绝区零 → ゼンゼロ) is as in v3.4.7.
+**Fix.** Both download calls now **prefer the authoritative `aid` / `bvid` / `cid` from the detail response**, falling back to page state only when unavailable. `cid` no longer uses `seasonCid` but the currently playing one — matching where the audio-cache path gets its parameters.
 
 Downloads are below.
