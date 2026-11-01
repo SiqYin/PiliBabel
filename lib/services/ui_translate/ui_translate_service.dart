@@ -459,6 +459,9 @@ class UiTranslateService extends GetxService {
   /// 命中即直接返回，不走缓存、不发请求，也不会被模型结果覆盖。
   static const Map<String, Map<String, String>> _pinnedTranslations = {
     '关注的人': {'ja': 'フォロー中'},
+    // 「绝区零」是游戏专有名词，官方日语名就是「ゼンゼロ」；模型常给出
+    // 「ゼンレスゾーンゼロ」这类又长又不统一的说法，这里钉死。
+    '绝区零': {'ja': 'ゼンゼロ'},
   };
 
   /// 与 [tx] 同源，但**等译文真正到齐再返回**。

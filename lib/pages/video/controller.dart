@@ -2347,6 +2347,8 @@ class VideoDetailController extends GetxController
         ownerName: detail?.owner?.name,
         cover: detail?.pic,
         collectionName: _collectionFolderName(),
+        seasonId: isUgc ? null : seasonId,
+        epId: isUgc ? null : epId,
       );
     } else {
       if (!isUgc) {
@@ -2367,6 +2369,8 @@ class VideoDetailController extends GetxController
         ownerName: detail?.owner?.name,
         cover: detail?.pic,
         collectionName: _collectionFolderName(),
+        seasonId: isUgc ? null : seasonId,
+        epId: isUgc ? null : epId,
       );
     }
   }

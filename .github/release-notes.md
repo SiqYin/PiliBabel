@@ -1,11 +1,11 @@
-### PiliBabel v3.4.6
+### PiliBabel v3.4.7
 
-**The offline-cache screen is now four sibling tabs; translation gains a "parallel variants share one style" rule; the APK slimming takes effect.**
+**Fixes "failed to fetch stream" when downloading audio/video to a local folder; failed fetches now leave a retryable record; Japanese "绝区零" is pinned to "ゼンゼロ".**
 
-**Cache screen restructured.** "Mine → Offline cache" used to offer three entries — Cached videos / Cached audio / Download status — and the last one required another tap into a second-level page that held Download video / Download audio. All four are now **sibling tabs on one level**: **Cached videos / Cached audio / Download video / Download audio**. No more nested navigation. (The old "Download status" page is kept for existing entry points, but the main screen no longer requires it.)
+**Root cause of the stream-fetch failure (a genuine bug).** All three fetch paths in the download service (single-file video / DASH high-quality video / audio) hard-coded `videoType: VideoType.ugc` and **never passed `seasonId` / `epid`**. A bangumi (PGC) item requires `ep_id` / `season_id` when requesting `playurl`; without them the server simply returns no stream — so the whole download fails at the very first step and the user sees "failed to fetch stream, cannot download locally". This explains why **some** videos always failed: every bangumi-type item hit it. All three paths now use `epId == null ? ugc : pgc` and carry `epid` / `seasonId`; the video page passes them down as well (null for UGC).
 
-**New translation rule: parallel variants must share one style.** The model previously rendered structurally parallel items in inconsistent styles — e.g. in Japanese it turned the "cache video" label into a verb phrase while rendering "cache audio" as a noun compound, so the two did not read as a set. The prompt now requires that structurally parallel items use **the same word-formation pattern** — same word order and same grammatical form, differing only in the object noun. If the source is "noun + noun", the translation is a noun compound; if it is "verb + object", the translation is verb + object. This applies to **every target language**, not just Japanese. Because the cache holds the old, inconsistent translations, `promptRevision` is bumped to 8 so those entries are re-translated once.
+**Failed fetches now leave a record.** Previously a fetch failure only showed a toast — nothing appeared in the list, so the user could neither see "this one was attempted and failed" nor retry. A `failed` record is now written, visible under "Offline cache → Download video / Download audio", where the user can tap "Re-download" to retry. (The placeholder path never creates a real file; the record's `failed` flag is what the list keys on.)
 
-**APK slimming.** The release build now passes `--target-platform android-arm,android-arm64` (alongside `abiFilters`), dropping the x86/x86_64 FFmpeg native libraries. This release exists to verify the actual size reduction.
+**Japanese pinned translation:** `绝区零` → `ゼンゼロ` (a game proper noun; the model tends to produce long, inconsistent renderings like 「ゼンレスゾーンゼロ」, so it is pinned via the manual translation table).
 
 Downloads are below.
