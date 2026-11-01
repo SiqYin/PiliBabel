@@ -332,6 +332,8 @@ class LocalDownloadService extends GetxService {
     String? ownerName,
     String? cover,
     String? collectionName,
+    String? seasonId,
+    int? epId,
   }) async {
     final dir = _targetDir(collectionName: collectionName);
     if (dir == null) {
@@ -362,7 +364,11 @@ class LocalDownloadService extends GetxService {
       cid: cid,
       qn: qn,
       tryLook: !isLogin && Pref.p1080,
-      videoType: VideoType.ugc,
+      // 番剧（PGC）必须带 ep_id / season_id，否则服务端不返回流 ——
+      // 这正是「取流失败，无法下载到本地」的根因之一。
+      videoType: epId == null ? VideoType.ugc : VideoType.pgc,
+      epid: epId,
+      seasonId: seasonId,
       allowAppSource: false,
       fnval: 1,
     );
@@ -401,6 +407,26 @@ class LocalDownloadService extends GetxService {
       return true;
     }
     _activeIds.remove(id);
+    // 取流失败也要留档：用户在「离线缓存 → 下载视频 / 下载音频」里
+    // 能看到这条失败记录，并直接点「重新下载」重试，不必回视频页重找稿件。
+    try {
+      final placeholderPath = path.join(
+        dir,
+        sanitize(title) + ' (视频)',
+      );
+      final failedRecord = _upsertRecord(
+        id: id,
+        isAudio: false,
+        title: title,
+        path: placeholderPath,
+        ownerName: ownerName,
+        cover: cover,
+        qn: qn,
+        audioQa: 0,
+      );
+      failedRecord.failed = true;
+      _touchRecords(save: true);
+    } catch (_) {}
     SmartDialog.showToast(uiTx('取流失败，无法下载到本地'));
     return false;
   }
@@ -426,7 +452,11 @@ class LocalDownloadService extends GetxService {
       cid: cid,
       qn: qn,
       tryLook: !isLogin && Pref.p1080,
-      videoType: VideoType.ugc,
+      // 番剧（PGC）必须带 ep_id / season_id，否则服务端不返回流 ——
+      // 这正是「取流失败，无法下载到本地」的根因之一。
+      videoType: epId == null ? VideoType.ugc : VideoType.pgc,
+      epid: epId,
+      seasonId: seasonId,
       allowAppSource: false,
     );
     if (res case Success(:final response)) {
@@ -505,6 +535,26 @@ class LocalDownloadService extends GetxService {
       return true;
     }
     _activeIds.remove(id);
+    // 取流失败也要留档：用户在「离线缓存 → 下载视频 / 下载音频」里
+    // 能看到这条失败记录，并直接点「重新下载」重试，不必回视频页重找稿件。
+    try {
+      final placeholderPath = path.join(
+        dir,
+        sanitize(title) + ' (视频)',
+      );
+      final failedRecord = _upsertRecord(
+        id: id,
+        isAudio: false,
+        title: title,
+        path: placeholderPath,
+        ownerName: ownerName,
+        cover: cover,
+        qn: qn,
+        audioQa: 0,
+      );
+      failedRecord.failed = true;
+      _touchRecords(save: true);
+    } catch (_) {}
     SmartDialog.showToast(uiTx('取流失败，无法下载到本地'));
     return false;
   }
@@ -761,6 +811,8 @@ class LocalDownloadService extends GetxService {
       videoType: epId == null
           ? VideoType.ugc
           : (isLogin ? VideoType.pgc : VideoType.ugc),
+      epid: epId,
+      seasonId: seasonId,
       allowAppSource: false,
       // 4048（DASH 全家桶）不含 4096（Hi-Res 无损位）：不补这一位，取流结果里
       // 永远不会有 Hi-Res（30251）轨，「下载 Hi-Res」会静默退化成 320K。
@@ -820,6 +872,26 @@ class LocalDownloadService extends GetxService {
       return true;
     }
     _activeIds.remove(id);
+    // 取流失败也要留档：用户在「离线缓存 → 下载视频 / 下载音频」里
+    // 能看到这条失败记录，并直接点「重新下载」重试，不必回视频页重找稿件。
+    try {
+      final placeholderPath = path.join(
+        dir,
+        sanitize(title) + ' (音频)',
+      );
+      final failedRecord = _upsertRecord(
+        id: id,
+        isAudio: true,
+        title: title,
+        path: placeholderPath,
+        ownerName: ownerName,
+        cover: cover,
+        qn: 0,
+        audioQa: pick,
+      );
+      failedRecord.failed = true;
+      _touchRecords(save: true);
+    } catch (_) {}
     SmartDialog.showToast(uiTx('取流失败，无法下载到本地'));
     return false;
   }
