@@ -332,7 +332,7 @@ class LocalDownloadService extends GetxService {
     String? ownerName,
     String? cover,
     String? collectionName,
-    String? seasonId,
+    int? seasonId,
     int? epId,
   }) async {
     final dir = _targetDir(collectionName: collectionName);
@@ -354,6 +354,8 @@ class LocalDownloadService extends GetxService {
         ownerName: ownerName,
         cover: cover,
         dir: dir,
+        seasonId: seasonId,
+        epId: epId,
       );
     }
     _activeIds.add(id);
@@ -441,6 +443,8 @@ class LocalDownloadService extends GetxService {
     String? ownerName,
     String? cover,
     required String dir,
+    int? seasonId,
+    int? epId,
   }) async {
     final id = '$avid-$cid-v';
     _activeIds.add(id);
@@ -784,7 +788,7 @@ class LocalDownloadService extends GetxService {
     required String bvid,
     required int cid,
     required String title,
-    String? seasonId,
+    int? seasonId,
     int? epId,
     required AudioQuality quality,
     String? ownerName,
@@ -887,7 +891,7 @@ class LocalDownloadService extends GetxService {
         ownerName: ownerName,
         cover: cover,
         qn: 0,
-        audioQa: pick,
+        audioQa: quality.code,
       );
       failedRecord.failed = true;
       _touchRecords(save: true);
