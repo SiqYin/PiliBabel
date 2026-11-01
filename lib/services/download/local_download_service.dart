@@ -835,9 +835,12 @@ class LocalDownloadService extends GetxService {
       epid: epId,
       seasonId: seasonId,
       allowAppSource: false,
-      // 4048（DASH 全家桶）不含 4096（Hi-Res 无损位）：不补这一位，取流结果里
-      // 永远不会有 Hi-Res（30251）轨，「下载 Hi-Res」会静默退化成 320K。
-      fnval: 4048 | 4096,
+      // 只用 4048（DASH）。**不要再 OR 上 4096**：
+      // 4096 不是 playurl 的合法 fnval 位（合法的只有 1/16/32/64/128/256），
+      // 加上它会得到 8144，服务端判为非法参数直接返回 -400 请求错误 ——
+      // 这正是「下载音频到本地 / 缓存音频」全部失败的根因。
+      // Hi-Res 轨靠 DASH 响应本身下发，不需要这个位。
+      fnval: 4048,
     );
     if (res case Success(:final response)) {
       final audios = response.dash?.audio;
