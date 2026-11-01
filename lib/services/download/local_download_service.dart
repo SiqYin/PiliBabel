@@ -429,7 +429,9 @@ class LocalDownloadService extends GetxService {
       failedRecord.failed = true;
       _touchRecords(save: true);
     } catch (_) {}
-    SmartDialog.showToast(uiTx('取流失败，无法下载到本地'));
+    // 把服务端返回的真实原因带上，否则只有一句「取流失败」无从判断。
+    final reason = _fetchErrReason(res);
+    SmartDialog.showToast(uiTx('取流失败，无法下载到本地') + ((reason?.isNotEmpty ?? false) ? '：$reason' : ''));
     return false;
   }
 
@@ -559,7 +561,9 @@ class LocalDownloadService extends GetxService {
       failedRecord.failed = true;
       _touchRecords(save: true);
     } catch (_) {}
-    SmartDialog.showToast(uiTx('取流失败，无法下载到本地'));
+    // 把服务端返回的真实原因带上，否则只有一句「取流失败」无从判断。
+    final reason = _fetchErrReason(res);
+    SmartDialog.showToast(uiTx('取流失败，无法下载到本地') + ((reason?.isNotEmpty ?? false) ? '：$reason' : ''));
     return false;
   }
 
@@ -746,6 +750,19 @@ class LocalDownloadService extends GetxService {
     }
   }
 
+  /// 取流失败时把服务端返回的真实原因取出来（供 toast 使用，便于定位问题）。
+  ///
+  /// 之前三处取流只判断 Success，其它分支（含服务端明确给出的 code/message）
+  /// 全被丢弃，只剩一句「取流失败，无法下载到本地」，既没法自助解决、也没法排查。
+  static String? _fetchErrReason(LoadingState res) {
+    if (res is Error) {
+      final msg = res.errMsg;
+      if (msg == null || msg.isEmpty) return null;
+      return msg;
+    }
+    return null;
+  }
+
   /// 尽力删除一个文件；失败不抛出（调用方通常已有兜底逻辑）。
   void _tryDeleteFile(String p) {
     try {
@@ -896,7 +913,9 @@ class LocalDownloadService extends GetxService {
       failedRecord.failed = true;
       _touchRecords(save: true);
     } catch (_) {}
-    SmartDialog.showToast(uiTx('取流失败，无法下载到本地'));
+    // 把服务端返回的真实原因带上，否则只有一句「取流失败」无从判断。
+    final reason = _fetchErrReason(res);
+    SmartDialog.showToast(uiTx('取流失败，无法下载到本地') + ((reason?.isNotEmpty ?? false) ? '：$reason' : ''));
     return false;
   }
 
