@@ -1282,12 +1282,13 @@ class VideoDetailController extends GetxController
               language: wanted,
               voiceBalance: plPlayerController.enableAudioNormalization,
             );
-            if (switched case Success(:final response2)
+            // `:final x` 是「按属性名绑定」，改名要用 `属性: final 新名`，
+            // 否则这里会写成读取一个不存在的 `response2`  getter。
+            if (switched case Success(response: final switchedModel)
                 // 只认服务端的回显：`cur_language` 被换成我们要的语言才算真换成功。
-                when (response2.curLanguage ?? '') == wanted) {
-              final item = response2.language?.items?.firstWhereOrNull(
-                (e) => e.lang == wanted,
-              );
+                when (switchedModel.curLanguage ?? '') == wanted) {
+              final item = switchedModel.language?.items
+                  ?.firstWhereOrNull((e) => e.lang == wanted);
               SmartDialog.showToast(
                 '${uiTx('声轨已跟随界面语言')} · ${item?.title ?? wanted}',
                 displayTime: const Duration(seconds: 3),

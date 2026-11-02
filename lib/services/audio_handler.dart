@@ -212,7 +212,7 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     if (status != null) {
       return status.isPlaying;
     }
-    return playbackState.nvalue?.playing ?? false;
+    return playbackState.value.playing ?? false;
   }
 
   void setMediaItem(MediaItem newMediaItem) {
