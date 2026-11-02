@@ -233,7 +233,8 @@ abstract final class SettingBoxKey {
       uiTranslateOnboarded = 'uiTranslateOnboarded',
       uiTranslateUpgradeNoticeShown = 'uiTranslateUpgradeNoticeShown',
       uiTranslateOutageDismissed = 'uiTranslateOutageDismissed',
-      uiTranslateOutageSwitched = 'uiTranslateOutageSwitched';
+      uiTranslateOutageSwitched = 'uiTranslateOutageSwitched',
+      audioTrackFollowUiLang = 'audioTrackFollowUiLang';
 
   static const String minimizeOnExit = 'minimizeOnExit',
       windowSize = 'windowSize',

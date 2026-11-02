@@ -174,6 +174,23 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                 },
               );
             }),
+            // 官方 AI 原声翻译声轨（B 站自己生成的外语配音）要不要跟着界面语言走。
+            // 只影响「有官方声轨」的稿件；没有的照原声播放，我们不做本地合成兜底。
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(uiTx('声轨跟随界面语言')),
+              subtitle: Text(
+                uiTx(
+                  '稿件带官方 AI 原声翻译声轨、且其中有与界面语言一致的一轨时，'
+                  '打开即自动选中；没有就保持原声。需已登录（未登录时官方接口不换流）',
+                ),
+              ),
+              value: Pref.audioTrackFollowUiLang,
+              onChanged: (value) {
+                Pref.audioTrackFollowUiLang = value;
+                setState(() {});
+              },
+            ),
             // 翻译引擎：内置官方模型（默认、免密钥）/ 自备 API。
             // 两个引擎**共用同一份目标语言清单**，差异只在质量提示上。
             Obx(() {

@@ -261,12 +261,20 @@ abstract final class VideoHttp {
     //
     // 触发条件：UGC + 开关打开 + 拿得到 aid。另外「免登录 1080P」是靠 Web 端
     // 的 try_look 实现的，未登录时保持原样走 Web。
+    //
+    // **指定了语言（官方 AI 原声翻译声轨）时绝不能走 APP**：`PlayViewReq` 没有
+    // 任何语言参数，APP 下发的 `dash.audio` 永远是原声，而 `_mergeAppSource`
+    // 只把 Web 的 `language`/`curLanguage` 当元数据搬过来 —— 结果是界面显示
+    // 「已切 English」、耳朵里还是中文。声轨的换流必须由 Web 的 `cur_language`
+    // 完成，而两边直链的令牌指纹相反（APP 不带 Referer / Web 必须带），
+    // 也不能「视频用 APP、音频用 Web」地混。
     final canUseAppSource =
         allowAppSource &&
         Pref.useAppPlayUrl &&
         videoType == .ugc &&
         (avid != null || bvid != null) &&
-        !(tryLook && !Accounts.main.isLogin);
+        !(tryLook && !Accounts.main.isLogin) &&
+        (language == null || language.isEmpty);
 
     if (canUseAppSource) {
       int? aid = avid;
