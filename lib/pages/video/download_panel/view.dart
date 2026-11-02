@@ -20,6 +20,7 @@ import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/controller.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/widgets/page.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
+import 'package:PiliPlus/services/download/audio_cache_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
@@ -61,7 +62,10 @@ class DownloadPanel extends StatefulWidget {
   final UgcIntroController? ugcIntroController;
   final Set<int> cidSet;
 
-  /// 这个面板是「缓存视频」还是「缓存音频」——决定「查看缓存」跳到哪个模块。
+  /// 这个面板是「缓存视频」还是「缓存音频」。
+  ///
+  /// 它决定三件事：默认落到哪个音质档位、点条目时真正执行哪种缓存、
+  /// 以及「查看缓存」跳到哪个模块。
   final bool isAudio;
 
   @override
@@ -70,6 +74,7 @@ class DownloadPanel extends StatefulWidget {
 
 class _DownloadPanelState extends State<DownloadPanel> {
   final DownloadService _downloadService = Get.find<DownloadService>();
+  final AudioCacheService _audioCacheService = Get.find<AudioCacheService>();
   final ListController _listController = ListController();
 
   late final cidSet = widget.cidSet;
@@ -141,25 +146,29 @@ class _DownloadPanelState extends State<DownloadPanel> {
             child: Row(
               spacing: 12,
               children: [
-                Text(uiTx('画质'), style: textStyle),
-                Builder(
-                  builder: (context) => PopupMenuButton<VideoQuality>(
-                    initialValue: _quality,
-                    onSelected: (value) {
-                      _quality = value;
-                      (context as Element).markNeedsBuild();
-                    },
-                    itemBuilder: (context) => VideoQuality.values
-                        .map(
-                          (e) => PopupMenuItem(
-                            value: e,
-                            child: Text(uiTx(e.desc)),
-                          ),
-                        )
-                        .toList(),
-                    child: _buildPopupMenuChild(_quality.desc),
+                // 音频缓存面板不显示视频画质：这个面板只产出音频，
+                // 留着画质选择只会误导（用户以为选的画质决定了缓存内容）。
+                if (!widget.isAudio) ...[
+                  Text(uiTx('画质'), style: textStyle),
+                  Builder(
+                    builder: (context) => PopupMenuButton<VideoQuality>(
+                      initialValue: _quality,
+                      onSelected: (value) {
+                        _quality = value;
+                        (context as Element).markNeedsBuild();
+                      },
+                      itemBuilder: (context) => VideoQuality.values
+                          .map(
+                            (e) => PopupMenuItem(
+                              value: e,
+                              child: Text(uiTx(e.desc)),
+                            ),
+                          )
+                          .toList(),
+                      child: _buildPopupMenuChild(_quality.desc),
+                    ),
                   ),
-                ),
+                ],
                 Text(uiTx('音质'), style: textStyle),
                 Builder(
                   builder: (context) => PopupMenuButton<AudioQuality>(
@@ -297,6 +306,81 @@ class _DownloadPanelState extends State<DownloadPanel> {
     );
   }
 
+  /// 该 cid 在本面板对应的模块里是否已缓存。
+  ///
+  /// 音频与视频是两套独立的落盘记录：视频看下载服务的 cidSet，
+  /// 音频看 [AudioCacheService.audioList]。混用会让「已经在缓存视频」
+  /// 误判成「音频也缓存好了」。
+  bool _isCachedCid(int? cid) {
+    if (cid == null) return false;
+    return widget.isAudio
+        ? _audioCacheService.isCached(cid)
+        : cidSet.contains(cid);
+  }
+
+  /// 缓存音频：与「听视频」页共用 [AudioCacheService]，产出的是纯音频文件。
+  ///
+  /// 音质用面板顶部选的 [_audioQuality]；重复与并发由服务内部的
+  /// isCached / taskOf 判断（会自行提示「已缓存 / 正在缓存」），
+  /// 所以这里不走视频那边的 cidSet。
+  bool _onAudioCache({
+    required ugc.BaseEpisodeItem episode,
+    ugc.EpisodeItem? parent,
+  }) {
+    final cid = episode.cid;
+    if (cid == null) return false;
+    final detail = widget.videoDetail;
+    late final int avid;
+    late final String bvid;
+    late final String title;
+    late final String cover;
+    int durationMs = 0;
+
+    switch (episode) {
+      case Part part:
+        // 分P属于某个分集时，aid/bvid/封面以分集为准
+        // （合集里每一集是独立稿件，用外层 videoDetail 会串成同一个视频）。
+        avid = parent?.aid ?? detail?.aid ?? widget.videoDetailController.aid;
+        bvid =
+            parent?.bvid ??
+            detail?.bvid ??
+            widget.videoDetailController.bvid;
+        title = part.part ?? detail?.title ?? '';
+        cover = part.firstFrame ?? parent?.arc?.pic ?? detail?.pic ?? '';
+        durationMs = (part.duration ?? 0) * 1000;
+        break;
+      case ugc.EpisodeItem item:
+        avid = item.aid ?? detail?.aid ?? widget.videoDetailController.aid;
+        bvid =
+            item.bvid ??
+            detail?.bvid ??
+            widget.videoDetailController.bvid;
+        title = item.title ?? detail?.title ?? '';
+        cover = item.arc?.pic ?? detail?.pic ?? '';
+        durationMs = (item.arc?.duration ?? 0) * 1000;
+        break;
+      default:
+        // 番剧不提供音频缓存入口（菜单按 isUgc 显示），这里只做兜底。
+        return false;
+    }
+
+    if (title.isEmpty) {
+      SmartDialog.showToast(uiTx('视频信息还没加载好，稍后再试'));
+      return false;
+    }
+
+    _audioCacheService.download(
+      avid: avid,
+      bvid: bvid,
+      cid: cid,
+      title: title,
+      cover: cover,
+      durationMs: durationMs,
+      quality: _audioQuality,
+    );
+    return true;
+  }
+
   late final int? vipStatus = Pref.userInfoCache?.vipStatus;
   @pragma('vm:notify-debugger-on-exception')
   bool _onDownload({
@@ -310,13 +394,6 @@ class _DownloadPanelState extends State<DownloadPanel> {
     // on download
     if (cid == null) {
       SmartDialog.showToast('null cid');
-      return false;
-    }
-
-    if (cidSet.contains(cid)) {
-      if (kDebugMode) {
-        SmartDialog.showToast('downloaded');
-      }
       return false;
     }
 
@@ -345,8 +422,25 @@ class _DownloadPanelState extends State<DownloadPanel> {
           }
           return true;
         }
+        // 多分P：让用户往下选具体那一P（音频缓存同样如此，
+        // 每个分P的音频是独立的一条记录）。
         return false;
       }
+    }
+
+    // 音频缓存走自己的一套落盘结构（与「听视频」页同一个服务），
+    // 不能用下面的 video 下载分支。此前面板没有这条分支，`isAudio`
+    // 只用于「查看缓存」跳转，于是从视频页点「音频缓存」进去、
+    // 点条目时缓存的仍然是视频（用户实测）。
+    if (widget.isAudio) {
+      return _onAudioCache(episode: episode, parent: parent);
+    }
+
+    if (cidSet.contains(cid)) {
+      if (kDebugMode) {
+        SmartDialog.showToast('downloaded');
+      }
+      return false;
     }
 
     try {
@@ -581,7 +675,7 @@ CoverTranslateButton(cover: cover),
                                 ),
                               ],
                             ),
-                            if (!hasParts && cidSet.contains(cid))
+                            if (!hasParts && _isCachedCid(cid))
                               Positioned(
                                 bottom: 0,
                                 right: 0,
