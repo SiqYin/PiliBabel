@@ -18,6 +18,7 @@ import 'package:PiliPlus/services/download/download_service.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/services/ui_translate/glossary_update_service.dart';
 import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:PiliPlus/utils/calc_window_position.dart';
 import 'package:PiliPlus/utils/cdn_region.dart';
@@ -145,7 +146,8 @@ void main() async {
         ..lazyPut(AudioCacheService.new)
         ..lazyPut(LocalDownloadService.new)
     ..put(DownloadCollectionService())
-    ..put(UiTranslateService());
+    ..put(UiTranslateService())
+    ..put(GlossaryUpdateService());
   HttpOverrides.global = _CustomHttpOverrides();
 
   if (PlatformUtils.isMobile) {

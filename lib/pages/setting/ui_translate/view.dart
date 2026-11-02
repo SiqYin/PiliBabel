@@ -4,6 +4,8 @@ import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/services/ui_translate/translate_provider.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/services/ui_translate/game_glossary.dart';
+import 'package:PiliPlus/services/ui_translate/glossary_update_service.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 
@@ -191,6 +193,48 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                 setState(() {});
               },
             ),
+            // 内置术语表更新：8 款游戏的专业名词表随版本内嵌，这里检查远端
+            // 是否有更完整的版本。检查本身只拉一个几 KB 的清单，不下载词条。
+            Obx(() {
+              final svc = Get.isRegistered<GlossaryUpdateService>()
+                  ? Get.find<GlossaryUpdateService>()
+                  : null;
+              final st = svc?.state ?? GlossaryUpdateState.idle;
+              final String subtitle;
+              switch (st) {
+                case GlossaryUpdateState.checking:
+                  subtitle = uiTx('正在检查…');
+                case GlossaryUpdateState.outdated:
+                  final n = svc?.updates.length ?? 0;
+                  subtitle =
+                      uiTxP('有 {0} 款游戏的术语表可更新', [n.toString()]);
+                case GlossaryUpdateState.upToDate:
+                  subtitle = uiTx('已是最新版本');
+                case GlossaryUpdateState.failed:
+                  subtitle = uiTx('检查失败，请稍后重试');
+                case GlossaryUpdateState.idle:
+                  subtitle = uiTxP(
+                    '已内置 {0} 条专业术语（8 款游戏）',
+                    [kGlossaryNames.length.toString()],
+                  );
+              }
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.library_books_outlined),
+                title: Text(uiTx('游戏术语表')),
+                subtitle: Text(subtitle),
+                trailing: st == GlossaryUpdateState.checking
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh),
+                onTap: st == GlossaryUpdateState.checking
+                    ? null
+                    : () => svc?.check(),
+              );
+            }),
             // 翻译引擎：内置官方模型（默认、免密钥）/ 自备 API。
             // 两个引擎**共用同一份目标语言清单**，差异只在质量提示上。
             Obx(() {

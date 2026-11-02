@@ -2015,6 +2015,25 @@ abstract final class Pref {
   static set uiTranslatePromptRevision(int value) =>
       _setting.put(SettingBoxKey.uiTranslatePromptRevision, value);
 
+  /// 术语表上次检查更新时间（毫秒）。
+  static int get glossaryLastChecked =>
+      _setting.get(SettingBoxKey.glossaryLastChecked, defaultValue: 0);
+
+  static set glossaryLastChecked(int value) =>
+      _setting.put(SettingBoxKey.glossaryLastChecked, value);
+
+  /// 远端术语表清单地址。默认用官方发布的清单，用户可改镜像。
+  static String get glossaryManifestUrl {
+    final v = _setting.get(SettingBoxKey.glossaryManifestUrl);
+    return (v is String && v.isNotEmpty) ? v : _defaultGlossaryManifestUrl;
+  }
+
+  static const String _defaultGlossaryManifestUrl =
+      'https://raw.githubusercontent.com/SiqYin/PiliBabel/glossary/manifest.json';
+
+  static set glossaryManifestUrl(String value) =>
+      _setting.put(SettingBoxKey.glossaryManifestUrl, value);
+
   /// 升级告知是否已经弹过。**只用一次**：0.3.x 升到 1.0 会看到一次，
   /// 之后（哪怕是 1.0.0 → 1.0.1）都不再弹。
   ///

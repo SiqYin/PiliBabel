@@ -230,6 +230,8 @@ abstract final class SettingBoxKey {
       uiTranslateCache = 'uiTranslateCache',
       uiTranslateQueryCache = 'uiTranslateQueryCache',
       uiTranslatePromptRevision = 'uiTranslatePromptRevision',
+      glossaryLastChecked = 'glossaryLastChecked',
+      glossaryManifestUrl = 'glossaryManifestUrl',
       uiTranslateOnboarded = 'uiTranslateOnboarded',
       uiTranslateUpgradeNoticeShown = 'uiTranslateUpgradeNoticeShown',
       uiTranslateOutageDismissed = 'uiTranslateOutageDismissed',
