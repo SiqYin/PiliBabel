@@ -198,7 +198,16 @@ class RetryInterceptor extends Interceptor {
       isGrpc: _isGrpcRequest(options),
     );
     if (alternatives == null) return false;
-    final next = HostHealth.instance.nextOf(alternatives, uri.host);
+    // 主机清单里存的是带 scheme 的完整 URL（HttpString.grpcHosts），
+    // 而 uri.host 是裸主机名。这里先归一化成裸主机名再比较/拼接：
+    // 3.5.0 及之前直接拿完整 URL 拼 baseUrl，得到「https://https://app...」
+    // 这种坏地址（Uri 再解析成 https://https//app.../...），重试必然失败，
+    // 用户看到的就是「连接错误 + 坏 URL」的弹窗；且与裸主机名比较永远不等，
+    // 「换主机」总是选回当前主机，实际从未切换过。
+    final bareAlternatives = alternatives
+        .map((h) => h.replaceFirst(RegExp(r'^https?://'), ''))
+        .toList();
+    final next = HostHealth.instance.nextOf(bareAlternatives, uri.host);
     if (next == null || next == uri.host) return false;
     options
       ..baseUrl = '${uri.scheme}://$next'

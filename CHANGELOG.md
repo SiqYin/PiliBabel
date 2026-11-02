@@ -2,6 +2,28 @@
 
 按 Keep a Changelog 的思路编写,留个记录,方便知道每次更新都改了什么,也方便用户查看更新内容.
 
+## 3.5.1
+
+**新增《明日方舟》术语表（第八款游戏）+ 修复三种异常弹窗。**
+
+- **明日方舟术语表**：五服官方数据（国服 cn / 台服 tw / 英文 en / 日文 ja / 韩文 kr，
+  `ArknightsAssets/ArknightsGamedata` 每日自动同步的客户端数据表）按同一套 ID 精确对齐，
+  共 **5663 条**（干员/NPC/敌人/道具/技能），繁中直接来自台服官方数据（非机械转换）。
+  游戏名自带通行简称：アークナイツ→**アクナイ**、명일방주→**명방**、Arknights→**AK**
+  （社区俚语简称直接转正口径）。
+- **修复「换主机重试」拼出坏地址（弹窗里 `https://https//app.bilibili.com/...` 的根因）**：
+  主机清单存的是带 scheme 的完整 URL，换主机时直接拼 `scheme://$host` 产生
+  `https://https://app.bilibili.com`，Uri 解析后就是截图里的坏 URL，重试必然失败；
+  且清单项与裸主机名比较永远不相等，导致「换主机」其实从未切换过。两处都已修正。
+- **修复错误弹窗泄露完整请求 URL**：此前弹窗直接拼接完整 uri，query 里的
+  `access_key`/`sign` 凭证一起上屏（截图即外泄），且动辄十几行长文。现改为
+  只显示 `scheme://host + path`、超长截断，与文案之间补上分隔空格。
+- **加固 cookie 头处理**：请求头里的 cookie 若为 List（dio headers 是
+  `Map<String, dynamic>`），此前 `as String?` 直接抛
+  `type 'List<dynamic>' is not a subtype of type 'String'`（用户实测弹窗之一的高概率来源），
+  现已兼容 String/List 两态。类型错误的原文信息按用户要求继续原样上屏，便于截图查证；
+  根因彻底定位后再移除。
+
 ## 3.5.0
 
 **新功能：游戏术语表 + 全称/简称机制。** 界面翻译在命中专有名词时直接使用官方译名，
