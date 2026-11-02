@@ -1211,6 +1211,14 @@ class VideoDetailController extends GetxController
   /// 用户在本条稿件（cid）上手动选过声轨（含「关闭翻译」），本次不再自动干预。
   int? _trackUserPickedCid;
 
+  /// 按 cid 记住「这条稿件能切到哪一门外语声轨」（空串 = 没有可切的）。
+  ///
+  /// 自动切轨原本每次开播都要**多一次串行 playurl**：先取默认声轨拿到语言列表，
+  /// 命中再带 `cur_language` 重取。实测只有约 2.7% 的稿件带官方 AI 声轨，也就是
+  /// 绝大多数稿件白付这一次请求（首帧多 150~400ms）。记住结果之后，同一条稿件
+  /// 再看时直接按已知语言取流，不再多这一次往返。
+  static final Map<int, String> _langPickCache = {};
+
   void setLanguage(String language) {
     if (currLang.value == language) return;
     if (!isLoginVideo) {
@@ -1248,6 +1256,22 @@ class VideoDetailController extends GetxController
         prefetchedResult = Success(cached);
       }
     }
+    // 上一次看这条稿件时已经知道它能切到哪门外语声轨：直接按那门语言取流，
+    // 省掉下面「先取默认声轨、再带 cur_language 重取」的那一次往返。
+    String? knownLang;
+    if (allowAutoTrack &&
+        prefetchedResult == null &&
+        _autoTrackTriedCid != cid.value &&
+        (currLang.value?.isEmpty ?? true) &&
+        _trackUserPickedCid != cid.value &&
+        Pref.audioTrackFollowUiLang &&
+        isLoginVideo) {
+      final cached = _langPickCache[cid.value];
+      if (cached != null && cached.isNotEmpty) {
+        knownLang = cached;
+        _autoTrackTriedCid = cid.value;
+      }
+    }
     var result =
         prefetchedResult ??
         await VideoHttp.videoUrl(
@@ -1258,9 +1282,33 @@ class VideoDetailController extends GetxController
           seasonId: seasonId,
           tryLook: plPlayerController.tryLook,
           videoType: _actualVideoType ?? videoType,
-          language: currLang.value,
+          language: knownLang ?? currLang.value,
           voiceBalance: plPlayerController.enableAudioNormalization,
         );
+    // 已知语言取流后服务端没回显成那门语言（稿件改过 / 权限变了）→ 按原声播，
+    // 并把缓存结果作废，下次重新探测。
+    if (knownLang != null) {
+      final echoed = switch (result) {
+        Success(:final response) => response.curLanguage ?? '',
+        _ => '',
+      };
+      if (echoed == knownLang) {
+        final item = switch (result) {
+          Success(:final response) => response.language?.items
+              ?.firstWhereOrNull((e) => e.lang == knownLang),
+          _ => null,
+        };
+        if (!isClosed) {
+          SmartDialog.showToast(
+            '${uiTx('声轨已跟随界面语言')} · ${item?.title ?? knownLang}',
+            displayTime: const Duration(seconds: 3),
+          );
+        }
+      } else {
+        _langPickCache.remove(cid.value);
+        _autoTrackTriedCid = null;
+      }
+    }
     // 「声轨跟随界面语言」：官方 AI 原声翻译声轨要先拿到稿件支持哪些语言才知道能不能切，
     // 所以这里是**先取默认声轨的元数据、再带 cur_language 重取一次**。重取必须在开播前
     // 完成，否则用户会先听到原声再被换成外语。每个 cid 只试一次，切失败（响应里的
@@ -1270,6 +1318,7 @@ class VideoDetailController extends GetxController
         if (_autoTrackTriedCid != cid.value) {
           _autoTrackTriedCid = cid.value;
           final wanted = _autoTrackLang(response.language?.items);
+          _langPickCache[cid.value] = wanted ?? '';
           if (wanted != null) {
             final switched = await VideoHttp.videoUrl(
               cid: cid.value,
