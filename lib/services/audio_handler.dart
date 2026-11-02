@@ -201,6 +201,16 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     }
   }
 
+  /// 是否存在一条可上报的播放链路。
+  ///
+  /// 视频页有 `PlPlayerController` 实例；「听视频」页用的是自己的 media_kit
+  /// `Player`，没有那个实例，只挂了一个 [isPlaying] 回调。原来的门槛只认前者，
+  /// 于是听视频页的媒体项根本没被登记、`playbackState` 也从不更新 —— 通知栏 /
+  /// 系统媒体面板里的播放-暂停图标永远停在初始值。`_hasEpisodes` 本来就写了
+  /// AudioController 分支，说明这里原本就是打算支持听视频页的。
+  bool get _hasPlaybackSource =>
+      PlPlayerController.instanceExists() || isPlaying != null;
+
   /// 真实是否在播：先问挂着回调的播放页（听视频页走自己的 media_kit Player），
   /// 再问视频页的 `PlPlayerController`，两者都问不到才退回系统里那份上报值。
   bool _isActuallyPlaying() {
@@ -257,9 +267,7 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     bool isBuffering,
     bool isLive,
   ) {
-    if (!enableBackgroundPlay ||
-        _item.isEmpty ||
-        !PlPlayerController.instanceExists()) {
+    if (!enableBackgroundPlay || _item.isEmpty || !_hasPlaybackSource) {
       return;
     }
 
@@ -361,7 +369,7 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     //   debugPrint('当前调用栈为：');
     //   debugPrint(StackTrace.current);
     // }
-    if (!PlPlayerController.instanceExists()) return;
+    if (!_hasPlaybackSource) return;
     if (data == null) return;
 
     // Windows SMTC 弹窗由 shell 进程渲染，仅支持系统内置解码器，WebP 会静默不显示，
@@ -448,7 +456,7 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
         return;
     }
     // if (kDebugMode) debugPrint("exist: ${PlPlayerController.instanceExists()}");
-    if (!PlPlayerController.instanceExists()) return;
+    if (!_hasPlaybackSource) return;
     _item
       ..removeWhere((item) => item.id == id || item.id.endsWith(herotag))
       ..add(mediaItem);
@@ -471,9 +479,7 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
   }
 
   void onPositionChange(Duration position) {
-    if (!enableBackgroundPlay ||
-        _item.isEmpty ||
-        !PlPlayerController.instanceExists()) {
+    if (!enableBackgroundPlay || _item.isEmpty || !_hasPlaybackSource) {
       return;
     }
 
