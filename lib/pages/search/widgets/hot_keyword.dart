@@ -60,9 +60,12 @@ class SliverHotKeyword extends StatelessWidget {
                     : i.recommendReason?.isNotEmpty == true
                     ? Text(uiTx(i.recommendReason!), style: style)
                     : null;
-                // 「标题完全显示」打开时改成上下两行：关键词最多两行、标签另起一行。
-                // 译文通常比中文原文长得多，和标签横排并在一起会把关键词挤成省略号，
-                // 用户根本看不出这条热搜是什么。
+                // 「标题完全显示」打开时关键词最多两行。
+                //
+                // 标签**不能另起一行**：译文比中文长得多，常常正好占满两行，标签再
+                // 独占一行的话一条热搜会变成三行、四行，而第二行往往只剩一两个字、
+                // 后面全是空白。这里让标签始终和文字同一行（靠右、垂直居中），
+                // 一条最多两行。
                 final full = Pref.videoTitleFull;
                 final keyword = Text(
                   uiTxTight(i.keyword!),
@@ -80,39 +83,22 @@ class SliverHotKeyword extends StatelessWidget {
                       padding: const .only(left: 2, right: 10),
                       child: Tooltip(
                         message: uiTxTight(i.keyword!),
-                        child: full
-                            ? Column(
-                                mainAxisSize: MainAxisSize.min,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                    padding: const .fromLTRB(6, 5, 0, 0),
-                                    child: keyword,
-                                  ),
-                                  if (tag != null)
-                                    Padding(
-                                      padding: const .fromLTRB(6, 3, 0, 5),
-                                      child: tag,
-                                    )
-                                  else
-                                    const SizedBox(height: 5),
-                                ],
-                              )
-                            : Row(
-                                children: [
-                                  Flexible(
-                                    child: Padding(
-                                      padding: const .fromLTRB(6, 5, 0, 5),
-                                      child: keyword,
-                                    ),
-                                  ),
-                                  if (tag != null)
-                                    Padding(
-                                      padding: const .only(left: 4),
-                                      child: tag,
-                                    ),
-                                ],
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Flexible(
+                              child: Padding(
+                                padding: const .fromLTRB(6, 5, 0, 5),
+                                child: keyword,
                               ),
+                            ),
+                            if (tag != null)
+                              Padding(
+                                padding: const .only(left: 4, right: 2),
+                                child: tag,
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
