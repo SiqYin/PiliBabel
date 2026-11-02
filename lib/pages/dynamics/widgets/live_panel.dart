@@ -37,7 +37,7 @@ CoverTranslateButton(cover: live.cover),
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                uiTx(live.title!),
+                uiTxTight(live.title!),
                 maxLines: isDetail ? null : 2,
                 overflow: isDetail ? null : TextOverflow.ellipsis,
               ),

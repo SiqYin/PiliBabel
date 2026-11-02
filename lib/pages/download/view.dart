@@ -835,7 +835,7 @@ class _DownloadPageState extends State<DownloadPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    uiTx(task.title),
+                    uiTxTight(task.title),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 14),

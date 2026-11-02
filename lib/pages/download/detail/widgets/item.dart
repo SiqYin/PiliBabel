@@ -347,7 +347,9 @@ CoverTranslateButton(cover: entry.cover),
                       children: [
                         Obx(
                           () => Text(
-                            showTitle ? uiTx(entry.title) : uiTx(entry.showTitle),
+                            showTitle
+                                ? uiTxTight(entry.title)
+                                : uiTxTight(entry.showTitle),
                             textAlign: TextAlign.start,
                             style: TextStyle(
                               fontSize: theme.textTheme.bodyMedium!.fontSize,

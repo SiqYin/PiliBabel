@@ -1,3 +1,40 @@
+### PiliBabel v3.5.2
+
+**Short names now actually apply where they matter: titles and the comment
+section.** Plus the two previous releases are summarised below.
+
+- **The abbreviation rule is wired up — 31 UI surfaces.** Until now `txTight()`
+  existed but nothing called it, so the full/short rule never fired. It now
+  covers:
+  - **23 list / card titles** — video cards (H/V), dynamic video & extra cards,
+    live cards, embedded opus cards, audio lists, download list & detail,
+    article list, search suggestions, messages, member pages;
+  - **7 navigation labels** — home tabs, the three bottom-bar variants, drawer,
+    rail (including the rail width measurement, which must render the same
+    form as the label or the width comes out wrong);
+  - **the comment section** — comment bodies now pick the short form too,
+    because a comment section *is* the community.
+- **Result (same data, measured):**
+
+  | Term | Title / comments | Body text |
+  |---|---|---|
+  | 绝区零 | ゼンゼロ / 젠존제 / ZZZ | ゼンレスゾーンゼロ / 젠레스 존 제로 / Zenless Zone Zero |
+  | 崩坏：星穹铁道 | スタレ / 붕스 / HSR | 崩壊:スターレイル / 붕괴: 스타레일 / Honkai: Star Rail |
+  | 蔚蓝档案 | ブルアカ / 블아 / BA | ブルーアーカイブ / 블루 아카이브 / Blue Archive |
+  | 明日方舟 | アクナイ / 명방 / AK | アークナイツ / 명일방주 / Arknights |
+
+- New helper `uiTxTight(src)`. Glossary entries marked as *inferred* are **live
+  and in normal use** — the yellow highlight in the reference sheet only
+  distinguishes official sources from inferred ones; it is not a to-do.
+
+中文摘要：简称机制此前只有实现、没有调用方，实际没生效。本版接入 **31 处窄位界面**——
+列表/卡片标题 23 处、导航标签 7 处（含侧栏宽度测量，必须与渲染同形态）、
+评论区正文（评论区本身就是社区语境）。效果：标题与评论区用 ゼンゼロ / スタレ /
+ブルアカ / アクナイ 这类通行简称，正文才用全称。术语表中标记为「推断」的条目
+**已正常启用**，标黄只用于区分来源，不是待办。
+
+---
+
 ### PiliBabel v3.5.1
 
 **New: Arknights (明日方舟) glossary — the 8th game.**
