@@ -223,7 +223,8 @@ class Request {
     // 本机解析代理：HTTP/2 通道的 socket 由 ConnectionManager 自己建，只有把代理
     // 交给它，自解析才能覆盖到默认开启的 HTTP/2 主链路。用户自己开了系统代理时
     // 让位（proxySpec 返回 null），交回原有的系统代理链路。
-    final dnsProxyPort = !enableSystemProxy && DnsProxy.instance.available
+    final dnsProxyPort =
+        !Pref.netDirect && !enableSystemProxy && DnsProxy.instance.available
         ? DnsProxy.instance.port
         : 0;
     final connectionManager = _enableHttp2
@@ -255,6 +256,9 @@ class Request {
         : null;
     return (http11Adapter, connectionManager);
   }
+
+  /// Rebuild clients after changing the route preference without restarting.
+  static void resetAdapters() => _resetAdaptersForNetworkChange();
 
   @pragma('vm:notify-debugger-on-exception')
   static void _resetAdaptersForNetworkChange() {

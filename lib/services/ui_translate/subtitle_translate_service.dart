@@ -1,5 +1,6 @@
 import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_proxy.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/subtitle_utils.dart';
 import 'package:get/get.dart';
@@ -38,6 +39,46 @@ abstract final class SubtitleTranslateService {
     return false;
   }
 
+  /// A single request per chunk in the common case. If the provider changes
+  /// line boundaries, recover individual cues without ever shifting timing.
+  static Future<List<String>> translateChunk(
+    List<String> lines, {
+    List<String> contextLines = const [],
+    SubtitleTranslationProxy? proxy,
+  }) async {
+    if (!needed) throw StateError('Subtitle translation is disabled');
+    if (lines.isEmpty) return [];
+    final service = UiTranslateService.to;
+    final target = service.currentLanguage.code;
+    final translated = List<String>.of(lines);
+    final indices = <int>[];
+    for (var i = 0; i < lines.length; i++) {
+      if (_isCjk(lines[i])) indices.add(i);
+    }
+    if (indices.isEmpty) return translated;
+    final output = await service.translateSubtitleLines(
+      [
+        for (final i in indices) lines[i],
+      ],
+      contextLines: contextLines,
+      subtitleProxy: proxy,
+    );
+    if (!needed ||
+        service.currentLanguage.code != target ||
+        output.length != indices.length) {
+      throw const FormatException('Subtitle translation changed or failed');
+    }
+    for (var i = 0; i < indices.length; i++) {
+      final source = lines[indices[i]].trim();
+      final value = output[i].trim();
+      if (value.isEmpty || value == source) {
+        throw const FormatException('Subtitle translation unavailable');
+      }
+      translated[indices[i]] = value;
+    }
+    return translated;
+  }
+
   /// 翻译一条中文字幕轨，返回可直接挂载的 VTT 文本；不需要或失败返回 null。
   static Future<String?> translatedVtt({
     required String bvid,
@@ -64,7 +105,9 @@ abstract final class SubtitleTranslateService {
 
     final lines = <String>[];
     for (final item in body) {
-      lines.add(((item is Map ? item['content'] : null) as String?)?.trim() ?? '');
+      lines.add(
+        ((item is Map ? item['content'] : null) as String?)?.trim() ?? '',
+      );
     }
 
     // 只翻含汉字的行：纯数字/符号行没有翻译价值，少发一次请求。

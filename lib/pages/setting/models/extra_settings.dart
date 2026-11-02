@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+
 import 'dart:io' show Platform;
 import 'dart:math' show max;
 
@@ -12,6 +13,7 @@ import 'package:PiliPlus/common/widgets/image_grid/image_grid_view.dart'
     show ImageGridView, ImageModel;
 import 'package:PiliPlus/common/widgets/pendant_avatar.dart';
 import 'package:PiliPlus/http/fav.dart';
+import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/audio_normalization.dart';
 import 'package:PiliPlus/models/common/dm_chart_source.dart';
@@ -59,7 +61,7 @@ import 'package:material_ui/material_ui.dart' hide RefreshIndicator;
 List<SettingsModel> get extraSettings => [
   SwitchModel(
     title: uiTx('评论区默认展开评论'),
-      subtitle: uiTx('开启后评论区所有「查看更多」默认就是展开的'),
+    subtitle: uiTx('开启后评论区所有「查看更多」默认就是展开的'),
     leading: const Icon(Icons.unfold_more),
     setKey: SettingBoxKey.replyDefaultExpand,
     defaultVal: false,
@@ -100,8 +102,7 @@ List<SettingsModel> get extraSettings => [
     ),
   NormalModel(
     title: uiTx('下载到本地位置'),
-    getSubtitle: () =>
-        Pref.downloadLocalPath ?? uiTx('未设置，点击选择一个文件夹'),
+    getSubtitle: () => Pref.downloadLocalPath ?? uiTx('未设置，点击选择一个文件夹'),
     leading: const Icon(Icons.save_alt),
     onTap: _showLocalPathDialog,
   ),
@@ -204,7 +205,8 @@ List<SettingsModel> get extraSettings => [
     title: uiTx('评论折叠行数'),
     subtitle: uiTx('0行为不折叠'),
     leading: const Icon(Icons.compress),
-    getTrailing: (theme) => Text(uiTx('${ReplyItemGrpc.replyLengthLimit}行'),
+    getTrailing: (theme) => Text(
+      uiTx('${ReplyItemGrpc.replyLengthLimit}行'),
       style: theme.textTheme.titleSmall,
     ),
     onTap: _showReplyLengthDialog,
@@ -221,6 +223,14 @@ List<SettingsModel> get extraSettings => [
     leading: const Icon(Icons.dns),
     setKey: SettingBoxKey.dnsDoh,
     defaultVal: true,
+  ),
+  SwitchModel(
+    title: uiTx('网络直连（关闭后走自解析代理）'),
+    subtitle: uiTx('默认直连更稳定、更快；若网络只能通过自解析访问，可关闭此项'),
+    leading: const Icon(Icons.speed),
+    setKey: SettingBoxKey.netDirect,
+    defaultVal: true,
+    onChanged: (_) => Request.resetAdapters(),
   ),
   SwitchModel(
     title: uiTx('评论点赞/点踩按钮交换位置'),
@@ -293,17 +303,18 @@ List<SettingsModel> get extraSettings => [
   ),
   NormalModel(
     title: uiTx('横向滑动阈值'),
-    getSubtitle: () => uiTxP('当前:「{0}」，系统默认值: {1}',
-        [Pref.touchSlopH, deviceTouchSlop]),
+    getSubtitle: () =>
+        uiTxP('当前:「{0}」，系统默认值: {1}', [Pref.touchSlopH, deviceTouchSlop]),
     onTap: _showTouchSlopDialog,
     leading: const Icon(Icons.pan_tool_alt_outlined),
   ),
   NormalModel(
     title: uiTx('刷新指示器高度'),
     leading: const Icon(Icons.height),
-    getSubtitle: () =>
-        uiTxP('当前指示器高度: {0}, 刷新滑动距离: {1}',
-            [Pref.refreshDisplacement, refreshDragExtent]),
+    getSubtitle: () => uiTxP('当前指示器高度: {0}, 刷新滑动距离: {1}', [
+      Pref.refreshDisplacement,
+      refreshDragExtent,
+    ]),
     onTap: _showRefreshDialog,
   ),
   SwitchModel(
@@ -776,7 +787,8 @@ Future<void> audioNormalization(
           actions: [
             TextButton(
               onPressed: Get.back,
-              child: Text(uiTx('取消'),
+              child: Text(
+                uiTx('取消'),
                 style: TextStyle(color: ColorScheme.of(context).outline),
               ),
             ),
@@ -899,7 +911,8 @@ void _showDynDialog(BuildContext context) {
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(uiTx('取消'),
+          child: Text(
+            uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -938,7 +951,8 @@ void _showReplyLengthDialog(BuildContext context, VoidCallback setState) {
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(uiTx('取消'),
+          child: Text(
+            uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -977,7 +991,8 @@ void _showDmHeightDialog(BuildContext context, VoidCallback setState) {
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(uiTx('取消'),
+          child: Text(
+            uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -1018,7 +1033,8 @@ void _showTouchSlopDialog(BuildContext context, VoidCallback setState) {
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(uiTx('取消'),
+          child: Text(
+            uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -1266,7 +1282,8 @@ void _showProxyDialog(BuildContext context) {
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(uiTx('取消'),
+          child: Text(
+            uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),
@@ -1305,7 +1322,8 @@ void _showCacheDialog(BuildContext context, VoidCallback setState) {
       actions: [
         TextButton(
           onPressed: Get.back,
-          child: Text(uiTx('取消'),
+          child: Text(
+            uiTx('取消'),
             style: TextStyle(color: ColorScheme.of(context).outline),
           ),
         ),

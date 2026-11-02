@@ -927,7 +927,7 @@ packages:
     source: hosted
     version: "0.15.7"
   http:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: http
       sha256: "87721a4a50b19c7f1d49001e51409bddc46303966ce89a65af4f4e6004896412"
@@ -1788,6 +1788,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  socks5_proxy:
+    dependency: "direct main"
+    description:
+      name: socks5_proxy
+      sha256: a4b95506cbd962fa403e862777432671d36511230c4aedd125a28ddb922e6399
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.2"
   source_span:
     dependency: transitive
     description:

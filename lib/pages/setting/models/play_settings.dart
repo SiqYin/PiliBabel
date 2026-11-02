@@ -1,10 +1,10 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+
 import 'dart:io' show Platform;
 
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/models/common/super_chat_time_type.dart';
 import 'package:PiliPlus/models/common/super_chat_type.dart';
-import 'package:PiliPlus/models/common/video/subtitle_pref_type.dart';
 import 'package:PiliPlus/pages/main/controller.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
 import 'package:PiliPlus/pages/setting/pages/fullscreen_sc_size.dart';
@@ -173,8 +173,7 @@ List<SettingsModel> get playSettings => [
   NormalModel(
     title: uiTx('自动启用字幕'),
     leading: const Icon(Icons.closed_caption_outlined),
-    getSubtitle: () => '当前选择偏好：${Pref.subtitlePreferenceV2.desc}',
-    onTap: _showSubtitleDialog,
+    subtitle: uiTx('优先选择字幕译文；无译文时显示中文字幕'),
   ),
   if (PlatformUtils.isDesktop)
     SwitchModel(
@@ -394,27 +393,6 @@ List<SettingsModel> get playSettings => [
     defaultVal: false,
   ),
 ];
-
-Future<void> _showSubtitleDialog(
-  BuildContext context,
-  VoidCallback setState,
-) async {
-  final res = await showDialog<SubtitlePrefType>(
-    context: context,
-    builder: (context) => SelectDialog<SubtitlePrefType>(
-      title: uiTx('字幕选择偏好'),
-      value: Pref.subtitlePreferenceV2,
-      values: SubtitlePrefType.values.map((e) => (e, e.desc)).toList(),
-    ),
-  );
-  if (res != null) {
-    await GStorage.setting.put(
-      SettingBoxKey.subtitlePreferenceV2,
-      res.index,
-    );
-    setState();
-  }
-}
 
 Future<void> _showSuperChatTimeDialog(
   BuildContext context,

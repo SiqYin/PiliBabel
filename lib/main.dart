@@ -142,8 +142,8 @@ void main() async {
   Get
     ..lazyPut(AccountService.new)
     ..lazyPut(DownloadService.new)
-        ..lazyPut(AudioCacheService.new)
-        ..lazyPut(LocalDownloadService.new)
+    ..lazyPut(AudioCacheService.new)
+    ..lazyPut(LocalDownloadService.new)
     ..put(DownloadCollectionService())
     ..put(UiTranslateService());
   HttpOverrides.global = _CustomHttpOverrides();
@@ -491,6 +491,7 @@ class _CustomHttpOverrides extends HttpOverrides {
     if (kDebugMode || Pref.badCertificateCallback) {
       client.badCertificateCallback = (cert, host, port) => true;
     }
+    if (Pref.netDirect) return client;
     // 解析统一收口：dart:io 的 HttpClient 没有可注入的 DNS 钩子（HTTP/2 的
     // ConnectionManager 更是自己建 socket），所以用 findProxy 把请求交给本机
     // 解析代理，由它按自解析结果连上游。TLS 端到端不变，SNI/Host/直链签名不受影响。

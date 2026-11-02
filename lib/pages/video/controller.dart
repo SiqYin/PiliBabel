@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+
 import 'dart:async';
 import 'dart:convert' show jsonDecode;
 import 'dart:io';
@@ -26,7 +27,6 @@ import 'package:PiliPlus/models/common/sponsor_block/segment_model.dart';
 import 'package:PiliPlus/models/common/sponsor_block/segment_type.dart';
 import 'package:PiliPlus/models/common/video/audio_quality.dart';
 import 'package:PiliPlus/models/common/video/source_type.dart';
-import 'package:PiliPlus/models/common/video/subtitle_pref_type.dart';
 import 'package:PiliPlus/models/common/video/video_decode_type.dart';
 import 'package:PiliPlus/models/common/video/video_quality.dart';
 import 'package:PiliPlus/models/common/video/video_type.dart';
@@ -43,6 +43,7 @@ import 'package:PiliPlus/models_new/video/video_detail/page.dart';
 import 'package:PiliPlus/models_new/video/video_pbp/data.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translate_service.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_proxy.dart';
 import 'package:PiliPlus/models_new/video/video_stein_edgeinfo/data.dart';
 import 'package:PiliPlus/pages/ai_chat/controller.dart';
 import 'package:PiliPlus/pages/audio/view.dart';
@@ -64,6 +65,9 @@ import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/services/download/download_collection_service.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
 import 'package:PiliPlus/services/pip_overlay_service.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_selection.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_job.dart';
+import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/connectivity_utils.dart';
@@ -88,7 +92,6 @@ import 'package:extended_nested_scroll_view/extended_nested_scroll_view.dart'
     show ExtendedNestedScrollViewState;
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import 'package:get/get.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:material_ui/material_ui.dart';
@@ -415,8 +418,7 @@ class VideoDetailController extends GetxController
       final fsQa = isWiFi ? Pref.defaultVideoQa : Pref.defaultVideoQaCellular;
       final curHighestVideoQa = data.dash!.video!.first.quality.code;
       int targetQa = curHighestVideoQa;
-      if (data.acceptQuality?.isNotEmpty == true &&
-          fsQa <= curHighestVideoQa) {
+      if (data.acceptQuality?.isNotEmpty == true && fsQa <= curHighestVideoQa) {
         targetQa = data.acceptQuality!.findClosestTarget(
           (e) => e <= fsQa,
           (a, b) => a > b ? a : b,
@@ -1018,12 +1020,9 @@ class VideoDetailController extends GetxController
     if (videos == null || videos.isEmpty || cur == null) {
       return null;
     }
-    final lower = videos
-        .map((v) => v.id)
-        .where((c) => c < cur.code)
-        .toSet()
-        .toList()
-      ..sort();
+    final lower =
+        videos.map((v) => v.id).where((c) => c < cur.code).toSet().toList()
+          ..sort();
     if (lower.isEmpty) {
       return null;
     }
@@ -1160,7 +1159,9 @@ class VideoDetailController extends GetxController
     // 触发不必要的异步操作和 UI 更新
     if (isClosed) {
       if (kDebugMode) {
-        debugPrint('[VideoDetail] playerInit: controller is closed, skipping resource loading');
+        debugPrint(
+          '[VideoDetail] playerInit: controller is closed, skipping resource loading',
+        );
       }
       return;
     }
@@ -1301,17 +1302,17 @@ class VideoDetailController extends GetxController
     isQuerying = true;
     _queryStartedAt = DateTime.now();
     try {
-    if (_lastQueryBvid != bvid || _lastQueryCid != cid.value) {
-      // 跨视频/分P时重置画质缓存，确保根据半屏/全屏设置重新选择默认画质。
-      // resetTempSettings 在 setDataSource 中执行（HTTP 请求之后），
-      // 此处提前重置使得 cacheVideoQa == null 分支能正确初始化。
-      if (PlatformUtils.isMobile) {
-        plPlayerController.cacheVideoQa = null;
+      if (_lastQueryBvid != bvid || _lastQueryCid != cid.value) {
+        // 跨视频/分P时重置画质缓存，确保根据半屏/全屏设置重新选择默认画质。
+        // resetTempSettings 在 setDataSource 中执行（HTTP 请求之后），
+        // 此处提前重置使得 cacheVideoQa == null 分支能正确初始化。
+        if (PlatformUtils.isMobile) {
+          plPlayerController.cacheVideoQa = null;
+        }
+        _lastQueryBvid = bvid;
+        _lastQueryCid = cid.value;
       }
-      _lastQueryBvid = bvid;
-      _lastQueryCid = cid.value;
-    }
-    await _queryVideoUrl(fromReset, autoFullScreenFlag, reinitializePlayer);
+      await _queryVideoUrl(fromReset, autoFullScreenFlag, reinitializePlayer);
     } finally {
       // 只有最新一次取流才有资格复位；被判定卡死而放行的旧请求不得清掉新请求的
       // in-flight 标记，否则重载会与旧请求并发取流。
@@ -1337,8 +1338,8 @@ class VideoDetailController extends GetxController
       final halfScreenQa = Pref.defaultVideoQaHalfScreen;
       plPlayerController
         // 半屏与蜂窝是两个正交的画质上限，同时命中取较低者（docs/adr/0002）
-        ..cacheVideoQa = !plPlayerController.isFullScreen.value &&
-                halfScreenQa != null
+        ..cacheVideoQa =
+            !plPlayerController.isFullScreen.value && halfScreenQa != null
             ? min(halfScreenQa, fsQa)
             : fsQa
         ..cacheAudioQa = isWiFi
@@ -1536,6 +1537,21 @@ class VideoDetailController extends GetxController
   RxList<Subtitle> subtitles = RxList<Subtitle>();
   final Map<int, ({bool isData, String id})> vttSubtitles = {};
   late final RxInt vttSubtitlesIndex = (-1).obs;
+  final RxString subtitleTranslationStatus = ''.obs;
+  final RxDouble subtitleTranslationProgress = 0.0.obs;
+  final RxBool subtitleTranslationRunning = false.obs;
+  SubtitleTranslationJob? _subtitleJob;
+  Worker? _subtitlePositionWorker;
+  int _subtitleGeneration = 0;
+  bool _manualSubtitle = false;
+  bool _subtitleRefreshBusy = false;
+  int? _subtitleRefreshIndex;
+  int? _subtitleRefreshGeneration;
+  int _subtitleRequest = 0;
+  Future<void> _subtitleSetTail = Future<void>.value();
+  int _subtitleChunkSizeForVideo = Pref.subtitleChunkSize;
+  int _subtitleConcurrencyForVideo = Pref.subtitleConcurrency;
+  List<SubtitleTranslationProxy> _subtitleProxiesForVideo = const [];
   late final RxBool showVP = Pref.showViewPointsOverlay.obs;
   late final RxList<ViewPointSegment> viewPointList = <ViewPointSegment>[].obs;
 
@@ -1616,6 +1632,7 @@ class VideoDetailController extends GetxController
   }
 
   Future<void> _loadFileSubtitles() async {
+    final generation = _subtitleGeneration;
     // 与 _queryPlayInfo 一致:清理副字幕状态及 mpv secondary-sid 残留
     await setSecondarySubtitle(0);
     final indexFile = File(
@@ -1638,6 +1655,7 @@ class VideoDetailController extends GetxController
     }
 
     final validSubs = <Subtitle>[];
+    final localVtts = <int, ({bool isData, String id})>{};
     for (final sub in loaded) {
       final vttPath = path.join(
         entry.entryDirPath,
@@ -1645,78 +1663,341 @@ class VideoDetailController extends GetxController
         PathUtils.subtitleVttName(sub.lan),
       );
       if (File(vttPath).existsSync()) {
-        vttSubtitles[validSubs.length] = (isData: false, id: vttPath);
+        localVtts[validSubs.length] = (isData: false, id: vttPath);
         validSubs.add(sub);
       }
     }
-    if (validSubs.isEmpty) return;
-    if (isClosed) return;
-
-    subtitles.value = validSubs;
-
-    final idx = switch (Pref.subtitlePreferenceV2) {
-      SubtitlePrefType.off => 0,
-      SubtitlePrefType.on => 1,
-      SubtitlePrefType.withoutAi =>
-        subtitles.first.lan.startsWith('ai') ? 0 : 1,
-      SubtitlePrefType.auto =>
-        !subtitles.first.lan.startsWith('ai') ||
-                (PlatformUtils.isMobile &&
-                    (await FlutterVolumeController.getVolume() ?? 0.0) <= 0.0)
-            ? 1
-            : 0,
-      SubtitlePrefType.followLanguage => await _followLanguageIndex(),
-    };
-    if (!isClosed) await setSubtitle(idx);
-    if (Pref.subtitlePreferenceV2 == SubtitlePrefType.followLanguage) {
-      await _attachCompanionSubtitle(idx);
-    }
-  }
-
-  // 设定字幕轨道
-  Future<void> setSubtitle(int index) async {
-    if (index <= 0) {
-      await plPlayerController.videoPlayerController?.setSubtitleTrack(.no());
-      vttSubtitlesIndex.value = index;
+    if (validSubs.isEmpty ||
+        isClosed ||
+        generation != _subtitleGeneration ||
+        _manualSubtitle) {
       return;
     }
 
-    // 防御性兜底:主副不能同轨。正常路径下选择器已将副字幕所在轨置灰,
-    // 此处仅防绕过 UI 的调用或面板打开期间的状态竞态;冲突时副字幕让位。
-    if (index == vttSecondarySubtitlesIndex.value) {
-      await setSecondarySubtitle(0);
-    }
+    vttSubtitles.addAll(localVtts);
+    subtitles.value = validSubs;
 
-    final subUri = await _resolveVttUri(index - 1);
-    if (isClosed || subUri == null) return;
-    final sub = subtitles[index - 1];
-    await plPlayerController.videoPlayerController?.setSubtitleTrack(
-      SubtitleTrack(subUri, sub.lanDoc, sub.lan, uri: true),
-    );
-    vttSubtitlesIndex.value = index;
-    _maybeTranslateSubtitle(index);
+    await _selectPreferredSubtitle();
   }
 
-  /// 已经用译文替换过的主字幕轨下标（1-based，0 = 无），用来防止重挂时死循环。
-  int _translatedSubtitleIndex = 0;
+  // 设定字幕轨道
+  Future<void> setSubtitle(int index, {bool manual = false}) async {
+    final request = ++_subtitleRequest;
+    if (manual) {
+      _subtitleGeneration++;
+      _manualSubtitle = true;
+      _subtitleJob?.cancel();
+      _subtitleJob = null;
+      _subtitlePositionWorker?.dispose();
+      _subtitlePositionWorker = null;
+      subtitleTranslationStatus.value = '';
+      subtitleTranslationProgress.value = 0;
+      subtitleTranslationRunning.value = false;
+    }
+    if (index > subtitles.length) return;
+    final generation = _subtitleGeneration;
+    final sub = index > 0 ? subtitles[index - 1] : null;
+    final subUri = index > 0 ? await _resolveVttUri(index - 1) : null;
+    if (index > 0 && subUri == null) return;
+    final task = _subtitleSetTail.then((_) async {
+      if (isClosed ||
+          generation != _subtitleGeneration ||
+          request != _subtitleRequest) {
+        return;
+      }
+      if (index > 0 && index == vttSecondarySubtitlesIndex.value) {
+        await setSecondarySubtitle(0);
+      }
+      if (isClosed ||
+          generation != _subtitleGeneration ||
+          request != _subtitleRequest) {
+        return;
+      }
+      final player = plPlayerController.videoPlayerController;
+      if (index <= 0) {
+        await player?.setSubtitleTrack(.no());
+      } else {
+        await player?.setSubtitleTrack(
+          SubtitleTrack(subUri!, sub!.lanDoc, sub.lan, uri: true),
+        );
+      }
+      if (!isClosed &&
+          generation == _subtitleGeneration &&
+          request == _subtitleRequest) {
+        vttSubtitlesIndex.value = index;
+      }
+    });
+    _subtitleSetTail = task.catchError((Object _) {});
+    await task;
+  }
 
-  /// 正在显示的是中文字幕、且界面语言不是简体中文时，后台把这条轨翻成界面语言；
-  /// 翻好且用户没切走就用译文重挂一次。失败静默退回原轨，不影响播放。
-  Future<void> _maybeTranslateSubtitle(int index) async {
-    if (index <= 0 || index == _translatedSubtitleIndex) return;
-    if (!SubtitleTranslateService.needed) return;
-    final sub = subtitles[index - 1];
-    if (!SubtitleTranslateService.isChineseTrack(sub)) return;
-    final vtt = await SubtitleTranslateService.translatedVtt(
-      bvid: bvid,
-      cid: cid.value,
-      sub: sub,
-    );
-    if (vtt == null || isClosed) return;
-    if (vttSubtitlesIndex.value != index) return;
-    _translatedSubtitleIndex = index;
-    vttSubtitles[index - 1] = (isData: true, id: vtt);
-    await setSubtitle(index);
+  void _resetSubtitleTranslation() {
+    _subtitleGeneration++;
+    _subtitleRequest++;
+    _subtitleChunkSizeForVideo = Pref.subtitleChunkSize;
+    _subtitleConcurrencyForVideo = Pref.subtitleConcurrency;
+    try {
+      _subtitleProxiesForVideo = SubtitleTranslationProxy.parseMany(
+        Pref.subtitleTranslationProxies,
+        defaultType: Pref.subtitleTranslationProxyType == 'socks5'
+            ? SubtitleTranslationProxyType.socks5
+            : SubtitleTranslationProxyType.http,
+      );
+    } on FormatException {
+      _subtitleProxiesForVideo = const [];
+    }
+    _subtitleJob?.cancel();
+    _subtitleJob = null;
+    _subtitlePositionWorker?.dispose();
+    _subtitlePositionWorker = null;
+    _subtitleRefreshIndex = null;
+    _subtitleRefreshGeneration = null;
+    _manualSubtitle = false;
+    subtitleTranslationStatus.value = '';
+    subtitleTranslationProgress.value = 0;
+    subtitleTranslationRunning.value = false;
+  }
+
+  Future<void> _selectPreferredSubtitle() async {
+    if (isClosed || _manualSubtitle || subtitles.isEmpty) return;
+    final generation = _subtitleGeneration;
+    final choices = List<Subtitle>.of(subtitles);
+    while (choices.isNotEmpty) {
+      final selection = SubtitleSelectionPolicy.choose(
+        choices,
+        Pref.uiTranslateLang,
+        canTranslate: SubtitleTranslateService.needed,
+      );
+      if (selection.index == 0) return;
+      final selected = choices[selection.index - 1];
+      final index = subtitles.indexOf(selected) + 1;
+      final uri = await _resolveVttUri(index - 1);
+      if (isClosed || generation != _subtitleGeneration || _manualSubtitle) {
+        return;
+      }
+      if (uri == null) {
+        choices.remove(selected);
+        continue;
+      }
+      try {
+        await setSubtitle(index);
+      } catch (_) {
+        choices.remove(selected);
+        continue;
+      }
+      if (isClosed || generation != _subtitleGeneration || _manualSubtitle) {
+        return;
+      }
+      if (vttSubtitlesIndex.value != index) continue;
+      if (selected.langTag == 'zh' && Pref.uiTranslateLang != 'zh-CN') {
+        unawaited(
+          _startSubtitleTranslation(
+            selected,
+            index,
+            generation,
+            allowNewTranslation: selection.translate,
+          ),
+        );
+      }
+      return;
+    }
+    subtitleTranslationStatus.value = uiTx('字幕加载失败');
+    subtitleTranslationRunning.value = false;
+  }
+
+  Future<void> _startSubtitleTranslation(
+    Subtitle track,
+    int index,
+    int generation, {
+    required bool allowNewTranslation,
+  }) async {
+    if (allowNewTranslation) {
+      subtitleTranslationStatus.value = uiTx('正在准备实时翻译字幕');
+      subtitleTranslationProgress.value = 0;
+      subtitleTranslationRunning.value = true;
+    }
+    try {
+      List<SubtitleCue> cues;
+      final cached = vttSubtitles[index - 1];
+      if (cached != null) {
+        cues = SubtitleCues.fromVtt(
+          cached.isData ? cached.id : await File(cached.id).readAsString(),
+        );
+      } else {
+        final url = track.subtitleUrl;
+        if (url == null || url.isEmpty) throw StateError('No subtitle source');
+        final body = await VideoHttp.fetchSubtitleBody(url);
+        if (body == null) throw StateError('No subtitle body');
+        cues = SubtitleCues.fromBody(body);
+      }
+      if (cues.isEmpty) throw StateError('No subtitle cues');
+      if (isClosed || generation != _subtitleGeneration || _manualSubtitle) {
+        return;
+      }
+      final target = Pref.uiTranslateLang;
+      if (allowNewTranslation) {
+        subtitleTranslationStatus.value = uiTxP(
+          '正在实时翻译字幕：{0}/{1}句（{2}%）',
+          [0, cues.length, 0],
+        );
+      }
+      final proxyPool = SubtitleTranslationProxyPool(_subtitleProxiesForVideo);
+      final job = SubtitleTranslationJob(
+        cues: cues,
+        chunkSize: _subtitleChunkSizeForVideo,
+        concurrency: proxyPool.enabled
+            ? proxyPool.workerCount
+            : _subtitleConcurrencyForVideo,
+        translate: (lines) async {
+          if (Pref.uiTranslateLang != target) {
+            throw StateError('Subtitle language changed');
+          }
+          final translated = await SubtitleTranslateService.translateChunk(
+            lines,
+          );
+          if (Pref.uiTranslateLang != target) {
+            throw StateError('Subtitle language changed');
+          }
+          return translated;
+        },
+        translateWithContext: (lines, context) async {
+          if (Pref.uiTranslateLang != target) {
+            throw StateError('Subtitle language changed');
+          }
+          final translated = proxyPool.enabled
+              ? await proxyPool.run((proxy) async {
+                  try {
+                    return await SubtitleTranslateService.translateChunk(
+                      lines,
+                      contextLines: context,
+                      proxy: proxy,
+                    );
+                  } on AiApiException catch (error) {
+                    if (error.statusCode == null) {
+                      proxyPool.markUnavailable(proxy);
+                    }
+                    rethrow;
+                  }
+                })
+              : await SubtitleTranslateService.translateChunk(
+                  lines,
+                  contextLines: context,
+                );
+          if (Pref.uiTranslateLang != target) {
+            throw StateError('Subtitle language changed');
+          }
+          return translated;
+        },
+        cacheKey: '$bvid/${cid.value}/${track.lan}/$target',
+        positionSeconds: plPlayerController.position.value,
+        onUpdate: (vtt, progress) {
+          if (isClosed ||
+              generation != _subtitleGeneration ||
+              _manualSubtitle ||
+              vttSubtitlesIndex.value != index)
+            return;
+          final previous = vttSubtitles[index - 1];
+          vttSubtitles[index - 1] = (isData: true, id: vtt);
+          final percent = (progress.ratio * 100).round();
+          subtitleTranslationProgress.value = progress.ratio;
+          subtitleTranslationRunning.value = !progress.isComplete;
+          subtitleTranslationStatus.value = progress.failedChunks > 0
+              ? uiTxP(
+                  '字幕实时翻译部分失败：已处理{0}/{1}句（{2}%），'
+                  '已翻译{3}句，{4}个分块失败',
+                  [
+                    progress.processedCues,
+                    progress.totalCues,
+                    percent,
+                    progress.translatedCues,
+                    progress.failedChunks,
+                  ],
+                )
+              : progress.isComplete
+              ? uiTxP(
+                  '字幕翻译完成：{0}/{1}句（100%）',
+                  [progress.totalCues, progress.totalCues],
+                )
+              : uiTxP(
+                  '正在实时翻译字幕：{0}/{1}句（{2}%）',
+                  [
+                    progress.processedCues,
+                    progress.totalCues,
+                    percent,
+                  ],
+                );
+          if (previous?.id != vtt || previous?.isData != true) {
+            unawaited(_refreshTranslatedSubtitle(index, generation));
+          }
+        },
+      );
+      _subtitleJob = job;
+      if (await job.loadCached()) {
+        if (identical(_subtitleJob, job)) _subtitleJob = null;
+        return;
+      }
+      if (isClosed ||
+          generation != _subtitleGeneration ||
+          _manualSubtitle ||
+          vttSubtitlesIndex.value != index) {
+        if (identical(_subtitleJob, job)) _subtitleJob = null;
+        return;
+      }
+      if (!allowNewTranslation || !SubtitleTranslateService.needed) {
+        subtitleTranslationStatus.value = '';
+        subtitleTranslationProgress.value = 0;
+        subtitleTranslationRunning.value = false;
+        if (identical(_subtitleJob, job)) _subtitleJob = null;
+        return;
+      }
+      _subtitlePositionWorker?.dispose();
+      _subtitlePositionWorker = ever<int>(
+        plPlayerController.position,
+        job.setPosition,
+      );
+      try {
+        await job.run();
+      } finally {
+        if (identical(_subtitleJob, job)) {
+          _subtitlePositionWorker?.dispose();
+          _subtitlePositionWorker = null;
+          _subtitleJob = null;
+        }
+      }
+    } catch (_) {
+      if (!isClosed && generation == _subtitleGeneration && !_manualSubtitle) {
+        subtitleTranslationStatus.value = uiTx('字幕翻译失败');
+        subtitleTranslationRunning.value = false;
+      }
+    }
+  }
+
+  Future<void> _refreshTranslatedSubtitle(int index, int generation) async {
+    _subtitleRefreshIndex = index;
+    _subtitleRefreshGeneration = generation;
+    if (_subtitleRefreshBusy) return;
+    _subtitleRefreshBusy = true;
+    try {
+      while (_subtitleRefreshIndex != null) {
+        final next = _subtitleRefreshIndex!;
+        final nextGeneration = _subtitleRefreshGeneration;
+        _subtitleRefreshIndex = null;
+        _subtitleRefreshGeneration = null;
+        if (!isClosed &&
+            !_manualSubtitle &&
+            nextGeneration == _subtitleGeneration &&
+            vttSubtitlesIndex.value == next) {
+          try {
+            await setSubtitle(next);
+          } catch (_) {
+            subtitleTranslationStatus.value = uiTx('字幕加载失败');
+            subtitleTranslationRunning.value = false;
+          }
+        }
+      }
+    } finally {
+      _subtitleRefreshBusy = false;
+    }
   }
 
   // 副字幕(双语字幕):0 表示关闭,>0 对应 subtitles[index - 1]
@@ -1747,80 +2028,30 @@ class VideoDetailController extends GetxController
   /// 取 subtitles[subIdx] 的 VTT 播放地址(本地文件路径或 memory:// 数据),
   /// 网络字幕转换结果缓存于 [vttSubtitles]。
   Future<String?> _resolveVttUri(int subIdx) async {
+    if (subIdx < 0 || subIdx >= subtitles.length) return null;
+    final generation = _subtitleGeneration;
+    final track = subtitles[subIdx];
     ({bool isData, String id})? subtitle = vttSubtitles[subIdx];
     if (subtitle == null) {
-      final result = await VideoHttp.getSubtitles(
-        subtitles[subIdx].subtitleUrl!,
-      );
-      if (result == null) return null;
+      final url = track.subtitleUrl;
+      if (url == null || url.isEmpty) return null;
+      String? result;
+      try {
+        result = await VideoHttp.getSubtitles(url);
+      } catch (_) {
+        return null;
+      }
+      if (result == null ||
+          isClosed ||
+          generation != _subtitleGeneration ||
+          subIdx >= subtitles.length ||
+          !identical(subtitles[subIdx], track)) {
+        return null;
+      }
       subtitle = (isData: true, id: result);
       vttSubtitles[subIdx] = subtitle;
     }
     return subtitle.isData ? 'memory://${subtitle.id}' : subtitle.id;
-  }
-
-  /// 「跟随界面语言」：挑一条与当前界面语言一致的轨（1-based，0 = 关闭）。
-  ///
-  /// 界面语言取 [Pref.uiTranslateLang] —— 界面翻译关掉时界面本身就是简体中文，
-  /// 所以那时按 `zh-CN` 算，而不是按那个可能已被改成英语的配置值。
-  ///
-  /// 挑不到一致语言的轨时**退回**「静音时开第一条」的旧规则：宁可显示一条语言
-  /// 不对的字幕，也比什么都不显示强 —— 官方 APP 在没有译文轨时也是照原样显示。
-  Future<int> _followLanguageIndex() async {
-    if (subtitles.isEmpty) {
-      return 0;
-    }
-    final target = Pref.uiTranslateEnabled ? Pref.uiTranslateLang : 'zh-CN';
-    var best = -1;
-    var bestScore = 0;
-    for (var i = 0; i < subtitles.length; i++) {
-      final score = Subtitle.langScore(subtitles[i].lan, target);
-      if (score > bestScore) {
-        bestScore = score;
-        best = i;
-      }
-    }
-    if (best >= 0) {
-      return best + 1;
-    }
-    return !subtitles.first.lan.startsWith('ai') ||
-            (PlatformUtils.isMobile &&
-                (await FlutterVolumeController.getVolume() ?? 0.0) <= 0.0)
-        ? 1
-        : 0;
-  }
-
-  /// 跟随界面语言时的「双语」补位：主轨与别的轨不同语言时，把另一条挂成副字幕。
-  ///
-  /// 对齐官方 APP 的双语字幕（界面英语 → 主字幕英文、副字幕中文）。两个约束：
-  /// 只补**空位**（副字幕原本关闭时才动，绝不覆盖用户已选好的副字幕）；同语言
-  /// 多条时优先挑中文 —— B 站内容绝大多数以中文为原文。
-  Future<void> _attachCompanionSubtitle(int mainIdx) async {
-    if (mainIdx <= 0 ||
-        vttSecondarySubtitlesIndex.value != 0 ||
-        vttSubtitlesIndex.value != mainIdx) {
-      return;
-    }
-    final mainTag = subtitles[mainIdx - 1].langTag;
-    // 主轨已经就是排序后的第一条（通常即原文语言）时不补双语：官方 APP 的双语
-    // 是「译文 + 原文」，原文当主字幕时再挂一条同语言副字幕没有意义。
-    if (mainTag.isEmpty || mainTag == subtitles.first.langTag) {
-      return;
-    }
-    var best = -1;
-    for (var i = 0; i < subtitles.length; i++) {
-      if (i == mainIdx - 1 || subtitles[i].langTag == mainTag) {
-        continue;
-      }
-      if (best == -1 ||
-          (subtitles[i].langTag == 'zh' && subtitles[best].langTag != 'zh')) {
-        best = i;
-      }
-    }
-    if (best == -1 || isClosed) {
-      return;
-    }
-    await setSecondarySubtitle(best + 1);
   }
 
   // interactive video
@@ -1874,6 +2105,8 @@ class VideoDetailController extends GetxController
   }
 
   Future<void> _queryPlayInfo() async {
+    _resetSubtitleTranslation();
+    final generation = _subtitleGeneration;
     vttSubtitles.clear();
     vttSubtitlesIndex.value = 0;
     // 副字幕不跨 P/视频保留;同时清掉 mpv 的 secondary-sid 选项,
@@ -1888,6 +2121,7 @@ class VideoDetailController extends GetxController
       seasonId: seasonId,
       epId: epId,
     );
+    if (isClosed || generation != _subtitleGeneration) return;
     if (res case Success(:final response)) {
       if (response.lastPlayTime != null &&
           response.lastPlayTime! > 0 &&
@@ -1949,13 +2183,14 @@ class VideoDetailController extends GetxController
       }
 
       if (response.subtitle?.subtitles case final sub? when (sub.isNotEmpty)) {
-        _setSubtitle(sub);
+        await _setSubtitle(sub, generation);
       } else if (!Accounts.heartbeat.isLogin) {
         final res = await DmGrpc.dmView(aid, cid.value);
+        if (isClosed || generation != _subtitleGeneration) return;
         if (res case Success(:final response)) {
           if (response.hasSubtitle() &&
               response.subtitle.subtitles.isNotEmpty) {
-            _setSubtitle(
+            await _setSubtitle(
               response.subtitle.subtitles
                   .map(
                     (i) => Subtitle(
@@ -1970,6 +2205,7 @@ class VideoDetailController extends GetxController
                   )
                   .toList()
                 ..sort(),
+              generation,
             );
           }
         } else {
@@ -1979,32 +2215,12 @@ class VideoDetailController extends GetxController
     }
   }
 
-  Future<void> _setSubtitle(List<Subtitle> sub) async {
+  Future<void> _setSubtitle(List<Subtitle> sub, int generation) async {
+    if (isClosed || _manualSubtitle || generation != _subtitleGeneration) {
+      return;
+    }
     subtitles.value = sub;
-    var idx = switch (Pref.subtitlePreferenceV2) {
-      .off => 0,
-      .on => 1,
-      .withoutAi => sub.first.lan.startsWith('ai') ? 0 : 1,
-      .auto =>
-        !sub.first.lan.startsWith('ai') ||
-                (PlatformUtils.isMobile &&
-                    (await FlutterVolumeController.getVolume() ?? 0.0) <= 0.0)
-            ? 1
-            : 0,
-      .followLanguage => await _followLanguageIndex(),
-    };
-    // 字幕偏好保持默认（默认不显示）时：界面语言不是简体中文、且视频自带中文轨，
-    // 就自动开那条中文字幕，译文由 setSubtitle 里的后台翻译补上。
-    // 用户显式改过字幕偏好时不动它 —— 尊重用户的选择。
-    if (Pref.subtitlePreferenceV2 == SubtitlePrefType.off &&
-        SubtitleTranslateService.needed) {
-      final zhIdx = sub.indexWhere(SubtitleTranslateService.isChineseTrack);
-      if (zhIdx >= 0) idx = zhIdx + 1;
-    }
-    await setSubtitle(idx);
-    if (Pref.subtitlePreferenceV2 == SubtitlePrefType.followLanguage) {
-      await _attachCompanionSubtitle(idx);
-    }
+    await _selectPreferredSubtitle();
   }
 
   void updateMediaListHistory(int aid) {
@@ -2044,6 +2260,7 @@ class VideoDetailController extends GetxController
 
   @override
   void onClose() {
+    _resetSubtitleTranslation();
     plPlayerController.onNeedsPlayerInit = null;
     plPlayerController.onNeedLowerQuality = null;
     plPlayerController.onNeedRestoreQuality = null;
@@ -2078,6 +2295,7 @@ class VideoDetailController extends GetxController
   }
 
   void onReset({bool isStein = false}) {
+    _resetSubtitleTranslation();
     if (isFileSource) {
       cacheLocalProgress();
     }
@@ -2383,7 +2601,6 @@ class VideoDetailController extends GetxController
       return null;
     }
   }
-
 
   /// 缓存音频：按用户选的音质档位，把音轨单独存成原格式音频文件。
   Future<void> onDownloadAudio(BuildContext context) async {

@@ -537,8 +537,11 @@ class HeaderControlState extends State<HeaderControl>
                   title: Text(uiTx('定时关闭'), style: titleStyle),
                   subtitle: shutdownTimerService.isActive
                       ? ShutdownPanel(
-                          buildCountdownText: (text) =>
-                              Text(text == null ? uiTx('已结束') : uiTxP('剩余 {0}', [text])),
+                          buildCountdownText: (text) => Text(
+                            text == null
+                                ? uiTx('已结束')
+                                : uiTxP('剩余 {0}', [text]),
+                          ),
                           builder: (
                             context,
                             countdown,
@@ -604,7 +607,9 @@ class HeaderControlState extends State<HeaderControl>
                         subtitle: Text(
                           Pref.enableAppVolume
                               ? uiTx('应用内音量开启时不生效')
-                              : uiTxP('当前: {0}%', [Pref.playerVolume.toStringAsFixed(0)]),
+                              : uiTxP('当前: {0}%', [
+                                  Pref.playerVolume.toStringAsFixed(0),
+                                ]),
                         ),
                         onTap: () => showPlayerVolumeDialog(
                           context,
@@ -618,7 +623,8 @@ class HeaderControlState extends State<HeaderControl>
                     dense: true,
                     title: Text(uiTx('CDN 设置'), style: titleStyle),
                     leading: const Icon(MdiIcons.cloudPlusOutline, size: 20),
-                    subtitle: Text(uiTx('当前：${VideoUtils.effectiveCdnDesc()}，无法播放请切换'),
+                    subtitle: Text(
+                      uiTx('当前：${VideoUtils.effectiveCdnDesc()}，无法播放请切换'),
                       style: subTitleStyle,
                     ),
                     onTap: () async {
@@ -690,7 +696,8 @@ class HeaderControlState extends State<HeaderControl>
                                 plPlayerController.onlyPlayAudio.value =
                                     !onlyPlayAudio;
                                 plPlayerController.markManualOnlyPlayAudio(
-                                    !onlyPlayAudio);
+                                  !onlyPlayAudio,
+                                );
                                 final player =
                                     plPlayerController.videoPlayerController!;
                                 if (onlyPlayAudio &&
@@ -732,7 +739,8 @@ class HeaderControlState extends State<HeaderControl>
                     },
                     leading: const Icon(Icons.play_circle_outline, size: 20),
                     title: Text(uiTx('选择画质'), style: titleStyle),
-                    subtitle: Text(uiTx('当前画质 ${videoDetailCtr.currentVideoQa.value?.desc}'),
+                    subtitle: Text(
+                      uiTx('当前画质 ${videoDetailCtr.currentVideoQa.value?.desc}'),
                       style: subTitleStyle,
                     ),
                   ),
@@ -745,7 +753,8 @@ class HeaderControlState extends State<HeaderControl>
                       },
                       leading: const Icon(Icons.album_outlined, size: 20),
                       title: Text(uiTx('选择音质'), style: titleStyle),
-                      subtitle: Text(uiTx('当前音质 ${videoDetailCtr.currentAudioQa!.desc}'),
+                      subtitle: Text(
+                        uiTx('当前音质 ${videoDetailCtr.currentAudioQa!.desc}'),
                         style: subTitleStyle,
                       ),
                     ),
@@ -757,7 +766,10 @@ class HeaderControlState extends State<HeaderControl>
                     },
                     leading: const Icon(Icons.av_timer_outlined, size: 20),
                     title: Text(uiTx('解码格式'), style: titleStyle),
-                    subtitle: Text(uiTx('当前解码格式 ${videoDetailCtr.currentDecodeFormats.description}'),
+                    subtitle: Text(
+                      uiTx(
+                        '当前解码格式 ${videoDetailCtr.currentDecodeFormats.description}',
+                      ),
                       style: subTitleStyle,
                     ),
                   ),
@@ -859,7 +871,10 @@ class HeaderControlState extends State<HeaderControl>
                             lanDoc: name.split('.').firstOrNull ?? name,
                           ),
                         );
-                        await videoDetailCtr.setSubtitle(length + 1);
+                        await videoDetailCtr.setSubtitle(
+                          length + 1,
+                          manual: true,
+                        );
                       }
                     } catch (e) {
                       SmartDialog.showToast(uiTx('加载失败: $e'));
@@ -1153,7 +1168,9 @@ class HeaderControlState extends State<HeaderControl>
                               videoDetailCtr
                                 ..currentDecodeFormats = format
                                 ..updatePlayer();
-                              SmartDialog.showToast(uiTx("解码已变为：${format.name}"));
+                              SmartDialog.showToast(
+                                uiTx("解码已变为：${format.name}"),
+                              );
                             },
                             contentPadding: const .symmetric(horizontal: 20),
                             title: Text(uiTx(format.description)),
@@ -1487,7 +1504,9 @@ class HeaderControlState extends State<HeaderControl>
                   ),
                   const SizedBox(height: 10),
                   ...sliderRow(
-                    title: uiTxP('字体大小 {0}%', [(fontScale * 100).toStringAsFixed(1)]),
+                    title: uiTxP('字体大小 {0}%', [
+                      (fontScale * 100).toStringAsFixed(1),
+                    ]),
                     reset: isPrimary
                         ? resetBtn(theme, '100.0%', () => updateFontScale(1.0))
                         : resetBtn(theme, '80.0%', () => updateFontScale(0.8)),
@@ -1499,8 +1518,9 @@ class HeaderControlState extends State<HeaderControl>
                     onChanged: updateFontScale,
                   ),
                   ...sliderRow(
-                    title:
-                        uiTxP('全屏字体大小 {0}%', [(fontScaleFS * 100).toStringAsFixed(1)]),
+                    title: uiTxP('全屏字体大小 {0}%', [
+                      (fontScaleFS * 100).toStringAsFixed(1),
+                    ]),
                     reset: isPrimary
                         ? resetBtn(
                             theme,
@@ -1582,8 +1602,7 @@ class HeaderControlState extends State<HeaderControl>
                       onChanged: updateSecondarySpacing,
                     ),
                   ...sliderRow(
-                    title:
-                        '背景不透明度 ${(bgOpacity * 100).toStringAsFixed(1)}%',
+                    title: '背景不透明度 ${(bgOpacity * 100).toStringAsFixed(1)}%',
                     reset: resetBtn(theme, '67%', () => updateOpacity(0.67)),
                     min: 0,
                     max: 1,
@@ -1792,7 +1811,8 @@ class HeaderControlState extends State<HeaderControl>
                 child: FractionalTranslation(
                   translation: const Offset(0, 1),
                   child: Obx(
-                    () => Text(uiTx('${introController.total.value}人正在看'),
+                    () => Text(
+                      uiTx('${introController.total.value}人正在看'),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
@@ -1963,7 +1983,8 @@ class HeaderControlState extends State<HeaderControl>
                 height: btnHeight,
                 child: Obx(
                   () {
-                    final enableShowDanmaku = plPlayerController.enableShowDanmaku.value;
+                    final enableShowDanmaku =
+                        plPlayerController.enableShowDanmaku.value;
                     return IconButton(
                       tooltip: uiTx("${enableShowDanmaku ? '关闭' : '开启'}弹幕"),
                       style: btnStyle,
@@ -2256,7 +2277,8 @@ class HeaderControlState extends State<HeaderControl>
             maintainAnimation: true,
             maintainState: true,
             maintainSize: true,
-            child: Text(uiTx('0人正在看'),
+            child: Text(
+              uiTx('0人正在看'),
               maxLines: 1,
               style: TextStyle(
                 color: Colors.white,

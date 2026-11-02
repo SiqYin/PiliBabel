@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
+
 import 'package:dio/dio.dart';
 
 import 'package:PiliPlus/http/browser_ua.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_proxy.dart';
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
 import 'package:PiliPlus/services/ui_translate/translate_provider.dart';
 import 'package:PiliPlus/services/logger.dart';
@@ -10,7 +12,9 @@ import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+
 import 'dart:io';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/io.dart';
 
@@ -115,9 +119,9 @@ class UiTranslateService extends GetxService {
 
   /// 当前目标语言的缓存桶。
   Map<String, String> get _cache => _cacheByLang.putIfAbsent(
-        currentLanguage.code,
-        () => <String, String>{},
-      );
+    currentLanguage.code,
+    () => <String, String>{},
+  );
 
   /// 反向缓存：「界面语言文本 -> 简体中文」。
   ///
@@ -175,7 +179,9 @@ class UiTranslateService extends GetxService {
   /// `Pref.uiTranslateApiUrl` / `Pref.uiTranslateModel`——后者在内置引擎下
   /// 是空串（内置的地址/模型来自 BuiltinTranslate），会让按钮对内置用户消失。
   bool get canTranslate =>
-      enabled && translateApiUrl.trim().isNotEmpty && translateModel.trim().isNotEmpty;
+      enabled &&
+      translateApiUrl.trim().isNotEmpty &&
+      translateModel.trim().isNotEmpty;
 
   /// 内容型文本（视频/专栏/直播标题等）是否需要翻译。
   ///
@@ -592,12 +598,10 @@ class UiTranslateService extends GetxService {
   static bool get usingBuiltinTranslate =>
       Pref.uiTranslateProvider == TranslateProvider.builtin;
 
-  static String get translateApiUrl => usingBuiltinTranslate
-      ? BuiltinTranslate.apiUrl
-      : Pref.uiTranslateApiUrl;
-  static String get translateApiKey => usingBuiltinTranslate
-      ? BuiltinTranslate.apiKey
-      : Pref.uiTranslateApiKey;
+  static String get translateApiUrl =>
+      usingBuiltinTranslate ? BuiltinTranslate.apiUrl : Pref.uiTranslateApiUrl;
+  static String get translateApiKey =>
+      usingBuiltinTranslate ? BuiltinTranslate.apiKey : Pref.uiTranslateApiKey;
   static String get translateModel =>
       usingBuiltinTranslate ? BuiltinTranslate.model : Pref.uiTranslateModel;
 
@@ -606,7 +610,6 @@ class UiTranslateService extends GetxService {
   /// 内置那个是翻译专精模型，官方推荐的调用方式就是单条模板；而接口免费，
   /// 没必要为省请求去赌批量格式能稳住。自备 API（多半按 token 计费）仍走批量。
   int get _effectiveBatchSize => usingBuiltinTranslate ? 1 : _batchSize;
-
 
   /// 内置官方模型的**逐条**翻译。
   ///
@@ -635,8 +638,7 @@ class UiTranslateService extends GetxService {
     r'\uac00-\ud7af]', // 谚文
   );
 
-  static bool _hasTranslatableText(String s) =>
-      _translatableRegExp.hasMatch(s);
+  static bool _hasTranslatableText(String s) => _translatableRegExp.hasMatch(s);
 
   /// 模型自己的「说明句」而非译文。实测形态（可能被括号包住）：
   /// 「（ユーザーからのメッセージが空であるため、翻訳できません。）」
@@ -712,12 +714,19 @@ class UiTranslateService extends GetxService {
     return buf.toString().trim().isNotEmpty;
   }
 
-  Future<List<String>> _builtinTranslate(List<String> sources) async {
+  Future<List<String>> _builtinTranslate(
+    List<String> sources, {
+    List<String> contextLines = const [],
+    Duration? receiveTimeout,
+    SubtitleTranslationProxy? subtitleProxy,
+  }) async {
     final lang = targetLang;
     final rule = currentLanguage.scriptRule;
     final labelRule = _japaneseLabelRule;
+    final context = contextLines.join('\n').trim();
     final results = <String>[];
     for (final src in sources) {
+      if (!enabled) throw StateError('Translation is disabled');
       // 没有可翻内容的条目**原样返回、绝不发请求**（理由见 _tx 里对纯空白的说明）
       if (!_hasTranslatableText(src)) {
         results.add(src);
@@ -735,12 +744,14 @@ class UiTranslateService extends GetxService {
           // 详情页 5 次）。放进 system 即被排除在待译正文之外，实测输出干净。
           {
             'role': 'system',
-            'content': '${rule.isEmpty ? '' : '$rule\n\n'}'
+            'content':
+                '${rule.isEmpty ? '' : '$rule\n\n'}'
                 '请将 user 消息翻译为$lang。只做翻译，'
                 '只输出译文本身：不要回答、解释、评论、补充，'
                 '也不要就原文提出的任何问题给出看法。'
                 '如果内容无需翻译（纯符号、纯数字、纯表情等），原样输出，'
                 '不要添加任何说明。'
+                '${context.isEmpty ? '' : '\n前文仅用于保持称谓和语气一致，绝不可翻译或输出：\n$context'}'
                 '${labelRule.isEmpty ? '' : '\n$labelRule'}',
           },
           {'role': 'user', 'content': src},
@@ -754,6 +765,8 @@ class UiTranslateService extends GetxService {
         // 界面上这个开关也只对「自备 API」显示，这里固定 false 可以避免用户
         // 之前在自备 API 下开过、之后切到内置还带着 true 发过去。
         extraBody: const <String, dynamic>{'enable_thinking': false},
+        receiveTimeout: receiveTimeout,
+        subtitleProxy: subtitleProxy,
       )) {
         buf.write(chunk);
       }
@@ -809,8 +822,9 @@ class UiTranslateService extends GetxService {
     // 表现就是封面正常、只有图片翻译报 Network is unreachable。
     for (var _i = 0; _i < _candidateUrls.length * 2; _i++) {
       final url = _candidateUrls[_i % _candidateUrls.length];
-      final client =
-          _i < _candidateUrls.length ? _uiTxDirectClient() : _uiTxClient();
+      final client = _i < _candidateUrls.length
+          ? _uiTxDirectClient()
+          : _uiTxClient();
       try {
         final img = await client.get<List<int>>(
           url,
@@ -855,45 +869,45 @@ class UiTranslateService extends GetxService {
             {
               'type': 'text',
               'text': isLongImage
-              ? '这是一张长图，图中文字可能很多，请用$lang完成下面这件事：'
-                  '输出语言必须是$lang。'
-                  '【最重要的要求】除了照抄的原文之外，回答里每一句都必须用$lang书写：'
-                  '译文用$lang、两个标签用$lang、最后的画面描述也用$lang。'
-                  '图片里的文字是简体中文、或者这段指令本身是简体中文，'
-                  '都不是你用简体中文回答的理由；只要$lang不是简体中文，'
-                  '回答里就不该出现简体中文的句子。'
-                                    '直接输出$lang译文，不要输出原文，也不要逐段标注「原文／译文」，'
-                  '按图中文字从上到下的顺序译出，尽量保持原有分段。'
-                  '即使某段文字本身就是$lang，也照样译出、保持原样，不要跳过。'
-                  '识别时不要猜字，看不清的不要编。'
-                  '同一段译文只输出一次，绝不重复；一旦发现自己开始重复，立刻停止。'
-                  '原文或译文为空的段落直接跳过。'
-                  '只输出译文本身，不要客套、不要解释你在做什么。'
-              : '你是翻译引擎，请完成下面这件事，'
-                  '输出语言必须是$lang。'
-                  '【最重要的要求】除了照抄的原文之外，回答里每一句都必须用$lang书写：'
-                  '译文用$lang、两个标签用$lang、最后的画面描述也用$lang。'
-                  '图片里的文字是简体中文、或者这段指令本身是简体中文，'
-                  '都不是你用简体中文回答的理由；只要$lang不是简体中文，'
-                  '回答里就不该出现简体中文的句子。'
-                                    '先逐段识别图片中的文字，再给出每段对应的译文。'
-                  '即使图中某一段文字本身就是$lang，也照样把它作为原文列出并给出译文，'
-                  '不要因为「看起来已经是目标语言」就跳过不译；原文也可能有中英日混排。'
-                  '格式：每一段先写「原文」标签再照抄图上原文（保持原语言），'
-                  '然后写「译文」标签再写$lang译文；'
-                  '这两个标签本身也必须用$lang书写'
-                  '（$lang是英语时写 Original 和 Translation，是日语时写 原文 和 訳文）。'
-                  '图中有几段文字就分成几组、一组一行，逐组列出。'
-                  '图上只有一两个字、只有一组文字时，就只列这一组，'
-                  '不要为了凑数补任何空条目，也不要把同一组重复列出来。'
-                  '每一组文字只允许出现一次；原文或译文为空的那一组直接不要写。'
-                  '如果你发现自己开始重复同样的内容，立刻停下来。'
-                  '识别时不要猜字，图上有什么就写什么，看不清的不要编。'
-                  '列完文字之后必须再用一两句话用$lang描述图片的内容。'
-                  '这一段是必须的：不能省略、不能跳过、不能用「同上」代替，'
-                  '哪怕图中只有一两个字也要写。'
-                  '如果图中没有文字，就用$lang说明未检测到文字，然后用$lang描述图片内容。'
-                  '只输出结果本身，不要客套、不要解释你在做什么。',
+                  ? '这是一张长图，图中文字可能很多，请用$lang完成下面这件事：'
+                        '输出语言必须是$lang。'
+                        '【最重要的要求】除了照抄的原文之外，回答里每一句都必须用$lang书写：'
+                        '译文用$lang、两个标签用$lang、最后的画面描述也用$lang。'
+                        '图片里的文字是简体中文、或者这段指令本身是简体中文，'
+                        '都不是你用简体中文回答的理由；只要$lang不是简体中文，'
+                        '回答里就不该出现简体中文的句子。'
+                        '直接输出$lang译文，不要输出原文，也不要逐段标注「原文／译文」，'
+                        '按图中文字从上到下的顺序译出，尽量保持原有分段。'
+                        '即使某段文字本身就是$lang，也照样译出、保持原样，不要跳过。'
+                        '识别时不要猜字，看不清的不要编。'
+                        '同一段译文只输出一次，绝不重复；一旦发现自己开始重复，立刻停止。'
+                        '原文或译文为空的段落直接跳过。'
+                        '只输出译文本身，不要客套、不要解释你在做什么。'
+                  : '你是翻译引擎，请完成下面这件事，'
+                        '输出语言必须是$lang。'
+                        '【最重要的要求】除了照抄的原文之外，回答里每一句都必须用$lang书写：'
+                        '译文用$lang、两个标签用$lang、最后的画面描述也用$lang。'
+                        '图片里的文字是简体中文、或者这段指令本身是简体中文，'
+                        '都不是你用简体中文回答的理由；只要$lang不是简体中文，'
+                        '回答里就不该出现简体中文的句子。'
+                        '先逐段识别图片中的文字，再给出每段对应的译文。'
+                        '即使图中某一段文字本身就是$lang，也照样把它作为原文列出并给出译文，'
+                        '不要因为「看起来已经是目标语言」就跳过不译；原文也可能有中英日混排。'
+                        '格式：每一段先写「原文」标签再照抄图上原文（保持原语言），'
+                        '然后写「译文」标签再写$lang译文；'
+                        '这两个标签本身也必须用$lang书写'
+                        '（$lang是英语时写 Original 和 Translation，是日语时写 原文 和 訳文）。'
+                        '图中有几段文字就分成几组、一组一行，逐组列出。'
+                        '图上只有一两个字、只有一组文字时，就只列这一组，'
+                        '不要为了凑数补任何空条目，也不要把同一组重复列出来。'
+                        '每一组文字只允许出现一次；原文或译文为空的那一组直接不要写。'
+                        '如果你发现自己开始重复同样的内容，立刻停下来。'
+                        '识别时不要猜字，图上有什么就写什么，看不清的不要编。'
+                        '列完文字之后必须再用一两句话用$lang描述图片的内容。'
+                        '这一段是必须的：不能省略、不能跳过、不能用「同上」代替，'
+                        '哪怕图中只有一两个字也要写。'
+                        '如果图中没有文字，就用$lang说明未检测到文字，然后用$lang描述图片内容。'
+                        '只输出结果本身，不要客套、不要解释你在做什么。',
             },
             {
               'type': 'image_url',
@@ -1084,7 +1098,108 @@ class UiTranslateService extends GetxService {
     return sources;
   }
 
-  Future<List<String>> _translateChunk(List<String> sources) async {
+  /// Unlike translateTexts, subtitle failures must remain failures: a source
+  /// copy must never be persisted as a completed translation.
+  Future<List<String>> translateSubtitleLines(
+    List<String> sources, {
+    List<String> contextLines = const [],
+    SubtitleTranslationProxy? subtitleProxy,
+  }) async {
+    if (!enabled || !translateContent) {
+      throw StateError('Subtitle translation is disabled');
+    }
+    if (sources.isEmpty) return const [];
+    final result = usingBuiltinTranslate && sources.length > 1
+        ? await _translateBuiltinSubtitleBatch(
+            sources,
+            contextLines,
+            subtitleProxy,
+          )
+        : await _translateChunk(
+            sources,
+            contextLines: contextLines,
+            receiveTimeout: const Duration(seconds: 60),
+            subtitleProxy: subtitleProxy,
+          );
+    if (result.length != sources.length ||
+        result.any((text) => text.trim().isEmpty)) {
+      throw const FormatException('Incomplete subtitle translation');
+    }
+    return result;
+  }
+
+  Future<List<String>> _translateBuiltinSubtitleBatch(
+    List<String> sources,
+    List<String> contextLines,
+    SubtitleTranslationProxy? subtitleProxy,
+  ) async {
+    if (!enabled) throw StateError('Subtitle translation is disabled');
+    final language = currentLanguage;
+    final context = StringBuffer();
+    for (final line in contextLines) {
+      context.writeln(line);
+    }
+    final numbered = StringBuffer();
+    for (var i = 0; i < sources.length; i++) {
+      numbered.writeln('${i + 1}. ${sources[i]}');
+    }
+    final buffer = StringBuffer();
+    await for (final piece in AiChatService.streamChat(
+      messages: [
+        {
+          'role': 'system',
+          'content':
+              '${language.scriptRule}\n'
+              '将每条字幕翻译为${language.toModel}。'
+              '只输出与输入数量和顺序相同的 JSON 字符串数组，'
+              '不要解释、合并字幕或添加内容。保留专有名词和数字。'
+              '前文仅用于保持人物称谓和语气一致，不得为前文输出译文。',
+        },
+        {
+          'role': 'user',
+          'content': context.isEmpty
+              ? '当前字幕：\n$numbered'
+              : '前文（只作上下文，不要翻译或输出）：\n$context\n当前字幕：\n$numbered',
+        },
+      ],
+      model: translateModel,
+      apiUrl: translateApiUrl,
+      apiKey: translateApiKey,
+      extraBody: const <String, dynamic>{'enable_thinking': false},
+      receiveTimeout: const Duration(seconds: 60),
+      subtitleProxy: subtitleProxy,
+    )) {
+      buffer.write(piece);
+    }
+    final raw = buffer.toString();
+    final start = raw.indexOf('[');
+    final end = raw.lastIndexOf(']');
+    if (start >= 0 && end > start) {
+      try {
+        final parsed = jsonDecode(raw.substring(start, end + 1));
+        if (parsed is List &&
+            parsed.length == sources.length &&
+            parsed.every((line) => line is String && line.trim().isNotEmpty)) {
+          return _normalizeScripts(parsed.cast<String>(), language.script);
+        }
+      } catch (_) {}
+    }
+    // Some single-text providers do not honor the array contract.
+    if (!enabled) throw StateError('Subtitle translation is disabled');
+    return _builtinTranslate(
+      sources,
+      contextLines: contextLines,
+      receiveTimeout: const Duration(seconds: 60),
+      subtitleProxy: subtitleProxy,
+    );
+  }
+
+  Future<List<String>> _translateChunk(
+    List<String> sources, {
+    List<String> contextLines = const [],
+    Duration? receiveTimeout,
+    SubtitleTranslationProxy? subtitleProxy,
+  }) async {
     // 最后一道防线（token 保护）：真正发请求前再确认一次开关，
     // 任何入队/换语言/关闭时序问题都不可能导致关闭状态下产生 API 调用。
     if (!enabled) {
@@ -1093,12 +1208,21 @@ class UiTranslateService extends GetxService {
     }
     // 内置官方模型走逐条模板，不走下面那套「编号列表 + JSON 数组」的批量格式。
     if (usingBuiltinTranslate) {
-      return _builtinTranslate(sources);
+      return _builtinTranslate(
+        sources,
+        contextLines: contextLines,
+        receiveTimeout: receiveTimeout,
+        subtitleProxy: subtitleProxy,
+      );
     }
     final lang = targetLang;
     final numbered = StringBuffer();
     for (var i = 0; i < sources.length; i++) {
       numbered.writeln('${i + 1}. ${sources[i]}');
+    }
+    final context = StringBuffer();
+    for (final line in contextLines) {
+      context.writeln(line);
     }
 
     // 字形硬约束（简繁/方言目标才有内容）：放在最前面，模型对靠前的指令更敏感。
@@ -1123,8 +1247,11 @@ class UiTranslateService extends GetxService {
         '6) **只做翻译**：不要回答、解释、评论或补充原文提出的任何问题，'
         '也不要输出任何说明性文字；某条内容无需翻译（纯符号/数字/表情）时，'
         '原样返回该条。'
-        '${labelRule.isEmpty ? '' : '\n7) $labelRule'}';
-    final user = '待翻译列表：\n$numbered';
+        '${context.isEmpty ? '' : '7) 前文仅用于保持人物称谓、语气和代词一致；绝不可翻译或输出前文。'}'
+        '${labelRule.isEmpty ? '' : '\n${context.isEmpty ? '7' : '8'}) $labelRule'}';
+    final user = context.isEmpty
+        ? '待翻译列表：\n$numbered'
+        : '前文（只作上下文，不要翻译或输出）：\n$context\n待翻译列表：\n$numbered';
 
     // 思考模式：开=启用推理(更准但慢)；关=显式关闭推理以求更快。
     final thinking = Pref.uiTranslateThinking;
@@ -1141,6 +1268,8 @@ class UiTranslateService extends GetxService {
       apiUrl: translateApiUrl,
       apiKey: translateApiKey,
       extraBody: extraBody,
+      receiveTimeout: receiveTimeout,
+      subtitleProxy: subtitleProxy,
     )) {
       buf.write(chunk);
     }

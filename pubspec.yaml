@@ -162,6 +162,7 @@ dependencies:
   screen_retriever: ^0.2.0
   share_plus: ^13.1.0
   stream_transform: ^2.1.1
+  socks5_proxy: ^2.1.2
   super_sliver_list:
     git:
       url: https://github.com/bggRGjQaUbCoE/super_sliver_list.git

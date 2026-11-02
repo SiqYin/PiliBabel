@@ -17,6 +17,7 @@ abstract final class SettingBoxKey {
       audioOutput = 'audioOutput',
       bufferSize = 'bufferSize',
       bufferSec = 'bufferSec',
+      netDirect = 'netDirect',
       autoPlayAdjust = 'autoPlayAdjust',
       autoLowerQuality = 'autoLowerQuality',
       useAppPlayUrl = 'useAppPlayUrl',
@@ -215,6 +216,10 @@ abstract final class SettingBoxKey {
       aiPromptTemplates = 'aiPromptTemplates';
 
   static const String uiTranslateEnabled = 'uiTranslateEnabled',
+      subtitleChunkSize = 'subtitleChunkSize',
+      subtitleConcurrency = 'subtitleConcurrency',
+      subtitleTranslationProxies = 'subtitleTranslationProxies',
+      subtitleTranslationProxyType = 'subtitleTranslationProxyType',
       uiTranslateProvider = 'uiTranslateProvider',
       uiTranslateLang = 'uiTranslateLang',
       uiTranslateModel = 'uiTranslateModel',

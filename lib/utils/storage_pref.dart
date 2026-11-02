@@ -1,4 +1,5 @@
 import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
+
 import 'dart:convert';
 import 'dart:io';
 
@@ -1435,6 +1436,11 @@ abstract final class Pref {
   static bool get dnsDoh =>
       _setting.get(SettingBoxKey.dnsDoh, defaultValue: true);
 
+  /// Data requests normally connect directly. The local DNS proxy remains
+  /// available for networks where normal DNS cannot reach Bilibili.
+  static bool get netDirect =>
+      _setting.get(SettingBoxKey.netDirect, defaultValue: true);
+
   static double get bufferSec =>
       _setting.get(SettingBoxKey.bufferSec, defaultValue: 16.0);
 
@@ -1863,9 +1869,10 @@ abstract final class Pref {
   /// 默认值即 [builtin]，所以旧版本升级上来的用户会自动切到官方模型，而他们
   /// 原先填的 url/key/model 原样保留、不会被覆盖 —— 切回
   /// [TranslateProvider.custom] 就能继续用。
-  static TranslateProvider get uiTranslateProvider => TranslateProvider.fromName(
-    _setting.get(SettingBoxKey.uiTranslateProvider),
-  );
+  static TranslateProvider get uiTranslateProvider =>
+      TranslateProvider.fromName(
+        _setting.get(SettingBoxKey.uiTranslateProvider),
+      );
 
   static set uiTranslateProvider(TranslateProvider value) =>
       _setting.put(SettingBoxKey.uiTranslateProvider, value.name);
@@ -1875,6 +1882,42 @@ abstract final class Pref {
 
   static set uiTranslateLang(String value) =>
       _setting.put(SettingBoxKey.uiTranslateLang, value);
+
+  static int get subtitleChunkSize =>
+      (_setting.get(SettingBoxKey.subtitleChunkSize, defaultValue: 20) as int)
+          .clamp(10, 40)
+          .toInt();
+
+  static set subtitleChunkSize(int value) => _setting.put(
+    SettingBoxKey.subtitleChunkSize,
+    value.clamp(10, 40).toInt(),
+  );
+
+  static int get subtitleConcurrency =>
+      (_setting.get(SettingBoxKey.subtitleConcurrency, defaultValue: 5) as int)
+          .clamp(1, 5)
+          .toInt();
+
+  static set subtitleConcurrency(int value) => _setting.put(
+    SettingBoxKey.subtitleConcurrency,
+    value.clamp(1, 5).toInt(),
+  );
+
+  static String get subtitleTranslationProxies =>
+      _setting.get(SettingBoxKey.subtitleTranslationProxies, defaultValue: '');
+
+  static set subtitleTranslationProxies(String value) =>
+      _setting.put(SettingBoxKey.subtitleTranslationProxies, value.trim());
+
+  static String get subtitleTranslationProxyType => _setting.get(
+    SettingBoxKey.subtitleTranslationProxyType,
+    defaultValue: 'http',
+  );
+
+  static set subtitleTranslationProxyType(String value) => _setting.put(
+    SettingBoxKey.subtitleTranslationProxyType,
+    value == 'socks5' ? 'socks5' : 'http',
+  );
 
   static String get uiTranslateModel =>
       _setting.get(SettingBoxKey.uiTranslateModel, defaultValue: '');
@@ -1961,23 +2004,23 @@ abstract final class Pref {
   static set uiTranslateOnboarded(bool value) =>
       _setting.put(SettingBoxKey.uiTranslateOnboarded, value);
 
-      /// 内置官方模型（Index-Translate）故障弹窗已被用户「明白了」过。
-      /// 官方接口恢复正常时自动清掉，所以下一次故障仍会再提示一次。
-      static bool get uiTranslateOutageDismissed => _setting.get(
-      SettingBoxKey.uiTranslateOutageDismissed,
-      defaultValue: false,
-      );
-      static set uiTranslateOutageDismissed(bool value) =>
+  /// 内置官方模型（Index-Translate）故障弹窗已被用户「明白了」过。
+  /// 官方接口恢复正常时自动清掉，所以下一次故障仍会再提示一次。
+  static bool get uiTranslateOutageDismissed => _setting.get(
+    SettingBoxKey.uiTranslateOutageDismissed,
+    defaultValue: false,
+  );
+  static set uiTranslateOutageDismissed(bool value) =>
       _setting.put(SettingBoxKey.uiTranslateOutageDismissed, value);
 
-      /// 用户是在官方接口故障弹窗里被引导切到自备 API 的（不是自己主动换的）。
-      /// 只有它为真时，才会在官方接口恢复后提示「是否切回」；用户选择保留自备
-      /// 配置后立刻置回 false，避免每次启动都提示。
-      static bool get uiTranslateOutageSwitched => _setting.get(
-      SettingBoxKey.uiTranslateOutageSwitched,
-      defaultValue: false,
-      );
-      static set uiTranslateOutageSwitched(bool value) =>
+  /// 用户是在官方接口故障弹窗里被引导切到自备 API 的（不是自己主动换的）。
+  /// 只有它为真时，才会在官方接口恢复后提示「是否切回」；用户选择保留自备
+  /// 配置后立刻置回 false，避免每次启动都提示。
+  static bool get uiTranslateOutageSwitched => _setting.get(
+    SettingBoxKey.uiTranslateOutageSwitched,
+    defaultValue: false,
+  );
+  static set uiTranslateOutageSwitched(bool value) =>
       _setting.put(SettingBoxKey.uiTranslateOutageSwitched, value);
 
   static int get angleDegrees =>
