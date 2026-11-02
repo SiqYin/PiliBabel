@@ -1,25 +1,13 @@
-### PiliBabel v3.5.6
+### PiliBabel v3.5.8
 
-**Search: trending keywords are translated and laid out on two lines. Listen-only page: the media session state is fixed. Subtitles: the track matching the app language is picked automatically.**
+**Zenless Zone Zero glossary greatly expanded; glossary can now check for updates; live rooms can save their cover.**
 
-- **Trending entries, two lines** - each trending keyword may wrap to two lines and its badge
-  moves to a second row. A translation is usually much longer than the Chinese original, and
-  keeping the badge inline squeezed the keyword into an ellipsis. The layout follows the
-  **标题完全显示** switch (renamed from 视频标题完全显示 in this release); turn it off and the
-  single-line layout comes back.
-- **Listen-only page media session** - that page drives its own media_kit player and has no
-  `PlPlayerController`, while the handler only reported state when one existed. As a result the
-  page never reported anything: the play/pause icon and progress in the notification and the
-  system media panel stayed at their initial values. The gate now also accepts the page's own
-  playing-state callback.
-- **Subtitles follow the app language** - with the default subtitle preference, a track matching
-  the app language is selected when one exists (Japanese UI plus a Japanese subtitle track shows
-  it directly, no translation pass). Without such a track the previous behaviour stands: open the
-  Chinese track and translate it in the background.
-- The full ranking page (bilibili 热搜) follows the same line-count switch.
+**Zenless Zone Zero glossary switched to a living source.** The previous source stopped updating in July 2024 and only covered versions 1.0/1.1, which is why Chinese/Japanese/Korean coverage sat at 6%. It now uses a community-reviewed multilingual glossary (tagged up to version 3.3): rows **1057 → 2907**, Simplified Chinese **94 → 2270**, Japanese **61 → 2256**, Korean **61 → 2257**.
 
-中文摘要：本版把热搜条目改成上下两行（关键词最多两行、小标签另起一行），跟随设置里的
-「标题完全显示」（原「视频标题完全显示」，本版改名）；「完整榜单」页同步。修好听视频页
-从不向系统上报媒体会话状态的问题（该页没有 `PlPlayerController`，被「有播放器才上报」
-的门槛挡掉），通知栏与系统媒体面板的播放/暂停图标和进度现在是对的。字幕方面：字幕偏好
-保持默认时优先选与界面语言一致的那条轨，没有才退回「开中文轨并翻译」。
+**Glossary update check.** Settings → AI Translate now has a "Game glossary" entry. It can be checked manually, and will also check itself at most once per 24 hours. The check only fetches a few-KB version manifest (no term data), then compares per-game version and hash; if something moved it reports "N game glossaries can be updated". The manifest URL can be pointed at your own mirror via `Pref.glossaryManifestUrl`.
+
+**Live room "save cover".** The live-room overflow menu previously offered only copy link / share room / open in browser / share to messages — **there was no way to save the cover**. It has been added, reusing the exact same save implementation as the video page's "save cover". The entry is hidden when no cover is available.
+
+**Still incomplete (missing upstream data, not a missing feature):** Japanese/Korean names for Wuthering Waves, EN/JA/KO names for Honkai Impact 3rd, and Korean names for some Genshin NPCs do not exist in any public source I could find. Details are in `docs/outstanding.md` section 9.
+
+Downloads are below.
