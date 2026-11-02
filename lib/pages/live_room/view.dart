@@ -1003,6 +1003,23 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                     ],
                   ),
                 ),
+            // 保存直播间封面：与视频页「保存封面」同一套实现（ImageUtils.downloadImg）。
+            // 封面地址就是上面「分享至消息」用的 roomInfoH5.roomInfo.cover，
+            // 因此不必额外请求接口；取不到时该菜单项不显示。
+            if (_liveRoomController.roomInfoH5.value?.roomInfo?.cover
+                    case final String coverUrl
+                when coverUrl.isNotEmpty)
+              PopupMenuItem(
+                onTap: () => ImageUtils.downloadImg([coverUrl]),
+                child: Row(
+                  spacing: 10,
+                  mainAxisSize: .min,
+                  children: [
+                    const Icon(Icons.save_alt, size: 19),
+                    Text(uiTx('保存封面')),
+                  ],
+                ),
+              ),
             ];
           },
         ),
