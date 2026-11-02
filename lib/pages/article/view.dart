@@ -223,7 +223,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                 SliverToBoxWithVisibilityAdapter(
                   onVisibilityChanged: controller.showTitle.call,
                   child: Text(
-                    uiTx(controller.summary.title!),
+                    uiTxTight(controller.summary.title!),
                     style: const TextStyle(fontSize: 17, fontWeight: .bold),
                   ),
                 ),
@@ -251,7 +251,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
   PreferredSizeWidget _buildAppBar() => AppBar(
     title: Obx(() {
       if (controller.isLoaded.value && controller.showTitle.value) {
-        return Text(uiTx(controller.summary.title!));
+        return Text(uiTxTight(controller.summary.title!));
       }
       return const SizedBox.shrink();
     }),
