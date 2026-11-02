@@ -103,3 +103,36 @@
 
 **3.0.5 → 3.4.0 这一轮大修已收尾。** 最终版 v3.4.0 发布后，
 除第一节「需要真机验证」与第二节「明确阻塞/不做」之外，没有遗留的开发项。
+
+---
+
+## 八、2026-11-02 新增（官方 AI 声轨 + 耳机媒体键）
+
+评估全文在 `docs/ai-audio-track-evaluation.md`（`docs/*` 被 .gitignore，仅本机）。
+下面按「**已改代码但未验证**」与「**发现了但明确没做**」分两类，别混着看。
+
+### 8.1 代码已改、真机未验证
+
+| # | 事项 | 为什么还没底 |
+|---|---|---|
+| 1 | 耳机播放/暂停键（`49cc5be85`） | 根因确定（`audio_service` 把 PLAY/PAUSE/PLAY_PAUSE/HEADSETHOOK 全路由到 `click(MediaButton.media)`，默认实现看的是**上报给系统**的 `playbackState.playing`），但修复只在本机做了括号配平静检，**没真机按过一次** |
+| 2 | 同一根因的**未修完部分**：`setPlaybackState` 的三道门槛（后台播放开关 / mediaItem 已注册 / `PlPlayerController` 实例存在）我**没动**，只改了按键判定路径。所以「听视频」页在通知栏 / 系统媒体面板里的播放-暂停**图标**可能仍是错的（上报值停在 `false`） | 动门槛会影响通知栏形态，没实测不敢改 |
+| 3 | Windows SMTC / Linux MPRIS 的媒体键**没查** | 本轮只顺着 Android 的 `MediaButtonReceiver` → `handler.click()` 这条链查。注意本仓库用的是 **audio_service 的 fork**（`bggRGjQaUbCoE/audio_service`，ref `main`，见 pubspec.lock:100-108），Windows 侧的 SMTC 很可能是这个 fork 补的（`audio_handler.dart:320` 有「Windows SMTC 弹窗由 shell 进程渲染」的注释），Linux 走 `audio_service_mpris`；**这两条链路是否同样只看上报的 `playing` 完全没验** |
+| 4 | 声轨跟随界面语言（`40ed8bc8c`）实际效果 | 依赖「登录后 `cur_language` 真的换流」——匿名实测被服务端直接忽略，带登录态从没验过。代码只认服务端回显（回显不匹配就当失败、照原声播），所以**不会谎称切换成功**，但也可能**永远切不动** |
+
+### 8.2 发现了、明确没做
+
+| # | 事项 | 位置 / 说明 |
+|---|---|---|
+| 5 | **gRPC `Playurl.ai_audio` 仍未解析**：官方 APP 是「一条响应并列各语言音轨」（`AIAudioItem{audio_info: repeated DashItem, subtitle_lang}`），比 Web 的 `cur_language` 换流更优（开播前不多一次请求） | `playershared.pb.dart:7923` 的 getter 无人引用。等真机确认它非空再上，不拿播放主链路赌 |
+| 6 | **下载 / 音频缓存不传语言** → 缓存下来的永远是原声 | `audio_cache_service.dart:275`、`local_download_service.dart:363/455/826`、`http/download.dart:46`。要先定「同一 cid 的多语言缓存怎么共存」（现 key 是 `bvid_cid`） |
+| 7 | **`Dash` 按 `id`（音质码）去重**，同音质不同语言的轨会被 merge 掉 | `url.dart:534-544` `BaseItemExt.merge` 用 `(id, codecid)` 做键。做 5 之前必须先解决，否则多语言轨会被折叠成一条 |
+| 8 | `subtitle_lang` / `video_detext` 没消费 | 字幕侧靠 `Subtitle.langScore` 间接覆盖（`ai-en` 会归一化成 `en`），但「切到 en 轨后字幕是否真的跟着走 `ai-en`、两条链路时序会不会打架」**未验证**；`video_detext=true` 时服务端下发的是擦掉烧录字幕的画面，我们没有提示 |
+| 9 | 自动切轨会多一次串行 playurl | 只在「支持且命中」的稿件上发生（实测热榜 2.7%），首帧约多 150–400ms。没做「按 cid 记住支持哪些语言」的缓存 |
+| 10 | 语种覆盖本身很窄 | 实测只有 `en`/`ja`，且命中的 3 条**全部只有 en**；界面语言是韩/法/德/俄时这功能等于不存在 |
+
+### 8.3 老遗留（与本轮无关，仍开放）
+
+- `type 'List<dynamic>' is not a subtype of type 'String'`：3.5.1 修了高概率抛点（cookie 头为
+  List），release 混淆下仍是 `<optimized out>`，**等下一张带完整类型名的截图**才能定位到字段。
+- 术语表只内嵌了核心词 10571 条，全量 26739 条的按需加载没做。
