@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/models_new/search/search_trending/list.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:cached_network_image_ce/cached_network_image.dart';
@@ -9,6 +10,7 @@ import 'package:flutter/rendering.dart'
         MultiChildLayoutParentData,
         RenderBoxContainerDefaultsMixin,
         BoxHitTestResult;
+import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 class SliverHotKeyword extends StatelessWidget {
@@ -31,7 +33,7 @@ class SliverHotKeyword extends StatelessWidget {
         .round();
 
     return SliverToBoxAdapter(
-      child: _HotKeywordGrid(
+      child: Obx(() => _HotKeywordGrid(
         mainAxisSpacing: 5,
         crossAxisSpacing: 0.4,
         crossAxisCount: 2,
@@ -46,14 +48,14 @@ class SliverHotKeyword extends StatelessWidget {
                   child: Padding(
                     padding: const .only(left: 2, right: 10),
                     child: Tooltip(
-                      message: i.keyword,
+                      message: uiTxTight(i.keyword!),
                       child: Row(
                         children: [
                           Flexible(
                             child: Padding(
                               padding: const .fromLTRB(6, 5, 0, 5),
                               child: Text(
-                                i.keyword!,
+                                uiTxTight(i.keyword!),
                                 overflow: TextOverflow.ellipsis,
                                 maxLines: 1,
                                 style: const TextStyle(fontSize: 14),
@@ -81,7 +83,7 @@ class SliverHotKeyword extends StatelessWidget {
                               ),
                             )
                           else if (i.recommendReason?.isNotEmpty == true)
-                            Text(i.recommendReason!, style: style),
+                            Text(uiTx(i.recommendReason!), style: style),
                         ],
                       ),
                     ),
@@ -90,7 +92,7 @@ class SliverHotKeyword extends StatelessWidget {
               ),
             )
             .toList(),
-      ),
+      )),
     );
   }
 }
