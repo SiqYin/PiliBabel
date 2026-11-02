@@ -1548,9 +1548,12 @@ class VideoDetailController extends GetxController
   final RxString subtitleTranslationStatus = ''.obs;
   final RxDouble subtitleTranslationProgress = 0.0.obs;
   final RxBool subtitleTranslationRunning = false.obs;
+  final Map<int, ({bool isData, String id})> _sourceVttSubtitles = {};
   SubtitleTranslationSubscription? _subtitleSubscription;
   Worker? _subtitlePositionWorker;
   bool _pausedForSubtitleTranslation = false;
+  int _subtitleRenderFailedGeneration = -1;
+  int _subtitleErrorNotifiedGeneration = -1;
   int _subtitleGeneration = 0;
   bool _manualSubtitle = false;
   bool _subtitleRefreshBusy = false;
@@ -1763,6 +1766,9 @@ class VideoDetailController extends GetxController
     _subtitlePositionWorker = null;
     _subtitleRefreshIndex = null;
     _subtitleRefreshGeneration = null;
+    _sourceVttSubtitles.clear();
+    _subtitleRenderFailedGeneration = -1;
+    _subtitleErrorNotifiedGeneration = -1;
     _manualSubtitle = false;
     subtitleTranslationStatus.value = '';
     subtitleTranslationProgress.value = 0;
@@ -1814,6 +1820,13 @@ class VideoDetailController extends GetxController
     }
     subtitleTranslationStatus.value = uiTx('字幕加载失败');
     subtitleTranslationRunning.value = false;
+    _notifySubtitleError(generation, uiTx('字幕加载失败，请稍后重试'));
+  }
+
+  void _notifySubtitleError(int generation, String message) {
+    if (_subtitleErrorNotifiedGeneration == generation) return;
+    _subtitleErrorNotifiedGeneration = generation;
+    SmartDialog.showToast(message);
   }
 
   Future<void> _startSubtitleTranslation(
@@ -1822,15 +1835,24 @@ class VideoDetailController extends GetxController
     int generation, {
     required bool allowNewTranslation,
   }) async {
-    if (allowNewTranslation) {
+    final canStartTranslation =
+        allowNewTranslation && SubtitleTranslateService.needed;
+    if (canStartTranslation) {
       subtitleTranslationStatus.value = uiTx('正在准备实时翻译字幕');
       subtitleTranslationProgress.value = 0;
       subtitleTranslationRunning.value = true;
+    } else {
+      // Keep the Chinese track visible and explain why no request is sent.
+      // A completed local cache can still replace it below.
+      subtitleTranslationStatus.value = uiTx('正在显示中文字幕；请开启AI翻译以翻译字幕');
+      subtitleTranslationProgress.value = 0;
+      subtitleTranslationRunning.value = false;
     }
     try {
       List<SubtitleCue> cues;
       final cached = vttSubtitles[index - 1];
       if (cached != null) {
+        _sourceVttSubtitles.putIfAbsent(index - 1, () => cached);
         cues = SubtitleCues.fromVtt(
           cached.isData ? cached.id : await File(cached.id).readAsString(),
         );
@@ -1846,7 +1868,7 @@ class VideoDetailController extends GetxController
         return;
       }
       final target = Pref.uiTranslateLang;
-      if (allowNewTranslation) {
+      if (canStartTranslation) {
         subtitleTranslationStatus.value = uiTxP(
           '正在实时翻译字幕：{0}/{1}句（{2}%）',
           [0, cues.length, 0],
@@ -1859,8 +1881,7 @@ class VideoDetailController extends GetxController
       final prefetchTarget = _captureNextPlaylistSubtitleTarget();
       final subscription = SubtitleTranslationCoordinator.attach(
         key: SubtitleTranslationJob.cacheIdentity(sessionKey, cues),
-        allowNewTranslation:
-            allowNewTranslation && SubtitleTranslateService.needed,
+        allowNewTranslation: canStartTranslation,
         onCompleted: prefetchTarget == null
             ? null
             : () {
@@ -1926,11 +1947,14 @@ class VideoDetailController extends GetxController
             return;
           }
           final previous = vttSubtitles[index - 1];
-          vttSubtitles[index - 1] = (isData: true, id: vtt);
           final percent = (progress.ratio * 100).round();
           subtitleTranslationProgress.value = progress.ratio;
-          subtitleTranslationRunning.value = !progress.isComplete;
-          subtitleTranslationStatus.value = progress.failedChunks > 0
+          subtitleTranslationRunning.value =
+              canStartTranslation && !progress.isComplete;
+          subtitleTranslationStatus.value =
+              !canStartTranslation && !progress.isComplete
+              ? uiTx('正在显示中文字幕；请开启AI翻译以翻译字幕')
+              : progress.failedChunks > 0
               ? uiTxP(
                   '字幕翻译将在后台重试：已处理{0}/{1}句（{2}%），'
                   '已翻译{3}句，{4}个分块待重试',
@@ -1955,6 +1979,14 @@ class VideoDetailController extends GetxController
                     percent,
                   ],
                 );
+          // If the player rejected a generated memory:// VTT, keep showing the
+          // original track while the background session continues caching.
+          if (_subtitleRenderFailedGeneration == generation) return;
+          _sourceVttSubtitles.putIfAbsent(
+            index - 1,
+            () => previous ?? (isData: true, id: vtt),
+          );
+          vttSubtitles[index - 1] = (isData: true, id: vtt);
           if (previous?.id != vtt || previous?.isData != true) {
             unawaited(_refreshTranslatedSubtitle(index, generation));
           }
@@ -1988,8 +2020,7 @@ class VideoDetailController extends GetxController
       );
       final shouldWait =
           Pref.subtitleTranslationWaitForComplete &&
-          allowNewTranslation &&
-          SubtitleTranslateService.needed &&
+          canStartTranslation &&
           plPlayerController.playerStatus.isPlaying;
       if (shouldWait) {
         _pausedForSubtitleTranslation = true;
@@ -2004,10 +2035,14 @@ class VideoDetailController extends GetxController
           await PlPlayerController.playIfExists();
         }
       }
-    } catch (_) {
+    } catch (error, stackTrace) {
+      if (kDebugMode) {
+        debugPrint('subtitle translation setup failed: $error\n$stackTrace');
+      }
       if (!isClosed && generation == _subtitleGeneration && !_manualSubtitle) {
-        subtitleTranslationStatus.value = uiTx('字幕翻译失败');
+        subtitleTranslationStatus.value = uiTx('字幕翻译启动失败，正在保留原字幕');
         subtitleTranslationRunning.value = false;
+        _notifySubtitleError(generation, uiTx('字幕翻译启动失败，正在保留原字幕'));
       }
     }
   }
@@ -2029,9 +2064,27 @@ class VideoDetailController extends GetxController
             vttSubtitlesIndex.value == next) {
           try {
             await setSubtitle(next);
-          } catch (_) {
-            subtitleTranslationStatus.value = uiTx('字幕加载失败');
-            subtitleTranslationRunning.value = false;
+          } catch (error, stackTrace) {
+            if (kDebugMode) {
+              debugPrint(
+                'translated subtitle track refresh failed: '
+                '$error\n$stackTrace',
+              );
+            }
+            final source = _sourceVttSubtitles[next - 1];
+            if (source != null) {
+              _subtitleRenderFailedGeneration = nextGeneration ?? -1;
+              vttSubtitles[next - 1] = source;
+              try {
+                await setSubtitle(next);
+              } catch (_) {
+                // The original source stays in memory for a manual retry.
+              }
+              subtitleTranslationStatus.value = uiTx('字幕译文已缓存，播放器暂时显示原字幕');
+            } else {
+              subtitleTranslationStatus.value = uiTx('字幕加载失败');
+              subtitleTranslationRunning.value = false;
+            }
           }
         }
       }

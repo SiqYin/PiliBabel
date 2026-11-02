@@ -16,6 +16,45 @@ List<SubtitleCue> _cues(int length) => [
 
 void main() {
   test(
+    'reports a zero-progress update before the first chunk completes',
+    () async {
+      final directory = await Directory.systemTemp.createTemp(
+        'pili_coordinator_initial_',
+      );
+      addTearDown(() => directory.delete(recursive: true));
+      final translateGate = Completer<void>();
+      final updates = <SubtitleTranslationProgress>[];
+
+      final subscription = SubtitleTranslationCoordinator.attach(
+        key: 'initial-progress',
+        allowNewTranslation: true,
+        createJob: (onUpdate) => SubtitleTranslationJob(
+          cues: _cues(20),
+          chunkSize: 20,
+          concurrency: 1,
+          cacheKey: 'initial-progress',
+          cacheDirectory: directory.path,
+          translate: (lines) async {
+            await translateGate.future;
+            return lines.map((line) => 'vi $line').toList();
+          },
+          onUpdate: onUpdate,
+        ),
+        onUpdate: (_, progress) => updates.add(progress),
+      );
+
+      expect(updates, hasLength(1));
+      expect(updates.single.processedCues, 0);
+      expect(updates.single.totalCues, 20);
+      expect(updates.single.isComplete, isFalse);
+
+      subscription.cancel();
+      translateGate.complete();
+      await subscription.whenComplete;
+    },
+  );
+
+  test(
     'detaching a viewer leaves translation running for a later viewer',
     () async {
       final directory = await Directory.systemTemp.createTemp(

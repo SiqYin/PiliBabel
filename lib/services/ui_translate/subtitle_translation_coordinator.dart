@@ -33,10 +33,10 @@ class SubtitleTranslationCoordinator {
       _sessions[key] = session;
     }
     final listenerId = _nextListenerId++;
-    session
-      ..listeners[listenerId] = onUpdate
-      ..start(allowNewTranslation)
-      ..emitLatestTo(onUpdate);
+    final hadLatestUpdate = session.hasLatestUpdate;
+    session.listeners[listenerId] = onUpdate;
+    session.start(allowNewTranslation);
+    if (hadLatestUpdate) session.emitLatestTo(onUpdate);
     return SubtitleTranslationSubscription._(session, listenerId);
   }
 }
@@ -99,8 +99,14 @@ class _SubtitleTranslationSession {
 
   bool get isCancelled => _cancelled;
 
+  bool get hasLatestUpdate => _vtt != null && _progress != null;
+
   void start(bool allowNewTranslation) {
     _allowNewTranslation = _allowNewTranslation || allowNewTranslation;
+    // A cache miss used to be completely silent until the first network chunk
+    // finished. Let attached players show the original subtitles and progress
+    // from zero immediately when a new translation is allowed.
+    if (_progress == null && allowNewTranslation) job.emitCurrent();
     _runFuture ??= _run();
   }
 
@@ -123,7 +129,12 @@ class _SubtitleTranslationSession {
       while (!_cancelled) {
         if (_progress?.isComplete == true) break;
         if (!_allowNewTranslation) return;
-        await job.run();
+        try {
+          await job.run();
+        } catch (_) {
+          // A listener or transient storage failure must not strand this
+          // shared session forever. The normal retry delay below applies.
+        }
         if (_cancelled || _progress?.isComplete == true) break;
         // Preserve failed chunks and retry their exact indexes without
         // hammering a temporarily unavailable translation service.

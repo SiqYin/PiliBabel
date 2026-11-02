@@ -161,6 +161,14 @@ class SubtitleTranslationJob {
 
   void setPosition(int seconds) => positionSeconds = seconds;
 
+  /// Publish the original cues before the first translation result arrives.
+  /// This keeps the player on a valid subtitle track and gives the UI an
+  /// immediate, observable "starting" state for a long-running request.
+  void emitCurrent() {
+    if (_cancelled || cues.isEmpty) return;
+    _emit();
+  }
+
   Future<bool> loadCached() async {
     if (_cacheChecked) return _cacheHit;
     _cacheChecked = true;
