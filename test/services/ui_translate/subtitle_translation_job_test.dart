@@ -153,19 +153,26 @@ void main() {
     },
   );
 
-  test('rejects unchanged Chinese instead of caching a source copy', () async {
-    final job = SubtitleTranslationJob(
-      cues: _cues(20),
-      chunkSize: 20,
-      concurrency: 1,
-      cacheKey: 'source-copy',
-      cacheDirectory: directory.path,
-      translate: (lines) async => lines,
-      onUpdate: (_, progress) => expect(progress.failedChunks, 1),
-    );
-    await job.run();
-    expect(await directory.list().isEmpty, true);
-  });
+  test(
+    'keeps a retryable checkpoint for an unchanged Chinese source copy',
+    () async {
+      final job = SubtitleTranslationJob(
+        cues: _cues(20),
+        chunkSize: 20,
+        concurrency: 1,
+        cacheKey: 'source-copy',
+        cacheDirectory: directory.path,
+        translate: (lines) async => lines,
+        onUpdate: (_, progress) => expect(progress.failedChunks, 1),
+      );
+      await job.run();
+      final files = (await directory.list().toList())
+          .whereType<File>()
+          .toList();
+      expect(files, hasLength(1));
+      expect(await files.single.readAsString(), contains('"failedChunks":[0]'));
+    },
+  );
 
   test('retries a transient chunk failure before reporting it', () async {
     var attempts = 0;
@@ -222,7 +229,7 @@ void main() {
     },
   );
 
-  test('emits partial translation but does not cache failed chunks', () async {
+  test('emits partial translation and checkpoints failed chunks', () async {
     String? lastVtt;
     bool? failed;
     int? translatedCues;
@@ -247,8 +254,52 @@ void main() {
     expect(translatedCues, 20);
     expect(lastVtt, contains('translated 句0'));
     expect(lastVtt, contains('句20'));
-    expect(await directory.list().isEmpty, true);
+    final files = (await directory.list().toList()).whereType<File>().toList();
+    expect(files, hasLength(1));
+    final checkpoint = await files.single.readAsString();
+    expect(checkpoint, contains('"completedChunks":[0]'));
+    expect(checkpoint, contains('"failedChunks":[1]'));
   });
+
+  test(
+    'resumes only failed checkpoint chunks and preserves completed text',
+    () async {
+      final first = SubtitleTranslationJob(
+        cues: _cues(40),
+        chunkSize: 20,
+        concurrency: 1,
+        cacheKey: 'resume-failed-chunk',
+        cacheDirectory: directory.path,
+        translate: (lines) async {
+          if (lines.first == '句20') throw StateError('temporary outage');
+          return lines.map((line) => 'first $line').toList();
+        },
+        onUpdate: (_, __) {},
+      );
+      await first.run();
+
+      final translatedChunks = <int>[];
+      String? finalVtt;
+      final resumed = SubtitleTranslationJob(
+        cues: _cues(40),
+        chunkSize: 20,
+        concurrency: 1,
+        cacheKey: 'resume-failed-chunk',
+        cacheDirectory: directory.path,
+        translate: (lines) async {
+          translatedChunks.add(int.parse(lines.first.substring(1)) ~/ 20);
+          return lines.map((line) => 'retry $line').toList();
+        },
+        onUpdate: (vtt, _) => finalVtt = vtt,
+      );
+
+      await resumed.run();
+
+      expect(translatedChunks, [1]);
+      expect(finalVtt, contains('first 句0'));
+      expect(finalVtt, contains('retry 句20'));
+    },
+  );
 
   test(
     'reuses complete cache offline and invalidates changed source',

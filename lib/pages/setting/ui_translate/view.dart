@@ -379,6 +379,36 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
               ),
               trailing: Text('$_subtitleConcurrency'),
             ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(uiTx('Chờ dịch xong rồi phát video')),
+              subtitle: Text(
+                uiTx(
+                  'Tạm dừng video khi bắt đầu dịch; tự phát lại khi toàn bộ phụ đề đã dịch xong',
+                ),
+              ),
+              value: Pref.subtitleTranslationWaitForComplete,
+              onChanged: (value) {
+                Pref.subtitleTranslationWaitForComplete = value;
+                setState(() {});
+              },
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(
+                uiTx('Dịch trước video kế tiếp trong danh sách phát'),
+              ),
+              subtitle: Text(
+                uiTx(
+                  'Khi phụ đề hiện tại hoàn tất, chuẩn bị trước phụ đề của mục tiếp theo nếu có',
+                ),
+              ),
+              value: Pref.subtitleTranslationPrefetchNext,
+              onChanged: (value) {
+                Pref.subtitleTranslationPrefetchNext = value;
+                setState(() {});
+              },
+            ),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.hub_outlined),

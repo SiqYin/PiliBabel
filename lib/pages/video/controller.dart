@@ -66,6 +66,7 @@ import 'package:PiliPlus/services/download/download_collection_service.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
 import 'package:PiliPlus/services/pip_overlay_service.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_selection.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_coordinator.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_job.dart';
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
@@ -102,6 +103,13 @@ import 'package:PiliPlus/services/download/audio_cache_service.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/pages/download/utils/cache_target.dart';
 import 'package:PiliPlus/services/download/local_download_service.dart';
+
+typedef _SubtitlePrefetchTarget = ({
+  String bvid,
+  int cid,
+  int? epId,
+  int? seasonId,
+});
 
 class VideoDetailController extends GetxController
     with GetTickerProviderStateMixin, BlockMixin {
@@ -1540,8 +1548,9 @@ class VideoDetailController extends GetxController
   final RxString subtitleTranslationStatus = ''.obs;
   final RxDouble subtitleTranslationProgress = 0.0.obs;
   final RxBool subtitleTranslationRunning = false.obs;
-  SubtitleTranslationJob? _subtitleJob;
+  SubtitleTranslationSubscription? _subtitleSubscription;
   Worker? _subtitlePositionWorker;
+  bool _pausedForSubtitleTranslation = false;
   int _subtitleGeneration = 0;
   bool _manualSubtitle = false;
   bool _subtitleRefreshBusy = false;
@@ -1686,8 +1695,9 @@ class VideoDetailController extends GetxController
     if (manual) {
       _subtitleGeneration++;
       _manualSubtitle = true;
-      _subtitleJob?.cancel();
-      _subtitleJob = null;
+      _subtitleSubscription?.cancel();
+      _subtitleSubscription = null;
+      _pausedForSubtitleTranslation = false;
       _subtitlePositionWorker?.dispose();
       _subtitlePositionWorker = null;
       subtitleTranslationStatus.value = '';
@@ -1746,8 +1756,9 @@ class VideoDetailController extends GetxController
     } on FormatException {
       _subtitleProxiesForVideo = const [];
     }
-    _subtitleJob?.cancel();
-    _subtitleJob = null;
+    _subtitleSubscription?.detach();
+    _subtitleSubscription = null;
+    _pausedForSubtitleTranslation = false;
     _subtitlePositionWorker?.dispose();
     _subtitlePositionWorker = null;
     _subtitleRefreshIndex = null;
@@ -1842,60 +1853,78 @@ class VideoDetailController extends GetxController
         );
       }
       final proxyPool = SubtitleTranslationProxyPool(_subtitleProxiesForVideo);
-      final job = SubtitleTranslationJob(
-        cues: cues,
-        chunkSize: _subtitleChunkSizeForVideo,
-        concurrency: proxyPool.enabled
-            ? proxyPool.workerCount
-            : _subtitleConcurrencyForVideo,
-        translate: (lines) async {
-          if (Pref.uiTranslateLang != target) {
-            throw StateError('Subtitle language changed');
-          }
-          final translated = await SubtitleTranslateService.translateChunk(
-            lines,
-          );
-          if (Pref.uiTranslateLang != target) {
-            throw StateError('Subtitle language changed');
-          }
-          return translated;
-        },
-        translateWithContext: (lines, context) async {
-          if (Pref.uiTranslateLang != target) {
-            throw StateError('Subtitle language changed');
-          }
-          final translated = proxyPool.enabled
-              ? await proxyPool.run((proxy) async {
-                  try {
-                    return await SubtitleTranslateService.translateChunk(
-                      lines,
-                      contextLines: context,
-                      proxy: proxy,
-                    );
-                  } on AiApiException catch (error) {
-                    if (error.statusCode == null) {
-                      proxyPool.markUnavailable(proxy);
+      final sessionKey = '$bvid/${cid.value}/${track.lan}/$target';
+      // Resolve this before the page moves to another video. The shared
+      // session can now schedule the prefetch even after this controller detaches.
+      final prefetchTarget = _captureNextPlaylistSubtitleTarget();
+      final subscription = SubtitleTranslationCoordinator.attach(
+        key: SubtitleTranslationJob.cacheIdentity(sessionKey, cues),
+        allowNewTranslation:
+            allowNewTranslation && SubtitleTranslateService.needed,
+        onCompleted: prefetchTarget == null
+            ? null
+            : () {
+                if (Pref.subtitleTranslationPrefetchNext) {
+                  unawaited(_prefetchNextPlaylistSubtitle(prefetchTarget));
+                }
+              },
+        createJob: (onUpdate) => SubtitleTranslationJob(
+          cues: cues,
+          chunkSize: _subtitleChunkSizeForVideo,
+          concurrency: proxyPool.enabled
+              ? proxyPool.workerCount
+              : _subtitleConcurrencyForVideo,
+          translate: (lines) async {
+            if (Pref.uiTranslateLang != target) {
+              throw StateError('Subtitle language changed');
+            }
+            final translated = await SubtitleTranslateService.translateChunk(
+              lines,
+            );
+            if (Pref.uiTranslateLang != target) {
+              throw StateError('Subtitle language changed');
+            }
+            return translated;
+          },
+          translateWithContext: (lines, context) async {
+            if (Pref.uiTranslateLang != target) {
+              throw StateError('Subtitle language changed');
+            }
+            final translated = proxyPool.enabled
+                ? await proxyPool.run((proxy) async {
+                    try {
+                      return await SubtitleTranslateService.translateChunk(
+                        lines,
+                        contextLines: context,
+                        proxy: proxy,
+                      );
+                    } on AiApiException catch (error) {
+                      if (error.statusCode == null) {
+                        proxyPool.markUnavailable(proxy);
+                      }
+                      rethrow;
                     }
-                    rethrow;
-                  }
-                })
-              : await SubtitleTranslateService.translateChunk(
-                  lines,
-                  contextLines: context,
-                );
-          if (Pref.uiTranslateLang != target) {
-            throw StateError('Subtitle language changed');
-          }
-          return translated;
-        },
-        cacheKey: '$bvid/${cid.value}/${track.lan}/$target',
-        positionSeconds: plPlayerController.position.value,
+                  })
+                : await SubtitleTranslateService.translateChunk(
+                    lines,
+                    contextLines: context,
+                  );
+            if (Pref.uiTranslateLang != target) {
+              throw StateError('Subtitle language changed');
+            }
+            return translated;
+          },
+          cacheKey: sessionKey,
+          positionSeconds: plPlayerController.position.value,
+          onUpdate: onUpdate,
+        ),
         onUpdate: (vtt, progress) {
           if (isClosed ||
               generation != _subtitleGeneration ||
               _manualSubtitle ||
-              vttSubtitlesIndex.value != index)
+              vttSubtitlesIndex.value != index) {
             return;
+          }
           final previous = vttSubtitles[index - 1];
           vttSubtitles[index - 1] = (isData: true, id: vtt);
           final percent = (progress.ratio * 100).round();
@@ -1903,8 +1932,8 @@ class VideoDetailController extends GetxController
           subtitleTranslationRunning.value = !progress.isComplete;
           subtitleTranslationStatus.value = progress.failedChunks > 0
               ? uiTxP(
-                  '字幕实时翻译部分失败：已处理{0}/{1}句（{2}%），'
-                  '已翻译{3}句，{4}个分块失败',
+                  '字幕翻译将在后台重试：已处理{0}/{1}句（{2}%），'
+                  '已翻译{3}句，{4}个分块待重试',
                   [
                     progress.processedCues,
                     progress.totalCues,
@@ -1931,37 +1960,48 @@ class VideoDetailController extends GetxController
           }
         },
       );
-      _subtitleJob = job;
-      if (await job.loadCached()) {
-        if (identical(_subtitleJob, job)) _subtitleJob = null;
-        return;
-      }
+      _subtitleSubscription?.detach();
+      _subtitleSubscription = subscription;
       if (isClosed ||
           generation != _subtitleGeneration ||
           _manualSubtitle ||
           vttSubtitlesIndex.value != index) {
-        if (identical(_subtitleJob, job)) _subtitleJob = null;
-        return;
-      }
-      if (!allowNewTranslation || !SubtitleTranslateService.needed) {
-        subtitleTranslationStatus.value = '';
-        subtitleTranslationProgress.value = 0;
-        subtitleTranslationRunning.value = false;
-        if (identical(_subtitleJob, job)) _subtitleJob = null;
+        subscription.detach();
+        if (identical(_subtitleSubscription, subscription)) {
+          _subtitleSubscription = null;
+        }
         return;
       }
       _subtitlePositionWorker?.dispose();
       _subtitlePositionWorker = ever<int>(
         plPlayerController.position,
-        job.setPosition,
+        subscription.setPosition,
       );
-      try {
-        await job.run();
-      } finally {
-        if (identical(_subtitleJob, job)) {
-          _subtitlePositionWorker?.dispose();
-          _subtitlePositionWorker = null;
-          _subtitleJob = null;
+      unawaited(
+        subscription.whenComplete.then((_) {
+          if (identical(_subtitleSubscription, subscription)) {
+            _subtitlePositionWorker?.dispose();
+            _subtitlePositionWorker = null;
+            _subtitleSubscription = null;
+          }
+        }),
+      );
+      final shouldWait =
+          Pref.subtitleTranslationWaitForComplete &&
+          allowNewTranslation &&
+          SubtitleTranslateService.needed &&
+          plPlayerController.playerStatus.isPlaying;
+      if (shouldWait) {
+        _pausedForSubtitleTranslation = true;
+        await PlPlayerController.pauseIfExists();
+        await subscription.whenComplete;
+        if (!isClosed &&
+            generation == _subtitleGeneration &&
+            !_manualSubtitle &&
+            identical(_subtitleSubscription, subscription) &&
+            _pausedForSubtitleTranslation) {
+          _pausedForSubtitleTranslation = false;
+          await PlPlayerController.playIfExists();
         }
       }
     } catch (_) {
@@ -1997,6 +2037,133 @@ class VideoDetailController extends GetxController
       }
     } finally {
       _subtitleRefreshBusy = false;
+    }
+  }
+
+  _SubtitlePrefetchTarget? _captureNextPlaylistSubtitleTarget() {
+    dynamic next;
+    dynamic nextAfterCurrent(List<dynamic> entries) {
+      final current = entries.indexWhere((entry) => entry?.cid == cid.value);
+      if (current < 0 || current + 1 >= entries.length) return null;
+      return entries[current + 1];
+    }
+
+    try {
+      if (isPlayAll && mediaList.isNotEmpty) {
+        next = nextAfterCurrent(mediaList);
+      }
+      if (next == null &&
+          isUgc &&
+          Get.isRegistered<UgcIntroController>(tag: heroTag)) {
+        final pages = Get.find<UgcIntroController>(tag: heroTag)
+            .videoDetail
+            .value
+            .pages;
+        if (pages != null && pages.length > 1) next = nextAfterCurrent(pages);
+      }
+      if (next == null && Get.isRegistered<PgcIntroController>(tag: heroTag)) {
+        final episodes = Get.find<PgcIntroController>(tag: heroTag)
+            .pgcItem
+            .episodes;
+        if (episodes != null && episodes.length > 1) {
+          next = nextAfterCurrent(episodes);
+        }
+      }
+      final nextCid = next?.cid as int?;
+      if (nextCid == null || nextCid == cid.value) return null;
+      final nextBvid = (next?.bvid as String?) ?? bvid;
+      final rawEpId = next?.epId ?? next?.id;
+      return (
+        bvid: nextBvid,
+        cid: nextCid,
+        epId: rawEpId is int ? rawEpId : null,
+        seasonId: rawEpId is int ? seasonId : null,
+      );
+    } catch (_) {
+      // The current video can still play if its optional playlist is malformed.
+      return null;
+    }
+  }
+
+  static Future<void> _prefetchNextPlaylistSubtitle(
+    _SubtitlePrefetchTarget target,
+  ) async {
+    if (!Pref.subtitleTranslationPrefetchNext) return;
+    try {
+      final playInfo = await VideoHttp.playInfo(
+        bvid: target.bvid,
+        cid: target.cid,
+        seasonId: target.seasonId,
+        epId: target.epId,
+      );
+      if (!Pref.subtitleTranslationPrefetchNext) return;
+      if (playInfo case Success(:final response)) {
+        final tracks = response.subtitle?.subtitles;
+        if (tracks == null || tracks.isEmpty) return;
+        final selection = SubtitleSelectionPolicy.choose(
+          tracks,
+          Pref.uiTranslateLang,
+          canTranslate: SubtitleTranslateService.needed,
+        );
+        if (!selection.translate || selection.index == 0) return;
+        final sourceTrack = tracks[selection.index - 1];
+        final sourceUrl = sourceTrack.subtitleUrl;
+        if (sourceUrl == null || sourceUrl.isEmpty) return;
+        final body = await VideoHttp.fetchSubtitleBody(sourceUrl);
+        if (body == null || !Pref.subtitleTranslationPrefetchNext) {
+          return;
+        }
+        final cues = SubtitleCues.fromBody(body);
+        if (cues.isEmpty) return;
+        final targetLanguage = Pref.uiTranslateLang;
+        final cacheKey =
+            '${target.bvid}/${target.cid}/${sourceTrack.lan}/$targetLanguage';
+        final proxies = SubtitleTranslationProxy.parseMany(
+          Pref.subtitleTranslationProxies,
+          defaultType: Pref.subtitleTranslationProxyType == 'socks5'
+              ? SubtitleTranslationProxyType.socks5
+              : SubtitleTranslationProxyType.http,
+        );
+        final proxyPool = SubtitleTranslationProxyPool(proxies);
+        SubtitleTranslationCoordinator.attach(
+          key: SubtitleTranslationJob.cacheIdentity(cacheKey, cues),
+          allowNewTranslation: true,
+          createJob: (onUpdate) => SubtitleTranslationJob(
+            cues: cues,
+            chunkSize: Pref.subtitleChunkSize,
+            concurrency: proxyPool.enabled
+                ? proxyPool.workerCount
+                : Pref.subtitleConcurrency,
+            cacheKey: cacheKey,
+            onUpdate: onUpdate,
+            translate: SubtitleTranslateService.translateChunk,
+            translateWithContext: (lines, context) => proxyPool.enabled
+                ? proxyPool.run((proxy) async {
+                    try {
+                      return await SubtitleTranslateService.translateChunk(
+                        lines,
+                        contextLines: context,
+                        proxy: proxy,
+                      );
+                    } on AiApiException catch (error) {
+                      if (error.statusCode == null) {
+                        proxyPool.markUnavailable(proxy);
+                      }
+                      rethrow;
+                    }
+                  })
+                : SubtitleTranslateService.translateChunk(
+                    lines,
+                    contextLines: context,
+                  ),
+          ),
+          onUpdate: (_, _) {},
+        ).detach();
+      }
+    } on FormatException {
+      // Invalid optional proxy input must never interrupt playback.
+    } catch (_) {
+      // Prefetch is best effort; the next video will still translate on open.
     }
   }
 

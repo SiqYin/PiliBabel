@@ -33,7 +33,7 @@ class SubtitleTranslationProgress {
   final int totalCues;
   final int failedChunks;
 
-  bool get isComplete => completedChunks == totalChunks;
+  bool get isComplete => completedChunks == totalChunks && failedChunks == 0;
 
   double get ratio => totalCues == 0 ? 0 : processedCues / totalCues;
 }
@@ -131,18 +131,28 @@ class SubtitleTranslationJob {
   final int contextOverlap;
   final List<String> _texts;
   final Set<int> _pending = {};
+  final Set<int> _completedChunks = {};
+  final Set<int> _failedChunkIndexes = {};
   int positionSeconds;
   bool _cancelled = false;
-  int _completed = 0;
   int _processedCues = 0;
   int _translatedCues = 0;
-  int _failedChunks = 0;
   bool _cacheChecked = false;
   bool _cacheHit = false;
   Timer? _refresh;
   DateTime? _lastEmitAt;
+  Future<void> _checkpointTail = Future.value();
 
   int get total => (cues.length + chunkSize - 1) ~/ chunkSize;
+
+  static String cacheIdentity(String cacheKey, List<SubtitleCue> cues) {
+    final source = cues
+        .map((cue) => '${cue.start}/${cue.end}/${cue.text}')
+        .join(
+          '\n',
+        );
+    return sha256.convert(utf8.encode('$cacheKey\n$source')).toString();
+  }
 
   void cancel() {
     _cancelled = true;
@@ -160,18 +170,52 @@ class SubtitleTranslationJob {
       final data =
           jsonDecode(await file.readAsString()) as Map<String, dynamic>;
       final lines = (data['texts'] as List).cast<String>();
-      if (lines.length != cues.length ||
-          lines.any((line) => line.trim().isEmpty) ||
-          _unchangedChinese(cues.map((cue) => cue.text).toList(), lines) ||
-          _cancelled)
+      if (lines.length != cues.length || _cancelled) return false;
+      final completed = data['completedChunks'] is List
+          ? (data['completedChunks'] as List)
+                .whereType<num>()
+                .map((value) => value.toInt())
+                .where((index) => index >= 0 && index < total)
+                .toSet()
+          : <int>{};
+      final isComplete =
+          data['complete'] == true ||
+          (completed.isEmpty &&
+              lines.every((line) => line.trim().isNotEmpty) &&
+              !_unchangedChinese(cues.map((cue) => cue.text).toList(), lines));
+      if (isComplete) {
+        completed
+          ..clear()
+          ..addAll(List.generate(total, (index) => index));
+      }
+      if (completed.isEmpty ||
+          completed.any((index) => !_isValidChunk(index, lines))) {
         return false;
+      }
       _texts.setAll(0, lines);
-      _completed = total;
-      _processedCues = cues.length;
-      _translatedCues = cues.length;
-      _cacheHit = true;
+      _completedChunks
+        ..clear()
+        ..addAll(completed);
+      _failedChunkIndexes
+        ..clear()
+        ..addAll(
+          data['failedChunks'] is List
+              ? (data['failedChunks'] as List)
+                    .whereType<num>()
+                    .map((value) => value.toInt())
+                    .where(
+                      (index) =>
+                          index >= 0 &&
+                          index < total &&
+                          !_completedChunks.contains(index),
+                    )
+              : const <int>[],
+        );
+      _translatedCues = _cueCount(_completedChunks);
+      _processedCues = _translatedCues + _cueCount(_failedChunkIndexes);
+      _cacheHit = _completedChunks.length == total;
       _emit();
-      return true;
+      return _cacheHit;
     } catch (_) {
       return false;
     }
@@ -179,26 +223,17 @@ class SubtitleTranslationJob {
 
   Future<void> run() async {
     if (cues.isEmpty || _cancelled || await loadCached()) return;
-    _pending.addAll(List.generate(total, (i) => i));
+    _pending.addAll(
+      List.generate(
+        total,
+        (index) => index,
+      ).where((index) => !_completedChunks.contains(index)),
+    );
     await Future.wait(List.generate(concurrency, (_) => _worker()));
     _refresh?.cancel();
     if (_cancelled) return;
+    await _checkpointTail;
     _emit();
-    if (_failedChunks == 0) {
-      try {
-        final file = _cacheFile;
-        await file.parent.create(recursive: true);
-        final temp = File('${file.path}.${identityHashCode(this)}.tmp');
-        await temp.writeAsString(jsonEncode({'texts': _texts}));
-        if (_cancelled) {
-          await temp.delete();
-          return;
-        }
-        await temp.rename(file.path);
-      } catch (_) {
-        // Playback does not depend on disk caching.
-      }
-    }
   }
 
   Future<void> _worker() async {
@@ -217,13 +252,15 @@ class SubtitleTranslationJob {
         final result = await _translateWithRetry(source, context);
         if (_cancelled) return;
         _texts.setRange(start, end, result);
-        _translatedCues += end - start;
+        _completedChunks.add(next);
+        _failedChunkIndexes.remove(next);
+        _translatedCues = _cueCount(_completedChunks);
       } catch (_) {
         if (_cancelled) return;
-        _failedChunks++;
+        _failedChunkIndexes.add(next);
       }
-      _completed++;
-      _processedCues += end - start;
+      _processedCues = _translatedCues + _cueCount(_failedChunkIndexes);
+      _saveCheckpoint();
       _scheduleEmit();
     }
   }
@@ -315,12 +352,12 @@ class SubtitleTranslationJob {
     onUpdate(
       SubtitleCues.toVtt(cues, _texts),
       SubtitleTranslationProgress(
-        completedChunks: _completed,
+        completedChunks: _completedChunks.length,
         totalChunks: total,
         processedCues: _processedCues,
         translatedCues: _translatedCues,
         totalCues: cues.length,
-        failedChunks: _failedChunks,
+        failedChunks: _failedChunkIndexes.length,
       ),
     );
   }
@@ -333,9 +370,55 @@ class SubtitleTranslationJob {
         (double.tryParse(parts[2]) ?? 0);
   }
 
+  bool _isValidChunk(int index, List<String> texts) {
+    final start = index * chunkSize;
+    final end = min(start + chunkSize, cues.length);
+    return texts.sublist(start, end).every((line) => line.trim().isNotEmpty) &&
+        !_unchangedChinese(
+          cues.sublist(start, end).map((cue) => cue.text).toList(),
+          texts.sublist(start, end),
+        );
+  }
+
+  int _cueCount(Iterable<int> indexes) => indexes.fold(
+    0,
+    (count, index) => count + min(chunkSize, cues.length - index * chunkSize),
+  );
+
+  void _saveCheckpoint() {
+    if (_cancelled) return;
+    _checkpointTail = _checkpointTail.then((_) async {
+      if (_cancelled) return;
+      try {
+        final file = _cacheFile;
+        await file.parent.create(recursive: true);
+        if (_cancelled) return;
+        final complete = _completedChunks.length == total;
+        final payload = <String, Object>{
+          'version': 2,
+          'complete': complete,
+          'texts': List<String>.from(_texts),
+          'completedChunks': _completedChunks.toList()..sort(),
+          'failedChunks': _failedChunkIndexes.toList()..sort(),
+        };
+        final temp = File(
+          '${file.path}.${identityHashCode(this)}.'
+          '${DateTime.now().microsecondsSinceEpoch}.tmp',
+        );
+        await temp.writeAsString(jsonEncode(payload));
+        if (_cancelled) {
+          if (await temp.exists()) await temp.delete();
+          return;
+        }
+        await temp.rename(file.path);
+      } catch (_) {
+        // Playback and a later retry do not depend on checkpoint storage.
+      }
+    });
+  }
+
   File get _cacheFile {
-    final source = cues.map((e) => '${e.start}/${e.end}/${e.text}').join('\n');
-    final hash = sha256.convert(utf8.encode('$cacheKey\n$source'));
+    final hash = cacheIdentity(cacheKey, cues);
     return File(
       path.join(
         cacheDirectory ?? path.join(appSupportDirPath, 'subtitle_translations'),

@@ -1903,6 +1903,26 @@ abstract final class Pref {
     value.clamp(1, 5).toInt(),
   );
 
+  static bool get subtitleTranslationWaitForComplete => _setting.get(
+    SettingBoxKey.subtitleTranslationWaitForComplete,
+    defaultValue: false,
+  );
+
+  static set subtitleTranslationWaitForComplete(bool value) => _setting.put(
+    SettingBoxKey.subtitleTranslationWaitForComplete,
+    value,
+  );
+
+  static bool get subtitleTranslationPrefetchNext => _setting.get(
+    SettingBoxKey.subtitleTranslationPrefetchNext,
+    defaultValue: true,
+  );
+
+  static set subtitleTranslationPrefetchNext(bool value) => _setting.put(
+    SettingBoxKey.subtitleTranslationPrefetchNext,
+    value,
+  );
+
   static String get subtitleTranslationProxies =>
       _setting.get(SettingBoxKey.subtitleTranslationProxies, defaultValue: '');
 
