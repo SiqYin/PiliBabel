@@ -67,10 +67,26 @@ class SliverHotKeyword extends StatelessWidget {
                 // 后面全是空白。这里让标签始终和文字同一行（靠右、垂直居中），
                 // 一条最多两行。
                 final full = Pref.videoTitleFull;
-                final keyword = Text(
-                  uiTxTight(i.keyword!),
+                // 标签用 WidgetSpan 直接跟在文字流里：译文常常是一行多出几个字，
+                // 第二行还空着大半行，标签就该紧跟在最后一个字后面，而不是被挤到
+                // 单独一行（那样一条热搜会白占一行、行间距看着莫名其妙地大）。
+                // 多留一行给标签：文字正好占满两行时标签会落到第三行，不能裁掉它。
+                final keyword = Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: uiTxTight(i.keyword!)),
+                      if (tag != null)
+                        WidgetSpan(
+                          alignment: PlaceholderAlignment.middle,
+                          child: Padding(
+                            padding: const .only(left: 4),
+                            child: tag,
+                          ),
+                        ),
+                    ],
+                  ),
                   overflow: TextOverflow.ellipsis,
-                  maxLines: full ? 2 : 1,
+                  maxLines: full ? 3 : 1,
                   style: const TextStyle(fontSize: 14),
                 );
                 return Material(
@@ -83,21 +99,9 @@ class SliverHotKeyword extends StatelessWidget {
                       padding: const .only(left: 2, right: 10),
                       child: Tooltip(
                         message: uiTxTight(i.keyword!),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Flexible(
-                              child: Padding(
-                                padding: const .fromLTRB(6, 5, 0, 5),
-                                child: keyword,
-                              ),
-                            ),
-                            if (tag != null)
-                              Padding(
-                                padding: const .only(left: 4, right: 2),
-                                child: tag,
-                              ),
-                          ],
+                        child: Padding(
+                          padding: const .fromLTRB(6, 5, 2, 5),
+                          child: keyword,
                         ),
                       ),
                     ),
