@@ -2094,13 +2094,31 @@ class VideoDetailController extends GetxController
             : 0,
       .followLanguage => await _followLanguageIndex(),
     };
-    // 字幕偏好保持默认（默认不显示）时：界面语言不是简体中文、且视频自带中文轨，
-    // 就自动开那条中文字幕，译文由 setSubtitle 里的后台翻译补上。
+    // 字幕偏好保持默认（默认不显示）时，界面语言不是简体中文就自动开一条轨：
+    // **优先与界面语言一致的那条** —— 日语界面 + 视频自带日语字幕就直接显示，
+    // 不用再把中文字幕翻一遍（原来只认中文轨，于是有原生日语字幕的视频反而
+    // 什么都不显示，或者显示一条翻过的中文轨）。没有同语言轨才退回原规则：
+    // 开中文轨、译文由 setSubtitle 里的后台翻译补上。
     // 用户显式改过字幕偏好时不动它 —— 尊重用户的选择。
     if (Pref.subtitlePreferenceV2 == SubtitlePrefType.off &&
         SubtitleTranslateService.needed) {
-      final zhIdx = sub.indexWhere(SubtitleTranslateService.isChineseTrack);
-      if (zhIdx >= 0) idx = zhIdx + 1;
+      final target = Pref.uiTranslateLang;
+      var best = -1;
+      // 起评 1：必须是同一门语言。简繁之别（1 分）对字幕没意义，宁可去翻中文轨。
+      var bestScore = 1;
+      for (var i = 0; i < sub.length; i++) {
+        final score = Subtitle.langScore(sub[i].lan, target);
+        if (score > bestScore) {
+          bestScore = score;
+          best = i;
+        }
+      }
+      if (best >= 0) {
+        idx = best + 1;
+      } else {
+        final zhIdx = sub.indexWhere(SubtitleTranslateService.isChineseTrack);
+        if (zhIdx >= 0) idx = zhIdx + 1;
+      }
     }
     await setSubtitle(idx);
     if (Pref.subtitlePreferenceV2 == SubtitlePrefType.followLanguage) {
