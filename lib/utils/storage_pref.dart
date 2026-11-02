@@ -1938,6 +1938,16 @@ abstract final class Pref {
   static set uiTranslateLang(String value) =>
       _setting.put(SettingBoxKey.uiTranslateLang, value);
 
+  /// 官方 AI 原声翻译声轨是否跟随界面语言自动选中。
+  ///
+  /// 只在**稿件本身下发了对应语言的官方声轨**时才生效，匹配不上就保持原声，
+  /// 绝不退而求其次挑「最接近的一门语言」（见 `VideoDetailController._autoTrackLang`）。
+  static bool get audioTrackFollowUiLang =>
+      _setting.get(SettingBoxKey.audioTrackFollowUiLang, defaultValue: true);
+
+  static set audioTrackFollowUiLang(bool value) =>
+      _setting.put(SettingBoxKey.audioTrackFollowUiLang, value);
+
   static String get uiTranslateModel =>
       _setting.get(SettingBoxKey.uiTranslateModel, defaultValue: '');
 
