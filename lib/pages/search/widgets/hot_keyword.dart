@@ -62,15 +62,13 @@ class SliverHotKeyword extends StatelessWidget {
                     : null;
                 // 「标题完全显示」打开时关键词最多两行。
                 //
-                // 标签**不能另起一行**：译文比中文长得多，常常正好占满两行，标签再
-                // 独占一行的话一条热搜会变成三行、四行，而第二行往往只剩一两个字、
-                // 后面全是空白。这里让标签始终和文字同一行（靠右、垂直居中），
-                // 一条最多两行。
+                // 标签**不能另起一行**：译文比中文长得多，常常正好占满行宽，标签再
+                // 独占一行的话一条热搜会凭空多出一行，而那一行往往只剩一两个字、
+                // 后面全是空白。这里让标签始终和文字同一行（靠右、垂直居中）。
                 final full = Pref.videoTitleFull;
                 // 标签用 WidgetSpan 直接跟在文字流里：译文常常是一行多出几个字，
                 // 第二行还空着大半行，标签就该紧跟在最后一个字后面，而不是被挤到
                 // 单独一行（那样一条热搜会白占一行、行间距看着莫名其妙地大）。
-                // 多留一行给标签：文字正好占满两行时标签会落到第三行，不能裁掉它。
                 final keyword = Text.rich(
                   TextSpan(
                     children: [
@@ -86,7 +84,10 @@ class SliverHotKeyword extends StatelessWidget {
                     ],
                   ),
                   overflow: TextOverflow.ellipsis,
-                  maxLines: full ? 3 : 1,
+                  // 默认一行；「标题完全显示」打开后两行（不是三行）。
+                  // 标签是 WidgetSpan，会随文字流换行，不会独占一行，
+                  // 所以两行足够容纳「文字 + 标签」。
+                  maxLines: full ? 2 : 1,
                   style: const TextStyle(fontSize: 14),
                 );
                 return Material(
