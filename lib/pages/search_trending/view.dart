@@ -172,12 +172,14 @@ class _SearchTrendingPageState extends State<SearchTrendingPage> {
                 title: Row(
                   children: [
                     Flexible(
-                      child: Text(
-                        item.keyword!,
-                        maxLines: 1,
-                        overflow: .ellipsis,
-                        strutStyle: const StrutStyle(height: 1, leading: 0),
-                        style: const TextStyle(height: 1, fontSize: 15),
+                      child: Obx(
+                        () => Text(
+                          uiTxTight(item.keyword!),
+                          maxLines: 1,
+                          overflow: .ellipsis,
+                          strutStyle: const StrutStyle(height: 1, leading: 0),
+                          style: const TextStyle(height: 1, fontSize: 15),
+                        ),
                       ),
                     ),
                     if (item.icon?.isNotEmpty == true) ...[

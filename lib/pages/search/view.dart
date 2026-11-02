@@ -174,12 +174,14 @@ class _SearchPageState extends State<SearchPage> {
   Widget _buildHotSearch({
     bool isTrending = true,
   }) {
-    final text = Text(
-      isTrending ? '大家都在搜' : '搜索发现',
-      strutStyle: const StrutStyle(leading: 0, height: 1),
-      style: theme.textTheme.titleMedium!.copyWith(
-        height: 1,
-        fontWeight: .bold,
+    final text = Obx(
+      () => Text(
+        uiTx(isTrending ? '大家都在搜' : '搜索发现'),
+        strutStyle: const StrutStyle(leading: 0, height: 1),
+        style: theme.textTheme.titleMedium!.copyWith(
+          height: 1,
+          fontWeight: .bold,
+        ),
       ),
     );
     final outline = theme.colorScheme.outline;
