@@ -1,6 +1,7 @@
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/models_new/search/search_trending/list.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:cached_network_image_ce/cached_network_image.dart';
@@ -39,57 +40,84 @@ class SliverHotKeyword extends StatelessWidget {
         crossAxisCount: 2,
         children: hotSearchList
             .map(
-              (i) => Material(
-                type: .transparency,
-                borderRadius: const .all(.circular(3)),
-                child: InkWell(
+              (i) {
+                // 条目后面的小标签：`icon` 与服务端下发的图标图片、「直播中」是内置
+                // 动图，两者都没法接文本翻译；只有推荐理由是文字。
+                final Widget? tag = !i.icon.isNullOrEmpty
+                    ? CachedNetworkImage(
+                        height: 15,
+                        memCacheHeight: cacheHeight,
+                        imageUrl: ImageUtils.thumbnailUrl(i.icon!),
+                        placeholder: (_, _) => const SizedBox.shrink(),
+                      )
+                    : i.showLiveIcon == true
+                    ? Image.asset(
+                        Assets.livingRect,
+                        width: 48,
+                        height: 15,
+                        cacheHeight: cacheHeight,
+                      )
+                    : i.recommendReason?.isNotEmpty == true
+                    ? Text(uiTx(i.recommendReason!), style: style)
+                    : null;
+                // 「标题完全显示」打开时改成上下两行：关键词最多两行、标签另起一行。
+                // 译文通常比中文原文长得多，和标签横排并在一起会把关键词挤成省略号，
+                // 用户根本看不出这条热搜是什么。
+                final full = Pref.videoTitleFull;
+                final keyword = Text(
+                  uiTxTight(i.keyword!),
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: full ? 2 : 1,
+                  style: const TextStyle(fontSize: 14),
+                );
+                return Material(
+                  type: .transparency,
                   borderRadius: const .all(.circular(3)),
-                  onTap: () => onClick?.call(i.keyword),
-                  child: Padding(
-                    padding: const .only(left: 2, right: 10),
-                    child: Tooltip(
-                      message: uiTxTight(i.keyword!),
-                      child: Row(
-                        children: [
-                          Flexible(
-                            child: Padding(
-                              padding: const .fromLTRB(6, 5, 0, 5),
-                              child: Text(
-                                uiTxTight(i.keyword!),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                                style: const TextStyle(fontSize: 14),
+                  child: InkWell(
+                    borderRadius: const .all(.circular(3)),
+                    onTap: () => onClick?.call(i.keyword),
+                    child: Padding(
+                      padding: const .only(left: 2, right: 10),
+                      child: Tooltip(
+                        message: uiTxTight(i.keyword!),
+                        child: full
+                            ? Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const .fromLTRB(6, 5, 0, 0),
+                                    child: keyword,
+                                  ),
+                                  if (tag != null)
+                                    Padding(
+                                      padding: const .fromLTRB(6, 3, 0, 5),
+                                      child: tag,
+                                    )
+                                  else
+                                    const SizedBox(height: 5),
+                                ],
+                              )
+                            : Row(
+                                children: [
+                                  Flexible(
+                                    child: Padding(
+                                      padding: const .fromLTRB(6, 5, 0, 5),
+                                      child: keyword,
+                                    ),
+                                  ),
+                                  if (tag != null)
+                                    Padding(
+                                      padding: const .only(left: 4),
+                                      child: tag,
+                                    ),
+                                ],
                               ),
-                            ),
-                          ),
-                          if (!i.icon.isNullOrEmpty)
-                            Padding(
-                              padding: const .only(left: 4),
-                              child: CachedNetworkImage(
-                                height: 15,
-                                memCacheHeight: cacheHeight,
-                                imageUrl: ImageUtils.thumbnailUrl(i.icon!),
-                                placeholder: (_, _) => const SizedBox.shrink(),
-                              ),
-                            )
-                          else if (i.showLiveIcon == true)
-                            Padding(
-                              padding: const .only(left: 4),
-                              child: Image.asset(
-                                Assets.livingRect,
-                                width: 48,
-                                height: 15,
-                                cacheHeight: cacheHeight,
-                              ),
-                            )
-                          else if (i.recommendReason?.isNotEmpty == true)
-                            Text(uiTx(i.recommendReason!), style: style),
-                        ],
                       ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             )
             .toList(),
       )),
@@ -180,27 +208,43 @@ class _RenderHotKeywordGrid extends RenderBox
         (constraints.maxWidth - mainAxisSpacing * (crossAxisCount - 1)) /
         crossAxisCount;
     final c = BoxConstraints(maxWidth: childWidth);
+    // 两遍布局：条目高度不再假定一致。「标题完全显示」打开后关键词最多两行、
+    // 标签另起一行，有没有标签、文字长短都会让高度不同；沿用首个子节点的高度
+    // 去套整张表，高出来的条目会压到下一行上去。
+    final heights = <double>[];
     var child = firstChild;
-    double? childHeight;
-    int index = 0;
     while (child != null) {
-      if (childHeight == null) {
-        childHeight = (child..layout(c, parentUsesSize: true)).size.height;
-      } else {
-        child.layout(c);
-      }
+      child.layout(c, parentUsesSize: true);
+      heights.add(child.size.height);
+      child = (child.parentData as MultiChildLayoutParentData).nextSibling;
+    }
+    final count = heights.length;
+    final rowCount = count == 0 ? 0 : (count / crossAxisCount).ceil();
+    final rowHeights = List<double>.filled(rowCount, 0);
+    final rowTops = List<double>.filled(rowCount, 0);
+    for (var i = 0; i < count; i++) {
+      final r = i ~/ crossAxisCount;
+      if (heights[i] > rowHeights[r]) rowHeights[r] = heights[i];
+    }
+    var top = 0.0;
+    for (var r = 0; r < rowCount; r++) {
+      rowTops[r] = top;
+      top += rowHeights[r] + (r == rowCount - 1 ? 0 : crossAxisSpacing);
+    }
+    child = firstChild;
+    var index = 0;
+    while (child != null) {
       final parentData = child.parentData as MultiChildLayoutParentData
         ..offset = Offset(
           (childWidth + mainAxisSpacing) * (index % crossAxisCount),
-          (childHeight + crossAxisSpacing) * (index ~/ crossAxisCount),
+          rowTops[index ~/ crossAxisCount],
         );
       child = parentData.nextSibling;
       index++;
     }
-    final row = (index / crossAxisCount).ceil();
     size = constraints.constrainDimensions(
       constraints.maxWidth,
-      row * childHeight! + crossAxisSpacing * (row - 1),
+      rowCount == 0 ? 0.0 : top,
     );
   }
 

@@ -156,11 +156,11 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
               final enabled = controller.uiTranslateEnabled.value;
               return SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text(uiTx('视频标题完全显示')),
+                title: Text(uiTx('标题完全显示')),
                 subtitle: Text(
                   uiTx(
                     enabled
-                        ? '首页与动态的视频方块会纵向拉长，尽量完整显示翻译后的标题'
+                        ? '首页与动态的视频方块会纵向拉长，搜索页的热搜条目会变成上下两行，尽量完整显示翻译后的标题'
                         : '开启 AI 翻译后生效；当前翻译已关闭',
                   ),
                 ),
