@@ -238,7 +238,11 @@ class AudioController extends GetxController
     videoPlayerServiceHandler
       ?..onPlay = onPlay
       ..onPause = onPause
-      ..onSeek = onSeek;
+      ..onSeek = onSeek
+      // 耳机播放/暂停键靠这个查询真实状态：本页用的是自己的 media_kit Player，
+      // 没有 PlPlayerController 实例，handler 里那份「上报给系统」的 playing
+      // 在这条路上不会被更新。
+      ..isPlaying = isPlaying;
 
     animController = AnimationController(
       vsync: this,
@@ -1110,6 +1114,7 @@ class AudioController extends GetxController
       ?..onPlay = null
       ..onPause = null
       ..onSeek = null
+      ..isPlaying = null
       ..onVideoDetailDispose(heroTag);
     _subscriptions?.forEach((e) => e.cancel());
     _subscriptions?.clear();
