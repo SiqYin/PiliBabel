@@ -249,7 +249,7 @@ class VideoCardH extends StatelessWidget {
                 );
               }
               return Text(
-                uiTx(videoItem.title),
+                uiTxTight(videoItem.title),
                 textAlign: .start,
                 style: TextStyle(
                   fontSize: theme.textTheme.bodyMedium!.fontSize,

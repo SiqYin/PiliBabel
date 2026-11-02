@@ -211,7 +211,7 @@ class _BubblePageState extends State<BubblePage>
                     },
                   ),
                   title: Text(
-                    uiTx(item.title!),
+                    uiTxTight(item.title!),
                     maxLines: 1,
                     overflow: .ellipsis,
                   ),

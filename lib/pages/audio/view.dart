@@ -288,7 +288,7 @@ class _AudioPageState extends State<AudioPage> {
                         title: Obx(() {
                           UiTranslateService.to.revision.value;
                           return Text(
-                            uiTx(item.arc.title),
+                            uiTxTight(item.arc.title),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: isCurr
@@ -410,7 +410,7 @@ class _AudioPageState extends State<AudioPage> {
                                 const TextSpan(text: '  '),
                               ],
                               TextSpan(
-                                text: uiTx(item.arc.title),
+                                text: uiTxTight(item.arc.title),
                               ),
                             ],
                           ),
@@ -1086,7 +1086,7 @@ CoverTranslateButton(cover: cover),
                     ),
                     const SizedBox(height: 12),
                     SelectionText(
-                      uiTx(audioItem.arc.title),
+                      uiTxTight(audioItem.arc.title),
                       style: const TextStyle(height: 1.7, fontSize: 16),
                     ),
                     const SizedBox(height: 12),

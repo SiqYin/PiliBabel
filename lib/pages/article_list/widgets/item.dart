@@ -64,7 +64,7 @@ CoverTranslateButton(cover: item.imageUrls!.first),
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      uiTx(item.title!),
+                      uiTxTight(item.title!),
                       style: const TextStyle(
                         fontSize: 14,
                         height: 1.42,

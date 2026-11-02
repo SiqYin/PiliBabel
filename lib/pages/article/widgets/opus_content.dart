@@ -371,7 +371,7 @@ CoverTranslateButton(cover: ugc.cover),
                         child: Column(
                           crossAxisAlignment: .start,
                           children: [
-                            Text(uiTx(ugc.title!)),
+                            Text(uiTxTight(ugc.title!)),
                             Text(
                               ugc.descSecond!,
                               maxLines: 2,
@@ -409,7 +409,7 @@ CoverTranslateButton(cover: common.cover),
                         child: Column(
                           crossAxisAlignment: .start,
                           children: [
-                            Text(uiTx(common.title!)),
+                            Text(uiTxTight(common.title!)),
                             if (common.desc1 != null)
                               Text(
                                 common.desc1!,
@@ -451,7 +451,7 @@ CoverTranslateButton(cover: live.cover),
                         child: Column(
                           crossAxisAlignment: .start,
                           children: [
-                            Text(uiTx(live.title!)),
+                            Text(uiTxTight(live.title!)),
                             if (live.descFirst != null)
                               Text(
                                 live.descFirst!,
@@ -493,7 +493,7 @@ CoverTranslateButton(cover: opus.cover),
                         child: Column(
                           crossAxisAlignment: .start,
                           children: [
-                            Text(uiTx(opus.title!)),
+                            Text(uiTxTight(opus.title!)),
                             Text(uiTx('${opus.authorName} · ${opus.statView ?? 0}阅读'),
                               style: TextStyle(
                                 fontSize: 13,
@@ -557,7 +557,7 @@ CoverTranslateButton(cover: music.cover),
                         child: Column(
                           crossAxisAlignment: .start,
                           children: [
-                            Text(uiTx(music.title!)),
+                            Text(uiTxTight(music.title!)),
                             if (music.label != null)
                               Text(
                                 uiTx(music.label!),
@@ -961,7 +961,7 @@ Widget opusCollection(ThemeData theme, ModuleCollection item) {
                   mainAxisSize: .min,
                   crossAxisAlignment: .start,
                   children: [
-                    Text(uiTx(item.title!)),
+                    Text(uiTxTight(item.title!)),
                     Text.rich(
                       TextSpan(
                         children: [

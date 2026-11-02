@@ -128,7 +128,7 @@ CoverTranslateButton(cover: cover),
           ),
         if (video.title case final title?)
           Text(
-            uiTx(title),
+            uiTxTight(title),
             maxLines: isDetail ? null : (Pref.videoTitleFull ? 2 : 1),
             style: const TextStyle(fontWeight: FontWeight.bold),
             overflow: isDetail ? null : TextOverflow.ellipsis,

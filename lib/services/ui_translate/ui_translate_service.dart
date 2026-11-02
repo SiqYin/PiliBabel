@@ -297,7 +297,9 @@ class UiTranslateService extends GetxService {
   String commentText(String src, String id) {
     revision.value;
     if (_originalIds.contains(id)) return src;
-    return _tx(src);
+    // 评论区按窄位选型：这里是社区语境，游戏术语优先用通行简称
+    // （ゼンゼロ / スタレ / ブルアカ / アクナイ…），与用户口径一致。
+    return _tx(src, UiTextWidth.tight);
   }
 
   /// 弹幕翻译确认弹窗的提示文案。
@@ -1557,6 +1559,14 @@ class UiTranslateService extends GetxService {
 /// 需在被 Obx（或任何读取了 UiTranslateService 修订号）的构建里调用，
 /// 才能在异步译文回来后自动刷新；否则仅在界面重建时取到缓存译文。
 String uiTx(String src) => UiTranslateService.tx(src);
+
+/// 窄位便捷入口：列表标题 / 卡片标题 / 按钮 / Tab 这类空间紧张的位置用它。
+///
+/// 命中的游戏术语会倾向用**通行简称**（ゼンゼロ、スタレ、ブルアカ、アクナイ…），
+/// 详见 [UiTextWidth.tight]。与 [uiTx] 的区别只在术语选型，其余行为完全一致
+/// （同一份缓存、同一套队列），两者混用不会导致重复翻译。
+String uiTxTight(String src) =>
+    UiTranslateService.tx(src, width: UiTextWidth.tight);
 
 /// 带占位符的模板翻译：把含 `{0}`/`{1}`… 的整句模板作为一个稳定 key 送翻译，
 /// 再把参数回填（提示词已要求模型保留 `{n}` 占位符）。用于 `'共 {0} 条'` 这类句子。
