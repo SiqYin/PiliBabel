@@ -1,19 +1,13 @@
-### PiliBabel v3.6.3
+### PiliBabel v3.6.4
 
-**Fixes the lag when AI translation is on, turns the glossary into a page with per-table switches, adds hololive / NIJISANJI / THE iDOLM@STER, and fills every table in five languages.**
+**Urgent fix: with v3.6.3, turning AI translation on could leave pages blank and then crash the app. This release also switches every glossary table to off by default.**
 
-**Fixed the lag (important).** With AI translation on, the UI felt sluggish; turning it off made it smooth again. The cause: every translation lookup ran a glossary search first, and on a miss that degraded into scanning 50,000+ term forms by substring — once per widget per frame. Now the translation cache is consulted first, the substring scan only runs on short strings (≤80 chars), and terms are bucketed by their first character: measured comparisons drop from 53,953 to 18–323 per title, i.e. 167–2,997× fewer.
+**What went wrong.** v3.6.3 added in-sentence term matching using a loop that replaced a term, rescanned from the start, and repeated while anything still matched. But most glossary forms are *self-containing* — measured 45,601 out of 53,953 have a translation whose lowercase form still contains the source form (the key `genshin impact` translates to `Genshin Impact`, and Japanese names are often identical to the Japanese key). So the same form was found again after replacement, the loop never ended, and each pass allocated another growing string buffer until the process ran out of memory and was killed. That is what you saw: open a page, nothing loads, then it closes itself.
 
-**The glossary is now its own page.** The settings entry is renamed to "术语集" (Glossary) and opens a dedicated page that lists all 15 tables under two sections — games and franchises — each with its own switch, **all enabled by default**. You can turn off a game you don't play so its proper nouns are not applied to unrelated contexts.
+It now uses a **single-pass cursor scan**: on a hit the cursor jumps past the matched source, and text already written never takes part in further matching. Termination is guaranteed by construction rather than depending on the data.
 
-**Three new tables:** hololive (83 talents), NIJISANJI (239 livers) and THE iDOLM@STER (282 characters).
+**A second hazard, also fixed.** The glossary index and its buckets were built lazily on first use — which happened during the first frame of a page, synchronously, over 50,000 entries. That alone could freeze the frame. The index is now warmed up in the background shortly after launch, and the hot path simply skips the glossary until it is ready, so it can never block rendering.
 
-**All 15 tables now cover five languages** (Simplified Chinese, Traditional Chinese, English, Japanese, Korean) with no gaps in the 769 newly added records. 1,236 of those values were filled in from community-standard names and are tagged with their provenance so they can be reviewed later.
-
-**Fixed "Check for updates" always failing.** The manifest URL pointed at a `glossary` branch that never existed, so it always returned 404. It now ships with the main branch at `docs/glossary-manifest.json`.
-
-**Fixed two untranslated strings:** the description under "Audio track follows UI language" and the note under the app-language selector. They did call the translation helper, but were not wrapped in the reactive `Obx` that rebuilds when a translation arrives, so they stayed Chinese forever.
-
-Also repaired 36 BanG Dream rows whose Japanese name was the literal `{{ruby` — leftover template fragments from an earlier parse.
+**All glossary tables now default to off.** The 15 built-in tables are no longer enabled automatically; open Settings → Terms and turn on the ones you care about. This also removes the overhead of matching against tables you never asked for.
 
 Downloads are below.

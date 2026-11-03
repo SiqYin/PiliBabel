@@ -233,6 +233,7 @@ abstract final class SettingBoxKey {
       glossaryLastChecked = 'glossaryLastChecked',
       glossaryManifestUrl = 'glossaryManifestUrl',
       glossaryDisabledTables = 'glossaryDisabledTables',
+  glossaryDefaultsApplied = 'glossaryDefaultsApplied',
       uiTranslateOnboarded = 'uiTranslateOnboarded',
       uiTranslateUpgradeNoticeShown = 'uiTranslateUpgradeNoticeShown',
       uiTranslateOutageDismissed = 'uiTranslateOutageDismissed',

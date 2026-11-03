@@ -399,6 +399,9 @@ class UiTranslateService extends GetxService {
     }
     _loadCache(Pref.uiTranslateCache);
     _reverseCache.addAll(Pref.uiTranslateQueryCache);
+    // 预热术语表索引：5 万多条形态的构建挪到启动后台，避免首帧卡死。
+    // 只在已启用翻译时才需要；默认所有词表关闭，构建出来也是空表。
+    warmGlossary();
   }
 
   @override
@@ -664,12 +667,55 @@ class UiTranslateService extends GetxService {
   /// 这样以后新增词表天然是启用的，无需迁移。
   static bool _glossaryTableEnabled(String recordId) {
     final bar = recordId.indexOf('|');
-    if (bar <= 0) return true;
+    if (bar <= 0) return false;
     final table = recordId.substring(0, bar);
+    if (!_glossaryDefaultsApplied) {
+      // 首次运行：把所有词表一次性标记为「关闭」。
+      //
+      // 用户要求默认全部关闭，由用户自己按需打开。用一次性标记而不是每次
+      // 判空，是为了不覆盖用户之后自己做的选择。
+      final all = <String>{};
+      for (final key in kGlossaryNames.keys) {
+        final b = key.indexOf('|');
+        if (b > 0) all.add(key.substring(0, b));
+      }
+      all.addAll(kGlossaryManifest.keys);
+      Pref.glossaryDisabledTables = all;
+      Pref.glossaryDefaultsApplied = true;
+      _glossaryDefaultsApplied = true;
+      return false;
+    }
     return !Pref.glossaryDisabledTables.contains(table);
   }
 
-  /// 用户改了某一类术语集的开关后调用：作废已构建的索引，下次查询按新状态重建。
+  /// 进程内缓存「默认关闭」标记，避免每条术语都读一次存储。
+  static bool get _glossaryDefaultsApplied =>
+      _defaultsAppliedCache ??= Pref.glossaryDefaultsApplied;
+  static set _glossaryDefaultsApplied(bool v) => _defaultsAppliedCache = v;
+  static bool? _defaultsAppliedCache;
+
+  /// 术语表索引是否已预热。
+  static bool get glossaryReady => _glossaryFormIndex != null;
+
+  /// 预热术语表索引：把 5 万多条形态的构建从首帧挪到启动后台。
+  ///
+  /// 不预热的话，第一次 `_tx` 会在一帧之内同步建索引与分桶 ——
+  /// 这是 3.6.3「点进去什么也加载不出来、随后闪退」的直接原因之一。
+  static void warmGlossary() {
+    if (!Get.isRegistered<UiTranslateService>()) return;
+    if (!to.enabled) return;
+    Future<void>.delayed(const Duration(milliseconds: 1200), () {
+      if (!Get.isRegistered<UiTranslateService>()) return;
+      if (to.enabled) _warmNow();
+    });
+  }
+
+  /// 立即构建索引（后台调用；构建结果是静态缓存的）。
+  static void _warmNow() {
+    _glossaryIndex.length;
+    _glossaryFormsByFirstChar.length;
+  }
+
   static void rebuildGlossaryIndex() {
     _glossaryFormIndex = null;
     _glossaryFormsSorted = null;
@@ -733,6 +779,10 @@ class UiTranslateService extends GetxService {
     final key = src.trim().toLowerCase();
     if (key.isEmpty) return null;
 
+    // 索引未预热就放弃：宁可这一帧交给模型，也不要在首帧同步构建
+    // 五万条索引导致界面卡死甚至闪退（见 [warmGlossary]）。
+    if (_glossaryFormIndex == null) return null;
+
     // 1) 整串精确命中（最常见：标题/菜单项本身就是一个术语）
     final exact = _glossaryIndex[key];
     if (exact != null) return _glossaryPreferred(exact, langCode, width);
@@ -746,56 +796,59 @@ class UiTranslateService extends GetxService {
     // 桶内按长度降序，「菲欧妮・蕾法爱菈」会先于「菲欧妮」被匹配到，
     // 不会把全名拆成两个短名分别替换。
     // **性能门控**：子串扫描只用于标题/标签这类短文本
-    // （例「【绝区零】菲欧妮实战演示」）。长段落交给模型整句翻译更自然，
-    // 而且遍历术语表对长文本是纯浪费。
+    // （例「【绝区零】菲欧妮实战演示」）。长段落交给模型整句翻译更自然。
     if (src.length > _substringScanMaxChars) return null;
 
-    // 按首字符分桶查找，避免每次都比较全部两万多个形态。
     final buckets = _glossaryFormsByFirstChar;
     if (buckets.isEmpty) return null;
-    var out = src;
+
+    // **单趟游标扫描**（3.6.4 崩溃修复）
+    //
+    // 旧实现是「替换 → 从头重扫 → 只要还有命中就再来一轮」的 while 循环。
+    // 但绝大多数术语是**自我包含**的：实测 53953 个形态中有 45601 个，
+    // 其译文的小写形式仍含原文（例如键 `genshin impact` 的译名就是
+    // `Genshin Impact`；日文名常与日文键完全相同）。于是替换后同一个形态
+    // 又被找到，progress 永远为 true，循环永不退出；每轮都新建 StringBuffer
+    // 且字符串不断变长，内存很快耗尽、进程被杀 ——
+    // 表现就是「点进去什么都加载不出来，然后闪退」。
+    //
+    // 现在改为从头到尾只走一遍游标：命中就写入译文并把游标跳过匹配段，
+    // 已写入的内容不再参与匹配。终止性由构造保证，不依赖数据性质。
+    final lower = src.toLowerCase();
+    final buf = StringBuffer();
+    var cursor = 0;
     var hit = false;
-    // 每一轮：找出当前文本里出现的所有首字符，再扫对应的桶。
-    // 替换后文本会变，因此用 while 循环直到没有新的命中。
-    var progress = true;
-    while (progress) {
-      progress = false;
-      final lower = out.toLowerCase();
-      final firstChars = <String>{};
-      for (final r in lower.runes) {
-        firstChars.add(String.fromCharCode(r));
+    var steps = 0;
+    while (cursor < src.length) {
+      if (++steps > _substringScanMaxSteps) {
+        buf.write(src.substring(cursor));
+        break;
       }
-      for (final fc in firstChars) {
-        final forms = buckets[fc];
-        if (forms == null) continue;
+      final forms = buckets[lower[cursor]];
+      String? matched;
+      String? repl;
+      if (forms != null) {
         for (final form in forms) {
-          final idx = lower.indexOf(form);
-          if (idx < 0) continue;
+          if (!lower.startsWith(form, cursor)) continue;
           final id = _glossaryIndex[form];
           if (id == null) continue;
-          final repl = _glossaryPreferred(id, langCode, width);
-          if (repl == null || repl.isEmpty) continue;
-          // 替换全部出现处
-          final buf = StringBuffer();
-          var cursor = 0;
-          var pos = idx;
-          while (pos >= 0) {
-            buf.write(out.substring(cursor, pos));
-            buf.write(repl);
-            cursor = pos + form.length;
-            // 每次替换后重新取小写串：out 变了，旧的 lower 已过期
-            pos = out.toLowerCase().indexOf(form, cursor);
-          }
-          buf.write(out.substring(cursor));
-          out = buf.toString();
-          hit = true;
-          progress = true;
-          break; // 该桶已改写文本，回到外层重算
+          final r = _glossaryPreferred(id, langCode, width);
+          if (r == null || r.isEmpty) continue;
+          matched = form;
+          repl = r;
+          break;
         }
-        if (progress) break;
+      }
+      if (matched != null && repl != null) {
+        buf.write(repl);
+        cursor += matched.length;
+        hit = true;
+      } else {
+        buf.write(src[cursor]);
+        cursor++;
       }
     }
-    return hit ? out : null;
+    return hit ? buf.toString() : null;
   }
 
   /// 长度降序的术语形态表（供 [_glossaryTranslate] 的子串扫描用），懒构建一次。
@@ -837,6 +890,9 @@ class UiTranslateService extends GetxService {
   static const int _minSubstringFormLength = 3;
   /// 做子串术语替换的最大文本长度：超过就跳过（长文本交给模型整句翻译）。
   static const int _substringScanMaxChars = 80;
+
+  /// 单趟扫描的最大步数（安全阀，正常短文本远达不到）。
+  static const int _substringScanMaxSteps = 4096;
 
   /// 按宽度层级选出该术语的目标语言形态（全称或通行简称）。
   static String? _glossaryPreferred(String id, String langCode, UiTextWidth width) {
