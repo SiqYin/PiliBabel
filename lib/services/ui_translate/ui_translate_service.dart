@@ -531,12 +531,17 @@ class UiTranslateService extends GetxService {
     // 人工固定译名优先于缓存与模型：钉住的译法必须始终生效。
     final pinned = _pinnedTranslations[src]?[currentLanguage.code];
     if (pinned != null) return pinned;
-    // 游戏术语表其次：命中即返回官方译名（全称/简称按 [width] 决定），
-    // 不走缓存、不发请求，也不会被模型结果覆盖。
-    final glossary = _glossaryTranslate(src, currentLanguage.code, width);
-    if (glossary != null) return glossary;
+    // 缓存优先：稳态下这一步就是一次 map 查询，直接返回，不必碰术语表。
+    //
+    // 顺序很关键。之前是「术语表 → 缓存」，而术语表未命中整串时会退化成
+    // 遍历上万个形态做子串扫描 —— 每个还没翻好的控件、每一帧都要跑一遍，
+    // 这正是「打开 AI 翻译后界面整体变卡」的根因。
     final hit = _cache[src];
     if (hit != null) return hit;
+    // 术语表其次：命中即返回官方译名（全称/简称按 [width] 决定），
+    // 不发请求，也不会被模型结果覆盖。
+    final glossary = _glossaryTranslate(src, currentLanguage.code, width);
+    if (glossary != null) return glossary;
     // 尚未翻译：先显示原文，排进待翻队列。
     if (_pending.add(src)) _scheduleFlush();
     return src;
@@ -556,10 +561,10 @@ class UiTranslateService extends GetxService {
     if (looksLikeNativeScript(src, currentLanguage.nativeScript)) return src;
     final pinned = _pinnedTranslations[src]?[currentLanguage.code];
     if (pinned != null) return pinned;
-    final glossary = _glossaryTranslate(src, currentLanguage.code, UiTextWidth.wide);
-    if (glossary != null) return glossary;
     final hit = _cache[src];
     if (hit != null) return hit;
+    final glossary = _glossaryTranslate(src, currentLanguage.code, UiTextWidth.wide);
+    if (glossary != null) return glossary;
     // 未翻译：先显示原文，但排进优先队列；同时把它从普通队列里摘掉，
     // 避免同一串文字被两个队列各翻一次。
     _pending.remove(src);
@@ -653,18 +658,41 @@ class UiTranslateService extends GetxService {
   /// 术语表运行时索引：任一语言的全称/简称 → 术语 id。懒构建一次。
   static Map<String, String>? _glossaryFormIndex;
 
+/// 词表是否启用（[recordId] 形如 `zzz|Phoenix`，取竖线前的 id）。
+///
+/// 默认全部启用：`Pref.glossaryDisabledTables` 里只记录用户**关掉**的，
+/// 这样以后新增词表天然是启用的，无需迁移。
+static bool _glossaryTableEnabled(String recordId) {
+  final bar = recordId.indexOf('|');
+  if (bar <= 0) return true;
+  final table = recordId.substring(0, bar);
+  return !Pref.glossaryDisabledTables.contains(table);
+}
+
+/// 用户改了某一类术语集的开关后调用：作废已构建的索引，下次查询按新状态重建。
+static void rebuildGlossaryIndex() {
+  _glossaryFormIndex = null;
+  _glossaryFormsSorted = null;
+  _formsByFirstCharCache = null;
+  _minFormLengthCache = 0;
+  if (Get.isRegistered<UiTranslateService>()) {
+    to.revision.value++;
+  }
+}
   static Map<String, String> get _glossaryIndex {
     final built = _glossaryFormIndex;
     if (built != null) return built;
     final index = <String, String>{};
     void put(Map<String, Map<String, String>> table) {
-      table.forEach((id, names) {
-        for (final form in names.values) {
-          final key = form.toLowerCase();
-          // 全称优先登记；同一形态冲突时先到先得（确定性）。
-          index.putIfAbsent(key, () => id);
-        }
-      });
+          table.forEach((id, names) {
+            // 按用户的开关过滤：关闭的词表不参与匹配。
+            if (!_glossaryTableEnabled(id)) return;
+            for (final form in names.values) {
+              final key = form.toLowerCase();
+              // 全称优先登记；同一形态冲突时先到先得（确定性）。
+              index.putIfAbsent(key, () => id);
+            }
+          });
     }
 
     put(kGlossaryNames);
@@ -678,6 +706,7 @@ class UiTranslateService extends GetxService {
     // 取译文时仍按 id 拿该语言的标准名，所以短名也能得到正确译名。
     // 顺序上标准名先登记（put 在别名之前），同名冲突时标准名优先。
     kGlossaryAliasToId.forEach((form, id) {
+      if (!_glossaryTableEnabled(id)) return;
       index.putIfAbsent(form.toLowerCase(), () => id);
     });
     // 简称也建立索引：源文本里出现 ゼンゼロ/ZZZ 时同样能命中该术语。
@@ -716,36 +745,60 @@ class UiTranslateService extends GetxService {
     // 做法：按**长形态优先**扫描句子，把命中的术语替换成目标语言的标准名。
     // 长优先很关键：「菲欧妮・蕾法爱菈」必须先于「菲欧妮」被匹配到，
     // 否则全名会被拆成两个短名各自替换。
-    final forms = _glossarySortedForms;
-    if (forms.isEmpty) return null;
+    // **性能门控**：子串扫描只用于标题/标签这类短文本
+    // （例「【绝区零】菲欧妮实战演示」）。它要遍历上万个术语形态，
+    // 长段落跑一遍会明显卡顿，而长文本交给模型整句翻译本来就更自然。
+    if (src.length > _substringScanMaxChars) return null;
+
+    // **性能门控**：子串扫描只用于标题/标签这类短文本
+    // （例「【绝区零】菲欧妮实战演示」）。长段落交给模型整句翻译更自然，
+    // 而且遍历术语表对长文本是纯浪费。
+    if (src.length > _substringScanMaxChars) return null;
+
+    // 按首字符分桶查找，避免每次都比较全部两万多个形态。
+    final buckets = _glossaryFormsByFirstChar;
+    if (buckets.isEmpty) return null;
     var out = src;
     var hit = false;
-    for (final form in forms) {
-      // 大小写不敏感地找；form 已是小写
+    // 每一轮：找出当前文本里出现的所有首字符，再扫对应的桶。
+    // 替换后文本会变，因此用 while 循环直到没有新的命中。
+    var progress = true;
+    while (progress) {
+      progress = false;
       final lower = out.toLowerCase();
-      final idx = lower.indexOf(form);
-      if (idx < 0) continue;
-      final id = _glossaryIndex[form];
-      if (id == null) continue;
-      final repl = _glossaryPreferred(id, langCode, width);
-      if (repl == null || repl.isEmpty) continue;
-      // 逐次替换（同一术语可能出现多次）
-      final buf = StringBuffer();
-      var cursor = 0;
-      var pos = idx;
-      var replaced = false;
-      while (pos >= 0) {
-        buf.write(out.substring(cursor, pos));
-        buf.write(repl);
-        cursor = pos + form.length;
-        replaced = true;
-        final nextLower = out.toLowerCase();
-        pos = nextLower.indexOf(form, cursor);
+      final firstChars = <String>{};
+      for (final r in lower.runes) {
+        firstChars.add(String.fromCharCode(r));
       }
-      if (!replaced) continue;
-      buf.write(out.substring(cursor));
-      out = buf.toString();
-      hit = true;
+      for (final fc in firstChars) {
+        final forms = buckets[fc];
+        if (forms == null) continue;
+        for (final form in forms) {
+          final idx = lower.indexOf(form);
+          if (idx < 0) continue;
+          final id = _glossaryIndex[form];
+          if (id == null) continue;
+          final repl = _glossaryPreferred(id, langCode, width);
+          if (repl == null || repl.isEmpty) continue;
+          // 替换全部出现处
+          final buf = StringBuffer();
+          var cursor = 0;
+          var pos = idx;
+          var cur = lower;
+          while (pos >= 0) {
+            buf.write(out.substring(cursor, pos));
+            buf.write(repl);
+            cursor = pos + form.length;
+            pos = cur.indexOf(form, cursor);
+          }
+          buf.write(out.substring(cursor));
+          out = buf.toString();
+          hit = true;
+          progress = true;
+          break; // 该桶已改写文本，回到外层重算
+        }
+        if (progress) break;
+      }
     }
     return hit ? out : null;
   }
@@ -761,6 +814,34 @@ class UiTranslateService extends GetxService {
   }
 
   static List<String>? _glossaryFormsSorted;
+  /// 术语形态按**首字符**分桶，供子串扫描用。
+  ///
+  /// 直接遍历全部形态在运行期是 O(2 万) 次 indexOf，每个文本控件每帧一次，
+  /// 打开 AI 翻译后界面会明显卡（实测形态数 23282）。按首字符分桶后，
+  /// 只比较「文本里确实出现过的首字符」对应的桶，通常是几十条。
+  ///
+  /// 桶内仍按长度降序，保证「菲欧妮・蕾法爱菈」先于「菲欧妮」被替换。
+  /// **单字符与双字符形态不参与子串匹配**：单字术语几乎会命中任何中文句子，
+  /// 替换出来只会是错的。
+  static Map<String, List<String>> get _glossaryFormsByFirstChar {
+    final cached = _formsByFirstCharCache;
+    if (cached != null) return cached;
+    final map = <String, List<String>>{};
+    for (final form in _glossarySortedForms) {
+      if (form.length < _minSubstringFormLength) continue;
+      final fc = form[0];
+      (map[fc] ??= <String>[]).add(form);
+    }
+    _formsByFirstCharCache = map;
+    return map;
+  }
+
+  static Map<String, List<String>>? _formsByFirstCharCache;
+
+  /// 参与子串匹配的最短形态长度。单/双字符太容易误命中，排除。
+  static const int _minSubstringFormLength = 3;
+  /// 做子串术语替换的最大文本长度：超过就跳过（长文本交给模型整句翻译）。
+  static const int _substringScanMaxChars = 80;
 
   /// 按宽度层级选出该术语的目标语言形态（全称或通行简称）。
   static String? _glossaryPreferred(String id, String langCode, UiTextWidth width) {
