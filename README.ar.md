@@ -153,7 +153,7 @@ paru -S pilinara-bin         # أو عبر AUR: pilinara-bin (مبنياً مس�
 
 <br/>
 
-## سجل التغييرات: 2.6.x → 3.6.3
+## سجل التغييرات: 2.6.x → 3.6.4
 
 - **2.6.x** — تخزين الصوت مؤقتًا (وحدتان منفصلتان للفيديو والصوت، مع تذكّر آخر اختيار، ومداخل في صفحة الفيديو وصفحة الصوت فقط ومشغّل الصوت؛ مع الحفاظ على الصيغة الأصلية وإمكانية اختيار الجودة) والتنزيل إلى الجهاز (عنصر قائمة مستقل: الفيديو/الصوت أولًا ثم الجودة؛ وعند عدم تحديد مجلد يُفتح منتقي الملفات في النظام).
 
@@ -167,7 +167,7 @@ paru -S pilinara-bin         # أو عبر AUR: pilinara-bin (مبنياً مس�
 
 - **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
 
-- **3.5.0–3.6.3 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone.
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. تم إصلاح عطل ظهر في 3.6.3: تفعيل الترجمة بالذكاء الاصطناعي قد يترك الصفحات فارغة ثم يُغلق التطبيق (أُصلح في 3.6.4).
 
 ## سجل الميزات الموروثة (من PiliNara / PiliPlus)
 

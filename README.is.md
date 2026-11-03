@@ -153,7 +153,7 @@ paru -S pilinara-bin         # eða í gegnum AUR: pilinara-bin (forbyggð) / pi
 
 <br/>
 
-## Breytingaskrá: 2.6.x → 3.6.3
+## Breytingaskrá: 2.6.x → 3.6.4
 
 - **2.6.x** — hljóðskyndiminni (aðskildir einingar fyrir myndband og hljóð, man síðustu val, inngangar á myndbandssíðu, hljóðsíðu og í hljóðspilara; upprunalegt snið varðveitt; gæði valanleg) og niðurhal í tækið (sér valmyndaratriði: fyrst myndband/hljóð, svo gæði; ef engin mappa er stillt opnast skráarval kerfisins).
 
@@ -167,7 +167,7 @@ paru -S pilinara-bin         # eða í gegnum AUR: pilinara-bin (forbyggð) / pi
 
 - **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
 
-- **3.5.0–3.6.3 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone.
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4.
 
 ## Erfða eiginleikayfirlit (frá PiliNara / PiliPlus)
 

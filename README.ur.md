@@ -153,7 +153,7 @@ paru -S pilinara-bin         # یا AUR کے ذریعے: pilinara-bin (پہلے 
 
 <br/>
 
-## تبدیلیوں کا ریکارڈ: 2.6.x → 3.6.3
+## تبدیلیوں کا ریکارڈ: 2.6.x → 3.6.4
 
 - **2.6.x** — آڈیو کیش (ویڈیو اور آڈیو کے لیے الگ ماڈیول، آخری انتخاب یاد رہتا ہے، ویڈیو صفحہ، صرف آڈیو صفحہ اور آڈیو پلیئر میں داخلے؛ اصل فارمیٹ برقرار رہتا ہے؛ معیار منتخب کیا جا سکتا ہے) اور ڈیوائس پر ڈاؤن لوڈ (الگ مینو آئٹم: پہلے ویڈیو/آڈیو، پھر معیار؛ فولڈر مقرر نہ ہو تو سسٹم فائل منتخب کرنے والا کھلتا ہے)۔
 
@@ -167,7 +167,7 @@ paru -S pilinara-bin         # یا AUR کے ذریعے: pilinara-bin (پہلے 
 
 - **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
 
-- **3.5.0–3.6.3 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone.
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4.
 
 ## ورثے میں ملنے والی خصوصیات کا لاگ (PiliNara / PiliPlus سے)
 
