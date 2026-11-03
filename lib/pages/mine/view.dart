@@ -32,6 +32,7 @@ import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:material_ui/material_ui.dart' hide ListTile;
+import 'package:PiliPlus/services/ui_translate/prewarm_strings.dart';
 
 class MinePage extends StatefulWidget {
   const MinePage({super.key, this.showBackBtn = false});
@@ -44,6 +45,15 @@ class MinePage extends StatefulWidget {
 
 class _MediaPageState extends CommonPageState<MinePage>
     with AutomaticKeepAliveClientMixin {
+
+  @override
+  void initState() {
+    super.initState();
+    // 「我的」是另一个枢纽页：收藏/历史/稍后再看/设置等二级界面都从这里进，
+    // 那些界面的 ⋮ 菜单与确认框是「点开才渲染」，先预热一遍。
+    PrewarmStrings.warmCommon();
+  }
+
   final MineController controller = Get.putOrFind(MineController.new);
   late final MainController _mainController = Get.find<MainController>();
   late final List<MineCardType> _mineCards = _loadMineCards();
