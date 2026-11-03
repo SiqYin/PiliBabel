@@ -153,7 +153,7 @@ paru -S pilinara-bin         # أو عبر AUR: pilinara-bin (مبنياً مس�
 
 <br/>
 
-## سجل التغييرات: 2.6.x → 3.3.4
+## سجل التغييرات: 2.6.x → 3.6.3
 
 - **2.6.x** — تخزين الصوت مؤقتًا (وحدتان منفصلتان للفيديو والصوت، مع تذكّر آخر اختيار، ومداخل في صفحة الفيديو وصفحة الصوت فقط ومشغّل الصوت؛ مع الحفاظ على الصيغة الأصلية وإمكانية اختيار الجودة) والتنزيل إلى الجهاز (عنصر قائمة مستقل: الفيديو/الصوت أولًا ثم الجودة؛ وعند عدم تحديد مجلد يُفتح منتقي الملفات في النظام).
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # أو عبر AUR: pilinara-bin (مبنياً مس�
 - **3.2.0–3.3.3** — أساس شبكي على نمط التطبيق الرسمي: بصمة الطلب (buvid/fp/session_id/env)، والتبديل عند فشل مضيفي gRPC، ومعترض إعادة المحاولة، وحدّ الطلبات المتزامنة لكل مضيف، والتحميل المسبق للواجهة الأولى عند الإقلاع البارد، ومعاملات أحداث الخلاصة الرسمية، وترتيب مرشّحي CDN مع بدائل خارجية؛ والتحميل المسبق للصفحة الثانية، وطابور محدود لتحميل الصور المصغّرة، والتحميل المسبق لروابط التشغيل؛ ثم عرض الديناميكيات (P3) عبر gRPC، وإصلاح خطأ الترجمة في مدة المخزن المؤقت لصفحة الصوت وخطأ تحويل النوع في التحميل المسبق للتعليقات الذي كان يجعل كل إعادة محاولة تفشل فورًا.
 
 - **3.3.4** — بطاقات الديناميكيات للمنشورات المدفوعة والتطبيقات المصغّرة ومجموعات المواضيع والاشتراكات؛ وإصلاح اختفاء جميع صور الأغلفة في الشاشة الأولى من الصفحة الرئيسية؛ ومزامنة تحديثات PiliNara (شريط الحالة، واستئناف التنزيل بعد إغلاق العملية، وتحديث media-kit، وتجاوز الشاشة السوداء في Wayland، واختيار جودة الصوت عند التخزين المؤقت)؛ وتدقيق ترجمة الذكاء الاصطناعي لكل نصوص الواجهة المضافة منذ 3.0.5؛ وهذا السجل.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.3 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone.
 
 ## سجل الميزات الموروثة (من PiliNara / PiliPlus)
 

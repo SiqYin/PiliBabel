@@ -153,7 +153,7 @@ paru -S pilinara-bin         # hoặc qua AUR: pilinara-bin (dựng sẵn) / pil
 
 <br/>
 
-## Nhật ký thay đổi: 2.6.x → 3.3.4
+## Nhật ký thay đổi: 2.6.x → 3.6.3
 
 - **2.6.x** — bộ nhớ đệm âm thanh (mô-đun riêng cho video và âm thanh, ghi nhớ lựa chọn gần nhất, có lối vào ở trang video, trang chỉ âm thanh và trình phát âm thanh; giữ nguyên định dạng gốc; chọn được chất lượng) và tải về thiết bị (mục menu riêng: chọn video/âm thanh trước rồi chọn chất lượng; nếu chưa đặt thư mục sẽ mở trình chọn tệp của hệ thống).
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # hoặc qua AUR: pilinara-bin (dựng sẵn) / pil
 - **3.2.0–3.3.3** — nền tảng mạng theo phong cách ứng dụng chính thức: dấu vân tay yêu cầu (buvid/fp/session_id/env), chuyển máy chủ gRPC khi lỗi, bộ chặn thử lại, giới hạn yêu cầu đồng thời mỗi máy chủ, tải trước luồng đầu khi khởi động lạnh, tham số sự kiện luồng chính thức, thứ tự ứng viên CDN kèm phương án dự phòng nước ngoài; tải trước trang thứ hai, hàng đợi tải trước ảnh bìa có giới hạn, tải trước URL phát; sau đó hiển thị dynamics (P3) qua gRPC và các sửa lỗi: lỗi biên dịch thời lượng bộ đệm ở trang âm thanh và lỗi chuyển kiểu khi tải trước bình luận khiến mọi lần thử lại thất bại ngay lập tức.
 
 - **3.3.4** — thẻ dynamics cho bài đăng trả phí, ứng dụng nhỏ, bộ chủ đề và đăng ký; đã sửa lỗi màn hình đầu trang chủ không hiện ảnh bìa nào; đưa các thay đổi từ PiliNara vào (thanh trạng thái, tiếp tục tải sau khi đóng tiến trình, cập nhật media-kit, tránh màn hình đen trên Wayland, chọn chất lượng âm thanh khi lưu đệm); rà soát dịch AI cho toàn bộ văn bản giao diện thêm từ 3.0.5; nhật ký này.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.3 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone.
 
 ## Danh sách tính năng kế thừa (từ PiliNara / PiliPlus)
 

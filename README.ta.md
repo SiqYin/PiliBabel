@@ -153,7 +153,7 @@ paru -S pilinara-bin         # அல்லது AUR வழியாக: pilina
 
 <br/>
 
-## மாற்றங்களின் பட்டியல்: 2.6.x → 3.3.4
+## மாற்றங்களின் பட்டியல்: 2.6.x → 3.6.3
 
 - **2.6.x** — ஒலி தற்காலிகச் சேமிப்பு (வீடியோ மற்றும் ஒலிக்கு தனி தொகுதிகள், கடைசி தேர்வை நினைவில் வைக்கும், வீடியோ பக்கம், ஒலி-மட்டும் பக்கம் மற்றும் ஒலி இயக்கியில் நுழைவுகள்; அசல் வடிவம் தக்கவைக்கப்படுகிறது; தரத்தைத் தேர்ந்தெடுக்கலாம்) மற்றும் சாதனத்தில் பதிவிறக்கம் (தனி பட்டி உருப்படி: முதலில் வீடியோ/ஒலி, பின்னர் தரம்; கோப்புறை அமைக்கப்படாவிட்டால் கணினியின் கோப்புத் தேர்வி திறக்கும்).
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # அல்லது AUR வழியாக: pilina
 - **3.2.0–3.3.3** — அதிகாரப்பூர்வ செயலி பாணியிலான வலைப்பிணைப்பு அடித்தளம்: கோரிக்கை கைரேகை (buvid/fp/session_id/env), gRPC புரவலன் தோல்வி மாற்றம், மீள்முயற்சி இடைமறிப்பான், ஒரு புரவலனுக்கு ஒரே நேரக் கோரிக்கை வரம்பு, குளிர் தொடக்கத்தில் முதல் ஊட்டத்தை முன்னேற்றுதல், அதிகாரப்பூர்வ ஊட்ட நிகழ்வு அளவுருக்கள், வெளிநாட்டு மாற்றுடன் CDN வேட்பாளர் வரிசை; இரண்டாம் பக்க முன்னேற்றுதல், வரம்புடைய அட்டை முன்னேற்ற வரிசை, இயக்க URL முன்னேற்றுதல்; பின்னர் dynamics (P3)-ஐ gRPC வழியாக வரைதல் மற்றும் திருத்தங்கள்: ஒலி பக்கத்தின் இடையக காலத்தின் தொகுப்பு பிழை மற்றும் கருத்து முன்னேற்றத்தின் வகை மாற்றப் பிழை, இதனால் ஒவ்வொரு மீள்முயற்சியும் உடனே தோல்வியடைந்தது.
 
 - **3.3.4** — கட்டணப் பதிவுகள், சிறு செயலிகள், தலைப்புத் தொகுப்புகள் மற்றும் சந்தாக்களுக்கான dynamics அட்டைகள்; முதற்பக்கத்தின் முதல் திரையில் அட்டைகள் எதுவும் தெரியாத பிரச்சினை சரிசெய்யப்பட்டது; PiliNara மாற்றங்கள் இணைக்கப்பட்டன (நிலைப் பட்டி, செயல்முறை மூடப்பட்ட பின் பதிவிறக்கம் தொடரும், media-kit புதுப்பிப்பு, Wayland இல் கறுப்பு வீடியோவைத் தவிர்த்தல், சேமிக்கும்போது ஒலித் தரத் தேர்வு); 3.0.5 முதல் சேர்க்கப்பட்ட அனைத்து இடைமுக உரையின் AI மொழிபெயர்ப்பு தணிக்கை; இந்தப் பட்டியல்.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.3 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone.
 
 ## மரபு அம்ச பதிவு (PiliNara / PiliPlus இலிருந்து)
 

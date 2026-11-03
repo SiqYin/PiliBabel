@@ -153,7 +153,7 @@ paru -S pilinara-bin         # oder über AUR: pilinara-bin (vorgebaut) / pilina
 
 <br/>
 
-## Änderungsverlauf: 2.6.x → 3.3.4
+## Änderungsverlauf: 2.6.x → 3.6.3
 
 - **2.6.x** — Audio-Cache (getrennte Module für Video und Audio, letzte Auswahl wird gemerkt, Einstiege auf der Videoseite, der Nur-Audio-Seite und im Audioplayer; Originalformat bleibt erhalten; wählbare Qualität) und Download auf das Gerät (eigener Menüpunkt: erst Video/Audio, dann Qualität; ohne eingestellten Ordner öffnet sich die Systemdateiauswahl).
 
@@ -166,6 +166,12 @@ paru -S pilinara-bin         # oder über AUR: pilinara-bin (vorgebaut) / pilina
 - **3.3.0–3.3.3** — Dynamik-Darstellung (P3) über gRPC, danach Korrekturen: Kompilierfehler bei der Pufferlänge auf der Audioseite und ein Typfehler beim Vorladen der Kommentare, durch den jeder Wiederholungsversuch sofort scheiterte.
 
 - **3.3.4** — Dynamik-Karten für Bezahlkarten, Mini-Apps, Themensammlungen und Abos; der Startbildschirm ohne Titelbilder ist behoben; Abgleich mit PiliNara (Statusleiste, Fortsetzen des Downloads nach Prozessende, media-kit-Aktualisierung, Umgehung des schwarzen Bildes unter Wayland, wählbare Tonqualität beim Cachen); Prüfung der AI-Übersetzung für alle seit 3.0.5 hinzugefügten Oberflächentexte; dieser Änderungsverlauf.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.3 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone.
 
 ## Verzeichnis der übernommenen Funktionen (aus PiliNara / PiliPlus)
 
