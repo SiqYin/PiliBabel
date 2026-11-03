@@ -2033,6 +2033,16 @@ static Set<String> get glossaryDisabledTables =>
 static set glossaryDisabledTables(Set<String> value) =>
     _setting.put(SettingBoxKey.glossaryDisabledTables, value.toList());
 
+/// 术语表「默认关闭」是否已落到存储里。
+///
+/// 用户要求所有词表默认关闭、由用户自己打开。这里用一个一次性标记实现：
+/// 首次读取时把当前全部词表写入 disabled 集合，之后完全尊重用户的选择。
+static bool get glossaryDefaultsApplied =>
+    _setting.get(SettingBoxKey.glossaryDefaultsApplied, defaultValue: false);
+
+static set glossaryDefaultsApplied(bool value) =>
+    _setting.put(SettingBoxKey.glossaryDefaultsApplied, value);
+
   /// 远端术语表清单地址。默认用官方发布的清单，用户可改镜像。
   static String get glossaryManifestUrl {
     final v = _setting.get(SettingBoxKey.glossaryManifestUrl);

@@ -10,8 +10,8 @@ import 'package:get/get.dart';
 /// 术语集清单页。
 ///
 /// 把内嵌的每一个术语表（原神 / 鸣潮 / 崩坏：星穹铁道 / hololive …）按类别列出，
-/// 每条一个开关，默认全开，用户可以关掉不玩的作品，避免它的专有名词被套用到
-/// 其它语境里。
+/// 每条一个开关，**默认全部关闭**，用户按需打开自己感兴趣的作品，避免不相关
+/// 的专有名词被套用到别的语境里。
 ///
 /// 关掉的效果：该词表的所有词条不再参与运行时匹配（见
 /// `UiTranslateService._glossaryTableEnabled`），已翻好的缓存不受影响。
@@ -119,7 +119,7 @@ class _GlossaryTablesPageState extends State<GlossaryTablesPage> {
             padding: const EdgeInsets.only(top: 12),
             child: Text(
               uiTxP(
-                '已启用 {0} / {1} 个术语集。关闭后，该作品的专有名词不再被自动套用。',
+                '已启用 {0} / {1} 个术语集。默认全部关闭，按需打开；未启用时其专有名词不会被套用。',
                 [enabled.toString(), kGlossaryManifest.length.toString()],
               ),
               style: TextStyle(
