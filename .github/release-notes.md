@@ -1,13 +1,13 @@
-### PiliBabel v3.6.4
+### PiliBabel v3.6.4.1
 
-**Urgent fix: with v3.6.3, turning AI translation on could leave pages blank and then crash the app. This release also switches every glossary table to off by default.**
+**Urgent fix: v3.6.4 opened to a permanent black screen.**
 
-**What went wrong.** v3.6.3 added in-sentence term matching using a loop that replaced a term, rescanned from the start, and repeated while anything still matched. But most glossary forms are *self-containing* — measured 45,601 out of 53,953 have a translation whose lowercase form still contains the source form (the key `genshin impact` translates to `Genshin Impact`, and Japanese names are often identical to the Japanese key). So the same form was found again after replacement, the loop never ended, and each pass allocated another growing string buffer until the process ran out of memory and was killed. That is what you saw: open a page, nothing loads, then it closes itself.
+**What happened.** To move glossary index construction off the first frame, v3.6.4 called `warmGlossary()` at the end of `UiTranslateService.onInit()`, and that method read the service's own settings through `to`. But `onInit` runs while the service is *still being registered* — resolving `to` at that moment throws. The exception escaped `onInit`, and `onInit` is invoked from a synchronous `..put()` inside `main()`, before `runApp()`. Startup therefore aborted before the first frame was ever built: a black screen that never goes away, and no crash either, because there is no frame loop left to crash.
 
-It now uses a **single-pass cursor scan**: on a hit the cursor jumps past the matched source, and text already written never takes part in further matching. Termination is guaranteed by construction rather than depending on the data.
+**The fix.** `warmGlossary()` no longer touches `to`. It reads `Pref.uiTranslateEnabled` directly and wraps the whole warm-up in `try`, so a failed warm-up can never affect startup. Warm-up is purely an optimisation; it should never be able to break launching.
 
-**A second hazard, also fixed.** The glossary index and its buckets were built lazily on first use — which happened during the first frame of a page, synchronously, over 50,000 entries. That alone could freeze the frame. The index is now warmed up in the background shortly after launch, and the hot path simply skips the glossary until it is ready, so it can never block rendering.
+Also restored a doc comment that had been dropped from `rebuildGlossaryIndex`, and fixed a missing newline at end of file.
 
-**All glossary tables now default to off.** The 15 built-in tables are no longer enabled automatically; open Settings → Terms and turn on the ones you care about. This also removes the overhead of matching against tables you never asked for.
+Everything from v3.6.4 is included, of course: the single-pass term scan, the background index warm-up, and all glossary tables defaulting to off.
 
 Downloads are below.
