@@ -23,7 +23,7 @@ import 'package:get/get.dart';
 class GlossaryUpdateService extends GetxService {
   /// 默认远端清单地址（与术语表数据同源发布）。
   static const String defaultManifestUrl =
-      'https://raw.githubusercontent.com/SiqYin/PiliBabel/glossary/manifest.json';
+      'https://raw.githubusercontent.com/SiqYin/PiliBabel/main/docs/glossary-manifest.json';
 
   /// 两次自动检查之间的最小间隔。
   static const Duration _minGap = Duration(hours: 24);
