@@ -481,6 +481,18 @@ class UiTranslateService extends GetxService {
     }
     if (service._pendingUrgent.isNotEmpty) service._scheduleFlush();
   }
+  /// [precache] 的延迟版：等首屏渲染完再排队。
+  ///
+  /// 页面 initState 里直接 precache 会和「首屏可见文案入队」撞在同一时刻，
+  /// 挤进同一批反而拖慢首屏。延迟一会儿后首屏那批已经在发请求，
+  /// 再把「点开才出现」的文案补进去，用户真正点开时刚好翻好。
+  static void precacheLater(Iterable<String> sources) {
+    final list = sources.toList(growable: false);
+    Future<void>.delayed(
+      const Duration(milliseconds: 600),
+      () => precache(list),
+    );
+  }
 
   String _tx(String src, [UiTextWidth width = UiTextWidth.normal]) {
     // 始终读取一次修订号：即便翻译关闭，也能让包裹本调用的 Obx 拥有合法依赖，
