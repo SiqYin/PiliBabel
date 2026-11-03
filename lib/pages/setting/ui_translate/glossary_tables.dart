@@ -1,6 +1,5 @@
-import 'dart:convert';
-
-import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
+import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
+import 'package:PiliPlus/common/widgets/view_safe_area.dart';
 import 'package:PiliPlus/services/ui_translate/game_glossary.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -10,11 +9,16 @@ import 'package:get/get.dart';
 /// 术语集清单页。
 ///
 /// 把内嵌的每一个术语表（原神 / 鸣潮 / 崩坏：星穹铁道 / hololive …）按类别列出，
-/// 每条一个开关，**默认全部关闭**，用户按需打开自己感兴趣的作品，避免不相关
-/// 的专有名词被套用到别的语境里。
+/// 每条一个开关，**默认全部开启**，用户可以关掉不玩的作品，避免它的专有名词被
+/// 套用到别的语境里。
 ///
 /// 关掉的效果：该词表的所有词条不再参与运行时匹配（见
 /// `UiTranslateService._glossaryTableEnabled`），已翻好的缓存不受影响。
+///
+/// **配色必须跟随应用主题**：本页和其它设置页一样使用 `SimpleScaffold` +
+/// `Theme.of(context)`，颜色全部从 `colorScheme` 取，不写死任何色值。
+/// 之前这里用的是裸 `Scaffold`、开关也没套主题，所以在深色主题和自定义调色板下
+/// 会显示成白底黑字紫按钮，与整个 App 割裂。
 class GlossaryTablesPage extends StatefulWidget {
   const GlossaryTablesPage({super.key});
 
@@ -51,6 +55,21 @@ class _GlossaryTablesPageState extends State<GlossaryTablesPage> {
   static const List<String> _projectIds = ['holo', 'niji', 'imas'];
 
   late Set<String> _disabled = Pref.glossaryDisabledTables;
+  late ThemeData theme;
+
+  /// 每个词表的词条数只算一次（每次 build 遍历上万条 key 会明显掉帧）。
+  static final Map<String, int> _countCache = _buildCounts();
+
+  static Map<String, int> _buildCounts() {
+    final map = <String, int>{};
+    for (final key in kGlossaryNames.keys) {
+      final bar = key.indexOf('|');
+      if (bar <= 0) continue;
+      final id = key.substring(0, bar);
+      map[id] = (map[id] ?? 0) + 1;
+    }
+    return map;
+  }
 
   void _toggle(String id, bool enabled) {
     setState(() {
@@ -65,15 +84,6 @@ class _GlossaryTablesPageState extends State<GlossaryTablesPage> {
     UiTranslateService.rebuildGlossaryIndex();
   }
 
-  /// 每个词表的词条数量，从内嵌表里现算。
-  int _countOf(String id) {
-    var n = 0;
-    for (final key in kGlossaryNames.keys) {
-      if (key.startsWith('$id|')) n++;
-    }
-    return n;
-  }
-
   Widget _section(String title, List<String> ids) {
     final tiles = <Widget>[];
     for (final id in ids) {
@@ -84,7 +94,8 @@ class _GlossaryTablesPageState extends State<GlossaryTablesPage> {
           contentPadding: EdgeInsets.zero,
           title: Text(uiTx(name)),
           subtitle: Text(
-            uiTxP('{0} 条术语', [_countOf(id).toString()]),
+            uiTxP('{0} 条术语', [(_countCache[id] ?? 0).toString()]),
+            style: TextStyle(color: theme.colorScheme.outline),
           ),
           value: !_disabled.contains(id),
           onChanged: (v) => _toggle(id, v),
@@ -96,10 +107,13 @@ class _GlossaryTablesPageState extends State<GlossaryTablesPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(0, 12, 0, 4),
+          padding: const EdgeInsets.fromLTRB(0, 16, 0, 4),
           child: Text(
             uiTx(title),
-            style: const TextStyle(fontWeight: FontWeight.w600),
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              color: theme.colorScheme.primary,
+            ),
           ),
         ),
         ...tiles,
@@ -109,29 +123,32 @@ class _GlossaryTablesPageState extends State<GlossaryTablesPage> {
 
   @override
   Widget build(BuildContext context) {
+    theme = Theme.of(context);
     final enabled = kGlossaryManifest.length - _disabled.length;
-    return Scaffold(
+    return SimpleScaffold(
       appBar: AppBar(title: Text(uiTx('术语集'))),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: Text(
-              uiTxP(
-                '已启用 {0} / {1} 个术语集。默认全部关闭，按需打开；未启用时其专有名词不会被套用。',
-                [enabled.toString(), kGlossaryManifest.length.toString()],
-              ),
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.outline,
+      body: ViewSafeArea(
+        child: ListView(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: Text(
+                uiTxP(
+                  '已启用 {0} / {1} 个术语集。关闭后，该作品的专有名词不再被自动套用。',
+                  [enabled.toString(), kGlossaryManifest.length.toString()],
+                ),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: theme.colorScheme.outline,
+                ),
               ),
             ),
-          ),
-          _section('游戏', _gameIds),
-          _section('企划', _projectIds),
-          const SizedBox(height: 24),
-        ],
+            _section('游戏', _gameIds),
+            _section('企划', _projectIds),
+            const SizedBox(height: 24),
+          ],
+        ),
       ),
     );
   }
