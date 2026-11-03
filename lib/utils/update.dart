@@ -10,6 +10,7 @@ import 'package:PiliPlus/http/api.dart';
 import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
+import 'package:PiliPlus/utils/markdown_text.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
@@ -92,9 +93,14 @@ abstract final class Update {
                   onPressed: () => onDownload(data, ext: ext, url: url),
                   child: Text(text),
                 );
-            // 整个弹窗包在 Obx 里：Release 说明正文（data['body']）走 uiTx——
+            // 整个弹窗包在 Obx 里：Release 说明正文走 uiTx——
             // 弹窗先以原文出现，译文在后台翻好后随 revision 自动刷新；
             // 缓存按语言持久化，同一版本的正文只翻译一次。
+            //
+            // 正文是 GitHub 的 Markdown 原文，**必须先压成纯文本**，否则
+            // `**`、`` ` ``、`###` 这些排版符号会直接显示出来，也会被送去翻译
+            // （见 MarkdownText）。
+            final plainBody = MarkdownText.toDialogText('${data['body'] ?? ''}');
             return Obx(
               () => AlertDialog(
                 title: Text(uiTx('🎉 发现新版本 ')),
@@ -109,7 +115,9 @@ abstract final class Update {
                           style: const TextStyle(fontSize: 20),
                         ),
                         const SizedBox(height: 8),
-                        Text(uiTx(data['body'] ?? '')),
+                        // 走**高优先级**队列：这个弹窗是用户一进 App 就看到的，
+                        // 不能和主界面几十条文案排队（见 txUrgent）。
+                        Text(uiTxUrgent(plainBody)),
                         TextButton(
                           onPressed: () => PageUtils.launchURL(
                             '${Constants.sourceCodeUrl}/commits/main',
