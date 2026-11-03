@@ -662,11 +662,67 @@ class UiTranslateService extends GetxService {
   ///
   /// 社区口径说明（用户确认）：B 站游戏视频的评论区本身就是社区的一部分，
   /// 社区俚语简称在翻译中名正言顺、应当推荐——所以带通行简称的词条默认简称。
-  static String? _glossaryTranslate(String src, String langCode, UiTextWidth width) {
-    final id = _glossaryIndex[src.trim().toLowerCase()];
-    if (id == null) return null;
-    return _glossaryPreferred(id, langCode, width);
+  String? _glossaryTranslate(String src, String langCode, UiTextWidth width) {
+    final key = src.trim().toLowerCase();
+    if (key.isEmpty) return null;
+
+    // 1) 整串精确命中（最常见：标题/菜单项本身就是一个术语）
+    final exact = _glossaryIndex[key];
+    if (exact != null) return _glossaryPreferred(exact, langCode, width);
+
+    // 2) 术语嵌在句子里：如「【绝区零】菲欧妮实战演示」。
+    //
+    // 之前只做精确匹配，所以这类标题永远命中不了，直接丢给模型音译——
+    // 这就是「词表里明明有菲欧妮，App 里还是翻错」的另一半原因。
+    //
+    // 做法：按**长形态优先**扫描句子，把命中的术语替换成目标语言的标准名。
+    // 长优先很关键：「菲欧妮・蕾法爱菈」必须先于「菲欧妮」被匹配到，
+    // 否则全名会被拆成两个短名各自替换。
+    final forms = _glossarySortedForms;
+    if (forms.isEmpty) return null;
+    var out = src;
+    var hit = false;
+    for (final form in forms) {
+      // 大小写不敏感地找；form 已是小写
+      final lower = out.toLowerCase();
+      final idx = lower.indexOf(form);
+      if (idx < 0) continue;
+      final id = _glossaryIndex[form];
+      if (id == null) continue;
+      final repl = _glossaryPreferred(id, langCode, width);
+      if (repl == null || repl.isEmpty) continue;
+      // 逐次替换（同一术语可能出现多次）
+      final buf = StringBuffer();
+      var cursor = 0;
+      var pos = idx;
+      var replaced = false;
+      while (pos >= 0) {
+        buf.write(out.substring(cursor, pos));
+        buf.write(repl);
+        cursor = pos + form.length;
+        replaced = true;
+        final nextLower = out.toLowerCase();
+        pos = nextLower.indexOf(form, cursor);
+      }
+      if (!replaced) continue;
+      buf.write(out.substring(cursor));
+      out = buf.toString();
+      hit = true;
+    }
+    return hit ? out : null;
   }
+
+  /// 长度降序的术语形态表（供 [_glossaryTranslate] 的子串扫描用），懒构建一次。
+  static List<String> get _glossarySortedForms {
+    final cached = _glossaryFormsSorted;
+    if (cached != null) return cached;
+    final forms = _glossaryIndex.keys.toList(growable: false)
+      ..sort((a, b) => b.length.compareTo(a.length));
+    _glossaryFormsSorted = forms;
+    return forms;
+  }
+
+  static List<String>? _glossaryFormsSorted;
 
   /// 按宽度层级选出该术语的目标语言形态（全称或通行简称）。
   static String? _glossaryPreferred(String id, String langCode, UiTextWidth width) {
