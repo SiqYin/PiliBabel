@@ -1,9 +1,12 @@
 import 'package:PiliPlus/pages/setting/ai_setting/controller.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
+import 'package:PiliPlus/pages/setting/ui_translate/glossary_tables.dart';
 import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/services/ui_translate/translate_provider.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/services/ui_translate/game_glossary.dart';
+import 'package:PiliPlus/services/ui_translate/glossary_update_service.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:get/get.dart';
 
@@ -72,7 +75,7 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
     await Future.delayed(const Duration(milliseconds: 450));
     if (!mounted) return;
     final sectionContext = _aiSectionKey.currentContext;
-    if (sectionContext != null) {
+    if (sectionContext != null && sectionContext.mounted) {
       await Scrollable.ensureVisible(
         sectionContext,
         duration: const Duration(milliseconds: 550),
@@ -156,11 +159,11 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
               final enabled = controller.uiTranslateEnabled.value;
               return SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: Text(uiTx('视频标题完全显示')),
+                title: Text(uiTx('标题完全显示')),
                 subtitle: Text(
                   uiTx(
                     enabled
-                        ? '首页与动态的视频方块会纵向拉长，尽量完整显示翻译后的标题'
+                        ? '首页与动态的视频方块会纵向拉长，搜索页的热搜条目会变成上下两行，尽量完整显示翻译后的标题'
                         : '开启 AI 翻译后生效；当前翻译已关闭',
                   ),
                 ),
@@ -172,6 +175,52 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                   // 关掉开关后方块高度收不回去。
                   Get.forceAppUpdate();
                 },
+              );
+            }),
+            // 官方 AI 原声翻译声轨（B 站自己生成的外语配音）要不要跟着界面语言走。
+            // 只影响「有官方声轨」的稿件；没有的照原声播放，我们不做本地合成兜底。
+            // 必须包在 Obx 里：uiTx 只负责把原文排进翻译队列，
+            // 译文回来后靠这个 Obx 监听 revision 重建才会换掉。
+            // 之前这块直接放在页面体里，所以永远停在中文。
+            Obx(
+              () => SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(uiTx('声轨跟随界面语言')),
+                subtitle: Text(
+                  uiTx(
+                    '稿件带官方 AI 原声翻译声轨、且其中有与界面语言一致的一轨时，'
+                    '打开即自动选中；没有就保持原声。需已登录（未登录时官方接口不换流）',
+                  ),
+                ),
+                value: Pref.audioTrackFollowUiLang,
+                onChanged: (value) {
+                  Pref.audioTrackFollowUiLang = value;
+                  setState(() {});
+                },
+              ),
+            ),
+            // 术语集：每个词表一个开关，默认全开。点进去是独立页面，
+            // 避免把十几个开关平铺在 AI 翻译设置页里。
+            Obx(() {
+              final disabled = Pref.glossaryDisabledTables;
+              final total = kGlossaryManifest.length;
+              final on = total - disabled.length;
+              return ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.library_books_outlined),
+                title: Text(uiTx('术语集')),
+                subtitle: Text(
+                  uiTxP(
+                    '已内置 {0} 条专业术语，{1} / {2} 个术语集已启用',
+                    [
+                      kGlossaryNames.length.toString(),
+                      on.toString(),
+                      total.toString(),
+                    ],
+                  ),
+                ),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => Get.to(GlossaryTablesPage.new),
               );
             }),
             // 翻译引擎：内置官方模型（默认、免密钥）/ 自备 API。
@@ -230,18 +279,21 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
-                    lang.code == 'zh-CN'
-                        ? uiTx(
-                            '当前是原文语言（简体中文）：不调用你配置的 API。'
-                            '评论区外文可点每条评论下的「翻译」，走 B 站自带的免费翻译。',
-                          )
-                        : uiTx(
-                            '简体中文以外的语言（含繁體中文、粤语、吴语、闽南语等）'
-                            '都会用当前选定的翻译引擎翻译。',
-                          ),
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: colorScheme.outline,
+                  // 同样必须包 Obx，否则译文回来后不会重建（见上面声轨那处的说明）
+                  Obx(
+                    () => Text(
+                      lang.code == 'zh-CN'
+                          ? uiTx(
+                              '当前是原文语言（简体中文）：不调用你配置的 API。'
+                              '评论区外文可点每条评论下的「翻译」，走 B 站自带的免费翻译。',
+                            )
+                          : uiTx(
+                              '简体中文以外的语言（含繁體中文、粤语、吴语、闽南语等）'
+                              '都会用当前选定的翻译引擎翻译。',
+                            ),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: colorScheme.outline,
+                      ),
                     ),
                   ),
                 ],

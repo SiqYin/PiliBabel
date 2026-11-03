@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:PiliPlus/grpc/bilibili/rpc.pb.dart';
-import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/utils/host_health.dart';
@@ -35,9 +34,8 @@ abstract final class GrpcReq {
     final length = ByteData.sublistView(data, 1, 5).getInt32(0, Endian.big);
 
     if (data[0] == 1) {
-      return const GZipDecoder().decodeBytes(
-        Uint8List.sublistView(data, 5, length + 5),
-      );
+      return Request.gzip.convert(Uint8List.sublistView(data, 5, length + 5))
+          as Uint8List;
     } else {
       return Uint8List.sublistView(data, 5, length + 5);
     }
@@ -105,6 +103,18 @@ abstract final class GrpcReq {
           } catch (e) {
             msg = utf8.decode(msgBytes, allowMalformed: true);
           }
+        }
+        if (msg.isEmpty) {
+          // 服务端只回非 0 的 Grpc-Status、不带 Grpc-Status-Details-Bin 时，
+          // 这里以前会原样返回空串，界面上就只剩一个「点击重试」，
+          // 完全看不出失败原因。兜底把能拿到的状态和 URL 都拼出来。
+          final grpcStatus = response.headers.value('Grpc-Status') ?? 'unknown';
+          final biliStatus = response.headers.value('Bili-Status-Code');
+          final httpStatus = response.statusCode;
+          msg = 'grpc-status: $grpcStatus'
+              '${biliStatus == null ? '' : ', bili-status-code: $biliStatus'}'
+              '${httpStatus == null ? '' : ', http: $httpStatus'}'
+              '\n${response.requestOptions.uri}';
         }
         return Error(msg, code: code);
       } catch (e) {

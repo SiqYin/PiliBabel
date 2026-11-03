@@ -3,7 +3,7 @@
     <h1>PiliBabel</h1>
     <p><b>Klien Bilibili pihak ketiga dengan terjemahan AI.</b></p>
     <p>Babel — meruntuhkan dinding bahasa, agar setiap orang dapat menikmati bilibili dalam bahasanya sendiri.</p>
-    <p>Mencakup terjemahan 4 bahasa minoritas etnis di Tiongkok dan 3 dialek Tionghoa.</p>
+    <p>Menyatukan 151 bahasa yang didukung resmi bilibili dengan 6 bahasa lain yang belum dicakupnya — Tionghoa Tradisional, Wu Sederhana dan Tradisional, Hokkien daratan dan Taiwan, serta Zhuang — dalam satu daftar.</p>
     <p>Terjemahan langsung berfungsi begitu dipasang, memakai model gratis bilibili — tanpa perlu kunci API.</p>
 </div>
 <!-- lang-switch:start -->
@@ -52,7 +52,7 @@ Dan sejak 1.0, hal itu **langsung bekerja begitu dipasang**: model terjemahannya
 
 - **Terjemahan AI di mana-mana.** Bilah navigasi, kartu video, halaman detail, komentar, dinamika, serta layar Saya / Favorit / Riwayat / Pesan / Pencarian — satu sapuan global mencakup **sekitar 1650 teks antarmuka**, ditambah konten dinamis (judul, nama penulis, penghitung).
 - **Dua mesin, satu sakelar.** *Bawaan* (default) memakai titik akhir gratis model resmi **Index-Translate-35B-A3B** milik bilibili — tidak ada yang perlu dikonfigurasi. *API sendiri* mempertahankan perilaku sebelumnya: arahkan ke titik akhir `/chat/completions` yang kompatibel dengan OpenAI, dengan URL dasar / kunci / model Anda sendiri. Ringkasan video AI dan terjemahan AI tetap memiliki titik akhir dan pengaturan yang **sepenuhnya independen**, keduanya berada dalam satu halaman **«Fitur AI»**.
-- **Satu daftar bahasa, dipakai kedua mesin.** Daftar bahasa tujuan tidak dipisah per mesin: daftarnya sama, mesin mana pun yang Anda pilih. Daftar itu menyatukan **150 bahasa** model resmi bilibili dengan **4 bahasa minoritas etnis di Tiongkok dan 3 dialek Tionghoa** yang ditambahkan PiliBabel — Tibet, Uighur, Zhuang, dan Hmong di satu sisi; Kanton, Wu (Shanghai), dan Minnan di sisi lain — plus Tionghoa Tradisional. Varian regional dan sistem tulisan tetap menjadi **entri tersendiri** alih-alih digabung: Arab Maroko / Mesir / Najdi / Levant masing-masing pilihan sendiri, begitu pula Serbia, Uzbek, dan Urdu dalam tulisan Kiril atau Latin.
+- **Satu daftar bahasa, dipakai kedua mesin.** Daftar bahasa tujuan tidak dipisah per mesin: daftarnya sama, mesin mana pun yang Anda pilih. Daftar itu menyatukan **151 bahasa** model resmi bilibili dengan **6 lagi yang belum dicakupnya** — Tionghoa Tradisional, Wu Sederhana dan Tradisional, Hokkien daratan dan Taiwan, serta Zhuang. Varian regional dan aksara tetap menjadi **entri terpisah** alih-alih digabung: Arab Maroko / Mesir / Najdi / Levant masing-masing pilihan tersendiri, begitu pula Serbia, Uzbek, dan Urdu dalam aksara Kiril atau Latin.
 - **Jujur soal cakupan.** Bahasa di dalam daftar resmi ditangani model bilibili. Beberapa yang di luarnya — Tionghoa Tradisional, serta dialek Tionghoa dan bahasa minoritas di atas yang tidak dicantumkan bilibili — tetap muncul di daftar, ditandai demikian, supaya Anda tahu sekilas bahwa hasil yang lebih baik mungkin memerlukan model sendiri.
 - **Diterjemahkan sekali, lalu tetap.** Setiap teks sumber diterjemahkan **tepat satu kali**; hasilnya disimpan secara lokal dan **tidak pernah diterjemahkan ulang** saat Anda membuka layar itu lagi — prinsip yang sama dengan klien resmi, demi terjemahan yang stabil dan bisa diprediksi.
 - **Sakelar «Asli ⇄ Terjemahan» per komentar** (ikon kecil, bukan kata). `@sebutan / [emoji] / #topik# / tautan` dipertahankan sebagai token, dan **komentar yang memuat tautan tetap diterjemahkan sementara tautannya tetap bisa diklik**.
@@ -153,7 +153,7 @@ paru -S pilinara-bin         # atau lewat AUR: pilinara-bin (siap pakai) / pilin
 
 <br/>
 
-## Catatan perubahan: 2.6.x → 3.3.4
+## Catatan perubahan: 2.6.x → 3.6.4
 
 - **2.6.x** — cache audio (modul terpisah untuk video dan audio, mengingat pilihan terakhir, tersedia pintasan di halaman video, halaman khusus audio, dan pemutar audio; format asli dipertahankan; kualitas dapat dipilih) dan unduh ke perangkat (item menu tersendiri: pilih video/audio lalu kualitas; bila folder belum diatur, pemilih berkas sistem akan terbuka).
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # atau lewat AUR: pilinara-bin (siap pakai) / pilin
 - **3.2.0–3.3.3** — fondasi jaringan bergaya aplikasi resmi: sidik jari permintaan (buvid/fp/session_id/env), failover host gRPC, interceptor percobaan ulang, batas permintaan bersamaan per host, pramuat feed pertama saat cold start, parameter peristiwa feed resmi, urutan kandidat CDN dengan cadangan luar negeri; pramuat halaman kedua, antrean pramuat sampul yang terbatas, pramuat URL pemutaran; lalu perenderan dynamics (P3) via gRPC dan perbaikan: galat kompilasi durasi buffer di halaman audio dan galat konversi tipe pada pramuat komentar yang membuat setiap percobaan ulang gagal seketika.
 
 - **3.3.4** — kartu dynamics untuk postingan berbayar, mini-app, kumpulan topik, dan langganan; diperbaiki masalah layar pertama beranda yang tidak menampilkan sampul sama sekali; perubahan dari PiliNara ikut diambil (bilah status, unduhan lanjut setelah proses ditutup, pembaruan media-kit, menghindari video hitam di Wayland, pemilihan kualitas audio saat menyimpan cache); audit terjemahan AI untuk seluruh teks antarmuka yang ditambahkan sejak 3.0.5; catatan ini.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4.
 
 ## Daftar fitur warisan (dari PiliNara / PiliPlus)
 
@@ -248,3 +254,8 @@ Fon **霞鹜文楷** yang disertakan berlisensi secara terpisah di bawah **SIL O
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — font Tionghoa sumber terbuka yang disertakan dalam aplikasi, berlisensi SIL Open Font License 1.1
 - dan masih banyak lagi
 - Terinspirasi oleh «terjemahan antarmuka AI» resmi bilibili.
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

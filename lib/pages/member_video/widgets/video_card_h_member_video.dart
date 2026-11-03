@@ -15,6 +15,7 @@ import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/extension/dimension_ext.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 
 // 视频卡片 - 水平布局
@@ -83,7 +84,7 @@ class VideoCardHMemberVideo extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AspectRatio(
+                  SizedBox(height: Style.cardHCoverHeight, child: AspectRatio(
                     aspectRatio: Style.aspectRatio,
                     child: LayoutBuilder(
                       builder: (context, boxConstraints) {
@@ -100,13 +101,13 @@ class VideoCardHMemberVideo extends StatelessWidget {
                             if (fromViewAid == videoItem.param)
                               Positioned.fill(
                                 child: DecoratedBox(
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                     borderRadius: Style.mdRadius,
                                     color: Colors.black54,
                                   ),
                                   child: Center(
                                     child: Text(uiTx('上次观看'),
-                                      style: TextStyle(
+                                      style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 15,
                                         letterSpacing: 5,
@@ -188,7 +189,7 @@ class VideoCardHMemberVideo extends StatelessWidget {
                         );
                       },
                     ),
-                  ),
+                  )),
                   const SizedBox(width: 10),
                   content(context, theme),
                 ],
@@ -229,7 +230,7 @@ class VideoCardHMemberVideo extends StatelessWidget {
                 letterSpacing: 0.3,
                 color: isCurr ? theme.colorScheme.primary : null,
               ),
-              maxLines: 2,
+              maxLines: Pref.videoTitleFull ? 4 : 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),

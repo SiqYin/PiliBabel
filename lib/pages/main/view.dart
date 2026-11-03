@@ -342,7 +342,7 @@ class _MainAppState extends PopScopeState<MainApp>
             destinations: _mainController.navigationBars
                 .map(
                   (e) => FloatingNavigationDestination(
-                    label: UiTranslateService.tx(e.label),
+                    label: UiTranslateService.txTight(e.label),
                     icon: _buildIcon(type: e),
                     selectedIcon: _buildIcon(type: e, selected: true),
                   ),
@@ -359,7 +359,7 @@ class _MainAppState extends PopScopeState<MainApp>
             destinations: _mainController.navigationBars
                 .map(
                   (e) => NavigationDestination(
-                    label: UiTranslateService.tx(e.label),
+                    label: UiTranslateService.txTight(e.label),
                     icon: _buildIcon(type: e),
                     selectedIcon: _buildIcon(type: e, selected: true),
                   ),
@@ -379,7 +379,7 @@ class _MainAppState extends PopScopeState<MainApp>
             items: _mainController.navigationBars
                 .map(
                   (e) => BottomNavigationBarItem(
-                    label: UiTranslateService.tx(e.label),
+                    label: UiTranslateService.txTight(e.label),
                     icon: _buildIcon(type: e),
                     activeIcon: _buildIcon(type: e, selected: true),
                   ),
@@ -429,7 +429,7 @@ class _MainAppState extends PopScopeState<MainApp>
     for (final e in _mainController.navigationBars) {
       final painter = TextPainter(
         text: TextSpan(
-          text: UiTranslateService.tx(e.label),
+          text: UiTranslateService.txTight(e.label),
           style: style,
         ),
         maxLines: 1,
@@ -480,7 +480,7 @@ class _MainAppState extends PopScopeState<MainApp>
                       .map(
                         (e) => NavigationDrawerDestination(
                           label: Text(
-                            UiTranslateService.tx(e.label),
+                            UiTranslateService.txTight(e.label),
                             maxLines: 1,
                             overflow: .ellipsis,
                           ),
@@ -513,7 +513,7 @@ class _MainAppState extends PopScopeState<MainApp>
               .map(
                 (e) => NavigationRailDestination(
                   label: Text(
-                    UiTranslateService.tx(e.label),
+                    UiTranslateService.txTight(e.label),
                     maxLines: 1,
                     overflow: .ellipsis,
                   ),

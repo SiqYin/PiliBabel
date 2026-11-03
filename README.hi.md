@@ -153,7 +153,7 @@ paru -S pilinara-bin         # या AUR के ज़रिए: pilinara-bin (
 
 <br/>
 
-## परिवर्तन सूची: 2.6.x → 3.3.4
+## परिवर्तन सूची: 2.6.x → 3.6.4
 
 - **2.6.x** — ऑडियो कैश (वीडियो और ऑडियो के लिए अलग मॉड्यूल, पिछला चयन याद रहता है, वीडियो पेज, केवल-ऑडियो पेज और ऑडियो प्लेयर में प्रवेश; मूल फ़ॉर्मैट बना रहता है; गुणवत्ता चुनी जा सकती है) और डिवाइस पर डाउनलोड (अलग मेनू आइटम: पहले वीडियो/ऑडियो, फिर गुणवत्ता; फ़ोल्डर सेट न होने पर सिस्टम फ़ाइल चयनकर्ता खुलता है)।
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # या AUR के ज़रिए: pilinara-bin (
 - **3.2.0–3.3.3** — आधिकारिक ऐप जैसा नेटवर्क आधार: अनुरोध फ़िंगरप्रिंट (buvid/fp/session_id/env), gRPC होस्ट फ़ेलओवर, पुनःप्रयास इंटरसेप्टर, प्रति होस्ट समवर्ती अनुरोधों की सीमा, कोल्ड स्टार्ट में पहले फ़ीड की प्री-लोडिंग, आधिकारिक फ़ीड इवेंट पैरामीटर, विदेशी विकल्प के साथ CDN उम्मीदवारों का क्रम; दूसरे पेज की प्री-लोडिंग, सीमित कवर प्री-लोड कतार, प्ले-URL प्री-लोडिंग; इसके बाद डायनैमिक (P3) का gRPC रेंडरिंग और सुधार: ऑडियो पेज की बफ़र अवधि की कंपाइल त्रुटि और टिप्पणी प्री-लोड की टाइप रूपांतरण त्रुटि, जिससे हर पुनःप्रयास तुरंत विफल हो जाता था।
 
 - **3.3.4** — सशुल्क पोस्ट, मिनी-ऐप, विषय-समूह और सदस्यता कार्ड के लिए डायनैमिक कार्ड; होम की पहली स्क्रीन पर सभी कवर न दिखने की समस्या ठीक की गई; PiliNara के बदलाव लिए गए (स्टेटस बार, प्रोसेस बंद होने के बाद डाउनलोड जारी, media-kit अद्यतन, Wayland में काला वीडियो टालना, कैश करते समय ऑडियो गुणवत्ता का चयन); 3.0.5 से जोड़े गए सभी इंटरफ़ेस पाठ का AI अनुवाद ऑडिट; यह सूची।
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4.
 
 ## विरासत में मिली सुविधाओं का लॉग (PiliNara / PiliPlus से)
 
@@ -248,3 +254,8 @@ PiliBabel **GNU General Public License v3.0 (GPL-3.0)** के अंतर्�
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — ऐप के साथ बंडल ओपन-सोर्स चीनी टाइपफ़ेस, SIL Open Font License 1.1 के अंतर्गत
 - और भी बहुत कुछ
 - bilibili के आधिकारिक "AI इंटरफ़ेस अनुवाद" से प्रेरित।
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

@@ -58,7 +58,7 @@ CoverTranslateButton(cover: ugc.cover),
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        uiTx(ugc.title!),
+                        uiTxTight(ugc.title!),
                         maxLines: Pref.videoTitleFull ? 2 : 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -239,7 +239,7 @@ CoverTranslateButton(cover: ugc.cover),
                     children: [
                       if (content.title?.isNotEmpty == true)
                         Text(
-                          uiTx(content.title!),
+                          uiTxTight(content.title!),
                           maxLines: Pref.videoTitleFull ? 2 : 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -369,7 +369,7 @@ CoverTranslateButton(cover: e.cover),
                                       ),
                                     ),
                                     TextSpan(text: uiTx(' 起'),
-                                      style: TextStyle(fontSize: 12),
+                                      style: const TextStyle(fontSize: 12),
                                     ),
                                   ],
                                 ),
@@ -528,7 +528,7 @@ CoverTranslateButton(cover: content.cover),
                     children: [
                       if (content.title?.isNotEmpty == true)
                         Text(
-                          uiTx(content.title!),
+                          uiTxTight(content.title!),
                           maxLines: Pref.videoTitleFull ? 2 : 1,
                           overflow: TextOverflow.ellipsis,
                         ),

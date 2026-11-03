@@ -32,13 +32,16 @@ class _ReplySettingState extends State<ReplySetting> {
         if (!mounted || list.isEmpty) {
           return;
         }
-        final firstItem = list.first;
-        if (firstItem case NormalModel(:final onTap)) {
-          onTap?.call(context, () {
-            if (mounted) {
-              setState(() {});
-            }
-          });
+        // 关键词过滤不一定在首位（上游分栏后首项是「显示视频评论」），按标题定位
+        for (final item in list) {
+          if (item is NormalModel && item.effectiveTitle == uiTx('评论关键词过滤')) {
+            item.onTap?.call(context, () {
+              if (mounted) {
+                setState(() {});
+              }
+            });
+            break;
+          }
         }
       });
     }
@@ -66,11 +69,13 @@ class _ReplySettingState extends State<ReplySetting> {
             subtitle: Text(
               uiTx(
                 '* 屏蔽用户后，该用户发布的评论将不会显示。\n'
-                '* 评论区屏蔽用户优先于白名单生效。\n'
-                '* 白名单用户与动态流/推荐流共享，白名单优先于带货屏蔽和常规过滤。\n'
-                '* 关键词过滤支持正则表达式，多个关键词使用|分隔。\n'
-                '* 等级过滤：屏蔽低于所设等级的用户发布的评论，0 为关闭。\n'
-                ),
+              '* 评论区屏蔽用户优先于白名单生效。\n'
+              '* 白名单用户与动态流/推荐流共享，白名单优先于带货屏蔽和常规过滤。\n'
+              '* 每行一个关键词，每行都是一条独立的正则表达式，命中任一即过滤。\n'
+              '* 等级过滤：屏蔽低于所设等级的用户发布的评论，0 为关闭。\n'
+              '* 设置立即生效，刷新评论区即可看到过滤结果。',
+              ),
+
               style: theme.textTheme.labelSmall!.copyWith(
                 color: theme.colorScheme.outline.withValues(alpha: 0.7),
               ),

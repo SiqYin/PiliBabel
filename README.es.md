@@ -3,7 +3,7 @@
     <h1>PiliBabel</h1>
     <p><b>Un cliente de Bilibili de terceros con traducción por IA.</b></p>
     <p>Babel — derribar la barrera del idioma, para que cada persona disfrute de bilibili en el suyo.</p>
-    <p>Incluye traducción de 4 lenguas de las minorías étnicas de China y 3 dialectos chinos.</p>
+    <p>Unifica los 151 idiomas que bilibili admite oficialmente con 6 más que no cubre — chino tradicional, wu simplificado y tradicional, hokkien continental y de Taiwán, y zhuang — en una sola lista.</p>
     <p>La traducción funciona nada más instalar, con el modelo gratuito de bilibili: no hace falta clave de API.</p>
 </div>
 <!-- lang-switch:start -->
@@ -52,7 +52,7 @@ Y desde la 1.0 funciona **nada más instalar**: el modelo de traducción viene *
 
 - **Traducción por IA, en todas partes.** Barras de navegación, tarjetas de vídeo, páginas de detalle, comentarios, dinámicas y las pantallas Yo / Favoritos / Historial / Mensajes / Búsqueda: un barrido global cubre **unos 1650 textos de interfaz**, más el contenido dinámico (títulos, nombres de autores, contadores).
 - **Dos motores, un solo ajuste.** *Integrado* (por defecto) usa el punto de acceso gratuito del modelo oficial **Index-Translate-35B-A3B** de bilibili: nada que configurar. *API propia* mantiene el comportamiento anterior: apúntala a cualquier punto de acceso `/chat/completions` compatible con OpenAI, con tu propia URL base / clave / modelo. El resumen de vídeo por IA y la traducción por IA siguen teniendo puntos de acceso y ajustes **totalmente independientes**, reunidos en una sola página **«Funciones de IA»**.
-- **Una sola lista de idiomas, para ambos motores.** La lista de idiomas de destino no se divide por motor: es la misma elijas el que elijas. Reúne los **150 idiomas** del modelo oficial de bilibili con las **4 lenguas de las minorías étnicas de China y 3 dialectos chinos** que añade PiliBabel — tibetano, uigur, zhuang y hmong por un lado; cantonés, wu (shanghainés) y minnan por otro — más el chino tradicional. Las variantes regionales y de escritura se mantienen como **entradas separadas** en lugar de fusionarse: el árabe marroquí / egipcio / najdí / levantino son cada uno su propia opción, igual que el serbio, el uzbeko y el urdu en cirílico o en latino.
+- **Una sola lista de idiomas, para ambos motores.** La lista de idiomas de destino no se divide por motor: es la misma elijas el que elijas. Reúne los **151 idiomas** del modelo oficial de bilibili con **6 más que no cubre** — chino tradicional, wu simplificado y tradicional, hokkien continental y de Taiwán, y zhuang. Las variantes regionales y de escritura se mantienen como **entradas separadas** en lugar de fusionarse: el árabe marroquí / egipcio / najdí / levantino son cada uno su propia opción, igual que el serbio, el uzbeko y el urdu en cirílico o en latino.
 - **Honesto con la cobertura.** Los idiomas dentro del inventario oficial los cubre el modelo de bilibili. Los pocos que quedan fuera —el chino tradicional y los dialectos chinos y lenguas minoritarias anteriores que bilibili no recoge— siguen apareciendo en la lista, marcados como tales, para que veas de un vistazo que un mejor resultado puede requerir tu propio modelo.
 - **Se traduce una vez y queda fijado.** Cada cadena de origen se traduce **exactamente una vez**; el resultado se guarda en local y **nunca se vuelve a traducir** al reabrir una pantalla, el mismo principio que el cliente oficial, para conseguir traducciones estables y predecibles.
 - **Conmutador Original ⇄ Traducción por comentario** (un icono pequeño, no una palabra). Las `@menciones / [emojis] / #temas# / enlaces` se conservan como tokens, y **los comentarios con hipervínculos se traducen manteniendo el enlace pulsable**.
@@ -153,7 +153,7 @@ paru -S pilinara-bin         # o vía AUR: pilinara-bin (precompilado) / pilinar
 
 <br/>
 
-## Historial de cambios: 2.6.x → 3.3.4
+## Historial de cambios: 2.6.x → 3.6.4
 
 - **2.6.x** — caché de audio (módulos separados de vídeo y audio, recuerda la última elección, entradas en la página de vídeo, la de solo audio y el reproductor de audio; se conserva el formato original; calidad seleccionable) y descarga al dispositivo (elemento de menú propio: primero vídeo/audio y luego la calidad; si no hay carpeta configurada se abre el selector del sistema).
 
@@ -166,6 +166,12 @@ paru -S pilinara-bin         # o vía AUR: pilinara-bin (precompilado) / pilinar
 - **3.3.0–3.3.3** — representación de dinámicas (P3) por gRPC y, después, correcciones: error de compilación en la duración del búfer de la página de audio y fallo de conversión de tipo en la precarga de comentarios que hacía que cada reintento fallara al instante.
 
 - **3.3.4** — tarjetas de dinámica para publicaciones de pago, miniaplicaciones, colecciones de temas y suscripciones; corregida la ausencia total de portadas en la primera pantalla de inicio; sincronización con PiliNara (barra de estado, reanudación de descargas tras cerrar el proceso, actualización de media-kit, solución al vídeo en negro en Wayland, selección de calidad de audio al cachear); auditoría de traducción AI de todos los textos de interfaz añadidos desde 3.0.5; este historial.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. Corregido un fallo introducido en 3.6.3: al activar la traducción por IA las páginas podían quedar en blanco y la app se cerraba (arreglado en 3.6.4).
 
 ## Registro de funciones heredadas (de PiliNara / PiliPlus)
 
@@ -252,3 +258,8 @@ La tipografía **霞鹜文楷** incluida se licencia por separado bajo la **SIL 
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — la tipografía china de código abierto incluida en la aplicación, bajo la SIL Open Font License 1.1
 - y más
 - Inspirado en la «traducción de interfaz por IA» oficial de bilibili.
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

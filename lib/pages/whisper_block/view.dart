@@ -104,7 +104,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                       onPressed: _onAdd,
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
-                        children: [Icon(Icons.add, size: 22), Text(uiTx('添加消息屏蔽词'))],
+                        children: [const Icon(Icons.add, size: 22), Text(uiTx('添加消息屏蔽词'))],
                       ),
                     ),
                   ),
@@ -118,7 +118,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                   children: [
                     SvgPicture.asset(Assets.error, height: 156),
                     Text(uiTx('还未添加屏蔽词'),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
                       ),
@@ -132,7 +132,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.add, size: 22),
+                          const Icon(Icons.add, size: 22),
                           Text(uiTx('添加')),
                         ],
                       ),
@@ -169,7 +169,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(uiTx('添加消息屏蔽词'),
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
@@ -216,7 +216,7 @@ class _WhisperBlockPageState extends State<WhisperBlockPage> {
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: [Icon(Icons.add, size: 22), Text(uiTx('添加消息屏蔽词'))],
+                    children: [const Icon(Icons.add, size: 22), Text(uiTx('添加消息屏蔽词'))],
                   ),
                 ),
               ],

@@ -59,7 +59,7 @@ class MusicRecommendController
       isEnd = true;
       applySortAndFilter();
     } else {
-      loadingState.value = Success(null);
+      loadingState.value = const Success(null);
     }
     return true;
   }

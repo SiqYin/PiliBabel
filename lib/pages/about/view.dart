@@ -12,17 +12,15 @@ import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/common/widgets/flutter/list_tile.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/models/common/font/app_font.dart';
-import 'package:PiliPlus/pages/mine/controller.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/utils/accounts.dart';
-import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:PiliPlus/utils/android/android_helper.dart';
+
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/device_utils.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
-import 'package:PiliPlus/utils/login_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -153,12 +151,12 @@ class _AboutPageState extends State<AboutPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'About PiliBabel',
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                 ),
-                SizedBox(height: 6),
-                Text(
+                const SizedBox(height: 6),
+                const Text(
                   'PiliBabel is an independent, open-source, third-party '
                   'Bilibili client — a fork of PiliNara (which is itself a '
                   'fork of PiliPlus → PiliPala). It keeps everything those '
@@ -167,8 +165,8 @@ class _AboutPageState extends State<AboutPage> {
                   'language.',
                   style: TextStyle(fontSize: 13, height: 1.5),
                 ),
-                SizedBox(height: 10),
-                Text(
+                const SizedBox(height: 10),
+                const Text(
                   '• Translate once: every string is translated exactly once '
                   'and cached locally, so it never re-translates on reopen.\n'
                   '• Bring your own model: point it at any OpenAI-compatible '
@@ -182,7 +180,7 @@ class _AboutPageState extends State<AboutPage> {
                   'danmaku.',
                   style: TextStyle(fontSize: 13, height: 1.6),
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Text(
                   'Unofficial — not affiliated with or endorsed by bilibili. '
                   'For learning & testing; delete within 24 hours. Licensed '
@@ -221,14 +219,14 @@ Commit Hash: ${BuildConfig.commitHash}''',
                 ? null
                 : () => Utils.copyText(BuildConfig.commitHash),
           ),
-          ListTile(
+          const ListTile(
             title: Text(
               'PiliBabel is an independent third-party fork of PiliNara '
               '(itself a fork of PiliPlus). It adds AI interface & content '
               'translation so the whole app speaks your language.',
-              style: const TextStyle(fontSize: 13, height: 1.5),
+              style: TextStyle(fontSize: 13, height: 1.5),
             ),
-            leading: const Icon(Icons.translate),
+            leading: Icon(Icons.translate),
           ),
           Divider(
             thickness: 1,
@@ -326,23 +324,13 @@ Commit Hash: ${BuildConfig.commitHash}''',
           ListTile(
             title: Text(uiTx('导入/导出登录信息')),
             leading: const Icon(Icons.import_export_outlined),
-            onTap: () => showImportExportDialog<Map>(
+            onTap: () => showImportExportDialog<Map<String, dynamic>>(
               context,
               title: uiTx('登录信息'),
               localFileName: () => 'account',
               onExport: () =>
                   Utils.jsonEncoder.convert(Accounts.account.toMap()),
-              onImport: (json) async {
-                final res = json.map(
-                  (key, value) => MapEntry(key, LoginAccount.fromJson(value)),
-                );
-                await Accounts.account.putAll(res);
-                await Accounts.refresh();
-                MineController.anonymity.value = !Accounts.heartbeat.isLogin;
-                if (Accounts.main.isLogin) {
-                  await LoginUtils.onLoginMain();
-                }
-              },
+              onImport: Accounts.importJsonAccount,
             ),
           ),
           ListTile(

@@ -17,10 +17,53 @@ import 'package:material_ui/material_ui.dart';
 /// 「清理档案」只在本地文件已经不存在时可用，点掉才从列表里消失。
 /// 样式对齐「缓存视频 / 缓存音频」两个界面。
 class LocalDownloadPage extends StatefulWidget {
-  const LocalDownloadPage({super.key});
+  const LocalDownloadPage({super.key, this.initialAudio = false});
+
+  /// 打开时默认停在哪个标签：false = 下载视频，true = 下载音频。
+  final bool initialAudio;
 
   @override
   State<LocalDownloadPage> createState() => _LocalDownloadPageState();
+}
+
+/// 保留的独立页：内部仍是「下载视频 / 下载音频」两个页签。
+/// 「离线缓存」主界面已经把这两类提为一级页签，这个页面只用于既有入口。
+class _LocalDownloadPageState extends State<LocalDownloadPage>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController = TabController(
+    length: 2,
+    vsync: this,
+    initialIndex: widget.initialAudio ? 1 : 0,
+  );
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(uiTx('下载情况')),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: [
+            Tab(text: uiTx('下载视频')),
+            Tab(text: uiTx('下载音频')),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: const [
+          LocalDownloadList(isAudio: false),
+          LocalDownloadList(isAudio: true),
+        ],
+      ),
+    );
+  }
 }
 
 String _formatSize(int bytes) {
@@ -37,44 +80,32 @@ String _formatSize(int bytes) {
   return '${size.toStringAsFixed(size >= 100 || i == 0 ? 0 : 1)} ${units[i]}';
 }
 
-class _LocalDownloadPageState extends State<LocalDownloadPage>
-    with SingleTickerProviderStateMixin {
-  final LocalDownloadService _service = Get.find<LocalDownloadService>();
-  late final TabController _tabController = TabController(
-    length: 2,
-    vsync: this,
-  );
+/// 下载到本地（视频 / 音频）的列表。
+///
+/// 原先是一个独立二级页（内部再分「下载视频 / 下载音频」两个 tab），
+/// 现在「离线缓存」改成四个平级页签（缓存视频 / 缓存音频 / 下载视频 / 下载音频），
+/// 所以这里不再自带 Scaffold 与 TabBar，只负责渲染「某一类」的列表，
+/// 由 [DownloadPage] 把它放进对应的页签里。
+/// [LocalDownloadPage] 仍保留（供既有入口直接打开完整两页签视图）。
+class LocalDownloadList extends StatefulWidget {
+  const LocalDownloadList({super.key, required this.isAudio});
+
+  /// true = 下载音频列表，false = 下载视频列表。
+  final bool isAudio;
 
   @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
+  State<LocalDownloadList> createState() => _LocalDownloadListState();
+}
+
+class _LocalDownloadListState extends State<LocalDownloadList> {
+  final LocalDownloadService _service = Get.find<LocalDownloadService>();
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
       // 档案新增、进度、删除都靠这个计数刷新。
       _service.recordsRevision.value;
-      return Scaffold(
-        appBar: AppBar(
-          title: Text(uiTx('下载情况')),
-          bottom: TabBar(
-            controller: _tabController,
-            tabs: [
-              Tab(text: uiTx('下载视频')),
-              Tab(text: uiTx('下载音频')),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _buildList(isAudio: false),
-            _buildList(isAudio: true),
-          ],
-        ),
-      );
+      return _buildList(isAudio: widget.isAudio);
     });
   }
 
@@ -107,7 +138,7 @@ class _LocalDownloadPageState extends State<LocalDownloadPage>
 
   Future<void> _showMore(LocalDownloadRecord record) async {
     // 每次打开菜单都重新判断：用户可能在别处刚把文件删掉。
-    final missing = record.fileMissing;
+    final missing = record.fileMissingAndSettled;
     // 下载失败或本地文件已删除时才提供「重新下载」：让用户在原地一键重下，
     // 不用回视频页重新找稿件、重新选画质音质。
     final canRedownload = record.failed || missing;
@@ -206,22 +237,13 @@ class _LocalDownloadItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final missing = record.fileMissing;
-    final String status;
-    if (record.failed) {
-      status = uiTx('下载失败');
-    } else if (record.done) {
-      status = uiTx('已下载');
-    } else {
-      status = uiTx('下载中');
-    }
+    // 下载进行中不做完整性检测：文件要等写完才落盘，中途必然「不存在」，
+    // 否则会出现「进度条在走、同时又提示本地文件已删除」的怪状。
+    final missing = record.fileMissingAndSettled;
     final sizeText = record.totalBytes > 0
         ? '${_formatSize(record.receivedBytes)} / '
               '${_formatSize(record.totalBytes)}'
         : _formatSize(record.receivedBytes);
-    // 高画质（1080P60 及以上）走 DASH 分离流，是「视频轨 + 音频轨」两个文件，
-    // 标出来让用户知道为什么文件夹里是两个文件。
-    final splitTag = record.splitStream ? ' · ${uiTx('分离流')}' : '';
     return InkWell(
       onTap: onMore,
       child: Padding(
@@ -242,18 +264,39 @@ class _LocalDownloadItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    record.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 14, height: 1.25),
+                  Obx(
+                    () => Text(
+                      uiTx(record.title),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 14, height: 1.25),
+                    ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    '$status · $sizeText$splitTag',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(fontSize: 12, color: colorScheme.outline),
+                  Obx(
+                    () {
+                      // 状态与「分离流」标签都在 Obx 里调用 uiTx，译文异步回落后自动刷新。
+                      final String status;
+                      if (record.failed) {
+                        status = uiTx('下载失败');
+                      } else if (record.done) {
+                        status = uiTx('已下载');
+                      } else {
+                        status = uiTx('下载中');
+                      }
+                      final splitTag = record.splitStream
+                          ? ' · ${uiTx('分离流')}'
+                          : '';
+                      return Text(
+                        '$status · $sizeText$splitTag',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.outline,
+                        ),
+                      );
+                    },
                   ),
                   if (!record.done && !record.failed)
                     Padding(
@@ -266,13 +309,15 @@ class _LocalDownloadItem extends StatelessWidget {
                   if (record.ownerName case final name?)
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.outline,
+                      child: Obx(
+                        () => Text(
+                          uiTx(name),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.outline,
+                          ),
                         ),
                       ),
                     ),

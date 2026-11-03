@@ -3,7 +3,7 @@
     <h1>PiliBabel</h1>
     <p><b>Ứng dụng khách Bilibili của bên thứ ba, có dịch bằng AI.</b></p>
     <p>Babel — phá bỏ bức tường ngôn ngữ, để ai cũng được thưởng thức bilibili bằng tiếng của mình.</p>
-    <p>Bao gồm dịch 4 ngôn ngữ dân tộc thiểu số của Trung Quốc và 3 phương ngữ tiếng Trung.</p>
+    <p>Hợp nhất 151 ngôn ngữ được bilibili chính thức hỗ trợ với 6 ngôn ngữ nữa mà nó chưa bao phủ — tiếng Trung phồn thể, tiếng Ngô giản thể và phồn thể, tiếng Hokkien đại lục và Đài Loan, và tiếng Choang — thành một danh sách.</p>
     <p>Dịch hoạt động ngay sau khi cài, trên mô hình miễn phí của bilibili — không cần khóa API.</p>
 </div>
 <!-- lang-switch:start -->
@@ -52,7 +52,7 @@ Và từ phiên bản 1.0, việc đó chạy **ngay sau khi cài**: mô hình d
 
 - **Dịch bằng AI, ở khắp mọi nơi.** Thanh điều hướng, thẻ video, trang chi tiết, bình luận, động thái, cùng các màn hình Của tôi / Yêu thích / Lịch sử / Tin nhắn / Tìm kiếm — một lượt quét toàn cục bao phủ **khoảng 1650 chuỗi giao diện**, cộng thêm nội dung động (tiêu đề, tên tác giả, các bộ đếm).
 - **Hai bộ máy, một công tắc.** *Tích hợp* (mặc định) dùng điểm truy cập miễn phí của mô hình chính thức **Index-Translate-35B-A3B** của bilibili — không cần cấu hình gì. *API riêng* giữ nguyên hành vi trước đây: trỏ tới bất kỳ điểm truy cập `/chat/completions` tương thích OpenAI nào, với URL gốc / khóa / mô hình của bạn. Tính năng tóm tắt video bằng AI và dịch bằng AI vẫn có điểm truy cập và cài đặt **hoàn toàn độc lập**, cùng nằm trong một trang **«Tính năng AI»**.
-- **Một danh sách ngôn ngữ, dùng chung cho cả hai bộ máy.** Danh sách ngôn ngữ đích không chia theo bộ máy: bạn chọn bộ máy nào cũng là cùng một danh sách. Nó hợp nhất **150 ngôn ngữ** của mô hình chính thức bilibili với **4 ngôn ngữ dân tộc thiểu số của Trung Quốc và 3 phương ngữ tiếng Trung** mà PiliBabel bổ sung — tiếng Tây Tạng, Duy Ngô Nhĩ, Choang và H'Mông ở một phía; tiếng Quảng Đông, Ngô (Thượng Hải) và Mân Nam ở phía kia — cùng tiếng Trung phồn thể. Các biến thể vùng miền và chữ viết vẫn là **mục riêng biệt** thay vì gộp lại: tiếng Ả Rập Maroc / Ai Cập / Najd / Levant mỗi thứ là một lựa chọn riêng, tương tự tiếng Serbia, Uzbek và Urdu ở dạng chữ Kirin hoặc Latinh.
+- **Một danh sách ngôn ngữ, dùng chung cho cả hai bộ máy.** Danh sách ngôn ngữ đích không chia theo bộ máy: bạn chọn bộ máy nào cũng là cùng một danh sách. Nó hợp nhất **151 ngôn ngữ** của mô hình chính thức bilibili với **6 ngôn ngữ nữa mà nó chưa bao phủ** — tiếng Trung phồn thể, tiếng Ngô giản thể và phồn thể, tiếng Hokkien đại lục và Đài Loan, và tiếng Choang. Các biến thể khu vực và chữ viết được giữ thành **mục riêng** thay vì gộp lại: tiếng Ả Rập Maroc / Ai Cập / Najd / Levant mỗi loại là một lựa chọn riêng, cũng như tiếng Serbia, Uzbek và Urdu ở dạng Kirin hoặc Latinh.
 - **Nói thẳng về phạm vi bao phủ.** Những ngôn ngữ nằm trong danh mục chính thức do mô hình bilibili đảm nhiệm. Vài ngôn ngữ nằm ngoài — tiếng Trung phồn thể, cùng các phương ngữ tiếng Trung và ngôn ngữ dân tộc thiểu số nêu trên mà bilibili không liệt kê — vẫn xuất hiện trong danh sách, có đánh dấu rõ, để bạn thấy ngay rằng muốn kết quả tốt hơn có thể cần mô hình của riêng bạn.
 - **Dịch một lần rồi cố định.** Mỗi chuỗi gốc được dịch **đúng một lần**; kết quả lưu cục bộ và **không bao giờ dịch lại** khi bạn mở lại màn hình — cùng nguyên tắc với ứng dụng chính thức, cho bản dịch ổn định và dễ đoán.
 - **Nút chuyển «Nguyên văn ⇄ Bản dịch» cho từng bình luận** (một biểu tượng nhỏ, không phải một từ). `@lượt nhắc / [biểu tượng cảm xúc] / #chủ đề# / liên kết` được giữ nguyên như các token, và **bình luận chứa siêu liên kết vẫn được dịch trong khi liên kết vẫn bấm được**.
@@ -153,7 +153,7 @@ paru -S pilinara-bin         # hoặc qua AUR: pilinara-bin (dựng sẵn) / pil
 
 <br/>
 
-## Nhật ký thay đổi: 2.6.x → 3.3.4
+## Nhật ký thay đổi: 2.6.x → 3.6.4
 
 - **2.6.x** — bộ nhớ đệm âm thanh (mô-đun riêng cho video và âm thanh, ghi nhớ lựa chọn gần nhất, có lối vào ở trang video, trang chỉ âm thanh và trình phát âm thanh; giữ nguyên định dạng gốc; chọn được chất lượng) và tải về thiết bị (mục menu riêng: chọn video/âm thanh trước rồi chọn chất lượng; nếu chưa đặt thư mục sẽ mở trình chọn tệp của hệ thống).
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # hoặc qua AUR: pilinara-bin (dựng sẵn) / pil
 - **3.2.0–3.3.3** — nền tảng mạng theo phong cách ứng dụng chính thức: dấu vân tay yêu cầu (buvid/fp/session_id/env), chuyển máy chủ gRPC khi lỗi, bộ chặn thử lại, giới hạn yêu cầu đồng thời mỗi máy chủ, tải trước luồng đầu khi khởi động lạnh, tham số sự kiện luồng chính thức, thứ tự ứng viên CDN kèm phương án dự phòng nước ngoài; tải trước trang thứ hai, hàng đợi tải trước ảnh bìa có giới hạn, tải trước URL phát; sau đó hiển thị dynamics (P3) qua gRPC và các sửa lỗi: lỗi biên dịch thời lượng bộ đệm ở trang âm thanh và lỗi chuyển kiểu khi tải trước bình luận khiến mọi lần thử lại thất bại ngay lập tức.
 
 - **3.3.4** — thẻ dynamics cho bài đăng trả phí, ứng dụng nhỏ, bộ chủ đề và đăng ký; đã sửa lỗi màn hình đầu trang chủ không hiện ảnh bìa nào; đưa các thay đổi từ PiliNara vào (thanh trạng thái, tiếp tục tải sau khi đóng tiến trình, cập nhật media-kit, tránh màn hình đen trên Wayland, chọn chất lượng âm thanh khi lưu đệm); rà soát dịch AI cho toàn bộ văn bản giao diện thêm từ 3.0.5; nhật ký này.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. Đã sửa lỗi có từ 3.6.3: bật dịch bằng AI có thể khiến trang trắng rồi ứng dụng tự đóng (đã sửa ở 3.6.4).
 
 ## Danh sách tính năng kế thừa (từ PiliNara / PiliPlus)
 
@@ -248,3 +254,8 @@ Phông chữ **霞鹜文楷** được đóng gói được cấp phép riêng t
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — phông chữ Trung Quốc mã nguồn mở được đóng gói trong ứng dụng, theo giấy phép SIL Open Font License 1.1
 - và nhiều dự án khác
 - Lấy cảm hứng từ «dịch giao diện bằng AI» chính thức của bilibili.
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。
