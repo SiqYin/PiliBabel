@@ -469,14 +469,14 @@ class UiTranslateService extends GetxService {
     if (!Get.isRegistered<UiTranslateService>()) return;
     final service = to;
     if (!service.enabled) return;
-    // currentLanguage / _pinnedTranslations 都是**实例**成员，静态上下文里
-    // 直接写 currentLanguage 会报 Undefined name，必须先取一次。
+    // currentLanguage 是**实例**成员（静态上下文里直接写会 Undefined name），
+    // 先取一次；_pinnedTranslations 是 static const，直接类内引用即可。
     final langCode = service.currentLanguage.code;
     for (final src in sources) {
       if (src.isEmpty) continue;
       // 已经翻好的直接跳过（缓存命中是同步的，不花钱）
       if (service._cache.containsKey(src)) continue;
-      if (service._pinnedTranslations[src]?[langCode] != null) {
+      if (_pinnedTranslations[src]?[langCode] != null) {
         continue;
       }
       service._pending.remove(src);
