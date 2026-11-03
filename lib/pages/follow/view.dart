@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/services/ui_translate/prewarm_strings.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
@@ -48,6 +49,8 @@ class _FollowPageState extends State<FollowPage>
   @override
   void initState() {
     super.initState();
+    // 预翻译：本页 ⋮ 菜单/确认框是「点开才渲染」，提前排队。
+    PrewarmStrings.warmSocial();
     _followController = Get.put(FollowController(_tag), tag: _tag);
   }
 
