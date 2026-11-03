@@ -153,7 +153,7 @@ paru -S pilinara-bin         # અથવા AUR મારફત: pilinara-bin (�
 
 <br/>
 
-## ફેરફારોની યાદી: 2.6.x → 3.3.4
+## ફેરફારોની યાદી: 2.6.x → 3.6.3
 
 - **2.6.x** — ઓડિયો કેશ (વિડિયો અને ઓડિયો માટે અલગ મોડ્યુલ, છેલ્લી પસંદ યાદ રહે છે, વિડિયો પૃષ્ઠ, ફક્ત-ઓડિયો પૃષ્ઠ અને ઓડિયો પ્લેયરમાં પ્રવેશ; મૂળ ફોર્મેટ જળવાય છે; ગુણવત્તા પસંદ કરી શકાય) અને ઉપકરણ પર ડાઉનલોડ (અલગ મેનુ આઇટમ: પહેલાં વિડિયો/ઓડિયો, પછી ગુણવત્તા; ફોલ્ડર સેટ ન હોય તો સિસ્ટમ ફાઇલ પસંદ કરનાર ખૂલે છે).
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # અથવા AUR મારફત: pilinara-bin (�
 - **3.2.0–3.3.3** — અધિકૃત ઍપ જેવો નેટવર્ક પાયો: વિનંતી ફિંગરપ્રિન્ટ (buvid/fp/session_id/env), gRPC હોસ્ટ ફેલઓવર, રિટ્રાય ઇન્ટરસેપ્ટર, પ્રતિ હોસ્ટ સમવર્તી વિનંતીઓની મર્યાદા, કોલ્ડ સ્ટાર્ટમાં પ્રથમ ફીડની પૂર્વ-લોડિંગ, અધિકૃત ફીડ ઇવેન્ટ પરિમાણો, વિદેશી વિકલ્પ સાથે CDN ઉમેદવારોનો ક્રમ; બીજા પૃષ્ઠની પૂર્વ-લોડિંગ, મર્યાદિત કવર પૂર્વ-લોડિંગ કતાર, પ્લે-URL પૂર્વ-લોડિંગ; પછી ડાયનેમિક (P3) gRPC રેન્ડરિંગ અને સુધારા: ઓડિયો પૃષ્ઠના બફર સમયની કમ્પાઇલ ભૂલ અને ટિપ્પણી પૂર્વ-લોડિંગની પ્રકાર-રૂપાંતર ભૂલ, જેના કારણે દરેક ફરી પ્રયાસ તરત નિષ્ફળ જતો હતો.
 
 - **3.3.4** — પેઇડ પોસ્ટ, મિની-ઍપ, વિષય સમૂહ અને સબસ્ક્રિપ્શન કાર્ડ માટે ડાયનેમિક કાર્ડ; હોમની પ્રથમ સ્ક્રીન પર બધા કવર ન આવવાની સમસ્યા સુધારી; PiliNara ના ફેરફારો લીધા (સ્ટેટસ બાર, પ્રોસેસ બંધ થયા પછી ડાઉનલોડ ચાલુ, media-kit અપડેટ, Wayland માં કાળો વિડિયો ટાળવો, કેશ કરતી વખતે ઓડિયો ગુણવત્તાની પસંદગી); 3.0.5 થી ઉમેરાયેલા તમામ ઇન્ટરફેસ લખાણનું AI અનુવાદ ઓડિટ; આ યાદી.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.3 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone.
 
 ## વારસામાં મળેલી લક્ષણ યાદી (PiliNara / PiliPlus માંથી)
 

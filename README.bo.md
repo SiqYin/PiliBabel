@@ -153,7 +153,7 @@ paru -S pilinara-bin         # ཡང་ན་ AUR བརྒྱུད་ནས: 
 
 <br/>
 
-## འགྱུར་བའི་ཐོ་གཞུང་། 2.6.x → 3.3.4
+## འགྱུར་བའི་ཐོ་གཞུང་། 2.6.x → 3.6.3
 
 - **2.6.x** — སྒྲ་གཟུགས་ཉར་ཚགས། (བརྙན་ལེན་དང་སྒྲ་གཟུགས་ཀྱི་མོ་ཁུལ་སོ་སོ། ཐེངས་སྔོན་མའི་འདེམས་སྒྲུག་དྲན་པ། བརྙན་ལེན་ཤོག་ངོས། སྒྲ་གཟུགས་ཁོ་ནའི་ཤོག་ངོས། སྒྲ་གཟུགས་འཁྲོལ་ཆས་བཅས་ལ་འཛུལ་སྒོ་ཡོད། རྩ་བའི་རྣམ་པ་ཉར་ཚགས། སྤུས་ཚད་འདེམས་ཐུབ།) དང་། ཁྱིམ་ཆས་ལ་ཕབ་ལེན། (མེ་ནུ་རེ་ཡི་རྣམ་གྲངས་སོ་སོ། དང་པོ་བརྙན་ལེན་/སྒྲ་གཟུགས། དེ་ནས་སྤུས་ཚད། ས་གནས་མ་བཀོད་ན་མ་ལག་གི་ཡིག་ཆ་འདེམས་ཆས་ཕྱེ་བ།)
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # ཡང་ན་ AUR བརྒྱུད་ནས: 
 - **3.2.0–3.3.3** — གཞུང་ཕྱོགས་ཨེ་པི་ལྟ་བུའི་དྲ་རྒྱ་རྨང་གཞི། རེ་བའི་མཛུབ་རྗེས་ (buvid/fp/session_id/env)། gRPC ཁྱིམ་ཚང་འཁྱོལ་སྤོ། ཡང་བསྐྱར་འཛིན་ཆས། ཁྱིམ་ཚང་རེར་མཉམ་དུ་སྐྱོད་པའི་ཚད་བཀག། གྲང་འགོ་སྐབས་ཀྱི་སྔོན་ལེན། གཞུང་ཕྱོགས་ feed གི་བྱུང་རིམ་ཚད་ཚད། རྒྱལ་ཕྱིའི་གྲབས་ཉར་ལྡན་པའི་ CDN གདམ་ཀའི་རིམ་པ། ཤོག་ངོས་གཉིས་པའི་སྔོན་ལེན། ཚད་ཡོད་ཀྱི་གདུགས་རིས་སྔོན་ལེན་གྱི་གྱི་མཐུད། འཁྲོལ་ལམ་སྔོན་ལེན། དེ་ནས་དག་ཟློས་ (P3) གི་ gRPC བཀོད་པ། དང་ སྒྲ་གཟུགས་ཤོག་ངོས་ཀྱི་བུ་ཕར་དུས་ཚོད་ཀྱི་འདུ་སྒྲིག་ནོར་འཁྲུལ་དང་ བསམ་ཚུལ་སྔོན་ལེན་གྱི་རིགས་བསྒྱུར་ནོར་འཁྲུལ་ལ་བཅོས་པ། (ཐེངས་རེར་ཡང་བསྐྱར་མྱུར་དུ་ཕམ་པ་དེ)།
 
 - **3.3.4** — དངུལ་སྤྲོད་པའི་ཤོག་བྱང་། ཆུང་ཆས། བརྗོད་གཞིའི་ཚོགས། མངགས་ཐོ་བཅས་ཀྱི་དག་ཟློས་ཤོག་བྱང་གི་བཀོད་པ། མདུན་ཤོག་གི་ཐོག་མའི་བརྙན་ཤོག་ཚང་མ་མི་འདུག་པ་ལ་བཅོས་པ། PiliNara དང་མཉམ་འབྲེལ་ (གནས་ཚུལ་རྒྱན། བརྒྱུད་རིམ་བསྡམས་རྗེས་ཕབ་ལེན་མུ་མཐུད། media-kit གསར་བསྒྱུར། Wayland གི་ནག་པོའི་བརྙན་ལེན་གཡོལ་ཐབས། ཉར་ཚགས་སྐབས་སྒྲའི་སྤུས་ཚད་འདེམས་སྒྲུག)། 3.0.5 ནས་བཟུང་བསྣན་པའི་ཁ་ངོས་ཀྱི་ཡི་གེ་ཚང་མར་ AI སྐད་བསྒྱུར་གྱི་ཞིབ་བཤེར། ཐོ་གཞུང་འདི།
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.3 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone.
 
 ## ཤུལ་བཞག་ཁྱད་ཆོས་ཐོ་གཞུང (PiliNara / PiliPlus)
 
