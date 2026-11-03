@@ -153,7 +153,7 @@ paru -S pilinara-bin         # 或者經 AUR：pilinara-bin（預編譯）/ pili
 
 <br/>
 
-## 更新紀錄：2.6.x → 3.6.3
+## 更新紀錄：2.6.x → 3.6.4
 
 - **2.6.x** — 音訊快取（影片同音訊兩個獨立模組，記住上次嘅選擇，影片頁、聽影片頁、音訊播放頁都有入口；保持原格式；音質可以揀）同埋下載到本機（獨立選單項目，先揀影片／音訊再揀畫質／音質，未設定過位置就直接開系統檔案管理員）。
 
@@ -167,7 +167,7 @@ paru -S pilinara-bin         # 或者經 AUR：pilinara-bin（預編譯）/ pili
 
 - **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
 
-- **3.5.0–3.6.3 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone.
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4.
 
 ## 繼承功能清單（來自 PiliNara / PiliPlus）
 

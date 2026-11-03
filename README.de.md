@@ -153,7 +153,7 @@ paru -S pilinara-bin         # oder über AUR: pilinara-bin (vorgebaut) / pilina
 
 <br/>
 
-## Änderungsverlauf: 2.6.x → 3.6.3
+## Änderungsverlauf: 2.6.x → 3.6.4
 
 - **2.6.x** — Audio-Cache (getrennte Module für Video und Audio, letzte Auswahl wird gemerkt, Einstiege auf der Videoseite, der Nur-Audio-Seite und im Audioplayer; Originalformat bleibt erhalten; wählbare Qualität) und Download auf das Gerät (eigener Menüpunkt: erst Video/Audio, dann Qualität; ohne eingestellten Ordner öffnet sich die Systemdateiauswahl).
 
@@ -171,7 +171,7 @@ paru -S pilinara-bin         # oder über AUR: pilinara-bin (vorgebaut) / pilina
 
 - **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
 
-- **3.5.0–3.6.3 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone.
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. Ein in 3.6.3 eingeführter Absturz (bei aktiver KI-Übersetzung blieben Seiten leer, danach schloss sich die App) ist in 3.6.4 behoben.
 
 ## Verzeichnis der übernommenen Funktionen (aus PiliNara / PiliPlus)
 

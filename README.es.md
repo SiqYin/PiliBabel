@@ -153,7 +153,7 @@ paru -S pilinara-bin         # o vía AUR: pilinara-bin (precompilado) / pilinar
 
 <br/>
 
-## Historial de cambios: 2.6.x → 3.6.3
+## Historial de cambios: 2.6.x → 3.6.4
 
 - **2.6.x** — caché de audio (módulos separados de vídeo y audio, recuerda la última elección, entradas en la página de vídeo, la de solo audio y el reproductor de audio; se conserva el formato original; calidad seleccionable) y descarga al dispositivo (elemento de menú propio: primero vídeo/audio y luego la calidad; si no hay carpeta configurada se abre el selector del sistema).
 
@@ -171,7 +171,7 @@ paru -S pilinara-bin         # o vía AUR: pilinara-bin (precompilado) / pilinar
 
 - **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
 
-- **3.5.0–3.6.3 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone.
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. Corregido un fallo introducido en 3.6.3: al activar la traducción por IA las páginas podían quedar en blanco y la app se cerraba (arreglado en 3.6.4).
 
 ## Registro de funciones heredadas (de PiliNara / PiliPlus)
 

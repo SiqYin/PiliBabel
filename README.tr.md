@@ -153,7 +153,7 @@ paru -S pilinara-bin         # ya da AUR aracılığıyla: pilinara-bin (öncede
 
 <br/>
 
-## Değişiklik günlüğü: 2.6.x → 3.6.3
+## Değişiklik günlüğü: 2.6.x → 3.6.4
 
 - **2.6.x** — ses önbelleği (video ve ses için ayrı modüller, son seçimi hatırlar, video sayfası, yalnızca ses sayfası ve ses oynatıcıda girişler; özgün biçim korunur; kalite seçilebilir) ve cihaza indirme (ayrı menü öğesi: önce video/ses, sonra kalite; klasör ayarlı değilse sistem dosya seçicisi açılır).
 
@@ -167,7 +167,7 @@ paru -S pilinara-bin         # ya da AUR aracılığıyla: pilinara-bin (öncede
 
 - **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
 
-- **3.5.0–3.6.3 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone.
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4.
 
 ## Devralınan özellik günlüğü (PiliNara / PiliPlus)
 
