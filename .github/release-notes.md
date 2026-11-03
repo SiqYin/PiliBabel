@@ -1,14 +1,13 @@
-### PiliBabel v3.3.4
+### PiliBabel v3.6.1
 
-**Dynamics cards, a home-feed cover fix, and an upstream sync.**
+**Found new community data sources and filled in the Japanese/Korean proper nouns for Wuthering Waves and Honkai Impact 3rd.**
 
-- The dynamics (P3) timeline now renders four card types that were previously dropped or shown as blanks: paid/charging posts, applets, topic sets, and subscription cards.
-- Fixed the home feed's first screen showing no covers at all. The cold-start prefetch entries are consumed as the first page, and those entries do not always carry a top-level `cover`; the cover is now read from the item's `args`/`pic` fallbacks, and a prefetch page that yields no cover at all is treated as a miss so the normal feed request runs instead.
-- Upstream PiliNara changes are in: the status bar going dark when the app opens, downloads that were waiting resuming after the process is killed, the media-kit and companion package upgrade, the Wayland black-video workaround, and selectable audio quality when caching a video.
-- AI-translation audit of every interface string added since 3.0.5. One string was missing: the "audio quality" label and the quality menu items in the download panel now go through the same AI translation path as the rest of the UI.
-- The README changelog was rewritten from scratch for all 44 language versions, covering everything from 2.6.x through 3.3.4.
-- Upstream sync baseline for this release: Starfallan/PiliNara at commit `b5694ccd` (2026-10-24). The baseline is written down in `UPSTREAM-SYNC.md` so the next sync knows where to start.
+**Wuthering Waves Japanese names: 28 → 58 entries.** The data comes from `wikiwiki.jp/w-w`, a Japanese community wiki last modified 2026-10-29 whose table covers up to version 3.8. Fandom has no Japanese sub-wiki for this game, the official site is a single-page app, and the third-party APIs that used to work are gone — this is currently the only source with *current* Japanese names. Newly covered includes リリー (3.8), 鎖暝 (3.7) and 景燃 (3.6).
 
-Everything from v3.3.3 is included as well: the comment-section hotfix (the first-page prefetch was casting `Success<MainListReply?>` to `LoadingState<MainListReply>`, so the cast threw before any network work and every retry replayed the same broken cache entry), the v3.3.2 DNS resolution instrumentation and encrypted-DNS fallback switch, the host table, speed scores shared with the connection layer, second-screen feed prefetch with generation-based de-duplication, feed `idx` semantics, the audio page's buffered range and cache statistics, host health in stream selection, and the "load more replies" wording.
+**Honkai Impact 3rd: Japanese 19 → 33 entries, Korean 0 → 27 entries.** The Japanese names come from `wikiwiki.jp/houkai3rd` (its sidebar groups all 90 battlesuits under their valkyrie), and the Korean names from the `붕괴3rd/발키리` page on `namu.wiki` (last edited 2026-09-24).
+
+The two wikis organise names differently from the mainland BWIKI (valkyrie/battlesuit vs. character) and share no ids, so the mapping was aligned valkyrie by valkyrie by hand. Where a pair could not be confirmed it was left blank rather than guessed.
+
+**Still missing:** Korean names for Wuthering Waves, English names for Honkai Impact 3rd, and Korean names for some Genshin NPCs — these genuinely do not exist in any public source I could find. Details are in `docs/outstanding.md` section 9.
 
 Downloads are below.

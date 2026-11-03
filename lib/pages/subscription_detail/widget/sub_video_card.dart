@@ -13,6 +13,7 @@ import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 
 // 收藏视频卡片 - 水平布局
@@ -59,7 +60,7 @@ class SubVideoCardH extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AspectRatio(
+              SizedBox(height: Style.cardHCoverHeight, child: AspectRatio(
                 aspectRatio: Style.aspectRatio,
                 child: LayoutBuilder(
                   builder: (context, boxConstraints) {
@@ -88,7 +89,7 @@ CoverTranslateButton(cover: videoItem.cover),
                     );
                   },
                 ),
-              ),
+              )),
               const SizedBox(width: 10),
               content(context),
             ],
@@ -110,7 +111,7 @@ CoverTranslateButton(cover: videoItem.cover),
               style: const TextStyle(
                 letterSpacing: 0.3,
               ),
-              maxLines: 2,
+              maxLines: Pref.videoTitleFull ? 4 : 2,
               overflow: TextOverflow.ellipsis,
             ),
           ),

@@ -287,52 +287,26 @@ abstract final class ImageUtils {
   /// CachedNetworkImage 的缓存，滚到那一条时直接命中，不再等网络。
   /// 用 ImageStream 监听触发加载、首帧即断开监听（图已在缓存里）。
   ///
-  /// B2 对标官方 ImagePreloadTask：改成**有界队列 + 空闲逐个发起**，不再一次性
-  /// 全 resolve——一次性拉几十张封面会跟首屏渲染、滚动抢带宽和主线程。同一地址
-  /// 重复入队会被忽略，队列也不会无界增长。
-  static const int _prefetchConcurrency = 2;
-  static const Duration _prefetchGap = Duration(milliseconds: 40);
-  static final List<String> _prefetchQueue = <String>[];
-  static final Set<String> _prefetchInflight = <String>{};
-  static int _prefetchRunning = 0;
-
+  /// 退回 v3.0.5 实现：一次性对所有 url 立即 resolve（不再做有界队列 + 40ms 间隔
+  /// + 并发上限 2 的逐个发）。排队逐个发会拖慢首页首屏封面的出图节奏（实测约 10 秒
+  /// 才全部出来），此处按用户要求完全回退到 v3.0.5 的全量并发预取。
   static void prefetchImages(Iterable<String?> urls, {int quality = 1}) {
     for (final url in urls) {
       if (url == null || url.isEmpty) {
         continue;
       }
-      final target = thumbnailUrl(url, quality);
-      if (target.isEmpty || !_prefetchInflight.add(target)) {
-        continue;
-      }
-      _prefetchQueue.add(target);
+      final provider = CachedNetworkImageProvider(
+        thumbnailUrl(url, quality),
+      );
+      final stream = provider.resolve(ImageConfiguration.empty);
+      late final ImageStreamListener listener;
+      listener = ImageStreamListener((image, synchronousCall) {
+        stream.removeListener(listener);
+      }, onError: (_, _) {
+        stream.removeListener(listener);
+      });
+      stream.addListener(listener);
     }
-    _pumpPrefetch();
-  }
-
-  /// 空闲执行：先让出当前事件循环（首屏渲染、滚动那一批任务先跑），再发下一张。
-  static void _pumpPrefetch() {
-    if (_prefetchRunning >= _prefetchConcurrency || _prefetchQueue.isEmpty) {
-      return;
-    }
-    final url = _prefetchQueue.removeAt(0);
-    _prefetchRunning++;
-    Future<void>.delayed(_prefetchGap, () => _resolvePrefetch(url));
-  }
-
-  static void _resolvePrefetch(String url) {
-    final provider = CachedNetworkImageProvider(url);
-    final stream = provider.resolve(const ImageConfiguration());
-    late final ImageStreamListener listener;
-    void finish() {
-      stream.removeListener(listener);
-      _prefetchInflight.remove(url);
-      _prefetchRunning--;
-      _pumpPrefetch();
-    }
-
-    listener = ImageStreamListener((_, _) => finish(), onError: (_, _) => finish());
-    stream.addListener(listener);
   }
 
   static Future<SaveResult?> saveByteImg({

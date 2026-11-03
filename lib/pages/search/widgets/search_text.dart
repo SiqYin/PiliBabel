@@ -47,7 +47,7 @@ class SearchText extends StatelessWidget {
         child: Padding(
           padding: padding,
           child: Text(
-            translate ? uiTx(text) : text,
+            translate ? uiTxTight(text) : text,
             textAlign: textAlign,
             style: TextStyle(
               fontSize: fontSize,

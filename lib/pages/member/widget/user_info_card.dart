@@ -239,7 +239,7 @@ class UserInfoCard extends StatelessWidget {
                 color: colorScheme.vipColor,
               ),
               child: Text(
-                card.vip?.label?.text ?? uiTx('大会员'),
+                uiTx(card.vip?.label?.text ?? '大会员'),
                 strutStyle: const StrutStyle(
                   height: 1,
                   leading: 0,
@@ -319,9 +319,12 @@ class UserInfoCard extends StatelessWidget {
   Widget _buildSign() {
     return Padding(
       padding: const .only(left: 20, top: 6, right: 20),
-      child: SelectionText(
-        card.sign!.trim().replaceAll(RegExp(r'\n{2,}'), '\n'),
-        style: const TextStyle(fontSize: 14),
+      // 个性签名是服务端下发的中文，需要走翻译；用 Obx 让译文到达后刷新。
+      child: Obx(
+        () => SelectionText(
+          uiTx(card.sign!.trim().replaceAll(RegExp(r'\n{2,}'), '\n')),
+          style: const TextStyle(fontSize: 14),
+        ),
       ),
     );
   }
@@ -360,8 +363,10 @@ class UserInfoCard extends StatelessWidget {
           ...?card.spaceTag?.map(
             (item) {
               final hasUri = item.uri?.isNotEmpty ?? false;
+              // spaceTag 是服务端下发的文本：「IP属地：XX」以及 UP 主自己编辑的
+              // 分类标签都在这里，需要走翻译（公有标签如「收藏」本来就已翻译过）。
               final child = Text(
-                item.title ?? '',
+                uiTx(item.title ?? ''),
                 style: TextStyle(
                   fontSize: 12,
                   color: hasUri ? colorScheme.secondary : colorScheme.outline,
@@ -515,15 +520,15 @@ class UserInfoCard extends StatelessWidget {
                     ],
                     TextSpan(
                       text: isOwner
-                          ? '编辑资料'
+                          ? uiTx('编辑资料')
                           : switch (relation) {
-                              0 || -1 => '关注',
-                              1 => '悄悄关注',
-                              2 => '已关注',
+                              0 || -1 => uiTx('关注'),
+                              1 => uiTx('悄悄关注'),
+                              2 => uiTx('已关注'),
                               // 3 => '回关',
-                              4 || 6 => '已互关',
-                              128 => '移除黑名单',
-                              -10 => '特别关注', // 该状态码并不是官方状态码
+                              4 || 6 => uiTx('已互关'),
+                              128 => uiTx('移除黑名单'),
+                              -10 => uiTx('特别关注'), // 该状态码并不是官方状态码
                               _ => relation.toString(),
                             },
                     ),
@@ -870,7 +875,7 @@ class UserInfoCard extends StatelessWidget {
                   ),
                 ),
                 TextSpan(
-                  text: desc,
+                  text: uiTx(desc),
                   style: TextStyle(
                     fontSize: 13,
                     color: colorScheme.outline,
@@ -963,7 +968,9 @@ class UserInfoCard extends StatelessWidget {
             ),
           ),
           Text(
-            '${flag ? '等${item.items!.length}人' : ''}也关注了TA',
+            flag
+                ? uiTxP('等{0}人也关注了TA', ['${item.items!.length}'])
+                : uiTx('也关注了TA'),
             style: TextStyle(fontSize: 13, color: colorScheme.outline),
           ),
           Icon(

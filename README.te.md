@@ -248,3 +248,8 @@ PiliBabel **GNU General Public License v3.0 (GPL-3.0)** కింద లైస�
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — SIL Open Font License 1.1 కింద యాప్‌తో బండిల్ చేయబడిన ఓపెన్-సోర్స్ చైనీస్ టైప్‌ఫేస్
 - మరియు మరెన్నో
 - bilibili అధికారిక "AI ఇంటర్‌ఫేస్ అనువాదం" ద్వారా ప్రేరేపించబడింది.
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

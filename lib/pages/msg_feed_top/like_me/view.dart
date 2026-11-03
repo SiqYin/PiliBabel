@@ -215,7 +215,7 @@ class _LikeMePageState extends State<LikeMePage> {
                   onConfirm: () => onRemove(item.id),
                 );
               },
-              child: Text(uiTx('删除'), style: TextStyle(fontSize: 14)),
+              child: Text(uiTx('删除'), style: const TextStyle(fontSize: 14)),
             ),
             DialogOption(
               onPressed: () {

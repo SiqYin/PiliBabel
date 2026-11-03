@@ -157,6 +157,9 @@ docs/*
 !docs/ai/
 docs/ai/*
 !docs/ai/ACTIVE.md
+!docs/known-differences-vs-official.md
+!docs/outstanding.md
+!docs/backlog-verification.md
 test*.dart
 
 AGENTS.md

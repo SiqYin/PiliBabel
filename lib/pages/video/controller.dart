@@ -675,7 +675,7 @@ class VideoDetailController extends GetxController
         mediaList: mediaList,
         onChangeEpisode: (episode, {bool manual = false}) async {
           try {
-            return Get.find<UgcIntroController>(
+            return await Get.find<UgcIntroController>(
               tag: heroTag,
             ).onChangeEpisode(episode, manual: manual);
           } catch (_) {}
@@ -898,7 +898,7 @@ class VideoDetailController extends GetxController
 
     if (videoList.isEmpty) {
       final fallback = allVideos.first;
-      currentVideoQa.value = VideoQuality.fromCode(fallback.id!);
+      currentVideoQa.value = VideoQuality.fromCode(fallback.id);
       return fallback;
     }
 
@@ -1214,20 +1214,41 @@ class VideoDetailController extends GetxController
 
   final languages = Rxn<List<LanguageItem>>();
   final currLang = Rxn<String>();
+
+  /// 「声轨跟随界面语言」在本条稿件（cid）上已经试过，不再重复试。
+  int? _autoTrackTriedCid;
+
+  /// 用户在本条稿件（cid）上手动选过声轨（含「关闭翻译」），本次不再自动干预。
+  int? _trackUserPickedCid;
+
+  /// 按 cid 记住「这条稿件能切到哪一门外语声轨」（空串 = 没有可切的）。
+  ///
+  /// 自动切轨原本每次开播都要**多一次串行 playurl**：先取默认声轨拿到语言列表，
+  /// 命中再带 `cur_language` 重取。实测只有约 2.7% 的稿件带官方 AI 声轨，也就是
+  /// 绝大多数稿件白付这一次请求（首帧多 150~400ms）。记住结果之后，同一条稿件
+  /// 再看时直接按已知语言取流，不再多这一次往返。
+  static final Map<int, String> _langPickCache = {};
+
   void setLanguage(String language) {
     if (currLang.value == language) return;
     if (!isLoginVideo) {
       SmartDialog.showToast(uiTx('账号未登录'));
       return;
     }
+    _trackUserPickedCid = cid.value;
     currLang.value = language;
     queryVideoUrl(fromReset: true);
   }
 
-  Future<LoadingState<PlayUrlModel>> _getVideoUrl(int quality) async {
+  Future<LoadingState<PlayUrlModel>> _getVideoUrl(
+    int quality, {
+    bool allowAutoTrack = true,
+  }) async {
     // B1：命中预取就直接用（预取还在飞就等它，不再发第二次请求）。画质、语言、
     // 音量均衡、试看必须完全一致才算命中；预取失败返回 null，照原样走下面的
     // 正式请求，行为与没有预取时完全一致。
+    // 唯一会在这之后多加一次请求的是「声轨跟随界面语言」：预取的那份没有语言，
+    // 命中后仍要看有没有可切的官方声轨（见下面 allowAutoTrack 分支）。
     final prefetched = PlayUrlPrefetch.take(
       bvid: bvid,
       cid: cid.value,
@@ -1236,23 +1257,110 @@ class VideoDetailController extends GetxController
       voiceBalance: plPlayerController.enableAudioNormalization,
       tryLook: plPlayerController.tryLook,
     );
+    LoadingState<PlayUrlModel>? prefetchedResult;
     if (prefetched != null) {
       final cached = await prefetched;
       if (cached != null) {
-        return Success(cached);
+        // 不直接 return：预取的那份里带着 `language` 元数据（Web 侧搬过来的），
+        // 声轨自动切换要靠它判断，所以让预取结果继续往下走同一条判定。
+        prefetchedResult = Success(cached);
       }
     }
-    final result = await VideoHttp.videoUrl(
-      cid: cid.value,
-      bvid: bvid,
-      qn: quality,
-      epid: epId,
-      seasonId: seasonId,
-      tryLook: plPlayerController.tryLook,
-      videoType: _actualVideoType ?? videoType,
-      language: currLang.value,
-      voiceBalance: plPlayerController.enableAudioNormalization,
-    );
+    // 上一次看这条稿件时已经知道它能切到哪门外语声轨：直接按那门语言取流，
+    // 省掉下面「先取默认声轨、再带 cur_language 重取」的那一次往返。
+    String? knownLang;
+    if (allowAutoTrack &&
+        prefetchedResult == null &&
+        _autoTrackTriedCid != cid.value &&
+        (currLang.value?.isEmpty ?? true) &&
+        _trackUserPickedCid != cid.value &&
+        Pref.audioTrackFollowUiLang &&
+        isLoginVideo) {
+      final cached = _langPickCache[cid.value];
+      if (cached != null && cached.isNotEmpty) {
+        knownLang = cached;
+        _autoTrackTriedCid = cid.value;
+      }
+    }
+    var result =
+        prefetchedResult ??
+        await VideoHttp.videoUrl(
+          cid: cid.value,
+          bvid: bvid,
+          qn: quality,
+          epid: epId,
+          seasonId: seasonId,
+          tryLook: plPlayerController.tryLook,
+          videoType: _actualVideoType ?? videoType,
+          language: knownLang ?? currLang.value,
+          voiceBalance: plPlayerController.enableAudioNormalization,
+        );
+    // 已知语言取流后服务端没回显成那门语言（稿件改过 / 权限变了）→ 按原声播，
+    // 并把缓存结果作废，下次重新探测。
+    if (knownLang != null) {
+      final echoed = switch (result) {
+        Success(:final response) => response.curLanguage ?? '',
+        _ => '',
+      };
+      if (echoed == knownLang) {
+        final item = switch (result) {
+          Success(:final response) =>
+            response.language?.items?.firstWhereOrNull(
+              (e) => e.lang == knownLang,
+            ),
+          _ => null,
+        };
+        if (!isClosed) {
+          SmartDialog.showToast(
+            '${uiTx('声轨已跟随界面语言')} · ${item?.title ?? knownLang}',
+            displayTime: const Duration(seconds: 3),
+          );
+        }
+      } else {
+        _langPickCache.remove(cid.value);
+        _autoTrackTriedCid = null;
+      }
+    }
+    // 「声轨跟随界面语言」：官方 AI 原声翻译声轨要先拿到稿件支持哪些语言才知道能不能切，
+    // 所以这里是**先取默认声轨的元数据、再带 cur_language 重取一次**。重取必须在开播前
+    // 完成，否则用户会先听到原声再被换成外语。每个 cid 只试一次，切失败（响应里的
+    // `cur_language` 没被服务端接受）就照原样播原声。
+    if (allowAutoTrack) {
+      if (result case Success(:final response)) {
+        if (_autoTrackTriedCid != cid.value) {
+          _autoTrackTriedCid = cid.value;
+          final wanted = _autoTrackLang(response.language?.items);
+          _langPickCache[cid.value] = wanted ?? '';
+          if (wanted != null) {
+            final switched = await VideoHttp.videoUrl(
+              cid: cid.value,
+              bvid: bvid,
+              qn: quality,
+              epid: epId,
+              seasonId: seasonId,
+              tryLook: plPlayerController.tryLook,
+              videoType: _actualVideoType ?? videoType,
+              language: wanted,
+              voiceBalance: plPlayerController.enableAudioNormalization,
+            );
+            // `:final x` 是「按属性名绑定」，改名要用 `属性: final 新名`，
+            // 否则这里会写成读取一个不存在的 `response2`  getter。
+            if (switched case Success(response: final switchedModel)
+                // 只认服务端的回显：`cur_language` 被换成我们要的语言才算真换成功。
+                when (switchedModel.curLanguage ?? '') == wanted) {
+              final item = switchedModel.language?.items?.firstWhereOrNull(
+                (e) => e.lang == wanted,
+              );
+              SmartDialog.showToast(
+                '${uiTx('声轨已跟随界面语言')} · ${item?.title ?? wanted}',
+                displayTime: const Duration(seconds: 3),
+              );
+              result = switched;
+            }
+          }
+        }
+      }
+    }
     // A4.3 首帧优先：冷启动时先给候选一个有限预算的探测窗口（与播放器初始化
     // 重叠，不额外拖起播），选流就能直接落到实测最快的那条，少一次失败重试。
     if (result case Success(:final response)) {
@@ -1268,6 +1376,50 @@ class VideoDetailController extends GetxController
     return result;
   }
 
+  /// 按界面语言挑一条**官方** AI 原声翻译声轨，返回要请求的 `cur_language`。
+  ///
+  /// 规则（2026-11-02 与用户确认）：**只有官方下发了与界面语言一致的声轨才切**，
+  /// 界面是韩语、官方只有英/日時就**保持原声**，不做「挑一门最接近的」这种兜底，
+  /// 也不做本地合成。反过来，外语原稿带中文轨时界面是中文就会切到中文轨。
+  ///
+  /// 两个门槛：
+  /// - **必须已登录**：匿名请求里 `cur_language` 被服务端直接忽略（实测回显恒为空串、
+  ///   音频直链一字未变），未登录自动切只会让界面与声音不一致；
+  /// - **不覆盖用户的选择**：本条稿件手动选过（包括选「关闭翻译」）就不再自动干预，
+  ///   已经处在某条轨上也不动。
+  String? _autoTrackLang(List<LanguageItem>? items) {
+    if (!Pref.audioTrackFollowUiLang || !isLoginVideo) {
+      return null;
+    }
+    if (items == null || items.isEmpty) {
+      return null;
+    }
+    if (_trackUserPickedCid == cid.value) {
+      return null;
+    }
+    if (currLang.value?.isNotEmpty ?? false) {
+      return null;
+    }
+    // 与字幕同一套语言贴合度；界面翻译关掉时界面就是简体中文，按 zh-CN 算。
+    final target = Pref.uiTranslateEnabled ? Pref.uiTranslateLang : 'zh-CN';
+    String? best;
+    // 起评 1 分：要求「同一门语言」。简繁之别（1 分）对音频毫无意义，
+    // 而 2/3 分才是真的同一门话。
+    var bestScore = 1;
+    for (final item in items) {
+      final lang = item.lang;
+      if (lang == null || lang.isEmpty) {
+        continue;
+      }
+      final score = Subtitle.langScore(lang, target);
+      if (score > bestScore) {
+        bestScore = score;
+        best = lang;
+      }
+    }
+    return best;
+  }
+
   Future<void> _supplementVideoQualities() async {
     // APP 同源直链绝不能再补 Web 直链：两边令牌要求的请求指纹相反
     // （APP 要「不带 Referer」、Web 要「带 Referer」），混进列表里必然有一半
@@ -1275,7 +1427,8 @@ class VideoDetailController extends GetxController
     if (data.isAppSource) return;
     final quality = data.missingVideoQualityBelowHighest;
     if (quality == -1) return;
-    final result = await _getVideoUrl(quality);
+    // 补档位不是「重新打开视频」，不要再触发一次声轨自动切换。
+    final result = await _getVideoUrl(quality, allowAutoTrack: false);
     if (result case Success(:final response)) {
       data.dash!.video!.merge(response.dash?.video);
     }
@@ -2605,6 +2758,8 @@ class VideoDetailController extends GetxController
       // language
       languages.value = null;
       currLang.value = null;
+      _autoTrackTriedCid = null;
+      _trackUserPickedCid = null;
 
       // dm trend
       if (plPlayerController.showDmChart) {
@@ -2837,13 +2992,19 @@ class VideoDetailController extends GetxController
       // UP 主与封面随档案一起落盘，「下载情况」里才看得见是谁发的、封面是什么。
       final detail = _videoDetailOrNull();
       await service.downloadVideo(
-        avid: aid,
-        bvid: IdUtils.av2bv(aid),
-        cid: seasonCid ?? cid.value,
+        avid: detail?.aid ?? aid,
+        bvid: detail?.bvid ?? bvid,
+        // 必须用**当前正在播放**的 cid。seasonCid 是「合集内选中集」，
+        // 它与 cid.value 不同步时（例如刚切换分 P / 合集条目），
+        // 用 seasonCid 取流会与 bvid 不匹配，服务端直接返回 -400 请求错误。
+        cid: detail?.cid ?? cid.value,
         title: title,
         qn: quality.code,
         ownerName: detail?.owner?.name,
         cover: detail?.pic,
+        collectionName: _collectionFolderName(),
+        seasonId: isUgc ? null : seasonId,
+        epId: isUgc ? null : epId,
       );
     } else {
       if (!isUgc) {
@@ -2856,15 +3017,41 @@ class VideoDetailController extends GetxController
       }
       final detail = _videoDetailOrNull();
       await service.downloadAudio(
-        avid: aid,
-        bvid: IdUtils.av2bv(aid),
-        cid: cid.value,
+        avid: detail?.aid ?? aid,
+        bvid: detail?.bvid ?? bvid,
+        cid: detail?.cid ?? cid.value,
         title: title,
         quality: quality,
         ownerName: detail?.owner?.name,
         cover: detail?.pic,
+        collectionName: _collectionFolderName(),
+        seasonId: isUgc ? null : seasonId,
+        epId: isUgc ? null : epId,
       );
     }
+  }
+
+  /// 当前视频所属「合集 / 多 P」的名字，用于在下载目录下建同名子文件夹。
+  ///
+  /// 合集（ugc_season）优先用合集标题；普通多 P 视频退而用视频标题，
+  /// 这样同一视频的各分 P 会落进同一个文件夹。都不是则返回 null（直接放所选目录）。
+  String? _collectionFolderName() {
+    if (!isUgc) {
+      return null;
+    }
+    final detail = _videoDetailOrNull();
+    if (detail == null) {
+      return null;
+    }
+    final seasonTitle = detail.ugcSeason?.title;
+    if (seasonTitle != null && seasonTitle.trim().isNotEmpty) {
+      return seasonTitle;
+    }
+    final pages = detail.pages;
+    if (pages != null && pages.length > 1) {
+      return detail.title;
+    }
+    return null;
   }
 
   /// 取当前视频的标题：UGC 用视频详情，PGC 用番剧信息。
@@ -2883,7 +3070,14 @@ class VideoDetailController extends GetxController
   }
 
   /// 缓存音频：按用户选的音质档位，把音轨单独存成原格式音频文件。
-  Future<void> onDownloadAudio(BuildContext context) async {
+  /// 缓存音频：与「缓存视频」共用同一个面板，只是默认落到音频档位。
+  ///
+  /// 这样面板里的「查看缓存」能带着「这是音频」的上下文跳过去，
+  /// 缓存界面打开时直接停在「缓存音频」模块，而不是上次停留的模块。
+  Future<void> onDownloadAudio(BuildContext context) =>
+      onDownload(context, isAudio: true);
+
+  Future<void> onDownloadAudioLegacy(BuildContext context) async {
     VideoDetailData? videoDetail;
     try {
       videoDetail = Get.find<UgcIntroController>(
@@ -2914,7 +3108,11 @@ class VideoDetailController extends GetxController
     );
   }
 
-  Future<void> onDownload(BuildContext context) async {
+  /// 缓存视频 / 缓存音频共用的面板入口。
+  ///
+  /// [isAudio] 决定面板里默认选中音频档位，也决定面板内「查看缓存」跳到
+  /// 缓存界面的哪个模块（缓存视频 / 缓存音频）。
+  Future<void> onDownload(BuildContext context, {bool isAudio = false}) async {
     VideoDetailData? videoDetail;
     List<ugc.BaseEpisodeItem>? episodes;
     UgcIntroController? ugcIntroController;
@@ -2991,6 +3189,7 @@ class VideoDetailController extends GetxController
               heroTag: heroTag,
               ugcIntroController: ugcIntroController,
               cidSet: cidSet,
+              isAudio: isAudio,
             ),
           );
         },

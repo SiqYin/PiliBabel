@@ -288,7 +288,7 @@ class _AudioPageState extends State<AudioPage> {
                         title: Obx(() {
                           UiTranslateService.to.revision.value;
                           return Text(
-                            uiTx(item.arc.title),
+                            uiTxTight(item.arc.title),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: isCurr
@@ -410,7 +410,7 @@ class _AudioPageState extends State<AudioPage> {
                                 const TextSpan(text: '  '),
                               ],
                               TextSpan(
-                                text: uiTx(item.arc.title),
+                                text: uiTxTight(item.arc.title),
                               ),
                             ],
                           ),
@@ -722,7 +722,7 @@ class _AudioPageState extends State<AudioPage> {
                 ListTile(
                   dense: true,
                   leading: const Icon(Icons.audiotrack, size: 20),
-                  title: Text(uiTx('缓存音频'), style: TextStyle(fontSize: 14)),
+                  title: Text(uiTx('缓存音频'), style: const TextStyle(fontSize: 14)),
                   onTap: () {
                     Get.back();
                     _controller.onDownloadAudio(context);
@@ -731,7 +731,7 @@ class _AudioPageState extends State<AudioPage> {
               ListTile(
                 dense: true,
                 leading: const Icon(Icons.warning_amber_rounded, size: 20),
-                title: Text(uiTx('举报'), style: TextStyle(fontSize: 14)),
+                title: Text(uiTx('举报'), style: const TextStyle(fontSize: 14)),
                 onTap: () {
                   Get.back();
                   PageUtils.reportVideo(_controller.oid.toInt());
@@ -741,7 +741,7 @@ class _AudioPageState extends State<AudioPage> {
                 ListTile(
                   dense: true,
                   leading: const Icon(Icons.info_outline, size: 20),
-                  title: Text(uiTx('播放信息'), style: TextStyle(fontSize: 14)),
+                  title: Text(uiTx('播放信息'), style: const TextStyle(fontSize: 14)),
                   onTap: () {
                     Get.back();
                     HeaderControlState.showPlayerInfo(context, player: player);
@@ -750,7 +750,7 @@ class _AudioPageState extends State<AudioPage> {
                 ListTile(
                   dense: true,
                   leading: const Icon(Icons.memory, size: 20),
-                  title: Text(uiTx('缓存统计'), style: TextStyle(fontSize: 14)),
+                  title: Text(uiTx('缓存统计'), style: const TextStyle(fontSize: 14)),
                   onTap: () {
                     Get.back();
                     // C1.2：暴露已缓存时长与占全长的比例。
@@ -1086,7 +1086,7 @@ CoverTranslateButton(cover: cover),
                     ),
                     const SizedBox(height: 12),
                     SelectionText(
-                      uiTx(audioItem.arc.title),
+                      uiTxTight(audioItem.arc.title),
                       style: const TextStyle(height: 1.7, fontSize: 16),
                     ),
                     const SizedBox(height: 12),

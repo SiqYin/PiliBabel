@@ -1242,7 +1242,7 @@ class HeaderControlState extends State<HeaderControl>
           title: Row(
             children: [
               Expanded(child: Text(uiTx('保存字幕'))),
-              Text(uiTx('格式: '), style: TextStyle(fontSize: 14)),
+              Text(uiTx('格式: '), style: const TextStyle(fontSize: 14)),
               Builder(
                 builder: (context) => PopupMenuButton<SubtitleFormat>(
                   tooltip: '',
@@ -2068,7 +2068,7 @@ class HeaderControlState extends State<HeaderControl>
                         barrierLabel: 'dismiss',
                         barrierColor: Colors.black54,
                         transitionDuration: const Duration(milliseconds: 220),
-                        pageBuilder: (ctx, _, __) => Obx(
+                        pageBuilder: (ctx, _, _) => Obx(
                           () => AlertDialog(
                             content: Text(
                               uiTx(UiTranslateService.danmakuTranslateWarning),
@@ -2280,7 +2280,7 @@ class HeaderControlState extends State<HeaderControl>
             child: Text(
               uiTx('0人正在看'),
               maxLines: 1,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 11,
               ),

@@ -33,10 +33,14 @@ class LocalDownloadRecord {
 
   /// 落盘的绝对路径。视频高画质（1080P60 及以上）走 DASH 分离流时，
   /// 这里是视频轨的路径，音轨见 [extraPath]。
-  final String path;
+  ///
+  /// 不是 final：分离流下载完成后会用 FFmpeg 把两个轨合并成一个 MP4，
+  /// 届时这里改为指向合并后的文件、并把 [extraPath] 置空。
+  String path;
 
   /// 分离流下载时音频轨的落盘路径（与 [path] 一起构成完整内容）。
-  final String? extraPath;
+  /// 合并成功后置为 null（音频已并入 [path]）。
+  String? extraPath;
 
   final String? ownerName;
   final String? cover;
@@ -82,6 +86,21 @@ class LocalDownloadRecord {
       return true;
     }
   }
+
+  /// 是否应当显示「本地文件已删除」这类完整性告警。
+  ///
+  /// **下载进行中绝不能做这个检测**：文件要等下载写完才落盘，中途 `fileMissing`
+  /// 必然为 true，界面就会一边显示进度、一边红字说「文件已删除」（实际文件的
+  /// 下载还在进行）。
+  /// 只有两种情况需要检测：下载**已完成**（万一之后被用户删了/存储丢了），
+  /// 或者下载**已失败**（此时没有文件才说明确实不可用）。
+  bool get shouldCheckIntegrity => done || failed;
+
+  /// 需要显示「本地文件已删除」时的值；下载进行中恒为 false。
+  bool get fileMissingAndSettled => shouldCheckIntegrity && fileMissing;
+
+  /// 下载失败（fail）后若文件其实不在，同样属于不可用。
+  bool get isUnusable => shouldCheckIntegrity && (failed || fileMissing);
 
   /// 下载进度 0~1；总大小未知时按「完成与否」给值，界面显示已下载字节数。
   double get progress {

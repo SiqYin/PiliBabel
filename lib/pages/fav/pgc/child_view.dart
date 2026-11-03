@@ -108,7 +108,7 @@ class _FavPgcChildPageState extends State<FavPgcChildPage>
                     disableSelect: false,
                   ),
                   child: Padding(
-                    padding: EdgeInsets.only(
+                    padding: const EdgeInsets.only(
                       top: 14,
                       bottom: 14,
                       right: 12,

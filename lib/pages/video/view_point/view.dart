@@ -53,9 +53,9 @@ class _ViewPointsPageState extends State<ViewPointsPage>
           children: [
             const SizedBox(width: 16),
             Expanded(
-              child: Text(uiTx('分段信息'), style: TextStyle(fontSize: 16)),
+              child: Text(uiTx('分段信息'), style: const TextStyle(fontSize: 16)),
             ),
-            Text(uiTx('分段进度条 '), style: TextStyle(fontSize: 16)),
+            Text(uiTx('分段进度条 '), style: const TextStyle(fontSize: 16)),
             Obx(
               () => Transform.scale(
                 alignment: Alignment.centerLeft,

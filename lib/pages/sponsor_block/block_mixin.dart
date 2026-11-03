@@ -306,21 +306,21 @@ mixin BlockMixin on GetxController {
         contentPadding: const .symmetric(vertical: 10),
         children: [
           DialogOption(
-            child: Text(uiTx('赞成票'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('赞成票'), style: const TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               _doVote(segment.uuid, 1);
             },
           ),
           DialogOption(
-            child: Text(uiTx('反对票'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('反对票'), style: const TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               _doVote(segment.uuid, 0);
             },
           ),
           DialogOption(
-            child: Text(uiTx('更改类别'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('更改类别'), style: const TextStyle(fontSize: 14)),
             onPressed: () {
               Get.back();
               _showCategoryDialog(segment);

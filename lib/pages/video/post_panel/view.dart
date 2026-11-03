@@ -258,7 +258,7 @@ class _PostPanelState extends State<PostPanel>
         child: Row(
           children: [
             const SizedBox(width: 16),
-            Expanded(child: Text(uiTx('提交片段'), style: TextStyle(fontSize: 16))),
+            Expanded(child: Text(uiTx('提交片段'), style: const TextStyle(fontSize: 16))),
             iconButton(
               size: 32,
               context: context,

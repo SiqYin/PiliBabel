@@ -20,7 +20,6 @@ import 'package:PiliPlus/models_new/video/video_detail/data.dart';
 import 'package:PiliPlus/models_new/video/video_detail/episode.dart' as ugc;
 import 'package:PiliPlus/models_new/video/video_detail/page.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
-import 'package:PiliPlus/pages/danmaku/controller.dart';
 import 'package:PiliPlus/services/download/download_manager.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/cache_manager.dart';
@@ -48,7 +47,7 @@ class DownloadService extends GetxService {
   final _danmakuLock = Lock();
 
   final flagNotifier = SetNotifier();
-  final completedEntryNotifier = Set<ValueChanged<BiliDownloadEntryInfo>>();
+  final completedEntryNotifier = <ValueChanged<BiliDownloadEntryInfo>>{};
   final waitDownloadQueue = RxList<BiliDownloadEntryInfo>();
   final downloadList = <BiliDownloadEntryInfo>[];
 
@@ -353,6 +352,12 @@ class DownloadService extends GetxService {
   /// 调用 downloadDanmaku 的最长等待（含排队等弹幕锁）
   static const Duration _danmakuCallBudget = Duration(seconds: 75);
 
+  /// 单次取播放地址的最长等待。playurl 响应体大、海外慢，内部已放宽到
+  /// receive 30s，但 gRPC PlayView 没有内建超时；这里给整段加一个硬上限，
+  /// 防止「获取播放地址」阶段无限悬挂（用户看到的就是永远停在“获取播放地址”）。
+  /// 超时变成异常，被外层重试循环捕获；试满次数后转 failPlayUrl + toast，用户有反馈。
+  static const Duration _playUrlCallBudget = Duration(seconds: 45);
+
   /// 建立流程的代号：每次开始/切换都自增，旧的流程靠它自我作废。
   /// 有了它就**不再需要下载锁**——锁会被卡住的网络请求长期占死，
   /// 表现正是「正在下载却卡住时，点其它等待中的视频毫无反应」。
@@ -436,7 +441,7 @@ class DownloadService extends GetxService {
   void _warnIfSetupSlow(int gen) {
     Timer(const Duration(seconds: 12), () {
       if (gen == _setupGen && _setupDepth > 0) {
-        SmartDialog.showToast('${uiTx('缓存建立中，阶段：')}${_phase}');
+        SmartDialog.showToast('${uiTx('缓存建立中，阶段：')}$_phase');
       }
     });
   }
@@ -777,14 +782,22 @@ class DownloadService extends GetxService {
             ep: entry.ep,
             source: entry.source,
             pageData: entry.pageData,
-          );
+          ).timeout(_playUrlCallBudget);
           break;
         } catch (e) {
+          // 超时（我加的硬上限触发）或网络异常：非「不存在」类的可重试错误就退避重试。
+          // 试满次数后不再抛原始异常（TimeOutException 是一串英文时间戳，用户看不懂），
+          // 而是掷一个可翻译的友好原因，交给外层 catch 转 failPlayUrl + toast。
+          final isTimeout = e is TimeoutException;
           final msg = e.toString();
-          if (playUrlAttempt >= maxPlayUrlAttempts || msg.contains('不存在')) {
-            rethrow;
+          final permanent = msg.contains('不存在');
+          if (!permanent && playUrlAttempt < maxPlayUrlAttempts) {
+            await Future.delayed(Duration(seconds: 2 * playUrlAttempt));
+          } else {
+            throw isTimeout
+                ? '获取播放地址超时，请检查网络后重试'
+                : (permanent ? '该视频的播放地址不可用' : e);
           }
-          await Future.delayed(Duration(seconds: 2 * playUrlAttempt));
         }
         if (!_isCurrentSetup(entry, gen)) {
           return;
@@ -1154,7 +1167,7 @@ class DownloadService extends GetxService {
         ep: entry.ep,
         source: entry.source,
         pageData: entry.pageData,
-      );
+      ).timeout(_playUrlCallBudget);
       final mediaFileInfo = result.mediaFileInfo;
       if (mediaFileInfo is Type2 && mediaFileInfo.audio?.isNotEmpty == true) {
         if (curDownload.value?.cid != entry.cid) {

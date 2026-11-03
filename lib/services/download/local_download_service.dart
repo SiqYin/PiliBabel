@@ -13,6 +13,8 @@ import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/video_utils.dart';
+import 'package:ffmpeg_kit_flutter_new_min/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new_min/return_code.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
@@ -260,14 +262,19 @@ class LocalDownloadService extends GetxService {
     return file.path;
   }
 
-  String? _targetDir() {
+  String? _targetDir({String? collectionName}) {
     final dir = Pref.downloadLocalPath;
     if (dir == null || dir.isEmpty) {
       SmartDialog.showToast(uiTx('还没设置下载到本地的位置'));
       return null;
     }
+    // 合集/多 P 视频：在所选目录下建一个以合集名命名的子文件夹，
+    // 这样同一合集里后续追加下载的其它分集会自动落进同一个文件夹。
+    // 合集名会做一次文件名净化（去掉路径分隔符等非法字符），避免建目录失败。
+    final sub = _sanitizeFolderName(collectionName);
+    final target = sub == null ? dir : path.join(dir, sub);
     try {
-      final d = Directory(dir);
+      final d = Directory(target);
       if (!d.existsSync()) {
         d.createSync(recursive: true);
       }
@@ -278,7 +285,30 @@ class LocalDownloadService extends GetxService {
       SmartDialog.showToast(uiTx('下载位置不可用，请重新选择'));
       return null;
     }
-    return dir;
+    return target;
+  }
+
+  /// 把合集名净化成安全的目录名；没有可用字符时返回 null（表示不建子目录）。
+  static String? _sanitizeFolderName(String? raw) {
+    if (raw == null) {
+      return null;
+    }
+    var name = raw.trim();
+    if (name.isEmpty) {
+      return null;
+    }
+    // Windows / macOS / Linux 都不允许的字符，统一换成下划线
+    name = name.replaceAll(RegExp(r'[\\/:*?"<>|\x00-\x1f]'), '_');
+    // 去掉首尾的点与空格（Windows 不允许以点结尾）
+    name = name.replaceAll(RegExp(r'^[.\s]+|[.\s]+$'), '');
+    if (name.isEmpty) {
+      return null;
+    }
+    // 目录名过长会触发文件系统限制，截断到 80 个字符
+    if (name.length > 80) {
+      name = name.substring(0, 80);
+    }
+    return name;
   }
 
   /// 1080P（qn=80）是单文件 MP4（fnval=1 的 durl）能拿到的上限：
@@ -301,8 +331,11 @@ class LocalDownloadService extends GetxService {
     int qn = 80,
     String? ownerName,
     String? cover,
+    String? collectionName,
+    int? seasonId,
+    int? epId,
   }) async {
-    final dir = _targetDir();
+    final dir = _targetDir(collectionName: collectionName);
     if (dir == null) {
       return false;
     }
@@ -321,6 +354,8 @@ class LocalDownloadService extends GetxService {
         ownerName: ownerName,
         cover: cover,
         dir: dir,
+        seasonId: seasonId,
+        epId: epId,
       );
     }
     _activeIds.add(id);
@@ -331,7 +366,11 @@ class LocalDownloadService extends GetxService {
       cid: cid,
       qn: qn,
       tryLook: !isLogin && Pref.p1080,
-      videoType: VideoType.ugc,
+      // 番剧（PGC）必须带 ep_id / season_id，否则服务端不返回流 ——
+      // 这正是「取流失败，无法下载到本地」的根因之一。
+      videoType: epId == null ? VideoType.ugc : VideoType.pgc,
+      epid: epId,
+      seasonId: seasonId,
       allowAppSource: false,
       fnval: 1,
     );
@@ -370,7 +409,29 @@ class LocalDownloadService extends GetxService {
       return true;
     }
     _activeIds.remove(id);
-    SmartDialog.showToast(uiTx('取流失败，无法下载到本地'));
+    // 取流失败也要留档：用户在「离线缓存 → 下载视频 / 下载音频」里
+    // 能看到这条失败记录，并直接点「重新下载」重试，不必回视频页重找稿件。
+    try {
+      final placeholderPath = path.join(
+        dir,
+        sanitize(title) + ' (视频)',
+      );
+      final failedRecord = _upsertRecord(
+        id: id,
+        isAudio: false,
+        title: title,
+        path: placeholderPath,
+        ownerName: ownerName,
+        cover: cover,
+        qn: qn,
+        audioQa: 0,
+      );
+      failedRecord.failed = true;
+      _touchRecords(save: true);
+    } catch (_) {}
+    // 把服务端返回的真实原因带上，否则只有一句「取流失败」无从判断。
+    final reason = _fetchErrReason(res);
+    SmartDialog.showToast(uiTx('取流失败，无法下载到本地') + ((reason?.isNotEmpty ?? false) ? '：$reason' : ''));
     return false;
   }
 
@@ -384,6 +445,8 @@ class LocalDownloadService extends GetxService {
     String? ownerName,
     String? cover,
     required String dir,
+    int? seasonId,
+    int? epId,
   }) async {
     final id = '$avid-$cid-v';
     _activeIds.add(id);
@@ -395,7 +458,11 @@ class LocalDownloadService extends GetxService {
       cid: cid,
       qn: qn,
       tryLook: !isLogin && Pref.p1080,
-      videoType: VideoType.ugc,
+      // 番剧（PGC）必须带 ep_id / season_id，否则服务端不返回流 ——
+      // 这正是「取流失败，无法下载到本地」的根因之一。
+      videoType: epId == null ? VideoType.ugc : VideoType.pgc,
+      epid: epId,
+      seasonId: seasonId,
       allowAppSource: false,
     );
     if (res case Success(:final response)) {
@@ -434,7 +501,7 @@ class LocalDownloadService extends GetxService {
         videoMain,
         ...video.playUrls.where((u) => u != videoMain),
       ];
-      final videoPath = uniquePath(
+      var videoPath = uniquePath(
         dir,
         '${sanitize(title)} (${sanitize(video.quality.shortDesc)})',
         'mp4',
@@ -474,7 +541,29 @@ class LocalDownloadService extends GetxService {
       return true;
     }
     _activeIds.remove(id);
-    SmartDialog.showToast(uiTx('取流失败，无法下载到本地'));
+    // 取流失败也要留档：用户在「离线缓存 → 下载视频 / 下载音频」里
+    // 能看到这条失败记录，并直接点「重新下载」重试，不必回视频页重找稿件。
+    try {
+      final placeholderPath = path.join(
+        dir,
+        sanitize(title) + ' (视频)',
+      );
+      final failedRecord = _upsertRecord(
+        id: id,
+        isAudio: false,
+        title: title,
+        path: placeholderPath,
+        ownerName: ownerName,
+        cover: cover,
+        qn: qn,
+        audioQa: 0,
+      );
+      failedRecord.failed = true;
+      _touchRecords(save: true);
+    } catch (_) {}
+    // 把服务端返回的真实原因带上，否则只有一句「取流失败」无从判断。
+    final reason = _fetchErrReason(res);
+    SmartDialog.showToast(uiTx('取流失败，无法下载到本地') + ((reason?.isNotEmpty ?? false) ? '：$reason' : ''));
     return false;
   }
 
@@ -494,7 +583,7 @@ class LocalDownloadService extends GetxService {
       List<String> urls,
       String filePath,
       int baseBytes,
-    ) async {
+    ) {
       final completer = Completer<bool>();
       DownloadManager(
         urls: urls,
@@ -547,9 +636,31 @@ class LocalDownloadService extends GetxService {
         SmartDialog.showToast(uiTxP('{0} 下载失败', [title]));
         return;
       }
+      // 两个轨都下好之后合并成一个 MP4：用户要的是「一个能直接播放的视频」，
+      // 而不是「一个没声音的视频 + 一个单独的音频」。合并走 FFmpeg 的容器层
+      // remux（-c copy），不重新编码，所以既快又无损。
+      final mergedPath = await _mergeAudioVideo(
+        videoPath: videoPath,
+        audioPath: audioPath,
+        title: title,
+      );
+      if (mergedPath != null) {
+        // 合并成功：档案指向合并后的 MP4，并且不再有分离的音频轨。
+        record
+          ..path = mergedPath
+          ..extraPath = null;
+        videoPath = mergedPath;
+        _touchRecords(save: true);
+      } else {
+        // 合并失败不能让用户什么也拿不到：保留两个分轨，并明确告知。
+        SmartDialog.showToast(
+          uiTxP('{0} 已下载，但音视频合并失败，已保留分离的视频与音频文件', [title]),
+        );
+      }
     }
-    record.done = true;
-    record.failed = false;
+    record
+      ..done = true
+      ..failed = false;
     if (record.totalBytes > 0) {
       record.receivedBytes = record.totalBytes;
     }
@@ -558,19 +669,150 @@ class LocalDownloadService extends GetxService {
     SmartDialog.showToast(uiTxP('{0} 已下载到本地', [title]));
   }
 
+  /// 把 DASH 分离的视频轨与音频轨合并成一个可双击播放的 MP4。
+  ///
+  /// 走的是 FFmpeg 的**容器层 remux**（-c copy）：不重新编码，所以几乎不耗 CPU、
+  /// 画质音质完全无损，几秒钟就能完成（只受磁盘读写速度影响）。
+  ///
+  /// 成功时返回合并后的文件路径，并删掉两个临时分轨；
+  /// 失败（或缺某一路）返回 null —— 由调用方保留原文件并给出提示，
+  /// 绝不让用户「下载完却什么也没有」。
+  ///
+  /// 注意：FFmpeg 是本 App 打包进去的原生库（ffmpeg_kit_flutter_new_min），
+  /// 不依赖用户机器上已安装 ffmpeg，因此 Android / Windows / Linux 三端行为一致。
+  Future<String?> _mergeAudioVideo({
+    required String videoPath,
+    required String audioPath,
+    required String title,
+  }) async {
+    // 先输出到临时文件，成功后再改名成「原视频文件名」。
+    // 这样最终目录里**只有一个**文件、名字也和单文件档位一致（如「标题 (1080P+).mp4」），
+    // 不会出现「原无声视频 + 标题 (合并).mp4」两份。
+    final dir = path.dirname(videoPath);
+    final tmpPath = path.join(dir, '.merge_${DateTime.now().microsecondsSinceEpoch}.tmp.mp4');
+    try {
+      // -map 0:v + -map 1:a：明确取视频文件的视频流、音频文件的音频流。
+      // -c copy 不转码；-movflags +faststart 把索引放到文件头，
+      // 让播放器/网页能立刻开始播（而不是下完整文件才能看）。
+      final cmd =
+          '-y -i "{0}" -i "{1}" -map 0:v:0 -map 1:a:0 -c copy '
+          '-movflags +faststart "{2}"'
+              .replaceAll('{0}', videoPath)
+              .replaceAll('{1}', audioPath)
+              .replaceAll('{2}', tmpPath);
+      final session = await FFmpegKit.execute(cmd);
+      final rc = await session.getReturnCode();
+      if (!ReturnCode.isSuccess(rc)) {
+        if (kDebugMode) {
+          final output = await session.getOutput();
+          debugPrint('merge audio/video failed: rc=$rc\n$output');
+        }
+        _tryDeleteFile(tmpPath);
+        return null;
+      }
+      final tmpFile = File(tmpPath);
+      if (!tmpFile.existsSync() || tmpFile.lengthSync() <= 0) {
+        _tryDeleteFile(tmpPath);
+        return null;
+      }
+      // 合并产物已经在临时文件里。接下来要把它放到最终位置：
+      // 先删掉原来的视频轨与音频轨，再把临时文件改名为原视频文件名。
+      // 删除带重试：下载器刚关掉句柄时，某些平台（尤其 Windows）可能短暂占用文件，
+      // 之前一次 deleteSync 失败就被静默吞掉，于是「无声视频」被留了下来。
+      final videoDeleted = await _tryDeleteWithRetry(videoPath);
+      // 音频轨无论如何都不该留下来（内容已并入合并文件）。
+      await _tryDeleteWithRetry(audioPath);
+      if (!videoDeleted) {
+        // 原视频轨删不掉（被占用等）：退回「保留两份但明确命名」的做法，
+        // 至少不能把用户能播的合并文件丢掉。
+        if (kDebugMode) debugPrint('merge: cannot delete video track $videoPath');
+        return tmpPath;
+      }
+      // 视频轨已删除；把合并产物改名成视频轨原本的名字（保留画质后缀，方便辨认）。
+      try {
+        final target = File(videoPath);
+        if (target.existsSync()) {
+          // 极端情况下同名文件又出现（并发/重试），加序号避免覆盖。
+          final alt = uniquePath(dir, path.basenameWithoutExtension(videoPath), 'mp4');
+          await tmpFile.rename(alt);
+          return alt;
+        }
+        await tmpFile.rename(videoPath);
+        return videoPath;
+      } catch (e) {
+        if (kDebugMode) debugPrint('merge: rename failed: $e');
+        return tmpPath;
+      }
+    } catch (e, s) {
+      if (kDebugMode) debugPrint('merge audio/video error: $e\n$s');
+      _tryDeleteFile(tmpPath);
+      return null;
+    }
+  }
+
+  /// 取流失败时把服务端返回的真实原因取出来（供 toast 使用，便于定位问题）。
+  ///
+  /// 之前三处取流只判断 Success，其它分支（含服务端明确给出的 code/message）
+  /// 全被丢弃，只剩一句「取流失败，无法下载到本地」，既没法自助解决、也没法排查。
+  static String? _fetchErrReason(LoadingState res) {
+    if (res is Error) {
+      final msg = res.errMsg;
+      if (msg == null || msg.isEmpty) return null;
+      return msg;
+    }
+    return null;
+  }
+
+  /// 尽力删除一个文件；失败不抛出（调用方通常已有兜底逻辑）。
+  void _tryDeleteFile(String p) {
+    try {
+      final f = File(p);
+      if (f.existsSync()) f.deleteSync();
+    } catch (_) {}
+  }
+
+  /// 带重试的删除。
+  ///
+  /// 合并完成后要删掉原来的视频轨/音频轨，但下载器刚关掉写句柄的那一瞬间，
+  /// 部分平台（尤其 Windows）会短暂占用文件，单次 delete 会失败。
+  /// 之前那次失败被静默吞掉，结果「无声的原视频」被留在了目录里 —— 用户会同时
+  /// 看到「xxx (1080P+).mp4」（无声）和「xxx (合并).mp4」（有声）。
+  /// 这里重试几次并留出短暂间隔，成功返回 true。
+  Future<bool> _tryDeleteWithRetry(String p, {int attempts = 6}) async {
+    for (var i = 0; i < attempts; i++) {
+      try {
+        final f = File(p);
+        if (!f.existsSync()) {
+          return true;
+        }
+        f.deleteSync();
+        return true;
+      } catch (_) {
+        // 让出一点时间给占用方释放句柄
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+      }
+    }
+    try {
+      return !File(p).existsSync();
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// 音频下载到本地：沿用原始容器，不转码。
   Future<bool> downloadAudio({
     required int avid,
     required String bvid,
     required int cid,
     required String title,
-    String? seasonId,
+    int? seasonId,
     int? epId,
     required AudioQuality quality,
     String? ownerName,
     String? cover,
+    String? collectionName,
   }) async {
-    final dir = _targetDir();
+    final dir = _targetDir(collectionName: collectionName);
     if (dir == null) {
       return false;
     }
@@ -590,10 +832,15 @@ class LocalDownloadService extends GetxService {
       videoType: epId == null
           ? VideoType.ugc
           : (isLogin ? VideoType.pgc : VideoType.ugc),
+      epid: epId,
+      seasonId: seasonId,
       allowAppSource: false,
-      // 4048（DASH 全家桶）不含 4096（Hi-Res 无损位）：不补这一位，取流结果里
-      // 永远不会有 Hi-Res（30251）轨，「下载 Hi-Res」会静默退化成 320K。
-      fnval: 4048 | 4096,
+      // 只用 4048（DASH）。**不要再 OR 上 4096**：
+      // 4096 不是 playurl 的合法 fnval 位（合法的只有 1/16/32/64/128/256），
+      // 加上它会得到 8144，服务端判为非法参数直接返回 -400 请求错误 ——
+      // 这正是「下载音频到本地 / 缓存音频」全部失败的根因。
+      // Hi-Res 轨靠 DASH 响应本身下发，不需要这个位。
+      fnval: 4048,
     );
     if (res case Success(:final response)) {
       final audios = response.dash?.audio;
@@ -616,7 +863,7 @@ class LocalDownloadService extends GetxService {
       }
       final item = audios.firstWhere((e) => e.id == pick);
       final raw = <String>[
-        if (item.baseUrl case final b?) b,
+        ?item.baseUrl,
         ...?item.backupUrl,
       ];
       final mainUrl = VideoUtils.getCdnUrl(
@@ -649,7 +896,29 @@ class LocalDownloadService extends GetxService {
       return true;
     }
     _activeIds.remove(id);
-    SmartDialog.showToast(uiTx('取流失败，无法下载到本地'));
+    // 取流失败也要留档：用户在「离线缓存 → 下载视频 / 下载音频」里
+    // 能看到这条失败记录，并直接点「重新下载」重试，不必回视频页重找稿件。
+    try {
+      final placeholderPath = path.join(
+        dir,
+        sanitize(title) + ' (音频)',
+      );
+      final failedRecord = _upsertRecord(
+        id: id,
+        isAudio: true,
+        title: title,
+        path: placeholderPath,
+        ownerName: ownerName,
+        cover: cover,
+        qn: 0,
+        audioQa: quality.code,
+      );
+      failedRecord.failed = true;
+      _touchRecords(save: true);
+    } catch (_) {}
+    // 把服务端返回的真实原因带上，否则只有一句「取流失败」无从判断。
+    final reason = _fetchErrReason(res);
+    SmartDialog.showToast(uiTx('取流失败，无法下载到本地') + ((reason?.isNotEmpty ?? false) ? '：$reason' : ''));
     return false;
   }
 
@@ -687,8 +956,9 @@ class LocalDownloadService extends GetxService {
           SmartDialog.showToast(uiTxP('{0} 下载失败', [title]));
           return;
         }
-        record.done = true;
-        record.failed = false;
+        record
+          ..done = true
+          ..failed = false;
         if (record.totalBytes > 0) {
           record.receivedBytes = record.totalBytes;
         }

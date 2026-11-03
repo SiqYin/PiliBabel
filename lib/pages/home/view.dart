@@ -59,7 +59,7 @@ class _HomePageState extends CommonPageState<HomePage>
                 .map(
                   (e) => Obx(() {
                     UiTranslateService.to.revision.value;
-                    return Tab(text: UiTranslateService.tx(e.label));
+                    return Tab(text: UiTranslateService.txTight(e.label));
                   }),
                 )
                 .toList(),

@@ -28,12 +28,28 @@ class AudioCacheTask {
     required this.cid,
     required this.title,
     required this.quality,
+    this.avid,
+    this.cover,
+    this.ownerName,
+    this.ownerId,
+    this.durationMs = 0,
+    this.seasonId,
+    this.epId,
   });
 
   final String bvid;
   final int cid;
   final String title;
   final AudioQuality quality;
+
+  /// 失败重试要用到的原始参数（见 AudioCacheService.retryTask）。
+  final int? avid;
+  final String? cover;
+  final String? ownerName;
+  final int? ownerId;
+  final int durationMs;
+  final String? seasonId;
+  final int? epId;
 
   final status = AudioCacheStatus.wait.obs;
   final received = 0.obs;
@@ -245,6 +261,13 @@ class AudioCacheService extends GetxService {
       cid: cid,
       title: title,
       quality: quality,
+      avid: avid,
+      cover: cover,
+      ownerName: ownerName,
+      ownerId: ownerId,
+      durationMs: durationMs,
+      seasonId: seasonId,
+      epId: epId,
     );
     taskList.insert(0, task);
 
@@ -261,9 +284,12 @@ class AudioCacheService extends GetxService {
           ? VideoType.ugc
           : (isLogin ? VideoType.pgc : VideoType.ugc),
       allowAppSource: false,
-      // 4048（DASH 全家桶）不含 4096（Hi-Res 无损位）：不补这一位，取流结果里
-      // 永远不会有 Hi-Res（30251）轨，用户选了 Hi-Res 也会静默退化成 320K。
-      fnval: 4048 | 4096,
+      // 只用 4048（DASH）。**不要再 OR 上 4096**：
+      // 4096 不是 playurl 的合法 fnval 位（合法的只有 1/16/32/64/128/256），
+      // 加上它会得到 8144，服务端判为非法参数直接返回 -400 请求错误 ——
+      // 这正是「下载音频到本地 / 缓存音频」全部失败的根因。
+      // Hi-Res 轨靠 DASH 响应本身下发，不需要这个位。
+      fnval: 4048,
     );
     if (res case Success(:final response)) {
       final audios = response.dash?.audio;
@@ -343,6 +369,10 @@ class AudioCacheService extends GetxService {
           audioList.insert(0, entry);
           await _writeIndex();
           task.status.value = AudioCacheStatus.completed;
+          // 完成的任务必须从进行中列表移除：留着它，下载页顶部会永远挂着一条
+          // 100% 的进度条；而删除那条任务会连本地音频文件一起删掉，已经登记的
+          // 缓存条目就变成无声、拖进度回 00:00 并跳到下一 P。
+          taskList.remove(task);
           SmartDialog.showToast(uiTx('音频缓存完成'));
         },
       );
@@ -359,13 +389,32 @@ class AudioCacheService extends GetxService {
   Future<void> cancelTask(AudioCacheTask task) async {
     final manager = task.manager;
     task.manager = null;
+    // 已完成的任务，文件已经登记进 audioList，这里只解绑不能删文件，
+    // 否则那条缓存会变成有记录没文件（播放无声）。
+    final completed = task.status.value == AudioCacheStatus.completed;
     taskList.remove(task);
     if (manager != null) {
-      await manager.cancel(isDelete: true);
+      await manager.cancel(isDelete: !completed);
     }
   }
 
   void removeTask(AudioCacheTask task) => taskList.remove(task);
+
+  /// 失败的任务重试：用任务上缓存的原始参数重新走一遍 download。
+  /// 原来的失败任务只是留在列表里，用户没有任何重新缓存的入口。
+  Future<bool> retryTask(AudioCacheTask task) => download(
+        avid: task.avid ?? 0,
+        bvid: task.bvid,
+        cid: task.cid,
+        title: task.title,
+        cover: task.cover ?? '',
+        ownerName: task.ownerName,
+        ownerId: task.ownerId,
+        durationMs: task.durationMs,
+        seasonId: task.seasonId,
+        epId: task.epId,
+        quality: task.quality,
+      );
 
   /// 删除缓存。[deleteFile] 为 true 时连本地音频文件一起删。
   Future<void> delete(

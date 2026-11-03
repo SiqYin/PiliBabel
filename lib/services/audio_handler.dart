@@ -49,6 +49,9 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
   Future<void>? Function(Duration position)? onSeek;
   Future<void>? Function()? onSkipToNext;
   Future<void>? Function()? onSkipToPrevious;
+
+  /// 播放页挂上来的「真实是否在播」查询，给 [click] 用，见那里的注释。
+  bool Function()? isPlaying;
   String? currentHeroTag;
 
   void _clearCallbacks() {
@@ -57,6 +60,7 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     onSeek = null;
     onSkipToNext = null;
     onSkipToPrevious = null;
+    isPlaying = null;
   }
 
   void _emitIdleState() {
@@ -168,6 +172,59 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     // await player.seekTo(position);
   }
 
+  /// 耳机 / 车机上那颗「播放-暂停」键的落点。
+  ///
+  /// `audio_service` 的 Android 侧把 `KEYCODE_MEDIA_PLAY`、`KEYCODE_MEDIA_PAUSE`、
+  /// `KEYCODE_MEDIA_PLAY_PAUSE`、`KEYCODE_HEADSETHOOK` **全部**路由到 `click`
+  /// （`AudioService.onMediaButtonEvent` → `onClick(eventToButton(event))`，而这几个
+  /// 按键都映射成 `MediaButton.media`），所以按键语义永远是「切换」，不是「暂停」。
+  /// 而 `BaseAudioHandler` 的默认实现判断依据是 `playbackState.playing` —— 那是我们
+  /// **上报给系统**的状态，只有 `setPlaybackState` 通过三道门槛（后台播放开关、
+  /// 已注册 mediaItem、`PlPlayerController` 实例存在）时才会被写；「听视频」页用的是
+  /// 自己的 media_kit `Player`、没有 `PlPlayerController` 实例，于是上报值永远停在
+  /// 初始的 `false` → 每次按键都走 `play()` 分支 → **按得出播放、按不出暂停**。
+  ///
+  /// 这里改读播放器的真实状态，与「上报」彻底解耦；上报是否准确不再影响按键行为。
+  @override
+  Future<void> click([MediaButton button = MediaButton.media]) async {
+    switch (button) {
+      case MediaButton.media:
+        if (_isActuallyPlaying()) {
+          await pause();
+        } else {
+          await play();
+        }
+      case MediaButton.next:
+        await skipToNext();
+      case MediaButton.previous:
+        await skipToPrevious();
+    }
+  }
+
+  /// 是否存在一条可上报的播放链路。
+  ///
+  /// 视频页有 `PlPlayerController` 实例；「听视频」页用的是自己的 media_kit
+  /// `Player`，没有那个实例，只挂了一个 [isPlaying] 回调。原来的门槛只认前者，
+  /// 于是听视频页的媒体项根本没被登记、`playbackState` 也从不更新 —— 通知栏 /
+  /// 系统媒体面板里的播放-暂停图标永远停在初始值。`_hasEpisodes` 本来就写了
+  /// AudioController 分支，说明这里原本就是打算支持听视频页的。
+  bool get _hasPlaybackSource =>
+      PlPlayerController.instanceExists() || isPlaying != null;
+
+  /// 真实是否在播：先问挂着回调的播放页（听视频页走自己的 media_kit Player），
+  /// 再问视频页的 `PlPlayerController`，两者都问不到才退回系统里那份上报值。
+  bool _isActuallyPlaying() {
+    final callback = isPlaying;
+    if (callback != null) {
+      return callback();
+    }
+    final status = PlPlayerController.getPlayerStatusIfExists();
+    if (status != null) {
+      return status.isPlaying;
+    }
+    return playbackState.value.playing ?? false;
+  }
+
   void setMediaItem(MediaItem newMediaItem) {
     if (!enableBackgroundPlay) return;
     // if (kDebugMode) {
@@ -210,9 +267,7 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     bool isBuffering,
     bool isLive,
   ) {
-    if (!enableBackgroundPlay ||
-        _item.isEmpty ||
-        !PlPlayerController.instanceExists()) {
+    if (!enableBackgroundPlay || _item.isEmpty || !_hasPlaybackSource) {
       return;
     }
 
@@ -314,7 +369,7 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
     //   debugPrint('当前调用栈为：');
     //   debugPrint(StackTrace.current);
     // }
-    if (!PlPlayerController.instanceExists()) return;
+    if (!_hasPlaybackSource) return;
     if (data == null) return;
 
     // Windows SMTC 弹窗由 shell 进程渲染，仅支持系统内置解码器，WebP 会静默不显示，
@@ -401,7 +456,7 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
         return;
     }
     // if (kDebugMode) debugPrint("exist: ${PlPlayerController.instanceExists()}");
-    if (!PlPlayerController.instanceExists()) return;
+    if (!_hasPlaybackSource) return;
     _item
       ..removeWhere((item) => item.id == id || item.id.endsWith(herotag))
       ..add(mediaItem);
@@ -424,9 +479,7 @@ class VideoPlayerServiceHandler extends BaseAudioHandler with SeekHandler {
   }
 
   void onPositionChange(Duration position) {
-    if (!enableBackgroundPlay ||
-        _item.isEmpty ||
-        !PlPlayerController.instanceExists()) {
+    if (!enableBackgroundPlay || _item.isEmpty || !_hasPlaybackSource) {
       return;
     }
 

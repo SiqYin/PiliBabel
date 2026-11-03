@@ -33,7 +33,7 @@ TextSpan? richNode(
     if (moduleDynamic?.desc case final desc?) {
       richTextNodes = desc.richTextNodes;
       if (richTextNodes == null || richTextNodes.isEmpty) {
-        return TextSpan(text: uiTx(desc.text ?? ''));
+        return TextSpan(text: uiTxTight(desc.text ?? ''));
       }
     } else if (moduleDynamic?.major?.opus case DynamicOpusModel(
       :final title,
@@ -44,13 +44,13 @@ TextSpan? richNode(
       if (title != null && title.isNotEmpty) {
         if (richTextNodes == null || richTextNodes.isEmpty) {
           return TextSpan(
-            text: uiTx(title ?? ''),
+            text: uiTxTight(title),
             style: const TextStyle(fontWeight: FontWeight.bold),
           );
         } else {
           spanChildren.add(
             TextSpan(
-              text: '${uiTx(title ?? '')}\n',
+              text: '${uiTxTight(title)}\n',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           );
@@ -64,7 +64,7 @@ TextSpan? richNode(
       for (final i in richTextNodes) {
         switch (i.type) {
           case 'RICH_TEXT_NODE_TYPE_TEXT':
-            spanChildren.add(TextSpan(text: uiTx(i.origText ?? '')));
+            spanChildren.add(TextSpan(text: uiTxTight(i.origText ?? '')));
             break;
           // 表情
           case 'RICH_TEXT_NODE_TYPE_EMOJI' when (i.emoji != null):

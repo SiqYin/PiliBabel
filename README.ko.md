@@ -3,7 +3,7 @@
     <h1>PiliBabel</h1>
     <p><b>AI 번역을 갖춘 서드파티 Bilibili 클라이언트.</b></p>
     <p>Babel — 언어의 벽을 허물어, 누구나 자기 언어로 bilibili를 즐길 수 있도록.</p>
-    <p>중국의 소수민족 언어 4종과 중국어 방언 3종의 번역을 포함합니다.</p>
+    <p>bilibili 공식 지원 151개 언어에 공식이 다루지 않는 6개 언어(번체 중국어, 간체·번체 우어, 중국 본토·대만 민남어, 좡어)를 더해 하나의 목록으로 통합했습니다.</p>
     <p>bilibili 공식 무료 모델을 내장해 설치하자마자 번역되며, API 키가 필요 없습니다.</p>
 </div>
 <!-- lang-switch:start -->
@@ -252,3 +252,8 @@ PiliBabel은 **GNU General Public License v3.0(GPL-3.0)** 으로 배포됩니다
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai)(霞鹜文楷) — 앱에 내장된 오픈소스 중국어 글꼴. SIL Open Font License 1.1
 - 그리고 더 많은 프로젝트
 - bilibili 공식 "AI 인터페이스 번역"에서 영감을 받았습니다.
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

@@ -153,7 +153,7 @@ paru -S pilinara-bin         # or via AUR: pilinara-bin (prebuilt) / pilinara (s
 
 <br/>
 
-## Changelog: 2.6.x → 3.3.4
+## Changelog: 2.6.x → 3.4.0
 
 - **2.6.x** — offline audio caching (separate video/audio modules, remembers the last choice, entries on the video page, the audio-only page and the audio player; original format kept; selectable quality) and download-to-local (its own menu item, video/audio first then quality, system file picker when no folder is set).
 
@@ -166,6 +166,13 @@ paru -S pilinara-bin         # or via AUR: pilinara-bin (prebuilt) / pilinara (s
 - **3.3.0–3.3.3** — dynamics (P3) gRPC rendering, then fixes: the audio page's buffered-duration compile error, and the comment area's prefetch type-cast crash that made every retry fail instantly.
 
 - **3.3.4** — dynamic cards for charging / applet / topic-set / subscription; the home first screen losing every cover fixed; upstream PiliNara sync (black status bar, download resume after the process is killed, media-kit update, Wayland black-video workaround, selectable audio quality when caching); AI-translation audit of all interface text added since 3.0.5; this changelog.
+
+- **3.3.5–3.3.9** — comment-area and cache/download fixes carried over from the 3.3.x line (gRPC host ordering, stale 100% progress bars, re-cache / re-download entries, oid fallback, retry invalidating prefetches), plus the update-prompt path.
+
+- **3.3.10–3.3.25** — the wrap-up pass of this whole round (see `CHANGELOG.md` for the itemised list and `docs/outstanding.md` for what was deliberately left alone):
+  update prompt now races its two paths (settles on whichever answers first); comment sort labels and every cache/download string routed through AI translation; downloading no longer freezes on "get play URL" (45 s hard timeout + retry + clear failure toast); **image pipeline reworked** — image traffic connects directly instead of tunnelling through the in-app resolver proxy, which fixes both "covers need a pull-to-refresh" and the data-wide outage that tunnel flooding caused; **data requests connect directly by default** (with a setting to switch back), roughly halving load times versus v3.0.5; **audio and video play through a multi-connection segmented proxy by default** (2–4 parallel range requests, seek aborts the stale upstream, 302 fallback on any error) so buffering keeps ahead and seeking is fast; seeking can no longer hang (600 ms cap on the first-frame wait); comment labels wrap inside themselves and stay side by side instead of pushing the like button off-screen; **the "show full title" toggle now follows the original design per screen** (2→4 lines, 1→2 lines) and applies without restarting, with covers pinned so a taller cell never enlarges them.
+
+- **3.4.0** — end of this round: analyzer brought to **0 errors / 0 warnings**, all 44 language READMEs carry an AI-translation note, the remaining backlog is documented with reasons in `docs/outstanding.md`, and the known behaviour differences versus the official app are recorded in `docs/known-differences-vs-official.md`.
 
 ## Inherited feature log (from PiliNara / PiliPlus)
 
@@ -220,6 +227,8 @@ PiliBabel is a personal, interest-driven project, provided **for learning and te
 - All APIs are gathered from official public endpoints; **no cracked, over-privileged, or paywall-bypassing content** is provided.
 - **AI translation runs on a third-party model endpoint.** By default that is bilibili's own free public Index-Translate service; if you switch to your own API, it is the endpoint you configured. Translation quality and compliance are the responsibility of the user and the chosen model provider; this project hosts **no model and no API key**.
 - Respect copyright and bilibili's Terms of Service. Use responsibly.
+
+> **Documentation language note.** This README and its translations are written and maintained with the help of AI translation tooling. Technical statements are reviewed against the source code, but wording may differ slightly between language versions; if anything looks inconsistent, the English README is the reference.
 
 With respect to the original and upstream authors for their open-source dedication:
 - [guozhigq/pilipala](https://github.com/guozhigq/pilipala)

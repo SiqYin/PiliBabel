@@ -247,3 +247,8 @@ PiliBabel нь **GNU General Public License v3.0 (GPL-3.0)** лицензтэй 
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — апптай хамт багцлагдсан нээлттэй хятад үсгийн фонт, SIL Open Font License 1.1
 - ба бусад
 - bilibili-гийн албан ёсны "AI интерфейсийн орчуулга"-аас санаа авсан.
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

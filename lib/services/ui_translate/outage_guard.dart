@@ -43,9 +43,12 @@ Future<void> checkBuiltinTranslateOutage() async {
         return;
       }
       if (Pref.uiTranslateOutageDismissed) return;
+      // 这段中间隔着 await（pingBuiltin），context 可能已经失效，弹窗前再确认一次。
+      if (!context.mounted) return;
       await _showOutageDialog(context);
     } else {
       if (!healthy) return;
+      if (!context.mounted) return;
       await _showRecoveredDialog(context);
     }
   } catch (_) {

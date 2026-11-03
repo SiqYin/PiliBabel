@@ -252,3 +252,8 @@ A fonte **LXGW WenKai** embutida é licenciada separadamente sob a **SIL Open Fo
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — a fonte chinesa de código aberto embutida no aplicativo, sob a SIL Open Font License 1.1
 - e mais
 - Inspirado pela "tradução de interface por IA" oficial da bilibili.
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

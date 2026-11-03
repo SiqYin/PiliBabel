@@ -248,3 +248,8 @@ PiliBabel **GNU General Public License v3.0 (GPL-3.0)** கீழ் உரி�
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — SIL Open Font License 1.1 கீழ் செயலியுடன் இணைக்கப்பட்ட திறந்த மூல சீன எழுத்துரு
 - மேலும் பலர்
 - bilibili-இன் அதிகாரப்படி "AI இடைமுக மொழிபெயர்ப்பால்" உருவாக்கப்பட்டது.
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

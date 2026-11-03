@@ -253,7 +253,7 @@ class _InfoCard extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(uiTx('相关信息'),
-              style: TextStyle(fontWeight: .bold, fontSize: 15),
+              style: const TextStyle(fontWeight: .bold, fontSize: 15),
               maxLines: 1,
               overflow: .ellipsis,
             ),

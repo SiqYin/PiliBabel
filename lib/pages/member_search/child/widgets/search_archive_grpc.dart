@@ -76,7 +76,7 @@ class SearchArchiveGrpc extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: <Widget>[
-                  AspectRatio(
+                  SizedBox(height: Style.cardHCoverHeight, child: AspectRatio(
                     aspectRatio: Style.aspectRatio,
                     child: LayoutBuilder(
                       builder: (context, boxConstraints) {
@@ -112,7 +112,7 @@ CoverTranslateButton(cover: arc.pic),
                         );
                       },
                     ),
-                  ),
+                  )),
                   const SizedBox(width: 10),
                   content(context, regTitle),
                 ],
@@ -149,8 +149,8 @@ CoverTranslateButton(cover: arc.pic),
                   child: Row(
                     spacing: 6,
                     children: [
-                      Icon(MdiIcons.clockTimeEightOutline, size: 16),
-                      Text(uiTx('稍后再看'), style: TextStyle(fontSize: 13)),
+                      const Icon(MdiIcons.clockTimeEightOutline, size: 16),
+                      Text(uiTx('稍后再看'), style: const TextStyle(fontSize: 13)),
                     ],
                   ),
                 ),

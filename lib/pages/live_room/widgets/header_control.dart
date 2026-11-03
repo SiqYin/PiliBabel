@@ -276,8 +276,8 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
                     child: Row(
                       spacing: 8,
                       children: [
-                        Icon(Icons.alt_route, size: 20),
-                        Text(uiTx('切换路线'), style: TextStyle(fontSize: 14)),
+                        const Icon(Icons.alt_route, size: 20),
+                        Text(uiTx('切换路线'), style: const TextStyle(fontSize: 14)),
                       ],
                     ),
                   ),
@@ -288,8 +288,8 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
                       child: Row(
                         spacing: 8,
                         children: [
-                          Icon(Icons.cast, size: 20),
-                          Text(uiTx('投屏'), style: TextStyle(fontSize: 14)),
+                          const Icon(Icons.cast, size: 20),
+                          Text(uiTx('投屏'), style: const TextStyle(fontSize: 14)),
                         ],
                       ),
                     ),
@@ -298,8 +298,8 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
                     child: Row(
                       spacing: 8,
                       children: [
-                        Icon(Icons.info_outline, size: 20),
-                        Text(uiTx('播放信息'), style: TextStyle(fontSize: 14)),
+                        const Icon(Icons.info_outline, size: 20),
+                        Text(uiTx('播放信息'), style: const TextStyle(fontSize: 14)),
                       ],
                     ),
                     onTap: () => HeaderControlState.showPlayerInfo(
@@ -314,8 +314,8 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
                       child: Row(
                         spacing: 8,
                         children: [
-                          Icon(Icons.tune, size: 20),
-                          Text(uiTx('视频参数'), style: TextStyle(fontSize: 14)),
+                          const Icon(Icons.tune, size: 20),
+                          Text(uiTx('视频参数'), style: const TextStyle(fontSize: 14)),
                         ],
                       ),
                     ),

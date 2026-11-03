@@ -23,7 +23,6 @@ import 'package:PiliPlus/utils/global_data.dart';
 import 'package:PiliPlus/utils/login_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
-import 'package:archive/archive.dart';
 import 'package:brotli/brotli.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
@@ -32,8 +31,8 @@ import 'package:dio_http2_adapter/dio_http2_adapter.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, listEquals;
 
 class Request {
-  static const _gzipDecoder = GZipDecoder();
-  static const _brotliDecoder = BrotliDecoder();
+  static final gzip = ZLibDecoder(gzip: true);
+  static const brotli = BrotliDecoder();
 
   static final Request _instance = Request._internal();
   static late AccountManager accountManager;
@@ -77,13 +76,17 @@ class Request {
     // 后才发），用户点开首页直接命中。失败静默，不影响任何正常加载。
     FeedColdStart.warm();
     await Future.delayed(const Duration(milliseconds: 1500));
-    // 顺手把解析也预热掉：结果进缓存后，后面的请求不用再等解析
-    DnsResolver.warm(const [
-      'api.bilibili.com',
-      'app.bilibili.com',
-      'grpc.biliapi.net',
-      'i0.hdslb.com',
-    ]);
+    // 顺手把解析也预热掉：结果进缓存后，后面的请求不用再等解析。
+    // 直连模式（Pref.netDirect）下请求不经自解析代理，解析缓存用不上，跳过即可，
+    // 免得在启动时白跑一次 DoH/解析。
+    if (!Pref.netDirect) {
+      DnsResolver.warm(const [
+        'api.bilibili.com',
+        'app.bilibili.com',
+        'grpc.biliapi.net',
+        'i0.hdslb.com',
+      ]);
+    }
     for (final host in const [
       HttpString.apiBaseUrl,
       HttpString.appBaseUrl,
@@ -223,6 +226,9 @@ class Request {
     // 本机解析代理：HTTP/2 通道的 socket 由 ConnectionManager 自己建，只有把代理
     // 交给它，自解析才能覆盖到默认开启的 HTTP/2 主链路。用户自己开了系统代理时
     // 让位（proxySpec 返回 null），交回原有的系统代理链路。
+    //
+    // Pref.netDirect（默认开）时不用本机代理：自解析隧道每条连接都要重新解析+建连+
+    // TLS 且不复用上游，实测比直连慢 2~3 倍；全程 HTTPS+SNI 下自解析收益很小。
     final dnsProxyPort =
         !Pref.netDirect && !enableSystemProxy && DnsProxy.instance.available
         ? DnsProxy.instance.port
@@ -462,8 +468,8 @@ class Request {
     List<int> responseBytes,
     Map<String, List<String>> headers,
   ) => switch (headers['content-encoding']?.firstOrNull) {
-    'gzip' => _gzipDecoder.decodeBytes(responseBytes),
-    'br' => _brotliDecoder.convert(responseBytes),
+    'gzip' => gzip.convert(responseBytes),
+    'br' => brotli.convert(responseBytes),
     _ => responseBytes,
   };
 
