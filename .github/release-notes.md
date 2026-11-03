@@ -1,4 +1,4 @@
-### PiliBabel v3.7.0
+### PiliBabel v3.6.2
 
 **Glossary overhaul: short forms and name fragments now resolve, terms inside sentences match, four new games, consistent word formation for grouped labels, and pre-translated dialogs on sub-screens.**
 
