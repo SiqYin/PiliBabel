@@ -193,13 +193,16 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                 setState(() {});
               },
             ),
-            // 内置术语表更新：8 款游戏的专业名词表随版本内嵌，这里检查远端
-            // 是否有更完整的版本。检查本身只拉一个几 KB 的清单，不下载词条。
+            // 内置术语表更新：词表随版本内嵌，这里检查远端是否有更完整的版本。
+            // 检查本身只拉一个几 KB 的清单，不下载词条。
             Obx(() {
               final svc = Get.isRegistered<GlossaryUpdateService>()
                   ? Get.find<GlossaryUpdateService>()
                   : null;
               final st = svc?.state ?? GlossaryUpdateState.idle;
+              // 词表数量从内嵌清单里数，不要在文案里写死 ——
+              // 之前写死「8 款游戏」，词表增到 15 个后这行就变成错的了。
+              final tableCount = kGlossaryManifest.length;
               final String subtitle;
               switch (st) {
                 case GlossaryUpdateState.checking:
@@ -207,21 +210,21 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                 case GlossaryUpdateState.outdated:
                   final n = svc?.updates.length ?? 0;
                   subtitle =
-                      uiTxP('有 {0} 款游戏的术语表可更新', [n.toString()]);
+                      uiTxP('有 {0} 个词表可更新', [n.toString()]);
                 case GlossaryUpdateState.upToDate:
                   subtitle = uiTx('已是最新版本');
                 case GlossaryUpdateState.failed:
                   subtitle = uiTx('检查失败，请稍后重试');
                 case GlossaryUpdateState.idle:
                   subtitle = uiTxP(
-                    '已内置 {0} 条专业术语（8 款游戏）',
-                    [kGlossaryNames.length.toString()],
+                    '已内置 {0} 条专业术语（{1} 个词表）',
+                    [kGlossaryNames.length.toString(), tableCount.toString()],
                   );
               }
               return ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.library_books_outlined),
-                title: Text(uiTx('游戏术语表')),
+                title: Text(uiTx('游戏与企划术语表')),
                 subtitle: Text(subtitle),
                 trailing: st == GlossaryUpdateState.checking
                     ? const SizedBox(
