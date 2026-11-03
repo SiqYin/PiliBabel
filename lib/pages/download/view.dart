@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/services/ui_translate/prewarm_strings.dart';
 import 'dart:io' show Platform;
 
 import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
@@ -101,41 +102,6 @@ class DownloadPage extends StatefulWidget {
 
 class _DownloadPageState extends State<DownloadPage>
     with TickerProviderStateMixin, BaseFabMixin, FabMixin {
-  /// 本页可能出现的**弹窗 / 菜单 / 次级界面**文案清单（预翻译用，见 initState）。
-  ///
-  /// 判定标准：这段文字在用户**打开本页时看不到**，只有点了某个按钮、
-  /// 展开某个 ⋮ 菜单、或弹出某个确认框才会显示。这类文案如果不预热，
-  /// 等它出现时才排进翻译队列，用户就会先看到中文、过一会儿跳成译文。
-  ///
-  /// 维护要求：在本页**新增任何弹窗/菜单/对话框**时，把它的文案同步加到这里。
-  static const List<String> _prewarmStrings = [
-    // —— 缓存视频右侧 ⋮ 菜单 ——
-    '添加到文件夹', '添加到「{0}」', '已添加到文件夹', '已添加到「{0}」',
-    '添加到其他文件夹', '重命名', '删除', '排序', '手动排序', '按缓存时间',
-    '已按缓存时间显示', '继续播放', '更新', '添加到', '导出', '缓存',
-    '多选', '搜索', '新建文件夹', '重命名文件夹', '文件夹', '全部视频',
-    '正在缓存', '已下载', '下载中', '下载失败', '缓存失败',
-    '该内容正在下载', '已删除本地文件', '已清理档案',
-    // —— 文件夹相关对话框 ——
-    '创建成功', '重命名成功', '新建文件夹的名称', '请输入文件夹名称',
-    '确认删除', '确定', '取消', '保存',
-    '选中的文件夹里没有可导出的缓存', '导出成功', '导出失败',
-    // —— 删除 / 清理确认 ——
-    '删除本地文件', '清理档案', '本地文件还在，先删除文件',
-    '本地文件已删除', '确认删除该缓存吗', '删除后不可恢复',
-    // —— 多选相关 ——
-    '全选', '取消全选', '已选择 {0} 项', '删除所选',
-    '确认删除所选的 {0} 个缓存吗',
-    // —— 搜索 ——
-    '搜索缓存', '没有找到匹配的缓存', '清除搜索',
-    // —— 缓存音频页 ——
-    '还没有缓存音频', '音频缓存完成', '正在缓存音频',
-    // —— 下载视频 / 下载音频页 ——
-    '还没有下载过视频', '还没有下载过音频', '重新下载',
-    '按当时的画质 / 音质重新下载', '音频', '视频',
-    // —— 通用状态 ——
-    '加载中', '没有更多了', '出错了', '重试',
-  ];
 
   final _downloadService = Get.find<DownloadService>();
   final _collectionService = Get.find<DownloadCollectionService>();
@@ -186,7 +152,7 @@ class _DownloadPageState extends State<DownloadPage>
     // 排序方式、多选操作、导出提示……它们此时一个都没渲染过，
     // 等用户点开才翻就会出现「先中文后跳日文」。这里一次性全部登记，
     // 走优先队列预热（见 UiTranslateService.precache）。
-    UiTranslateService.precache(_prewarmStrings);
+    PrewarmStrings.warmDownload();
   }
 
   void _handleTabChanged() {
