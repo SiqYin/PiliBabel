@@ -615,6 +615,18 @@ class UiTranslateService extends GetxService {
     }
 
     put(kGlossaryNames);
+    // 别名表：短名 / 其他写法 → 同一 id。
+    //
+    // 这是「标题里只写短名就翻不出来」的修复点。术语表里每条记录只存**一个**
+    // 标准名（如 `菲欧妮・蕾法爱菈`），但标题、评论里通常只写短名（`菲欧妮`）。
+    // 没有别名表时索引查不到「菲欧妮」，于是走模型音译，译名自然不对。
+    //
+    // 别名表把「菲欧妮」「フィオニー」「Phoenix」都指向同一条 id；
+    // 取译文时仍按 id 拿该语言的标准名，所以短名也能得到正确译名。
+    // 顺序上标准名先登记（put 在别名之前），同名冲突时标准名优先。
+    kGlossaryAliasToId.forEach((form, id) {
+      index.putIfAbsent(form.toLowerCase(), () => id);
+    });
     // 简称也建立索引：源文本里出现 ゼンゼロ/ZZZ 时同样能命中该术语。
     put(kGlossaryShorts);
     _glossaryFormIndex = index;
