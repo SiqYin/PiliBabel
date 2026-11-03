@@ -658,41 +658,41 @@ class UiTranslateService extends GetxService {
   /// 术语表运行时索引：任一语言的全称/简称 → 术语 id。懒构建一次。
   static Map<String, String>? _glossaryFormIndex;
 
-/// 词表是否启用（[recordId] 形如 `zzz|Phoenix`，取竖线前的 id）。
-///
-/// 默认全部启用：`Pref.glossaryDisabledTables` 里只记录用户**关掉**的，
-/// 这样以后新增词表天然是启用的，无需迁移。
-static bool _glossaryTableEnabled(String recordId) {
-  final bar = recordId.indexOf('|');
-  if (bar <= 0) return true;
-  final table = recordId.substring(0, bar);
-  return !Pref.glossaryDisabledTables.contains(table);
-}
-
-/// 用户改了某一类术语集的开关后调用：作废已构建的索引，下次查询按新状态重建。
-static void rebuildGlossaryIndex() {
-  _glossaryFormIndex = null;
-  _glossaryFormsSorted = null;
-  _formsByFirstCharCache = null;
-  _minFormLengthCache = 0;
-  if (Get.isRegistered<UiTranslateService>()) {
-    to.revision.value++;
+  /// 词表是否启用（[recordId] 形如 `zzz|Phoenix`，取竖线前的 id）。
+  ///
+  /// 默认全部启用：`Pref.glossaryDisabledTables` 里只记录用户**关掉**的，
+  /// 这样以后新增词表天然是启用的，无需迁移。
+  static bool _glossaryTableEnabled(String recordId) {
+    final bar = recordId.indexOf('|');
+    if (bar <= 0) return true;
+    final table = recordId.substring(0, bar);
+    return !Pref.glossaryDisabledTables.contains(table);
   }
-}
+
+  /// 用户改了某一类术语集的开关后调用：作废已构建的索引，下次查询按新状态重建。
+  static void rebuildGlossaryIndex() {
+    _glossaryFormIndex = null;
+    _glossaryFormsSorted = null;
+    _formsByFirstCharCache = null;
+    if (Get.isRegistered<UiTranslateService>()) {
+      to.revision.value++;
+    }
+  }
+
   static Map<String, String> get _glossaryIndex {
     final built = _glossaryFormIndex;
     if (built != null) return built;
     final index = <String, String>{};
     void put(Map<String, Map<String, String>> table) {
-          table.forEach((id, names) {
-            // 按用户的开关过滤：关闭的词表不参与匹配。
-            if (!_glossaryTableEnabled(id)) return;
-            for (final form in names.values) {
-              final key = form.toLowerCase();
-              // 全称优先登记；同一形态冲突时先到先得（确定性）。
-              index.putIfAbsent(key, () => id);
-            }
-          });
+      table.forEach((id, names) {
+        // 按用户的开关过滤：关闭的词表不参与匹配。
+        if (!_glossaryTableEnabled(id)) return;
+        for (final form in names.values) {
+          final key = form.toLowerCase();
+          // 全称优先登记；同一形态冲突时先到先得（确定性）。
+          index.putIfAbsent(key, () => id);
+        }
+      });
     }
 
     put(kGlossaryNames);
@@ -742,14 +742,9 @@ static void rebuildGlossaryIndex() {
     // 之前只做精确匹配，所以这类标题永远命中不了，直接丢给模型音译——
     // 这就是「词表里明明有菲欧妮，App 里还是翻错」的另一半原因。
     //
-    // 做法：按**长形态优先**扫描句子，把命中的术语替换成目标语言的标准名。
-    // 长优先很关键：「菲欧妮・蕾法爱菈」必须先于「菲欧妮」被匹配到，
-    // 否则全名会被拆成两个短名各自替换。
-    // **性能门控**：子串扫描只用于标题/标签这类短文本
-    // （例「【绝区零】菲欧妮实战演示」）。它要遍历上万个术语形态，
-    // 长段落跑一遍会明显卡顿，而长文本交给模型整句翻译本来就更自然。
-    if (src.length > _substringScanMaxChars) return null;
-
+    // 做法：按**首字符分桶**扫描句子，把命中的术语替换成目标语言的标准名。
+    // 桶内按长度降序，「菲欧妮・蕾法爱菈」会先于「菲欧妮」被匹配到，
+    // 不会把全名拆成两个短名分别替换。
     // **性能门控**：子串扫描只用于标题/标签这类短文本
     // （例「【绝区零】菲欧妮实战演示」）。长段落交给模型整句翻译更自然，
     // 而且遍历术语表对长文本是纯浪费。
@@ -784,12 +779,12 @@ static void rebuildGlossaryIndex() {
           final buf = StringBuffer();
           var cursor = 0;
           var pos = idx;
-          var cur = lower;
           while (pos >= 0) {
             buf.write(out.substring(cursor, pos));
             buf.write(repl);
             cursor = pos + form.length;
-            pos = cur.indexOf(form, cursor);
+            // 每次替换后重新取小写串：out 变了，旧的 lower 已过期
+            pos = out.toLowerCase().indexOf(form, cursor);
           }
           buf.write(out.substring(cursor));
           out = buf.toString();
