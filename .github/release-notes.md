@@ -1,15 +1,13 @@
-### PiliBabel v3.6.0
+### PiliBabel v3.6.1
 
-**Update dialog: page markup is stripped, and its translation now jumps the queue so you no longer stare at an untranslated dialog.**
+**Found new community data sources and filled in the Japanese/Korean proper nouns for Wuthering Waves and Honkai Impact 3rd.**
 
-**No more markup symbols.** The update description comes from a GitHub Release and is raw Markdown. It was displayed as-is, so bold markers, backticks, heading hashes, leading dashes and link syntax all showed up literally in the dialog. It is now flattened to plain text first — code blocks, inline code, images, links, headings, blockquotes, list markers, horizontal rules, bold/italic/strikethrough and tables are all removed, leaving only readable content and line structure.
+**Wuthering Waves Japanese names: 28 → 58 entries.** The data comes from `wikiwiki.jp/w-w`, a Japanese community wiki last modified 2026-10-29 whose table covers up to version 3.8. Fandom has no Japanese sub-wiki for this game, the official site is a single-page app, and the third-party APIs that used to work are gone — this is currently the only source with *current* Japanese names. Newly covered includes リリー (3.8), 鎖暝 (3.7) and 景燃 (3.6).
 
-**The update dialog's translation is now top priority.** The dialog appears the instant the app launches, which is exactly when the main UI pushes dozens of strings into the translation queue. The dialog body used to queue up alongside them, so its translation often took a long time to arrive. It now uses a **separate high-priority queue**:
+**Honkai Impact 3rd: Japanese 19 → 33 entries, Korean 0 → 27 entries.** The Japanese names come from `wikiwiki.jp/houkai3rd` (its sidebar groups all 90 battlesuits under their valkyrie), and the Korean names from the `붕괴3rd/발키리` page on `namu.wiki` (last edited 2026-09-24).
 
-- the priority queue is neither batched nor debounced — it dispatches immediately
-- each translation round drains the priority queue first, before the normal queue
-- the two queues are mutually exclusive, so no string is ever translated twice
+The two wikis organise names differently from the mainland BWIKI (valkyrie/battlesuit vs. character) and share no ids, so the mapping was aligned valkyrie by valkyrie by hand. Where a pair could not be confirmed it was left blank rather than guessed.
 
-Net effect: right after launch, the update dialog's translation shows up first and the rest of the UI follows.
+**Still missing:** Korean names for Wuthering Waves, English names for Honkai Impact 3rd, and Korean names for some Genshin NPCs — these genuinely do not exist in any public source I could find. Details are in `docs/outstanding.md` section 9.
 
 Downloads are below.
