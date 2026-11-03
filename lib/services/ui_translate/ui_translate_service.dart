@@ -885,7 +885,11 @@ class UiTranslateService extends GetxService {
   ///
   /// 桶内保持长度降序，所以「菲欧妮・蕾法爱菈」仍会先于「菲欧妮」被选中，
   /// 不会把全名拆成短名。
-  static String _glossaryPromptHints(List<String> sources, String langCode) {
+  static String _glossaryPromptHints(
+    List<String> sources,
+    String langCode, {
+    UiTextWidth width = UiTextWidth.normal,
+  }) {
     if (sources.isEmpty) return '';
     if (_glossaryFormIndex == null) return '';
     final buckets = _glossaryFormsByFirstChar;
@@ -916,7 +920,7 @@ class UiTranslateService extends GetxService {
           if (!matched) continue;
           final id = _glossaryIndex[form];
           if (id == null) continue;
-          final chosen = _glossaryPreferred(id, langCode, UiTextWidth.normal);
+          final chosen = _glossaryPreferred(id, langCode, width);
           if (chosen != null) hits.putIfAbsent(form, () => chosen);
         }
       }
@@ -1291,6 +1295,7 @@ class UiTranslateService extends GetxService {
       }
       final buf = StringBuffer();
       // 逐条注入术语强制译法：本条原文里命中术语表的游戏专有名词。
+      // 批量路径逐条翻译，但宽度意图没有随批量传下来，这里用 normal 作为折中。
       final glossaryRule = _glossaryPromptHints([src], currentLanguage.code);
       await for (final chunk in AiChatService.streamChat(
         messages: [
