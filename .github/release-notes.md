@@ -1,13 +1,17 @@
-### PiliBabel v3.6.1
+### PiliBabel v3.7.0
 
-**Found new community data sources and filled in the Japanese/Korean proper nouns for Wuthering Waves and Honkai Impact 3rd.**
+**Glossary overhaul: short forms and name fragments now resolve, terms inside sentences match, four new games, consistent word formation for grouped labels, and pre-translated dialogs on sub-screens.**
 
-**Wuthering Waves Japanese names: 28 → 58 entries.** The data comes from `wikiwiki.jp/w-w`, a Japanese community wiki last modified 2026-10-29 whose table covers up to version 3.8. Fandom has no Japanese sub-wiki for this game, the official site is a single-page app, and the third-party APIs that used to work are gone — this is currently the only source with *current* Japanese names. Newly covered includes リリー (3.8), 鎖暝 (3.7) and 景燃 (3.6).
+**Short names and every name fragment now resolve** — this was the real cause of "Phoenix still comes out wrong in Japanese". The glossary used to store exactly one standard name per language, while titles and comments use short forms. The harvester did collect aliases, but the generator silently dropped them. Full names are now split into **every fragment**: `菲欧妮・蕾法爱菈` → `菲欧妮` + `蕾法爱菈` + the full name, likewise for `フィオニー・レファエラ` and `Phoenix Reffaella`. 12,280 aliases ship (ambiguous common words are filtered out to avoid false hits).
 
-**Honkai Impact 3rd: Japanese 19 → 33 entries, Korean 0 → 27 entries.** The Japanese names come from `wikiwiki.jp/houkai3rd` (its sidebar groups all 90 battlesuits under their valkyrie), and the Korean names from the `붕괴3rd/발키리` page on `namu.wiki` (last edited 2026-09-24).
+**Terms inside sentences match too.** Previously the whole string had to equal a term, so titles like "【绝区零】菲欧妮实战演示" never matched and went straight to the model. It now tries exact match first, then scans the sentence for known terms (longest form first) and substitutes them.
 
-The two wikis organise names differently from the mainland BWIKI (valkyrie/battlesuit vs. character) and share no ids, so the mapping was aligned valkyrie by valkyrie by hand. Where a pair could not be confirmed it was left blank rather than guessed.
+**Four new games.** Umamusume (321 entries), BanG Dream! (101 — MyGO and Ave Mujica are bands inside that game, so one source covers them), Reverse: 1999 (100) and Neverness to Everness (25).
 
-**Still missing:** Korean names for Wuthering Waves, English names for Honkai Impact 3rd, and Korean names for some Genshin NPCs — these genuinely do not exist in any public source I could find. Details are in `docs/outstanding.md` section 9.
+**Grouped labels share one word-formation pattern.** Chinese "缓存视频 / 缓存音频" is "action + object", so the translation must be structurally identical. The model used to mix "動画をキャッシュ" (verb + object) with "キャッシュ音響" (noun compound); the whole group is now pinned to the noun-compound form, and the prompt rule was rewritten into something checkable.
+
+**Dialogs on sub-screens are pre-translated.** Opening the offline-cache, settings or "Mine" hubs now queues the menu items and confirm dialogs that only appear on tap (maintained in a new `PrewarmStrings` file), so they are already translated when the user opens them.
+
+The Zenless Zone Zero table also went from 2,907 rows (634 empty placeholders) to **4,965 rows at 99.8% coverage in four languages**.
 
 Downloads are below.
