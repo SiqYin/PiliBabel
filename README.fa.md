@@ -153,7 +153,7 @@ paru -S pilinara-bin         # یا از طریق AUR: pilinara-bin (پیش‌س
 
 <br/>
 
-## تاریخچه تغییرات: 2.6.x → 3.6.4
+## تاریخچه تغییرات: 2.6.x → 3.6.5
 
 - **2.6.x** — ذخیره‌سازی صدا (ماژول‌های جدا برای ویدیو و صدا، حفظ آخرین انتخاب، ورودی در صفحه ویدیو، صفحه فقط صدا و پخش‌کننده صدا؛ قالب اصلی حفظ می‌شود؛ کیفیت قابل انتخاب) و دانلود روی دستگاه (گزینه مستقل منو: نخست ویدیو/صدا و سپس کیفیت؛ در نبود پوشه، انتخابگر فایل سیستم باز می‌شود).
 
@@ -167,7 +167,7 @@ paru -S pilinara-bin         # یا از طریق AUR: pilinara-bin (پیش‌س
 
 - **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
 
-- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4.
+- **3.5.0–3.6.5 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4. In 3.6.5 an embedded term no longer stops the rest of a paragraph from being translated, the glossary screen follows the app theme, the tables are on by default, and the version the app reports about itself now matches its release tag.
 
 ## گزارش ویژگی‌های به‌ارث‌رسیده (از PiliNara / PiliPlus)
 

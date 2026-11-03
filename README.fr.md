@@ -153,7 +153,7 @@ paru -S pilinara-bin         # ou via AUR : pilinara-bin (précompilé) / pilina
 
 <br/>
 
-## Journal des modifications : 2.6.x → 3.6.4
+## Journal des modifications : 2.6.x → 3.6.5
 
 - **2.6.x** — cache audio (modules séparés vidéo/audio, mémorisation du dernier choix, entrées sur la page vidéo, la page audio seule et le lecteur audio ; format d'origine conservé ; qualité au choix) et téléchargement sur l'appareil (entrée de menu distincte : d'abord vidéo/audio, puis la qualité ; sélecteur de fichiers système si aucun dossier n'est défini).
 
@@ -171,7 +171,7 @@ paru -S pilinara-bin         # ou via AUR : pilinara-bin (précompilé) / pilina
 
 - **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
 
-- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. Correction d'un plantage introduit en 3.6.3 : activer la traduction IA pouvait laisser les pages vides puis fermer l'application (corrigé en 3.6.4).
+- **3.5.0–3.6.5 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. Correction d'un plantage introduit en 3.6.3 : activer la traduction IA pouvait laisser les pages vides puis fermer l'application (corrigé en 3.6.4). En 3.6.5, un terme présent dans une phrase n'empêche plus la traduction du reste du paragraphe, l'écran du glossaire suit le thème de l'application, les tables sont activées par défaut et la version que l'application annonce correspond désormais à son tag de publication.
 
 ## Journal des fonctionnalités héritées (de PiliNara / PiliPlus)
 
