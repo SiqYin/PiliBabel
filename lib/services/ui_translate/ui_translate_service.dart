@@ -663,38 +663,15 @@ class UiTranslateService extends GetxService {
 
   /// 词表是否启用（[recordId] 形如 `zzz|Phoenix`，取竖线前的 id）。
   ///
-  /// 默认全部启用：`Pref.glossaryDisabledTables` 里只记录用户**关掉**的，
-  /// 这样以后新增词表天然是启用的，无需迁移。
+  /// **默认全部启用**：`Pref.glossaryDisabledTables` 里只记录用户**主动关掉**的，
+  /// 所以新装、以及以后新增的词表天然就是开着的，无需迁移。
   static bool _glossaryTableEnabled(String recordId) {
     final bar = recordId.indexOf('|');
-    if (bar <= 0) return false;
+    if (bar <= 0) return true;
     final table = recordId.substring(0, bar);
-    if (!_glossaryDefaultsApplied) {
-      // 首次运行：把所有词表一次性标记为「关闭」。
-      //
-      // 用户要求默认全部关闭，由用户自己按需打开。用一次性标记而不是每次
-      // 判空，是为了不覆盖用户之后自己做的选择。
-      final all = <String>{};
-      for (final key in kGlossaryNames.keys) {
-        final b = key.indexOf('|');
-        if (b > 0) all.add(key.substring(0, b));
-      }
-      all.addAll(kGlossaryManifest.keys);
-      Pref.glossaryDisabledTables = all;
-      Pref.glossaryDefaultsApplied = true;
-      _glossaryDefaultsApplied = true;
-      return false;
-    }
     return !Pref.glossaryDisabledTables.contains(table);
   }
 
-  /// 进程内缓存「默认关闭」标记，避免每条术语都读一次存储。
-  static bool get _glossaryDefaultsApplied =>
-      _defaultsAppliedCache ??= Pref.glossaryDefaultsApplied;
-  static set _glossaryDefaultsApplied(bool v) => _defaultsAppliedCache = v;
-  static bool? _defaultsAppliedCache;
-
-  /// 术语表索引是否已预热。
   static bool get glossaryReady => _glossaryFormIndex != null;
 
   /// 预热术语表索引：把 5 万多条形态的构建从首帧挪到启动后台。
@@ -795,68 +772,20 @@ class UiTranslateService extends GetxService {
     final exact = _glossaryIndex[key];
     if (exact != null) return _glossaryPreferred(exact, langCode, width);
 
-    // 2) 术语嵌在句子里：如「【绝区零】菲欧妮实战演示」。
+    // 2) 术语嵌在句子里：**不再在这里替换**（3.6.5 修复）
     //
-    // 之前只做精确匹配，所以这类标题永远命中不了，直接丢给模型音译——
-    // 这就是「词表里明明有菲欧妮，App 里还是翻错」的另一半原因。
+    // 之前这条分支会把句中命中的术语直接替换成目标语言的名字，然后把整段当成
+    // 译文返回。这会造成一个很严重的问题：整段简体中文里只要嵌了一个术语，
+    // 该术语变成日文、其余部分仍是中文；而这条混合文本又因为含有日文字符，
+    // 在后续判断里被当成「本来就是日文」，于是**整段中文彻底不再翻译**。
     //
-    // 做法：按**首字符分桶**扫描句子，把命中的术语替换成目标语言的标准名。
-    // 桶内按长度降序，「菲欧妮・蕾法爱菈」会先于「菲欧妮」被匹配到，
-    // 不会把全名拆成两个短名分别替换。
-    // **性能门控**：子串扫描只用于标题/标签这类短文本
-    // （例「【绝区零】菲欧妮实战演示」）。长段落交给模型整句翻译更自然。
-    if (src.length > _substringScanMaxChars) return null;
-
-    final buckets = _glossaryFormsByFirstChar;
-    if (buckets.isEmpty) return null;
-
-    // **单趟游标扫描**（3.6.4 崩溃修复）
+    // 正确做法是交给模型整句翻译，并通过 [_glossaryPromptHints] 把命中的术语
+    // 作为「强制译法」注入提示词——模型会在译文中使用这些官方名字，
+    // 同时把句子其余部分也正常翻成目标语言。术语规则的落地靠提示词注入，
+    // 而不是在这里做局部替换。
     //
-    // 旧实现是「替换 → 从头重扫 → 只要还有命中就再来一轮」的 while 循环。
-    // 但绝大多数术语是**自我包含**的：实测 53953 个形态中有 45601 个，
-    // 其译文的小写形式仍含原文（例如键 `genshin impact` 的译名就是
-    // `Genshin Impact`；日文名常与日文键完全相同）。于是替换后同一个形态
-    // 又被找到，progress 永远为 true，循环永不退出；每轮都新建 StringBuffer
-    // 且字符串不断变长，内存很快耗尽、进程被杀 ——
-    // 表现就是「点进去什么都加载不出来，然后闪退」。
-    //
-    // 现在改为从头到尾只走一遍游标：命中就写入译文并把游标跳过匹配段，
-    // 已写入的内容不再参与匹配。终止性由构造保证，不依赖数据性质。
-    final lower = src.toLowerCase();
-    final buf = StringBuffer();
-    var cursor = 0;
-    var hit = false;
-    var steps = 0;
-    while (cursor < src.length) {
-      if (++steps > _substringScanMaxSteps) {
-        buf.write(src.substring(cursor));
-        break;
-      }
-      final forms = buckets[lower[cursor]];
-      String? matched;
-      String? repl;
-      if (forms != null) {
-        for (final form in forms) {
-          if (!lower.startsWith(form, cursor)) continue;
-          final id = _glossaryIndex[form];
-          if (id == null) continue;
-          final r = _glossaryPreferred(id, langCode, width);
-          if (r == null || r.isEmpty) continue;
-          matched = form;
-          repl = r;
-          break;
-        }
-      }
-      if (matched != null && repl != null) {
-        buf.write(repl);
-        cursor += matched.length;
-        hit = true;
-      } else {
-        buf.write(src[cursor]);
-        cursor++;
-      }
-    }
-    return hit ? buf.toString() : null;
+    // 这里只负责判断「有没有命中术语」，不再返回任何替换结果。
+    return null;
   }
 
   /// 长度降序的术语形态表（供 [_glossaryTranslate] 的子串扫描用），懒构建一次。
@@ -945,36 +874,54 @@ class UiTranslateService extends GetxService {
   /// 词条注入简称（评论区即社区语境，社区俚语简称名正言顺），其余注入全称。
   /// 每个术语给出「源形态 → 目标译名」，源形态是命中的那条原文里实际出现的写法
   /// （可能是任一语言的名称或简称）。
+  /// 批量翻译前的术语注入：扫一遍待翻列表，把命中的术语作为「强制译法」
+  /// 写进 system 提示词，让句子内的专有名词也走统一译名。
+  ///
+  /// **性能**：必须按文本量计价，不能按术语表大小计价。
+  /// 旧实现是 `for src -> for entry in index`，也就是每条待翻文本都遍历
+  /// 五万四千条索引；一批 20 条就是约 100 万次 contains —— 这正是历史上
+  /// 「术语表一多、翻译就极慢甚至闪退」的来源。现在改成复用首字符分桶：
+  /// 只测试「这段文本里确实出现过的首字符」对应的桶，通常是几十条。
+  ///
+  /// 桶内保持长度降序，所以「菲欧妮・蕾法爱菈」仍会先于「菲欧妮」被选中，
+  /// 不会把全名拆成短名。
   static String _glossaryPromptHints(List<String> sources, String langCode) {
     if (sources.isEmpty) return '';
-    final index = _glossaryIndex;
-    if (index.isEmpty) return '';
+    if (_glossaryFormIndex == null) return '';
+    final buckets = _glossaryFormsByFirstChar;
+    if (buckets.isEmpty) return '';
+
     final hits = <String, String>{};
     for (final src in sources) {
-      if (src.length > 200) continue; // 长文本（简介/评论）不做逐形态扫描
+      // 长文本（简介/评论）不做逐形态扫描：既慢，也不是术语注入的适用场景
+      if (src.length > 200) continue;
+      if (hits.length >= _promptHintMaxHits) break;
+
       final lower = src.toLowerCase();
-      for (final entry in index.entries) {
-        if (hits.length >= 20) break;
-        final form = entry.key;
-        if (form.length < 2) continue;
-        var matched = false;
-        if (_isAsciiForm(form)) {
+      final seenChars = <String>{};
+      for (final r in lower.runes) {
+        seenChars.add(String.fromCharCode(r));
+      }
+
+      for (final fc in seenChars) {
+        final forms = buckets[fc];
+        if (forms == null) continue;
+        for (final form in forms) {
+          if (hits.length >= _promptHintMaxHits) break;
           // 纯 ASCII 的短形态（HSR/ZZZ/BA…）必须整词出现，
           // 否则 "ba" 会命中任何含 "ba" 的英文单词（banner/bar…）。
-          matched = form.length <= 4
+          final matched = _isAsciiForm(form) && form.length <= 4
               ? _hasAsciiWord(src, form)
               : lower.contains(form);
-        } else {
-          matched = lower.contains(form);
-        }
-        if (matched) {
-          final chosen = _glossaryPreferred(entry.value, langCode, UiTextWidth.normal);
-          if (chosen != null) {
-            hits.putIfAbsent(form, () => chosen);
-          }
+          if (!matched) continue;
+          final id = _glossaryIndex[form];
+          if (id == null) continue;
+          final chosen = _glossaryPreferred(id, langCode, UiTextWidth.normal);
+          if (chosen != null) hits.putIfAbsent(form, () => chosen);
         }
       }
     }
+
     if (hits.isEmpty) return '';
     final buf = StringBuffer('**术语译法**：下列对照为官方/社区通行译名，'
         '译文中出现的对应专有名词必须使用给出的译法（含其简称形式）：');
@@ -983,6 +930,9 @@ class UiTranslateService extends GetxService {
     });
     return buf.toString();
   }
+
+  /// 单次提示词最多注入多少条术语，避免提示词无限膨胀拖慢模型。
+  static const int _promptHintMaxHits = 20;
 
   /// 形态是否纯 ASCII（字母/数字），用于选择匹配策略。
   static bool _isAsciiForm(String form) {
