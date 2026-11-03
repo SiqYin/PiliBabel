@@ -140,7 +140,16 @@ class UiTranslateService extends GetxService {
   /// 已渲染但尚未翻译的字符串，等待批量 flush。
   final Set<String> _pending = <String>{};
 
-  /// 翻译缓存写入进度（用于 UI 读取以触发 Obx 重建）。
+  /// **高优先级**待翻队列。
+  ///
+  /// 使用场景：更新弹窗在 App 启动那一刻就出现，而主页面同一时间会一次性把几十条
+  /// 界面文案排进 [_pending]。如果按普通队列走，用户要对着未翻译的弹窗等很久。
+  ///
+  /// 所以弹窗正文走这里：flush 时**先翻完这一批**，再去处理普通队列
+  /// （见 [_flush] 顶部的取队列逻辑）。
+  final Set<String> _pendingUrgent = <String>{};
+
+  /// 翻译缓存的写入进度（用于 UI 读取以触发 Obx 重建）。
   final RxInt revision = 0.obs;
 
   /// 正在翻译中标记，避免并发重复请求。
@@ -427,6 +436,20 @@ class UiTranslateService extends GetxService {
   /// 术语命中时倾向用官方简称（ゼンゼロ、ブルアカ这一类）。
   static String txTight(String src) => tx(src, width: UiTextWidth.tight);
 
+  /// **高优先级**变体：译文插队到普通队列之前。
+  ///
+  /// 只给「用户一进 App 就盯着看、且必须等译文」的内容用 —— 目前只有更新弹窗。
+  /// 主界面会在启动那一刻把几十条文案塞进普通队列，弹窗正文若也排队，
+  /// 用户就得对着未翻译的更新说明干等（见 [_pendingUrgent]）。
+  static String txUrgent(String src) {
+    if (!Get.isRegistered<UiTranslateService>()) return src;
+    final service = to;
+    // 与 tx 一样先读 revision：这样调用点所在的 Obx 才能在译文回来后重建。
+    service.revision.value;
+    if (src.isEmpty) return src;
+    return service._txUrgent(src);
+  }
+
   String _tx(String src, [UiTextWidth width = UiTextWidth.normal]) {
     // 始终读取一次修订号：即便翻译关闭，也能让包裹本调用的 Obx 拥有合法依赖，
     // 避免 GetX “空 Obx” 运行时报错；开启时则据此在译文回来后刷新。
@@ -469,6 +492,31 @@ class UiTranslateService extends GetxService {
     if (hit != null) return hit;
     // 尚未翻译：先显示原文，排进待翻队列。
     if (_pending.add(src)) _scheduleFlush();
+    return src;
+  }
+
+  /// 与 [_tx] 相同，但把这条排进**高优先级队列**（[txUrgent] 的实例实现）。
+  ///
+  /// 唯一用途：App 启动时立刻弹出的「发现新版本」弹窗。主界面会在同一帧里把
+  /// 几十条文案塞进普通队列，如果弹窗正文也走普通队列，用户就得对着未翻译的
+  /// 更新说明干等。走这里可以整批插队，先把弹窗翻完。
+  ///
+  /// 命中缓存/术语表时与 [_tx] 完全一致（不发请求）。
+  String _txUrgent(String src) {
+    if (!enabled || src.isEmpty) return src;
+    if (src == currentLanguage.code) return src;
+    if (isSourceLanguage) return src;
+    if (looksLikeNativeScript(src, currentLanguage.nativeScript)) return src;
+    final pinned = _pinnedTranslations[src]?[currentLanguage.code];
+    if (pinned != null) return pinned;
+    final glossary = _glossaryTranslate(src, currentLanguage.code, UiTextWidth.wide);
+    if (glossary != null) return glossary;
+    final hit = _cache[src];
+    if (hit != null) return hit;
+    // 未翻译：先显示原文，但排进优先队列；同时把它从普通队列里摘掉，
+    // 避免同一串文字被两个队列各翻一次。
+    _pending.remove(src);
+    if (_pendingUrgent.add(src)) _scheduleFlush();
     return src;
   }
 
@@ -677,6 +725,13 @@ class UiTranslateService extends GetxService {
     // 关闭状态：清空待翻队列，绝不发起请求（保护用户的 API 额度/token）
     if (!enabled) {
       _pending.clear();
+      _pendingUrgent.clear();
+      return;
+    }
+    // 优先队列不攒批、不防抖：用户正对着更新弹窗等译文，越早发越好。
+    if (_pendingUrgent.isNotEmpty) {
+      _debounce?.cancel();
+      _flush();
       return;
     }
     // 攒满一批立即开翻，避免大批量（如切换语言）时干等防抖窗口
@@ -691,10 +746,11 @@ class UiTranslateService extends GetxService {
   }
 
   Future<void> _flush() async {
-    if (_busy || _pending.isEmpty) return;
+    if (_busy || (_pending.isEmpty && _pendingUrgent.isEmpty)) return;
     // 关闭时（含已排队未触发的防抖）绝不再发请求，保护用户 API 额度
     if (!enabled) {
       _pending.clear();
+      _pendingUrgent.clear();
       return;
     }
     _busy = true;
@@ -703,14 +759,29 @@ class UiTranslateService extends GetxService {
     // 表现为「切到 B 后个别文本还留在 A」。
     final reqLang = currentLanguage.code;
     try {
-      final batch = _pending.toList(growable: false);
-      _pending.clear();
+      // **优先队列**：更新弹窗这类「用户正盯着看」的内容先翻。
+      // 只要 _pendingUrgent 非空就只取它，普通队列留到下一轮 —— 这样弹窗
+      // 不用和主界面几十条文案抢同一个批次。
+      final fromUrgent = _pendingUrgent.isNotEmpty;
+      final Set<String> source;
+      if (fromUrgent) {
+        source = _pendingUrgent;
+      } else {
+        source = _pending;
+      }
+      final batch = source.toList(growable: false);
+      source.clear();
 
       final uncached = batch
           .where((s) => !_cache.containsKey(s))
           .toSet()
           .toList(growable: false);
-      if (uncached.isEmpty) return;
+      if (uncached.isEmpty) {
+        // 这一批全是缓存命中：立即把机会让给剩下的队列
+        _busy = false;
+        if (_pending.isNotEmpty || _pendingUrgent.isNotEmpty) _scheduleFlush();
+        return;
+      }
 
       // 切成小批
       final chunks = <List<String>>[];
@@ -769,7 +840,9 @@ class UiTranslateService extends GetxService {
     } finally {
       _busy = false;
       _persist();
-      if (_pending.isNotEmpty) _scheduleFlush();
+      // 两个队列都要接着跑：优先队列非空时 _flush 会先取它，所以这里
+      // 只要有一个非空就再排一次即可。
+      if (_pending.isNotEmpty || _pendingUrgent.isNotEmpty) _scheduleFlush();
     }
   }
 
@@ -1567,6 +1640,12 @@ String uiTx(String src) => UiTranslateService.tx(src);
 /// （同一份缓存、同一套队列），两者混用不会导致重复翻译。
 String uiTxTight(String src) =>
     UiTranslateService.tx(src, width: UiTextWidth.tight);
+
+/// **高优先级**入口：译文会插队到普通队列之前。
+///
+/// 只给「用户一进 App 就盯着看、且必须等译文」的内容用 —— 目前只有更新弹窗。
+/// 普通界面文案请继续用 [uiTx] / [uiTxTight]，否则会把启动优化白做。
+String uiTxUrgent(String src) => UiTranslateService.txUrgent(src);
 
 /// 带占位符的模板翻译：把含 `{0}`/`{1}`… 的整句模板作为一个稳定 key 送翻译，
 /// 再把参数回填（提示词已要求模型保留 `{n}` 占位符）。用于 `'共 {0} 条'` 这类句子。
