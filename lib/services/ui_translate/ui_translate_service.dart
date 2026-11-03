@@ -699,23 +699,31 @@ class UiTranslateService extends GetxService {
 
   /// 预热术语表索引：把 5 万多条形态的构建从首帧挪到启动后台。
   ///
-  /// 不预热的话，第一次 `_tx` 会在一帧之内同步建索引与分桶 ——
-  /// 这是 3.6.3「点进去什么也加载不出来、随后闪退」的直接原因之一。
+  /// **不要在这里解析 `to`。** `to` 会向 GetX 索取服务实例，而本方法是从
+  /// `onInit` 里调用的 —— 那一刻服务还在注册过程中，解析自身实例会抛错；
+  /// 异常顺着 `main()` 里同步的 `..put()` 冒出去，`runApp` 之前启动就断了，
+  /// 表现就是**一直纯黑屏、也不闪退**（3.6.4 的问题）。
+  ///
+  /// 因此这里只读 Pref（普通存储读取，安全），并把整个流程包在 try 里：
+  /// 预热只是性能优化，任何异常都不允许影响启动。
   static void warmGlossary() {
-    if (!Get.isRegistered<UiTranslateService>()) return;
-    if (!to.enabled) return;
-    Future<void>.delayed(const Duration(milliseconds: 1200), () {
-      if (!Get.isRegistered<UiTranslateService>()) return;
-      if (to.enabled) _warmNow();
+    Future<void>.delayed(const Duration(milliseconds: 1500), () {
+      try {
+        if (!Pref.uiTranslateEnabled) return;
+        _warmNow();
+      } catch (_) {
+        // 预热失败不影响任何功能，直接放弃
+      }
     });
   }
 
-  /// 立即构建索引（后台调用；构建结果是静态缓存的）。
+  /// 立即构建索引（构建结果是静态缓存的）。
   static void _warmNow() {
     _glossaryIndex.length;
     _glossaryFormsByFirstChar.length;
   }
 
+  /// 用户改了某一类术语集的开关后调用：作废已构建的索引，下次查询按新状态重建。
   static void rebuildGlossaryIndex() {
     _glossaryFormIndex = null;
     _glossaryFormsSorted = null;
