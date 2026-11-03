@@ -59,7 +59,7 @@ class FavPgcItem extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AspectRatio(
+                  SizedBox(height: Style.cardHCoverHeight, child: AspectRatio(
                     aspectRatio: 3 / 4,
                     child: LayoutBuilder(
                       builder: (context, boxConstraints) {
@@ -99,7 +99,7 @@ class FavPgcItem extends StatelessWidget {
                         );
                       },
                     ),
-                  ),
+                  )),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(

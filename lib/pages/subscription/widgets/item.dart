@@ -8,6 +8,7 @@ import 'package:PiliPlus/models_new/sub/sub/list.dart';
 import 'package:PiliPlus/pages/subscription_detail/view.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
@@ -64,7 +65,7 @@ class SubItem extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AspectRatio(
+              SizedBox(height: Style.cardHCoverHeight, child: AspectRatio(
                 aspectRatio: Style.aspectRatio,
                 child: LayoutBuilder(
                   builder: (context, boxConstraints) {
@@ -93,7 +94,7 @@ CoverTranslateButton(cover: item.cover),
                     );
                   },
                 ),
-              ),
+              )),
               const SizedBox(width: 10),
               content(context),
             ],
@@ -119,7 +120,7 @@ CoverTranslateButton(cover: item.cover),
               Expanded(
                 child: Text(
                   uiTx(item.title!),
-                  maxLines: 2,
+                  maxLines: Pref.videoTitleFull ? 4 : 2,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.start,
                   style: const TextStyle(

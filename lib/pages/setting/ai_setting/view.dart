@@ -182,7 +182,7 @@ class AiSettingPage extends StatelessWidget {
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       itemCount: controller.templates.length,
-                      onReorder: controller.reorderTemplate,
+                      onReorderItem: controller.reorderTemplate,
                       itemBuilder: (context, index) {
                         final t = controller.templates[index];
                         return Card(
@@ -354,7 +354,7 @@ class AiSettingPage extends StatelessWidget {
               controller: nameCtl,
               decoration: InputDecoration(
                 labelText: uiTx('模板名称'),
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
@@ -363,7 +363,7 @@ class AiSettingPage extends StatelessWidget {
               maxLines: 5,
               decoration: InputDecoration(
                 labelText: uiTx('提示词内容'),
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
             ),

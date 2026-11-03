@@ -222,9 +222,13 @@ Future<bool> _showCacheConfirmDialog({
   required String confirmText,
 }) {
   final messages = <String>[
-    '删除 ${entries.length} 个本地离线缓存，释放约 ${_formatEntriesSize(entries)}。',
-    if (otherFolderCount > 0) '其中 $otherFolderCount 个也存在于其他文件夹。',
-    '删除后会从离线缓存列表和所有文件夹中消失，无法恢复。',
+    uiTxP('删除 {0} 个本地离线缓存，释放约 {1}。', [
+      entries.length,
+      _formatEntriesSize(entries),
+    ]),
+    if (otherFolderCount > 0)
+      uiTxP('其中 {0} 个也存在于其他文件夹。', [otherFolderCount]),
+    uiTx('删除后会从离线缓存列表和所有文件夹中消失，无法恢复。'),
   ];
   return showDialog<bool>(
     context: context,

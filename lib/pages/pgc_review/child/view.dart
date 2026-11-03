@@ -136,7 +136,7 @@ class _PgcReviewChildPageState extends State<PgcReviewChildPage>
         children: [
           if (author.mid == Accounts.main.mid) ...[
             DialogOption(
-              child: Text(uiTx('编辑'), style: TextStyle(fontSize: 14)),
+              child: Text(uiTx('编辑'), style: const TextStyle(fontSize: 14)),
               onPressed: () {
                 Get.back();
                 showModalBottomSheet(
@@ -156,7 +156,7 @@ class _PgcReviewChildPageState extends State<PgcReviewChildPage>
               },
             ),
             DialogOption(
-              child: Text(uiTx('删除'), style: TextStyle(fontSize: 14)),
+              child: Text(uiTx('删除'), style: const TextStyle(fontSize: 14)),
               onPressed: () {
                 Get.back();
                 showConfirmDialog(
@@ -168,7 +168,7 @@ class _PgcReviewChildPageState extends State<PgcReviewChildPage>
             ),
           ],
           DialogOption(
-            child: Text(uiTx('举报'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('举报'), style: const TextStyle(fontSize: 14)),
             onPressed: () => Get
               ..back()
               ..toNamed(

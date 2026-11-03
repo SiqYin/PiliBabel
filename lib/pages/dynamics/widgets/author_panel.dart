@@ -76,7 +76,7 @@ class AuthorPanel extends StatelessWidget {
     Widget? pubTs;
     if (pubTime != null) {
       pubTs = Text(
-        '${uiTx(pubTime!)}${moduleAuthor.pubAction != null ? ' ${uiTx(moduleAuthor.pubAction!)}' : ''}',
+        '${uiTx(pubTime)}${moduleAuthor.pubAction != null ? ' ${uiTx(moduleAuthor.pubAction!)}' : ''}',
         style: TextStyle(
           color: theme.colorScheme.outline,
           fontSize: theme.textTheme.labelSmall!.fontSize,
@@ -421,8 +421,8 @@ class AuthorPanel extends StatelessWidget {
                   onBlock?.call();
                   try {
                     final mid = moduleAuthor.mid!;
-                    final blockedMids = Pref.dynamicsBlockedMids;
-                    blockedMids.add(mid);
+                    final blockedMids = Pref.dynamicsBlockedMids
+                      ..add(mid);
                     Pref.dynamicsBlockedMids = blockedMids;
                     GlobalData().dynamicsBlockedMids = blockedMids;
                     DynamicsDataModel.dynamicsBlockedMids = blockedMids;
@@ -591,7 +591,7 @@ class AuthorPanel extends StatelessWidget {
                               dense: true,
                               enabled: isPrivate,
                               title: Text(uiTx('所有用户可见'),
-                                style: TextStyle(fontSize: 14),
+                                style: const TextStyle(fontSize: 14),
                               ),
                               onTap: onTap,
                             ),
@@ -599,7 +599,7 @@ class AuthorPanel extends StatelessWidget {
                               dense: true,
                               enabled: !isPrivate,
                               title: Text(uiTx('仅自己可见'),
-                                style: TextStyle(fontSize: 14),
+                                style: const TextStyle(fontSize: 14),
                               ),
                               onTap: onTap,
                             ),

@@ -40,15 +40,13 @@ class DynamicsDataModel {
     return title ?? '';
   }
 
-  static RegExp banWordForDyn = RegExp(
-    Pref.parseBanWordToRegex(Pref.banWordForDyn),
-    caseSensitive: false,
-  );
-  static bool enableFilter = banWordForDyn.pattern.isNotEmpty;
+  static List<RegExp> banWordForDyn = Pref.compileBanWord(Pref.banWordForDyn);
+  static bool enableFilter = banWordForDyn.isNotEmpty;
 
   static bool antiGoodsDyn = Pref.antiGoodsDyn;
   static bool removeBlockedDyn = Pref.removeBlockedDyn;
   static bool removeOnlyFansVideoDyn = Pref.removeOnlyFansVideoDyn;
+  static bool removeDynVideoDyn = Pref.removeDynVideoDyn;
   static Set<int> dynamicsBlockedMids = Pref.dynamicsBlockedMids;
 
   DynamicsDataModel.fromJson(

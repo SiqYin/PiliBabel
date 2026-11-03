@@ -209,13 +209,13 @@ class _WhisperDetailPageState
               msgType: .EN_MSG_TYPE_DRAW_BACK,
               index: index,
             ),
-            child: Text(uiTx('撤回'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('撤回'), style: const TextStyle(fontSize: 14)),
           )
         else
           CustomPopupMenuItem<void>(
             height: 42,
             onTap: () => onReport(item),
-            child: Text(uiTx('举报'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('举报'), style: const TextStyle(fontSize: 14)),
           ),
       ],
     );
@@ -253,7 +253,7 @@ class _WhisperDetailPageState
                   );
                 },
                 dense: true,
-                title: Text(uiTx('撤回'), style: TextStyle(fontSize: 14)),
+                title: Text(uiTx('撤回'), style: const TextStyle(fontSize: 14)),
               )
             : ListTile(
                 onTap: () {
@@ -261,7 +261,7 @@ class _WhisperDetailPageState
                   onReport(item);
                 },
                 dense: true,
-                title: Text(uiTx('举报'), style: TextStyle(fontSize: 14)),
+                title: Text(uiTx('举报'), style: const TextStyle(fontSize: 14)),
               ),
       ),
     );

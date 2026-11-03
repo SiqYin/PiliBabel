@@ -158,30 +158,30 @@ class ImageGridView extends StatelessWidget {
           CustomPopupMenuItem<void>(
             height: 42,
             onTap: () => ImageUtils.onShareImg(item.url),
-            child: Text(uiTx('分享'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('分享'), style: const TextStyle(fontSize: 14)),
           ),
         CustomPopupMenuItem<void>(
           height: 42,
           onTap: () => ImageUtils.copyImg(item.url),
-          child: Text(uiTx('复制图片'), style: TextStyle(fontSize: 14)),
+          child: Text(uiTx('复制图片'), style: const TextStyle(fontSize: 14)),
         ),
         CustomPopupMenuItem<void>(
           height: 42,
           onTap: () => ImageUtils.downloadImg([item.url]),
-          child: Text(uiTx('保存图片'), style: TextStyle(fontSize: 14)),
+          child: Text(uiTx('保存图片'), style: const TextStyle(fontSize: 14)),
         ),
         if (PlatformUtils.isDesktop)
           CustomPopupMenuItem<void>(
             height: 42,
             onTap: () => PageUtils.launchURL(item.url),
-            child: Text(uiTx('网页打开'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('网页打开'), style: const TextStyle(fontSize: 14)),
           )
         else if (picArr.length > 1)
           CustomPopupMenuItem<void>(
             height: 42,
             onTap: () =>
                 ImageUtils.downloadImg(picArr.map((item) => item.url).toList()),
-            child: Text(uiTx('保存全部'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('保存全部'), style: const TextStyle(fontSize: 14)),
           ),
         if (item.isLivePhoto)
           CustomPopupMenuItem<void>(

@@ -10,6 +10,7 @@ import 'package:PiliPlus/common/widgets/sliver/trending_header.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models_new/search/search_trending/list.dart';
 import 'package:PiliPlus/pages/search_trending/controller.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/color_utils.dart';
 import 'package:PiliPlus/utils/extension/context_ext.dart';
 import 'package:PiliPlus/utils/extension/get_ext.dart';
@@ -172,12 +173,14 @@ class _SearchTrendingPageState extends State<SearchTrendingPage> {
                 title: Row(
                   children: [
                     Flexible(
-                      child: Text(
-                        item.keyword!,
-                        maxLines: 1,
-                        overflow: .ellipsis,
-                        strutStyle: const StrutStyle(height: 1, leading: 0),
-                        style: const TextStyle(height: 1, fontSize: 15),
+                      child: Obx(
+                        () => Text(
+                          uiTxTight(item.keyword!),
+                          maxLines: Pref.videoTitleFull ? 2 : 1,
+                          overflow: .ellipsis,
+                          strutStyle: const StrutStyle(height: 1, leading: 0),
+                          style: const TextStyle(height: 1, fontSize: 15),
+                        ),
                       ),
                     ),
                     if (item.icon?.isNotEmpty == true) ...[

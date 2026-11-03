@@ -26,6 +26,7 @@ abstract final class FontUtils {
   static final _fonts = <String>{};
   static bool _initialized = false;
 
+  static const kFontName = 'customFont.otf';
   static const _kFontExts = ['ttf', 'ttc', 'otf'];
   static final _kFontDir = path.join(appSupportDirPath, 'font');
 
@@ -42,6 +43,7 @@ abstract final class FontUtils {
   static final _customFontNames = Pref.customAppFontNames;
 
   static String _familyOf(String hash) => 'custom_font_$hash';
+
 
   /// 已导入字体的显示名，取不到时回落到族名本身
   static String displayName(String fontFamily) =>

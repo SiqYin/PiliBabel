@@ -214,7 +214,7 @@ class _SharePanelState extends State<SharePanel> {
                           ),
                         ),
                         const SizedBox(height: 2),
-                        Text(uiTx('更多'), style: TextStyle(fontSize: 12)),
+                        Text(uiTx('更多'), style: const TextStyle(fontSize: 12)),
                       ],
                     ),
                   ),

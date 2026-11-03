@@ -3,7 +3,7 @@
     <h1>PiliBabel</h1>
     <p><b>Ein Bilibili-Client von Drittanbietern mit KI-Übersetzung.</b></p>
     <p>Babel — die Sprachbarriere einreißen, damit jede und jeder bilibili in der eigenen Sprache genießen kann.</p>
-    <p>Enthält Übersetzungen für 4 Sprachen der ethnischen Minderheiten Chinas und 3 chinesische Dialekte.</p>
+    <p>Vereint die 151 offiziell von bilibili unterstützten Sprachen mit 6 weiteren, die es nicht abdeckt — traditionelles Chinesisch, vereinfachtes und traditionelles Wu, Festland- und Taiwan-Hokkien sowie Zhuang — in einer Liste.</p>
     <p>Die Übersetzung läuft direkt nach der Installation über bilibilis kostenloses Modell — kein API-Schlüssel nötig.</p>
 </div>
 <!-- lang-switch:start -->
@@ -52,7 +52,7 @@ Und seit 1.0 funktioniert das **direkt nach der Installation**: Das Übersetzung
 
 - **KI-Übersetzung, überall.** Navigationsleisten, Videokarten, Detailseiten, Kommentare, Dynamik sowie die Bereiche Ich / Favoriten / Verlauf / Nachrichten / Suche — ein globaler Durchlauf erfasst **rund 1.650 Oberflächentexte**, dazu dynamische Inhalte (Titel, Autorennamen, Zähler).
 - **Zwei Engines, ein Schalter.** *Eingebaut* (Standard) nutzt den kostenlosen Endpunkt des offiziellen Modells **Index-Translate-35B-A3B** von bilibili — nichts einzurichten. *Eigene API* behält das bisherige Verhalten: Richte sie auf einen beliebigen OpenAI-kompatiblen `/chat/completions`-Endpunkt mit eigener Basis-URL / Schlüssel / Modell. Die KI-Videozusammenfassung und die KI-Übersetzung haben weiterhin **vollständig getrennte** Endpunkte und Einstellungen und liegen gemeinsam auf einer Seite **„KI-Funktionen“**.
-- **Eine Sprachliste, beide Engines.** Die Liste der Zielsprachen ist nicht nach Engine getrennt — es ist dieselbe Liste, egal welche du wählst. Sie vereint die **150 Sprachen** des offiziellen bilibili-Modells mit den **4 Sprachen der ethnischen Minderheiten Chinas und 3 chinesischen Dialekten**, die PiliBabel ergänzt — Tibetisch, Uigurisch, Zhuang und Hmong auf der einen Seite; Kantonesisch, Wu (Shanghai) und Minnan auf der anderen — dazu Chinesisch in traditioneller Schrift. Regionale und schriftbezogene Varianten bleiben **eigene Einträge**, statt zusammengelegt zu werden: Marokkanisches / Ägyptisches / Nadschdi- / Levantinisches Arabisch sind jeweils eigene Optionen, ebenso Serbisch, Usbekisch und Urdu in kyrillischer bzw. lateinischer Schrift.
+- **Eine Sprachliste, beide Engines.** Die Liste der Zielsprachen ist nicht nach Engine getrennt — es ist dieselbe Liste, egal welche du wählst. Sie vereint die **151 Sprachen** des offiziellen bilibili-Modells mit **6 weiteren, die es nicht abdeckt** — traditionelles Chinesisch, vereinfachtes und traditionelles Wu, Festland- und Taiwan-Hokkien sowie Zhuang. Regionale und schriftliche Varianten bleiben **eigene Einträge**, statt zusammengelegt zu werden — Marokkanisches / Ägyptisches / Nadschdi- / Levantinisches Arabisch sind je eine eigene Wahl, ebenso Serbisch, Usbekisch und Urdu in kyrillischer bzw. lateinischer Schrift.
 - **Ehrlich bei der Abdeckung.** Sprachen innerhalb des offiziellen Verzeichnisses deckt bilibilis Modell ab. Die wenigen außerhalb — traditionelles Chinesisch sowie die oben genannten chinesischen Dialekte und Minderheitensprachen, die bilibili nicht führt — erscheinen trotzdem in der Liste, entsprechend gekennzeichnet, damit du auf einen Blick siehst, dass ein besseres Ergebnis dein eigenes Modell erfordern kann.
 - **Einmal übersetzt, dann festgeschrieben.** Jede Ausgangszeichenkette wird **genau einmal** übersetzt; das Ergebnis wird lokal gespeichert und **nie erneut übersetzt**, wenn du einen Bildschirm erneut öffnest — dasselbe Prinzip wie beim offiziellen Client, für stabile, vorhersehbare Übersetzungen.
 - **Umschalter Original ⇄ Übersetzung pro Kommentar** (ein kleines Symbol, kein Wort). `@Erwähnungen / [Emojis] / #Themen# / Links` bleiben als Tokens erhalten, und **Kommentare mit Hyperlinks werden übersetzt, wobei der Link anklickbar bleibt**.
@@ -153,7 +153,7 @@ paru -S pilinara-bin         # oder über AUR: pilinara-bin (vorgebaut) / pilina
 
 <br/>
 
-## Änderungsverlauf: 2.6.x → 3.3.4
+## Änderungsverlauf: 2.6.x → 3.6.4
 
 - **2.6.x** — Audio-Cache (getrennte Module für Video und Audio, letzte Auswahl wird gemerkt, Einstiege auf der Videoseite, der Nur-Audio-Seite und im Audioplayer; Originalformat bleibt erhalten; wählbare Qualität) und Download auf das Gerät (eigener Menüpunkt: erst Video/Audio, dann Qualität; ohne eingestellten Ordner öffnet sich die Systemdateiauswahl).
 
@@ -166,6 +166,12 @@ paru -S pilinara-bin         # oder über AUR: pilinara-bin (vorgebaut) / pilina
 - **3.3.0–3.3.3** — Dynamik-Darstellung (P3) über gRPC, danach Korrekturen: Kompilierfehler bei der Pufferlänge auf der Audioseite und ein Typfehler beim Vorladen der Kommentare, durch den jeder Wiederholungsversuch sofort scheiterte.
 
 - **3.3.4** — Dynamik-Karten für Bezahlkarten, Mini-Apps, Themensammlungen und Abos; der Startbildschirm ohne Titelbilder ist behoben; Abgleich mit PiliNara (Statusleiste, Fortsetzen des Downloads nach Prozessende, media-kit-Aktualisierung, Umgehung des schwarzen Bildes unter Wayland, wählbare Tonqualität beim Cachen); Prüfung der AI-Übersetzung für alle seit 3.0.5 hinzugefügten Oberflächentexte; dieser Änderungsverlauf.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. Ein in 3.6.3 eingeführter Absturz (bei aktiver KI-Übersetzung blieben Seiten leer, danach schloss sich die App) ist in 3.6.4 behoben.
 
 ## Verzeichnis der übernommenen Funktionen (aus PiliNara / PiliPlus)
 
@@ -252,3 +258,8 @@ Die mitgelieferte Schrift **霞鹜文楷** steht separat unter der **SIL Open Fo
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — die quelloffene chinesische Schrift, die der App beiliegt, unter der SIL Open Font License 1.1
 - und weitere
 - Inspiriert von bilibilis offizieller „KI-Oberflächenübersetzung“.
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

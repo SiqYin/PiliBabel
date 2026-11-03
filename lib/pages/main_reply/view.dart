@@ -3,6 +3,7 @@ import 'package:PiliPlus/common/skeleton/video_reply.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
+import 'package:PiliPlus/common/widgets/loading_widget/empty_placeholder.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/sliver/sliver_floating_header.dart';
@@ -167,9 +168,11 @@ class _MainReplyPageState extends State<MainReplyPage>
                   }
                 },
               )
-            : HttpError(
-                errMsg: uiTx('还没有评论'),
-                onReload: _controller.onReload,
+            // 请求成功但没有条目 = 确实没有评论，不是加载失败，不给重试按钮
+            : EmptyPlaceholder(
+                msg: _controller.count.value > 0
+                    ? uiTx('${NumUtils.numFormat(_controller.count.value)}条评论')
+                    : uiTx('0条评论'),
               ),
       Error(:final errMsg) => HttpError(
         errMsg: errMsg,
@@ -200,7 +203,7 @@ class _MainReplyPageState extends State<MainReplyPage>
               icon: Icon(Icons.sort, size: 16, color: secondary),
               label: Obx(
                 () => Text(
-                  _controller.sortType.value.descShort,
+                  uiTx(_controller.sortType.value.descShort),
                   style: TextStyle(fontSize: 13, color: secondary),
                 ),
               ),

@@ -8,10 +8,11 @@ import 'package:PiliPlus/models/common/stat_type.dart';
 import 'package:PiliPlus/models_new/space/space_article/item.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 
 class MemberArticleItem extends StatelessWidget {
-  const MemberArticleItem({super.key, required this.item});
+  const MemberArticleItem(this.item, {super.key});
 
   final SpaceArticleItem item;
 
@@ -42,7 +43,7 @@ class MemberArticleItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (item.originImageUrls?.firstOrNull?.isNotEmpty == true) ...[
-                AspectRatio(
+                SizedBox(height: Style.cardHCoverHeight, child: AspectRatio(
                   aspectRatio: Style.aspectRatio,
                   child: LayoutBuilder(
                     builder:
@@ -57,7 +58,7 @@ CoverTranslateButton(cover: item.originImageUrls!.first),
 ]);
                         },
                   ),
-                ),
+                )),
                 const SizedBox(width: 10),
               ],
               Expanded(
@@ -69,7 +70,7 @@ CoverTranslateButton(cover: item.originImageUrls!.first),
                       Expanded(
                         child: Text(
                           uiTx(item.title!),
-                          maxLines: 2,
+                          maxLines: Pref.videoTitleFull ? 4 : 2,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
                             fontSize: theme.textTheme.bodyMedium!.fontSize,

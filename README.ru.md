@@ -153,7 +153,7 @@ paru -S pilinara-bin         # или через AUR: pilinara-bin (готова
 
 <br/>
 
-## История изменений: 2.6.x → 3.3.4
+## История изменений: 2.6.x → 3.6.4
 
 - **2.6.x** — кэширование аудио (отдельные модули для видео и аудио, запоминается последний выбор, входы на странице видео, на странице «только аудио» и в аудиоплеере; исходный формат сохраняется; выбор качества) и загрузка на устройство (отдельный пункт меню: сначала видео/аудио, затем качество; при отсутствии папки открывается системный выбор файлов).
 
@@ -166,6 +166,12 @@ paru -S pilinara-bin         # или через AUR: pilinara-bin (готова
 - **3.3.0–3.3.3** — отрисовка динамики (P3) через gRPC, затем исправления: ошибка компиляции длительности буфера на странице аудио и сбой приведения типа в предзагрузке комментариев, из-за которого повтор всегда падал мгновенно.
 
 - **3.3.4** — карточки динамики для платных записей, мини-приложений, подборок тем и подписок; исправлено отсутствие обложек на первом экране главной; синхронизация с upstream PiliNara (строка состояния, докачка после завершения процесса, обновление media-kit, обход чёрного видео в Wayland, выбор качества звука при кэшировании); аудит AI-перевода для всех текстов интерфейса, добавленных с 3.0.5; этот список изменений.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4.
 
 ## Журнал унаследованных возможностей (из PiliNara / PiliPlus)
 
@@ -252,3 +258,8 @@ PiliBabel распространяется под **GNU General Public License v
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — открытый китайский шрифт, поставляемый с приложением, под SIL Open Font License 1.1
 - и другие
 - Вдохновлено официальным «AI interface translation» bilibili.
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

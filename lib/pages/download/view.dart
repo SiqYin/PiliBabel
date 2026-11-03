@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/services/ui_translate/prewarm_strings.dart';
 import 'dart:io' show Platform;
 
 import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
@@ -85,7 +86,15 @@ String _formatCacheBytes(int bytes) {
 }
 
 class DownloadPage extends StatefulWidget {
-  const DownloadPage({super.key});
+  const DownloadPage({super.key, this.initialCacheModule});
+
+  /// 打开时默认停在哪个一级页签：
+  /// 0 = 缓存视频，1 = 缓存音频，2 = 下载视频，3 = 下载音频。
+  ///
+  /// 为 null 时沿用「记住上次停留的页签」（Pref.downloadCacheModule）。
+  /// 从视频页的「视频缓存 / 音频缓存 / 下载视频 / 下载音频」入口进来时会显式指定，
+  /// 让用户点哪个就落到哪个，而不是被上次的选择带偏。
+  final int? initialCacheModule;
 
   @override
   State<DownloadPage> createState() => _DownloadPageState();
@@ -93,20 +102,28 @@ class DownloadPage extends StatefulWidget {
 
 class _DownloadPageState extends State<DownloadPage>
     with TickerProviderStateMixin, BaseFabMixin, FabMixin {
+
   final _downloadService = Get.find<DownloadService>();
   final _collectionService = Get.find<DownloadCollectionService>();
   final _controller = Get.put(DownloadPageController());
   late final _folderSelectController = Get.put(
     DownloadFolderSelectController(_controller),
   );
-  final _progress = ChangeNotifier();
+  /// 仅用来给下载进度条做重建通知。
+  ///
+  /// `ChangeNotifier.notifyListeners()` 是 protected，外部直接调用会触发
+  /// invalid_use_of_protected_member / invalid_use_of_visible_for_testing_member。
+  /// 用一层子类把它包成公开的 `notify()` 即可，语义不变。
+  final _progress = _NotifyingChangeNotifier();
 
   late final TabController _tabController;
   int _tabIndex = 0;
   bool _isOpeningContinue = false;
 
-  /// 缓存模块：0 = 缓存视频，1 = 缓存音频。默认取上次停留的模块。
-  late int _cacheModule = Pref.downloadCacheModule;
+  /// 缓存模块：0 = 缓存视频，1 = 缓存音频。
+  /// 调用方显式指定时优先用它，否则沿用上次停留的模块。
+  late int _cacheModule =
+      widget.initialCacheModule ?? Pref.downloadCacheModule;
   final _audioCacheService = Get.find<AudioCacheService>();
   final _audioSelected = <String>{};
   bool _audioSelectMode = false;
@@ -130,6 +147,12 @@ class _DownloadPageState extends State<DownloadPage>
       length: _DownloadTab.values.length,
       vsync: this,
     )..addListener(_handleTabChanged);
+    // 预翻译：这一页几乎全部内容都是「点开才出现」的弹窗 / 菜单 ——
+    // 缓存视频右侧 ⋮ 的十几个菜单项、删除确认框、新建/重命名文件夹、
+    // 排序方式、多选操作、导出提示……它们此时一个都没渲染过，
+    // 等用户点开才翻就会出现「先中文后跳日文」。这里一次性全部登记，
+    // 走优先队列预热（见 UiTranslateService.precache）。
+    PrewarmStrings.warmDownload();
   }
 
   void _handleTabChanged() {
@@ -253,7 +276,7 @@ class _DownloadPageState extends State<DownloadPage>
       if (!mounted) {
         return;
       }
-      _progress.notifyListeners();
+      _progress.notify();
       await _controller.refreshContinueTarget();
     } finally {
       if (mounted) {
@@ -310,7 +333,7 @@ class _DownloadPageState extends State<DownloadPage>
       return [
         CustomPopupMenuItem<void>(
           height: 38,
-          child: Text(uiTx('添加到文件夹'), style: TextStyle(fontSize: 13)),
+          child: Text(uiTx('添加到文件夹'), style: const TextStyle(fontSize: 13)),
           onTap: () async {
             final selectedIds = await showDownloadFolderPickerDialog(
               context: context,
@@ -348,7 +371,7 @@ class _DownloadPageState extends State<DownloadPage>
       ),
       CustomPopupMenuItem<void>(
         height: 38,
-        child: Text(uiTx('添加到其他文件夹'), style: TextStyle(fontSize: 13)),
+        child: Text(uiTx('添加到其他文件夹'), style: const TextStyle(fontSize: 13)),
         onTap: () async {
           final selectedIds = await showDownloadFolderPickerDialog(
             context: context,
@@ -384,7 +407,7 @@ class _DownloadPageState extends State<DownloadPage>
               CustomPopupMenuItem(
                 value: 0,
                 height: 38,
-                child: Text(uiTx('重命名'), style: TextStyle(fontSize: 13)),
+                child: Text(uiTx('重命名'), style: const TextStyle(fontSize: 13)),
               ),
               CustomPopupMenuItem(
                 value: 1,
@@ -634,32 +657,33 @@ class _DownloadPageState extends State<DownloadPage>
               ],
               bottom: PreferredSize(
                 preferredSize: Size.fromHeight(
-                  _cacheModule == 1 ? 46 : 46 + kTextTabBarHeight,
+                  // 缓存视频那一页还有「全部视频 / 文件夹」二级 TabBar，
+                  // 其余三页没有，所以高度要按当前模块给。
+                  _cacheModule == 0 ? 46 + kTextTabBarHeight : 46,
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     SizedBox(
                       height: 46,
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 12),
-                          _moduleBtn(0, '缓存视频'),
-                          const SizedBox(width: 8),
-                          _moduleBtn(1, '缓存音频'),
-                          const SizedBox(width: 8),
-                          TextButton(
-                            onPressed: () =>
-                                Get.to(const LocalDownloadPage()),
-                            style: TextButton.styleFrom(
-                              visualDensity: VisualDensity.compact,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                              ),
-                            ),
-                            child: Text(uiTx('下载情况')),
-                          ),
-                        ],
+                      // 横向可滚动：这四项译文在某些语言下会明显变长，固定 Row 会把
+                      // 最右侧文字挤出屏幕且无法查看。改成横向滚动后放得下正常显示、
+                      // 放不下可以左右滑。
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.only(right: 12),
+                        child: Row(
+                          children: [
+                            const SizedBox(width: 12),
+                            _moduleBtn(0, '缓存视频'),
+                            const SizedBox(width: 8),
+                            _moduleBtn(1, '缓存音频'),
+                            const SizedBox(width: 8),
+                            _moduleBtn(2, '下载视频'),
+                            const SizedBox(width: 8),
+                            _moduleBtn(3, '下载音频'),
+                          ],
+                        ),
                       ),
                     ),
                     if (_cacheModule == 0)
@@ -689,33 +713,42 @@ class _DownloadPageState extends State<DownloadPage>
               ),
             ),
           ),
-          body: _cacheModule == 1 ? _buildAudioTab() : Stack(
-            clipBehavior: Clip.none,
-            children: [
-              NotificationListener<UserScrollNotification>(
-                onNotification: (notification) {
-                  if (_tabIndex != 0) {
+          body: switch (_cacheModule) {
+            // 1 = 缓存音频
+            1 => _buildAudioTab(),
+            // 2 = 下载视频，3 = 下载音频（原本是「下载情况」二级页里的两个页签，
+            // 现在提到一级，直接复用同一套列表组件）
+            2 => const LocalDownloadList(isAudio: false),
+            3 => const LocalDownloadList(isAudio: true),
+            // 0 = 缓存视频（内部还有「全部视频 / 文件夹」二级页签）
+            _ => Stack(
+              clipBehavior: Clip.none,
+              children: [
+                NotificationListener<UserScrollNotification>(
+                  onNotification: (notification) {
+                    if (_tabIndex != 0) {
+                      return false;
+                    }
+                    final direction = notification.direction;
+                    if (direction == .forward) {
+                      showFab();
+                    } else if (direction == .reverse) {
+                      hideFab();
+                    }
                     return false;
-                  }
-                  final direction = notification.direction;
-                  if (direction == .forward) {
-                    showFab();
-                  } else if (direction == .reverse) {
-                    hideFab();
-                  }
-                  return false;
-                },
-                child: TabBarView(
-                  controller: _tabController,
-                  children: [
-                    _buildAllVideosTab(),
-                    _buildFoldersTab(),
-                  ],
+                  },
+                  child: TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildAllVideosTab(),
+                      _buildFoldersTab(),
+                    ],
+                  ),
                 ),
-              ),
-              _buildContinueFab(),
-            ],
-          ),
+                _buildContinueFab(),
+              ],
+            ),
+          },
         ),
       );
     });
@@ -810,7 +843,7 @@ class _DownloadPageState extends State<DownloadPage>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    task.title,
+                    uiTxTight(task.title),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(fontSize: 14),
@@ -830,6 +863,13 @@ class _DownloadPageState extends State<DownloadPage>
                 ],
               ),
             ),
+            if (failed)
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                tooltip: uiTx('重新缓存'),
+                onPressed: () => _audioCacheService.retryTask(task),
+                icon: Icon(Icons.refresh, size: 18, color: colorScheme.primary),
+              ),
             IconButton(
               visualDensity: VisualDensity.compact,
               onPressed: () => _audioCacheService.cancelTask(task),
@@ -873,7 +913,7 @@ class _DownloadPageState extends State<DownloadPage>
     if (confirmed == true) {
       await _audioCacheService.delete(entries, deleteFile: true);
       if (mounted) {
-        setState(() => _audioSelected.clear());
+        setState(_audioSelected.clear);
       }
     }
   }
@@ -1045,4 +1085,10 @@ class _DownloadPageState extends State<DownloadPage>
       ),
     );
   }
+}
+
+/// 暴露 [ChangeNotifier.notifyListeners] 的私有包装：该类本身是 protected，
+/// 外部直接调用会触发 analyze 的 invalid_use_of_* 提示。
+final class _NotifyingChangeNotifier extends ChangeNotifier {
+  void notify() => notifyListeners();
 }

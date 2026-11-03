@@ -1,0 +1,71 @@
+name: Dart fix (auto-apply lint fixes)
+
+# 用途：在没有本地 Flutter SDK 的环境里，借 CI 的 Dart 工具链跑 `dart fix --apply`，
+# 把 analyze 尾巴里「有官方 fix」的项（prefer_const_constructors、unnecessary_lambdas、
+# prefer_initializing_formals、unused_import 等）一次性批量修掉，再把结果提交回分支。
+#
+# 只在 fix/** 分支上运行，避免影响正式分支。
+
+on:
+  push:
+    branches:
+      - 'fix/**'
+  workflow_dispatch:
+
+jobs:
+  dart-fix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version-file: pubspec.yaml
+          cache: true
+
+      - name: Resolve deps
+        run: flutter pub get
+
+      - name: Patch Flutter + material_ui
+        shell: pwsh
+        run: lib/scripts/patch.ps1 Linux
+
+      - name: Analyze before
+        shell: bash
+        run: |
+          flutter analyze --no-pub > /tmp/before.txt 2>&1 || true
+          echo "before: $(grep -cE '^ *info( .|$)' /tmp/before.txt || echo 0) infos, $(grep -cE '^ *warning( .|$)' /tmp/before.txt || echo 0) warnings"
+
+      - name: Apply dart fix
+        shell: bash
+        run: |
+          dart fix --apply > /tmp/fix.log 2>&1 || true
+          tail -n 40 /tmp/fix.log
+
+      - name: Analyze after
+        shell: bash
+        run: |
+          flutter analyze --no-pub > /tmp/after.txt 2>&1 || true
+          echo "after: $(grep -cE '^ *info( .|$)' /tmp/after.txt || echo 0) infos, $(grep -cE '^ *warning( .|$)' /tmp/after.txt || echo 0) warnings, $(grep -cE '^ *error( .|$)' /tmp/after.txt || echo 0) errors"
+          grep -E '^ *error( .|$)' /tmp/after.txt | head -n 30 || true
+
+      - name: Commit and push if changed
+        shell: bash
+        run: |
+          git config user.name "dart-fix-bot"
+          git config user.email "dart-fix-bot@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "no changes"
+            exit 0
+          fi
+          git add -A
+          git commit -m "chore(analyze): dart fix --apply 自动修复 lint（CI）"
+          git push origin HEAD:${{ github.ref_name }}

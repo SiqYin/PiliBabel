@@ -61,7 +61,7 @@ class _WhisperSecPageState extends State<WhisperSecPage> {
                           child: Row(
                             children: [
                               e.type.icon,
-                              Text('  ${uiTx(e.title ?? '')}'),
+                              Text('  ${uiTx(e.title)}'),
                             ],
                           ),
                         ),

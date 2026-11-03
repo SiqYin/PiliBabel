@@ -5,7 +5,6 @@ import 'package:PiliPlus/common/widgets/dialog/export_import.dart';
 import 'package:PiliPlus/common/widgets/disabled_icon.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
-import 'package:PiliPlus/common/widgets/sliver_wrap.dart';
 import 'package:PiliPlus/common/widgets/view_insets_safe_area.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models_new/search/search_rcmd/data.dart';
@@ -175,12 +174,14 @@ class _SearchPageState extends State<SearchPage> {
   Widget _buildHotSearch({
     bool isTrending = true,
   }) {
-    final text = Text(
-      isTrending ? '大家都在搜' : '搜索发现',
-      strutStyle: const StrutStyle(leading: 0, height: 1),
-      style: theme.textTheme.titleMedium!.copyWith(
-        height: 1,
-        fontWeight: .bold,
+    final text = Obx(
+      () => Text(
+        uiTx(isTrending ? '大家都在搜' : '搜索发现'),
+        strutStyle: const StrutStyle(leading: 0, height: 1),
+        style: theme.textTheme.titleMedium!.copyWith(
+          height: 1,
+          fontWeight: .bold,
+        ),
       ),
     );
     final outline = theme.colorScheme.outline;

@@ -68,7 +68,7 @@ Future<List<String>?> showDownloadFolderPickerDialog({
               width: double.maxFinite,
               child: folders.isEmpty
                   ? Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
+                      padding: const EdgeInsets.symmetric(vertical: 20),
                       child: Text(uiTx('还没有文件夹，先新建一个吧。')),
                     )
                   : SingleChildScrollView(

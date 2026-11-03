@@ -943,7 +943,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                   spacing: 10,
                   mainAxisSize: .min,
                   children: [
-                    Icon(Icons.copy, size: 19),
+                    const Icon(Icons.copy, size: 19),
                     Text(uiTx('复制链接')),
                   ],
                 ),
@@ -955,7 +955,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                     spacing: 10,
                     mainAxisSize: .min,
                     children: [
-                      Icon(Icons.share, size: 19),
+                      const Icon(Icons.share, size: 19),
                       Text(uiTx('分享直播间')),
                     ],
                   ),
@@ -966,7 +966,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                   spacing: 10,
                   mainAxisSize: .min,
                   children: [
-                    Icon(Icons.open_in_browser, size: 19),
+                    const Icon(Icons.open_in_browser, size: 19),
                     Text(uiTx('浏览器打开')),
                   ],
                 ),
@@ -998,11 +998,28 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                     spacing: 10,
                     mainAxisSize: .min,
                     children: [
-                      Icon(Icons.forward_to_inbox, size: 19),
+                      const Icon(Icons.forward_to_inbox, size: 19),
                       Text(uiTx('分享至消息')),
                     ],
                   ),
                 ),
+            // 保存直播间封面：与视频页「保存封面」同一套实现（ImageUtils.downloadImg）。
+            // 封面地址就是上面「分享至消息」用的 roomInfoH5.roomInfo.cover，
+            // 因此不必额外请求接口；取不到时该菜单项不显示。
+            if (_liveRoomController.roomInfoH5.value?.roomInfo?.cover
+                    case final String coverUrl
+                when coverUrl.isNotEmpty)
+              PopupMenuItem(
+                onTap: () => ImageUtils.downloadImg([coverUrl]),
+                child: Row(
+                  spacing: 10,
+                  mainAxisSize: .min,
+                  children: [
+                    const Icon(Icons.save_alt, size: 19),
+                    Text(uiTx('保存封面')),
+                  ],
+                ),
+              ),
             ];
           },
         ),
@@ -1141,7 +1158,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                   },
                 ),
                 Expanded(
-                  child: Text(uiTx('发送弹幕'), style: TextStyle(color: baseWhite)),
+                  child: Text(uiTx('发送弹幕'), style: const TextStyle(color: baseWhite)),
                 ),
                 Builder(
                   builder: (context) {
