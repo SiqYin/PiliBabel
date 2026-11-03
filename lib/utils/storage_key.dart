@@ -218,6 +218,7 @@ abstract final class SettingBoxKey {
   static const String uiTranslateEnabled = 'uiTranslateEnabled',
       subtitleChunkSize = 'subtitleChunkSize',
       subtitleConcurrency = 'subtitleConcurrency',
+      subtitleContextOverlap = 'subtitleContextOverlap',
       subtitleTranslationWaitForComplete = 'subtitleTranslationWaitForComplete',
       subtitleTranslationPrefetchNext = 'subtitleTranslationPrefetchNext',
       subtitleTranslationProxies = 'subtitleTranslationProxies',

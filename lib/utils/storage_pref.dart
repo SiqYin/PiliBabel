@@ -1859,7 +1859,7 @@ abstract final class Pref {
       _setting.put(SettingBoxKey.aiPromptTemplates, value);
 
   static bool get uiTranslateEnabled =>
-      _setting.get(SettingBoxKey.uiTranslateEnabled, defaultValue: false);
+      _setting.get(SettingBoxKey.uiTranslateEnabled, defaultValue: true);
 
   static set uiTranslateEnabled(bool value) =>
       _setting.put(SettingBoxKey.uiTranslateEnabled, value);
@@ -1878,7 +1878,7 @@ abstract final class Pref {
       _setting.put(SettingBoxKey.uiTranslateProvider, value.name);
 
   static String get uiTranslateLang =>
-      _setting.get(SettingBoxKey.uiTranslateLang, defaultValue: 'zh-CN');
+      _setting.get(SettingBoxKey.uiTranslateLang, defaultValue: 'vi');
 
   static set uiTranslateLang(String value) =>
       _setting.put(SettingBoxKey.uiTranslateLang, value);
@@ -1901,6 +1901,18 @@ abstract final class Pref {
   static set subtitleConcurrency(int value) => _setting.put(
     SettingBoxKey.subtitleConcurrency,
     value.clamp(1, 5).toInt(),
+  );
+
+  /// Source cues prepended to each subtitle chunk to keep names and forms of
+  /// address consistent without changing the timed cues being translated.
+  static int get subtitleContextOverlap => (_setting.get(
+    SettingBoxKey.subtitleContextOverlap,
+    defaultValue: 4,
+  ) as int).clamp(0, 8).toInt();
+
+  static set subtitleContextOverlap(int value) => _setting.put(
+    SettingBoxKey.subtitleContextOverlap,
+    value.clamp(0, 8).toInt(),
   );
 
   static bool get subtitleTranslationWaitForComplete => _setting.get(

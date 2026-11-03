@@ -154,6 +154,9 @@ test.dart
 docs/*
 !docs/danmaku_font_scaling.md
 !docs/inapp_pip_implementation.md
+!docs/ai/
+docs/ai/*
+!docs/ai/ACTIVE.md
 test*.dart
 
 AGENTS.md
@@ -164,5 +167,12 @@ CONTEXT.md
 
 .claude
 test*
+!test/
+test/*
+!test/services/
+test/services/*
+!test/services/ui_translate/
+!test/services/ui_translate/subtitle_selection_test.dart
+!test/services/ui_translate/subtitle_translation_job_test.dart
 /pubspec_overrides.yaml
 .mindfs

@@ -66,6 +66,7 @@ import 'package:PiliPlus/services/download/download_collection_service.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
 import 'package:PiliPlus/services/pip_overlay_service.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_selection.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_background_service.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_coordinator.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_job.dart';
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
@@ -1559,10 +1560,12 @@ class VideoDetailController extends GetxController
   bool _subtitleRefreshBusy = false;
   int? _subtitleRefreshIndex;
   int? _subtitleRefreshGeneration;
+  bool _subtitleRefreshAllowsManualCacheRestore = false;
   int _subtitleRequest = 0;
   Future<void> _subtitleSetTail = Future<void>.value();
   int _subtitleChunkSizeForVideo = Pref.subtitleChunkSize;
   int _subtitleConcurrencyForVideo = Pref.subtitleConcurrency;
+  int _subtitleContextOverlapForVideo = Pref.subtitleContextOverlap;
   List<SubtitleTranslationProxy> _subtitleProxiesForVideo = const [];
   late final RxBool showVP = Pref.showViewPointsOverlay.obs;
   late final RxList<ViewPointSegment> viewPointList = <ViewPointSegment>[].obs;
@@ -1698,7 +1701,11 @@ class VideoDetailController extends GetxController
     if (manual) {
       _subtitleGeneration++;
       _manualSubtitle = true;
-      _subtitleSubscription?.cancel();
+      // A manual track change must only stop rendering updates for this page.
+      // Cancelling here also killed an in-progress shared job, causing a
+      // translated track to disappear after users toggled subtitles or picked
+      // another track. The coordinator continues checkpointing in background.
+      _subtitleSubscription?.detach();
       _subtitleSubscription = null;
       _pausedForSubtitleTranslation = false;
       _subtitlePositionWorker?.dispose();
@@ -1742,6 +1749,25 @@ class VideoDetailController extends GetxController
     });
     _subtitleSetTail = task.catchError((Object _) {});
     await task;
+    if (manual &&
+        index > 0 &&
+        sub?.langTag == 'zh' &&
+        Pref.uiTranslateLang != 'zh-CN' &&
+        !isClosed &&
+        generation == _subtitleGeneration &&
+        vttSubtitlesIndex.value == index) {
+      // Manual selection remains respected: this only loads an already saved
+      // translation, never starts a new API request or changes another track.
+      unawaited(
+        _startSubtitleTranslation(
+          sub!,
+          index,
+          generation,
+          allowNewTranslation: false,
+          allowManualCacheRestore: true,
+        ),
+      );
+    }
   }
 
   void _resetSubtitleTranslation() {
@@ -1749,6 +1775,7 @@ class VideoDetailController extends GetxController
     _subtitleRequest++;
     _subtitleChunkSizeForVideo = Pref.subtitleChunkSize;
     _subtitleConcurrencyForVideo = Pref.subtitleConcurrency;
+    _subtitleContextOverlapForVideo = Pref.subtitleContextOverlap;
     try {
       _subtitleProxiesForVideo = SubtitleTranslationProxy.parseMany(
         Pref.subtitleTranslationProxies,
@@ -1766,6 +1793,7 @@ class VideoDetailController extends GetxController
     _subtitlePositionWorker = null;
     _subtitleRefreshIndex = null;
     _subtitleRefreshGeneration = null;
+    _subtitleRefreshAllowsManualCacheRestore = false;
     _sourceVttSubtitles.clear();
     _subtitleRenderFailedGeneration = -1;
     _subtitleErrorNotifiedGeneration = -1;
@@ -1834,6 +1862,7 @@ class VideoDetailController extends GetxController
     int index,
     int generation, {
     required bool allowNewTranslation,
+    bool allowManualCacheRestore = false,
   }) async {
     final canStartTranslation =
         allowNewTranslation && SubtitleTranslateService.needed;
@@ -1850,7 +1879,10 @@ class VideoDetailController extends GetxController
     }
     try {
       List<SubtitleCue> cues;
-      final cached = vttSubtitles[index - 1];
+      // Source VTT is retained separately after translated VTT replaces the
+      // active player track. Always build cache identity from the source so a
+      // manual return to this track finds the same durable checkpoint.
+      final cached = _sourceVttSubtitles[index - 1] ?? vttSubtitles[index - 1];
       if (cached != null) {
         _sourceVttSubtitles.putIfAbsent(index - 1, () => cached);
         cues = SubtitleCues.fromVtt(
@@ -1864,7 +1896,9 @@ class VideoDetailController extends GetxController
         cues = SubtitleCues.fromBody(body);
       }
       if (cues.isEmpty) throw StateError('No subtitle cues');
-      if (isClosed || generation != _subtitleGeneration || _manualSubtitle) {
+      if (isClosed ||
+          generation != _subtitleGeneration ||
+          (_manualSubtitle && !allowManualCacheRestore)) {
         return;
       }
       final target = Pref.uiTranslateLang;
@@ -1874,7 +1908,10 @@ class VideoDetailController extends GetxController
           [0, cues.length, 0],
         );
       }
-      final proxyPool = SubtitleTranslationProxyPool(_subtitleProxiesForVideo);
+      final proxyPool = SubtitleTranslationProxyPool(
+        _subtitleProxiesForVideo,
+        directWorkers: _subtitleConcurrencyForVideo,
+      );
       final sessionKey = '$bvid/${cid.value}/${track.lan}/$target';
       // Resolve this before the page moves to another video. The shared
       // session can now schedule the prefetch even after this controller detaches.
@@ -1892,9 +1929,9 @@ class VideoDetailController extends GetxController
         createJob: (onUpdate) => SubtitleTranslationJob(
           cues: cues,
           chunkSize: _subtitleChunkSizeForVideo,
-          concurrency: proxyPool.enabled
-              ? proxyPool.workerCount
-              : _subtitleConcurrencyForVideo,
+          concurrency: proxyPool.workerCount,
+          contextOverlap: _subtitleContextOverlapForVideo,
+          targetLanguage: target,
           translate: (lines) async {
             if (Pref.uiTranslateLang != target) {
               throw StateError('Subtitle language changed');
@@ -1911,25 +1948,20 @@ class VideoDetailController extends GetxController
             if (Pref.uiTranslateLang != target) {
               throw StateError('Subtitle language changed');
             }
-            final translated = proxyPool.enabled
-                ? await proxyPool.run((proxy) async {
-                    try {
-                      return await SubtitleTranslateService.translateChunk(
-                        lines,
-                        contextLines: context,
-                        proxy: proxy,
-                      );
-                    } on AiApiException catch (error) {
-                      if (error.statusCode == null) {
-                        proxyPool.markUnavailable(proxy);
-                      }
-                      rethrow;
-                    }
-                  })
-                : await SubtitleTranslateService.translateChunk(
-                    lines,
-                    contextLines: context,
-                  );
+            final translated = await proxyPool.run((proxy) async {
+              try {
+                return await SubtitleTranslateService.translateChunk(
+                  lines,
+                  contextLines: context,
+                  proxy: proxy,
+                );
+              } on AiApiException catch (error) {
+                if (proxy != null && error.statusCode == null) {
+                  proxyPool.markUnavailable(proxy);
+                }
+                rethrow;
+              }
+            });
             if (Pref.uiTranslateLang != target) {
               throw StateError('Subtitle language changed');
             }
@@ -1942,7 +1974,7 @@ class VideoDetailController extends GetxController
         onUpdate: (vtt, progress) {
           if (isClosed ||
               generation != _subtitleGeneration ||
-              _manualSubtitle ||
+              (_manualSubtitle && !allowManualCacheRestore) ||
               vttSubtitlesIndex.value != index) {
             return;
           }
@@ -1979,6 +2011,9 @@ class VideoDetailController extends GetxController
                     percent,
                   ],
                 );
+          if (progress.isComplete) {
+            SubtitleTranslationBackgroundService.markComplete(videoKey: bvid);
+          }
           // If the player rejected a generated memory:// VTT, keep showing the
           // original track while the background session continues caching.
           if (_subtitleRenderFailedGeneration == generation) return;
@@ -1988,7 +2023,13 @@ class VideoDetailController extends GetxController
           );
           vttSubtitles[index - 1] = (isData: true, id: vtt);
           if (previous?.id != vtt || previous?.isData != true) {
-            unawaited(_refreshTranslatedSubtitle(index, generation));
+            unawaited(
+              _refreshTranslatedSubtitle(
+                index,
+                generation,
+                allowManualCacheRestore: allowManualCacheRestore,
+              ),
+            );
           }
         },
       );
@@ -1996,7 +2037,7 @@ class VideoDetailController extends GetxController
       _subtitleSubscription = subscription;
       if (isClosed ||
           generation != _subtitleGeneration ||
-          _manualSubtitle ||
+          (_manualSubtitle && !allowManualCacheRestore) ||
           vttSubtitlesIndex.value != index) {
         subscription.detach();
         if (identical(_subtitleSubscription, subscription)) {
@@ -2028,7 +2069,7 @@ class VideoDetailController extends GetxController
         await subscription.whenComplete;
         if (!isClosed &&
             generation == _subtitleGeneration &&
-            !_manualSubtitle &&
+            (!_manualSubtitle || allowManualCacheRestore) &&
             identical(_subtitleSubscription, subscription) &&
             _pausedForSubtitleTranslation) {
           _pausedForSubtitleTranslation = false;
@@ -2047,19 +2088,26 @@ class VideoDetailController extends GetxController
     }
   }
 
-  Future<void> _refreshTranslatedSubtitle(int index, int generation) async {
+  Future<void> _refreshTranslatedSubtitle(
+    int index,
+    int generation, {
+    required bool allowManualCacheRestore,
+  }) async {
     _subtitleRefreshIndex = index;
     _subtitleRefreshGeneration = generation;
+    _subtitleRefreshAllowsManualCacheRestore = allowManualCacheRestore;
     if (_subtitleRefreshBusy) return;
     _subtitleRefreshBusy = true;
     try {
       while (_subtitleRefreshIndex != null) {
         final next = _subtitleRefreshIndex!;
         final nextGeneration = _subtitleRefreshGeneration;
+        final allowManualRestore = _subtitleRefreshAllowsManualCacheRestore;
         _subtitleRefreshIndex = null;
         _subtitleRefreshGeneration = null;
+        _subtitleRefreshAllowsManualCacheRestore = false;
         if (!isClosed &&
-            !_manualSubtitle &&
+            (!_manualSubtitle || allowManualRestore) &&
             nextGeneration == _subtitleGeneration &&
             vttSubtitlesIndex.value == next) {
           try {
@@ -2153,62 +2201,74 @@ class VideoDetailController extends GetxController
       if (playInfo case Success(:final response)) {
         final tracks = response.subtitle?.subtitles;
         if (tracks == null || tracks.isEmpty) return;
-        final selection = SubtitleSelectionPolicy.choose(
-          tracks,
-          Pref.uiTranslateLang,
-          canTranslate: SubtitleTranslateService.needed,
-        );
-        if (!selection.translate || selection.index == 0) return;
-        final sourceTrack = tracks[selection.index - 1];
-        final sourceUrl = sourceTrack.subtitleUrl;
-        if (sourceUrl == null || sourceUrl.isEmpty) return;
-        final body = await VideoHttp.fetchSubtitleBody(sourceUrl);
-        if (body == null || !Pref.subtitleTranslationPrefetchNext) {
-          return;
+        final choices = List<Subtitle>.of(tracks);
+        Subtitle? sourceTrack;
+        List<SubtitleCue>? cues;
+        while (choices.isNotEmpty && Pref.subtitleTranslationPrefetchNext) {
+          final selection = SubtitleSelectionPolicy.choose(
+            choices,
+            Pref.uiTranslateLang,
+            canTranslate: SubtitleTranslateService.needed,
+          );
+          if (!selection.translate || selection.index == 0) return;
+          final candidate = choices[selection.index - 1];
+          final sourceUrl = candidate.subtitleUrl;
+          final body = sourceUrl == null || sourceUrl.isEmpty
+              ? null
+              : await VideoHttp.fetchSubtitleBody(sourceUrl);
+          final parsed = body == null
+              ? const <SubtitleCue>[]
+              : SubtitleCues.fromBody(body);
+          if (parsed.isNotEmpty) {
+            sourceTrack = candidate;
+            cues = parsed;
+            break;
+          }
+          choices.remove(candidate);
         }
-        final cues = SubtitleCues.fromBody(body);
-        if (cues.isEmpty) return;
+        if (sourceTrack == null || cues == null) return;
+        final selectedSourceTrack = sourceTrack;
+        final selectedCues = cues;
         final targetLanguage = Pref.uiTranslateLang;
         final cacheKey =
-            '${target.bvid}/${target.cid}/${sourceTrack.lan}/$targetLanguage';
+            '${target.bvid}/${target.cid}/${selectedSourceTrack.lan}/$targetLanguage';
         final proxies = SubtitleTranslationProxy.parseMany(
           Pref.subtitleTranslationProxies,
           defaultType: Pref.subtitleTranslationProxyType == 'socks5'
               ? SubtitleTranslationProxyType.socks5
               : SubtitleTranslationProxyType.http,
         );
-        final proxyPool = SubtitleTranslationProxyPool(proxies);
+        final proxyPool = SubtitleTranslationProxyPool(
+          proxies,
+          directWorkers: Pref.subtitleConcurrency,
+        );
         SubtitleTranslationCoordinator.attach(
-          key: SubtitleTranslationJob.cacheIdentity(cacheKey, cues),
+          key: SubtitleTranslationJob.cacheIdentity(cacheKey, selectedCues),
           allowNewTranslation: true,
           createJob: (onUpdate) => SubtitleTranslationJob(
-            cues: cues,
+            cues: selectedCues,
             chunkSize: Pref.subtitleChunkSize,
-            concurrency: proxyPool.enabled
-                ? proxyPool.workerCount
-                : Pref.subtitleConcurrency,
+            concurrency: proxyPool.workerCount,
+            contextOverlap: Pref.subtitleContextOverlap,
+            targetLanguage: targetLanguage,
             cacheKey: cacheKey,
             onUpdate: onUpdate,
             translate: SubtitleTranslateService.translateChunk,
-            translateWithContext: (lines, context) => proxyPool.enabled
-                ? proxyPool.run((proxy) async {
-                    try {
-                      return await SubtitleTranslateService.translateChunk(
-                        lines,
-                        contextLines: context,
-                        proxy: proxy,
-                      );
-                    } on AiApiException catch (error) {
-                      if (error.statusCode == null) {
-                        proxyPool.markUnavailable(proxy);
-                      }
-                      rethrow;
+            translateWithContext: (lines, context) =>
+                proxyPool.run((proxy) async {
+                  try {
+                    return await SubtitleTranslateService.translateChunk(
+                      lines,
+                      contextLines: context,
+                      proxy: proxy,
+                    );
+                  } on AiApiException catch (error) {
+                    if (proxy != null && error.statusCode == null) {
+                      proxyPool.markUnavailable(proxy);
                     }
-                  })
-                : SubtitleTranslateService.translateChunk(
-                    lines,
-                    contextLines: context,
-                  ),
+                    rethrow;
+                  }
+                }),
           ),
           onUpdate: (_, _) {},
         ).detach();

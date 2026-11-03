@@ -35,7 +35,10 @@ abstract final class SubtitleSelectionPolicy {
         }
       }
       if (track.langTag == 'zh') {
-        final rank = isAi ? 0 : 1;
+        // Bilibili's AI track is normally the more complete speech-recognition
+        // transcript. Use it as the translation source first; callers still
+        // retry with the regular track when this track cannot be loaded.
+        final rank = isAi ? 1 : 0;
         if (rank > sourceRank) {
           sourceRank = rank;
           source = i;

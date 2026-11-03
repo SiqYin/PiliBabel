@@ -12,9 +12,8 @@ bool _showing = false;
 
 /// 首次引导里默认选中的目标语言。
 ///
-/// 弹窗本身用英文、进来的多半正是想把 B 站内容译成英文的人，所以默认英语。
-/// 用户可以在紧接着弹出的语言列表里改。
-const String onboardingDefaultLanguageCode = 'en';
+/// Vietnamese is the product default for a new installation.
+const String onboardingDefaultLanguageCode = 'vi';
 
 /// 应用启动时的 AI 翻译引导入口。
 ///
@@ -35,6 +34,18 @@ Future<void> showTranslationOnboardingIfNeeded() async {
       Pref.uiTranslateOnboarded ||
       Pref.uiTranslateApiUrl.isNotEmpty ||
       Pref.uiTranslateModel.isNotEmpty;
+
+  // New installs already start with Vietnamese UI translation enabled. Do not
+  // interrupt first launch with the old opt-in dialog; users can still change
+  // the language or turn the feature off in Settings.
+  if (!usedBefore &&
+      Pref.uiTranslateEnabled &&
+      Pref.uiTranslateLang == onboardingDefaultLanguageCode) {
+    Pref.uiTranslateOnboarded = true;
+    Pref.uiTranslateUpgradeNoticeShown = true;
+    _showing = false;
+    return;
+  }
 
   // Wait briefly so the first route / overlay is settled.
   await Future.delayed(const Duration(milliseconds: 700));

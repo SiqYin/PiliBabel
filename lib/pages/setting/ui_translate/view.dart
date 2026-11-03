@@ -50,12 +50,14 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
   final _aiSectionKey = GlobalKey();
   late int _subtitleChunkSize;
   late int _subtitleConcurrency;
+  late int _subtitleContextOverlap;
 
   @override
   void initState() {
     super.initState();
     _subtitleChunkSize = Pref.subtitleChunkSize;
     _subtitleConcurrency = Pref.subtitleConcurrency;
+    _subtitleContextOverlap = Pref.subtitleContextOverlap;
     final mode = widget.guidedSetup;
     if (mode != null) {
       WidgetsBinding.instance.addPostFrameCallback(
@@ -168,7 +170,8 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                   uiTx(
                     'Mỗi dòng một proxy: ip:port:user:pass. '
                     'Ví dụ: 103.82.192.94:15406:w1t8:w1t8. '
-                    'Có N proxy sẽ dùng N × 6 luồng; lỗi kết nối sẽ tự retry qua proxy khác.',
+                    'Mỗi proxy hợp lệ thêm 6 luồng bên cạnh luồng IP thiết bị; '
+                    'proxy lỗi kết nối sẽ bị bỏ qua, dịch vẫn tiếp tục bằng IP thiết bị.',
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -379,6 +382,33 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
               ),
               trailing: Text('$_subtitleConcurrency'),
             ),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.forum_outlined),
+              title: Text(uiTx('Câu ngữ cảnh gối đầu cho phụ đề')),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Slider(
+                    min: 0,
+                    max: 8,
+                    divisions: 8,
+                    value: _subtitleContextOverlap.toDouble(),
+                    onChanged: (value) => setState(
+                      () => _subtitleContextOverlap = value.round(),
+                    ),
+                    onChangeEnd: (value) =>
+                        Pref.subtitleContextOverlap = value.round(),
+                  ),
+                  Text(
+                    uiTx(
+                      'Gửi các câu ngay trước chunk để giữ nhất quán tên nhân vật và xưng hô; không làm thay đổi thời điểm phụ đề.',
+                    ),
+                  ),
+                ],
+              ),
+              trailing: Text('$_subtitleContextOverlap'),
+            ),
             SwitchListTile(
               contentPadding: EdgeInsets.zero,
               title: Text(uiTx('Chờ dịch xong rồi phát video')),
@@ -415,12 +445,21 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
               title: Text(uiTx('字幕翻译代理（可选）')),
               subtitle: Text(
                 _subtitleProxyCount == 0
-                    ? uiTx('未设置：使用默认 5 个翻译线程')
-                    : uiTxP('已设置 {0} 个代理：视频开始时使用 {1} 个线程', [
-                        _subtitleProxyCount,
-                        _subtitleProxyCount *
-                            SubtitleTranslationProxyPool.workersPerProxy,
-                      ]),
+                    ? uiTxP('未设置：使用设备 IP 的 {0} 个翻译线程', [
+                        _subtitleConcurrency,
+                      ])
+                    : uiTxP(
+                        '已设置 {0} 个代理：设备 IP {1} 个 + 代理 {2} 个 = {3} 个线程',
+                        [
+                          _subtitleProxyCount,
+                          _subtitleConcurrency,
+                          _subtitleProxyCount *
+                              SubtitleTranslationProxyPool.workersPerProxy,
+                          _subtitleConcurrency +
+                              _subtitleProxyCount *
+                                  SubtitleTranslationProxyPool.workersPerProxy,
+                        ],
+                      ),
               ),
               trailing: const Icon(Icons.chevron_right),
               onTap: _editSubtitleProxies,

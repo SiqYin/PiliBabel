@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_job.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as path;
 
 List<SubtitleCue> _cues(int length) => [
   for (var i = 0; i < length; i++)
@@ -14,6 +16,14 @@ List<SubtitleCue> _cues(int length) => [
 ];
 
 void main() {
+  late Directory directory;
+  setUp(() async {
+    directory = await Directory.systemTemp.createTemp('pili_subtitles_');
+  });
+  tearDown(() async {
+    await directory.delete(recursive: true);
+  });
+
   test('round-trips downloaded VTT and Bilibili JSON cue timing', () {
     final cues = SubtitleCues.fromBody([
       {'from': 1.25, 'to': 2.5, 'content': '第一行'},
@@ -25,12 +35,51 @@ void main() {
     expect(parsed.map((e) => e.text), ['第一行', '第二行']);
   });
 
-  late Directory directory;
-  setUp(() async {
-    directory = await Directory.systemTemp.createTemp('pili_subtitles_');
-  });
-  tearDown(() async {
-    await directory.delete(recursive: true);
+  test(
+    'keeps every source timestamp when chunks finish out of order',
+    () async {
+      const cues = [
+        SubtitleCue('00:00:00.125', '00:00:01.875', '甲'),
+        SubtitleCue('00:01:02.250', '00:01:04.500', '乙'),
+        SubtitleCue('01:02:03.004', '01:02:06.999', '丙'),
+      ];
+      String? translatedVtt;
+      final job = SubtitleTranslationJob(
+        cues: cues,
+        chunkSize: 1,
+        concurrency: 3,
+        cacheKey: 'timestamp-order',
+        cacheDirectory: directory.path,
+        translate: (lines) async {
+          // Complete later cues first, as happens with parallel API requests.
+          final delay = switch (lines.single) {
+            '甲' => 30,
+            '乙' => 15,
+            _ => 0,
+          };
+          await Future<void>.delayed(Duration(milliseconds: delay));
+          return ['vi ${lines.single}'];
+        },
+        onUpdate: (vtt, _) => translatedVtt = vtt,
+      );
+
+      await job.run();
+
+      final parsed = SubtitleCues.fromVtt(translatedVtt!);
+      expect(parsed.map((cue) => cue.start), cues.map((cue) => cue.start));
+      expect(parsed.map((cue) => cue.end), cues.map((cue) => cue.end));
+      expect(parsed.map((cue) => cue.text), ['vi 甲', 'vi 乙', 'vi 丙']);
+    },
+  );
+
+  test('does not reuse a cache identity when only cue timing changes', () {
+    const original = [SubtitleCue('00:00:01.000', '00:00:02.000', '你好')];
+    const retimed = [SubtitleCue('00:00:01.001', '00:00:02.000', '你好')];
+
+    expect(
+      SubtitleTranslationJob.cacheIdentity('same-track', original),
+      isNot(SubtitleTranslationJob.cacheIdentity('same-track', retimed)),
+    );
   });
 
   test(
@@ -171,6 +220,125 @@ void main() {
           .toList();
       expect(files, hasLength(1));
       expect(await files.single.readAsString(), contains('"failedChunks":[0]'));
+    },
+  );
+
+  test('strips only model-echoed batch ordinals before emitting VTT', () async {
+    String? vtt;
+    final job = SubtitleTranslationJob(
+      cues: const [
+        SubtitleCue('00:00:00.000', '00:00:01.000', '你好'),
+        SubtitleCue('00:00:01.000', '00:00:02.000', '再见'),
+      ],
+      chunkSize: 20,
+      concurrency: 1,
+      targetLanguage: 'vi',
+      cacheKey: 'strip-ordinals',
+      cacheDirectory: directory.path,
+      translate: (_) async => ['1. Xin chào', '2、Tạm biệt'],
+      onUpdate: (value, _) => vtt = value,
+    );
+
+    await job.run();
+
+    expect(vtt, contains('00:00:00.000 --> 00:00:01.000\nXin chào'));
+    expect(vtt, contains('00:00:01.000 --> 00:00:02.000\nTạm biệt'));
+    expect(vtt, isNot(contains('1. Xin chào')));
+    expect(vtt, isNot(contains('2、Tạm biệt')));
+  });
+
+  test(
+    'keeps a failed checkpoint when Vietnamese target receives English',
+    () async {
+      var attempts = 0;
+      String? vtt;
+      SubtitleTranslationProgress? progress;
+      final job = SubtitleTranslationJob(
+        cues: const [SubtitleCue('00:00:00.000', '00:00:01.000', '你好')],
+        chunkSize: 20,
+        concurrency: 1,
+        targetLanguage: 'vi',
+        cacheKey: 'reject-english',
+        cacheDirectory: directory.path,
+        retryDelay: Duration.zero,
+        translate: (_) async {
+          attempts++;
+          return ['Hello, how are you?'];
+        },
+        onUpdate: (value, valueProgress) {
+          vtt = value;
+          progress = valueProgress;
+        },
+      );
+
+      await job.run();
+
+      expect(attempts, 3);
+      expect(progress!.failedChunks, 1);
+      expect(vtt, contains('你好'));
+      final files = (await directory.list().toList())
+          .whereType<File>()
+          .toList();
+      expect(files, hasLength(1));
+      final checkpoint = await files.single.readAsString();
+      expect(checkpoint, contains('"failedChunks":[0]'));
+    },
+  );
+
+  test('preserves a real source ordinal in translated dialogue', () {
+    expect(
+      SubtitleTranslationOutput.sanitizeAndValidate(
+        const ['1. 第一章'],
+        const ['1. Chương một'],
+        targetLanguage: 'vi',
+      ),
+      ['1. Chương một'],
+    );
+  });
+
+  test(
+    'repairs legacy numbered Vietnamese cache without retranslating',
+    () async {
+      const cacheKey = 'legacy-numbered-cache';
+      const cues = [
+        SubtitleCue('00:00:00.000', '00:00:01.000', '你好'),
+        SubtitleCue('00:00:01.000', '00:00:02.000', '再见'),
+      ];
+      final identity = SubtitleTranslationJob.cacheIdentity(cacheKey, cues);
+      final file = File(path.join(directory.path, '$identity.json'));
+      await file.writeAsString(
+        jsonEncode({
+          'version': 2,
+          'complete': true,
+          'texts': ['1. Xin chào', '2、Tạm biệt'],
+          'completedChunks': [0],
+          'failedChunks': <int>[],
+        }),
+      );
+      var requests = 0;
+      String? vtt;
+      final job = SubtitleTranslationJob(
+        cues: cues,
+        chunkSize: 20,
+        concurrency: 1,
+        targetLanguage: 'vi',
+        cacheKey: cacheKey,
+        cacheDirectory: directory.path,
+        translate: (_) async {
+          requests++;
+          throw StateError('offline');
+        },
+        onUpdate: (value, _) => vtt = value,
+      );
+
+      expect(await job.loadCached(), true);
+      await job.run();
+
+      expect(requests, 0);
+      expect(vtt, contains('\nXin chào\n'));
+      expect(vtt, contains('\nTạm biệt\n'));
+      final repaired = jsonDecode(await file.readAsString()) as Map;
+      expect(repaired['texts'], ['Xin chào', 'Tạm biệt']);
     },
   );
 

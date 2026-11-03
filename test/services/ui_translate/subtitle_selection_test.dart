@@ -31,14 +31,14 @@ void main() {
     expect(selected.translate, false);
   });
 
-  test('uses regular Chinese as source before AI Chinese', () {
+  test('uses AI Chinese as source before regular Chinese', () {
     final tracks = [_track('ai-zh', ai: true), _track('zh-CN')];
     final selected = SubtitleSelectionPolicy.choose(
       tracks,
       'vi',
       canTranslate: true,
     );
-    expect(selected.index, 2);
+    expect(selected.index, 1);
     expect(selected.translate, true);
     expect(
       SubtitleSelectionPolicy.choose(
@@ -77,7 +77,7 @@ void main() {
       'zh-Hant',
       canTranslate: true,
     );
-    expect(ambiguous.index, 2);
+    expect(ambiguous.index, 1);
     expect(ambiguous.translate, true);
   });
 }

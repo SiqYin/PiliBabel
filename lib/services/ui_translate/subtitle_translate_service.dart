@@ -15,8 +15,14 @@ import 'package:get/get.dart';
 ///
 /// 译文按 `bvid/cid/lan/目标语言` 缓存在内存里：同一视频来回切轨不会重复翻译。
 abstract final class SubtitleTranslateService {
-  /// 一条字幕轨要发多次请求，缓存只留最近几条，避免长列表下内存膨胀。
-  static const int _maxCache = 6;
+  /// Keep enough full VTT tracks in memory for normal playlist browsing.
+  ///
+  /// Completed translations are also checkpointed under the app-support
+  /// directory by [SubtitleTranslationJob], so they survive app restarts and
+  /// are not governed by the temporary image-cache limit. This in-memory
+  /// layer avoids repeatedly reading those files while the user switches
+  /// between recently watched videos or subtitle tracks.
+  static const int _maxCache = 64;
   static final Map<String, String> _cache = {};
 
   /// 是否需要翻译字幕：界面翻译开着，且界面语言不是简体中文。

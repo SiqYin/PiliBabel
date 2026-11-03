@@ -16,9 +16,9 @@ class AiSettingController extends GetxController {
   final templates = <AiPromptTemplate>[].obs;
 
   // --- AI 界面翻译（使用独立 API）---
-  final uiTranslateEnabled = false.obs;
+  final uiTranslateEnabled = true.obs;
   final uiTranslateProvider = TranslateProvider.builtin.obs;
-  final uiTranslateLang = 'zh-CN'.obs;
+  final uiTranslateLang = 'vi'.obs;
   final translateApiUrl = ''.obs;
   final translateApiKey = ''.obs;
   final translateModel = ''.obs;

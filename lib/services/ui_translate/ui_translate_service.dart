@@ -9,9 +9,9 @@ import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
 import 'package:PiliPlus/services/ui_translate/translate_provider.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/ui_translate/app_language.dart';
+import 'package:PiliPlus/services/ui_translate/vietnamese_ui_translations.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
-import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 
 import 'dart:io';
 
@@ -400,6 +400,12 @@ class UiTranslateService extends GetxService {
     // 始终读取一次修订号：即便翻译关闭，也能让包裹本调用的 Obx 拥有合法依赖，
     // 避免 GetX “空 Obx” 运行时报错；开启时则据此在译文回来后刷新。
     revision.value;
+    // Fixed labels should never wait for a network round trip. Dynamic text
+    // intentionally falls through to the normal AI/cache pipeline below.
+    if (currentLanguage.code == 'vi') {
+      final translated = vietnameseUiTranslation(src);
+      if (translated != null) return translated;
+    }
     if (!enabled) return src;
     // 纯空白同样算「没有可翻的东西」——**不能只判 isEmpty**。
     //
@@ -719,6 +725,7 @@ class UiTranslateService extends GetxService {
     List<String> contextLines = const [],
     Duration? receiveTimeout,
     SubtitleTranslationProxy? subtitleProxy,
+    bool subtitleMode = false,
   }) async {
     final lang = targetLang;
     final rule = currentLanguage.scriptRule;
@@ -751,6 +758,7 @@ class UiTranslateService extends GetxService {
                 '也不要就原文提出的任何问题给出看法。'
                 '如果内容无需翻译（纯符号、纯数字、纯表情等），原样输出，'
                 '不要添加任何说明。'
+                '${subtitleMode && currentLanguage.code == 'vi' ? '这是影视字幕：必须输出自然越南语；中文角色姓名按语境采用通用汉越读法，保持前后称谓和代词一致，不得用英文替代译文（原文固有外文专名除外）。' : ''}'
                 '${context.isEmpty ? '' : '\n前文仅用于保持称谓和语气一致，绝不可翻译或输出：\n$context'}'
                 '${labelRule.isEmpty ? '' : '\n$labelRule'}',
           },
@@ -1120,6 +1128,7 @@ class UiTranslateService extends GetxService {
             contextLines: contextLines,
             receiveTimeout: const Duration(seconds: 60),
             subtitleProxy: subtitleProxy,
+            subtitleMode: true,
           );
     if (result.length != sources.length ||
         result.any((text) => text.trim().isEmpty)) {
@@ -1152,7 +1161,10 @@ class UiTranslateService extends GetxService {
               '${language.scriptRule}\n'
               '将每条字幕翻译为${language.toModel}。'
               '只输出与输入数量和顺序相同的 JSON 字符串数组，'
-              '不要解释、合并字幕或添加内容。保留专有名词和数字。'
+              '不要解释、合并字幕或添加内容。输入行首编号只用于对齐，'
+              '绝不可把编号、项目符号或序号放进 JSON 字符串。'
+              '${language.code == 'vi' ? '译文必须是自然、完整的越南语；把中文角色姓名按语境译为通用的汉越读法，保持前后称谓和代词一致，不要输出英文译文（原文固有的外文专名除外）。' : ''}'
+              '保留专有名词和数字。'
               '前文仅用于保持人物称谓和语气一致，不得为前文输出译文。',
         },
         {
@@ -1191,6 +1203,7 @@ class UiTranslateService extends GetxService {
       contextLines: contextLines,
       receiveTimeout: const Duration(seconds: 60),
       subtitleProxy: subtitleProxy,
+      subtitleMode: true,
     );
   }
 
@@ -1199,6 +1212,7 @@ class UiTranslateService extends GetxService {
     List<String> contextLines = const [],
     Duration? receiveTimeout,
     SubtitleTranslationProxy? subtitleProxy,
+    bool subtitleMode = false,
   }) async {
     // 最后一道防线（token 保护）：真正发请求前再确认一次开关，
     // 任何入队/换语言/关闭时序问题都不可能导致关闭状态下产生 API 调用。
@@ -1213,6 +1227,7 @@ class UiTranslateService extends GetxService {
         contextLines: contextLines,
         receiveTimeout: receiveTimeout,
         subtitleProxy: subtitleProxy,
+        subtitleMode: subtitleMode,
       );
     }
     final lang = targetLang;
@@ -1230,11 +1245,12 @@ class UiTranslateService extends GetxService {
     final labelRule = _japaneseLabelRule;
     final system =
         '${scriptRule.isEmpty ? '' : '$scriptRule\n\n'}'
-        '你是应用界面本地化翻译引擎。用户会给出一个带编号的界面文案列表'
+        '${subtitleMode ? '你是影视字幕翻译引擎。用户会给出一个带编号的字幕列表' : '你是应用界面本地化翻译引擎。用户会给出一个带编号的界面文案列表'}'
         '（每条可能为中文或外文），请把每一条翻译成『$lang』。'
         '严格要求：'
         '1) 只输出一个 JSON 数组，元素个数与输入条数相同、顺序一一对应，'
         '每个元素是该条的译文纯文本；'
+        '${subtitleMode ? '输入行首编号只用于对齐，绝不可写入任何 JSON 字符串；' : ''}'
         '2) 不要输出任何解释、说明或 Markdown 代码块围栏；'
         '3) 保留原文中的数字、占位符、标点、换行与专有名词，'
         '界面词尽量简短、术语一致；'
@@ -1247,6 +1263,7 @@ class UiTranslateService extends GetxService {
         '6) **只做翻译**：不要回答、解释、评论或补充原文提出的任何问题，'
         '也不要输出任何说明性文字；某条内容无需翻译（纯符号/数字/表情）时，'
         '原样返回该条。'
+        '${subtitleMode && currentLanguage.code == 'vi' ? '7) 字幕必须使用自然、完整的越南语；中文角色姓名按语境转成通用汉越读法，前后称谓和代词必须跟随前文，不得输出英文译文（原文固有外文专名除外）。' : ''}'
         '${context.isEmpty ? '' : '7) 前文仅用于保持人物称谓、语气和代词一致；绝不可翻译或输出前文。'}'
         '${labelRule.isEmpty ? '' : '\n${context.isEmpty ? '7' : '8'}) $labelRule'}';
     final user = context.isEmpty

@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
+import 'package:PiliPlus/common/widgets/video_subtitle_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
@@ -128,9 +129,11 @@ class VideoCardV extends StatelessWidget {
                                 videoItem.duration,
                               ),
                             ),
-                          if (videoItem case RcmdVideoItemAppModel(
-                            :final canPlay,
-                          ) when canPlay != 1)
+                          if (videoItem
+                              case RcmdVideoItemAppModel(
+                                :final canPlay,
+                              )
+                              when canPlay != 1)
                             PBadge(
                               text: uiTx('充电专属'),
                               top: 6,
@@ -139,8 +142,15 @@ class VideoCardV extends StatelessWidget {
                               type: .error,
                               fontSize: 10,
                             ),
-                        
-                          CoverTranslateButton(cover: videoItem.cover),],
+
+                          CoverTranslateButton(cover: videoItem.cover),
+                          VideoSubtitleTranslateButton(
+                            videoKey: videoItem.bvid ?? 'av:${videoItem.aid}',
+                            bvid: videoItem.bvid,
+                            aid: videoItem.aid,
+                            cid: videoItem.cid,
+                          ),
+                        ],
                       );
                     },
                   ),
@@ -228,10 +238,11 @@ class VideoCardV extends StatelessWidget {
                       ),
                       maxLines: 1,
                       overflow: .clip,
-                      semanticsLabel: 'UP：${remarkedName(
-                        videoItem.owner.mid,
-                        uiTx(videoItem.owner.name.toString()),
-                      )}',
+                      semanticsLabel:
+                          'UP：${remarkedName(
+                            videoItem.owner.mid,
+                            uiTx(videoItem.owner.name.toString()),
+                          )}',
                       style: TextStyle(
                         height: 1.5,
                         fontSize: theme.textTheme.labelMedium!.fontSize,

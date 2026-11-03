@@ -73,75 +73,69 @@ class SubtitleTranslationProxy {
   }
 }
 
-/// Limits each configured proxy to six in-flight subtitle requests.
+/// Schedules direct-device and configured proxy translation routes together.
+///
+/// A null slot represents a request made through the device's own network.
+/// Each configured proxy adds six independent slots without replacing those
+/// direct slots.
 class SubtitleTranslationProxyPool {
   static const workersPerProxy = 6;
 
-  SubtitleTranslationProxyPool(List<SubtitleTranslationProxy> proxies)
-    : _slots = [
-        for (final proxy in proxies)
-          for (var i = 0; i < workersPerProxy; i++) proxy,
-      ],
-      _proxies = proxies.toSet();
+  SubtitleTranslationProxyPool(
+    List<SubtitleTranslationProxy> proxies, {
+    required int directWorkers,
+  }) : assert(directWorkers >= 1),
+       _slots = [
+         for (var i = 0; i < directWorkers; i++) null,
+         for (final proxy in proxies)
+           for (var i = 0; i < workersPerProxy; i++) proxy,
+       ],
+       _proxies = proxies.toSet(),
+       directWorkers = directWorkers;
 
-  final List<SubtitleTranslationProxy> _slots;
+  final int directWorkers;
+  final List<SubtitleTranslationProxy?> _slots;
   final Set<SubtitleTranslationProxy> _proxies;
-  final List<Completer<SubtitleTranslationProxy>> _waiters = [];
+  final List<Completer<SubtitleTranslationProxy?>> _waiters = [];
   final Set<SubtitleTranslationProxy> _unavailable = {};
 
   bool get enabled => _proxies.any((proxy) => !_unavailable.contains(proxy));
   int get workerCount => _slots.length;
 
   Future<T> run<T>(
-    Future<T> Function(SubtitleTranslationProxy proxy) action,
+    Future<T> Function(SubtitleTranslationProxy? proxy) action,
   ) async {
-    final proxy = await _acquire();
+    final route = await _acquire();
     try {
-      return await action(proxy);
+      return await action(route);
     } finally {
-      _release(proxy);
+      _release(route);
     }
   }
 
   void markUnavailable(SubtitleTranslationProxy proxy) {
     _unavailable.add(proxy);
-    if (_proxies.every(_unavailable.contains)) {
-      for (final waiter in _waiters) {
-        if (!waiter.isCompleted) {
-          waiter.completeError(
-            StateError('All subtitle translation proxies are unavailable'),
-          );
-        }
-      }
-      _waiters.clear();
-    }
   }
 
-  Future<SubtitleTranslationProxy> _acquire() {
-    if (_proxies.every(_unavailable.contains)) {
-      return Future.error(
-        StateError('All subtitle translation proxies are unavailable'),
-      );
-    }
-    final index = _slots.indexWhere((proxy) => !_unavailable.contains(proxy));
+  Future<SubtitleTranslationProxy?> _acquire() {
+    final index = _slots.indexWhere(
+      (route) => route == null || !_unavailable.contains(route),
+    );
     if (index >= 0) return Future.value(_slots.removeAt(index));
-    if (_slots.isNotEmpty) {
-      throw StateError('All subtitle translation proxies are unavailable');
-    }
-    final waiter = Completer<SubtitleTranslationProxy>();
+    final waiter = Completer<SubtitleTranslationProxy?>();
     _waiters.add(waiter);
     return waiter.future;
   }
 
-  void _release(SubtitleTranslationProxy proxy) {
-    if (_unavailable.contains(proxy)) return;
+  void _release(SubtitleTranslationProxy? route) {
+    if (route != null && _unavailable.contains(route)) return;
     while (_waiters.isNotEmpty) {
       final waiter = _waiters.removeAt(0);
       if (!waiter.isCompleted) {
-        waiter.complete(proxy);
+        waiter.complete(route);
         return;
       }
     }
-    _slots.add(proxy);
+    _slots.add(route);
   }
 }

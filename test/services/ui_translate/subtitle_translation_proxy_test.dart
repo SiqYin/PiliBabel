@@ -27,30 +27,48 @@ void main() {
     expect(proxy.type, SubtitleTranslationProxyType.http);
   });
 
-  test('provides exactly six simultaneous slots per proxy', () async {
-    final pool = SubtitleTranslationProxyPool(
-      SubtitleTranslationProxy.parseMany('1.1.1.1:80\n2.2.2.2:80'),
-    );
-    final gates = List.generate(12, (_) => Completer<void>());
-    final active = <String, int>{};
-    final allStarted = Completer<void>();
-    var started = 0;
+  test(
+    'combines direct workers with six simultaneous slots per proxy',
+    () async {
+      final pool = SubtitleTranslationProxyPool(
+        SubtitleTranslationProxy.parseMany('1.1.1.1:80\n2.2.2.2:80'),
+        directWorkers: 5,
+      );
+      final gates = List.generate(17, (_) => Completer<void>());
+      final active = <String, int>{};
+      final allStarted = Completer<void>();
+      var started = 0;
 
-    final work = [
-      for (final gate in gates)
-        pool.run((proxy) async {
-          active.update(proxy.host, (value) => value + 1, ifAbsent: () => 1);
-          if (++started == 12) allStarted.complete();
-          await gate.future;
-          active.update(proxy.host, (value) => value - 1);
-        }),
-    ];
+      final work = [
+        for (final gate in gates)
+          pool.run((proxy) async {
+            final route = proxy?.host ?? 'direct';
+            active.update(route, (value) => value + 1, ifAbsent: () => 1);
+            if (++started == 17) allStarted.complete();
+            await gate.future;
+            active.update(route, (value) => value - 1);
+          }),
+      ];
 
-    await allStarted.future;
-    expect(active, {'1.1.1.1': 6, '2.2.2.2': 6});
-    for (final gate in gates) {
-      gate.complete();
-    }
-    await Future.wait(work);
-  });
+      await allStarted.future;
+      expect(active, {'direct': 5, '1.1.1.1': 6, '2.2.2.2': 6});
+      for (final gate in gates) {
+        gate.complete();
+      }
+      await Future.wait(work);
+    },
+  );
+
+  test(
+    'keeps direct workers usable after a proxy becomes unavailable',
+    () async {
+      final proxy = SubtitleTranslationProxy.parse('1.1.1.1:80');
+      final pool = SubtitleTranslationProxyPool([proxy], directWorkers: 1)
+        ..markUnavailable(proxy);
+
+      final route = await pool.run((route) async => route);
+
+      expect(route, isNull);
+    },
+  );
 }
