@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 import 'dart:math';
 
 import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/services/ui_translate/prewarm_strings.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
@@ -262,6 +263,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   @override
   void initState() {
     super.initState();
+    // 预翻译：本页 ⋮ 菜单/确认框是「点开才渲染」，提前排队。
+    PrewarmStrings.warmVideo();
     VideoStackManager.increment(); // 追踪视频页面层级
     final bool fromPip = Get.arguments['fromPip'] ?? false;
     final String? targetContextKey = PipOverlayService.contextKeyFromArgs(

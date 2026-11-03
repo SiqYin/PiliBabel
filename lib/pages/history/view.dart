@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
+import 'package:PiliPlus/services/ui_translate/prewarm_strings.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
@@ -35,6 +36,8 @@ class _HistoryPageState extends State<HistoryPage>
   @override
   void initState() {
     super.initState();
+    // 预翻译：本页 ⋮ 菜单/确认框是「点开才渲染」，提前排队。
+    PrewarmStrings.warmList();
     _historyController = Get.put(
       HistoryController(widget.type),
       tag: widget.type ?? 'all',
