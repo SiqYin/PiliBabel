@@ -835,7 +835,6 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                   ? videoDetailController.subtitleTranslationStatus.value
                   : uiTx('字幕'),
               requestFocus: false,
-              initialValue: val,
               color: Colors.black.withValues(alpha: 0.8),
               menuPadding: EdgeInsets.zero,
               menuItemOuterPadding: EdgeInsets.zero,
@@ -845,6 +844,44 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 // 两条以上才用主/副双栏面板
                 if (videoDetailController.subtitles.length < 2) {
                   return [
+                    if (videoDetailController.canRestoreTranslatedSubtitle)
+                      PopupMenuItem<int>(
+                        height: 35,
+                        onTap: videoDetailController.restoreTranslatedSubtitle,
+                        child: Text(
+                          uiTx('Khôi phục phụ đề dịch'),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    if (videoDetailController.canRetranslateCurrentSubtitle)
+                      PopupMenuItem<int>(
+                        height: 35,
+                        onTap: videoDetailController.retranslateCurrentSubtitle,
+                        child: Text(
+                          uiTx('Dịch lại phụ đề'),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    if (videoDetailController.canDeleteTranslatedSubtitle)
+                      PopupMenuItem<int>(
+                        height: 35,
+                        onTap: videoDetailController
+                            .deleteCurrentTranslatedSubtitle,
+                        child: Text(
+                          uiTx('Xóa phụ đề đã dịch'),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    const PopupMenuDivider(height: 1),
                     PopupMenuItem<int>(
                       value: 0,
                       height: 35,
@@ -2916,6 +2953,7 @@ class _SubtitleSelectPanel extends StatelessWidget {
     required int selectedIndex,
     required int disabledIndex,
     required ValueChanged<int> onSelect,
+    bool showRestoreAction = false,
   }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -2925,6 +2963,32 @@ class _SubtitleSelectPanel extends StatelessWidget {
           height: 32,
           child: Center(child: Text(title, style: _headerStyle)),
         ),
+        if (showRestoreAction && controller.canRestoreTranslatedSubtitle)
+          _item(
+            label: uiTx('Khôi phục phụ đề dịch'),
+            selected: false,
+            disabled: false,
+            onTap: controller.restoreTranslatedSubtitle,
+          ),
+        if (showRestoreAction && controller.canRetranslateCurrentSubtitle)
+          _item(
+            label: uiTx('Dịch lại phụ đề'),
+            selected: false,
+            disabled: false,
+            onTap: controller.retranslateCurrentSubtitle,
+          ),
+        if (showRestoreAction && controller.canDeleteTranslatedSubtitle)
+          _item(
+            label: uiTx('Xóa phụ đề đã dịch'),
+            selected: false,
+            disabled: false,
+            onTap: controller.deleteCurrentTranslatedSubtitle,
+          ),
+        if (showRestoreAction &&
+            (controller.canRestoreTranslatedSubtitle ||
+                controller.canRetranslateCurrentSubtitle ||
+                controller.canDeleteTranslatedSubtitle))
+          const Divider(height: 1, color: Colors.white24),
         _item(
           label: uiTx('关闭'),
           selected: selectedIndex == 0,
@@ -2962,6 +3026,7 @@ class _SubtitleSelectPanel extends StatelessWidget {
                     disabledIndex: secondary,
                     onSelect: (index) =>
                         controller.setSubtitle(index, manual: true),
+                    showRestoreAction: true,
                   ),
                 ),
                 const VerticalDivider(

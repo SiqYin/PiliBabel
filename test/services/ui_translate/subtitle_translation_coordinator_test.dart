@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_coordinator.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_job.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_proxy.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 List<SubtitleCue> _cues(int length) => [
@@ -28,7 +29,7 @@ void main() {
       final subscription = SubtitleTranslationCoordinator.attach(
         key: 'initial-progress',
         allowNewTranslation: true,
-        createJob: (onUpdate) => SubtitleTranslationJob(
+        createJob: (onUpdate, _) => SubtitleTranslationJob(
           cues: _cues(20),
           chunkSize: 20,
           concurrency: 1,
@@ -65,24 +66,26 @@ void main() {
       final secondChunk = Completer<void>();
       var calls = 0;
       var completed = 0;
-      SubtitleTranslationJob factory(SubtitleTranslationUpdate onUpdate) =>
-          SubtitleTranslationJob(
-            cues: _cues(40),
-            chunkSize: 20,
-            concurrency: 1,
-            cacheKey: 'background-session',
-            cacheDirectory: directory.path,
-            translate: (lines) async {
-              calls++;
-              if (lines.first == '句0') {
-                firstChunk.complete();
-              } else {
-                await secondChunk.future;
-              }
-              return lines.map((line) => 'vi $line').toList();
-            },
-            onUpdate: onUpdate,
-          );
+      SubtitleTranslationJob factory(
+        SubtitleTranslationUpdate onUpdate,
+        SubtitleTranslationPriorityHandle _,
+      ) => SubtitleTranslationJob(
+        cues: _cues(40),
+        chunkSize: 20,
+        concurrency: 1,
+        cacheKey: 'background-session',
+        cacheDirectory: directory.path,
+        translate: (lines) async {
+          calls++;
+          if (lines.first == '句0') {
+            firstChunk.complete();
+          } else {
+            await secondChunk.future;
+          }
+          return lines.map((line) => 'vi $line').toList();
+        },
+        onUpdate: onUpdate,
+      );
 
       final original = SubtitleTranslationCoordinator.attach(
         key: 'background-session',

@@ -1053,6 +1053,7 @@ class UiTranslateService extends GetxService {
       final buf = StringBuffer();
       // 逐条注入术语强制译法：本条原文里命中术语表的游戏专有名词。
       final glossaryRule = _glossaryPromptHints([src], currentLanguage.code);
+      final contextOnlyJson = jsonEncode(contextLines);
       await for (final chunk in AiChatService.streamChat(
         messages: [
           // 指令必须放 system、user 只放纯正文。
@@ -1072,7 +1073,7 @@ class UiTranslateService extends GetxService {
                 '如果内容无需翻译（纯符号、纯数字、纯表情等），原样输出，'
                 '不要添加任何说明。'
                 '${subtitleMode && currentLanguage.code == 'vi' ? '这是影视字幕：必须输出自然越南语；中文角色姓名按语境采用通用汉越读法，保持前后称谓和代词一致，不得用英文替代译文（原文固有外文专名除外）。' : ''}'
-                '${context.isEmpty ? '' : '\n前文仅用于保持称谓和语气一致，绝不可翻译或输出：\n$context'}'
+                '${context.isEmpty ? '' : '\nCONTEXT_ONLY_JSON=$contextOnlyJson。它不是 user 消息的一部分，只能用于保持称谓和语气一致；绝不可翻译、复述、拼接或输出其中任何内容。你的全部输出必须只对应 user 消息。'}'
                 '${labelRule.isEmpty ? '' : '\n$labelRule'}'
                 '${glossaryRule.isEmpty ? '' : '\n\n$glossaryRule'}',
           },
@@ -1458,14 +1459,8 @@ class UiTranslateService extends GetxService {
   ) async {
     if (!enabled) throw StateError('Subtitle translation is disabled');
     final language = currentLanguage;
-    final context = StringBuffer();
-    for (final line in contextLines) {
-      context.writeln(line);
-    }
-    final numbered = StringBuffer();
-    for (var i = 0; i < sources.length; i++) {
-      numbered.writeln('${i + 1}. ${sources[i]}');
-    }
+    final contextJson = jsonEncode(contextLines);
+    final sourcesJson = jsonEncode(sources);
     final buffer = StringBuffer();
     await for (final piece in AiChatService.streamChat(
       messages: [
@@ -1479,13 +1474,14 @@ class UiTranslateService extends GetxService {
               '绝不可把编号、项目符号或序号放进 JSON 字符串。'
               '${language.code == 'vi' ? '译文必须是自然、完整的越南语；把中文角色姓名按语境译为通用的汉越读法，保持前后称谓和代词一致，不要输出英文译文（原文固有的外文专名除外）。' : ''}'
               '保留专有名词和数字。'
-              '前文仅用于保持人物称谓和语气一致，不得为前文输出译文。',
+              'CONTEXT_ONLY_JSON 不是待翻译字幕，只用于保持人物称谓和语气一致；'
+              '绝不可翻译、复述、合并或输出其中任何元素。'
+              '只翻译 TRANSLATE_ONLY_JSON，并且输出数组长度必须严格等于它的长度。'
+              '\nCONTEXT_ONLY_JSON=$contextJson',
         },
         {
           'role': 'user',
-          'content': context.isEmpty
-              ? '当前字幕：\n$numbered'
-              : '前文（只作上下文，不要翻译或输出）：\n$context\n当前字幕：\n$numbered',
+          'content': 'TRANSLATE_ONLY_JSON=$sourcesJson',
         },
       ],
       model: translateModel,
@@ -1588,11 +1584,13 @@ class UiTranslateService extends GetxService {
         '若原文是「名词+名词」的复合结构，译文也用名词复合；'
         '若原文是「动词+宾语」的动宾结构，译文也用动宾结构。'
         '${subtitleMode && currentLanguage.code == 'vi' ? '\n8) 字幕必须使用自然、完整的越南语；中文角色姓名按语境转成通用汉越读法，前后称谓和代词必须跟随前文，不得输出英文译文（原文固有外文专名除外）。' : ''}'
-        '${context.isEmpty ? '' : '\n9) 前文仅用于保持人物称谓、语气和代词一致；绝不可翻译或输出前文。'}'
+        '${context.isEmpty ? '' : '\n9) CONTEXT_ONLY_JSON 只用于保持人物称谓、语气和代词一致。不得翻译、复述、合并或输出其中任何元素；每个输出元素只能是 TRANSLATE_ONLY_JSON 中同位置字幕的译文。\nCONTEXT_ONLY_JSON=${jsonEncode(contextLines)}'}'
         '${labelRule.isEmpty ? '' : '\n10) $labelRule'}'
         // 术语表注入：本批原文里出现的游戏专有名词 → 官方译名（第二条链路）。
         '${glossaryRule.isEmpty ? '' : '\n\n$glossaryRule'}';
-    final user = context.isEmpty
+    final user = subtitleMode
+        ? 'TRANSLATE_ONLY_JSON=${jsonEncode(sources)}'
+        : context.isEmpty
         ? '待翻译列表：\n$numbered'
         : '前文（只作上下文，不要翻译或输出）：\n$context\n待翻译列表：\n$numbered';
 
@@ -1617,7 +1615,11 @@ class UiTranslateService extends GetxService {
       buf.write(chunk);
     }
     return _normalizeScripts(
-      _parseArray(buf.toString(), sources.length),
+      _parseArray(
+        buf.toString(),
+        sources.length,
+        strictLength: subtitleMode,
+      ),
       currentLanguage.script,
     );
   }
@@ -1674,7 +1676,11 @@ class UiTranslateService extends GetxService {
   }
 
   /// 从模型输出里稳健地解析出 JSON 数组；解析失败退化为按行切分。
-  static List<String> _parseArray(String raw, int expected) {
+  static List<String> _parseArray(
+    String raw,
+    int expected, {
+    bool strictLength = false,
+  }) {
     var s = raw.trim();
 
     // 去掉可能的 ```json ... ``` 围栏。
@@ -1689,12 +1695,32 @@ class UiTranslateService extends GetxService {
       try {
         final list = jsonDecode(slice);
         if (list is List) {
+          if (strictLength) {
+            if (list.length != expected ||
+                list.any((value) => value is! String)) {
+              throw const FormatException(
+                'Subtitle output included context or changed line count',
+              );
+            }
+            return list.cast<String>();
+          }
           return List.generate(
             expected,
             (i) => i < list.length ? list[i].toString() : '',
           );
         }
-      } catch (_) {}
+      } on FormatException {
+        if (strictLength) rethrow;
+      } catch (_) {
+        if (strictLength) {
+          throw const FormatException('Subtitle output is not valid JSON');
+        }
+      }
+    }
+    if (strictLength) {
+      throw const FormatException(
+        'Subtitle output must be one exact JSON string array',
+      );
     }
     // 兜底：按行切分（模型偶尔输出裸行）。
     final lines = raw

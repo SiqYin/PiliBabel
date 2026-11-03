@@ -71,4 +71,42 @@ void main() {
       expect(route, isNull);
     },
   );
+
+  test('serves playback work before queued background work', () async {
+    final pool = SubtitleTranslationProxyPool([], directWorkers: 1);
+    final gate = Completer<void>();
+    final order = <String>[];
+
+    final active = pool.run((_) async {
+      await gate.future;
+      order.add('active');
+    });
+    await Future<void>.delayed(Duration.zero);
+    final background = pool.run(
+      (_) async => order.add('background'),
+      priority: SubtitleTranslationPriority.background,
+    );
+    final playback = pool.run(
+      (_) async => order.add('playback'),
+      priority: SubtitleTranslationPriority.playback,
+    );
+
+    gate.complete();
+    await Future.wait([active, background, playback]);
+    expect(order, ['active', 'playback', 'background']);
+  });
+
+  test('shared pool caps routes across multiple video jobs', () {
+    final first = SubtitleTranslationProxyPool.shared(
+      SubtitleTranslationProxy.parseMany('1.1.1.1:80'),
+      directWorkers: 2,
+    );
+    final second = SubtitleTranslationProxyPool.shared(
+      SubtitleTranslationProxy.parseMany('1.1.1.1:80'),
+      directWorkers: 2,
+    );
+
+    expect(identical(first, second), isTrue);
+    expect(first.workerCount, 8);
+  });
 }

@@ -63,6 +63,9 @@ abstract final class SubtitleTranslationOutput {
   static final RegExp _han = RegExp(r'[\u3400-\u9FFF\uF900-\uFAFF]');
   static final RegExp _vietnameseMarks = RegExp(r'[À-ỹĐđ]');
   static final RegExp _latinWords = RegExp(r'[A-Za-z]+');
+  static final RegExp _contextWordSeparator = RegExp(
+    r'[^0-9A-Za-zÀ-ỹĐđ]+',
+  );
   static const Set<String> _vietnameseWords = {
     'anh',
     'em',
@@ -176,11 +179,12 @@ abstract final class SubtitleTranslationOutput {
     List<String> source,
     List<String> output, {
     String? targetLanguage,
+    List<String> translatedContext = const [],
   }) {
     if (source.length != output.length) {
       throw const FormatException('Subtitle line count changed');
     }
-    return [
+    final normalized = [
       for (var i = 0; i < output.length; i++)
         _validateLine(
           source: source[i],
@@ -189,6 +193,59 @@ abstract final class SubtitleTranslationOutput {
           targetLanguage: targetLanguage,
         ),
     ];
+    _rejectMergedContext(normalized, translatedContext);
+    return normalized;
+  }
+
+  static void _rejectMergedContext(
+    List<String> output,
+    List<String> translatedContext,
+  ) {
+    if (translatedContext.isEmpty) return;
+    final contexts = translatedContext
+        .map(_contextWords)
+        .where((words) => words.length >= 2)
+        .toList(growable: false);
+    for (final line in output) {
+      final words = _contextWords(line);
+      for (final context in contexts) {
+        if (words.length <= context.length) continue;
+        final prefix = _sameWords(words, 0, context);
+        final suffix = _sameWords(
+          words,
+          words.length - context.length,
+          context,
+        );
+        if (!prefix && !suffix) continue;
+        final extraWords = words.length - context.length;
+        // A two-word context such as "xin chào" is only considered an echo
+        // when the model also appended a meaningful sentence. Longer context
+        // lines need less extra text to prove that two cues were merged.
+        if ((context.length == 2 && extraWords >= 3) ||
+            (context.length >= 3 && extraWords >= 2)) {
+          throw const FormatException(
+            'Subtitle translation repeated an overlap context cue',
+          );
+        }
+      }
+    }
+  }
+
+  static List<String> _contextWords(String value) => value
+      .toLowerCase()
+      .split(_contextWordSeparator)
+      .where((word) => word.isNotEmpty)
+      .toList(growable: false);
+
+  static bool _sameWords(
+    List<String> value,
+    int offset,
+    List<String> expected,
+  ) {
+    for (var i = 0; i < expected.length; i++) {
+      if (value[offset + i] != expected[i]) return false;
+    }
+    return true;
   }
 
   static String _validateLine({
@@ -201,9 +258,23 @@ abstract final class SubtitleTranslationOutput {
     if (normalized.isEmpty) {
       throw const FormatException('Subtitle translation is empty');
     }
+    if (!source.contains('\n') && normalized.contains('\n')) {
+      throw const FormatException('Subtitle translation merged extra lines');
+    }
+    if (normalized.contains('CONTEXT_ONLY_JSON') ||
+        normalized.contains('TRANSLATE_ONLY_JSON')) {
+      throw const FormatException('Subtitle translation echoed prompt data');
+    }
     final sourceHasHan = _han.hasMatch(source);
     if (sourceHasHan && normalized == source.trim()) {
       throw const FormatException('Subtitle translation copied source');
+    }
+    if (sourceHasHan &&
+        targetLanguage?.toLowerCase() == 'vi' &&
+        _han.hasMatch(normalized)) {
+      throw const FormatException(
+        'Vietnamese subtitle still contains untranslated Chinese text',
+      );
     }
     if (sourceHasHan &&
         targetLanguage?.toLowerCase() == 'vi' &&
@@ -295,6 +366,64 @@ abstract final class SubtitleCues {
     return out.toString();
   }
 
+  /// A translation may change only cue text. Rejecting a mismatched rendered
+  /// VTT prevents a stale or malformed update from collapsing playback times.
+  static bool hasSameTimeline(List<SubtitleCue> source, String renderedVtt) {
+    final rendered = fromVtt(renderedVtt);
+    if (source.length != rendered.length) return false;
+    for (var i = 0; i < source.length; i++) {
+      if (source[i].start != rendered[i].start ||
+          source[i].end != rendered[i].end) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /// Some AI-generated Bilibili tracks contain repeated or invalid ranges.
+  /// mpv renders every overlapping cue at once, then has nothing left later.
+  /// Do not retime source dialogue: callers can select a healthy source track.
+  static bool hasSafePlaybackTimeline(List<SubtitleCue> cues) {
+    if (cues.isEmpty) return false;
+    final events = <({double time, int delta})>[];
+    for (final cue in cues) {
+      final start = _seconds(cue.start);
+      final end = _seconds(cue.end);
+      if (start == null || end == null || start < 0 || end <= start) {
+        return false;
+      }
+      events
+        ..add((time: start, delta: 1))
+        ..add((time: end, delta: -1));
+    }
+    // End events must be processed first: WebVTT cue ends are exclusive.
+    events.sort(
+      (a, b) => a.time != b.time
+          ? a.time.compareTo(b.time)
+          : a.delta.compareTo(b.delta),
+    );
+    var active = 0;
+    for (final event in events) {
+      active += event.delta;
+      // Three simultaneous cues remain usable for exceptional dialogue; four
+      // or more produces the stacked subtitles seen with malformed AI tracks.
+      if (active > 3 || active < 0) return false;
+    }
+    return active == 0;
+  }
+
+  static double? _seconds(String timestamp) {
+    final parts = timestamp.replaceAll(',', '.').split(':');
+    if (parts.length != 3) return null;
+    final hours = int.tryParse(parts[0]);
+    final minutes = int.tryParse(parts[1]);
+    final seconds = double.tryParse(parts[2]);
+    if (hours == null || minutes == null || seconds == null || minutes > 59) {
+      return null;
+    }
+    return hours * 3600 + minutes * 60 + seconds;
+  }
+
   static String _time(num seconds) {
     final hours = seconds ~/ 3600;
     final minutes = (seconds % 3600) ~/ 60;
@@ -318,6 +447,7 @@ class SubtitleTranslationJob {
     this.positionSeconds = 0,
     this.cacheDirectory,
     this.retryDelay = const Duration(milliseconds: 250),
+    this.attemptTimeout = const Duration(seconds: 65),
     this.contextOverlap = 4,
     this.targetLanguage,
   }) : _texts = cues.map((cue) => cue.text).toList();
@@ -331,6 +461,7 @@ class SubtitleTranslationJob {
   final String? cacheDirectory;
   final SubtitleTranslationUpdate onUpdate;
   final Duration retryDelay;
+  final Duration attemptTimeout;
   final int contextOverlap;
   final String? targetLanguage;
   final List<String> _texts;
@@ -357,6 +488,20 @@ class SubtitleTranslationJob {
         );
     return sha256.convert(utf8.encode('$cacheKey\n$source')).toString();
   }
+
+  /// Resolves the durable checkpoint for a source track.  Kept public so a
+  /// deliberate retranslation can prepare a replacement without deleting the
+  /// currently playable cache first.
+  static File cacheFileFor(
+    String cacheKey,
+    List<SubtitleCue> cues, {
+    String? cacheDirectory,
+  }) => File(
+    path.join(
+      cacheDirectory ?? path.join(appSupportDirPath, 'subtitle_translations'),
+      '${cacheIdentity(cacheKey, cues)}.json',
+    ),
+  );
 
   void cancel() {
     _cancelled = true;
@@ -407,10 +552,20 @@ class SubtitleTranslationJob {
         return false;
       }
       var normalizedLegacyCache = false;
-      for (final index in completed) {
+      final invalidCompleted = <int>{};
+      for (final index in completed.toList(growable: false)) {
         final normalized = _normalizedCachedChunk(index, lines);
-        if (normalized == null) return false;
         final start = index * chunkSize;
+        final end = min(start + chunkSize, cues.length);
+        if (normalized == null) {
+          invalidCompleted.add(index);
+          lines.setRange(
+            start,
+            end,
+            cues.sublist(start, end).map((cue) => cue.text),
+          );
+          continue;
+        }
         for (var offset = 0; offset < normalized.length; offset++) {
           if (lines[start + offset] != normalized[offset]) {
             normalizedLegacyCache = true;
@@ -418,6 +573,8 @@ class SubtitleTranslationJob {
         }
         lines.setRange(start, start + normalized.length, normalized);
       }
+      completed.removeAll(invalidCompleted);
+      if (completed.isEmpty) return false;
       _texts.setAll(0, lines);
       _completedChunks
         ..clear()
@@ -437,6 +594,7 @@ class SubtitleTranslationJob {
                     )
               : const <int>[],
         );
+      _failedChunkIndexes.addAll(invalidCompleted);
       _translatedCues = _cueCount(_completedChunks);
       _processedCues = _translatedCues + _cueCount(_failedChunkIndexes);
       _cacheHit = _completedChunks.length == total;
@@ -463,6 +621,7 @@ class SubtitleTranslationJob {
       ).where((index) => !_completedChunks.contains(index)),
     );
     await Future.wait(List.generate(concurrency, (_) => _worker()));
+    await _repairMergedContextChunks();
     _refresh?.cancel();
     if (_cancelled) return;
     await _checkpointTail;
@@ -481,8 +640,13 @@ class SubtitleTranslationJob {
           .sublist(contextStart, start)
           .map((cue) => cue.text)
           .toList();
+      final translatedContext = _translatedContext(contextStart, start);
       try {
-        final result = await _translateWithRetry(source, context);
+        final result = await _translateWithRetry(
+          source,
+          context,
+          translatedContext,
+        );
         if (_cancelled) return;
         _texts.setRange(start, end, result);
         _completedChunks.add(next);
@@ -501,16 +665,20 @@ class SubtitleTranslationJob {
   Future<List<String>> _translateWithRetry(
     List<String> source,
     List<String> context,
+    List<String> translatedContext,
   ) async {
     for (var attempt = 0; attempt <= _maxRetries; attempt++) {
       try {
-        final result =
-            await (translateWithContext?.call(source, context) ??
-                translate(source));
+        final request =
+            translateWithContext?.call(source, context) ?? translate(source);
+        final result = attemptTimeout > Duration.zero
+            ? await request.timeout(attemptTimeout)
+            : await request;
         return SubtitleTranslationOutput.sanitizeAndValidate(
           source,
           result,
           targetLanguage: targetLanguage,
+          translatedContext: translatedContext,
         );
       } catch (error, stackTrace) {
         // Local state changes cannot be fixed by retrying and must stop work.
@@ -524,6 +692,70 @@ class SubtitleTranslationJob {
       }
     }
     throw StateError('Unreachable subtitle translation retry state');
+  }
+
+  List<String> _translatedContext(int start, int end) {
+    final translated = <String>[];
+    for (var index = start; index < end; index++) {
+      if (_completedChunks.contains(index ~/ chunkSize)) {
+        translated.add(_texts[index]);
+      }
+    }
+    return translated;
+  }
+
+  Future<void> _repairMergedContextChunks() async {
+    if (_cancelled || contextOverlap <= 0) return;
+    // Parallel workers can finish a later chunk before its preceding chunk,
+    // so translated context may not exist during the first validation. Check
+    // completed boundaries once all workers settle and retry only polluted
+    // chunks, in order, while their clean preceding translations are known.
+    for (var chunk = 1; chunk < total && !_cancelled; chunk++) {
+      if (!_completedChunks.contains(chunk)) continue;
+      final start = chunk * chunkSize;
+      final end = min(start + chunkSize, cues.length);
+      final contextStart = max(0, start - contextOverlap);
+      final source = cues.sublist(start, end).map((cue) => cue.text).toList();
+      final context = cues
+          .sublist(contextStart, start)
+          .map((cue) => cue.text)
+          .toList();
+      final translatedContext = _translatedContext(contextStart, start);
+      try {
+        SubtitleTranslationOutput.sanitizeAndValidate(
+          source,
+          _texts.sublist(start, end),
+          targetLanguage: targetLanguage,
+          translatedContext: translatedContext,
+        );
+        continue;
+      } on FormatException {
+        _completedChunks.remove(chunk);
+        _texts.setRange(start, end, source);
+        _translatedCues = _cueCount(_completedChunks);
+        _processedCues = _translatedCues + _cueCount(_failedChunkIndexes);
+        _saveCheckpoint();
+        _scheduleEmit();
+      }
+      try {
+        final repaired = await _translateWithRetry(
+          source,
+          context,
+          translatedContext,
+        );
+        if (_cancelled) return;
+        _texts.setRange(start, end, repaired);
+        _completedChunks.add(chunk);
+        _failedChunkIndexes.remove(chunk);
+      } catch (_) {
+        if (_cancelled) return;
+        _failedChunkIndexes.add(chunk);
+      }
+      _translatedCues = _cueCount(_completedChunks);
+      _processedCues = _translatedCues + _cueCount(_failedChunkIndexes);
+      _saveCheckpoint();
+      _scheduleEmit();
+    }
   }
 
   int _nearestPending() {
@@ -596,11 +828,14 @@ class SubtitleTranslationJob {
     final end = min(start + chunkSize, cues.length);
     final source = cues.sublist(start, end).map((cue) => cue.text).toList();
     final cached = texts.sublist(start, end);
+    final contextStart = max(0, start - contextOverlap);
+    final translatedContext = texts.sublist(contextStart, start);
     try {
       return SubtitleTranslationOutput.sanitizeAndValidate(
         source,
         cached,
         targetLanguage: targetLanguage,
+        translatedContext: translatedContext,
       );
     } on FormatException {
       return null;
@@ -644,13 +879,9 @@ class SubtitleTranslationJob {
     });
   }
 
-  File get _cacheFile {
-    final hash = cacheIdentity(cacheKey, cues);
-    return File(
-      path.join(
-        cacheDirectory ?? path.join(appSupportDirPath, 'subtitle_translations'),
-        '$hash.json',
-      ),
-    );
-  }
+  File get _cacheFile => cacheFileFor(
+    cacheKey,
+    cues,
+    cacheDirectory: cacheDirectory,
+  );
 }

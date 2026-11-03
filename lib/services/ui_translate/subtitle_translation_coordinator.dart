@@ -1,9 +1,11 @@
 import 'dart:async';
 
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_job.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_proxy.dart';
 
 typedef SubtitleTranslationJobFactory = SubtitleTranslationJob Function(
   SubtitleTranslationUpdate onUpdate,
+  SubtitleTranslationPriorityHandle priority,
 );
 
 /// Keeps translation work alive independently from a video page/controller.
@@ -21,16 +23,21 @@ class SubtitleTranslationCoordinator {
     required SubtitleTranslationJobFactory createJob,
     required SubtitleTranslationUpdate onUpdate,
     required bool allowNewTranslation,
+    SubtitleTranslationPriority priority =
+        SubtitleTranslationPriority.background,
     void Function()? onCompleted,
   }) {
     var session = _sessions[key];
     if (session == null) {
       session = _SubtitleTranslationSession(
         createJob,
+        priority: priority,
         onFinished: () => _sessions.remove(key),
         onCompleted: onCompleted,
       );
       _sessions[key] = session;
+    } else {
+      session.promote(priority);
     }
     final listenerId = _nextListenerId++;
     final hadLatestUpdate = session.hasLatestUpdate;
@@ -75,10 +82,12 @@ class SubtitleTranslationSubscription {
 class _SubtitleTranslationSession {
   _SubtitleTranslationSession(
     this._createJob, {
+    required SubtitleTranslationPriority priority,
     required this.onFinished,
     this.onCompleted,
   }) {
-    job = _createJob(_onUpdate);
+    priorityHandle = SubtitleTranslationPriorityHandle(priority);
+    job = _createJob(_onUpdate, priorityHandle);
   }
 
   final SubtitleTranslationJobFactory _createJob;
@@ -86,6 +95,7 @@ class _SubtitleTranslationSession {
   final void Function()? onCompleted;
   final listeners = <int, SubtitleTranslationUpdate>{};
   late final SubtitleTranslationJob job;
+  late final SubtitleTranslationPriorityHandle priorityHandle;
   final _completion = Completer<void>();
   String? _vtt;
   SubtitleTranslationProgress? _progress;
@@ -100,6 +110,10 @@ class _SubtitleTranslationSession {
   bool get isCancelled => _cancelled;
 
   bool get hasLatestUpdate => _vtt != null && _progress != null;
+
+  void promote(SubtitleTranslationPriority priority) {
+    priorityHandle.promote(priority);
+  }
 
   void start(bool allowNewTranslation) {
     _allowNewTranslation = _allowNewTranslation || allowNewTranslation;
@@ -139,8 +153,16 @@ class _SubtitleTranslationSession {
         // Preserve failed chunks and retry their exact indexes without
         // hammering a temporarily unavailable translation service.
         final retryExponent = _backgroundRetryAttempt.clamp(0, 3).toInt();
+        final baseSeconds = switch (priorityHandle.value) {
+          SubtitleTranslationPriority.playback => 2,
+          SubtitleTranslationPriority.userRequested => 4,
+          SubtitleTranslationPriority.background => 6,
+          SubtitleTranslationPriority.playlistPrefetch => 8,
+        };
         final delay = Duration(
-          seconds: (8 << retryExponent).clamp(8, 60).toInt(),
+          seconds: (baseSeconds << retryExponent)
+              .clamp(baseSeconds, 60)
+              .toInt(),
         );
         _backgroundRetryAttempt = (_backgroundRetryAttempt + 1)
             .clamp(0, 3)

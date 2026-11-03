@@ -75,12 +75,14 @@ class AiChatService {
 
   static Options _options({Duration? receiveTimeout, String? apiKey}) {
     final key = apiKey ?? Pref.aiApiKey;
+    final timeout = receiveTimeout ?? const Duration(seconds: 60);
     return Options(
       headers: {
         'Content-Type': 'application/json',
         if (key.isNotEmpty) 'Authorization': 'Bearer $key',
       },
-      receiveTimeout: receiveTimeout ?? const Duration(seconds: 60),
+      sendTimeout: timeout,
+      receiveTimeout: timeout,
     );
   }
 
@@ -284,9 +286,11 @@ class AiChatService {
     final client = subtitleProxy == null
         ? Dio()
         : _subtitleProxyClient(subtitleProxy);
-    if (receiveTimeout != null) {
-      client.options.connectTimeout = receiveTimeout;
-    }
+    final requestTimeout = receiveTimeout ?? const Duration(minutes: 10);
+    client.options
+      ..connectTimeout = requestTimeout
+      ..sendTimeout = requestTimeout
+      ..receiveTimeout = requestTimeout;
     try {
       response = await client.post<ResponseBody>(
         url,

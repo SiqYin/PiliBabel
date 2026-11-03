@@ -89,6 +89,15 @@ const Map<String, String> vietnameseUiTranslations = <String, String>{
       'Đường truyền hiện tại quá chậm, đã đổi sang đường dự phòng',
   '投屏': 'Truyền màn hình',
   '字幕': 'Phụ đề',
+  'Dịch lại phụ đề': 'Dịch lại phụ đề',
+  'Xóa phụ đề đã dịch': 'Xóa phụ đề đã dịch',
+  'Đã xóa phụ đề đã dịch': 'Đã xóa phụ đề đã dịch',
+  'Không thể xóa phụ đề đã dịch': 'Không thể xóa phụ đề đã dịch',
+  'Phụ đề nguồn có mốc thời gian lỗi; đang giữ phụ đề gốc':
+      'Phụ đề nguồn có mốc thời gian lỗi; đang giữ phụ đề gốc',
+  'Bản dịch có mốc thời gian không hợp lệ; đang giữ phụ đề gốc':
+      'Bản dịch có mốc thời gian không hợp lệ; đang giữ phụ đề gốc',
+  'Khôi phục phụ đề dịch': 'Khôi phục phụ đề dịch',
   '关闭字幕': 'Tắt phụ đề',
   '字幕设置': 'Cài đặt phụ đề',
   '字幕加载失败': 'Không thể tải phụ đề',
@@ -235,8 +244,7 @@ const Map<String, String> vietnameseUiTranslations = <String, String>{
   '主框架背景由纯色改为渐变色': 'Đổi nền chính từ màu đơn sang chuyển sắc',
   '优化平板导航栏': 'Tối ưu thanh điều hướng máy tính bảng',
   'MD3样式底栏': 'Thanh dưới kiểu MD3',
-  'Material You设计规范底栏，关闭可变窄':
-      'Thanh dưới theo Material You; tắt để thu hẹp',
+  'Material You设计规范底栏，关闭可变窄': 'Thanh dưới theo Material You; tắt để thu hẹp',
   'Navbar编辑': 'Chỉnh sửa thanh điều hướng',
   '删除或调换Navbar': 'Xóa hoặc đổi vị trí thanh điều hướng',
   '删除或调换首页标签页': 'Xóa hoặc đổi vị trí thẻ trang chủ',
@@ -254,26 +262,21 @@ const Map<String, String> vietnameseUiTranslations = <String, String>{
   '后台只听音频（实验性）': 'Chỉ nghe âm thanh nền (thử nghiệm)',
   '后台画中画': 'Hình trong hình khi chạy nền',
   '应用内画中画': 'Hình trong hình trong ứng dụng',
-  '应用内小窗转后台画中画（实验性）':
-      'Cửa sổ nhỏ chuyển sang hình trong hình nền (thử nghiệm)',
-  '支持在应用内以小窗形式播放视频':
-      'Hỗ trợ phát video trong cửa sổ nhỏ của ứng dụng',
+  '应用内小窗转后台画中画（实验性）': 'Cửa sổ nhỏ chuyển sang hình trong hình nền (thử nghiệm)',
+  '支持在应用内以小窗形式播放视频': 'Hỗ trợ phát video trong cửa sổ nhỏ của ứng dụng',
   '全屏默认画质': 'Chất lượng mặc định toàn màn hình',
   '全屏蜂窝网络画质': 'Chất lượng toàn màn hình khi dùng dữ liệu di động',
   '全屏手势反向': 'Đảo hướng cử chỉ toàn màn hình',
   '全屏显示截图按钮': 'Hiện nút chụp màn hình khi toàn màn hình',
   '全屏显示电池电量': 'Hiện pin khi toàn màn hình',
   '全屏显示锁定按钮': 'Hiện nút khóa khi toàn màn hình',
-  '全屏展示点赞/投币/收藏等操作按钮':
-      'Hiện nút thích/tặng xu/yêu thích khi toàn màn hình',
+  '全屏展示点赞/投币/收藏等操作按钮': 'Hiện nút thích/tặng xu/yêu thích khi toàn màn hình',
   '中间滑动进入/退出全屏': 'Vuốt giữa để vào/thoát toàn màn hình',
   '双击快退/快进': 'Nhấn đúp tua lùi/tua tới',
   '双击快进/快退时长': 'Thời lượng tua khi nhấn đúp',
-  '左侧双击快退/右侧双击快进，关闭则双击均为暂停/播放':
-      'Nhấn đúp trái để tua lùi, phải để tua tới; tắt để nhấn đúp phát/tạm dừng',
+  '左侧双击快退/右侧双击快进，关闭则双击均为暂停/播放': 'Nhấn đúp trái để tua lùi, phải để tua tới; tắt để nhấn đúp phát/tạm dừng',
   '左右侧滑动调节亮度/音量': 'Vuốt hai bên để chỉnh độ sáng/âm lượng',
-  '从播放器一端滑到另一端的快进/快退时长':
-      'Thời lượng tua khi vuốt từ mép này sang mép kia',
+  '从播放器一端滑到另一端的快进/快退时长': 'Thời lượng tua khi vuốt từ mép này sang mép kia',
   '延长播放控件显示时间': 'Kéo dài thời gian hiện điều khiển phát',
   '手动切集后显示播放控件': 'Hiện điều khiển phát sau khi đổi tập thủ công',
   '带宽不足时询问是否降画质': 'Hỏi giảm chất lượng khi băng thông không đủ',
@@ -288,8 +291,7 @@ const Map<String, String> vietnameseUiTranslations = <String, String>{
   '启用HTTP/2': 'Bật HTTP/2',
   '下载到本地位置': 'Vị trí tải xuống cục bộ',
   '允许三方APP访问私有存储': 'Cho phép ứng dụng bên thứ ba truy cập bộ nhớ riêng',
-  '允许三方APP（例如MT管理器）通过访问外部存储的方式访问私有存储':
-      'Cho phép ứng dụng bên thứ ba (ví dụ MT Manager) truy cập bộ nhớ riêng qua bộ nhớ ngoài',
+  '允许三方APP（例如MT管理器）通过访问外部存储的方式访问私有存储': 'Cho phép ứng dụng bên thứ ba (ví dụ MT Manager) truy cập bộ nhớ riêng qua bộ nhớ ngoài',
   '不显示下载 Loading 弹窗': 'Không hiện hộp thoại tải xuống',
   '免登录1080P': '1080P không cần đăng nhập',
   '免登录查看1080P视频': 'Xem video 1080P không cần đăng nhập',
@@ -306,8 +308,7 @@ const Map<String, String> vietnameseUiTranslations = <String, String>{
       'Hiện thanh thao tác dưới ở trang chi tiết bảng tin/bài viết',
   '主页推荐流': 'Luồng đề xuất trang chủ',
   '保留首页推荐刷新': 'Giữ trạng thái làm mới đề xuất trang chủ',
-  '保留上次推荐时，在上次刷新位置显示提示':
-      'Giữ lần đề xuất trước và hiện gợi ý ở vị trí làm mới',
+  '保留上次推荐时，在上次刷新位置显示提示': 'Giữ lần đề xuất trước và hiện gợi ý ở vị trí làm mới',
   'App推荐/热门/排行榜: 视频分区关键词过滤':
       'Đề xuất/Thịnh hành/Bảng xếp hạng: lọc từ khóa khu vực video',
   'UP名称关键词过滤': 'Lọc từ khóa tên UP',

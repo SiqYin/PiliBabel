@@ -44,6 +44,7 @@ void main() {
         SubtitleCue('01:02:03.004', '01:02:06.999', '丙'),
       ];
       String? translatedVtt;
+      final emittedVtts = <String>[];
       final job = SubtitleTranslationJob(
         cues: cues,
         chunkSize: 1,
@@ -60,7 +61,10 @@ void main() {
           await Future<void>.delayed(Duration(milliseconds: delay));
           return ['vi ${lines.single}'];
         },
-        onUpdate: (vtt, _) => translatedVtt = vtt,
+        onUpdate: (vtt, _) {
+          emittedVtts.add(vtt);
+          translatedVtt = vtt;
+        },
       );
 
       await job.run();
@@ -69,6 +73,10 @@ void main() {
       expect(parsed.map((cue) => cue.start), cues.map((cue) => cue.start));
       expect(parsed.map((cue) => cue.end), cues.map((cue) => cue.end));
       expect(parsed.map((cue) => cue.text), ['vi 甲', 'vi 乙', 'vi 丙']);
+      expect(
+        emittedVtts.every((vtt) => SubtitleCues.hasSameTimeline(cues, vtt)),
+        isTrue,
+      );
     },
   );
 
@@ -80,6 +88,49 @@ void main() {
       SubtitleTranslationJob.cacheIdentity('same-track', original),
       isNot(SubtitleTranslationJob.cacheIdentity('same-track', retimed)),
     );
+  });
+
+  test('rejects a VTT update when a timestamp changes', () {
+    const source = [
+      SubtitleCue('00:00:01.000', '00:00:02.000', '你好'),
+      SubtitleCue('00:00:02.000', '00:00:03.000', '再见'),
+    ];
+    final retimed = SubtitleCues.toVtt(
+      const [
+        SubtitleCue('00:00:01.000', '00:00:02.000', '你好'),
+        SubtitleCue('00:00:02.500', '00:00:03.000', '再见'),
+      ],
+      ['Xin chào', 'Tạm biệt'],
+    );
+
+    expect(SubtitleCues.hasSameTimeline(source, retimed), isFalse);
+  });
+
+  test('rejects a source timeline that would stack four subtitles', () {
+    const cues = [
+      SubtitleCue('00:04:00.000', '00:04:04.000', '一'),
+      SubtitleCue('00:04:00.100', '00:04:04.000', '二'),
+      SubtitleCue('00:04:00.200', '00:04:04.000', '三'),
+      SubtitleCue('00:04:00.300', '00:04:04.000', '四'),
+    ];
+
+    expect(SubtitleCues.hasSafePlaybackTimeline(cues), isFalse);
+  });
+
+  test('uses a separate checkpoint for an explicit retranslation', () {
+    const cues = [SubtitleCue('00:00:01.000', '00:00:02.000', '你好')];
+    final cached = SubtitleTranslationJob.cacheFileFor(
+      'video/1/zh/vi',
+      cues,
+      cacheDirectory: directory.path,
+    );
+    final replacement = SubtitleTranslationJob.cacheFileFor(
+      'video/1/zh/vi/retranslate/123',
+      cues,
+      cacheDirectory: directory.path,
+    );
+
+    expect(replacement.path, isNot(cached.path));
   });
 
   test(
@@ -296,6 +347,29 @@ void main() {
     );
   });
 
+  test('rejects a translated cue that merges an overlap context line', () {
+    expect(
+      () => SubtitleTranslationOutput.sanitizeAndValidate(
+        const ['你要去哪里？'],
+        const ['Huynh định đi đâu?\nTa sẽ đi cùng huynh.'],
+        targetLanguage: 'vi',
+      ),
+      throwsFormatException,
+    );
+  });
+
+  test('rejects an overlap translation inserted on the same line', () {
+    expect(
+      () => SubtitleTranslationOutput.sanitizeAndValidate(
+        const ['你要去哪里？'],
+        const ['Ta sẽ đi cùng huynh. Huynh định đi đâu?'],
+        targetLanguage: 'vi',
+        translatedContext: const ['Ta sẽ đi cùng huynh.'],
+      ),
+      throwsFormatException,
+    );
+  });
+
   test(
     'repairs legacy numbered Vietnamese cache without retranslating',
     () async {
@@ -368,6 +442,40 @@ void main() {
   });
 
   test(
+    'times out a stuck chunk and retries without losing cue timing',
+    () async {
+      var attempts = 0;
+      String? vtt;
+      final never = Completer<List<String>>();
+      final job = SubtitleTranslationJob(
+        cues: const [
+          SubtitleCue('00:04:01.125', '00:04:03.875', '你好'),
+        ],
+        chunkSize: 20,
+        concurrency: 1,
+        cacheKey: 'stuck-retry',
+        cacheDirectory: directory.path,
+        retryDelay: Duration.zero,
+        attemptTimeout: const Duration(milliseconds: 20),
+        translate: (lines) {
+          attempts++;
+          if (attempts == 1) return never.future;
+          return Future.value(['Xin chào']);
+        },
+        onUpdate: (value, _) => vtt = value,
+      );
+
+      await job.run();
+
+      expect(attempts, 2);
+      final cue = SubtitleCues.fromVtt(vtt!).single;
+      expect(cue.start, '00:04:01.125');
+      expect(cue.end, '00:04:03.875');
+      expect(cue.text, 'Xin chào');
+    },
+  );
+
+  test(
     'passes four source cues as context without shifting chunk output',
     () async {
       final calls = <({List<String> lines, List<String> context})>[];
@@ -394,6 +502,55 @@ void main() {
       expect(calls.last.lines, ['句20', '句21', '句22', '句23', '句24']);
       expect(calls.last.context, ['句16', '句17', '句18', '句19']);
       expect(finalVtt, contains('translated 句20'));
+    },
+  );
+
+  test(
+    'repairs a context cue echoed by an out-of-order parallel chunk',
+    () async {
+      var secondChunkAttempts = 0;
+      String? finalVtt;
+      final job = SubtitleTranslationJob(
+        cues: _cues(25),
+        chunkSize: 20,
+        concurrency: 2,
+        cacheKey: 'parallel-context-echo',
+        cacheDirectory: directory.path,
+        targetLanguage: 'vi',
+        retryDelay: Duration.zero,
+        translate: (lines) async =>
+            lines.map((line) => 'Bản dịch câu ${line.substring(1)}').toList(),
+        translateWithContext: (lines, context) async {
+          if (lines.first == '句0') {
+            await Future<void>.delayed(const Duration(milliseconds: 20));
+          }
+          if (lines.first == '句20') {
+            secondChunkAttempts++;
+            if (secondChunkAttempts == 1) {
+              return [
+                'Bản dịch câu 19. Bản dịch câu 20',
+                for (final line in lines.skip(1))
+                  'Bản dịch câu ${line.substring(1)}',
+              ];
+            }
+          }
+          return lines
+              .map((line) => 'Bản dịch câu ${line.substring(1)}')
+              .toList();
+        },
+        onUpdate: (vtt, _) => finalVtt = vtt,
+      );
+
+      await job.run();
+
+      expect(secondChunkAttempts, 2);
+      final translated = SubtitleCues.fromVtt(finalVtt!);
+      expect(translated[19].text, 'Bản dịch câu 19');
+      expect(translated[20].text, 'Bản dịch câu 20');
+      expect(
+        translated.any((cue) => cue.text.contains('19. Bản dịch câu 20')),
+        isFalse,
+      );
     },
   );
 
@@ -466,6 +623,62 @@ void main() {
       expect(translatedChunks, [1]);
       expect(finalVtt, contains('first 句0'));
       expect(finalVtt, contains('retry 句20'));
+    },
+  );
+
+  test(
+    'retries only a cached chunk polluted by translated overlap context',
+    () async {
+      final cues = _cues(25);
+      final initial = SubtitleTranslationJob(
+        cues: cues,
+        chunkSize: 20,
+        concurrency: 1,
+        cacheKey: 'cached-context-echo',
+        cacheDirectory: directory.path,
+        targetLanguage: 'vi',
+        translate: (lines) async =>
+            lines.map((line) => 'Bản dịch câu ${line.substring(1)}').toList(),
+        onUpdate: (_, __) {},
+      );
+      await initial.run();
+
+      final checkpoint = SubtitleTranslationJob.cacheFileFor(
+        'cached-context-echo',
+        cues,
+        cacheDirectory: directory.path,
+      );
+      final data =
+          jsonDecode(await checkpoint.readAsString()) as Map<String, dynamic>;
+      final texts = List<String>.from(data['texts'] as List);
+      texts[20] = 'Bản dịch câu 19. Bản dịch câu 20';
+      data['texts'] = texts;
+      await checkpoint.writeAsString(jsonEncode(data));
+
+      final retriedChunks = <int>[];
+      String? finalVtt;
+      final resumed = SubtitleTranslationJob(
+        cues: cues,
+        chunkSize: 20,
+        concurrency: 1,
+        cacheKey: 'cached-context-echo',
+        cacheDirectory: directory.path,
+        targetLanguage: 'vi',
+        translate: (lines) async {
+          retriedChunks.add(int.parse(lines.first.substring(1)) ~/ 20);
+          return lines
+              .map((line) => 'Đã sửa câu ${line.substring(1)}')
+              .toList();
+        },
+        onUpdate: (vtt, _) => finalVtt = vtt,
+      );
+
+      await resumed.run();
+
+      expect(retriedChunks, [1]);
+      final translated = SubtitleCues.fromVtt(finalVtt!);
+      expect(translated.first.text, 'Bản dịch câu 0');
+      expect(translated[20].text, 'Đã sửa câu 20');
     },
   );
 

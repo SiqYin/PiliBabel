@@ -37,13 +37,14 @@ class _VideoSubtitleTranslateButtonState
     unawaited(SubtitleTranslationBackgroundService.ensureInitialized());
   }
 
-  void _start() {
+  void _start({bool force = false}) {
     unawaited(
       SubtitleTranslationBackgroundService.start(
         videoKey: widget.videoKey,
         bvid: widget.bvid,
         aid: widget.aid,
         cid: widget.cid,
+        force: force,
       ),
     );
   }
@@ -86,15 +87,12 @@ class _VideoSubtitleTranslateButtonState
           ),
         };
         final hint = state.message ?? label;
+        final isComplete = state.phase == SubtitleTranslationTaskPhase.complete;
         return Tooltip(
           message: hint,
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap:
-                state.isRunning ||
-                    state.phase == SubtitleTranslationTaskPhase.complete
-                ? null
-                : _start,
+            onTap: state.isRunning || isComplete ? null : _start,
             child: Container(
               constraints: const BoxConstraints(minWidth: 54, minHeight: 28),
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
@@ -126,6 +124,24 @@ class _VideoSubtitleTranslateButtonState
                     label,
                     style: const TextStyle(color: Colors.white, fontSize: 9),
                   ),
+                  if (isComplete) ...[
+                    const SizedBox(width: 2),
+                    Tooltip(
+                      message: uiTx('Dịch lại phụ đề'),
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => _start(force: true),
+                        child: const Padding(
+                          padding: EdgeInsets.all(2),
+                          child: Icon(
+                            Icons.refresh,
+                            size: 13,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
