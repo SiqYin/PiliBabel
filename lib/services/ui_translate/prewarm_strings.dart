@@ -120,9 +120,29 @@ abstract final class PrewarmStrings {
     '快进至片段中间时跳过', '跳过次数统计跟踪', '随机', '重置',
   ];
 
+  /// 术语集（设置页那一项 + 次级页面全部文案）。
+  ///
+  /// 这些文案以前**不在任何预热清单里**，要等用户点进设置页、甚至点进术语集页
+  /// 才第一次入队翻译，所以总比旁边的选项慢一拍。列在这里之后，进入设置页就会
+  /// 一起排队。
+  static const List<String> glossary = [
+    // 设置页那一项
+    '术语集',
+    '已内置 {0} 条专业术语，{1} / {2} 个术语集已启用',
+    // 次级页面
+    '游戏', '企划',
+    '已启用 {0} / {1} 个术语集。关闭后，该作品的专有名词不再被自动套用。',
+    '{0} 条术语',
+    // 15 个词表的显示名
+    '原神', '崩坏：星穹铁道', '绝区零', '鸣潮', '崩坏3', '蔚蓝档案',
+    '胜利女神：妮姬', '明日方舟', '赛马娘', 'BanG Dream!',
+    '重返未来 1999', '异环', 'hololive', 'NIJISANJI', '偶像大师',
+  ];
+
   /// 全部合并（去重），供「不确定属于哪一组」的场合使用
   static List<String> get all => [
     ..._commonActions,
+    ...glossary,
     ...download,
     ...setting,
     ...video,
@@ -136,8 +156,9 @@ abstract final class PrewarmStrings {
   static void warmDownload() =>
       UiTranslateService.precacheLater([..._commonActions, ...download]);
 
-  static void warmSetting() =>
-      UiTranslateService.precacheLater([..._commonActions, ...setting, ...tools]);
+  static void warmSetting() => UiTranslateService.precacheLater(
+        [..._commonActions, ...setting, ...tools, ...glossary],
+      );
 
   static void warmVideo() =>
       UiTranslateService.precacheLater([..._commonActions, ...video]);
