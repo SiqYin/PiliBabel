@@ -1,12 +1,12 @@
 {
  "schema": 1,
- "generated_at": "2026-11-04T12:42:29",
+ "generated_at": "2026-11-04T13:35:46",
  "games": {
   "ak": {
    "version": "2026-11-02",
    "rows": 5619,
    "updated_at": "2026-11-04",
-   "hash": "94386e96f7a21e15",
+   "hash": "13d66d92e219ed01",
    "deps": {
     "ArknightsGamedata": "2026-11-02T19:43:18Z"
    }
@@ -24,14 +24,14 @@
    "version": "unknown",
    "rows": 165,
    "updated_at": "2026-11-04",
-   "hash": "7a1e93eb8a7c4627",
+   "hash": "71dec75ba756540a",
    "deps": {}
   },
   "genshin": {
    "version": "2026-10-31",
    "rows": 11505,
    "updated_at": "2026-11-04",
-   "hash": "e452ba8876e6d901",
+   "hash": "48cef97f37adcb85",
    "deps": {
     "genshin-langdata": "2026-10-31T02:08:28Z"
    }
@@ -56,7 +56,7 @@
    "version": "2026-09-29",
    "rows": 6301,
    "updated_at": "2026-11-04",
-   "hash": "383b8665486e02ad",
+   "hash": "6301ccc4fddccf37",
    "deps": {
     "StarRailRes": "2026-09-29T14:21:44Z"
    }
@@ -65,21 +65,21 @@
    "version": "unknown",
    "rows": 282,
    "updated_at": "2026-11-04",
-   "hash": "36d1b6f6cd2ae241",
+   "hash": "18c599e02f20882c",
    "deps": {}
   },
   "niji": {
    "version": "unknown",
    "rows": 239,
    "updated_at": "2026-11-04",
-   "hash": "1f267a1b6cd1a962",
+   "hash": "4fe552d8397a0fb8",
    "deps": {}
   },
   "nikke": {
    "version": "2026-11-02",
    "rows": 211,
    "updated_at": "2026-11-04",
-   "hash": "98135f86beafaad1",
+   "hash": "dc6480e58a71c4a7",
    "deps": {
     "nikke-goddess-of-victory-international": "2026-11-02T20:18:11Z"
    }
@@ -88,21 +88,21 @@
    "version": "unknown",
    "rows": 100,
    "updated_at": "2026-11-04",
-   "hash": "0cc2fc3381b0444d",
+   "hash": "4f25e645c0849657",
    "deps": {}
   },
   "uma": {
    "version": "unknown",
    "rows": 321,
    "updated_at": "2026-11-04",
-   "hash": "13751f6df59e545b",
+   "hash": "2b12c7e2f1a5c055",
    "deps": {}
   },
   "wuwa": {
    "version": "2026-11-03",
    "rows": 1443,
    "updated_at": "2026-11-04",
-   "hash": "3d401ddcaebac306",
+   "hash": "c93ff8e0f84cda33",
    "deps": {
     "wutheringwaves": "2026-11-03T00:18:28Z"
    }
@@ -118,7 +118,7 @@
    "version": "3.2",
    "rows": 4963,
    "updated_at": "2026-11-04",
-   "hash": "9be40cc8f7820496",
+   "hash": "1679730ef128b9c2",
    "deps": {
     "zzz-tr-db": "2026-10-25-7a7408865aa3",
     "count": 2318
