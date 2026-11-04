@@ -153,7 +153,7 @@ paru -S pilinara-bin         # или через AUR: pilinara-bin (готова
 
 <br/>
 
-## История изменений: 2.6.x → 3.6.5
+## История изменений: 2.6.x → 3.6.6
 
 - **2.6.x** — кэширование аудио (отдельные модули для видео и аудио, запоминается последний выбор, входы на странице видео, на странице «только аудио» и в аудиоплеере; исходный формат сохраняется; выбор качества) и загрузка на устройство (отдельный пункт меню: сначала видео/аудио, затем качество; при отсутствии папки открывается системный выбор файлов).
 
@@ -171,7 +171,7 @@ paru -S pilinara-bin         # или через AUR: pilinara-bin (готова
 
 - **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
 
-- **3.5.0–3.6.5 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4. In 3.6.5 an embedded term no longer stops the rest of a paragraph from being translated, the glossary screen follows the app theme, the tables are on by default, and the version the app reports about itself now matches its release tag.
+- **3.5.0–3.6.6 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4. In 3.6.5 an embedded term no longer stops the rest of a paragraph from being translated, the glossary screen follows the app theme, the tables are on by default, and the version the app reports about itself now matches its release tag. 3.6.6 also fixes surname parts of a name expanding to the full name, makes the glossary screen follow the app theme again (with working switches), and lets official glossary names override stale cached translations.
 
 ## Журнал унаследованных возможностей (из PiliNara / PiliPlus)
 
