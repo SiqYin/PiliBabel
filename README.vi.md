@@ -153,7 +153,7 @@ paru -S pilinara-bin         # hoặc qua AUR: pilinara-bin (dựng sẵn) / pil
 
 <br/>
 
-## Nhật ký thay đổi: 2.6.x → 3.6.6
+## Nhật ký thay đổi: 2.6.x → 3.6.7
 
 - **2.6.x** — bộ nhớ đệm âm thanh (mô-đun riêng cho video và âm thanh, ghi nhớ lựa chọn gần nhất, có lối vào ở trang video, trang chỉ âm thanh và trình phát âm thanh; giữ nguyên định dạng gốc; chọn được chất lượng) và tải về thiết bị (mục menu riêng: chọn video/âm thanh trước rồi chọn chất lượng; nếu chưa đặt thư mục sẽ mở trình chọn tệp của hệ thống).
 
@@ -167,7 +167,7 @@ paru -S pilinara-bin         # hoặc qua AUR: pilinara-bin (dựng sẵn) / pil
 
 - **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
 
-- **3.5.0–3.6.6 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. Đã sửa lỗi có từ 3.6.3: bật dịch bằng AI có thể khiến trang trắng rồi ứng dụng tự đóng (đã sửa ở 3.6.4). Từ 3.6.5, một thuật ngữ nằm trong câu không còn khiến phần còn lại của đoạn không được dịch, màn hình thuật ngữ theo giao diện của ứng dụng, các bảng được bật mặc định và phiên bản ứng dụng tự báo cáo khớp với tag phát hành. Bản 3.6.6 cũng sửa lỗi các phần họ của tên bị mở rộng thành tên đầy đủ; màn hình thuật ngữ đã theo theme của ứng dụng trở lại (các công tắc hoạt động), và tên thuật ngữ chính thức thắng bản dịch cũ trong bộ nhớ đệm.
+- **3.5.0–3.6.7 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. Đã sửa lỗi có từ 3.6.3: bật dịch bằng AI có thể khiến trang trắng rồi ứng dụng tự đóng (đã sửa ở 3.6.4). Từ 3.6.5, một thuật ngữ nằm trong câu không còn khiến phần còn lại của đoạn không được dịch, màn hình thuật ngữ theo giao diện của ứng dụng, các bảng được bật mặc định và phiên bản ứng dụng tự báo cáo khớp với tag phát hành. Bản 3.6.6 sửa lỗi phần họ của tên bị mở rộng thành tên đầy đủ, màn hình thuật ngữ đã theo theme của ứng dụng (các công tắc hoạt động), và tên thuật ngữ chính thức thắng bản dịch cũ trong bộ nhớ đệm; 3.6.7 sửa bộ đếm thuật ngữ luôn hiện 14/15 dù đã bật tất cả, và sửa số liệu hiển thị của ba bảng (Reverse: 1999 chưa nhúng mục nào).
 
 ## Danh sách tính năng kế thừa (từ PiliNara / PiliPlus)
 
