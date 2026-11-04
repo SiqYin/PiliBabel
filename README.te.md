@@ -153,7 +153,7 @@ paru -S pilinara-bin         # లేదా AUR ద్వారా: pilinara-bin
 
 <br/>
 
-## మార్పుల జాబితా: 2.6.x → 3.3.4
+## మార్పుల జాబితా: 2.6.x → 3.6.4
 
 - **2.6.x** — ఆడియో క్యాష్ (వీడియో మరియు ఆడియోకు వేర్వేరు మాడ్యూళ్లు, చివరి ఎంపిక గుర్తుంచుకుంటుంది, వీడియో పేజీ, ఆడియో-మాత్రమే పేజీ మరియు ఆడియో ప్లేయర్లో ప్రవేశాలు; అసలు ఫార్మాట్ నిలుపుకుంటారు; నాణ్యత ఎంచుకోవచ్చు) మరియు పరికరంలోకి డౌన్లోడ్ (ప్రత్యేక మెనూ అంశం: ముందు వీడియో/ఆడియో, తర్వాత నాణ్యత; ఫోల్డర్ సెట్ చేయకపోతే సిస్టమ్ ఫైల్ ఎంపిక యంత్రం తెరుచుకుంటుంది).
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # లేదా AUR ద్వారా: pilinara-bin
 - **3.2.0–3.3.3** — అధికారిక యాప్ శైలిలో నెట్వర్క్ పునాది: అభ్యర్థన వేలిముద్ర (buvid/fp/session_id/env), gRPC హోస్ట్ ఫెయిలోవర్, తిరిగి ప్రయత్నించే ఇంటర్సెప్టర్, ప్రతి హోస్ట్కు ఏకకాల అభ్యర్థనల పరిమితి, కోల్డ్ స్టార్ట్లో మొదటి ఫీడ్ ముందస్తు లోడ్, అధికారిక ఫీడ్ ఈవెంట్ పారామితులు, విదేశీ ప్రత్యామ్నాయంతో CDN అభ్యర్థుల క్రమం; రెండో పేజీ ముందస్తు లోడ్, పరిమిత కవర్ ముందస్తు లోడ్ క్యూ, ప్లే-URL ముందస్తు లోడ్; తర్వాత dynamics (P3) యొక్క gRPC రెండరింగ్ మరియు సవరణలు: ఆడియో పేజీ బఫర్ వ్యవధి కంపైల్ లోపం మరియు వ్యాఖ్యల ముందస్తు లోడ్లో రకం మార్పిడి లోపం, దీనివల్ల ప్రతి పునఃప్రయత్నం వెంటనే విఫలమైంది.
 
 - **3.3.4** — చెల్లింపు పోస్ట్లు, మినీ యాప్లు, టాపిక్ సెట్లు మరియు సభ్యత్వాల కోసం dynamics కార్డులు; హోమ్ మొదటి స్క్రీన్లో కవర్లు ఏవీ కనిపించని సమస్య పరిష్కరించబడింది; PiliNara మార్పులు చేర్చబడ్డాయి (స్టేటస్ బార్, ప్రాసెస్ మూసిన తర్వాత డౌన్లోడ్ కొనసాగుతుంది, media-kit నవీకరణ, Waylandలో నల్ల వీడియోను నివారించడం, క్యాష్ చేసేటప్పుడు ఆడియో నాణ్యత ఎంపిక); 3.0.5 నుండి జోడించిన అన్ని ఇంటర్ఫేస్ వచనాలకు AI అనువాద ఆడిట్; ఈ జాబితా.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4.
 
 ## వారసత్వ ఫీచర్ లాగ్ (PiliNara / PiliPlus నుండి)
 

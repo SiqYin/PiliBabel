@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/services/ui_translate/game_glossary.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:dio/dio.dart';
@@ -23,7 +22,7 @@ import 'package:get/get.dart';
 class GlossaryUpdateService extends GetxService {
   /// 默认远端清单地址（与术语表数据同源发布）。
   static const String defaultManifestUrl =
-      'https://raw.githubusercontent.com/SiqYin/PiliBabel/glossary/manifest.json';
+      'https://raw.githubusercontent.com/SiqYin/PiliBabel/main/docs/glossary-manifest.json';
 
   /// 两次自动检查之间的最小间隔。
   static const Duration _minGap = Duration(hours: 24);
@@ -104,7 +103,8 @@ class GlossaryUpdateService extends GetxService {
       final remoteHash = remoteGame['hash']?.toString() ?? '';
       final builtVer = built['version'] ?? '';
       final builtHash = built['hash'] ?? '';
-      if (remoteVer != builtVer || (remoteHash.isNotEmpty && remoteHash != builtHash)) {
+      if (remoteVer != builtVer ||
+          (remoteHash.isNotEmpty && remoteHash != builtHash)) {
         _updates[game] = GlossaryGameUpdate(
           game: game,
           builtVersion: builtVer,

@@ -153,7 +153,7 @@ paru -S pilinara-bin         # або праз AUR: pilinara-bin (перадзб
 
 <br/>
 
-## Гісторыя змяненняў: 2.6.x → 3.3.4
+## Гісторыя змяненняў: 2.6.x → 3.6.4
 
 - **2.6.x** — кэшаванне аўдыё (асобныя модулі для відэа і аўдыё, захоўваецца апошні выбар, уваходы на старонцы відэа, на старонцы толькі аўдыё і ў аўдыяпрайгравальніку; зыходны фармат захоўваецца; выбар якасці) і спампоўка на прыладу (асобны пункт меню: спачатку відэа/аўдыё, потым якасць; калі тэчка не зададзена, адкрываецца сістэмны выбар файлаў).
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # або праз AUR: pilinara-bin (перадзб
 - **3.2.0–3.3.3** — сеткавая аснова ў стылі афіцыйнай праграмы: адбітак запыту (buvid/fp/session_id/env), пераключэнне хостаў gRPC, перахопнік паўтораў, абмежаванне адначасовых запытаў на хост, прагрэў першай стужкі пры халодным старце, афіцыйныя параметры падзей стужкі, парадак кандыдатаў CDN з замежным рэзэрвам; прагрэў другой старонкі, чарга прагрэву вокладак з абмежаваннем, прагрэў спасылак прайгравання; затым адлюстраванне дынамікі (P3) праз gRPC і выпраўленні: памылка кампіляцыі працягласці буфера на старонцы аўдыё і збой пераўтварэння тыпу ў прагрэве каментароў, з-за якога кожная спроба паўтору падала імгненна.
 
 - **3.3.4** — карткі дынамікі для платных запісаў, міні-праграм, зборнікаў тэм і падпісак; выпраўлена адсутнасць вокладак на першым экране галоўнай; сінхранізацыя з PiliNara (радок стану, дакачка пасля закрыцця працэсу, абнаўленне media-kit, абыход чорнага відэа ў Wayland, выбар якасці гуку пры кэшаванні); аўдыт AI-перакладу ўсіх тэкстаў інтэрфейсу, дададзеных з 3.0.5; гэтая гісторыя.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4.
 
 ## Журнал успадкаваных функцый (ад PiliNara / PiliPlus)
 

@@ -153,7 +153,7 @@ paru -S pilinara-bin         # немесе AUR арқылы: pilinara-bin (да
 
 <br/>
 
-## Өзгерістер тізімі: 2.6.x → 3.3.4
+## Өзгерістер тізімі: 2.6.x → 3.6.4
 
 - **2.6.x** — дыбыс кэші (бейне мен дыбыс үшін бөлек модульдер, соңғы таңдау есте сақталады, бейне бетінен, тек дыбыс бетінен және дыбыс ойнатқышынан кіруге болады; бастапқы пішім сақталады; сапаны таңдауға болады) және құрылғыға жүктеу (жеке мәзір тармағы: алдымен бейне/дыбыс, содан кейін сапа; қалта көрсетілмесе, жүйелік файл таңдаушы ашылады).
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # немесе AUR арқылы: pilinara-bin (да
 - **3.2.0–3.3.3** — ресми қолданба үлгісіндегі желілік негіз: сұраныс ізтаңбасы (buvid/fp/session_id/env), gRPC хосттарының ауысуы, қайта әрекет сүзгісі, хостқа шаққандағы бір мезгілдегі сұраныс шегі, суық іске қосудағы бірінші таспаны алдын ала жүктеу, ресми feed оқиға параметрлері, шетелдік қосалқы нұсқалары бар CDN кандидаттарының реті; екінші бетті алдын ала жүктеу, шектеулі мұқаба алдын ала жүктеу кезегі, ойнату сілтемелерін алдын ала жүктеу; содан кейін dynamics (P3) gRPC арқылы көрсету және түзетулер: дыбыс бетіндегі буфер ұзақтығының компиляция қатесі және пікірлерді алдын ала жүктеудегі тип түрлендіру қатесі, ол әр әрекетті бірден сәтсіз ететін.
 
 - **3.3.4** — ақылы жазбалар, шағын қолданбалар, тақырып жинақтары және жазылымдар үшін dynamics карталары; басты беттің бірінші экранында мұқабалардың мүлде көрінбеуі түзетілді; PiliNara өзгерістері қосылды (күй жолағы, процесс жабылғаннан кейін жүктеуді жалғастыру, media-kit жаңартуы, Wayland-дағы қара бейнені айналып өту, кэштеу кезінде дыбыс сапасын таңдау); 3.0.5-тен бері қосылған барлық интерфейс мәтініне AI аударма тексеруі; осы тізім.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4.
 
 ## Мұраланған мүмкіндіктер журналы (PiliNara / PiliPlus)
 

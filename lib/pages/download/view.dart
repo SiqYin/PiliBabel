@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/services/ui_translate/prewarm_strings.dart';
 import 'dart:io' show Platform;
 
 import 'package:PiliPlus/common/widgets/appbar/appbar.dart';
@@ -101,6 +102,7 @@ class DownloadPage extends StatefulWidget {
 
 class _DownloadPageState extends State<DownloadPage>
     with TickerProviderStateMixin, BaseFabMixin, FabMixin {
+
   final _downloadService = Get.find<DownloadService>();
   final _collectionService = Get.find<DownloadCollectionService>();
   final _controller = Get.put(DownloadPageController());
@@ -145,6 +147,12 @@ class _DownloadPageState extends State<DownloadPage>
       length: _DownloadTab.values.length,
       vsync: this,
     )..addListener(_handleTabChanged);
+    // 预翻译：这一页几乎全部内容都是「点开才出现」的弹窗 / 菜单 ——
+    // 缓存视频右侧 ⋮ 的十几个菜单项、删除确认框、新建/重命名文件夹、
+    // 排序方式、多选操作、导出提示……它们此时一个都没渲染过，
+    // 等用户点开才翻就会出现「先中文后跳日文」。这里一次性全部登记，
+    // 走优先队列预热（见 UiTranslateService.precache）。
+    PrewarmStrings.warmDownload();
   }
 
   void _handleTabChanged() {

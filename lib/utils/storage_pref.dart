@@ -2092,6 +2092,28 @@ abstract final class Pref {
   static set glossaryLastChecked(int value) =>
       _setting.put(SettingBoxKey.glossaryLastChecked, value);
 
+  /// 被用户关闭的术语表 id 集合。
+  ///
+  /// 存「关掉的」而不是「开着的」：这样以后新增词表默认就是启用的，
+  /// 不需要为老用户做迁移。
+  static Set<String> get glossaryDisabledTables => (_setting.get(
+    SettingBoxKey.glossaryDisabledTables,
+    defaultValue: <String>[],
+  ) as List).map((e) => e.toString()).toSet();
+
+  static set glossaryDisabledTables(Set<String> value) =>
+      _setting.put(SettingBoxKey.glossaryDisabledTables, value.toList());
+
+  /// 术语表「默认关闭」是否已落到存储里。
+  ///
+  /// 用户要求所有词表默认关闭、由用户自己打开。这里用一个一次性标记实现：
+  /// 首次读取时把当前全部词表写入 disabled 集合，之后完全尊重用户的选择。
+  static bool get glossaryDefaultsApplied =>
+      _setting.get(SettingBoxKey.glossaryDefaultsApplied, defaultValue: false);
+
+  static set glossaryDefaultsApplied(bool value) =>
+      _setting.put(SettingBoxKey.glossaryDefaultsApplied, value);
+
   /// 远端术语表清单地址。默认用官方发布的清单，用户可改镜像。
   static String get glossaryManifestUrl {
     final v = _setting.get(SettingBoxKey.glossaryManifestUrl);
@@ -2099,7 +2121,7 @@ abstract final class Pref {
   }
 
   static const String _defaultGlossaryManifestUrl =
-      'https://raw.githubusercontent.com/SiqYin/PiliBabel/glossary/manifest.json';
+      'https://raw.githubusercontent.com/SiqYin/PiliBabel/main/docs/glossary-manifest.json';
 
   static set glossaryManifestUrl(String value) =>
       _setting.put(SettingBoxKey.glossaryManifestUrl, value);

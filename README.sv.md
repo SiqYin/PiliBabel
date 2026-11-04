@@ -153,7 +153,7 @@ paru -S pilinara-bin         # eller via AUR: pilinara-bin (förbyggt) / pilinar
 
 <br/>
 
-## Ändringslogg: 2.6.x → 3.3.4
+## Ändringslogg: 2.6.x → 3.6.4
 
 - **2.6.x** — ljudcache (separata moduler för video och ljud, kommer ihåg senaste valet, ingångar på videosidan, ljudsidan och i ljudspelaren; originalformatet behålls; kvalitet kan väljas) och nedladdning till enheten (eget menyalternativ: först video/ljud, sedan kvalitet; utan vald mapp öppnas systemets filväljare).
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # eller via AUR: pilinara-bin (förbyggt) / pilinar
 - **3.2.0–3.3.3** — nätverksgrund i den officiella appens stil: förfrågningsavtryck (buvid/fp/session_id/env), redundans för gRPC-värdar, återförsöksinterceptor, gräns för samtidiga förfrågningar per värd, förladdning av första flödet vid kallstart, officiella parametrar för flödeshändelser, ordning för CDN-kandidater med utländska reserver; förladdning av andra sidan, begränsad kö för förladdning av omslag, förladdning av uppspelningsadresser; därefter rendering av dynamics (P3) via gRPC samt rättelser: kompileringsfel i buffertiden på ljudsidan och typfel i förladdningen av kommentarer som gjorde att varje nytt försök misslyckades direkt.
 
 - **3.3.4** — dynamics-kort för betalda inlägg, miniappar, ämnessamlingar och prenumerationer; felet där startsidans första skärm saknade alla omslag är åtgärdat; ändringar från PiliNara har hämtats in (statusfält, återuppta nedladdning efter att processen stängts, uppdatering av media-kit, kringgående av svart video i Wayland, val av ljudkvalitet vid cachning); granskning av AI-översättning för all gränssnittstext som lagts till sedan 3.0.5; denna logg.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.4 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4.
 
 ## Ärvd funktionslogg (från PiliNara / PiliPlus)
 

@@ -12,6 +12,7 @@ import 'package:PiliPlus/pages/setting/ui_translate/view.dart';
 import 'package:PiliPlus/pages/setting/widgets/multi_select_dialog.dart';
 import 'package:PiliPlus/pages/webdav/view.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/services/ui_translate/prewarm_strings.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:PiliPlus/utils/extension/size_ext.dart';
@@ -42,6 +43,14 @@ class SettingPage extends StatefulWidget {
 
 class _SettingPageState extends State<SettingPage> {
   late SettingType _type = SettingType.privacySetting;
+
+@override
+void initState() {
+  super.initState();
+  // 设置是枢纽页：从这里能进二十多个子页，各子页里的确认框、清除缓存弹窗等
+  // 都是「点开才渲染」。在这里先预热通用文案，用户继续往下点时译文已就绪。
+  PrewarmStrings.warmSetting();
+}
   final RxBool _noAccount = Accounts.account.isEmpty.obs;
   late bool _isPortrait;
   late ThemeData theme;
