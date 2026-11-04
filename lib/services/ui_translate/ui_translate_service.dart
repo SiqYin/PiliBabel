@@ -792,7 +792,7 @@ class UiTranslateService extends GetxService {
       if (frag != null && frag.isNotEmpty) return frag;
     }
 
-    // 2) 术语嵌在句子里：**不再在这里替换**（3.6.5 修复）
+    // 3) 术语嵌在句子里：**不再在这里替换**（3.6.5 修复）
     //
     // 之前这条分支会把句中命中的术语直接替换成目标语言的名字，然后把整段当成
     // 译文返回。这会造成一个很严重的问题：整段简体中文里只要嵌了一个术语，
@@ -845,11 +845,6 @@ class UiTranslateService extends GetxService {
 
   /// 参与子串匹配的最短形态长度。单/双字符太容易误命中，排除。
   static const int _minSubstringFormLength = 3;
-  /// 做子串术语替换的最大文本长度：超过就跳过（长文本交给模型整句翻译）。
-  static const int _substringScanMaxChars = 80;
-
-  /// 单趟扫描的最大步数（安全阀，正常短文本远达不到）。
-  static const int _substringScanMaxSteps = 4096;
 
   /// 按宽度层级选出该术语的目标语言形态（全称或通行简称）。
   static String? _glossaryPreferred(String id, String langCode, UiTextWidth width) {
