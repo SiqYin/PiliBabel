@@ -8,15 +8,15 @@ import 'package:PiliPlus/http/search.dart';
 import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
-import 'package:PiliPlus/services/ui_translate/subtitle_selection.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_source_resolver.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translate_service.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_artifact.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_coordinator.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_job.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_proxy.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_targets.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
-import 'package:collection/collection.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart' as path;
 
@@ -57,15 +57,20 @@ abstract final class SubtitleTranslationBackgroundService {
 
   static SubtitleTranslationTaskState stateFor({
     required String videoKey,
+    int? cid,
     String? language,
   }) =>
-      _states[_key(videoKey, language ?? Pref.uiTranslateLang)] ??
+      _states[_key(videoKey, language ?? Pref.uiTranslateLang, cid)] ??
       const SubtitleTranslationTaskState();
 
   static Future<void> ensureInitialized() => _loadFuture ??= _loadIndex();
 
-  static void markComplete({required String videoKey, String? language}) {
-    final taskKey = _key(videoKey, language ?? Pref.uiTranslateLang);
+  static void markComplete({
+    required String videoKey,
+    required int cid,
+    String? language,
+  }) {
+    final taskKey = _key(videoKey, language ?? Pref.uiTranslateLang, cid);
     // The player can finish the selected child while its collection is still
     // translating. Keep aggregate progress visible until every child settles.
     if (_activeBatchTaskKeys.contains(taskKey)) return;
@@ -89,12 +94,13 @@ abstract final class SubtitleTranslationBackgroundService {
   /// Callers must not invoke this while the corresponding job is running.
   static Future<bool> removeCachedTranslation({
     required String videoKey,
+    required int cid,
     required String cacheKey,
     required List<SubtitleCue> cues,
     String? language,
   }) async {
     await ensureInitialized();
-    final taskKey = _key(videoKey, language ?? Pref.uiTranslateLang);
+    final taskKey = _key(videoKey, language ?? Pref.uiTranslateLang, cid);
     var removed = false;
     try {
       final file = SubtitleTranslationJob.cacheFileFor(cacheKey, cues);
@@ -121,7 +127,7 @@ abstract final class SubtitleTranslationBackgroundService {
   }) async {
     await ensureInitialized();
     final target = Pref.uiTranslateLang;
-    final taskKey = _key(videoKey, target);
+    final taskKey = _key(videoKey, target, cid);
     final current = _states[taskKey];
     if (current?.isRunning == true ||
         (!force && current?.phase == SubtitleTranslationTaskPhase.complete)) {
@@ -156,6 +162,7 @@ abstract final class SubtitleTranslationBackgroundService {
       if (targets.length > 1) {
         await _startBatch(
           parentVideoKey: videoKey,
+          parentCid: cid,
           targets: targets,
           language: target,
           force: force,
@@ -182,7 +189,7 @@ abstract final class SubtitleTranslationBackgroundService {
   }) async {
     await ensureInitialized();
     final target = Pref.uiTranslateLang;
-    final taskKey = _key(videoKey, target);
+    var taskKey = _key(videoKey, target, cid);
     final current = _states[taskKey];
     if (current?.isRunning == true ||
         (!force && current?.phase == SubtitleTranslationTaskPhase.complete)) {
@@ -215,6 +222,20 @@ abstract final class SubtitleTranslationBackgroundService {
         _fail(taskKey, 'Không lấy được phần video để dịch phụ đề');
         return;
       }
+      if (cid == null) {
+        final resolvedTaskKey = _key(videoKey, target, resolvedCid);
+        if (resolvedTaskKey != taskKey) {
+          _states.remove(taskKey);
+          taskKey = resolvedTaskKey;
+          _set(
+            taskKey,
+            const SubtitleTranslationTaskState(
+              phase: SubtitleTranslationTaskPhase.preparing,
+              message: 'Đang lấy phụ đề',
+            ),
+          );
+        }
+      }
       final info = await VideoHttp.playInfo(
         aid: aid?.toString(),
         bvid: bvid,
@@ -228,59 +249,37 @@ abstract final class SubtitleTranslationBackgroundService {
         _fail(taskKey, 'Không lấy được danh sách phụ đề');
         return;
       }
-      final choices = List<Subtitle>.of(tracks);
-      Subtitle? track;
-      List<SubtitleCue>? cues;
-      while (choices.isNotEmpty) {
-        final selection = SubtitleSelectionPolicy.choose(
-          choices,
-          target,
-          canTranslate: true,
-        );
-        Subtitle? candidate;
-        if (force) {
-          // A forced retry must translate a Chinese source even when Bilibili
-          // already offers a target-language track. Prefer the more complete
-          // AI transcript, then fall back to the regular Chinese track.
-          candidate = choices.firstWhereOrNull(
-            (item) =>
-                item.langTag == 'zh' &&
-                (item.isAi || item.lan.startsWith('ai-')),
-          );
-          candidate ??= choices.firstWhereOrNull(
-            (item) => item.langTag == 'zh',
-          );
-          if (candidate == null) break;
-        } else {
-          if (selection.index == 0) break;
-          candidate = choices[selection.index - 1];
-        }
-        if (!force && !selection.translate) {
-          markComplete(videoKey: videoKey, language: target);
-          return;
-        }
-        final url = candidate.subtitleUrl;
-        final body = url == null || url.isEmpty
-            ? null
-            : await VideoHttp.fetchSubtitleBody(url);
-        final parsed = body == null
-            ? const <SubtitleCue>[]
-            : SubtitleCues.fromBody(body);
-        if (parsed.isNotEmpty) {
-          track = candidate;
-          cues = parsed;
-          break;
-        }
-        // Prefer the AI transcript, but an unavailable/empty AI track must
-        // not prevent a usable original Chinese track from being translated.
-        choices.remove(candidate);
-      }
-      if (track == null || cues == null) {
+      final resolved = await SubtitleSourceResolver.resolve(
+        tracks: List<Subtitle>.of(tracks),
+        targetLanguage: target,
+        forceChineseSource: force,
+        loadCues: (candidate) async {
+          final url = candidate.subtitleUrl;
+          final body = url == null || url.isEmpty
+              ? null
+              : await VideoHttp.fetchSubtitleBody(url);
+          return body == null
+              ? const <SubtitleCue>[]
+              : SubtitleCues.fromBody(body);
+        },
+      );
+      if (resolved == null) {
         _fail(taskKey, 'Không tải được phụ đề nguồn để dịch');
         return;
       }
-      final sourceTrack = track;
-      final sourceCues = cues;
+      if (resolved.kind == SubtitleSourceKind.nativeTarget) {
+        _set(
+          taskKey,
+          const SubtitleTranslationTaskState(
+            phase: SubtitleTranslationTaskPhase.complete,
+            progress: 1,
+            message: 'Có sub Việt từ Bilibili',
+          ),
+        );
+        return;
+      }
+      final sourceTrack = resolved.track;
+      final sourceCues = resolved.cues;
       final proxies = _readProxies();
       final pool = SubtitleTranslationProxyPool.shared(
         proxies,
@@ -293,8 +292,13 @@ abstract final class SubtitleTranslationBackgroundService {
       final activeCacheKey = force
           ? '$cacheKey/retranslate/${DateTime.now().microsecondsSinceEpoch}'
           : cacheKey;
-      var replacementSaved = !force;
-      Future<void>? replacementPromotion;
+      final sourceIdentity = SubtitleTranslationJob.cacheIdentity(
+        cacheKey,
+        sourceCues,
+      );
+      var completionScheduled = false;
+      SubtitleTranslationProgress? lastProgress;
+      Future<void>? completionPromotion;
       final subscription = SubtitleTranslationCoordinator.attach(
         key: SubtitleTranslationJob.cacheIdentity(activeCacheKey, sourceCues),
         allowNewTranslation: true,
@@ -317,7 +321,10 @@ abstract final class SubtitleTranslationBackgroundService {
                   proxy: proxy,
                 );
               } on AiApiException catch (error) {
-                if (proxy != null && error.statusCode == null) {
+                if (proxy != null &&
+                    SubtitleTranslationProxyPool.shouldCooldownStatus(
+                      error.statusCode,
+                    )) {
                   pool.markUnavailable(proxy);
                 }
                 rethrow;
@@ -326,37 +333,54 @@ abstract final class SubtitleTranslationBackgroundService {
             priorityHandle: priority,
           ),
         ),
-        onUpdate: (_, progress) {
-          if (progress.isComplete) {
-            if (!replacementSaved) {
-              replacementSaved = true;
-              _set(
-                taskKey,
-                const SubtitleTranslationTaskState(
-                  phase: SubtitleTranslationTaskPhase.translating,
-                  progress: 1,
-                  message: 'Đang lưu bản dịch mới',
-                ),
-              );
-              replacementPromotion =
-                  _replaceCachedTranslation(
-                        activeCacheKey: activeCacheKey,
-                        canonicalCacheKey: cacheKey,
-                        cues: sourceCues,
-                      )
-                      .then((_) {
-                        markComplete(videoKey: videoKey, language: target);
-                      })
-                      .catchError((_) {
-                        _fail(
-                          taskKey,
-                          'Không thể lưu bản dịch mới, chạm để thử lại',
-                        );
-                      });
-              unawaited(replacementPromotion);
-            } else {
-              markComplete(videoKey: videoKey, language: target);
-            }
+        onUpdate: (vtt, progress) {
+          lastProgress = progress;
+          if (progress.isComplete && !completionScheduled) {
+            completionScheduled = true;
+            _set(
+              taskKey,
+              const SubtitleTranslationTaskState(
+                phase: SubtitleTranslationTaskPhase.translating,
+                progress: 1,
+                message: 'Đang kiểm tra và lưu phụ đề Việt',
+              ),
+            );
+            completionPromotion =
+                () async {
+                  if (force) {
+                    await _replaceCachedTranslation(
+                      activeCacheKey: activeCacheKey,
+                      canonicalCacheKey: cacheKey,
+                      cues: sourceCues,
+                    );
+                  }
+                  final registered = await _registerCompletedArtifact(
+                    videoKey: bvid ?? 'av$aid',
+                    cid: resolvedCid,
+                    targetLanguage: target,
+                    sourceLan: sourceTrack.lan,
+                    sourceIdentity: sourceIdentity,
+                    cacheKey: cacheKey,
+                    cues: sourceCues,
+                    vtt: vtt,
+                  );
+                  if (!registered) {
+                    throw const FormatException(
+                      'Phụ đề hoàn tất không vượt qua kiểm tra toàn bộ',
+                    );
+                  }
+                  markComplete(
+                    videoKey: videoKey,
+                    cid: resolvedCid,
+                    language: target,
+                  );
+                }().catchError((_) {
+                  _fail(
+                    taskKey,
+                    'Bản dịch chưa hợp lệ hoặc không thể lưu, chạm để thử lại',
+                  );
+                });
+            unawaited(completionPromotion);
             return;
           }
           final percent = (progress.ratio * 100).round();
@@ -368,15 +392,29 @@ abstract final class SubtitleTranslationBackgroundService {
               message: progress.processedCues == 0
                   ? 'Đang xếp hàng dịch ưu tiên'
                   : progress.failedChunks > 0
-                  ? 'Đang thử lại $percent%'
-                  : 'Đang dịch $percent%',
+                  ? 'Đang thử lại ${progress.failedChunks} chunk lỗi '
+                        '($percent%)'
+                  : 'Đang dịch ${progress.processedCues}/'
+                        '${progress.totalCues} câu ($percent%)',
             ),
           );
         },
       );
-      await subscription.whenComplete;
-      await replacementPromotion;
-      subscription.detach();
+      try {
+        await subscription.whenComplete;
+        await completionPromotion;
+        final progress = lastProgress;
+        if (progress != null &&
+            !progress.isComplete &&
+            (_states[taskKey]?.isRunning ?? false)) {
+          _fail(
+            taskKey,
+            'Còn ${progress.failedChunks} chunk lỗi, chạm để thử lại',
+          );
+        }
+      } finally {
+        subscription.detach();
+      }
     } catch (_) {
       _fail(taskKey, 'Không thể bắt đầu dịch sub, chạm để thử lại');
     }
@@ -414,18 +452,19 @@ abstract final class SubtitleTranslationBackgroundService {
 
   static Future<void> _startBatch({
     required String parentVideoKey,
+    required int? parentCid,
     required List<SubtitleTranslationTarget> targets,
     required String language,
     required bool force,
   }) async {
-    final parentTaskKey = _key(parentVideoKey, language);
+    final parentTaskKey = _key(parentVideoKey, language, parentCid);
     _activeBatchTaskKeys.add(parentTaskKey);
     _completed.remove(parentTaskKey);
     if (force) {
       // Keep the old subtitle cache usable, but reset display markers so an
       // explicit collection retranslation cannot look complete immediately.
       for (final target in targets) {
-        final childTaskKey = _key(target.videoKey, language);
+        final childTaskKey = _key(target.videoKey, language, target.cid);
         _completed.remove(childTaskKey);
         _set(childTaskKey, const SubtitleTranslationTaskState());
       }
@@ -437,7 +476,11 @@ abstract final class SubtitleTranslationBackgroundService {
       if (finalized) return;
       final states = [
         for (final target in targets)
-          stateFor(videoKey: target.videoKey, language: language),
+          stateFor(
+            videoKey: target.videoKey,
+            cid: target.cid,
+            language: language,
+          ),
       ];
       final completed = states
           .where(
@@ -467,7 +510,7 @@ abstract final class SubtitleTranslationBackgroundService {
         finalized = true;
         _fail(
           parentTaskKey,
-          '$failed/${targets.length} video bị lỗi, chạm để thử lại',
+          '$failed/${targets.length} phần bị lỗi, chạm để thử lại',
         );
         return;
       }
@@ -478,7 +521,7 @@ abstract final class SubtitleTranslationBackgroundService {
               ? SubtitleTranslationTaskPhase.preparing
               : SubtitleTranslationTaskPhase.translating,
           progress: progress,
-          message: 'Đang dịch $completed/${targets.length} video',
+          message: 'Đang dịch $completed/${targets.length} phần',
         ),
       );
     }
@@ -555,6 +598,69 @@ abstract final class SubtitleTranslationBackgroundService {
     await source.rename(destination.path);
   }
 
+  static Future<bool> _registerCompletedArtifact({
+    required String videoKey,
+    required int cid,
+    required String targetLanguage,
+    required String sourceLan,
+    required String sourceIdentity,
+    required String cacheKey,
+    required List<SubtitleCue> cues,
+    required String vtt,
+  }) async {
+    if (!SubtitleTranslationOutput.isCompleteTranslatedVtt(
+      cues,
+      vtt,
+      targetLanguage: targetLanguage,
+    )) {
+      return false;
+    }
+    final directory = Directory(
+      path.join(appSupportDirPath, 'subtitle_translations'),
+    );
+    await directory.create(recursive: true);
+    final vttFile = File(path.join(directory.path, '$sourceIdentity.vtt'));
+    final temp = File(
+      '${vttFile.path}.${DateTime.now().microsecondsSinceEpoch}.tmp',
+    );
+    await temp.writeAsString(vtt, flush: true);
+    try {
+      await temp.rename(vttFile.path);
+    } on FileSystemException {
+      if (await vttFile.exists()) await vttFile.delete();
+      await temp.rename(vttFile.path);
+    }
+    final artifact = SubtitleTranslationArtifact(
+      key: SubtitleTranslationArtifact.makeKey(
+        videoKey: videoKey,
+        cid: cid,
+        targetLanguage: targetLanguage,
+        sourceLan: sourceLan,
+        sourceIdentity: sourceIdentity,
+      ),
+      videoKey: videoKey,
+      cid: cid,
+      targetLanguage: targetLanguage,
+      sourceLan: sourceLan,
+      sourceIdentity: sourceIdentity,
+      cueCount: cues.length,
+      cacheFilePath: SubtitleTranslationJob.cacheFileFor(cacheKey, cues).path,
+      vttFilePath: vttFile.path,
+      completedAt: DateTime.now(),
+    );
+    return SubtitleTranslationArtifactRegistry.shared.registerVerified(
+      artifact,
+      verify: () async {
+        if (!await vttFile.exists()) return false;
+        return SubtitleTranslationOutput.isCompleteTranslatedVtt(
+          cues,
+          await vttFile.readAsString(),
+          targetLanguage: targetLanguage,
+        );
+      },
+    );
+  }
+
   static void _set(String key, SubtitleTranslationTaskState state) {
     _states[key] = state;
   }
@@ -569,29 +675,55 @@ abstract final class SubtitleTranslationBackgroundService {
     );
   }
 
-  static String _key(String videoKey, String language) => '$videoKey/$language';
+  static String _key(String videoKey, String language, [int? cid]) =>
+      cid == null ? '$videoKey/$language' : '$videoKey/$cid/$language';
 
   static File get _indexFile => File(
     path.join(appSupportDirPath, 'subtitle_translations', 'video_index.json'),
   );
 
   static Future<void> _loadIndex() async {
+    // `video_index.json` from older builds is only a display hint keyed by
+    // video/language. Never restore "Đã dịch" from it because it cannot prove
+    // the part, source fingerprint, cue count or timeline.
     try {
       final file = _indexFile;
-      if (!file.existsSync()) return;
-      final data = jsonDecode(await file.readAsString());
-      if (data is! Map || data['completed'] is! List) return;
-      for (final value in data['completed'] as List) {
-        if (value is! String) continue;
-        _completed.add(value);
-        _states[value] = const SubtitleTranslationTaskState(
+      if (file.existsSync()) await file.readAsString();
+    } catch (_) {
+      // A missing or old status index never invalidates translation caches.
+    }
+
+    final artifacts = await SubtitleTranslationArtifactRegistry.shared.list();
+    for (final artifact in artifacts) {
+      try {
+        final cacheFile = File(artifact.cacheFilePath);
+        final vttFile = File(artifact.vttFilePath);
+        if (!await cacheFile.exists() || !await vttFile.exists()) continue;
+        final cues = SubtitleCues.fromVtt(await vttFile.readAsString());
+        if (cues.length != artifact.cueCount) continue;
+        if (artifact.targetLanguage.toLowerCase().startsWith('vi') &&
+            cues.any(
+              (cue) => RegExp(
+                r'[\u3400-\u9FFF\uF900-\uFAFF]',
+              ).hasMatch(cue.text),
+            )) {
+          continue;
+        }
+        final taskKey = _key(
+          artifact.videoKey,
+          artifact.targetLanguage,
+          artifact.cid,
+        );
+        _completed.add(taskKey);
+        _states[taskKey] = const SubtitleTranslationTaskState(
           phase: SubtitleTranslationTaskPhase.complete,
           progress: 1,
           message: 'Đã dịch và lưu trên thiết bị',
         );
+      } catch (_) {
+        // Invalid artifacts stay on disk for targeted repair, but are never
+        // advertised as a completed Vietnamese subtitle.
       }
-    } catch (_) {
-      // A missing or old status index never invalidates translation caches.
     }
   }
 
@@ -603,7 +735,9 @@ abstract final class SubtitleTranslationBackgroundService {
         final temp = File('${file.path}.tmp');
         await temp.writeAsString(
           jsonEncode({
-            'version': 1,
+            'version': 2,
+            // These are migration/debug hints only. Startup completion state
+            // is reconstructed exclusively from verified artifacts.
             'completed': _completed.toList()..sort(),
           }),
         );

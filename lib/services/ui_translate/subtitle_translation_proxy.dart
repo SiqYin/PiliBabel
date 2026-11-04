@@ -139,8 +139,9 @@ class SubtitleTranslationProxyPool {
        _capacity = directWorkers + proxies.length * workersPerProxy,
        _slots = [
          for (var i = 0; i < directWorkers; i++) null,
-         for (final proxy in proxies)
-           for (var i = 0; i < workersPerProxy; i++) proxy,
+         // A new proxy starts with one probe slot. The remaining slots only
+         // become available after its first successful translation request.
+         for (final proxy in proxies) proxy,
        ],
        _proxies = proxies.toSet(),
        directWorkers = directWorkers;
@@ -149,6 +150,7 @@ class SubtitleTranslationProxyPool {
   final int _capacity;
   final List<SubtitleTranslationProxy?> _slots;
   final Set<SubtitleTranslationProxy> _proxies;
+  final Set<SubtitleTranslationProxy> _activatedProxies = {};
   final List<_ProxyWaiter> _waiters = [];
   final Map<SubtitleTranslationProxy, DateTime> _unavailableUntil = {};
   int _nextWaiterSequence = 0;
@@ -165,12 +167,24 @@ class SubtitleTranslationProxyPool {
     SubtitleTranslationPriorityHandle? priorityHandle,
   }) async {
     final route = await _acquire(priority, priorityHandle);
+    var succeeded = false;
     try {
-      return await action(route);
+      final result = await action(route);
+      succeeded = true;
+      return result;
     } finally {
+      if (succeeded && route != null) _activateProxy(route);
       _release(route);
     }
   }
+
+  static bool shouldCooldownStatus(int? statusCode) =>
+      statusCode == null ||
+      statusCode == 401 ||
+      statusCode == 403 ||
+      statusCode == 407 ||
+      statusCode == 429 ||
+      statusCode >= 500;
 
   void markUnavailable(
     SubtitleTranslationProxy proxy, {
@@ -178,6 +192,14 @@ class SubtitleTranslationProxyPool {
   }) {
     _unavailableUntil[proxy] = DateTime.now().add(cooldown);
     _scheduleCooldownWake();
+  }
+
+  void _activateProxy(SubtitleTranslationProxy proxy) {
+    if (!_activatedProxies.add(proxy)) return;
+    for (var i = 1; i < workersPerProxy; i++) {
+      _slots.add(proxy);
+    }
+    _drainWaiters();
   }
 
   Future<SubtitleTranslationProxy?> _acquire(

@@ -38,6 +38,7 @@ import 'package:PiliPlus/pages/video/introduction/pgc/controller.dart';
 import 'package:PiliPlus/pages/video/post_panel/popup_menu_text.dart';
 import 'package:PiliPlus/pages/video/post_panel/view.dart';
 import 'package:PiliPlus/pages/video/widgets/header_control.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_playback_track.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/bottom_control_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_status.dart';
@@ -824,13 +825,14 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       /// 字幕
       BottomControlType.subtitle => Obx(
         () {
-          if (videoDetailController.subtitles.isNotEmpty) {
-            final val = videoDetailController.vttSubtitlesIndex.value;
+          if (videoDetailController.subtitlePlaybackTracks.isNotEmpty) {
+            final selectedId =
+                videoDetailController.selectedSubtitleTrackId.value;
             final translationRunning =
                 videoDetailController.subtitleTranslationRunning.value;
             final translationProgress =
                 videoDetailController.subtitleTranslationProgress.value;
-            return StaticPopupMenuButton<int>(
+            return StaticPopupMenuButton<String>(
               tooltip: translationRunning
                   ? videoDetailController.subtitleTranslationStatus.value
                   : uiTx('字幕'),
@@ -842,22 +844,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               itemBuilder: (context) {
                 // 只有一条字幕时退回旧版单列菜单
                 // 两条以上才用主/副双栏面板
-                if (videoDetailController.subtitles.length < 2) {
+                if (videoDetailController.subtitlePlaybackTracks.length < 2) {
                   return [
-                    if (videoDetailController.canRestoreTranslatedSubtitle)
-                      PopupMenuItem<int>(
-                        height: 35,
-                        onTap: videoDetailController.restoreTranslatedSubtitle,
-                        child: Text(
-                          uiTx('Khôi phục phụ đề dịch'),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
                     if (videoDetailController.canRetranslateCurrentSubtitle)
-                      PopupMenuItem<int>(
+                      PopupMenuItem<String>(
                         height: 35,
                         onTap: videoDetailController.retranslateCurrentSubtitle,
                         child: Text(
@@ -869,7 +859,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         ),
                       ),
                     if (videoDetailController.canDeleteTranslatedSubtitle)
-                      PopupMenuItem<int>(
+                      PopupMenuItem<String>(
                         height: 35,
                         onTap: videoDetailController
                             .deleteCurrentTranslatedSubtitle,
@@ -882,11 +872,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         ),
                       ),
                     const PopupMenuDivider(height: 1),
-                    PopupMenuItem<int>(
-                      value: 0,
+                    PopupMenuItem<String>(
+                      value: SubtitlePlaybackTrack.offId,
                       height: 35,
-                      onTap: () => videoDetailController.setSubtitle(
-                        0,
+                      onTap: () => videoDetailController.setSubtitleById(
+                        SubtitlePlaybackTrack.offId,
                         manual: true,
                       ),
                       child: Text(
@@ -897,23 +887,23 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         ),
                       ),
                     ),
-                    ...videoDetailController.subtitles.mapIndexed((i, e) {
-                      return PopupMenuItem<int>(
-                        value: i + 1,
+                    ...videoDetailController.subtitlePlaybackTracks.map((e) {
+                      return PopupMenuItem<String>(
+                        value: e.id,
                         height: 35,
-                        onTap: () => videoDetailController.setSubtitle(
-                          i + 1,
+                        onTap: () => videoDetailController.setSubtitleById(
+                          e.id,
                           manual: true,
                         ),
                         child: Text(
-                          e.lanDoc ?? e.lan,
+                          e.label,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const .new(color: Colors.white, fontSize: 13),
                         ),
                       );
                     }),
-                    PopupMenuItem<int>(
+                    PopupMenuItem<String>(
                       enabled: false,
                       height: 38,
                       child: Obx(
@@ -932,14 +922,14 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 }
                 return [
                   // 主/副字幕双栏选择面板,点击不关闭菜单,可连续设置
-                  PopupMenuItem<int>(
+                  PopupMenuItem<String>(
                     enabled: false,
                     padding: EdgeInsets.zero,
                     child: _SubtitleSelectPanel(
                       controller: videoDetailController,
                     ),
                   ),
-                  PopupMenuItem<int>(
+                  PopupMenuItem<String>(
                     enabled: false,
                     height: 38,
                     child: Obx(
@@ -962,7 +952,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    val == 0
+                    selectedId == SubtitlePlaybackTrack.offId
                         ? const Icon(
                             Icons.closed_caption_off_outlined,
                             size: 22,
@@ -2950,10 +2940,10 @@ class _SubtitleSelectPanel extends StatelessWidget {
 
   Widget _column({
     required String title,
-    required int selectedIndex,
-    required int disabledIndex,
-    required ValueChanged<int> onSelect,
-    bool showRestoreAction = false,
+    required String selectedId,
+    required String disabledId,
+    required ValueChanged<String> onSelect,
+    bool showActions = false,
   }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -2963,44 +2953,36 @@ class _SubtitleSelectPanel extends StatelessWidget {
           height: 32,
           child: Center(child: Text(title, style: _headerStyle)),
         ),
-        if (showRestoreAction && controller.canRestoreTranslatedSubtitle)
-          _item(
-            label: uiTx('Khôi phục phụ đề dịch'),
-            selected: false,
-            disabled: false,
-            onTap: controller.restoreTranslatedSubtitle,
-          ),
-        if (showRestoreAction && controller.canRetranslateCurrentSubtitle)
+        if (showActions && controller.canRetranslateCurrentSubtitle)
           _item(
             label: uiTx('Dịch lại phụ đề'),
             selected: false,
             disabled: false,
             onTap: controller.retranslateCurrentSubtitle,
           ),
-        if (showRestoreAction && controller.canDeleteTranslatedSubtitle)
+        if (showActions && controller.canDeleteTranslatedSubtitle)
           _item(
             label: uiTx('Xóa phụ đề đã dịch'),
             selected: false,
             disabled: false,
             onTap: controller.deleteCurrentTranslatedSubtitle,
           ),
-        if (showRestoreAction &&
-            (controller.canRestoreTranslatedSubtitle ||
-                controller.canRetranslateCurrentSubtitle ||
+        if (showActions &&
+            (controller.canRetranslateCurrentSubtitle ||
                 controller.canDeleteTranslatedSubtitle))
           const Divider(height: 1, color: Colors.white24),
         _item(
           label: uiTx('关闭'),
-          selected: selectedIndex == 0,
+          selected: selectedId == SubtitlePlaybackTrack.offId,
           disabled: false,
-          onTap: () => onSelect(0),
+          onTap: () => onSelect(SubtitlePlaybackTrack.offId),
         ),
-        ...controller.subtitles.mapIndexed(
-          (i, e) => _item(
-            label: e.lanDoc ?? e.lan,
-            selected: selectedIndex == i + 1,
-            disabled: disabledIndex == i + 1,
-            onTap: () => onSelect(i + 1),
+        ...controller.subtitlePlaybackTracks.map(
+          (track) => _item(
+            label: track.label,
+            selected: selectedId == track.id,
+            disabled: disabledId == track.id,
+            onTap: () => onSelect(track.id),
           ),
         ),
       ],
@@ -3011,8 +2993,8 @@ class _SubtitleSelectPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () {
-        final primary = controller.vttSubtitlesIndex.value;
-        final secondary = controller.vttSecondarySubtitlesIndex.value;
+        final primary = controller.selectedSubtitleTrackId.value;
+        final secondary = controller.selectedSecondarySubtitleTrackId.value;
         return SizedBox(
           width: 300,
           child: IntrinsicHeight(
@@ -3022,11 +3004,13 @@ class _SubtitleSelectPanel extends StatelessWidget {
                 Expanded(
                   child: _column(
                     title: uiTx('主字幕'),
-                    selectedIndex: primary,
-                    disabledIndex: secondary,
-                    onSelect: (index) =>
-                        controller.setSubtitle(index, manual: true),
-                    showRestoreAction: true,
+                    selectedId: primary,
+                    disabledId: secondary,
+                    onSelect: (trackId) => controller.setSubtitleById(
+                      trackId,
+                      manual: true,
+                    ),
+                    showActions: true,
                   ),
                 ),
                 const VerticalDivider(
@@ -3037,9 +3021,9 @@ class _SubtitleSelectPanel extends StatelessWidget {
                 Expanded(
                   child: _column(
                     title: uiTx('副字幕'),
-                    selectedIndex: secondary,
-                    disabledIndex: primary,
-                    onSelect: controller.setSecondarySubtitle,
+                    selectedId: secondary,
+                    disabledId: primary,
+                    onSelect: controller.setSecondarySubtitleById,
                   ),
                 ),
               ],

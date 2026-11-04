@@ -197,6 +197,39 @@ abstract final class SubtitleTranslationOutput {
     return normalized;
   }
 
+  /// A completed Vietnamese artifact must preserve every source cue while
+  /// passing the same per-line quality checks used during chunk translation.
+  static bool isCompleteVietnameseVtt(
+    List<SubtitleCue> source,
+    String renderedVtt,
+  ) => isCompleteTranslatedVtt(
+    source,
+    renderedVtt,
+    targetLanguage: 'vi',
+  );
+
+  static bool isCompleteTranslatedVtt(
+    List<SubtitleCue> source,
+    String renderedVtt, {
+    required String targetLanguage,
+  }) {
+    final rendered = SubtitleCues.fromVtt(renderedVtt);
+    if (rendered.length != source.length ||
+        !SubtitleCues.hasSameTimeline(source, renderedVtt)) {
+      return false;
+    }
+    try {
+      sanitizeAndValidate(
+        source.map((cue) => cue.text).toList(growable: false),
+        rendered.map((cue) => cue.text).toList(growable: false),
+        targetLanguage: targetLanguage,
+      );
+      return true;
+    } on FormatException {
+      return false;
+    }
+  }
+
   static void _rejectMergedContext(
     List<String> output,
     List<String> translatedContext,
@@ -447,7 +480,7 @@ class SubtitleTranslationJob {
     this.positionSeconds = 0,
     this.cacheDirectory,
     this.retryDelay = const Duration(milliseconds: 250),
-    this.attemptTimeout = const Duration(seconds: 65),
+    this.attemptTimeout = const Duration(seconds: 60),
     this.contextOverlap = 4,
     this.targetLanguage,
   }) : _texts = cues.map((cue) => cue.text).toList();

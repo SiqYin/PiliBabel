@@ -57,11 +57,15 @@ class _VideoSubtitleTranslateButtonState
       child: Obx(() {
         final state = SubtitleTranslationBackgroundService.stateFor(
           videoKey: widget.videoKey,
+          cid: widget.cid,
         );
         final theme = Theme.of(context);
+        final hasNativeVietnamese =
+            state.phase == SubtitleTranslationTaskPhase.complete &&
+            state.message?.startsWith('Có sub Việt') == true;
         final (label, icon, color) = switch (state.phase) {
           SubtitleTranslationTaskPhase.complete => (
-            uiTx('Đã dịch'),
+            uiTx(hasNativeVietnamese ? 'Có sub Việt' : 'Đã dịch'),
             Icons.check,
             Colors.greenAccent,
           ),

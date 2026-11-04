@@ -28,17 +28,26 @@ void main() {
   });
 
   test(
-    'combines direct workers with six simultaneous slots per proxy',
+    'probes each proxy once before opening six simultaneous slots',
     () async {
       final pool = SubtitleTranslationProxyPool(
         SubtitleTranslationProxy.parseMany('1.1.1.1:80\n2.2.2.2:80'),
         directWorkers: 5,
       );
+      final probes = <String>[];
+
+      await Future.wait([
+        pool.run((proxy) async => probes.add(proxy?.host ?? 'direct')),
+        pool.run((proxy) async => probes.add(proxy?.host ?? 'direct')),
+      ]);
+
+      expect(probes, containsAll(['1.1.1.1', '2.2.2.2']));
+      expect(pool.workerCount, 17);
+
       final gates = List.generate(17, (_) => Completer<void>());
       final active = <String, int>{};
       final allStarted = Completer<void>();
       var started = 0;
-
       final work = [
         for (final gate in gates)
           pool.run((proxy) async {
@@ -46,7 +55,6 @@ void main() {
             active.update(route, (value) => value + 1, ifAbsent: () => 1);
             if (++started == 17) allStarted.complete();
             await gate.future;
-            active.update(route, (value) => value - 1);
           }),
       ];
 
@@ -58,6 +66,14 @@ void main() {
       await Future.wait(work);
     },
   );
+
+  test('classifies proxy failures that require route cooldown', () {
+    expect(SubtitleTranslationProxyPool.shouldCooldownStatus(null), isTrue);
+    expect(SubtitleTranslationProxyPool.shouldCooldownStatus(407), isTrue);
+    expect(SubtitleTranslationProxyPool.shouldCooldownStatus(429), isTrue);
+    expect(SubtitleTranslationProxyPool.shouldCooldownStatus(503), isTrue);
+    expect(SubtitleTranslationProxyPool.shouldCooldownStatus(400), isFalse);
+  });
 
   test(
     'keeps direct workers usable after a proxy becomes unavailable',

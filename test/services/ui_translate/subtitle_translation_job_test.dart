@@ -24,6 +24,38 @@ void main() {
     await directory.delete(recursive: true);
   });
 
+  test(
+    'completed Vietnamese VTT rejects residual Chinese and timing drift',
+    () {
+      const source = [
+        SubtitleCue('00:00:01.000', '00:00:02.000', '你好'),
+        SubtitleCue('00:00:03.000', '00:00:04.000', '再见'),
+      ];
+      expect(
+        SubtitleTranslationOutput.isCompleteVietnameseVtt(
+          source,
+          SubtitleCues.toVtt(source, const ['Xin chào', 'Tạm biệt']),
+        ),
+        isTrue,
+      );
+      expect(
+        SubtitleTranslationOutput.isCompleteVietnameseVtt(
+          source,
+          SubtitleCues.toVtt(source, const ['Xin chào', '再见']),
+        ),
+        isFalse,
+      );
+      expect(
+        SubtitleTranslationOutput.isCompleteVietnameseVtt(
+          source,
+          'WEBVTT\n\n00:00:01.100 --> 00:00:02.000\nXin chào\n\n'
+          '00:00:03.000 --> 00:00:04.000\nTạm biệt\n',
+        ),
+        isFalse,
+      );
+    },
+  );
+
   test('round-trips downloaded VTT and Bilibili JSON cue timing', () {
     final cues = SubtitleCues.fromBody([
       {'from': 1.25, 'to': 2.5, 'content': '第一行'},
