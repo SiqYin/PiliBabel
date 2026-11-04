@@ -534,17 +534,21 @@ class UiTranslateService extends GetxService {
     // 人工固定译名优先于缓存与模型：钉住的译法必须始终生效。
     final pinned = _pinnedTranslations[src]?[currentLanguage.code];
     if (pinned != null) return pinned;
-    // 缓存优先：稳态下这一步就是一次 map 查询，直接返回，不必碰术语表。
+    // 术语表优先于缓存（3.6.5.1 修回）。
     //
-    // 顺序很关键。之前是「术语表 → 缓存」，而术语表未命中整串时会退化成
-    // 遍历上万个形态做子串扫描 —— 每个还没翻好的控件、每一帧都要跑一遍，
-    // 这正是「打开 AI 翻译后界面整体变卡」的根因。
-    final hit = _cache[src];
-    if (hit != null) return hit;
-    // 术语表其次：命中即返回官方译名（全称/简称按 [width] 决定），
-    // 不发请求，也不会被模型结果覆盖。
+    // 3.6.4 为了性能把顺序改成「缓存 → 术语表」，理由是术语表未命中整串时会
+    // 退化成遍历上万个形态做子串扫描。但 3.6.5 已经**彻底移除了子串替换**，
+    // `_glossaryTranslate` 现在只剩一次 map 查找，与缓存查询同为 O(1)，
+    // 当初的性能理由不再成立。
+    //
+    // 而缓存优先会带来真问题：模型早先翻错的译文（如「桑多涅」→「サンドロネ」）
+    // 会永久压住词表里的正确官方名（サンドローネ），因为缓存以原文为 key、
+    // 命中即返回，词表根本没机会介入。术语表存在的意义就是覆盖模型的自由发挥，
+    // 所以必须排在缓存前面。
     final glossary = _glossaryTranslate(src, currentLanguage.code, width);
     if (glossary != null) return glossary;
+    final hit = _cache[src];
+    if (hit != null) return hit;
     // 尚未翻译：先显示原文，排进待翻队列。
     if (_pending.add(src)) _scheduleFlush();
     return src;
@@ -564,10 +568,11 @@ class UiTranslateService extends GetxService {
     if (looksLikeNativeScript(src, currentLanguage.nativeScript)) return src;
     final pinned = _pinnedTranslations[src]?[currentLanguage.code];
     if (pinned != null) return pinned;
-    final hit = _cache[src];
-    if (hit != null) return hit;
+    // 与 [_tx] 同一顺序：术语表在缓存之前（理由见 _tx 里的注释）。
     final glossary = _glossaryTranslate(src, currentLanguage.code, UiTextWidth.wide);
     if (glossary != null) return glossary;
+    final hit = _cache[src];
+    if (hit != null) return hit;
     // 未翻译：先显示原文，但排进优先队列；同时把它从普通队列里摘掉，
     // 避免同一串文字被两个队列各翻一次。
     _pending.remove(src);
@@ -771,6 +776,21 @@ class UiTranslateService extends GetxService {
     // 1) 整串精确命中（最常见：标题/菜单项本身就是一个术语）
     final exact = _glossaryIndex[key];
     if (exact != null) return _glossaryPreferred(exact, langCode, width);
+
+    // 2) 整串就是一个**名字片段**（姓氏或名字）：如「马斯克」。
+    //
+    // 绝不能让它命中整条记录——那会把「马斯克」译成全名「エラ・マスク」，
+    // 于是所有马斯克（含埃隆·马斯克）都变成艾拉·马斯克。
+    // 片段只断言了其中一段，所以取**译文的对应片段**：马斯克 → マスク。
+    // 这样无论上下文指的是谁，译法都是对的。
+    //
+    // 片段表在生成期就做了歧义处理：同一写法对应多个不同译法时整条丢弃，
+    // 与任何真实词条名重合时也丢弃（上面的精确命中已经优先）。
+    final fragIdx = kGlossaryFragmentIndex[key];
+    if (fragIdx != null) {
+      final frag = kGlossaryFragments[fragIdx][langCode];
+      if (frag != null && frag.isNotEmpty) return frag;
+    }
 
     // 2) 术语嵌在句子里：**不再在这里替换**（3.6.5 修复）
     //
