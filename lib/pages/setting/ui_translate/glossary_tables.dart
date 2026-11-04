@@ -60,7 +60,25 @@ class _GlossaryTablesPageState extends State<GlossaryTablesPage> {
   ];
   static const List<String> _projectIds = ['holo', 'niji', 'imas'];
 
-  late Set<String> _disabled = Pref.glossaryDisabledTables;
+  late Set<String> _disabled = _sanitise(Pref.glossaryDisabledTables);
+
+  /// 剔除集合里不属于任何词表的残留 id。
+  ///
+  /// 3.6.4 的「默认全部关闭」迁移曾把 `kGlossaryNames` 的所有 id 前缀写进禁用
+  /// 集合，其中包含 `game`（游戏名条目 `game|zzz` 的前缀），而本页根本没有它的
+  /// 开关 —— 于是用户把 15 个开关全打开后，集合里仍残留 `game`，
+  /// 计数「15 - 残留」就永远停在 14/15；运行时 `game|*` 的 8 条游戏名简称也被
+  /// 顺带永久禁用。加载与保存时都过一遍白名单，老数据自动被治好。
+  static Set<String> _sanitise(Set<String> stored) {
+    final clean = <String>{
+      for (final id in stored)
+        if (kGlossaryManifest.containsKey(id)) id,
+    };
+    if (clean.length != stored.length) {
+      Pref.glossaryDisabledTables = clean;
+    }
+    return clean;
+  }
 
   /// 每个词表的词条数只算一次。
   /// 每次 build 都遍历上万个 key 会明显掉帧。
@@ -99,8 +117,11 @@ class _GlossaryTablesPageState extends State<GlossaryTablesPage> {
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
           title: Text(uiTx(name)),
+          // 「已内置」：kGlossaryNames 里真正参与匹配的子集条数
+          // （采集全量在构建机上，词表按分类白名单只内嵌核心部分）。
+          // 不写「共 N 条」，避免和采集总数（manifest rows）对不上。
           subtitle: Text(
-            uiTxP('{0} 条术语', [(_countCache[id] ?? 0).toString()]),
+            uiTxP('已内置 {0} 条术语', [(_countCache[id] ?? 0).toString()]),
           ),
           value: !_disabled.contains(id),
           onChanged: (v) => _toggle(id, v),
@@ -136,7 +157,8 @@ class _GlossaryTablesPageState extends State<GlossaryTablesPage> {
         // 所以这里不需要（也不能）自己再读：revision 是**实例**成员，
         // 没有同名的静态入口。
         child: Obx(() {
-          final enabled = kGlossaryManifest.length - _disabled.length;
+          // 与设置主页那一项用同一个权威计数，避免两处公式漂移。
+          final enabled = UiTranslateService.enabledGlossaryTableCount();
           return ListView(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             children: [

@@ -674,7 +674,25 @@ class UiTranslateService extends GetxService {
     final bar = recordId.indexOf('|');
     if (bar <= 0) return true;
     final table = recordId.substring(0, bar);
+    // 游戏名条目（game|zzz 等）没有对应的开关（术语集页面按 15 个词表展示），
+    // 永远视为启用。3.6.4 的「默认关闭」迁移曾把 `game` 写进禁用集合，
+    // 若不在这里兜住，老用户升级后游戏名简称（ゼンゼロ…）会被永久禁用。
+    if (table == 'game') return true;
     return !Pref.glossaryDisabledTables.contains(table);
+  }
+
+  /// 已启用的词表数量。
+  ///
+  /// 不能拿 `kGlossaryManifest.length - disabled.length` 直接相减：禁用集合里可能
+  /// 残留没有开关的 id（3.6.4「默认关闭」迁移写过 `game` 前缀），会把它们错算成
+  /// 「被关掉的词表」，于是 15 个全开也显示 14/15。这里只数真正有开关的词表。
+  static int enabledGlossaryTableCount() {
+    final disabled = Pref.glossaryDisabledTables;
+    var n = 0;
+    for (final id in kGlossaryManifest.keys) {
+      if (!disabled.contains(id)) n++;
+    }
+    return n;
   }
 
   static bool get glossaryReady => _glossaryFormIndex != null;
