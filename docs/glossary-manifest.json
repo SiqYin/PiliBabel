@@ -1,12 +1,12 @@
 {
  "schema": 1,
- "generated_at": "2026-11-04T00:00:37",
+ "generated_at": "2026-11-04T12:42:29",
  "games": {
   "ak": {
    "version": "2026-11-02",
    "rows": 5619,
    "updated_at": "2026-11-04",
-   "hash": "f109187ae0035776",
+   "hash": "94386e96f7a21e15",
    "deps": {
     "ArknightsGamedata": "2026-11-02T19:43:18Z"
    }
@@ -15,7 +15,7 @@
    "version": "2026-11-03",
    "rows": 149,
    "updated_at": "2026-11-04",
-   "hash": "6a38a39b4333bba8",
+   "hash": "68510bef9522ee72",
    "deps": {
     "bluearchive": "2026-11-03T00:06:18Z"
    }
@@ -24,14 +24,14 @@
    "version": "unknown",
    "rows": 165,
    "updated_at": "2026-11-04",
-   "hash": "054833c350d6ec8e",
+   "hash": "7a1e93eb8a7c4627",
    "deps": {}
   },
   "genshin": {
    "version": "2026-10-31",
    "rows": 11505,
    "updated_at": "2026-11-04",
-   "hash": "d1532301703e7b63",
+   "hash": "e452ba8876e6d901",
    "deps": {
     "genshin-langdata": "2026-10-31T02:08:28Z"
    }
@@ -40,7 +40,7 @@
    "version": "2026-11-03",
    "rows": 401,
    "updated_at": "2026-11-04",
-   "hash": "4bbc1cc908e2c075",
+   "hash": "1c7fd2d0ed912797",
    "deps": {
     "honkaiimpact3": "2026-11-03T02:06:14Z"
    }
@@ -49,14 +49,14 @@
    "version": "unknown",
    "rows": 83,
    "updated_at": "2026-11-04",
-   "hash": "13affd117d04aa30",
+   "hash": "a5723087ec1d40eb",
    "deps": {}
   },
   "hsr": {
    "version": "2026-09-29",
    "rows": 6301,
    "updated_at": "2026-11-04",
-   "hash": "9594da5e72d543ad",
+   "hash": "383b8665486e02ad",
    "deps": {
     "StarRailRes": "2026-09-29T14:21:44Z"
    }
@@ -65,21 +65,21 @@
    "version": "unknown",
    "rows": 282,
    "updated_at": "2026-11-04",
-   "hash": "d3a9ccdc23ea5d25",
+   "hash": "36d1b6f6cd2ae241",
    "deps": {}
   },
   "niji": {
    "version": "unknown",
    "rows": 239,
    "updated_at": "2026-11-04",
-   "hash": "482b92d16aa2baa6",
+   "hash": "1f267a1b6cd1a962",
    "deps": {}
   },
   "nikke": {
    "version": "2026-11-02",
    "rows": 211,
    "updated_at": "2026-11-04",
-   "hash": "891edc94b7a14987",
+   "hash": "98135f86beafaad1",
    "deps": {
     "nikke-goddess-of-victory-international": "2026-11-02T20:18:11Z"
    }
@@ -88,21 +88,21 @@
    "version": "unknown",
    "rows": 100,
    "updated_at": "2026-11-04",
-   "hash": "f2619c8086341256",
+   "hash": "0cc2fc3381b0444d",
    "deps": {}
   },
   "uma": {
    "version": "unknown",
    "rows": 321,
    "updated_at": "2026-11-04",
-   "hash": "91c9d7e22450ac5d",
+   "hash": "13751f6df59e545b",
    "deps": {}
   },
   "wuwa": {
    "version": "2026-11-03",
    "rows": 1443,
    "updated_at": "2026-11-04",
-   "hash": "f2dd15fea489f943",
+   "hash": "3d401ddcaebac306",
    "deps": {
     "wutheringwaves": "2026-11-03T00:18:28Z"
    }
@@ -111,14 +111,14 @@
    "version": "unknown",
    "rows": 25,
    "updated_at": "2026-11-04",
-   "hash": "bf480b639f64e54f",
+   "hash": "ed4032645e7afdc2",
    "deps": {}
   },
   "zzz": {
    "version": "3.2",
    "rows": 4963,
    "updated_at": "2026-11-04",
-   "hash": "98b3f1e7364bd2c5",
+   "hash": "9be40cc8f7820496",
    "deps": {
     "zzz-tr-db": "2026-10-25-7a7408865aa3",
     "count": 2318
