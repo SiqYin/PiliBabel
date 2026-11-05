@@ -1982,14 +1982,29 @@ abstract final class Pref {
     value,
   );
 
-  static bool get subtitleTranslationPrefetchNext => _setting.get(
-    SettingBoxKey.subtitleTranslationPrefetchNext,
-    defaultValue: true,
-  );
+  static bool get subtitleTranslationPrefetchNext =>
+      subtitleTranslationPrefetchCount > 0;
 
-  static set subtitleTranslationPrefetchNext(bool value) => _setting.put(
-    SettingBoxKey.subtitleTranslationPrefetchNext,
-    value,
+  static set subtitleTranslationPrefetchNext(bool value) =>
+      subtitleTranslationPrefetchCount = value ? 1 : 0;
+
+  static int get subtitleTranslationPrefetchCount {
+    final stored = _setting.get(
+      SettingBoxKey.subtitleTranslationPrefetchCount,
+    );
+    if (stored is num) return stored.toInt().clamp(0, 5).toInt();
+    final legacy = _setting.get(
+      SettingBoxKey.subtitleTranslationPrefetchNext,
+      defaultValue: true,
+    );
+    final migrated = legacy == false ? 0 : 1;
+    _setting.put(SettingBoxKey.subtitleTranslationPrefetchCount, migrated);
+    return migrated;
+  }
+
+  static set subtitleTranslationPrefetchCount(int value) => _setting.put(
+    SettingBoxKey.subtitleTranslationPrefetchCount,
+    value.clamp(0, 5).toInt(),
   );
 
   static String get subtitleTranslationProxies =>

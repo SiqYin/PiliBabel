@@ -67,7 +67,9 @@ import 'package:PiliPlus/services/download/download_service.dart';
 import 'package:PiliPlus/services/pip_overlay_service.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_selection.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_playback_track.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_prefetch_policy.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_source_resolver.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_text_quality.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_artifact.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_background_service.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_coordinator.dart';
@@ -114,6 +116,11 @@ typedef _SubtitlePrefetchTarget = ({
   int cid,
   int? epId,
   int? seasonId,
+  String targetLanguage,
+  int chunkSize,
+  int concurrency,
+  int contextOverlap,
+  List<SubtitleTranslationProxy> proxies,
 });
 
 class VideoDetailController extends GetxController
@@ -1728,7 +1735,9 @@ class VideoDetailController extends GetxController
   int _subtitleChunkSizeForVideo = Pref.subtitleChunkSize;
   int _subtitleConcurrencyForVideo = Pref.subtitleConcurrency;
   int _subtitleContextOverlapForVideo = Pref.subtitleContextOverlap;
+  int _subtitlePrefetchCountForVideo = Pref.subtitleTranslationPrefetchCount;
   List<SubtitleTranslationProxy> _subtitleProxiesForVideo = const [];
+  static final Set<String> _subtitlePrefetchInFlight = <String>{};
   late final RxBool showVP = Pref.showViewPointsOverlay.obs;
   late final RxList<ViewPointSegment> viewPointList = <ViewPointSegment>[].obs;
 
@@ -2227,6 +2236,7 @@ class VideoDetailController extends GetxController
     _subtitleChunkSizeForVideo = Pref.subtitleChunkSize;
     _subtitleConcurrencyForVideo = Pref.subtitleConcurrency;
     _subtitleContextOverlapForVideo = Pref.subtitleContextOverlap;
+    _subtitlePrefetchCountForVideo = Pref.subtitleTranslationPrefetchCount;
     try {
       _subtitleProxiesForVideo = SubtitleTranslationProxy.parseMany(
         Pref.subtitleTranslationProxies,
@@ -2338,7 +2348,10 @@ class VideoDetailController extends GetxController
 
   String _translatedTrackLabel(SubtitleTranslationProgress progress) {
     final percent = (progress.ratio * 100).round();
-    if (progress.isComplete) return 'Tiếng Việt (đang kiểm tra 100%)';
+    if (progress.phase == SubtitleTranslationPhase.verifying) {
+      return 'Tiếng Việt (đang kiểm tra)';
+    }
+    if (progress.isComplete) return 'Tiếng Việt (đang lưu)';
     if (progress.failedChunks > 0) {
       return 'Tiếng Việt (đang thử lại $percent%)';
     }
@@ -2400,6 +2413,7 @@ class VideoDetailController extends GetxController
         sourceLan: sourceLan,
         sourceIdentity: sourceIdentity,
         cueCount: cues.length,
+        verifierVersion: SubtitleTextQuality.verifierVersion,
         cacheFilePath: SubtitleTranslationJob.cacheFileFor(
           sessionKey,
           cues,
@@ -2441,6 +2455,11 @@ class VideoDetailController extends GetxController
           ),
         );
       }
+      subtitleTranslationProgress.value = 1;
+      subtitleTranslationRunning.value = false;
+      subtitleTranslationStatus.value = uiTx(
+        'Phụ đề tiếng Việt đã được kiểm tra và lưu trên thiết bị',
+      );
     } finally {
       _artifactPromotionInFlight.remove(sourceIdentity);
     }
@@ -2539,20 +2558,15 @@ class VideoDetailController extends GetxController
         cues,
       );
       final translatedTrackId = 'subtitle:translated:$sourceIdentity';
-      // Resolve this before the page moves to another video. The shared
-      // session can now schedule the prefetch even after this controller detaches.
-      final prefetchTarget = _captureNextPlaylistSubtitleTarget();
+      // Capture the current part's settings. Changes apply from the next part
+      // and cannot silently resize an already-running background job.
+      final prefetchTargets = _capturePlaylistSubtitleTargets(
+        _subtitlePrefetchCountForVideo,
+      );
       final subscription = SubtitleTranslationCoordinator.attach(
         key: sourceIdentity,
         allowNewTranslation: canStartTranslation,
         priority: SubtitleTranslationPriority.playback,
-        onCompleted: prefetchTarget == null
-            ? null
-            : () {
-                if (Pref.subtitleTranslationPrefetchNext) {
-                  unawaited(_prefetchNextPlaylistSubtitle(prefetchTarget));
-                }
-              },
         createJob: (onUpdate, priority) => SubtitleTranslationJob(
           cues: cues,
           chunkSize: _subtitleChunkSizeForVideo,
@@ -2620,6 +2634,11 @@ class VideoDetailController extends GetxController
           subtitleTranslationStatus.value =
               !canStartTranslation && !progress.isComplete
               ? uiTx('正在显示中文字幕；请开启AI翻译以翻译字幕')
+              : progress.phase == SubtitleTranslationPhase.verifying
+              ? uiTxP(
+                  'Đang kiểm tra phụ đề Việt: {0}/{1} câu',
+                  [progress.verifiedCues, progress.totalCues],
+                )
               : progress.failedChunks > 0
               ? uiTxP(
                   '字幕翻译将在后台重试：已处理{0}/{1}句（{2}%），'
@@ -2633,10 +2652,7 @@ class VideoDetailController extends GetxController
                   ],
                 )
               : progress.isComplete
-              ? uiTxP(
-                  '字幕翻译完成：{0}/{1}句（100%）',
-                  [progress.totalCues, progress.totalCues],
-                )
+              ? uiTx('Đang lưu phụ đề tiếng Việt đã xác minh')
               : uiTxP(
                   '正在实时翻译字幕：{0}/{1}句（{2}%）',
                   [
@@ -2650,7 +2666,11 @@ class VideoDetailController extends GetxController
             label: _translatedTrackLabel(progress),
             language: 'vi',
             kind: SubtitlePlaybackTrackKind.translated,
-            phase: progress.failedChunks > 0
+            phase:
+                progress.isComplete ||
+                    progress.phase == SubtitleTranslationPhase.verifying
+                ? SubtitlePlaybackTrackPhase.verifying
+                : progress.failedChunks > 0
                 ? SubtitlePlaybackTrackPhase.retrying
                 : SubtitlePlaybackTrackPhase.translating,
             sourceIndex: index - 1,
@@ -2658,6 +2678,7 @@ class VideoDetailController extends GetxController
             isComplete: false,
             progress: progress.ratio,
             translatedCues: progress.translatedCues,
+            verifiedCues: progress.verifiedCues,
             totalCues: progress.totalCues,
             failedChunks: progress.failedChunks,
             vtt: vtt,
@@ -2703,6 +2724,11 @@ class VideoDetailController extends GetxController
           }
         },
       );
+      if (canStartTranslation) {
+        for (final prefetchTarget in prefetchTargets) {
+          unawaited(_prefetchPlaylistSubtitle(prefetchTarget));
+        }
+      }
       _subtitleSubscription?.detach();
       _subtitleSubscription = subscription;
       if (isClosed || generation != _subtitleGeneration) {
@@ -2791,55 +2817,73 @@ class VideoDetailController extends GetxController
     }
   }
 
-  _SubtitlePrefetchTarget? _captureNextPlaylistSubtitleTarget() {
-    dynamic next;
-    dynamic nextAfterCurrent(List<dynamic> entries) {
-      final current = entries.indexWhere((entry) => entry?.cid == cid.value);
-      if (current < 0 || current + 1 >= entries.length) return null;
-      return entries[current + 1];
-    }
-
+  List<_SubtitlePrefetchTarget> _capturePlaylistSubtitleTargets(int count) {
+    if (count <= 0) return const [];
     try {
+      List<dynamic>? entries;
       if (isPlayAll && mediaList.isNotEmpty) {
-        next = nextAfterCurrent(mediaList);
+        entries = mediaList;
       }
-      if (next == null &&
+      if (entries == null &&
           isUgc &&
           Get.isRegistered<UgcIntroController>(tag: heroTag)) {
         final pages = Get.find<UgcIntroController>(tag: heroTag)
             .videoDetail
             .value
             .pages;
-        if (pages != null && pages.length > 1) next = nextAfterCurrent(pages);
+        if (pages != null && pages.length > 1) entries = pages;
       }
-      if (next == null && Get.isRegistered<PgcIntroController>(tag: heroTag)) {
+      if (entries == null &&
+          Get.isRegistered<PgcIntroController>(tag: heroTag)) {
         final episodes = Get.find<PgcIntroController>(tag: heroTag)
             .pgcItem
             .episodes;
-        if (episodes != null && episodes.length > 1) {
-          next = nextAfterCurrent(episodes);
-        }
+        if (episodes != null && episodes.length > 1) entries = episodes;
       }
-      final nextCid = next?.cid as int?;
-      if (nextCid == null || nextCid == cid.value) return null;
-      final nextBvid = (next?.bvid as String?) ?? bvid;
-      final rawEpId = next?.epId ?? next?.id;
-      return (
-        bvid: nextBvid,
-        cid: nextCid,
-        epId: rawEpId is int ? rawEpId : null,
-        seasonId: rawEpId is int ? seasonId : null,
+      if (entries == null) return const [];
+      final selected = selectSubtitlePrefetchEntries<dynamic>(
+        entries: entries,
+        currentCid: cid.value,
+        count: count,
+        cidOf: (entry) => entry?.cid as int?,
+        identityOf: (entry) {
+          final entryCid = entry?.cid as int?;
+          final entryBvid = (entry?.bvid as String?) ?? bvid;
+          return '$entryBvid/$entryCid';
+        },
       );
+      final targets = <_SubtitlePrefetchTarget>[];
+      for (final entry in selected) {
+        final nextCid = entry?.cid as int?;
+        if (nextCid == null) continue;
+        final nextBvid = (entry?.bvid as String?) ?? bvid;
+        final rawEpId = entry?.epId ?? entry?.id;
+        targets.add((
+          bvid: nextBvid,
+          cid: nextCid,
+          epId: rawEpId is int ? rawEpId : null,
+          seasonId: rawEpId is int ? seasonId : null,
+          targetLanguage: Pref.uiTranslateLang,
+          chunkSize: _subtitleChunkSizeForVideo,
+          concurrency: _subtitleConcurrencyForVideo,
+          contextOverlap: _subtitleContextOverlapForVideo,
+          proxies: List<SubtitleTranslationProxy>.of(
+            _subtitleProxiesForVideo,
+          ),
+        ));
+      }
+      return targets;
     } catch (_) {
       // The current video can still play if its optional playlist is malformed.
-      return null;
+      return const [];
     }
   }
 
-  static Future<void> _prefetchNextPlaylistSubtitle(
+  static Future<void> _prefetchPlaylistSubtitle(
     _SubtitlePrefetchTarget target,
   ) async {
-    if (!Pref.subtitleTranslationPrefetchNext) return;
+    final prefetchKey = '${target.bvid}/${target.cid}/${target.targetLanguage}';
+    if (!_subtitlePrefetchInFlight.add(prefetchKey)) return;
     try {
       final playInfo = await VideoHttp.playInfo(
         bvid: target.bvid,
@@ -2847,17 +2891,18 @@ class VideoDetailController extends GetxController
         seasonId: target.seasonId,
         epId: target.epId,
       );
-      if (!Pref.subtitleTranslationPrefetchNext) return;
+      if (Pref.uiTranslateLang != target.targetLanguage) return;
       if (playInfo case Success(:final response)) {
         final tracks = response.subtitle?.subtitles;
         if (tracks == null || tracks.isEmpty) return;
         final choices = List<Subtitle>.of(tracks);
         Subtitle? sourceTrack;
         List<SubtitleCue>? cues;
-        while (choices.isNotEmpty && Pref.subtitleTranslationPrefetchNext) {
+        while (choices.isNotEmpty &&
+            Pref.uiTranslateLang == target.targetLanguage) {
           final selection = SubtitleSelectionPolicy.choose(
             choices,
-            Pref.uiTranslateLang,
+            target.targetLanguage,
             canTranslate: SubtitleTranslateService.needed,
           );
           if (!selection.translate || selection.index == 0) return;
@@ -2879,28 +2924,50 @@ class VideoDetailController extends GetxController
         if (sourceTrack == null || cues == null) return;
         final selectedSourceTrack = sourceTrack;
         final selectedCues = cues;
-        final targetLanguage = Pref.uiTranslateLang;
+        final targetLanguage = target.targetLanguage;
         final cacheKey =
             '${target.bvid}/${target.cid}/${selectedSourceTrack.lan}/$targetLanguage';
-        final proxies = SubtitleTranslationProxy.parseMany(
-          Pref.subtitleTranslationProxies,
-          defaultType: Pref.subtitleTranslationProxyType == 'socks5'
-              ? SubtitleTranslationProxyType.socks5
-              : SubtitleTranslationProxyType.http,
-        );
         final proxyPool = SubtitleTranslationProxyPool.shared(
-          proxies,
-          directWorkers: Pref.subtitleConcurrency,
+          target.proxies,
+          directWorkers: target.concurrency,
         );
-        SubtitleTranslationCoordinator.attach(
-          key: SubtitleTranslationJob.cacheIdentity(cacheKey, selectedCues),
+        final sourceIdentity = SubtitleTranslationJob.cacheIdentity(
+          cacheKey,
+          selectedCues,
+        );
+        final existing = await SubtitleTranslationArtifactRegistry.shared.find(
+          videoKey: target.bvid,
+          cid: target.cid,
+          targetLanguage: targetLanguage,
+          sourceLan: selectedSourceTrack.lan,
+          sourceIdentity: sourceIdentity,
+        );
+        if (existing != null &&
+            existing.verifierVersion == SubtitleTextQuality.verifierVersion) {
+          try {
+            final file = File(existing.vttFilePath);
+            if (await file.exists() &&
+                SubtitleTranslationOutput.isCompleteTranslatedVtt(
+                  selectedCues,
+                  await file.readAsString(),
+                  targetLanguage: targetLanguage,
+                )) {
+              return;
+            }
+          } catch (_) {
+            // Fall through and repair only the incomplete checkpoint chunks.
+          }
+        }
+        String? readyVtt;
+        final subscription = SubtitleTranslationCoordinator.attach(
+          key: sourceIdentity,
           allowNewTranslation: true,
           priority: SubtitleTranslationPriority.playlistPrefetch,
           createJob: (onUpdate, priority) => SubtitleTranslationJob(
             cues: selectedCues,
-            chunkSize: Pref.subtitleChunkSize,
+            chunkSize: target.chunkSize,
             concurrency: proxyPool.workerCount,
-            contextOverlap: Pref.subtitleContextOverlap,
+            contextOverlap: target.contextOverlap,
             targetLanguage: targetLanguage,
             cacheKey: cacheKey,
             onUpdate: onUpdate,
@@ -2926,13 +2993,43 @@ class VideoDetailController extends GetxController
               priorityHandle: priority,
             ),
           ),
-          onUpdate: (_, _) {},
-        ).detach();
+          onUpdate: (vtt, progress) {
+            if (progress.isComplete) readyVtt = vtt;
+          },
+        );
+        try {
+          await subscription.whenComplete;
+        } finally {
+          subscription.detach();
+        }
+        final vtt = readyVtt;
+        if (vtt != null) {
+          final registered =
+              await SubtitleTranslationBackgroundService.registerCompletedArtifact(
+                videoKey: target.bvid,
+                cid: target.cid,
+                targetLanguage: targetLanguage,
+                sourceLan: selectedSourceTrack.lan,
+                sourceIdentity: sourceIdentity,
+                cacheKey: cacheKey,
+                cues: selectedCues,
+                vtt: vtt,
+              );
+          if (registered) {
+            SubtitleTranslationBackgroundService.markComplete(
+              videoKey: target.bvid,
+              cid: target.cid,
+              language: targetLanguage,
+            );
+          }
+        }
       }
     } on FormatException {
       // Invalid optional proxy input must never interrupt playback.
     } catch (_) {
       // Prefetch is best effort; the next video will still translate on open.
+    } finally {
+      _subtitlePrefetchInFlight.remove(prefetchKey);
     }
   }
 

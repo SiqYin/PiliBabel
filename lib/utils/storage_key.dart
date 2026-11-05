@@ -226,6 +226,7 @@ abstract final class SettingBoxKey {
       subtitleContextOverlap = 'subtitleContextOverlap',
       subtitleTranslationWaitForComplete = 'subtitleTranslationWaitForComplete',
       subtitleTranslationPrefetchNext = 'subtitleTranslationPrefetchNext',
+      subtitleTranslationPrefetchCount = 'subtitleTranslationPrefetchCount',
       subtitleTranslationProxies = 'subtitleTranslationProxies',
       subtitleTranslationProxyType = 'subtitleTranslationProxyType',
       uiTranslateProvider = 'uiTranslateProvider',

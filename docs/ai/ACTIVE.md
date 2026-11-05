@@ -1,44 +1,46 @@
 # Active work
 
-- Objective: Keep the durable Vietnamese subtitle pipeline intact while integrating stable upstream PiliBabel `v3.6.5` fixes and glossary improvements.
+- Objective: Stabilize verified Vietnamese subtitles, integrate upstream PiliBabel `v3.6.7`, and pretranslate the next `0-5` playlist items without replacing the custom subtitle pipeline.
 - Branch: `codex/subtitle-translation-proxy` tracking `origin/codex/subtitle-translation-proxy`.
-- Status: Upstream `v3.6.5` integration is complete and release-ready; affected tests/analyze, APK build/signature, ADB install and startup smoke pass.
+- Upstream merge commit: `8fdaabfc7`; implementation changes are staged for a separate commit.
+- Status: Source implementation, affected tests/analyze, release build, APK integrity and signature checks pass. ADB install/startup smoke is pending because no device is connected.
 
 ## Completed
 
-- Added stable-ID `SubtitlePlaybackTrack` models and a shared source resolver. Bilibili Chinese tracks retain their original URI; app-translated Vietnamese uses a separate VTT and menu entry.
-- Added `SubtitleTranslationArtifact` identity keyed by video, CID, target/source language, source content and timeline fingerprint. Completion requires atomic write/readback, exact cue count/order/timestamps, and no unresolved Chinese/source-copy/likely-English output.
-- Unified online playback, background-card translation, playlist/multipart work, retranslations and offline download around the same source-selection and artifact validation rules.
-- Manual track/off selection no longer cancels jobs. Automatic switching occurs only after translated output is available and respects manual choice for the current part.
-- Background progress includes translated cue count and failed chunks. Multi-part status reports `x/y phần`; old completion markers are treated only as hints and verified artifacts rebuild completion state.
-- Offline downloads materialize a verified Vietnamese artifact as `vi-app-ai.vtt` and expose it as `Tiếng Việt (AI dịch)`.
-- Translation defaults remain 20 cues/chunk, overlap 4, five direct workers, 60-second request timeout and six slots per healthy proxy. A proxy begins with one probe slot and expands after success; connection/auth/429/5xx failures trigger cooldown/rotation.
-- Merged upstream `v3.6.5` without replacing the custom subtitle runtime. The merge retains stable Vietnamese tracks, durable artifacts, proxy workers and retry/checkpoint behavior.
-- Integrated upstream glossary indexing, first-character buckets, short/full term handling, glossary management UI, prewarmed UI strings and black-screen/crash fixes.
-- Embedded glossary terms no longer produce a partially translated mixed-language sentence. The full sentence is sent to the model with the official/community term supplied as a prompt hint.
+- Created backup branch `codex/backup-before-v3.6.7-sync` and merged stable upstream tag `v3.6.7` with a merge commit; no rebase or force-push.
+- Preserved the custom runtime: independent Vietnamese playback tracks, durable artifacts/checkpoints, proxy routing, chunk retries, strict JSON output and Vietnamese UI behavior.
+- Replaced partial Han detection with a shared rune/code-point classifier covering `〇`, CJK Unified Ideographs, Extensions A-I and the Compatibility Supplement.
+- Output cues containing Han are rejected regardless of source-language detection and do not count as translated or verified.
+- Added two-stage completion: `translating -> verifying -> ready`. The app no longer advertises 100%/completed until atomic cache readback and full VTT verification pass.
+- Verification requires exact cue count/order/timestamps, no context overlap leakage and no residual Han. Invalid cues reopen only their owning chunks while valid chunks remain cached.
+- Added artifact verifier metadata. Legacy caches remain reusable, but stale completion markers and old verifier versions are revalidated before being exposed as ready.
+- Added `SubtitlePlaybackTrackPhase.verifying` and separate translated/verified/error progress values for player/menu status.
+- Kept stable-ID Vietnamese track selection as the default. A manual track/off choice suppresses auto-switching only for the current video part.
+- Replaced the old prefetch boolean with `subtitleTranslationPrefetchCount` (`0-5`, default `1`) and migration `true -> 1`, `false -> 0`.
+- Added pure playlist prefetch selection, deduplication and priority rules. Playback/current-video work remains above prefetch jobs, and per-video settings are captured when queued.
+- Fixed detached playlist-prefetch listeners so background jobs remain tracked until completion.
 
 ## Files changed
 
-- Player/UI: `lib/pages/video/controller.dart`, `lib/plugin/pl_player/view/view.dart`, `lib/common/widgets/video_subtitle_translate_button.dart`.
-- Translation/cache: `lib/services/ui_translate/subtitle_playback_track.dart`, `subtitle_source_resolver.dart`, `subtitle_translation_artifact.dart`, `subtitle_translation_background_service.dart`, `subtitle_translation_job.dart`, `subtitle_translation_proxy.dart`.
-- Offline: `lib/services/download/download_service.dart`.
-- Upstream UI translation: `lib/services/ui_translate/ui_translate_service.dart`, `game_glossary.dart`, `glossary_update_service.dart`, `prewarm_strings.dart`, and `lib/pages/setting/ui_translate/glossary_tables.dart`.
-- Tests: playback-track, source-resolver, artifact, job, proxy, Vietnamese UI and glossary regressions under `test/services/ui_translate/`.
+- Quality/validation: `lib/services/ui_translate/subtitle_text_quality.dart`, `subtitle_translation_job.dart`, `subtitle_translation_artifact.dart`.
+- Playback/progress: `lib/services/ui_translate/subtitle_playback_track.dart`, `lib/pages/video/controller.dart`, `lib/common/widgets/video_subtitle_translate_button.dart`.
+- Prefetch/settings: `lib/services/ui_translate/subtitle_prefetch_policy.dart`, `subtitle_translation_background_service.dart`, `subtitle_translate_service.dart`, `lib/pages/setting/ui_translate/view.dart`, `lib/utils/storage_key.dart`, `lib/utils/storage_pref.dart`.
+- Tests: artifact/job/prefetch/text-quality tests under `test/services/ui_translate/`.
 
 ## Validation
 
-- FAST/AFFECTED tests: PASS, 60 focused subtitle/cache/source/proxy/Vietnamese UI/glossary tests.
-- Affected Flutter analyze: PASS across 19 changed Dart files with no issues.
+- FAST/AFFECTED: PASS, `flutter test test/services/ui_translate` (`65/65`).
+- Affected Flutter analyze: PASS with exit code 0; 28 existing/info-only notices remain, mainly slow async I/O and test style.
 - `git diff --check`: PASS.
-- Release build: PASS on 2026-11-04 using Flutter 3.47.2, Android SDK 37 and a locally extracted Temurin JDK 17.
-- APK: `build/app/outputs/flutter-apk/app-release.apk`, 120.5 MB, SHA-256 `1b9580fc32be6b7a89ba6bbd687d44544b4f18567c7019ea60399edc724f49a8`; ZIP integrity and APK Signature Scheme v2 verification pass.
-- ADB install: PASS with `adb install -r -g` on `XHK6R20612001230` (`MRX_W29`), preserving app data/cache. Package `com.example.pilibabel` reports version `3.6.5`; `MainActivity` resumed and no `AndroidRuntime`/`FATAL EXCEPTION` appeared in the startup log scan.
-- Startup log still reports non-fatal media option warnings for `reconnect_streamed`, `reconnect_delay_max`, `multiple_requests` and `http-persistent`; they do not prevent launch.
-- Independent Antigravity review: unavailable because the required Antigravity bridge is absent; no native `agy` fallback used.
+- Release build: PASS on 2026-11-05 using Flutter 3.47.2, Android SDK build-tools 37 and Temurin JDK 17.
+- APK: `build/app/outputs/flutter-apk/app-release.apk`, 120,065,502 bytes, SHA-256 `a0f9de187f2a8f602b4785a23e7042f036741ff87ba6747db7935d52b14a2ddd`.
+- APK ZIP integrity: PASS. APK Signature Scheme v2 verification: PASS (existing Android debug signing certificate).
+- ADB: no connected device returned by `adb devices -l`; install and startup/crash smoke were not run.
+- Independent Antigravity review: bridge health passed, but review attempts were unavailable (permission denial, then timeout); do not retry repeatedly.
 
 ## Remaining risks and next action
 
-- Next action: perform interactive subtitle smoke tests on the device: switch Chinese/Vietnamese/off, seek past minute four, change video while translation runs, background/restore the app, verify proxy expansion and test offline Vietnamese playback.
-- Jobs resume from durable chunk checkpoints when restarted, but there is no Android foreground service that guarantees execution after the OS kills the app process.
-- Real translation-provider and proxy behavior still require device/network smoke evidence.
-- Preserve user-owned untracked `.cursor/` and `.ruler/` directories.
+- Reconnect the Android device, then run `adb install -r -g`, launch `com.example.pilibabel`, scan for `AndroidRuntime`/`FATAL EXCEPTION`, and perform interactive subtitle checks (seek past minute four, track switching, cache restore and playlist prefetch).
+- Push is gated on successful device startup smoke per the requested release plan. Commit may be prepared locally while the device is disconnected.
+- Real provider/proxy translation throughput still requires device/network smoke evidence.
+- Preserve user-owned untracked `.agentboard/`, `.codebase-memory/`, `.cursor/` and `.ruler/` directories.

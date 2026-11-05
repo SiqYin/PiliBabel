@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_artifact.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_text_quality.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:path/path.dart' as path;
 
@@ -25,6 +26,7 @@ SubtitleTranslationArtifact _artifact(
     sourceLan: 'ai-zh',
     sourceIdentity: source,
     cueCount: 20,
+    verifierVersion: SubtitleTextQuality.verifierVersion,
     cacheFilePath: path.join(root, '$key.json'),
     vttFilePath: path.join(root, '$key.vtt'),
     completedAt: DateTime.utc(2026, 1, 1),

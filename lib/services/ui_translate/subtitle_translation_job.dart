@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' show max, min;
 
+import 'package:PiliPlus/services/ui_translate/subtitle_text_quality.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:crypto/crypto.dart';
 import 'package:path/path.dart' as path;
@@ -16,26 +17,32 @@ typedef SubtitleChunkTranslatorWithContext = Future<List<String>> Function(
   List<String> context,
 );
 
+enum SubtitleTranslationPhase { translating, verifying, ready }
+
 class SubtitleTranslationProgress {
   const SubtitleTranslationProgress({
+    required this.phase,
     required this.completedChunks,
     required this.totalChunks,
     required this.processedCues,
     required this.translatedCues,
+    required this.verifiedCues,
     required this.totalCues,
     required this.failedChunks,
   });
 
+  final SubtitleTranslationPhase phase;
   final int completedChunks;
   final int totalChunks;
   final int processedCues;
   final int translatedCues;
+  final int verifiedCues;
   final int totalCues;
   final int failedChunks;
 
-  bool get isComplete => completedChunks == totalChunks && failedChunks == 0;
+  bool get isComplete => phase == SubtitleTranslationPhase.ready;
 
-  double get ratio => totalCues == 0 ? 0 : processedCues / totalCues;
+  double get ratio => totalCues == 0 ? 0 : translatedCues / totalCues;
 }
 
 typedef SubtitleTranslationUpdate = void Function(
@@ -60,7 +67,6 @@ abstract final class SubtitleTranslationOutput {
   static final RegExp _ordinalPrefix = RegExp(
     r'^\s*(?:\[(\d{1,3})\]|(\d{1,3})\s*[\.、\):：-]\s*(?!\d))',
   );
-  static final RegExp _han = RegExp(r'[\u3400-\u9FFF\uF900-\uFAFF]');
   static final RegExp _vietnameseMarks = RegExp(r'[À-ỹĐđ]');
   static final RegExp _latinWords = RegExp(r'[A-Za-z]+');
   static final RegExp _contextWordSeparator = RegExp(
@@ -298,13 +304,12 @@ abstract final class SubtitleTranslationOutput {
         normalized.contains('TRANSLATE_ONLY_JSON')) {
       throw const FormatException('Subtitle translation echoed prompt data');
     }
-    final sourceHasHan = _han.hasMatch(source);
+    final sourceHasHan = SubtitleTextQuality.containsHan(source);
     if (sourceHasHan && normalized == source.trim()) {
       throw const FormatException('Subtitle translation copied source');
     }
-    if (sourceHasHan &&
-        targetLanguage?.toLowerCase() == 'vi' &&
-        _han.hasMatch(normalized)) {
+    if (targetLanguage?.toLowerCase().startsWith('vi') == true &&
+        SubtitleTextQuality.containsHan(normalized)) {
       throw const FormatException(
         'Vietnamese subtitle still contains untranslated Chinese text',
       );
@@ -507,6 +512,8 @@ class SubtitleTranslationJob {
   int _translatedCues = 0;
   bool _cacheChecked = false;
   bool _cacheHit = false;
+  SubtitleTranslationPhase _phase = SubtitleTranslationPhase.translating;
+  int _verifiedCues = 0;
   Timer? _refresh;
   DateTime? _lastEmitAt;
   Future<void> _checkpointTail = Future.value();
@@ -570,13 +577,13 @@ class SubtitleTranslationJob {
                 .where((index) => index >= 0 && index < total)
                 .toSet()
           : <int>{};
-      final isComplete =
+      final declaredComplete =
           data['complete'] == true ||
           (completed.isEmpty &&
               List.generate(total, (index) => index).every(
                 (index) => _normalizedCachedChunk(index, lines) != null,
               ));
-      if (isComplete) {
+      if (declaredComplete) {
         completed
           ..clear()
           ..addAll(List.generate(total, (index) => index));
@@ -630,16 +637,23 @@ class SubtitleTranslationJob {
       _failedChunkIndexes.addAll(invalidCompleted);
       _translatedCues = _cueCount(_completedChunks);
       _processedCues = _translatedCues + _cueCount(_failedChunkIndexes);
-      _cacheHit = _completedChunks.length == total;
+      _phase = SubtitleTranslationPhase.translating;
+      _verifiedCues = 0;
       _emit();
-      if (normalizedLegacyCache) {
+      if (_completedChunks.length == total && _failedChunkIndexes.isEmpty) {
+        _cacheHit = await _verifyAndFinalize();
+        return _cacheHit;
+      }
+      if (normalizedLegacyCache ||
+          declaredComplete ||
+          invalidCompleted.isNotEmpty) {
         // Older releases may have stored model-echoed batch labels such as
         // "1. Xin chao". Keep the completed translation and repair the
         // durable file in place, rather than discarding it and retranslating.
         _saveCheckpoint();
         await _checkpointTail;
       }
-      return _cacheHit;
+      return false;
     } catch (_) {
       return false;
     }
@@ -658,7 +672,13 @@ class SubtitleTranslationJob {
     _refresh?.cancel();
     if (_cancelled) return;
     await _checkpointTail;
-    _emit();
+    if (_completedChunks.length == total && _failedChunkIndexes.isEmpty) {
+      await _verifyAndFinalize();
+    } else {
+      _phase = SubtitleTranslationPhase.translating;
+      _verifiedCues = 0;
+      _emit();
+    }
   }
 
   Future<void> _worker() async {
@@ -838,10 +858,12 @@ class SubtitleTranslationJob {
     onUpdate(
       SubtitleCues.toVtt(cues, _texts),
       SubtitleTranslationProgress(
+        phase: _phase,
         completedChunks: _completedChunks.length,
         totalChunks: total,
         processedCues: _processedCues,
         translatedCues: _translatedCues,
+        verifiedCues: _verifiedCues,
         totalCues: cues.length,
         failedChunks: _failedChunkIndexes.length,
       ),
@@ -880,7 +902,95 @@ class SubtitleTranslationJob {
     (count, index) => count + min(chunkSize, cues.length - index * chunkSize),
   );
 
-  void _saveCheckpoint() {
+  Future<bool> _verifyAndFinalize() async {
+    if (_cancelled ||
+        _completedChunks.length != total ||
+        _failedChunkIndexes.isNotEmpty) {
+      return false;
+    }
+    _phase = SubtitleTranslationPhase.verifying;
+    _verifiedCues = 0;
+    _saveCheckpoint();
+    await _checkpointTail;
+    if (_cancelled) return false;
+    _emit();
+
+    var invalid = await _invalidCheckpointChunks(requireComplete: false);
+    if (invalid.isNotEmpty) {
+      _reopenInvalidChunks(invalid);
+      return false;
+    }
+
+    _verifiedCues = cues.length;
+    _saveCheckpoint(complete: true);
+    await _checkpointTail;
+    if (_cancelled) return false;
+    invalid = await _invalidCheckpointChunks(requireComplete: true);
+    if (invalid.isNotEmpty) {
+      _reopenInvalidChunks(invalid);
+      return false;
+    }
+
+    _phase = SubtitleTranslationPhase.ready;
+    _cacheHit = true;
+    _emit();
+    return true;
+  }
+
+  Future<Set<int>> _invalidCheckpointChunks({
+    required bool requireComplete,
+  }) async {
+    final all = List.generate(total, (index) => index).toSet();
+    try {
+      final data =
+          jsonDecode(await _cacheFile.readAsString()) as Map<String, dynamic>;
+      if ((data['verifierVersion'] as num?)?.toInt() !=
+              SubtitleTextQuality.verifierVersion ||
+          (requireComplete && data['complete'] != true)) {
+        return all;
+      }
+      final lines = List<String>.from((data['texts'] as List).cast<String>());
+      if (lines.length != cues.length) return all;
+      final invalid = <int>{};
+      for (var index = 0; index < total; index++) {
+        if (_normalizedCachedChunk(index, lines) == null) invalid.add(index);
+      }
+      if (invalid.isEmpty &&
+          !SubtitleTranslationOutput.isCompleteTranslatedVtt(
+            cues,
+            SubtitleCues.toVtt(cues, lines),
+            targetLanguage: targetLanguage ?? '',
+          )) {
+        return all;
+      }
+      return invalid;
+    } catch (_) {
+      return all;
+    }
+  }
+
+  void _reopenInvalidChunks(Set<int> invalid) {
+    for (final index in invalid) {
+      final start = index * chunkSize;
+      final end = min(start + chunkSize, cues.length);
+      _texts.setRange(
+        start,
+        end,
+        cues.sublist(start, end).map((cue) => cue.text),
+      );
+    }
+    _completedChunks.removeAll(invalid);
+    _failedChunkIndexes.addAll(invalid);
+    _translatedCues = _cueCount(_completedChunks);
+    _processedCues = _translatedCues + _cueCount(_failedChunkIndexes);
+    _verifiedCues = 0;
+    _phase = SubtitleTranslationPhase.translating;
+    _cacheHit = false;
+    _saveCheckpoint();
+    _emit();
+  }
+
+  void _saveCheckpoint({bool complete = false}) {
     if (_cancelled) return;
     _checkpointTail = _checkpointTail.then((_) async {
       if (_cancelled) return;
@@ -888,9 +998,9 @@ class SubtitleTranslationJob {
         final file = _cacheFile;
         await file.parent.create(recursive: true);
         if (_cancelled) return;
-        final complete = _completedChunks.length == total;
         final payload = <String, Object>{
-          'version': 2,
+          'version': 3,
+          'verifierVersion': SubtitleTextQuality.verifierVersion,
           'complete': complete,
           'texts': List<String>.from(_texts),
           'completedChunks': _completedChunks.toList()..sort(),

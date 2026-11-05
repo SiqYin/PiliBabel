@@ -753,6 +753,68 @@ void main() {
     },
   );
 
+  test(
+    'reopens only the legacy completed chunk that still contains Han',
+    () async {
+      final cues = _cues(40);
+      const cacheKey = 'legacy-residual-han';
+      final cache = SubtitleTranslationJob.cacheFileFor(
+        cacheKey,
+        cues,
+        cacheDirectory: directory.path,
+      );
+      final texts = [
+        for (var index = 0; index < cues.length; index++) 'Bản dịch câu $index',
+      ];
+      texts[25] = 'Bản dịch còn sót 〇';
+      await cache.writeAsString(
+        jsonEncode({
+          'version': 2,
+          'complete': true,
+          'texts': texts,
+          'completedChunks': [0, 1],
+          'failedChunks': <int>[],
+        }),
+      );
+
+      final retriedChunks = <int>[];
+      final phases = <SubtitleTranslationPhase>[];
+      String? finalVtt;
+      final job = SubtitleTranslationJob(
+        cues: cues,
+        chunkSize: 20,
+        concurrency: 2,
+        cacheKey: cacheKey,
+        cacheDirectory: directory.path,
+        targetLanguage: 'vi',
+        translate: (lines) async {
+          retriedChunks.add(int.parse(lines.first.substring(1)) ~/ 20);
+          return [
+            for (final line in lines) 'Đã sửa câu ${line.substring(1)}',
+          ];
+        },
+        onUpdate: (vtt, progress) {
+          finalVtt = vtt;
+          phases.add(progress.phase);
+        },
+      );
+
+      await job.run();
+
+      expect(retriedChunks, [1]);
+      expect(phases, contains(SubtitleTranslationPhase.verifying));
+      expect(phases.last, SubtitleTranslationPhase.ready);
+      final translated = SubtitleCues.fromVtt(finalVtt!);
+      expect(translated.first.text, 'Bản dịch câu 0');
+      expect(translated[20].text, 'Đã sửa câu 20');
+      expect(translated.any((cue) => cue.text.contains('〇')), isFalse);
+      expect(
+        translated.map((cue) => (cue.start, cue.end)),
+        cues.map((cue) => (cue.start, cue.end)),
+      );
+    },
+  );
+
   test('cancelled work cannot emit or write a cache', () async {
     final gate = Completer<List<String>>();
     final started = Completer<void>();

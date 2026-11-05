@@ -53,6 +53,7 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
   late int _subtitleChunkSize;
   late int _subtitleConcurrency;
   late int _subtitleContextOverlap;
+  late int _subtitlePrefetchCount;
 
   @override
   void initState() {
@@ -60,6 +61,7 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
     _subtitleChunkSize = Pref.subtitleChunkSize;
     _subtitleConcurrency = Pref.subtitleConcurrency;
     _subtitleContextOverlap = Pref.subtitleContextOverlap;
+    _subtitlePrefetchCount = Pref.subtitleTranslationPrefetchCount;
     final mode = widget.guidedSetup;
     if (mode != null) {
       WidgetsBinding.instance.addPostFrameCallback(
@@ -475,21 +477,36 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                 setState(() {});
               },
             ),
-            SwitchListTile(
+            ListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(
-                uiTx('Dịch trước video kế tiếp trong danh sách phát'),
+              leading: const Icon(Icons.playlist_play_outlined),
+              title: Text(uiTx('Dịch trước video tiếp theo')),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Slider(
+                    min: 0,
+                    max: 5,
+                    divisions: 5,
+                    value: _subtitlePrefetchCount.toDouble(),
+                    onChanged: (value) => setState(
+                      () => _subtitlePrefetchCount = value.round(),
+                    ),
+                    onChangeEnd: (value) =>
+                        Pref.subtitleTranslationPrefetchCount = value.round(),
+                  ),
+                  Text(
+                    uiTx(
+                      'Chuẩn bị nền 0–5 video/phần kế tiếp; 0 là tắt. Video đang xem luôn được ưu tiên.',
+                    ),
+                  ),
+                ],
               ),
-              subtitle: Text(
-                uiTx(
-                  'Khi phụ đề hiện tại hoàn tất, chuẩn bị trước phụ đề của mục tiếp theo nếu có',
-                ),
+              trailing: Text(
+                _subtitlePrefetchCount == 0
+                    ? uiTx('Tắt')
+                    : '$_subtitlePrefetchCount',
               ),
-              value: Pref.subtitleTranslationPrefetchNext,
-              onChanged: (value) {
-                Pref.subtitleTranslationPrefetchNext = value;
-                setState(() {});
-              },
             ),
             ListTile(
               contentPadding: EdgeInsets.zero,

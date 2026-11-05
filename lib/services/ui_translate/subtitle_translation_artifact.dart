@@ -15,6 +15,7 @@ class SubtitleTranslationArtifact {
     required this.sourceLan,
     required this.sourceIdentity,
     required this.cueCount,
+    required this.verifierVersion,
     required this.cacheFilePath,
     required this.vttFilePath,
     required this.completedAt,
@@ -27,6 +28,7 @@ class SubtitleTranslationArtifact {
   final String sourceLan;
   final String sourceIdentity;
   final int cueCount;
+  final int verifierVersion;
   final String cacheFilePath;
   final String vttFilePath;
   final DateTime completedAt;
@@ -53,6 +55,7 @@ class SubtitleTranslationArtifact {
     'sourceLan': sourceLan,
     'sourceIdentity': sourceIdentity,
     'cueCount': cueCount,
+    'verifierVersion': verifierVersion,
     'cacheFilePath': cacheFilePath,
     'vttFilePath': vttFilePath,
     'completedAt': completedAt.toUtc().toIso8601String(),
@@ -67,6 +70,7 @@ class SubtitleTranslationArtifact {
         sourceLan: json['sourceLan'] as String,
         sourceIdentity: json['sourceIdentity'] as String,
         cueCount: (json['cueCount'] as num).toInt(),
+        verifierVersion: (json['verifierVersion'] as num?)?.toInt() ?? 0,
         cacheFilePath: json['cacheFilePath'] as String,
         vttFilePath: json['vttFilePath'] as String,
         completedAt: DateTime.parse(json['completedAt'] as String),

@@ -5,7 +5,13 @@ import 'package:crypto/crypto.dart';
 
 enum SubtitlePlaybackTrackKind { bilibili, translated }
 
-enum SubtitlePlaybackTrackPhase { ready, translating, retrying, failed }
+enum SubtitlePlaybackTrackPhase {
+  ready,
+  translating,
+  verifying,
+  retrying,
+  failed,
+}
 
 /// A stable player/menu identity that is independent from Bilibili's list
 /// position. Translated tracks deliberately keep their own VTT instead of
@@ -23,6 +29,7 @@ class SubtitlePlaybackTrack {
     this.isComplete = false,
     this.progress = 0,
     this.translatedCues = 0,
+    this.verifiedCues = 0,
     this.totalCues = 0,
     this.failedChunks = 0,
     this.vtt,
@@ -42,6 +49,7 @@ class SubtitlePlaybackTrack {
   final bool isComplete;
   final double progress;
   final int translatedCues;
+  final int verifiedCues;
   final int totalCues;
   final int failedChunks;
   final String? vtt;
@@ -55,6 +63,7 @@ class SubtitlePlaybackTrack {
     bool? isComplete,
     double? progress,
     int? translatedCues,
+    int? verifiedCues,
     int? totalCues,
     int? failedChunks,
     String? vtt,
@@ -71,6 +80,7 @@ class SubtitlePlaybackTrack {
     isComplete: isComplete ?? this.isComplete,
     progress: progress ?? this.progress,
     translatedCues: translatedCues ?? this.translatedCues,
+    verifiedCues: verifiedCues ?? this.verifiedCues,
     totalCues: totalCues ?? this.totalCues,
     failedChunks: failedChunks ?? this.failedChunks,
     vtt: vtt ?? this.vtt,

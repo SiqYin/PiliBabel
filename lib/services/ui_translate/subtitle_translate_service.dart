@@ -1,6 +1,7 @@
 import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_proxy.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_text_quality.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/subtitle_utils.dart';
 import 'package:get/get.dart';
@@ -36,14 +37,7 @@ abstract final class SubtitleTranslateService {
   static bool isChineseTrack(Subtitle sub) => sub.langTag == 'zh';
 
   /// 含中日韩汉字就认为需要翻译，纯数字/符号/拉丁文的行原样保留。
-  static bool _isCjk(String s) {
-    for (final r in s.runes) {
-      if ((r >= 0x3400 && r <= 0x9FFF) || (r >= 0xF900 && r <= 0xFAFF)) {
-        return true;
-      }
-    }
-    return false;
-  }
+  static bool _isCjk(String s) => SubtitleTextQuality.containsHan(s);
 
   /// A single request per chunk in the common case. If the provider changes
   /// line boundaries, recover individual cues without ever shifting timing.

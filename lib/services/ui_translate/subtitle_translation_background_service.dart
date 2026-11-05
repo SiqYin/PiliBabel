@@ -9,6 +9,7 @@ import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_source_resolver.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_text_quality.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translate_service.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_artifact.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_coordinator.dart';
@@ -24,6 +25,7 @@ enum SubtitleTranslationTaskPhase {
   idle,
   preparing,
   translating,
+  verifying,
   complete,
   failed,
 }
@@ -41,7 +43,8 @@ class SubtitleTranslationTaskState {
 
   bool get isRunning =>
       phase == SubtitleTranslationTaskPhase.preparing ||
-      phase == SubtitleTranslationTaskPhase.translating;
+      phase == SubtitleTranslationTaskPhase.translating ||
+      phase == SubtitleTranslationTaskPhase.verifying;
 }
 
 /// Starts subtitle translation from a card and keeps it alive after the card
@@ -340,7 +343,7 @@ abstract final class SubtitleTranslationBackgroundService {
             _set(
               taskKey,
               const SubtitleTranslationTaskState(
-                phase: SubtitleTranslationTaskPhase.translating,
+                phase: SubtitleTranslationTaskPhase.verifying,
                 progress: 1,
                 message: 'Đang kiểm tra và lưu phụ đề Việt',
               ),
@@ -354,7 +357,7 @@ abstract final class SubtitleTranslationBackgroundService {
                       cues: sourceCues,
                     );
                   }
-                  final registered = await _registerCompletedArtifact(
+                  final registered = await registerCompletedArtifact(
                     videoKey: bvid ?? 'av$aid',
                     cid: resolvedCid,
                     targetLanguage: target,
@@ -387,9 +390,13 @@ abstract final class SubtitleTranslationBackgroundService {
           _set(
             taskKey,
             SubtitleTranslationTaskState(
-              phase: SubtitleTranslationTaskPhase.translating,
+              phase: progress.phase == SubtitleTranslationPhase.verifying
+                  ? SubtitleTranslationTaskPhase.verifying
+                  : SubtitleTranslationTaskPhase.translating,
               progress: progress.ratio,
-              message: progress.processedCues == 0
+              message: progress.phase == SubtitleTranslationPhase.verifying
+                  ? 'Đang kiểm tra phụ đề Việt'
+                  : progress.processedCues == 0
                   ? 'Đang xếp hàng dịch ưu tiên'
                   : progress.failedChunks > 0
                   ? 'Đang thử lại ${progress.failedChunks} chunk lỗi '
@@ -598,7 +605,7 @@ abstract final class SubtitleTranslationBackgroundService {
     await source.rename(destination.path);
   }
 
-  static Future<bool> _registerCompletedArtifact({
+  static Future<bool> registerCompletedArtifact({
     required String videoKey,
     required int cid,
     required String targetLanguage,
@@ -644,6 +651,7 @@ abstract final class SubtitleTranslationBackgroundService {
       sourceLan: sourceLan,
       sourceIdentity: sourceIdentity,
       cueCount: cues.length,
+      verifierVersion: SubtitleTextQuality.verifierVersion,
       cacheFilePath: SubtitleTranslationJob.cacheFileFor(cacheKey, cues).path,
       vttFilePath: vttFile.path,
       completedAt: DateTime.now(),
@@ -699,21 +707,29 @@ abstract final class SubtitleTranslationBackgroundService {
         final cacheFile = File(artifact.cacheFilePath);
         final vttFile = File(artifact.vttFilePath);
         if (!await cacheFile.exists() || !await vttFile.exists()) continue;
-        final cues = SubtitleCues.fromVtt(await vttFile.readAsString());
-        if (cues.length != artifact.cueCount) continue;
-        if (artifact.targetLanguage.toLowerCase().startsWith('vi') &&
-            cues.any(
-              (cue) => RegExp(
-                r'[\u3400-\u9FFF\uF900-\uFAFF]',
-              ).hasMatch(cue.text),
-            )) {
-          continue;
-        }
         final taskKey = _key(
           artifact.videoKey,
           artifact.targetLanguage,
           artifact.cid,
         );
+        if (artifact.verifierVersion != SubtitleTextQuality.verifierVersion) {
+          _states[taskKey] = const SubtitleTranslationTaskState(
+            phase: SubtitleTranslationTaskPhase.failed,
+            message: 'Phụ đề cũ cần được kiểm tra lại khi mở video',
+          );
+          continue;
+        }
+        if (!await _storedArtifactIsIntact(
+          artifact: artifact,
+          cacheFile: cacheFile,
+          vttFile: vttFile,
+        )) {
+          _states[taskKey] = const SubtitleTranslationTaskState(
+            phase: SubtitleTranslationTaskPhase.failed,
+            message: 'Phụ đề đã lưu cần kiểm tra hoặc sửa lại phần lỗi',
+          );
+          continue;
+        }
         _completed.add(taskKey);
         _states[taskKey] = const SubtitleTranslationTaskState(
           phase: SubtitleTranslationTaskPhase.complete,
@@ -724,6 +740,42 @@ abstract final class SubtitleTranslationBackgroundService {
         // Invalid artifacts stay on disk for targeted repair, but are never
         // advertised as a completed Vietnamese subtitle.
       }
+    }
+  }
+
+  static Future<bool> _storedArtifactIsIntact({
+    required SubtitleTranslationArtifact artifact,
+    required File cacheFile,
+    required File vttFile,
+  }) async {
+    try {
+      final checkpoint =
+          jsonDecode(await cacheFile.readAsString()) as Map<String, dynamic>;
+      if (checkpoint['complete'] != true ||
+          (checkpoint['verifierVersion'] as num?)?.toInt() !=
+              SubtitleTextQuality.verifierVersion) {
+        return false;
+      }
+      final texts = List<String>.from(
+        (checkpoint['texts'] as List).cast<String>(),
+      );
+      final cues = SubtitleCues.fromVtt(await vttFile.readAsString());
+      if (texts.length != artifact.cueCount ||
+          cues.length != artifact.cueCount ||
+          !SubtitleCues.hasSafePlaybackTimeline(cues)) {
+        return false;
+      }
+      for (var index = 0; index < cues.length; index++) {
+        final text = cues[index].text;
+        if (text != texts[index] ||
+            (artifact.targetLanguage.toLowerCase().startsWith('vi') &&
+                SubtitleTextQuality.containsHan(text))) {
+          return false;
+        }
+      }
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 

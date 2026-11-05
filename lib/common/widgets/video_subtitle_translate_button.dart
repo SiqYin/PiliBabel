@@ -84,6 +84,11 @@ class _VideoSubtitleTranslateButtonState
             Icons.subtitles_outlined,
             Colors.white,
           ),
+          SubtitleTranslationTaskPhase.verifying => (
+            uiTx('Đang kiểm tra'),
+            Icons.verified_outlined,
+            Colors.white,
+          ),
           SubtitleTranslationTaskPhase.idle => (
             uiTx('Dịch sub'),
             Icons.subtitles_outlined,
