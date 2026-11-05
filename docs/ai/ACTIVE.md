@@ -2,8 +2,8 @@
 
 - Objective: Stabilize verified Vietnamese subtitles, integrate upstream PiliBabel `v3.6.7`, and pretranslate the next `0-5` playlist items without replacing the custom subtitle pipeline.
 - Branch: `codex/subtitle-translation-proxy` tracking `origin/codex/subtitle-translation-proxy`.
-- Upstream merge commit: `8fdaabfc7`; implementation changes are staged for a separate commit.
-- Status: Source implementation, affected tests/analyze, release build, APK integrity and signature checks pass. ADB install/startup smoke is pending because no device is connected.
+- Upstream merge commit: `8fdaabfc7`; subtitle verification/prefetch commit: `1c0dd4733`.
+- Status: Source implementation, affected tests/analyze, release build, APK integrity and signature checks pass. ADB install/startup smoke and push are pending because no device is connected.
 
 ## Completed
 
@@ -41,6 +41,6 @@
 ## Remaining risks and next action
 
 - Reconnect the Android device, then run `adb install -r -g`, launch `com.example.pilibabel`, scan for `AndroidRuntime`/`FATAL EXCEPTION`, and perform interactive subtitle checks (seek past minute four, track switching, cache restore and playlist prefetch).
-- Push is gated on successful device startup smoke per the requested release plan. Commit may be prepared locally while the device is disconnected.
+- Push is gated on successful device startup smoke per the requested release plan. The local branch is nine commits ahead of `origin/codex/subtitle-translation-proxy`.
 - Real provider/proxy translation throughput still requires device/network smoke evidence.
 - Preserve user-owned untracked `.agentboard/`, `.codebase-memory/`, `.cursor/` and `.ruler/` directories.
