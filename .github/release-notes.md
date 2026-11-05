@@ -1,19 +1,18 @@
-### PiliBabel v3.6.5
+### PiliBabel v3.6.7
 
-**Fixes a serious translation bug, makes the glossary screen follow your theme, restores the tables to on-by-default, and repairs a self-reported version mismatch that caused endless update prompts.**
+**Fixes "14/15 glossary tables enabled" showing even with all switches on, and audits every per-table count.**
 
-**The translation bug.** Terms found *inside* a sentence used to be substituted in place, and that resulting string was returned as the finished translation. So with a Japanese interface and a Simplified-Chinese paragraph, a single embedded term became Japanese while the rest stayed Chinese — and because that mixed string now contained Japanese, later checks concluded it was already Japanese and never translated it at all. The whole paragraph was left untranslated.
+**The 14/15 bug.** When v3.6.4 introduced "off by default", the migration wrote *every* embedded id prefix into the disabled set — including `game`, the prefix of the 8 game-title entries (`game|zzz`, `game|hsr`, …). The glossary screen only renders the 15 tables that appear in the manifest and has no switch for `game`, so turning all 15 switches on still left `game` stuck in the disabled set, and the counter (`tables − disabled.count`) sat permanently at 14/15. Worse, those 8 game-name rows (the short names like ゼンゼロ / スタレ) were silently disabled at runtime too.
 
-Now an embedded term is no longer substituted. The paragraph goes to the model as normal, and the matched terms are injected into the prompt as forced translations, so the model uses the official names while translating the rest of the sentence properly.
+Now the count no longer subtracts: it walks the manifest tables and checks each against the disabled set, shared by both the settings tile and the glossary page. `game` is always treated as enabled (it has no switch), and the page sanitises legacy leftovers from the stored set on load, so affected installs heal themselves.
 
-**Short names are used in titles again.** A title containing 绝区零 was showing the full name ゼンレスゾーンゼロ instead of the short form ゼンゼロ. The glossary already picks short vs. full form by text width, but the prompt-injection step hard-coded the "normal" width and never received the caller's intent. The width is now threaded through, so narrow contexts such as titles keep using the short form.
+**Per-table counts, audited one by one:**
+- *Reverse: 1999* displayed **0 terms**: all 100 rows had their category reverted to `term` by an earlier rebuild and were excluded from embedding. Fixed — 100/100 now embedded.
+- *BanG Dream!* was 3 rows short and *Neverness to Everness* 1 short: band and organisation names (CRYCHIC, sumimi, Glitter☆Green, 环) were filtered out by the category whitelist. They are exactly the proper nouns that appear in titles, so the whitelist now includes them; both tables match their harvested totals.
+- Template residue scrubbed from values (`37}}`, `{{rubi`, a key containing a newline, 69 rows with `{{tt` tails) so junk can never surface as a translation.
 
-**The glossary screen follows the theme.** It previously used a bare `Scaffold` with untinted switches, so under a dark theme or a custom palette it rendered as a white background with black text and purple buttons. It now uses the same `SimpleScaffold` + `ViewSafeArea` as the settings pages, and takes every colour from `Theme.of(context).colorScheme`.
+Where a table embeds fewer terms than it was harvested with (Genshin Impact, Honkai: Star Rail, Zenless Zone Zero, Wuthering Waves), that is by design — only the core subset ships in-app. The subtitle now reads "N terms embedded" instead of "N terms", so the number matches what it actually measures.
 
-**Glossary tables are on by default again.** All 15 are enabled out of the box; you can still switch off individual works on the glossary page.
-
-**Fixed the version the app reports about itself.** v3.6.4.1 was tagged `v3.6.4.1` while `pubspec.yaml` still said `3.6.4`. The app derives its reported version only from pubspec, so it believed it was 3.6.4, saw a newer tag, and kept prompting to update forever. Flutter's `version:` field only accepts `x.y.z+build`, so the rule is that the tag's numeric part must equal pubspec's `x.y.z`. `build.ps1` now verifies this and fails the build when they disagree, so a self-contradictory release cannot ship again.
-
-**Performance.** The term-injection scan now uses the same first-character bucketing as the in-sentence matcher. Its cost went from scaling with the glossary (54,000 comparisons per string) to scaling with the text (a few dozen), so a large glossary can no longer make translation slow or crash the app.
+Embedded terms: 11,637 → **11,741**.
 
 Downloads are below.

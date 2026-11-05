@@ -306,9 +306,10 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
             // 术语集：每个词表一个开关，默认全开。点进去是独立页面，
             // 避免把十几个开关平铺在 AI 翻译设置页里。
             Obx(() {
-              final disabled = Pref.glossaryDisabledTables;
               final total = kGlossaryManifest.length;
-              final on = total - disabled.length;
+              // 计数只按「有开关的词表」算，禁用集合里的历史残留（如 `game`）
+              // 不参与，否则 15 个全开会显示 14/15（见 enabledGlossaryTableCount）。
+              final on = UiTranslateService.enabledGlossaryTableCount();
               return ListTile(
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.library_books_outlined),
