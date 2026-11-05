@@ -41,6 +41,6 @@
 ## Remaining risks and next action
 
 - Reconnect the Android device, then run `adb install -r -g`, launch `com.example.pilibabel`, scan for `AndroidRuntime`/`FATAL EXCEPTION`, and perform interactive subtitle checks (seek past minute four, track switching, cache restore and playlist prefetch).
-- Push is gated on successful device startup smoke per the requested release plan. The local branch is nine commits ahead of `origin/codex/subtitle-translation-proxy`.
+- Push is gated on successful device startup smoke per the requested release plan. The local branch is ahead of `origin/codex/subtitle-translation-proxy`.
 - Real provider/proxy translation throughput still requires device/network smoke evidence.
 - Preserve user-owned untracked `.agentboard/`, `.codebase-memory/`, `.cursor/` and `.ruler/` directories.
