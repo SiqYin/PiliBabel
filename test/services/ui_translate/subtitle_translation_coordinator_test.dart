@@ -114,4 +114,93 @@ void main() {
       expect(restoredVtt, contains('vi 句20'));
     },
   );
+
+  test('manual retry wakes backoff without starting a duplicate job', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'pili_coordinator_retry_',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    var calls = 0;
+    var failedUpdates = 0;
+    final failed = Completer<void>();
+
+    final subscription = SubtitleTranslationCoordinator.attach(
+      key: 'manual-retry',
+      allowNewTranslation: true,
+      retryDelay: (_, _) => const Duration(days: 1),
+      createJob: (onUpdate, _) => SubtitleTranslationJob(
+        cues: _cues(20),
+        chunkSize: 20,
+        concurrency: 1,
+        cacheKey: 'manual-retry',
+        cacheDirectory: directory.path,
+        translate: (lines) async {
+          calls++;
+          if (calls == 1) throw StateError('temporary outage');
+          return lines.map((line) => 'vi $line').toList();
+        },
+        onUpdate: onUpdate,
+      ),
+      onUpdate: (_, progress) {
+        if (progress.failedChunks > 0) {
+          failedUpdates++;
+          if (!failed.isCompleted) failed.complete();
+        }
+      },
+    );
+
+    await failed.future;
+    subscription.retryNow();
+    await subscription.whenComplete.timeout(const Duration(seconds: 2));
+
+    expect(calls, 2);
+    expect(failedUpdates, greaterThanOrEqualTo(1));
+  });
+
+  test('successful progress resets automatic retry backoff', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'pili_coordinator_backoff_',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    final attempts = <int>[];
+    final delayStarted = StreamController<int>.broadcast();
+    addTearDown(delayStarted.close);
+    final calls = <int, int>{};
+
+    final subscription = SubtitleTranslationCoordinator.attach(
+      key: 'progress-resets-backoff',
+      allowNewTranslation: true,
+      retryDelay: (_, attempt) {
+        attempts.add(attempt);
+        delayStarted.add(attempt);
+        return const Duration(days: 1);
+      },
+      createJob: (onUpdate, _) => SubtitleTranslationJob(
+        cues: _cues(40),
+        chunkSize: 20,
+        concurrency: 1,
+        cacheKey: 'progress-resets-backoff',
+        cacheDirectory: directory.path,
+        translate: (lines) async {
+          final chunk = lines.first == '句0' ? 0 : 1;
+          final call = (calls[chunk] ?? 0) + 1;
+          calls[chunk] = call;
+          if (call == 1 || (chunk == 1 && call == 2)) {
+            throw StateError('retry chunk $chunk');
+          }
+          return lines.map((line) => 'vi $line').toList();
+        },
+        onUpdate: onUpdate,
+      ),
+      onUpdate: (_, _) {},
+    );
+
+    await delayStarted.stream.first;
+    subscription.retryNow();
+    await delayStarted.stream.first;
+
+    expect(attempts.take(2), [0, 0]);
+    subscription.retryNow();
+    await subscription.whenComplete.timeout(const Duration(seconds: 2));
+  });
 }

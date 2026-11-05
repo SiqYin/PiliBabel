@@ -2,7 +2,7 @@
 /// artifact promotion. Checking Unicode code points avoids missing Han
 /// extensions outside Dart's BMP-oriented regular-expression ranges.
 abstract final class SubtitleTextQuality {
-  static const int verifierVersion = 1;
+  static const int verifierVersion = 2;
 
   static bool containsHan(String value) => value.runes.any(isHanRune);
 

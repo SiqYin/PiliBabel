@@ -29,6 +29,11 @@ class SubtitleTranslationProgress {
     required this.verifiedCues,
     required this.totalCues,
     required this.failedChunks,
+    required this.currentPositionCovered,
+    required this.coverageAheadSeconds,
+    required this.remainingTimelineCovered,
+    required this.renderRevision,
+    required this.renderedChunks,
   });
 
   final SubtitleTranslationPhase phase;
@@ -39,10 +44,30 @@ class SubtitleTranslationProgress {
   final int verifiedCues;
   final int totalCues;
   final int failedChunks;
+  final bool currentPositionCovered;
+  final double coverageAheadSeconds;
+  final bool remainingTimelineCovered;
+  final int renderRevision;
+  final List<int> renderedChunks;
 
   bool get isComplete => phase == SubtitleTranslationPhase.ready;
 
   double get ratio => totalCues == 0 ? 0 : translatedCues / totalCues;
+}
+
+abstract final class SubtitleRealtimeBufferPolicy {
+  static const double resumeAheadSeconds = 60;
+  static const double pauseAheadSeconds = 15;
+
+  static bool canStart(SubtitleTranslationProgress progress) =>
+      progress.currentPositionCovered &&
+      (progress.coverageAheadSeconds >= resumeAheadSeconds ||
+          progress.remainingTimelineCovered);
+
+  static bool shouldPause(SubtitleTranslationProgress progress) =>
+      !progress.currentPositionCovered ||
+      (!progress.remainingTimelineCovered &&
+          progress.coverageAheadSeconds < pauseAheadSeconds);
 }
 
 typedef SubtitleTranslationUpdate = void Function(
@@ -185,6 +210,7 @@ abstract final class SubtitleTranslationOutput {
     List<String> source,
     List<String> output, {
     String? targetLanguage,
+    List<String> sourceContext = const [],
     List<String> translatedContext = const [],
   }) {
     if (source.length != output.length) {
@@ -199,7 +225,12 @@ abstract final class SubtitleTranslationOutput {
           targetLanguage: targetLanguage,
         ),
     ];
-    _rejectMergedContext(normalized, translatedContext);
+    _rejectMergedContext(
+      source: source,
+      output: normalized,
+      sourceContext: sourceContext,
+      translatedContext: translatedContext,
+    );
     return normalized;
   }
 
@@ -236,39 +267,127 @@ abstract final class SubtitleTranslationOutput {
     }
   }
 
-  static void _rejectMergedContext(
-    List<String> output,
-    List<String> translatedContext,
-  ) {
+  static void _rejectMergedContext({
+    required List<String> source,
+    required List<String> output,
+    required List<String> sourceContext,
+    required List<String> translatedContext,
+  }) {
     if (translatedContext.isEmpty) return;
-    final contexts = translatedContext
-        .map(_contextWords)
-        .where((words) => words.length >= 2)
-        .toList(growable: false);
-    for (final line in output) {
+    final contexts =
+        <({String? source, String translated, List<String> words})>[];
+    final sourceOffset = sourceContext.length - translatedContext.length;
+    for (var index = 0; index < translatedContext.length; index++) {
+      final sourceIndex = sourceOffset + index;
+      contexts.add((
+        source: sourceIndex >= 0 && sourceIndex < sourceContext.length
+            ? sourceContext[sourceIndex]
+            : null,
+        translated: translatedContext[index],
+        words: _contextWords(translatedContext[index]),
+      ));
+    }
+    for (var outputIndex = 0; outputIndex < output.length; outputIndex++) {
+      final line = output[outputIndex];
       final words = _contextWords(line);
       for (final context in contexts) {
-        if (words.length <= context.length) continue;
-        final prefix = _sameWords(words, 0, context);
+        final contextWords = context.words;
+        if (contextWords.isEmpty) continue;
+        final exact =
+            words.length == contextWords.length &&
+            _sameWords(words, 0, contextWords);
+        // A model can preserve the JSON array length by replacing the current
+        // cue with one translated context cue. Catch distinctive sentences,
+        // but allow short natural repeats such as "Vâng" or "Được".
+        if (exact &&
+            context.source != null &&
+            _isDistinctiveContext(contextWords) &&
+            !_sameSourceCue(source[outputIndex], context.source!)) {
+          throw const FormatException(
+            'Subtitle translation replaced a cue with overlap context',
+          );
+        }
+        if (contextWords.length < 2 || words.length <= contextWords.length) {
+          continue;
+        }
+        final prefix = _sameWords(words, 0, contextWords);
         final suffix = _sameWords(
           words,
-          words.length - context.length,
-          context,
+          words.length - contextWords.length,
+          contextWords,
         );
         if (!prefix && !suffix) continue;
-        final extraWords = words.length - context.length;
+        final extraWords = words.length - contextWords.length;
         // A two-word context such as "xin chào" is only considered an echo
         // when the model also appended a meaningful sentence. Longer context
         // lines need less extra text to prove that two cues were merged.
-        if ((context.length == 2 && extraWords >= 3) ||
-            (context.length >= 3 && extraWords >= 2)) {
+        if ((contextWords.length == 2 && extraWords >= 3) ||
+            (contextWords.length >= 3 && extraWords >= 2)) {
           throw const FormatException(
             'Subtitle translation repeated an overlap context cue',
           );
         }
       }
     }
+    _rejectContextSequence(source, output, contexts);
   }
+
+  static void _rejectContextSequence(
+    List<String> source,
+    List<String> output,
+    List<({String? source, String translated, List<String> words})> contexts,
+  ) {
+    if (contexts.length < 2 || output.length < 2) return;
+    for (var outputStart = 0; outputStart < output.length - 1; outputStart++) {
+      for (
+        var contextStart = 0;
+        contextStart < contexts.length - 1;
+        contextStart++
+      ) {
+        var matched = 0;
+        var matchedWords = 0;
+        var sourceMatches = true;
+        while (outputStart + matched < output.length &&
+            contextStart + matched < contexts.length &&
+            _sameTranslatedCue(
+              output[outputStart + matched],
+              contexts[contextStart + matched].translated,
+            )) {
+          final context = contexts[contextStart + matched];
+          matchedWords += context.words.length;
+          sourceMatches =
+              sourceMatches &&
+              context.source != null &&
+              _sameSourceCue(
+                source[outputStart + matched],
+                context.source!,
+              );
+          matched++;
+        }
+        // Two or more context elements replacing current cues are strong
+        // evidence even when each element is too short to judge alone.
+        if (matched >= 2 && matchedWords >= 4 && !sourceMatches) {
+          throw const FormatException(
+            'Subtitle translation repeated overlap context elements',
+          );
+        }
+      }
+    }
+  }
+
+  static bool _isDistinctiveContext(List<String> words) =>
+      words.length >= 4 || (words.length >= 3 && words.join().length >= 12);
+
+  static bool _sameTranslatedCue(String value, String expected) {
+    final valueWords = _contextWords(value);
+    final expectedWords = _contextWords(expected);
+    return valueWords.length == expectedWords.length &&
+        _sameWords(valueWords, 0, expectedWords);
+  }
+
+  static bool _sameSourceCue(String value, String expected) =>
+      value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ') ==
+      expected.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
 
   static List<String> _contextWords(String value) => value
       .toLowerCase()
@@ -404,6 +523,25 @@ abstract final class SubtitleCues {
     return out.toString();
   }
 
+  static String toVttSubset(
+    List<SubtitleCue> cues,
+    List<String> texts,
+    Iterable<int> cueIndexes,
+  ) {
+    final indexes = cueIndexes.toSet().toList()..sort();
+    final out = StringBuffer('WEBVTT\n\n');
+    for (final index in indexes) {
+      if (index < 0 || index >= cues.length || index >= texts.length) {
+        throw RangeError.index(index, cues, 'cueIndexes');
+      }
+      out
+        ..writeln('${cues[index].start} --> ${cues[index].end}')
+        ..writeln(texts[index])
+        ..writeln();
+    }
+    return out.toString();
+  }
+
   /// A translation may change only cue text. Rejecting a mismatched rendered
   /// VTT prevents a stale or malformed update from collapsing playback times.
   static bool hasSameTimeline(List<SubtitleCue> source, String renderedVtt) {
@@ -414,6 +552,32 @@ abstract final class SubtitleCues {
           source[i].end != rendered[i].end) {
         return false;
       }
+    }
+    return true;
+  }
+
+  /// Realtime output may omit untranslated chunks, but every rendered cue
+  /// must remain an ordered, unique member of the source timeline.
+  static bool hasTimelineSubset(
+    List<SubtitleCue> source,
+    String renderedVtt,
+  ) {
+    if (!renderedVtt.trimLeft().startsWith('WEBVTT')) return false;
+    final rendered = fromVtt(renderedVtt);
+    if (RegExp(r' --> ').allMatches(renderedVtt).length != rendered.length) {
+      return false;
+    }
+    var sourceIndex = 0;
+    for (final cue in rendered) {
+      var matched = false;
+      while (sourceIndex < source.length) {
+        final candidate = source[sourceIndex++];
+        if (candidate.start == cue.start && candidate.end == cue.end) {
+          matched = true;
+          break;
+        }
+      }
+      if (!matched) return false;
     }
     return true;
   }
@@ -505,6 +669,7 @@ class SubtitleTranslationJob {
   final List<String> _texts;
   final Set<int> _pending = {};
   final Set<int> _completedChunks = {};
+  final Map<int, List<String>> _provisionalChunks = {};
   final Set<int> _failedChunkIndexes = {};
   int positionSeconds;
   bool _cancelled = false;
@@ -516,6 +681,8 @@ class SubtitleTranslationJob {
   int _verifiedCues = 0;
   Timer? _refresh;
   DateTime? _lastEmitAt;
+  String? _lastRenderedVtt;
+  int _renderRevision = 0;
   Future<void> _checkpointTail = Future.value();
 
   int get total => (cues.length + chunkSize - 1) ~/ chunkSize;
@@ -548,11 +715,16 @@ class SubtitleTranslationJob {
     _refresh?.cancel();
   }
 
-  void setPosition(int seconds) => positionSeconds = seconds;
+  void setPosition(int seconds) {
+    if (_cancelled || seconds == positionSeconds) return;
+    positionSeconds = seconds;
+    // Position updates change buffer readiness and queue priority, but they do
+    // not rebuild the VTT or advance renderRevision.
+    _scheduleEmit();
+  }
 
-  /// Publish the original cues before the first translation result arrives.
-  /// This keeps the player on a valid subtitle track and gives the UI an
-  /// immediate, observable "starting" state for a long-running request.
+  /// Publish an empty Vietnamese track before the first valid chunk arrives.
+  /// Source Chinese is never copied into realtime translated output.
   void emitCurrent() {
     if (_cancelled || cues.isEmpty) return;
     _emit();
@@ -577,6 +749,13 @@ class SubtitleTranslationJob {
                 .where((index) => index >= 0 && index < total)
                 .toSet()
           : <int>{};
+      final provisional = data['provisionalChunks'] is List
+          ? (data['provisionalChunks'] as List)
+                .whereType<num>()
+                .map((value) => value.toInt())
+                .where((index) => index >= 0 && index < total)
+                .toSet()
+          : <int>{};
       final declaredComplete =
           data['complete'] == true ||
           (completed.isEmpty &&
@@ -587,16 +766,48 @@ class SubtitleTranslationJob {
         completed
           ..clear()
           ..addAll(List.generate(total, (index) => index));
+        provisional.clear();
       }
-      if (completed.isEmpty) {
+      if (completed.isEmpty && provisional.isEmpty) {
         return false;
       }
       var normalizedLegacyCache = false;
       final invalidCompleted = <int>{};
-      for (final index in completed.toList(growable: false)) {
-        final normalized = _normalizedCachedChunk(index, lines);
+      final candidates = {...completed, ...provisional}.toList()..sort();
+      _texts.setAll(0, cues.map((cue) => cue.text));
+      _completedChunks.clear();
+      _provisionalChunks.clear();
+      for (final index in candidates) {
         final start = index * chunkSize;
         final end = min(start + chunkSize, cues.length);
+        final candidate = lines.sublist(start, end);
+        final contextStart = max(0, start - contextOverlap);
+        final source = cues.sublist(start, end).map((cue) => cue.text).toList();
+        final context = cues
+            .sublist(contextStart, start)
+            .map((cue) => cue.text)
+            .toList();
+        final translatedContext = _completeTranslatedContext(
+          contextStart,
+          start,
+        );
+        if (context.isNotEmpty && translatedContext == null) {
+          _texts.setRange(start, end, candidate);
+          _provisionalChunks[index] = List<String>.from(candidate);
+          continue;
+        }
+        List<String>? normalized;
+        try {
+          normalized = SubtitleTranslationOutput.sanitizeAndValidate(
+            source,
+            candidate,
+            targetLanguage: targetLanguage,
+            sourceContext: context,
+            translatedContext: translatedContext ?? const <String>[],
+          );
+        } on FormatException {
+          normalized = null;
+        }
         if (normalized == null) {
           invalidCompleted.add(index);
           lines.setRange(
@@ -612,13 +823,10 @@ class SubtitleTranslationJob {
           }
         }
         lines.setRange(start, start + normalized.length, normalized);
+        _texts.setRange(start, start + normalized.length, normalized);
+        _completedChunks.add(index);
       }
-      completed.removeAll(invalidCompleted);
-      if (completed.isEmpty) return false;
-      _texts.setAll(0, lines);
-      _completedChunks
-        ..clear()
-        ..addAll(completed);
+      if (_completedChunks.isEmpty && _provisionalChunks.isEmpty) return false;
       _failedChunkIndexes
         ..clear()
         ..addAll(
@@ -630,7 +838,8 @@ class SubtitleTranslationJob {
                       (index) =>
                           index >= 0 &&
                           index < total &&
-                          !_completedChunks.contains(index),
+                          !_completedChunks.contains(index) &&
+                          !_provisionalChunks.containsKey(index),
                     )
               : const <int>[],
         );
@@ -646,7 +855,8 @@ class SubtitleTranslationJob {
       }
       if (normalizedLegacyCache ||
           declaredComplete ||
-          invalidCompleted.isNotEmpty) {
+          invalidCompleted.isNotEmpty ||
+          _provisionalChunks.isNotEmpty) {
         // Older releases may have stored model-echoed batch labels such as
         // "1. Xin chao". Keep the completed translation and repair the
         // durable file in place, rather than discarding it and retranslating.
@@ -665,10 +875,16 @@ class SubtitleTranslationJob {
       List.generate(
         total,
         (index) => index,
-      ).where((index) => !_completedChunks.contains(index)),
+      ).where(
+        (index) =>
+            !_completedChunks.contains(index) &&
+            !_provisionalChunks.containsKey(index),
+      ),
     );
-    await Future.wait(List.generate(concurrency, (_) => _worker()));
-    await _repairMergedContextChunks();
+    do {
+      await Future.wait(List.generate(concurrency, (_) => _worker()));
+      await _repairMergedContextChunks();
+    } while (_pending.isNotEmpty && !_cancelled);
     _refresh?.cancel();
     if (_cancelled) return;
     await _checkpointTail;
@@ -693,20 +909,32 @@ class SubtitleTranslationJob {
           .sublist(contextStart, start)
           .map((cue) => cue.text)
           .toList();
-      final translatedContext = _translatedContext(contextStart, start);
+      final translatedContext = _completeTranslatedContext(
+        contextStart,
+        start,
+      );
       try {
         final result = await _translateWithRetry(
           source,
           context,
-          translatedContext,
+          translatedContext ?? const <String>[],
         );
         if (_cancelled) return;
-        _texts.setRange(start, end, result);
-        _completedChunks.add(next);
-        _failedChunkIndexes.remove(next);
+        if (context.isNotEmpty && translatedContext == null) {
+          // Keep an out-of-order result hidden until every overlap cue has a
+          // validated translation. Otherwise a context echo can briefly leak
+          // into the realtime Vietnamese track before the later repair pass.
+          _texts.setRange(start, end, result);
+          _provisionalChunks[next] = List<String>.from(result);
+          _failedChunkIndexes.remove(next);
+        } else {
+          _acceptChunk(next, result);
+        }
+        _promoteProvisionalChunks();
         _translatedCues = _cueCount(_completedChunks);
       } catch (_) {
         if (_cancelled) return;
+        _provisionalChunks.remove(next);
         _failedChunkIndexes.add(next);
       }
       _processedCues = _translatedCues + _cueCount(_failedChunkIndexes);
@@ -731,6 +959,7 @@ class SubtitleTranslationJob {
           source,
           result,
           targetLanguage: targetLanguage,
+          sourceContext: context,
           translatedContext: translatedContext,
         );
       } catch (error, stackTrace) {
@@ -747,14 +976,64 @@ class SubtitleTranslationJob {
     throw StateError('Unreachable subtitle translation retry state');
   }
 
-  List<String> _translatedContext(int start, int end) {
-    final translated = <String>[];
+  List<String>? _completeTranslatedContext(int start, int end) {
+    if (start >= end) return const <String>[];
     for (var index = start; index < end; index++) {
-      if (_completedChunks.contains(index ~/ chunkSize)) {
-        translated.add(_texts[index]);
+      if (!_completedChunks.contains(index ~/ chunkSize)) return null;
+    }
+    return _texts.sublist(start, end);
+  }
+
+  void _acceptChunk(int index, List<String> translated) {
+    final start = index * chunkSize;
+    final end = min(start + chunkSize, cues.length);
+    _texts.setRange(start, end, translated);
+    _provisionalChunks.remove(index);
+    _completedChunks.add(index);
+    _failedChunkIndexes.remove(index);
+  }
+
+  void _promoteProvisionalChunks() {
+    var changed = true;
+    while (changed && !_cancelled) {
+      changed = false;
+      final candidates = _provisionalChunks.keys.toList()..sort();
+      for (final chunk in candidates) {
+        final start = chunk * chunkSize;
+        final end = min(start + chunkSize, cues.length);
+        final contextStart = max(0, start - contextOverlap);
+        final translatedContext = _completeTranslatedContext(
+          contextStart,
+          start,
+        );
+        if (translatedContext == null) continue;
+        final source = cues.sublist(start, end).map((cue) => cue.text).toList();
+        final context = cues
+            .sublist(contextStart, start)
+            .map((cue) => cue.text)
+            .toList();
+        final candidate = _provisionalChunks[chunk]!;
+        try {
+          final normalized = SubtitleTranslationOutput.sanitizeAndValidate(
+            source,
+            candidate,
+            targetLanguage: targetLanguage,
+            sourceContext: context,
+            translatedContext: translatedContext,
+          );
+          _acceptChunk(chunk, normalized);
+        } on FormatException {
+          _provisionalChunks.remove(chunk);
+          _texts.setRange(start, end, source);
+          // Retry only this chunk now that the translated overlap context is
+          // available. Existing workers will pick it up without duplicating
+          // requests or hiding already validated chunks.
+          _pending.add(chunk);
+          _failedChunkIndexes.remove(chunk);
+        }
+        changed = true;
       }
     }
-    return translated;
   }
 
   Future<void> _repairMergedContextChunks() async {
@@ -773,12 +1052,25 @@ class SubtitleTranslationJob {
           .sublist(contextStart, start)
           .map((cue) => cue.text)
           .toList();
-      final translatedContext = _translatedContext(contextStart, start);
+      final translatedContext = _completeTranslatedContext(
+        contextStart,
+        start,
+      );
+      if (translatedContext == null) {
+        _completedChunks.remove(chunk);
+        _provisionalChunks[chunk] = _texts.sublist(start, end);
+        _translatedCues = _cueCount(_completedChunks);
+        _processedCues = _translatedCues + _cueCount(_failedChunkIndexes);
+        _saveCheckpoint();
+        _emit();
+        continue;
+      }
       try {
         SubtitleTranslationOutput.sanitizeAndValidate(
           source,
           _texts.sublist(start, end),
           targetLanguage: targetLanguage,
+          sourceContext: context,
           translatedContext: translatedContext,
         );
         continue;
@@ -788,7 +1080,12 @@ class SubtitleTranslationJob {
         _translatedCues = _cueCount(_completedChunks);
         _processedCues = _translatedCues + _cueCount(_failedChunkIndexes);
         _saveCheckpoint();
-        _scheduleEmit();
+        // Remove the invalid chunk from the live Vietnamese track before its
+        // retry starts. It must never fall back to source Chinese or keep a
+        // known context-polluted cue visible during repair.
+        _refresh?.cancel();
+        _refresh = null;
+        _emit();
       }
       try {
         final repaired = await _translateWithRetry(
@@ -797,9 +1094,8 @@ class SubtitleTranslationJob {
           translatedContext,
         );
         if (_cancelled) return;
-        _texts.setRange(start, end, repaired);
-        _completedChunks.add(chunk);
-        _failedChunkIndexes.remove(chunk);
+        _acceptChunk(chunk, repaired);
+        _promoteProvisionalChunks();
       } catch (_) {
         if (_cancelled) return;
         _failedChunkIndexes.add(chunk);
@@ -813,18 +1109,36 @@ class SubtitleTranslationJob {
 
   int _nearestPending() {
     var best = _pending.first;
-    var bestBand = 3;
+    var bestBand = 5;
     var bestDistance = double.infinity;
+    final playbackCue = _cueIndexAtOrAfter(positionSeconds.toDouble());
+    final playbackChunk = playbackCue == null ? null : playbackCue ~/ chunkSize;
+    final contextStartChunk = playbackChunk == null
+        ? null
+        : max(0, playbackChunk * chunkSize - contextOverlap) ~/ chunkSize;
     for (final index in _pending) {
       final startIndex = index * chunkSize;
       final endIndex = min(startIndex + chunkSize, cues.length) - 1;
       final start = _seconds(cues[startIndex].start);
       final end = _seconds(cues[endIndex].end);
+      final lookaheadEnd =
+          positionSeconds + SubtitleRealtimeBufferPolicy.resumeAheadSeconds;
+      final isContextDependency =
+          playbackChunk != null &&
+          contextStartChunk != null &&
+          index >= contextStartChunk &&
+          index < playbackChunk;
       final (band, distance) = switch (positionSeconds) {
-        // Cue end times are exclusive, so a boundary belongs to the next chunk.
-        final position when position >= start && position < end => (0, 0.0),
-        final position when position < start => (1, start - position),
-        final position => (2, position - end),
+        // Translate the overlap dependency first so the playing chunk can be
+        // validated and exposed as soon as its parallel request returns.
+        _ when isContextDependency => (0, index.toDouble()),
+        _ when playbackChunk != null && index == playbackChunk => (1, 0.0),
+        final position when start >= position && start < lookaheadEnd => (
+          2,
+          start - position,
+        ),
+        final position when position < start => (3, start - position),
+        final position => (4, position - end),
       };
       if (band < bestBand ||
           (band == bestBand && distance < bestDistance) ||
@@ -835,6 +1149,17 @@ class SubtitleTranslationJob {
       }
     }
     return best;
+  }
+
+  int? _cueIndexAtOrAfter(double position) {
+    for (var index = 0; index < cues.length; index++) {
+      final start = _seconds(cues[index].start);
+      final end = _seconds(cues[index].end);
+      if ((position >= start && position < end) || start >= position) {
+        return index;
+      }
+    }
+    return null;
   }
 
   void _scheduleEmit() {
@@ -855,8 +1180,24 @@ class SubtitleTranslationJob {
 
   void _emit() {
     _lastEmitAt = DateTime.now();
+    final renderedChunks = _completedChunks.toList()..sort();
+    final cueIndexes = <int>[
+      for (final chunk in renderedChunks)
+        for (
+          var index = chunk * chunkSize;
+          index < min((chunk + 1) * chunkSize, cues.length);
+          index++
+        )
+          index,
+    ];
+    final renderedVtt = SubtitleCues.toVttSubset(cues, _texts, cueIndexes);
+    if (renderedVtt != _lastRenderedVtt) {
+      _lastRenderedVtt = renderedVtt;
+      _renderRevision++;
+    }
+    final coverage = _coverageAtPosition();
     onUpdate(
-      SubtitleCues.toVtt(cues, _texts),
+      renderedVtt,
       SubtitleTranslationProgress(
         phase: _phase,
         completedChunks: _completedChunks.length,
@@ -866,7 +1207,57 @@ class SubtitleTranslationJob {
         verifiedCues: _verifiedCues,
         totalCues: cues.length,
         failedChunks: _failedChunkIndexes.length,
+        currentPositionCovered: coverage.currentPositionCovered,
+        coverageAheadSeconds: coverage.coverageAheadSeconds,
+        remainingTimelineCovered: coverage.remainingTimelineCovered,
+        renderRevision: _renderRevision,
+        renderedChunks: List.unmodifiable(renderedChunks),
       ),
+    );
+  }
+
+  ({
+    bool currentPositionCovered,
+    double coverageAheadSeconds,
+    bool remainingTimelineCovered,
+  })
+  _coverageAtPosition() {
+    if (cues.isEmpty) {
+      return (
+        currentPositionCovered: false,
+        coverageAheadSeconds: 0,
+        remainingTimelineCovered: false,
+      );
+    }
+    final position = positionSeconds.toDouble();
+    final cueIndex = _cueIndexAtOrAfter(position);
+    // No subtitle cues remain after the playback position, so subtitle
+    // buffering must not pause the end of the video.
+    if (cueIndex == null) {
+      return (
+        currentPositionCovered: true,
+        coverageAheadSeconds: 0,
+        remainingTimelineCovered: true,
+      );
+    }
+    final currentChunk = cueIndex ~/ chunkSize;
+    if (!_completedChunks.contains(currentChunk)) {
+      return (
+        currentPositionCovered: false,
+        coverageAheadSeconds: 0,
+        remainingTimelineCovered: false,
+      );
+    }
+    var lastChunk = currentChunk;
+    while (lastChunk + 1 < total && _completedChunks.contains(lastChunk + 1)) {
+      lastChunk++;
+    }
+    final endCueIndex = min((lastChunk + 1) * chunkSize, cues.length) - 1;
+    final coverageEnd = _seconds(cues[endCueIndex].end);
+    return (
+      currentPositionCovered: true,
+      coverageAheadSeconds: max(0, coverageEnd - position),
+      remainingTimelineCovered: lastChunk == total - 1,
     );
   }
 
@@ -884,12 +1275,17 @@ class SubtitleTranslationJob {
     final source = cues.sublist(start, end).map((cue) => cue.text).toList();
     final cached = texts.sublist(start, end);
     final contextStart = max(0, start - contextOverlap);
+    final sourceContext = cues
+        .sublist(contextStart, start)
+        .map((cue) => cue.text)
+        .toList();
     final translatedContext = texts.sublist(contextStart, start);
     try {
       return SubtitleTranslationOutput.sanitizeAndValidate(
         source,
         cached,
         targetLanguage: targetLanguage,
+        sourceContext: sourceContext,
         translatedContext: translatedContext,
       );
     } on FormatException {
@@ -980,6 +1376,9 @@ class SubtitleTranslationJob {
       );
     }
     _completedChunks.removeAll(invalid);
+    for (final index in invalid) {
+      _provisionalChunks.remove(index);
+    }
     _failedChunkIndexes.addAll(invalid);
     _translatedCues = _cueCount(_completedChunks);
     _processedCues = _translatedCues + _cueCount(_failedChunkIndexes);
@@ -999,11 +1398,12 @@ class SubtitleTranslationJob {
         await file.parent.create(recursive: true);
         if (_cancelled) return;
         final payload = <String, Object>{
-          'version': 3,
+          'version': 4,
           'verifierVersion': SubtitleTextQuality.verifierVersion,
           'complete': complete,
           'texts': List<String>.from(_texts),
           'completedChunks': _completedChunks.toList()..sort(),
+          'provisionalChunks': _provisionalChunks.keys.toList()..sort(),
           'failedChunks': _failedChunkIndexes.toList()..sort(),
         };
         final temp = File(

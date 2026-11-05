@@ -1,46 +1,46 @@
 # Active work
 
-- Objective: Stabilize verified Vietnamese subtitles, integrate upstream PiliBabel `v3.6.7`, and pretranslate the next `0-5` playlist items without replacing the custom subtitle pipeline.
+- Objective: Keep realtime Vietnamese subtitles continuous, retry failed chunks safely, and reject overlap-context leakage without losing valid cache or cue timing.
 - Branch: `codex/subtitle-translation-proxy` tracking `origin/codex/subtitle-translation-proxy`.
-- Upstream merge commit: `8fdaabfc7`; subtitle verification/prefetch commit: `1c0dd4733`.
-- Status: Source implementation, affected tests/analyze, release build, APK integrity and signature checks pass. ADB install/startup smoke and push are pending because no device is connected.
+- Upstream base: stable `v3.6.7`, merge commit `8fdaabfc7`.
+- Status: Realtime/context implementation, affected validation and release build pass. Push is ready; ADB install/startup smoke is blocked because no device is connected.
 
 ## Completed
 
-- Created backup branch `codex/backup-before-v3.6.7-sync` and merged stable upstream tag `v3.6.7` with a merge commit; no rebase or force-push.
-- Preserved the custom runtime: independent Vietnamese playback tracks, durable artifacts/checkpoints, proxy routing, chunk retries, strict JSON output and Vietnamese UI behavior.
-- Replaced partial Han detection with a shared rune/code-point classifier covering `〇`, CJK Unified Ideographs, Extensions A-I and the Compatibility Supplement.
-- Output cues containing Han are rejected regardless of source-language detection and do not count as translated or verified.
-- Added two-stage completion: `translating -> verifying -> ready`. The app no longer advertises 100%/completed until atomic cache readback and full VTT verification pass.
-- Verification requires exact cue count/order/timestamps, no context overlap leakage and no residual Han. Invalid cues reopen only their owning chunks while valid chunks remain cached.
-- Added artifact verifier metadata. Legacy caches remain reusable, but stale completion markers and old verifier versions are revalidated before being exposed as ready.
-- Added `SubtitlePlaybackTrackPhase.verifying` and separate translated/verified/error progress values for player/menu status.
-- Kept stable-ID Vietnamese track selection as the default. A manual track/off choice suppresses auto-switching only for the current video part.
-- Replaced the old prefetch boolean with `subtitleTranslationPrefetchCount` (`0-5`, default `1`) and migration `true -> 1`, `false -> 0`.
-- Added pure playlist prefetch selection, deduplication and priority rules. Playback/current-video work remains above prefetch jobs, and per-video settings are captured when queued.
-- Fixed detached playlist-prefetch listeners so background jobs remain tracked until completion.
+- Realtime Vietnamese VTT contains only translated, validated chunks; untranslated chunks never copy Chinese source text into the Vietnamese track.
+- Playback starts after 60 seconds of continuous Vietnamese coverage and pauses below 15 seconds unless the user manually selects Chinese/off.
+- Queue priority follows current playback chunk, the 60-second lookahead window, later chunks, then watched history; seeking reprioritizes immediately.
+- Player reloads translated VTT only when `renderRevision` changes, not on each position update.
+- Coordinator automatically retries failed/stalled work with backoff reset after progress and supports immediate manual retry without duplicate requests.
+- Restored `Thử lại` and `Dịch lại phụ đề` controls in both subtitle menu layouts.
+- Overlap validation now compares source-context and translated-context pairs. It rejects merged context, a distinctive context sentence replacing the current cue, and multiple short context elements replacing current cues.
+- Short legitimate repeated dialogue such as `Được` remains valid.
+- Parallel out-of-order completion is rechecked after workers settle; only the polluted chunk is hidden, reopened and retried.
+- Out-of-order chunks whose translated overlap context is not ready are now stored as provisional checkpoint entries. They are not counted, rendered or exposed until all four preceding context cues are translated and the candidate passes context validation.
+- The playback queue now orders work as: overlap dependency immediately before playback, current chunk, future chunks in timeline order, then watched history. Seeking rebuilds this order so the current chunk can be verified without waiting behind unrelated future work.
+- Cached chunks are checked by the same context contract. `SubtitleTextQuality.verifierVersion` is now `2`, so older artifacts are revalidated and repaired rather than trusted blindly.
+- Cue count, order and exact timestamps remain source-owned; translations only replace cue text.
 
 ## Files changed
 
-- Quality/validation: `lib/services/ui_translate/subtitle_text_quality.dart`, `subtitle_translation_job.dart`, `subtitle_translation_artifact.dart`.
-- Playback/progress: `lib/services/ui_translate/subtitle_playback_track.dart`, `lib/pages/video/controller.dart`, `lib/common/widgets/video_subtitle_translate_button.dart`.
-- Prefetch/settings: `lib/services/ui_translate/subtitle_prefetch_policy.dart`, `subtitle_translation_background_service.dart`, `subtitle_translate_service.dart`, `lib/pages/setting/ui_translate/view.dart`, `lib/utils/storage_key.dart`, `lib/utils/storage_pref.dart`.
-- Tests: artifact/job/prefetch/text-quality tests under `test/services/ui_translate/`.
+- Runtime/player: `lib/pages/video/controller.dart`, `lib/plugin/pl_player/view/view.dart`.
+- Translation/retry/quality: `lib/services/ui_translate/subtitle_translation_coordinator.dart`, `lib/services/ui_translate/subtitle_translation_job.dart`, `lib/services/ui_translate/subtitle_text_quality.dart`.
+- Regression tests: `test/services/ui_translate/subtitle_translation_coordinator_test.dart`, `test/services/ui_translate/subtitle_translation_job_test.dart`.
 
 ## Validation
 
-- FAST/AFFECTED: PASS, `flutter test test/services/ui_translate` (`65/65`).
-- Affected Flutter analyze: PASS with exit code 0; 28 existing/info-only notices remain, mainly slow async I/O and test style.
+- Targeted job tests: PASS (`37/37`), including provisional context hiding and dependency-first queue order.
+- AFFECTED subtitle suite: PASS (`77/77`) via `flutter test test/services/ui_translate`.
+- Affected Flutter analyze: PASS with `--no-fatal-infos`; 19 info-only notices remain, mainly existing async I/O and test-style lints.
 - `git diff --check`: PASS.
-- Release build: PASS on 2026-11-05 using Flutter 3.47.2, Android SDK build-tools 37 and Temurin JDK 17.
-- APK: `build/app/outputs/flutter-apk/app-release.apk`, 120,065,502 bytes, SHA-256 `a0f9de187f2a8f602b4785a23e7042f036741ff87ba6747db7935d52b14a2ddd`.
+- Release build: PASS on 2026-11-06 using Flutter 3.47.2, Android SDK build-tools 37 and Temurin JDK 17.
+- APK: `build/app/outputs/flutter-apk/app-release.apk`, 120,099,926 bytes, SHA-256 `761c5e28aaf0dda9fc3418310aafd685606c0c4f95176f363cd86e33465e3ee3`.
 - APK ZIP integrity: PASS. APK Signature Scheme v2 verification: PASS (existing Android debug signing certificate).
-- ADB: no connected device returned by `adb devices -l`; install and startup/crash smoke were not run.
-- Independent Antigravity review: bridge health passed, but review attempts were unavailable (permission denial, then timeout); do not retry repeatedly.
+- Origin fetch: PASS; remote branch has no unseen commits before push.
+- ADB: `/Users/minhtuan/.cache/android-sdk/platform-tools/adb devices -l` returns no connected device, so install and startup/crash smoke were not run.
 
 ## Remaining risks and next action
 
-- Reconnect the Android device, then run `adb install -r -g`, launch `com.example.pilibabel`, scan for `AndroidRuntime`/`FATAL EXCEPTION`, and perform interactive subtitle checks (seek past minute four, track switching, cache restore and playlist prefetch).
-- Push is gated on successful device startup smoke per the requested release plan. The local branch is ahead of `origin/codex/subtitle-translation-proxy`.
-- Real provider/proxy translation throughput still requires device/network smoke evidence.
+- Interactive provider/proxy throughput and the exact wait-5%-then-play behavior still require a connected Android device and live network/API access.
+- When a device is connected, run `adb install -r -g`, launch `com.example.pilibabel`, inspect `AndroidRuntime`/`FATAL EXCEPTION`, then test realtime buffering, seeking, manual retry and cache restoration.
 - Preserve user-owned untracked `.agentboard/`, `.codebase-memory/`, `.cursor/` and `.ruler/` directories.

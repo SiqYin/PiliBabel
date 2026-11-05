@@ -846,14 +846,35 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 // 两条以上才用主/副双栏面板
                 if (videoDetailController.subtitlePlaybackTracks.length < 2) {
                   return [
-                    if (videoDetailController.canRetranslateCurrentSubtitle)
+                    if (videoDetailController.showRetryCurrentSubtitle)
                       PopupMenuItem<String>(
+                        enabled: videoDetailController.canRetryCurrentSubtitle,
+                        height: 35,
+                        onTap: videoDetailController.retryCurrentSubtitle,
+                        child: Text(
+                          uiTx('Thử lại'),
+                          style: TextStyle(
+                            color: videoDetailController.canRetryCurrentSubtitle
+                                ? Colors.white
+                                : Colors.white38,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    if (videoDetailController.showRetranslateCurrentSubtitle)
+                      PopupMenuItem<String>(
+                        enabled:
+                            videoDetailController.canRetranslateCurrentSubtitle,
                         height: 35,
                         onTap: videoDetailController.retranslateCurrentSubtitle,
                         child: Text(
                           uiTx('Dịch lại phụ đề'),
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color:
+                                videoDetailController
+                                    .canRetranslateCurrentSubtitle
+                                ? Colors.white
+                                : Colors.white38,
                             fontSize: 13,
                           ),
                         ),
@@ -2953,11 +2974,18 @@ class _SubtitleSelectPanel extends StatelessWidget {
           height: 32,
           child: Center(child: Text(title, style: _headerStyle)),
         ),
-        if (showActions && controller.canRetranslateCurrentSubtitle)
+        if (showActions && controller.showRetryCurrentSubtitle)
+          _item(
+            label: uiTx('Thử lại'),
+            selected: false,
+            disabled: !controller.canRetryCurrentSubtitle,
+            onTap: controller.retryCurrentSubtitle,
+          ),
+        if (showActions && controller.showRetranslateCurrentSubtitle)
           _item(
             label: uiTx('Dịch lại phụ đề'),
             selected: false,
-            disabled: false,
+            disabled: !controller.canRetranslateCurrentSubtitle,
             onTap: controller.retranslateCurrentSubtitle,
           ),
         if (showActions && controller.canDeleteTranslatedSubtitle)
@@ -2968,7 +2996,8 @@ class _SubtitleSelectPanel extends StatelessWidget {
             onTap: controller.deleteCurrentTranslatedSubtitle,
           ),
         if (showActions &&
-            (controller.canRetranslateCurrentSubtitle ||
+            (controller.showRetryCurrentSubtitle ||
+                controller.showRetranslateCurrentSubtitle ||
                 controller.canDeleteTranslatedSubtitle))
           const Divider(height: 1, color: Colors.white24),
         _item(

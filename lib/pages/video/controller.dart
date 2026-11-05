@@ -123,6 +123,13 @@ typedef _SubtitlePrefetchTarget = ({
   List<SubtitleTranslationProxy> proxies,
 });
 
+typedef _SubtitleBufferUpdate = ({
+  String trackId,
+  int generation,
+  bool canBuffer,
+  SubtitleTranslationProgress progress,
+});
+
 class VideoDetailController extends GetxController
     with GetTickerProviderStateMixin, BlockMixin {
   /// 路由传参
@@ -1718,6 +1725,7 @@ class VideoDetailController extends GetxController
   final RxString subtitleTranslationStatus = ''.obs;
   final RxDouble subtitleTranslationProgress = 0.0.obs;
   final RxBool subtitleTranslationRunning = false.obs;
+  final RxBool subtitleTranslationRetryAvailable = false.obs;
   final Map<int, ({bool isData, String id})> _sourceVttSubtitles = {};
   SubtitleTranslationSubscription? _subtitleSubscription;
   Worker? _subtitlePositionWorker;
@@ -1728,6 +1736,10 @@ class VideoDetailController extends GetxController
   bool _subtitleRefreshBusy = false;
   String? _subtitleRefreshTrackId;
   int? _subtitleRefreshGeneration;
+  int? _subtitleRefreshRevision;
+  int _lastSubtitleRenderRevision = -1;
+  bool _subtitleBufferBusy = false;
+  _SubtitleBufferUpdate? _subtitleBufferUpdate;
   DateTime? _lastSubtitleTrackUpdateAt;
   final Set<String> _artifactPromotionInFlight = <String>{};
   int _subtitleRequest = 0;
@@ -2022,6 +2034,7 @@ class VideoDetailController extends GetxController
     bool translateManualSource = true,
   }) async {
     final request = ++_subtitleRequest;
+    final resumeAfterManualSelection = manual && _pausedForSubtitleTranslation;
     if (manual) {
       _manualSubtitle = true;
       // Manual selection only disables automatic track switching for this
@@ -2065,6 +2078,11 @@ class VideoDetailController extends GetxController
     });
     _subtitleSetTail = task.catchError((Object _) {});
     await task;
+    if (resumeAfterManualSelection &&
+        !isClosed &&
+        generation == _subtitleGeneration) {
+      await PlPlayerController.playIfExists();
+    }
     if (manual &&
         translateManualSource &&
         index > 0 &&
@@ -2114,14 +2132,37 @@ class VideoDetailController extends GetxController
   /// A deliberate retranslation runs in an isolated checkpoint so the VTT
   /// already mounted in the player remains available until replacement is
   /// complete. The background service promotes the replacement atomically.
+  bool get showRetranslateCurrentSubtitle =>
+      subtitles.any((subtitle) => subtitle.langTag == 'zh');
+
   bool get canRetranslateCurrentSubtitle =>
-      subtitles.any((subtitle) => subtitle.langTag == 'zh') &&
+      showRetranslateCurrentSubtitle &&
       SubtitleTranslateService.needed &&
       !subtitleTranslationRunning.value &&
       !SubtitleTranslationBackgroundService.stateFor(
         videoKey: bvid,
         cid: cid.value,
       ).isRunning;
+
+  bool get showRetryCurrentSubtitle =>
+      showRetranslateCurrentSubtitle &&
+      (subtitleTranslationRetryAvailable.value ||
+          (subtitleTranslationRunning.value &&
+              translatedSubtitleTrack?.isComplete != true) ||
+          SubtitleTranslationBackgroundService.stateFor(
+                videoKey: bvid,
+                cid: cid.value,
+              ).phase ==
+              SubtitleTranslationTaskPhase.failed);
+
+  bool get canRetryCurrentSubtitle =>
+      showRetryCurrentSubtitle &&
+      SubtitleTranslateService.needed &&
+      (_subtitleSubscription != null ||
+          !SubtitleTranslationBackgroundService.stateFor(
+            videoKey: bvid,
+            cid: cid.value,
+          ).isRunning);
 
   bool get canDeleteTranslatedSubtitle {
     final state = SubtitleTranslationBackgroundService.stateFor(
@@ -2140,11 +2181,45 @@ class VideoDetailController extends GetxController
     await setSubtitleById(track.id, manual: true);
   }
 
+  Future<void> retryCurrentSubtitle() async {
+    if (!canRetryCurrentSubtitle) return;
+    subtitleTranslationRetryAvailable.value = false;
+    subtitleTranslationRunning.value = true;
+    subtitleTranslationStatus.value = uiTx('Đang thử lại phần phụ đề bị lỗi');
+    final subscription = _subtitleSubscription;
+    if (subscription != null && !subscription.isCancelled) {
+      subscription.retryNow();
+      return;
+    }
+
+    final translatedSource = translatedSubtitleTrack?.sourceIndex;
+    var sourceIndex =
+        translatedSource != null &&
+            translatedSource >= 0 &&
+            translatedSource < subtitles.length &&
+            subtitles[translatedSource].langTag == 'zh'
+        ? translatedSource
+        : subtitles.indexWhere((subtitle) => subtitle.langTag == 'zh');
+    if (sourceIndex < 0) {
+      subtitleTranslationRunning.value = false;
+      subtitleTranslationRetryAvailable.value = true;
+      return;
+    }
+    await _startSubtitleTranslation(
+      subtitles[sourceIndex],
+      sourceIndex + 1,
+      _subtitleGeneration,
+      allowNewTranslation: true,
+      allowManualCacheRestore: true,
+    );
+  }
+
   Future<void> retranslateCurrentSubtitle() async {
     if (!canRetranslateCurrentSubtitle) return;
     final generation = _subtitleGeneration;
     final target = Pref.uiTranslateLang;
     subtitleTranslationRunning.value = true;
+    subtitleTranslationRetryAvailable.value = false;
     subtitleTranslationProgress.value = 0;
     subtitleTranslationStatus.value = uiTx('Đang chuẩn bị dịch lại phụ đề');
     await SubtitleTranslationBackgroundService.start(
@@ -2168,6 +2243,8 @@ class VideoDetailController extends GetxController
       subtitleTranslationRunning.value = state.isRunning;
       subtitleTranslationStatus.value = state.message ?? '';
       if (!state.isRunning) {
+        subtitleTranslationRetryAvailable.value =
+            state.phase == SubtitleTranslationTaskPhase.failed;
         if (state.phase == SubtitleTranslationTaskPhase.complete) {
           await restoreTranslatedSubtitle();
         }
@@ -2254,6 +2331,10 @@ class VideoDetailController extends GetxController
     _subtitlePositionWorker = null;
     _subtitleRefreshTrackId = null;
     _subtitleRefreshGeneration = null;
+    _subtitleRefreshRevision = null;
+    _lastSubtitleRenderRevision = -1;
+    _subtitleBufferBusy = false;
+    _subtitleBufferUpdate = null;
     _lastSubtitleTrackUpdateAt = null;
     _sourceVttSubtitles.clear();
     subtitlePlaybackTracks.clear();
@@ -2265,6 +2346,7 @@ class VideoDetailController extends GetxController
     subtitleTranslationStatus.value = '';
     subtitleTranslationProgress.value = 0;
     subtitleTranslationRunning.value = false;
+    subtitleTranslationRetryAvailable.value = false;
   }
 
   Future<void> _selectPreferredSubtitle() async {
@@ -2620,15 +2702,25 @@ class VideoDetailController extends GetxController
         ),
         onUpdate: (vtt, progress) {
           if (isClosed || generation != _subtitleGeneration) return;
-          if (!SubtitleCues.hasSameTimeline(cues, vtt)) {
+          final timelineValid = progress.isComplete
+              ? SubtitleCues.hasSameTimeline(cues, vtt)
+              : SubtitleCues.hasTimelineSubset(cues, vtt);
+          final containsHan = SubtitleCues.fromVtt(
+            vtt,
+          ).any((cue) => SubtitleTextQuality.containsHan(cue.text));
+          if (!timelineValid || containsHan) {
             subtitleTranslationRunning.value = false;
+            subtitleTranslationRetryAvailable.value = true;
             subtitleTranslationStatus.value = uiTx(
-              'Bản dịch có mốc thời gian không hợp lệ; đang giữ phụ đề gốc',
+              containsHan
+                  ? 'Track tiếng Việt còn chữ Trung; đang thử lại phần lỗi'
+                  : 'Bản dịch có mốc thời gian không hợp lệ; đang thử lại phần lỗi',
             );
             return;
           }
           final percent = (progress.ratio * 100).round();
           subtitleTranslationProgress.value = progress.ratio;
+          subtitleTranslationRetryAvailable.value = progress.failedChunks > 0;
           subtitleTranslationRunning.value =
               canStartTranslation && !progress.isComplete;
           subtitleTranslationStatus.value =
@@ -2653,6 +2745,15 @@ class VideoDetailController extends GetxController
                 )
               : progress.isComplete
               ? uiTx('Đang lưu phụ đề tiếng Việt đã xác minh')
+              : SubtitleRealtimeBufferPolicy.canStart(progress)
+              ? uiTxP(
+                  'Sẵn sàng xem realtime: đã dịch {0}/{1} câu ({2}%)',
+                  [
+                    progress.translatedCues,
+                    progress.totalCues,
+                    percent,
+                  ],
+                )
               : uiTxP(
                   '正在实时翻译字幕：{0}/{1}句（{2}%）',
                   [
@@ -2700,28 +2801,12 @@ class VideoDetailController extends GetxController
               ),
             );
           }
-          final now = DateTime.now();
-          final shouldRefreshPlayer =
-              progress.translatedCues > 0 &&
-              (progress.isComplete ||
-                  _lastSubtitleTrackUpdateAt == null ||
-                  now.difference(_lastSubtitleTrackUpdateAt!) >=
-                      const Duration(milliseconds: 1200));
-          final mayAutoSelect =
-              !_manualSubtitle &&
-              (!Pref.subtitleTranslationWaitForComplete || progress.isComplete);
-          final isTranslatedTrackSelected =
-              selectedSubtitleTrackId.value == translatedTrackId;
-          if (shouldRefreshPlayer &&
-              (mayAutoSelect || isTranslatedTrackSelected)) {
-            _lastSubtitleTrackUpdateAt = now;
-            unawaited(
-              _refreshTranslatedSubtitle(
-                translatedTrackId,
-                generation,
-              ),
-            );
-          }
+          _scheduleSubtitleBufferUpdate(
+            translatedTrackId,
+            generation,
+            canStartTranslation,
+            progress,
+          );
         },
       );
       if (canStartTranslation) {
@@ -2752,22 +2837,6 @@ class VideoDetailController extends GetxController
           }
         }),
       );
-      final shouldWait =
-          Pref.subtitleTranslationWaitForComplete &&
-          canStartTranslation &&
-          plPlayerController.playerStatus.isPlaying;
-      if (shouldWait) {
-        _pausedForSubtitleTranslation = true;
-        await PlPlayerController.pauseIfExists();
-        await subscription.whenComplete;
-        if (!isClosed &&
-            generation == _subtitleGeneration &&
-            identical(_subtitleSubscription, subscription) &&
-            _pausedForSubtitleTranslation) {
-          _pausedForSubtitleTranslation = false;
-          await PlPlayerController.playIfExists();
-        }
-      }
     } catch (error, stackTrace) {
       if (kDebugMode) {
         debugPrint('subtitle translation setup failed: $error\n$stackTrace');
@@ -2775,30 +2844,150 @@ class VideoDetailController extends GetxController
       if (!isClosed && generation == _subtitleGeneration && !_manualSubtitle) {
         subtitleTranslationStatus.value = uiTx('字幕翻译启动失败，正在保留原字幕');
         subtitleTranslationRunning.value = false;
+        subtitleTranslationRetryAvailable.value = true;
         _notifySubtitleError(generation, uiTx('字幕翻译启动失败，正在保留原字幕'));
       }
+    }
+  }
+
+  void _scheduleSubtitleBufferUpdate(
+    String trackId,
+    int generation,
+    bool canBuffer,
+    SubtitleTranslationProgress progress,
+  ) {
+    _subtitleBufferUpdate = (
+      trackId: trackId,
+      generation: generation,
+      canBuffer: canBuffer,
+      progress: progress,
+    );
+    if (_subtitleBufferBusy) return;
+    _subtitleBufferBusy = true;
+    unawaited(_drainSubtitleBufferUpdates());
+  }
+
+  Future<void> _drainSubtitleBufferUpdates() async {
+    try {
+      while (_subtitleBufferUpdate != null) {
+        final update = _subtitleBufferUpdate!;
+        _subtitleBufferUpdate = null;
+        await _applySubtitleBufferUpdate(update);
+      }
+    } finally {
+      _subtitleBufferBusy = false;
+      if (_subtitleBufferUpdate != null && !isClosed) {
+        _scheduleSubtitleBufferUpdate(
+          _subtitleBufferUpdate!.trackId,
+          _subtitleBufferUpdate!.generation,
+          _subtitleBufferUpdate!.canBuffer,
+          _subtitleBufferUpdate!.progress,
+        );
+      }
+    }
+  }
+
+  Future<void> _applySubtitleBufferUpdate(
+    _SubtitleBufferUpdate update,
+  ) async {
+    if (isClosed || update.generation != _subtitleGeneration) return;
+    final progress = update.progress;
+    if (!update.canBuffer && !progress.isComplete) return;
+    final selectedTrack = selectedSubtitleTrackId.value;
+    final translatedSelected = selectedTrack == update.trackId;
+    // Manual Chinese/off selection owns the current part. A manually selected
+    // Vietnamese track still receives realtime refreshes and buffering.
+    if (_manualSubtitle && !translatedSelected) return;
+
+    final waitForComplete = Pref.subtitleTranslationWaitForComplete;
+    final realtimeReady =
+        progress.isComplete || SubtitleRealtimeBufferPolicy.canStart(progress);
+    final realtimeStarved =
+        !progress.isComplete &&
+        SubtitleRealtimeBufferPolicy.shouldPause(progress);
+    final mustWait = waitForComplete
+        ? !progress.isComplete
+        : (!translatedSelected && !realtimeReady) ||
+              (translatedSelected && realtimeStarved);
+
+    if (mustWait) {
+      if (!_manualSubtitle &&
+          selectedTrack != SubtitlePlaybackTrack.offId &&
+          !translatedSelected) {
+        await setSubtitle(0);
+      }
+      if (plPlayerController.playerStatus.isPlaying) {
+        _pausedForSubtitleTranslation = true;
+        await PlPlayerController.pauseIfExists();
+      }
+      if (waitForComplete) {
+        subtitleTranslationStatus.value = uiTxP(
+          'Đang chờ dịch xong phụ đề Việt: {0}/{1} câu',
+          [progress.translatedCues, progress.totalCues],
+        );
+      } else if (!progress.currentPositionCovered) {
+        subtitleTranslationStatus.value = uiTx('Đang chờ dịch đoạn hiện tại');
+      } else {
+        subtitleTranslationStatus.value = uiTxP(
+          'Đang đệm phụ đề Việt: {0}/60 giây',
+          [progress.coverageAheadSeconds.floor().clamp(0, 60)],
+        );
+      }
+      return;
+    }
+
+    final now = DateTime.now();
+    final renderChanged = progress.renderRevision > _lastSubtitleRenderRevision;
+    final refreshDue =
+        progress.isComplete ||
+        !translatedSelected ||
+        _lastSubtitleTrackUpdateAt == null ||
+        now.difference(_lastSubtitleTrackUpdateAt!) >=
+            const Duration(milliseconds: 1200);
+    if (renderChanged && refreshDue) {
+      _lastSubtitleTrackUpdateAt = now;
+      await _refreshTranslatedSubtitle(
+        update.trackId,
+        update.generation,
+        progress.renderRevision,
+      );
+    }
+    if (_pausedForSubtitleTranslation &&
+        selectedSubtitleTrackId.value == update.trackId &&
+        (progress.isComplete || realtimeReady)) {
+      _pausedForSubtitleTranslation = false;
+      await PlPlayerController.playIfExists();
     }
   }
 
   Future<void> _refreshTranslatedSubtitle(
     String trackId,
     int generation,
+    int renderRevision,
   ) async {
     _subtitleRefreshTrackId = trackId;
     _subtitleRefreshGeneration = generation;
+    _subtitleRefreshRevision = renderRevision;
     if (_subtitleRefreshBusy) return;
     _subtitleRefreshBusy = true;
     try {
       while (_subtitleRefreshTrackId != null) {
         final next = _subtitleRefreshTrackId!;
         final nextGeneration = _subtitleRefreshGeneration;
+        final nextRevision = _subtitleRefreshRevision;
         _subtitleRefreshTrackId = null;
         _subtitleRefreshGeneration = null;
+        _subtitleRefreshRevision = null;
         if (!isClosed &&
             nextGeneration == _subtitleGeneration &&
             (!_manualSubtitle || selectedSubtitleTrackId.value == next)) {
           try {
             await setSubtitleById(next);
+            if (selectedSubtitleTrackId.value == next &&
+                nextRevision != null &&
+                nextRevision > _lastSubtitleRenderRevision) {
+              _lastSubtitleRenderRevision = nextRevision;
+            }
           } catch (error, stackTrace) {
             if (kDebugMode) {
               debugPrint(

@@ -81,6 +81,7 @@ void main() {
         cues: cues,
         chunkSize: 1,
         concurrency: 3,
+        targetLanguage: 'vi',
         cacheKey: 'timestamp-order',
         cacheDirectory: directory.path,
         translate: (lines) async {
@@ -91,7 +92,13 @@ void main() {
             _ => 0,
           };
           await Future<void>.delayed(Duration(milliseconds: delay));
-          return ['vi ${lines.single}'];
+          return [
+            switch (lines.single) {
+              '甲' => 'Bản dịch một',
+              '乙' => 'Bản dịch hai',
+              _ => 'Bản dịch ba',
+            },
+          ];
         },
         onUpdate: (vtt, _) {
           emittedVtts.add(vtt);
@@ -104,13 +111,169 @@ void main() {
       final parsed = SubtitleCues.fromVtt(translatedVtt!);
       expect(parsed.map((cue) => cue.start), cues.map((cue) => cue.start));
       expect(parsed.map((cue) => cue.end), cues.map((cue) => cue.end));
-      expect(parsed.map((cue) => cue.text), ['vi 甲', 'vi 乙', 'vi 丙']);
+      expect(parsed.map((cue) => cue.text), [
+        'Bản dịch một',
+        'Bản dịch hai',
+        'Bản dịch ba',
+      ]);
       expect(
-        emittedVtts.every((vtt) => SubtitleCues.hasSameTimeline(cues, vtt)),
+        emittedVtts.every(
+          (vtt) => SubtitleCues.hasTimelineSubset(cues, vtt),
+        ),
         isTrue,
       );
+      expect(
+        emittedVtts.every(
+          (vtt) => SubtitleCues.fromVtt(
+            vtt,
+          ).every((cue) => !RegExp(r'[甲乙丙]').hasMatch(cue.text)),
+        ),
+        isTrue,
+      );
+      expect(SubtitleCues.hasSameTimeline(cues, translatedVtt!), isTrue);
     },
   );
+
+  test('accepts only an exact ordered subset of the source timeline', () {
+    final source = _cues(3);
+    final partial = SubtitleCues.toVttSubset(
+      source,
+      const ['Một', 'Hai', 'Ba'],
+      const [0, 2],
+    );
+
+    expect(SubtitleCues.hasTimelineSubset(source, partial), isTrue);
+    expect(
+      SubtitleCues.hasTimelineSubset(
+        source,
+        'WEBVTT\n\n00:00:00.100 --> 00:00:01.000\nMột\n',
+      ),
+      isFalse,
+    );
+    expect(
+      SubtitleCues.hasTimelineSubset(
+        source,
+        'WEBVTT\n\n00:00:00.000 --> 00:00:01.000\nMột\n\n'
+        '00:00:00.000 --> 00:00:01.000\nLặp\n',
+      ),
+      isFalse,
+    );
+  });
+
+  test(
+    'later five-percent chunk never covers the current playback position',
+    () async {
+      final firstChunk = Completer<void>();
+      final remainingChunks = Completer<void>();
+      final laterChunkUpdate = Completer<SubtitleTranslationProgress>();
+      final emittedVtts = <String>[];
+      var laterChunkReturned = false;
+      final job = SubtitleTranslationJob(
+        cues: _cues(400),
+        chunkSize: 20,
+        concurrency: 2,
+        targetLanguage: 'vi',
+        cacheKey: 'five-percent-gap',
+        cacheDirectory: directory.path,
+        translate: (lines) async {
+          final chunk = int.parse(lines.first.substring(1)) ~/ 20;
+          if (chunk == 0) await firstChunk.future;
+          if (chunk >= 2) await remainingChunks.future;
+          if (chunk == 1) laterChunkReturned = true;
+          return [
+            for (final line in lines) 'Bản dịch câu ${line.substring(1)}',
+          ];
+        },
+        onUpdate: (vtt, progress) {
+          emittedVtts.add(vtt);
+          if (laterChunkReturned && !laterChunkUpdate.isCompleted) {
+            laterChunkUpdate.complete(progress);
+          }
+        },
+      );
+
+      final running = job.run();
+      final progress = await laterChunkUpdate.future;
+      expect(progress.ratio, 0);
+      expect(progress.completedChunks, 0);
+      expect(progress.currentPositionCovered, isFalse);
+      expect(SubtitleRealtimeBufferPolicy.canStart(progress), isFalse);
+      expect(SubtitleCues.fromVtt(emittedVtts.last), isEmpty);
+      expect(
+        emittedVtts.every(
+          (vtt) => SubtitleCues.fromVtt(
+            vtt,
+          ).every((cue) => !RegExp(r'[\u3400-\u9FFF]').hasMatch(cue.text)),
+        ),
+        isTrue,
+      );
+      job.cancel();
+      firstChunk.complete();
+      remainingChunks.complete();
+      await running;
+    },
+  );
+
+  test('requires sixty seconds to start and pauses below fifteen', () async {
+    final gates = List.generate(5, (_) => Completer<void>());
+    final lowBufferUpdate = Completer<SubtitleTranslationProgress>();
+    final updates = <int, Completer<SubtitleTranslationProgress>>{
+      for (var completed = 1; completed <= 3; completed++)
+        completed: Completer<SubtitleTranslationProgress>(),
+    };
+    final job = SubtitleTranslationJob(
+      cues: _cues(100),
+      chunkSize: 20,
+      concurrency: 1,
+      targetLanguage: 'vi',
+      cacheKey: 'realtime-watermarks',
+      cacheDirectory: directory.path,
+      translate: (lines) async {
+        final chunk = int.parse(lines.first.substring(1)) ~/ 20;
+        await gates[chunk].future;
+        return [
+          for (final line in lines) 'Bản dịch câu ${line.substring(1)}',
+        ];
+      },
+      onUpdate: (_, progress) {
+        final waiter = updates[progress.completedChunks];
+        if (waiter != null && !waiter.isCompleted) waiter.complete(progress);
+        if (progress.completedChunks == 3 &&
+            progress.coverageAheadSeconds < 15 &&
+            !lowBufferUpdate.isCompleted) {
+          lowBufferUpdate.complete(progress);
+        }
+      },
+    );
+
+    final running = job.run();
+    gates[0].complete();
+    final twentySeconds = await updates[1]!.future;
+    expect(twentySeconds.coverageAheadSeconds, 20);
+    expect(SubtitleRealtimeBufferPolicy.canStart(twentySeconds), isFalse);
+    expect(SubtitleRealtimeBufferPolicy.shouldPause(twentySeconds), isFalse);
+
+    gates[1].complete();
+    final fortySeconds = await updates[2]!.future;
+    expect(fortySeconds.coverageAheadSeconds, 40);
+    expect(SubtitleRealtimeBufferPolicy.canStart(fortySeconds), isFalse);
+
+    gates[2].complete();
+    final sixtySeconds = await updates[3]!.future;
+    expect(sixtySeconds.coverageAheadSeconds, 60);
+    expect(SubtitleRealtimeBufferPolicy.canStart(sixtySeconds), isTrue);
+
+    job.setPosition(46);
+    final lowBuffer = await lowBufferUpdate.future;
+    expect(lowBuffer.coverageAheadSeconds, 14);
+    expect(SubtitleRealtimeBufferPolicy.shouldPause(lowBuffer), isTrue);
+
+    job.cancel();
+    for (final gate in gates.skip(3)) {
+      gate.complete();
+    }
+    await running;
+  });
 
   test('does not reuse a cache identity when only cue timing changes', () {
     const original = [SubtitleCue('00:00:01.000', '00:00:02.000', '你好')];
@@ -199,11 +362,11 @@ void main() {
       job.setPosition(80);
       waiting[1]!.complete();
       await Future<void>.delayed(Duration.zero);
-      expect(started.last, 4);
-      waiting[4]!.complete();
-      await Future<void>.delayed(Duration.zero);
       expect(started.last, 3);
-      for (final id in [0, 2, 3]) {
+      waiting[3]!.complete();
+      await Future<void>.delayed(Duration.zero);
+      expect(started.last, 4);
+      for (final id in [0, 2, 4]) {
         waiting[id]!.complete();
       }
       await running;
@@ -221,7 +384,7 @@ void main() {
   );
 
   test(
-    'prioritizes the playing chunk and upcoming chunks before history',
+    'prioritizes context, playing chunk and upcoming chunks before history',
     () async {
       final started = <int>[];
       final waiting = <Completer<void>>[];
@@ -245,7 +408,7 @@ void main() {
       );
       final running = job.run();
       await initialWorkers.future;
-      expect(started, [2, 3, 4]);
+      expect(started, [1, 2, 3]);
       job.cancel();
       for (final gate in waiting) {
         gate.complete();
@@ -358,7 +521,7 @@ void main() {
 
       expect(attempts, 3);
       expect(progress!.failedChunks, 1);
-      expect(vtt, contains('你好'));
+      expect(SubtitleCues.fromVtt(vtt!), isEmpty);
       final files = (await directory.list().toList())
           .whereType<File>()
           .toList();
@@ -399,6 +562,45 @@ void main() {
         translatedContext: const ['Ta sẽ đi cùng huynh.'],
       ),
       throwsFormatException,
+    );
+  });
+
+  test('rejects a context sentence used instead of the current cue', () {
+    expect(
+      () => SubtitleTranslationOutput.sanitizeAndValidate(
+        const ['你要去哪里？'],
+        const ['Ta sẽ đi cùng huynh.'],
+        targetLanguage: 'vi',
+        sourceContext: const ['我会和你一起去。'],
+        translatedContext: const ['Ta sẽ đi cùng huynh.'],
+      ),
+      throwsFormatException,
+    );
+  });
+
+  test('rejects multiple short context elements replacing current cues', () {
+    expect(
+      () => SubtitleTranslationOutput.sanitizeAndValidate(
+        const ['你先走。', '我留下。'],
+        const ['Chờ ta.', 'Được rồi.'],
+        targetLanguage: 'vi',
+        sourceContext: const ['等等我。', '好吧。'],
+        translatedContext: const ['Chờ ta.', 'Được rồi.'],
+      ),
+      throwsFormatException,
+    );
+  });
+
+  test('allows a short naturally repeated translation across chunks', () {
+    expect(
+      SubtitleTranslationOutput.sanitizeAndValidate(
+        const ['好。'],
+        const ['Được.'],
+        targetLanguage: 'vi',
+        sourceContext: const ['可以。'],
+        translatedContext: const ['Được.'],
+      ),
+      const ['Được.'],
     );
   });
 
@@ -586,6 +788,52 @@ void main() {
     },
   );
 
+  test(
+    'repairs a context cue that replaces a cue after parallel completion',
+    () async {
+      var secondChunkAttempts = 0;
+      String? finalVtt;
+      final job = SubtitleTranslationJob(
+        cues: _cues(25),
+        chunkSize: 20,
+        concurrency: 2,
+        cacheKey: 'parallel-context-replacement',
+        cacheDirectory: directory.path,
+        targetLanguage: 'vi',
+        retryDelay: Duration.zero,
+        translate: (lines) async => [
+          for (final line in lines) 'Bản dịch câu ${line.substring(1)}',
+        ],
+        translateWithContext: (lines, _) async {
+          if (lines.first == '句0') {
+            await Future<void>.delayed(const Duration(milliseconds: 20));
+            return [
+              for (final line in lines) 'Bản dịch câu ${line.substring(1)}',
+            ];
+          }
+          if (lines.first == '句20' && secondChunkAttempts++ == 0) {
+            return [
+              'Bản dịch câu 19',
+              for (final line in lines.skip(1))
+                'Bản dịch câu ${line.substring(1)}',
+            ];
+          }
+          return [
+            for (final line in lines) 'Đã sửa câu ${line.substring(1)}',
+          ];
+        },
+        onUpdate: (vtt, _) => finalVtt = vtt,
+      );
+
+      await job.run();
+
+      expect(secondChunkAttempts, 2);
+      final translated = SubtitleCues.fromVtt(finalVtt!);
+      expect(translated[19].text, 'Bản dịch câu 19');
+      expect(translated[20].text, 'Đã sửa câu 20');
+    },
+  );
+
   test('emits partial translation and checkpoints failed chunks', () async {
     String? lastVtt;
     bool? failed;
@@ -610,7 +858,8 @@ void main() {
     expect(failed, true);
     expect(translatedCues, 20);
     expect(lastVtt, contains('translated 句0'));
-    expect(lastVtt, contains('句20'));
+    expect(lastVtt, isNot(contains('句20')));
+    expect(SubtitleCues.fromVtt(lastVtt!), hasLength(20));
     final files = (await directory.list().toList()).whereType<File>().toList();
     expect(files, hasLength(1));
     final checkpoint = await files.single.readAsString();
@@ -713,6 +962,159 @@ void main() {
       expect(translated[20].text, 'Đã sửa câu 20');
     },
   );
+
+  test(
+    'retries only a cached chunk replaced by translated overlap context',
+    () async {
+      final cues = _cues(25);
+      final initial = SubtitleTranslationJob(
+        cues: cues,
+        chunkSize: 20,
+        concurrency: 1,
+        cacheKey: 'cached-context-replacement',
+        cacheDirectory: directory.path,
+        targetLanguage: 'vi',
+        translate: (lines) async => [
+          for (final line in lines) 'Bản dịch câu ${line.substring(1)}',
+        ],
+        onUpdate: (_, __) {},
+      );
+      await initial.run();
+
+      final checkpoint = SubtitleTranslationJob.cacheFileFor(
+        'cached-context-replacement',
+        cues,
+        cacheDirectory: directory.path,
+      );
+      final data =
+          jsonDecode(await checkpoint.readAsString()) as Map<String, dynamic>;
+      final texts = List<String>.from(data['texts'] as List);
+      texts[20] = texts[19];
+      data['texts'] = texts;
+      await checkpoint.writeAsString(jsonEncode(data));
+
+      final retriedChunks = <int>[];
+      String? finalVtt;
+      final resumed = SubtitleTranslationJob(
+        cues: cues,
+        chunkSize: 20,
+        concurrency: 1,
+        cacheKey: 'cached-context-replacement',
+        cacheDirectory: directory.path,
+        targetLanguage: 'vi',
+        translate: (lines) async {
+          retriedChunks.add(int.parse(lines.first.substring(1)) ~/ 20);
+          return [
+            for (final line in lines) 'Đã sửa câu ${line.substring(1)}',
+          ];
+        },
+        onUpdate: (vtt, _) => finalVtt = vtt,
+      );
+
+      await resumed.run();
+
+      expect(retriedChunks, [1]);
+      final translated = SubtitleCues.fromVtt(finalVtt!);
+      expect(translated[19].text, 'Bản dịch câu 19');
+      expect(translated[20].text, 'Đã sửa câu 20');
+    },
+  );
+
+  test(
+    'reopened context chunk disappears instead of reverting to Chinese',
+    () async {
+      var secondChunkAttempts = 0;
+      final emitted = <String>[];
+      final job = SubtitleTranslationJob(
+        cues: _cues(25),
+        chunkSize: 20,
+        concurrency: 2,
+        cacheKey: 'context-reopen-hidden',
+        cacheDirectory: directory.path,
+        targetLanguage: 'vi',
+        retryDelay: Duration.zero,
+        translate: (lines) async => [
+          for (final line in lines) 'Bản dịch câu ${line.substring(1)}',
+        ],
+        translateWithContext: (lines, _) async {
+          if (lines.first == '句0') {
+            await Future<void>.delayed(const Duration(milliseconds: 20));
+            return [
+              for (final line in lines) 'Bản dịch câu ${line.substring(1)}',
+            ];
+          }
+          if (lines.first == '句20' && secondChunkAttempts++ == 0) {
+            return [
+              'Bản dịch câu 19. Bản dịch câu 20',
+              for (final line in lines.skip(1))
+                'Bản dịch câu ${line.substring(1)}',
+            ];
+          }
+          return [
+            for (final line in lines) 'Đã sửa câu ${line.substring(1)}',
+          ];
+        },
+        onUpdate: (vtt, _) => emitted.add(vtt),
+      );
+
+      await job.run();
+
+      expect(secondChunkAttempts, 2);
+      expect(
+        emitted.every(
+          (vtt) => SubtitleCues.fromVtt(vtt).every(
+            (cue) => cue.text != 'Bản dịch câu 19. Bản dịch câu 20',
+          ),
+        ),
+        isTrue,
+        reason:
+            'An out-of-order chunk must stay hidden until its translated '
+            'overlap context has been validated.',
+      );
+      expect(
+        SubtitleCues.fromVtt(emitted.last).map((cue) => cue.text),
+        contains('Đã sửa câu 20'),
+      );
+    },
+  );
+
+  test('position updates keep the rendered VTT revision stable', () async {
+    final secondChunk = Completer<void>();
+    final firstChunk = Completer<SubtitleTranslationProgress>();
+    final moved = Completer<SubtitleTranslationProgress>();
+    var firstRevision = -1;
+    final job = SubtitleTranslationJob(
+      cues: _cues(40),
+      chunkSize: 20,
+      concurrency: 1,
+      cacheKey: 'position-render-revision',
+      cacheDirectory: directory.path,
+      translate: (lines) async {
+        if (lines.first == '句20') await secondChunk.future;
+        return lines.map((line) => 'translated $line').toList();
+      },
+      onUpdate: (_, progress) {
+        if (progress.completedChunks == 1 && !firstChunk.isCompleted) {
+          firstRevision = progress.renderRevision;
+          firstChunk.complete(progress);
+          return;
+        }
+        if (progress.completedChunks == 1 &&
+            progress.coverageAheadSeconds == 19 &&
+            !moved.isCompleted) {
+          moved.complete(progress);
+        }
+      },
+    );
+
+    final running = job.run();
+    await firstChunk.future;
+    job.setPosition(1);
+    final positionProgress = await moved.future;
+    expect(positionProgress.renderRevision, firstRevision);
+    secondChunk.complete();
+    await running;
+  });
 
   test(
     'reuses complete cache offline and invalidates changed source',

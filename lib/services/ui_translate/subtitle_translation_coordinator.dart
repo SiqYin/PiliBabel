@@ -8,6 +8,11 @@ typedef SubtitleTranslationJobFactory = SubtitleTranslationJob Function(
   SubtitleTranslationPriorityHandle priority,
 );
 
+typedef SubtitleTranslationRetryDelay = Duration Function(
+  SubtitleTranslationPriority priority,
+  int attempt,
+);
+
 /// Keeps translation work alive independently from a video page/controller.
 ///
 /// A page only attaches a listener. Leaving a video detaches that listener,
@@ -26,6 +31,7 @@ class SubtitleTranslationCoordinator {
     SubtitleTranslationPriority priority =
         SubtitleTranslationPriority.background,
     void Function()? onCompleted,
+    SubtitleTranslationRetryDelay? retryDelay,
   }) {
     var session = _sessions[key];
     if (session == null) {
@@ -34,6 +40,7 @@ class SubtitleTranslationCoordinator {
         priority: priority,
         onFinished: () => _sessions.remove(key),
         onCompleted: onCompleted,
+        retryDelay: retryDelay,
       );
       _sessions[key] = session;
     } else {
@@ -63,6 +70,12 @@ class SubtitleTranslationSubscription {
     if (!_detached) _session.job.setPosition(seconds);
   }
 
+  /// Retry the existing failed chunks immediately without creating a second
+  /// job or discarding chunks that have already passed validation.
+  void retryNow() {
+    if (!_detached) _session.retryNow();
+  }
+
   /// Stop receiving updates but deliberately keep the background translation.
   void detach() {
     if (_detached) return;
@@ -85,7 +98,9 @@ class _SubtitleTranslationSession {
     required SubtitleTranslationPriority priority,
     required this.onFinished,
     this.onCompleted,
+    SubtitleTranslationRetryDelay? retryDelay,
   }) {
+    _retryDelay = retryDelay ?? _defaultRetryDelay;
     priorityHandle = SubtitleTranslationPriorityHandle(priority);
     job = _createJob(_onUpdate, priorityHandle);
   }
@@ -93,6 +108,7 @@ class _SubtitleTranslationSession {
   final SubtitleTranslationJobFactory _createJob;
   final void Function() onFinished;
   final void Function()? onCompleted;
+  late final SubtitleTranslationRetryDelay _retryDelay;
   final listeners = <int, SubtitleTranslationUpdate>{};
   late final SubtitleTranslationJob job;
   late final SubtitleTranslationPriorityHandle priorityHandle;
@@ -104,6 +120,10 @@ class _SubtitleTranslationSession {
   bool _cancelled = false;
   bool _finished = false;
   int _backgroundRetryAttempt = 0;
+  int _bestTranslatedCues = 0;
+  int _retryRequest = 0;
+  int _consumedRetryRequest = 0;
+  Completer<void>? _retryWakeSignal;
 
   Future<void> get whenComplete => _completion.future;
 
@@ -121,6 +141,17 @@ class _SubtitleTranslationSession {
     // finished. Let attached players show the original subtitles and progress
     // from zero immediately when a new translation is allowed.
     if (_progress == null && allowNewTranslation) job.emitCurrent();
+    _runFuture ??= _run();
+  }
+
+  void retryNow() {
+    if (_cancelled || _finished) return;
+    _allowNewTranslation = true;
+    _backgroundRetryAttempt = 0;
+    _retryRequest++;
+    priorityHandle.promote(SubtitleTranslationPriority.userRequested);
+    final signal = _retryWakeSignal;
+    if (signal != null && !signal.isCompleted) signal.complete();
     _runFuture ??= _run();
   }
 
@@ -150,24 +181,19 @@ class _SubtitleTranslationSession {
           // shared session forever. The normal retry delay below applies.
         }
         if (_cancelled || _progress?.isComplete == true) break;
+        if (_retryRequest != _consumedRetryRequest) {
+          _consumedRetryRequest = _retryRequest;
+          continue;
+        }
         // Preserve failed chunks and retry their exact indexes without
         // hammering a temporarily unavailable translation service.
-        final retryExponent = _backgroundRetryAttempt.clamp(0, 3).toInt();
-        final baseSeconds = switch (priorityHandle.value) {
-          SubtitleTranslationPriority.playback => 2,
-          SubtitleTranslationPriority.userRequested => 4,
-          SubtitleTranslationPriority.background => 6,
-          SubtitleTranslationPriority.playlistPrefetch => 8,
-        };
-        final delay = Duration(
-          seconds: (baseSeconds << retryExponent)
-              .clamp(baseSeconds, 60)
-              .toInt(),
-        );
+        final attempt = _backgroundRetryAttempt.clamp(0, 3).toInt();
+        final delay = _retryDelay(priorityHandle.value, attempt);
         _backgroundRetryAttempt = (_backgroundRetryAttempt + 1)
             .clamp(0, 3)
             .toInt();
-        await Future<void>.delayed(delay);
+        await _waitForRetry(delay);
+        _consumedRetryRequest = _retryRequest;
       }
     } finally {
       _runFuture = null;
@@ -176,6 +202,31 @@ class _SubtitleTranslationSession {
         _finish(completed: completed);
       }
     }
+  }
+
+  Future<void> _waitForRetry(Duration delay) async {
+    final signal = Completer<void>();
+    _retryWakeSignal = signal;
+    try {
+      await Future.any([Future<void>.delayed(delay), signal.future]);
+    } finally {
+      if (identical(_retryWakeSignal, signal)) _retryWakeSignal = null;
+    }
+  }
+
+  static Duration _defaultRetryDelay(
+    SubtitleTranslationPriority priority,
+    int attempt,
+  ) {
+    final baseSeconds = switch (priority) {
+      SubtitleTranslationPriority.playback => 2,
+      SubtitleTranslationPriority.userRequested => 4,
+      SubtitleTranslationPriority.background => 6,
+      SubtitleTranslationPriority.playlistPrefetch => 8,
+    };
+    return Duration(
+      seconds: (baseSeconds << attempt).clamp(baseSeconds, 60).toInt(),
+    );
   }
 
   void _finish({bool completed = false}) {
@@ -194,6 +245,13 @@ class _SubtitleTranslationSession {
 
   void _onUpdate(String vtt, SubtitleTranslationProgress progress) {
     if (_cancelled) return;
+    if (progress.translatedCues > _bestTranslatedCues) {
+      _bestTranslatedCues = progress.translatedCues;
+      // Any newly validated chunk proves the route is making progress. Future
+      // failures restart at the short delay instead of inheriting stale
+      // exponential backoff from an earlier outage.
+      _backgroundRetryAttempt = 0;
+    }
     _vtt = vtt;
     _progress = progress;
     for (final listener in List<SubtitleTranslationUpdate>.from(
