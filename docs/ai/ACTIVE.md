@@ -3,7 +3,7 @@
 - Objective: Keep realtime Vietnamese subtitles continuous, retry failed chunks safely, and reject overlap-context leakage without losing valid cache or cue timing.
 - Branch: `codex/subtitle-translation-proxy` tracking `origin/codex/subtitle-translation-proxy`.
 - Upstream base: stable `v3.6.7`, merge commit `8fdaabfc7`.
-- Status: Realtime/context implementation, affected validation and release build pass. Push is ready; ADB install/startup smoke is blocked because no device is connected.
+- Status: Realtime/context implementation, affected validation and release build pass. Code commit `f132c5f82` is pushed to `origin/codex/subtitle-translation-proxy`; ADB install/startup smoke is blocked because no device is connected.
 
 ## Completed
 
@@ -37,6 +37,7 @@
 - APK: `build/app/outputs/flutter-apk/app-release.apk`, 120,099,926 bytes, SHA-256 `761c5e28aaf0dda9fc3418310aafd685606c0c4f95176f363cd86e33465e3ee3`.
 - APK ZIP integrity: PASS. APK Signature Scheme v2 verification: PASS (existing Android debug signing certificate).
 - Origin fetch: PASS; remote branch has no unseen commits before push.
+- Git push: PASS; `f132c5f82` reached `origin/codex/subtitle-translation-proxy` without force-push.
 - ADB: `/Users/minhtuan/.cache/android-sdk/platform-tools/adb devices -l` returns no connected device, so install and startup/crash smoke were not run.
 
 ## Remaining risks and next action
