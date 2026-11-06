@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
+import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:crypto/crypto.dart';
 
@@ -98,12 +99,17 @@ class SubtitlePlaybackTrack {
     final isTarget = subtitle.langTag == targetTag;
     // 标签跟随界面语言：中文源轨永远明确标注，目标语言轨标注来源，
     // 其余轨沿用 B 站自带的 lanDoc（如「英语」）。
-    final targetName = UiTranslateService.to.currentLanguage.name;
+    // Track construction also runs in tests and early player setup, before the
+    // GetX translation service is guaranteed to be registered.
+    final targetName = appLanguageByCode(targetLanguage).name;
+    final isVietnameseTarget = targetTag == 'vi';
     final label = switch ((subtitle.langTag, isTarget, subtitle.isAi)) {
-      ('zh', _, true) => uiTx('中文（AI 识别）'),
-      ('zh', _, false) => uiTx('中文（原文）'),
-      (_, true, true) => uiTxP('{0}（Bilibili AI）', [targetName]),
-      (_, true, false) => uiTxP('{0}（Bilibili 官方）', [targetName]),
+      ('zh', _, true) =>
+        isVietnameseTarget ? 'Tiếng Trung (AI gốc)' : uiTx('中文（AI 识别）'),
+      ('zh', _, false) =>
+        isVietnameseTarget ? 'Tiếng Trung (gốc)' : uiTx('中文（原文）'),
+      (_, true, true) => '$targetName (Bilibili AI)',
+      (_, true, false) => '$targetName (Bilibili)',
       _ => subtitle.lanDoc ?? subtitle.lan,
     };
     final sourceIdentity = sha256
