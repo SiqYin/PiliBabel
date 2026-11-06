@@ -21,13 +21,9 @@ abstract final class SubtitleSelectionPolicy {
       final track = tracks[i];
       final score = Subtitle.langScore(track.lan, language);
       final isAi = track.isAi || track.lan.startsWith('ai-');
-      // Bare "zh"/"ai-zh" is usually source Chinese, not a guaranteed
-      // traditional-Chinese track for a zh-Hant target.
-      final ambiguousChinese =
-          track.langTag == 'zh' &&
-          language.toLowerCase() != 'zh-cn' &&
-          (track.lan == 'zh' || track.lan == 'ai-zh');
-      if (score >= 2 && !ambiguousChinese) {
+      // 与后台源解析器、播放轨标签共用同一个「是否现成译文」判据，
+      // 避免三处各自判断导致繁體中文目标被当成已有译文。
+      if (track.isNativeTarget(language)) {
         final rank = (isAi ? 10 : 0) + score;
         if (rank > bestRank) {
           bestRank = rank;

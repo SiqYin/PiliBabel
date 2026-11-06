@@ -83,7 +83,7 @@ class AiChatController extends GetxController {
 
       if (hasSubtitles) {
         final subtitle = _videoCtl.subtitles.first;
-        final body = await VideoHttp.fetchSubtitleBody(subtitle.subtitleUrl!);
+        final body = await VideoHttp.fetchSubtitleBodyFor(subtitle);
         if (body == null || body.isEmpty) {
           SmartDialog.showToast(uiTx('获取字幕数据失败'));
           return;

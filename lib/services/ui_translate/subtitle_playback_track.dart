@@ -94,8 +94,9 @@ class SubtitlePlaybackTrack {
     required int cid,
     required String targetLanguage,
   }) {
-    final targetTag = _primaryLanguage(targetLanguage);
-    final isTarget = subtitle.langTag == targetTag;
+    // 裸 zh 源轨对繁體中文目标不是「现成译文」，标签不该写成
+    // 「繁體中文（Bilibili 官方）」。与选轨/后台解析共用同一判据。
+    final isTarget = subtitle.isNativeTarget(targetLanguage);
     // 标签跟随界面语言：中文源轨永远明确标注，目标语言轨标注来源，
     // 其余轨沿用 B 站自带的 lanDoc（如「英语」）。
     final targetName = UiTranslateService.to.currentLanguage.name;
@@ -126,11 +127,6 @@ class SubtitlePlaybackTrack {
       isComplete: true,
       progress: 1,
     );
-  }
-
-  static String _primaryLanguage(String value) {
-    final normalized = value.toLowerCase().replaceFirst('ai-', '');
-    return normalized.split(RegExp('[-_]')).first;
   }
 
   static String _stableUrl(String? value) {

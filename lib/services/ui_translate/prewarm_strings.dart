@@ -92,6 +92,27 @@ abstract final class PrewarmStrings {
     '画质', '音质', '当前音质', '缓存统计', '播放倍速',
   ];
 
+  /// 字幕后台任务的状态/toast：它们在任务结束时才第一次出现，
+  /// 那时再入队翻译已经来不及（toast 一闪就没了），必须先预热。
+  static const List<String> subtitleFeedback = [
+    '字幕已预翻译完成',
+    '字幕预翻译失败，可点按钮重试',
+    '全 {0} 个分P字幕已预翻译完成',
+    '全 {0} 个分P已处理（{1} 个无需翻译）',
+    '{0}/{1} 个分P字幕预翻译失败',
+    '{0}/{1} 个分P失败，点击重试',
+    '字幕下载失败，点击重试',
+    '字幕翻译没有开始，点击重试',
+    '这个视频没有可用的中文字幕',
+    '字幕需要登录后才能获取，请先登录',
+    'Bilibili 已提供目标语言字幕',
+    'B站已有译文',
+    '无法获取视频分P',
+    '已翻译并保存到设备',
+    '正在获取字幕',
+    '正在检查视频列表',
+  ];
+
   /// 收藏夹详情 / 收藏搜索
   static const List<String> fav = [
     '编辑信息', '清除失效内容', '确定删除该收藏夹?',
@@ -153,6 +174,7 @@ abstract final class PrewarmStrings {
     ...download,
     ...setting,
     ...video,
+    ...subtitleFeedback,
     ...fav,
     ...listPages,
     ...social,
@@ -167,8 +189,11 @@ abstract final class PrewarmStrings {
         [..._commonActions, ...setting, ...tools, ...glossary],
       );
 
-  static void warmVideo() =>
-      UiTranslateService.precacheLater([..._commonActions, ...video]);
+  static void warmVideo() => UiTranslateService.precacheLater([
+        ..._commonActions,
+        ...video,
+        ...subtitleFeedback,
+      ]);
 
   static void warmFav() =>
       UiTranslateService.precacheLater([..._commonActions, ...fav]);

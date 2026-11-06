@@ -92,6 +92,12 @@ class VideoCardV extends StatelessWidget {
       cover: videoItem.cover,
       bvid: videoItem.bvid,
     );
+    // 没有任何可定位编号时不显示字幕按钮，避免所有卡片共用
+    // 'av:null' 状态键（点一个视频，所有卡片一起转圈）。
+    final subtitleVideoKey = videoItem.bvid ??
+        (videoItem.goto == 'bangumi' && videoItem.param != null
+            ? 'ep${videoItem.param}'
+            : (videoItem.aid != null ? 'av:${videoItem.aid}' : null));
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -144,12 +150,16 @@ class VideoCardV extends StatelessWidget {
                             ),
 
                           CoverTranslateButton(cover: videoItem.cover),
-                          VideoSubtitleTranslateButton(
-                            videoKey: videoItem.bvid ?? 'av:${videoItem.aid}',
-                            bvid: videoItem.bvid,
-                            aid: videoItem.aid,
-                            cid: videoItem.cid,
-                          ),
+                          if (subtitleVideoKey != null)
+                            VideoSubtitleTranslateButton(
+                              videoKey: subtitleVideoKey,
+                              bvid: videoItem.bvid,
+                              aid: videoItem.aid,
+                              cid: videoItem.cid,
+                              epId: videoItem.goto == 'bangumi'
+                                  ? videoItem.param
+                                  : null,
+                            ),
                         ],
                       );
                     },

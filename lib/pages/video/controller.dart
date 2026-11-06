@@ -572,13 +572,21 @@ class VideoDetailController extends GetxController
   /// * 服务内部按 `videoKey/cid/语言` 去重，重复进同一个视频不会重复请求。
   void _autoStartSubtitleTranslation() {
     if (isFileSource || !SubtitleTranslateService.needed) return;
-    final key = bvid.isNotEmpty ? bvid : 'av$aid';
+    final resolvedBvid = bvid.isEmpty ? null : bvid;
+    final resolvedAid = aid > 0 ? aid : null;
+    // 番剧卡片/播放页可能既没有 bvid 也没有 aid，只有 epId。
+    final key = resolvedBvid ??
+        (resolvedAid != null
+            ? 'av$resolvedAid'
+            : (epId != null ? 'ep$epId' : '$aid'));
     unawaited(
       SubtitleTranslationBackgroundService.start(
         videoKey: key,
-        bvid: bvid.isEmpty ? null : bvid,
-        aid: aid > 0 ? aid : null,
+        bvid: resolvedBvid,
+        aid: resolvedAid,
         cid: cid.value > 0 ? cid.value : null,
+        epId: epId,
+        seasonId: seasonId,
         // 合集批量留给封面按钮，这里只处理点开的这一集。
         includeCollection: false,
       ),
@@ -2017,7 +2025,10 @@ class VideoDetailController extends GetxController
         PathUtils.subtitleVttName(sub.lan),
       );
       if (File(vttPath).existsSync()) {
-        if (sub.lan == 'vi-app-ai') {
+        // 下载服务按「目标语言主标签」保存译文轨（`<lang>-app-ai`）。
+        // 以前这里写死越南语 `vi-app-ai`，其它语言缓存的译文会被当成
+        // 一条普通外挂字幕，永远挂不到「AI 译文」轨上。
+        if (sub.lan.endsWith('-app-ai')) {
           translatedVtt = await File(vttPath).readAsString();
           continue;
         }
@@ -2264,6 +2275,8 @@ class VideoDetailController extends GetxController
       bvid: bvid.isEmpty ? null : bvid,
       aid: aid > 0 ? aid : null,
       cid: cid.value,
+      epId: epId,
+      seasonId: seasonId,
       force: true,
       includeCollection: false,
     );
@@ -2670,9 +2683,7 @@ class VideoDetailController extends GetxController
           cached.isData ? cached.id : await File(cached.id).readAsString(),
         );
       } else {
-        final url = track.subtitleUrl;
-        if (url == null || url.isEmpty) throw StateError('No subtitle source');
-        final body = await VideoHttp.fetchSubtitleBody(url);
+        final body = await VideoHttp.fetchSubtitleBodyFor(track);
         if (body == null) throw StateError('No subtitle body');
         cues = SubtitleCues.fromBody(body);
       }
@@ -2794,9 +2805,15 @@ class VideoDetailController extends GetxController
           final timelineValid = progress.isComplete
               ? SubtitleCues.hasSameTimeline(cues, vtt)
               : SubtitleCues.hasTimelineSubset(cues, vtt);
-          final containsHan = SubtitleCues.fromVtt(
-            vtt,
-          ).any((cue) => SubtitleTextQuality.containsHan(cue.text));
+          // 「译文含汉字」只在目标语言本身不使用汉字时才是错误。
+          // 繁體中文/粵語/吳語/閩南語/日語/韓語的译文本来就带汉字，
+          // 以前这里无条件拒收，导致这些语言永远挂不上译文轨、
+          // 状态一直停在「译文仍含中文，正在重试出错分块」。
+          final containsHan =
+              !SubtitleTranslationOutput.targetUsesHan(target) &&
+              SubtitleCues.fromVtt(
+                vtt,
+              ).any((cue) => SubtitleTextQuality.containsHan(cue.text));
           if (!timelineValid || containsHan) {
             subtitleTranslationRunning.value = false;
             subtitleTranslationRetryAvailable.value = true;
@@ -3133,7 +3150,9 @@ class VideoDetailController extends GetxController
           bvid: nextBvid,
           cid: nextCid,
           epId: rawEpId is int ? rawEpId : null,
-          seasonId: rawEpId is int ? seasonId : null,
+          // seasonId 与这一集有没有 epId 无关：以前被写成同一个条件，
+          // 只有 epId 为空但 seasonId 有效的剧集会把 seasonId 丢掉。
+          seasonId: seasonId,
           targetLanguage: Pref.uiTranslateLang,
           chunkSize: _subtitleChunkSizeForVideo,
           concurrency: _subtitleConcurrencyForVideo,
@@ -3178,10 +3197,7 @@ class VideoDetailController extends GetxController
           );
           if (!selection.translate || selection.index == 0) return;
           final candidate = choices[selection.index - 1];
-          final sourceUrl = candidate.subtitleUrl;
-          final body = sourceUrl == null || sourceUrl.isEmpty
-              ? null
-              : await VideoHttp.fetchSubtitleBody(sourceUrl);
+          final body = await VideoHttp.fetchSubtitleBodyFor(candidate);
           final parsed = body == null
               ? const <SubtitleCue>[]
               : SubtitleCues.fromBody(body);
@@ -3372,11 +3388,10 @@ class VideoDetailController extends GetxController
     final track = subtitles[subIdx];
     ({bool isData, String id})? subtitle = vttSubtitles[subIdx];
     if (subtitle == null) {
-      final url = track.subtitleUrl;
-      if (url == null || url.isEmpty) return null;
+      if (track.subtitleUrlCandidates.isEmpty) return null;
       String? result;
       try {
-        result = await VideoHttp.getSubtitles(url);
+        result = await VideoHttp.getSubtitlesFor(track);
       } catch (_) {
         return null;
       }

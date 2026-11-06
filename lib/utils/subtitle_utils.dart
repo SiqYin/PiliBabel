@@ -12,6 +12,23 @@ enum SubtitleFormat implements EnumWithLabel {
 }
 
 abstract final class SubtitleUtils {
+  /// 只保留能正常显示的字幕条目。
+  ///
+  /// 播放页拿到的源字幕就是 `getSubtitles` 用本文件从 B 站 JSON 生成的 VTT；
+  /// 以前零长度/倒序/空文本条目照样写进去，随后被整轨时间轴检查一票否决，
+  /// 表现为「源字幕时间轴异常」且无法重试。这里在生成期就清掉。
+  static List<Map> _validItems(List list) => [
+    for (final item in list)
+      if (item is Map &&
+          item['from'] is num &&
+          item['to'] is num &&
+          item['content'] is String &&
+          (item['from'] as num) >= 0 &&
+          (item['to'] as num) > (item['from'] as num) &&
+          (item['content'] as String).trim().isNotEmpty)
+        item.cast<String, dynamic>(),
+  ];
+
   static String _vttTimecode(num seconds) {
     final h = (seconds ~/ 3600).toString().padLeft(2, '0');
     seconds %= 3600;
@@ -22,9 +39,10 @@ abstract final class SubtitleUtils {
   }
 
   static String json2Vtt(List list) {
+    final items = _validItems(list);
     final sb = StringBuffer('WEBVTT\n\n')
       ..writeAll(
-        list.map(
+        items.map(
           (item) =>
               '${_vttTimecode(item['from'])} --> ${_vttTimecode(item['to'])}\n${item['content'].trim()}',
         ),
@@ -44,9 +62,10 @@ abstract final class SubtitleUtils {
   }
 
   static String json2Srt(List list) {
+    final items = _validItems(list);
     final sb = StringBuffer()
       ..writeAll(
-        list.mapIndexed(
+        items.mapIndexed(
           (i, e) =>
               '${i + 1}\n${_srtTimecode(e['from'])} --> ${_srtTimecode(e['to'])}\n${e['content'].trim()}',
         ),

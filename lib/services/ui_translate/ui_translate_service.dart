@@ -1414,8 +1414,16 @@ class UiTranslateService extends GetxService {
       // 这里把说明句剥离掉、保留正常译文；剥完什么都不剩才退回原文。
       final out = _stripMetaNotes(raw).trim();
       if (out.isEmpty && _hasTranslatableText(src)) {
-        // 以前这里静默返回原文，上层只会看到「译文与原文相同」的含糊失败。
-        throw const FormatException('Subtitle translation returned nothing');
+        if (subtitleMode) {
+          // 字幕绝不能把「空译文」当成原文持久化：那会让整块永远失败，
+          // 而且重试也翻不过去。以前静默返回原文，上层只看到含糊的
+          // 「译文与原文相同」，3.7.2 起改成明确抛错。
+          throw const FormatException('Subtitle translation returned nothing');
+        }
+        // 界面文案相反：一条翻译失败不该让整批 UI 文案全部重试，
+        // 原文兜底才是正确行为（_flush 会对整批做失败隔离）。
+        results.add(src);
+        continue;
       }
       results.add(out.isEmpty ? src : out);
     }

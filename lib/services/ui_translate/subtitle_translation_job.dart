@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' show max, min;
 
+import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_text_quality.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:crypto/crypto.dart';
@@ -268,16 +269,52 @@ abstract final class SubtitleTranslationOutput {
     }
   }
 
+  /// 中文变体的主标签，用于给语言清单外的别名兜底。
+  static const Set<String> _hanPrimaryTags = <String>{
+    'zh',
+    'cmn',
+    'yue',
+    'wuu',
+    'nan',
+    'cdo',
+    'cjy',
+    'gan',
+    'hak',
+    'lzh',
+  };
+
   /// 目标语言是否属于中文家族（简繁/粤语/吴语/闽南语）。
   ///
   /// 这些目标本来就该有大量行与原文一字不差（「好的」→「好的」），
   /// 任何「照抄」判定都必须豁免，否则整条轨必挂。
-  static bool _isChineseFamilyTarget(String? targetLanguage) {
-    final target = (targetLanguage ?? '').toLowerCase();
-    return target.startsWith('zh') ||
-        target.startsWith('yue') ||
-        target.startsWith('wuw') ||
-        target.startsWith('nan');
+  ///
+  /// 清单内的代码一律以 [AppLanguage.chineseFamily] 为唯一事实来源，避免手写
+  /// 前缀拼错：这里曾把吴语 `wuu` 写成 `wuw`，结果吴语译文被整块判成「照抄原文」
+  /// 而全部拒收。清单外的别名（B 站下发的 `zh-Hant`、`nan_TW` 之类）才按主标签
+  /// 兜底。
+  static bool isChineseFamilyTarget(String? targetLanguage) {
+    final target = (targetLanguage ?? '').trim().toLowerCase();
+    if (target.isEmpty) return false;
+    for (final language in appLanguages) {
+      if (language.code.toLowerCase() == target) {
+        return language.chineseFamily;
+      }
+    }
+    return _hanPrimaryTags.contains(target.split(RegExp(r'[-_]')).first);
+  }
+
+  /// 目标语言的译文里本来就允许出现汉字。
+  ///
+  /// 中文家族（简/繁/粤/吴/闽南）与日语（汉字）、韩语（汉字词）都是如此。
+  /// 播放页以前对译文 VTT 做「只要含汉字就整块拒收」的检查，等于让这些语言
+  /// 永远挂不上译文轨：每帧都被判成「译文仍含中文，正在重试出错分块」。
+  /// 译文质量由 [sanitizeAndValidate] 在分块级别保证，这里只负责区分
+  /// 「汉字是正常文字」还是「汉字说明没翻」。
+  static bool targetUsesHan(String? targetLanguage) {
+    final target = (targetLanguage ?? '').trim().toLowerCase();
+    if (target.isEmpty) return false;
+    final primary = target.split(RegExp(r'[-_]')).first;
+    return isChineseFamilyTarget(target) || primary == 'ja' || primary == 'ko';
   }
 
   /// 整块级别的「模型根本没翻」判定。
@@ -289,7 +326,7 @@ abstract final class SubtitleTranslationOutput {
     List<String> output,
     String? targetLanguage,
   ) {
-    if (_isChineseFamilyTarget(targetLanguage)) return;
+    if (isChineseFamilyTarget(targetLanguage)) return;
     var hanLines = 0;
     var copied = 0;
     for (var i = 0; i < source.length && i < output.length; i++) {
@@ -517,25 +554,27 @@ abstract final class SubtitleTranslationOutput {
 }
 
 abstract final class SubtitleCues {
-  static List<SubtitleCue> fromBody(List body) => [
-    for (final item in body)
-      if (item is Map &&
-          item['from'] is num &&
-          item['to'] is num &&
-          item['content'] is String &&
-          (item['content'] as String).trim().isNotEmpty &&
-          // 丢掉零长度/倒序的坏 cue：hasSafePlaybackTimeline 是「整条轨」判定，
-          // 一条坏 cue 会让整条字幕被判不可用（界面表现为「没有可用字幕」）。
-          (item['to'] as num) > (item['from'] as num))
-        SubtitleCue(
-          _time(item['from'] as num),
-          _time(item['to'] as num),
-          (item['content'] as String).trim(),
-        ),
-  ];
+  static List<SubtitleCue> fromBody(List body) {
+    final raw = <SubtitleCue>[
+      for (final item in body)
+        if (item is Map &&
+            item['from'] is num &&
+            item['to'] is num &&
+            item['content'] is String &&
+            (item['from'] as num) >= 0 &&
+            (item['to'] as num) > (item['from'] as num) &&
+            (item['content'] as String).trim().isNotEmpty)
+          SubtitleCue(
+            _time(item['from'] as num),
+            _time(item['to'] as num),
+            (item['content'] as String).trim(),
+          ),
+    ];
+    return sanitizeTimeline(raw);
+  }
 
   static List<SubtitleCue> fromVtt(String vtt) {
-    final cues = <SubtitleCue>[];
+    final raw = <SubtitleCue>[];
     final blocks = vtt.replaceAll('\r\n', '\n').split(RegExp(r'\n\s*\n'));
     for (final block in blocks) {
       final lines = block.split('\n');
@@ -545,10 +584,36 @@ abstract final class SubtitleCues {
       if (parts.length != 2) continue;
       final text = lines.skip(idx + 1).join('\n').trim();
       if (text.isNotEmpty) {
-        cues.add(SubtitleCue(parts[0].trim(), parts[1].trim(), text));
+        raw.add(SubtitleCue(parts[0].trim(), parts[1].trim(), text));
       }
     }
-    return cues;
+    return sanitizeTimeline(raw);
+  }
+
+  /// 把源轨规整成「可以逐句翻译、也能安全挂给播放器」的时间轴。
+  ///
+  /// 之前只在 `fromBody` 里过滤零长度 cue，播放页走的却是
+  /// `json2Vtt → fromVtt` 这条链：B 站 AI 轨常带零长度/重复时间段，
+  /// 一条坏 cue 就会让 `hasSafePlaybackTimeline`（整条轨判定）判死，
+  /// 界面直接停在「源字幕时间轴异常，已保留原字幕」/「没有可用字幕」，
+  /// 而且没有重试入口。这里统一在两个解析入口做同一套清洗：
+  /// ① 丢掉时间不可解析、负数、零长度、倒序的 cue；
+  /// ② 丢掉会造成 4 条及以上字幕同时叠在一起的 cue（mpv 会一次全画出来）。
+  /// 只删多余 cue，不改动保留下来的任何时间戳，译文与源轨仍然一一对应。
+  static List<SubtitleCue> sanitizeTimeline(List<SubtitleCue> cues) {
+    final kept = <SubtitleCue>[];
+    final activeEnds = <double>[];
+    for (final cue in cues) {
+      final start = _seconds(cue.start);
+      final end = _seconds(cue.end);
+      if (start == null || end == null || start < 0 || end <= start) continue;
+      // WebVTT 的结束时间是排他的：恰好在这一刻结束的 cue 已不占位置。
+      activeEnds.removeWhere((activeEnd) => activeEnd <= start);
+      if (activeEnds.length >= 3) continue;
+      activeEnds.add(end);
+      kept.add(cue);
+    }
+    return kept;
   }
 
   static String toVtt(List<SubtitleCue> cues, List<String> texts) {
@@ -655,6 +720,13 @@ abstract final class SubtitleCues {
 
   static double? _seconds(String timestamp) {
     final parts = timestamp.replaceAll(',', '.').split(':');
+    // 外部/本地 VTT 允许 mm:ss.mmm，B 站 JSON 转出来的则是 hh:mm:ss.mmm。
+    if (parts.length == 2) {
+      final minutes = int.tryParse(parts[0]);
+      final seconds = double.tryParse(parts[1]);
+      if (minutes == null || seconds == null) return null;
+      return minutes * 60 + seconds;
+    }
     if (parts.length != 3) return null;
     final hours = int.tryParse(parts[0]);
     final minutes = int.tryParse(parts[1]);
@@ -1309,7 +1381,11 @@ class SubtitleTranslationJob {
   }
 
   static double _seconds(String timestamp) {
-    final parts = timestamp.split(':');
+    final parts = timestamp.replaceAll(',', '.').split(':');
+    if (parts.length == 2) {
+      return (int.tryParse(parts[0]) ?? 0) * 60 +
+          (double.tryParse(parts[1]) ?? 0);
+    }
     if (parts.length != 3) return 0;
     return (int.tryParse(parts[0]) ?? 0) * 3600 +
         (int.tryParse(parts[1]) ?? 0) * 60 +

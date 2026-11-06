@@ -25,21 +25,32 @@ abstract final class SubtitleSourceResolver {
     required SubtitleCueLoader loadCues,
     bool forceChineseSource = false,
   }) async {
-    final target = _primaryLanguage(targetLanguage);
     if (!forceChineseSource) {
       final native =
           tracks
-              .where((track) => track.langTag == target)
+              .where((track) => track.isNativeTarget(targetLanguage))
               .toList(growable: false)
             ..sort((a, b) {
               if (a.isAi == b.isAi) return 0;
               return a.isAi ? -1 : 1;
             });
-      if (native.isNotEmpty) {
-        return ResolvedSubtitleSource(
-          kind: SubtitleSourceKind.nativeTarget,
-          track: native.first,
-        );
+      for (final track in native) {
+        try {
+          final cues = await loadCues(track);
+          // B 站偶尔会列出一条下载即 404 / 空 body 的「目标语言」轨。
+          // 以前不看内容就返回 nativeTarget，播放页挂不上字幕、后台又判定
+          // 「无需翻译」，用户点多少次都不会有译文。这里验证后才能算现成译文。
+          if (cues.isEmpty || !SubtitleCues.hasSafePlaybackTimeline(cues)) {
+            continue;
+          }
+          return ResolvedSubtitleSource(
+            kind: SubtitleSourceKind.nativeTarget,
+            track: track,
+            cues: cues,
+          );
+        } catch (_) {
+          // 这条轨不可用就继续试下一条，全部不可用则退回中文源 + AI 翻译。
+        }
       }
     }
 

@@ -6,12 +6,18 @@ class SubtitleTranslationTarget {
     required this.bvid,
     required this.aid,
     required this.cid,
+    this.epId,
+    this.seasonId,
   });
 
   final String videoKey;
   final String? bvid;
   final int? aid;
   final int? cid;
+
+  /// 番剧（pgc）单集没有 bvid/aid 时，靠这两个参数请求字幕列表。
+  final int? epId;
+  final int? seasonId;
 }
 
 /// Flattens a normal multi-P video or an entire UGC season into independent

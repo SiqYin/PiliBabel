@@ -48,6 +48,12 @@ class VideoCardH extends StatelessWidget {
       cover: videoItem.cover,
     );
     final theme = Theme.of(context);
+    // 没有任何可定位编号时不显示字幕按钮，避免所有卡片共用一个
+    // 'av:null' 状态键（点一个视频，所有卡片一起转圈）。
+    final subtitleVideoKey = videoItem.bvid ??
+        (videoItem.aid != null
+            ? 'av:${videoItem.aid}'
+            : (videoItem.seasonId != null ? 'ss${videoItem.seasonId}' : null));
     return Material(
       type: .transparency,
       child: Stack(
@@ -180,12 +186,14 @@ class VideoCardH extends StatelessWidget {
                               ),
 
                             CoverTranslateButton(cover: videoItem.cover),
-                            VideoSubtitleTranslateButton(
-                              videoKey: videoItem.bvid ?? 'av:${videoItem.aid}',
-                              bvid: videoItem.bvid,
-                              aid: videoItem.aid,
-                              cid: videoItem.cid,
-                            ),
+                            if (subtitleVideoKey != null)
+                              VideoSubtitleTranslateButton(
+                                videoKey: subtitleVideoKey,
+                                bvid: videoItem.bvid,
+                                aid: videoItem.aid,
+                                cid: videoItem.cid,
+                                seasonId: videoItem.seasonId,
+                              ),
                           ],
                         );
                       },

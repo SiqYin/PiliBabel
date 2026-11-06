@@ -1,9 +1,9 @@
 import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_job.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_proxy.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_text_quality.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
-import 'package:PiliPlus/utils/subtitle_utils.dart';
 import 'package:get/get.dart';
 
 /// 视频自带字幕的翻译。
@@ -83,13 +83,17 @@ abstract final class SubtitleTranslateService {
   }
 
   /// 翻译一条中文字幕轨，返回可直接挂载的 VTT 文本；不需要或失败返回 null。
+  ///
+  /// 这是合并 PR #2 时留下的旧同步路径（当前主链路走后台翻译服务），
+  /// 但它的失败语义必须正确：
+  /// 旧实现用 `translateTexts`（失败静默返回原文）逐行兜底，一旦模型出错就会
+  /// 把中文原文包装成「译文轨」挂上去，而且再也不会重试。现在改用
+  /// [UiTranslateService.translateSubtitleLines]，任何失败都返回 null。
   static Future<String?> translatedVtt({
     required String bvid,
     required int cid,
     required Subtitle sub,
   }) async {
-    final url = sub.subtitleUrl;
-    if (url == null || url.isEmpty) return null;
     if (!needed || !isChineseTrack(sub)) return null;
 
     final target = UiTranslateService.to.currentLanguage.code;
@@ -99,87 +103,48 @@ abstract final class SubtitleTranslateService {
 
     final List body;
     try {
-      final raw = await VideoHttp.fetchSubtitleBody(url);
+      final raw = await VideoHttp.fetchSubtitleBodyFor(sub);
       if (raw == null || raw.isEmpty) return null;
       body = raw;
     } catch (_) {
       return null;
     }
+    final cues = SubtitleCues.fromBody(body);
+    if (cues.isEmpty) return null;
 
-    final lines = <String>[];
-    for (final item in body) {
-      lines.add(
-        ((item is Map ? item['content'] : null) as String?)?.trim() ?? '',
-      );
-    }
-
-    // 只翻含汉字的行：纯数字/符号行没有翻译价值，少发一次请求。
-    final index = <int>[];
-    final pending = <String>[];
-    for (var i = 0; i < lines.length; i++) {
-      if (lines[i].isNotEmpty && _isCjk(lines[i])) {
-        index.add(i);
-        pending.add(lines[i]);
-      }
-    }
-    if (pending.isEmpty) return null;
+    final texts = <String>[for (final cue in cues) cue.text];
+    final indices = <int>[
+      for (var i = 0; i < texts.length; i++)
+        if (_isCjk(texts[i])) i,
+    ];
+    if (indices.isEmpty) return null;
 
     final translated = <String>[];
-    const batch = 30;
-    for (var i = 0; i < pending.length; i += batch) {
-      final end = i + batch < pending.length ? i + batch : pending.length;
-      translated.addAll(await _translateBatch(pending.sublist(i, end)));
-    }
-    if (translated.length != pending.length) return null;
-    for (var i = 0; i < index.length; i++) {
-      lines[index[i]] = translated[i];
-    }
-
-    final out = <Map<String, dynamic>>[];
-    for (var i = 0; i < body.length; i++) {
-      final item = body[i];
-      if (item is Map) {
-        out.add({
-          'from': item['from'],
-          'to': item['to'],
-          'content': lines[i].isEmpty ? (item['content'] ?? '') : lines[i],
-        });
+    const batch = 20;
+    try {
+      for (var start = 0; start < indices.length; start += batch) {
+        final end = start + batch < indices.length
+            ? start + batch
+            : indices.length;
+        final slice = indices.sublist(start, end);
+        final out = await UiTranslateService.to.translateSubtitleLines(
+          [for (final i in slice) texts[i]],
+        );
+        if (out.length != slice.length) return null;
+        translated.addAll(out);
       }
+    } catch (_) {
+      return null;
     }
-    if (out.isEmpty) return null;
+    for (var i = 0; i < indices.length; i++) {
+      texts[indices[i]] = translated[i];
+    }
 
-    final vtt = SubtitleUtils.json2Vtt(out);
+    final vtt = SubtitleCues.toVtt(cues, texts);
     _cache[key] = vtt;
     while (_cache.length > _maxCache) {
       _cache.remove(_cache.keys.first);
     }
     return vtt;
-  }
-
-  /// 一批字幕行：先整批拼成一段发一次请求，再按行拆回。
-  /// 行数对不上就退化成逐行翻译 —— 宁可慢，也不要把字幕错位。
-  static Future<List<String>> _translateBatch(List<String> part) async {
-    final service = UiTranslateService.to;
-    if (part.length > 1) {
-      try {
-        final out = await service.translateTexts([part.join('\n')]);
-        if (out.isNotEmpty) {
-          final split = out.first.split('\n');
-          if (split.length == part.length) {
-            return split.map((e) => e.trim()).toList();
-          }
-        }
-      } catch (_) {}
-    }
-    final one = <String>[];
-    for (final line in part) {
-      try {
-        final out = await service.translateTexts([line]);
-        one.add(out.isNotEmpty ? out.first : line);
-      } catch (_) {
-        one.add(line);
-      }
-    }
-    return one;
   }
 }

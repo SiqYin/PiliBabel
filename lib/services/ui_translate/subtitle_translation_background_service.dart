@@ -68,6 +68,9 @@ class SubtitleTranslationTaskState {
 abstract final class SubtitleTranslationBackgroundService {
   static final RxMap<String, SubtitleTranslationTaskState> _states =
       <String, SubtitleTranslationTaskState>{}.obs;
+  /// 封面按钮通常没有 cid（查询键 `bvid/语言`），而后台任务解析出 cid 后会改用
+  /// `bvid/cid/语言`。两者必须指向同一份状态，否则按钮永远停在「翻译字幕」不动。
+  static final Map<String, String> _stateAliases = {};
   static final Set<String> _completed = {};
   static final Set<String> _activeBatchTaskKeys = {};
   static Future<void>? _loadFuture;
@@ -77,9 +80,21 @@ abstract final class SubtitleTranslationBackgroundService {
     required String videoKey,
     int? cid,
     String? language,
-  }) =>
-      _states[_key(videoKey, language ?? Pref.uiTranslateLang, cid)] ??
-      const SubtitleTranslationTaskState();
+  }) {
+    final key = _key(videoKey, language ?? Pref.uiTranslateLang, cid);
+    final direct = _states[key];
+    if (direct != null) return direct;
+    final alias = _stateAliases[key];
+    return (alias == null ? null : _states[alias]) ??
+        const SubtitleTranslationTaskState();
+  }
+
+  /// 把「无 cid 的查询键」与「解析出 cid 后的任务键」双向绑定。
+  static void _registerStateAlias(String a, String b) {
+    if (a == b) return;
+    _stateAliases[a] = b;
+    _stateAliases[b] = a;
+  }
 
   static Future<void> ensureInitialized() => _loadFuture ??= _loadIndex();
 
@@ -97,6 +112,8 @@ abstract final class SubtitleTranslationBackgroundService {
 
   static void _markTaskComplete(String taskKey) {
     _completed.add(taskKey);
+    final alias = _stateAliases[taskKey];
+    if (alias != null) _completed.add(alias);
     _set(
       taskKey,
       SubtitleTranslationTaskState(
@@ -130,6 +147,8 @@ abstract final class SubtitleTranslationBackgroundService {
       // Clearing an optional cache must never affect the original subtitle.
     }
     _completed.remove(taskKey);
+    final alias = _stateAliases[taskKey];
+    if (alias != null) _completed.remove(alias);
     _set(taskKey, const SubtitleTranslationTaskState());
     await _saveIndex();
     return removed;
@@ -140,6 +159,8 @@ abstract final class SubtitleTranslationBackgroundService {
     String? bvid,
     int? aid,
     int? cid,
+    int? epId,
+    int? seasonId,
     bool force = false,
     bool includeCollection = true,
   }) async {
@@ -162,7 +183,7 @@ abstract final class SubtitleTranslationBackgroundService {
       );
       return;
     }
-    if (bvid == null && aid == null) {
+    if (bvid == null && aid == null && epId == null && seasonId == null) {
       _fail(taskKey, uiTx('该视频缺少可获取字幕的编号'));
       return;
     }
@@ -180,6 +201,8 @@ abstract final class SubtitleTranslationBackgroundService {
         bvid: bvid,
         aid: aid,
         cid: cid,
+        epId: epId,
+        seasonId: seasonId,
       );
       if (targets.length > 1) {
         await _startBatch(
@@ -198,9 +221,11 @@ abstract final class SubtitleTranslationBackgroundService {
       bvid: bvid,
       aid: aid,
       cid: cid,
+      epId: epId,
+      seasonId: seasonId,
       force: force,
-      // 合集逐集翻译时不要每集弹一次 toast，收尾由 _startBatch 统一提示。
-      notify: false,
+      // 单集必须给结果反馈；只有合集批量（_startBatch）才关掉逐集 toast。
+      notify: true,
     );
   }
 
@@ -209,6 +234,8 @@ abstract final class SubtitleTranslationBackgroundService {
     String? bvid,
     int? aid,
     int? cid,
+    int? epId,
+    int? seasonId,
     bool force = false,
     bool notify = true,
   }) async {
@@ -231,7 +258,7 @@ abstract final class SubtitleTranslationBackgroundService {
       );
       return;
     }
-    if (bvid == null && aid == null) {
+    if (bvid == null && aid == null && epId == null && seasonId == null) {
       _fail(taskKey, uiTx('该视频缺少可获取字幕的编号'));
       return;
     }
@@ -244,17 +271,23 @@ abstract final class SubtitleTranslationBackgroundService {
       ),
     );
     try {
-      final resolvedCid =
-          cid ??
-          (await SearchHttp.ab2cWithDimension(aid: aid, bvid: bvid))?.cid;
-      if (resolvedCid == null) {
+      final identity = await _resolvePlayableIdentity(
+        bvid: bvid,
+        aid: aid,
+        cid: cid,
+        epId: epId,
+        seasonId: seasonId,
+      );
+      if (identity == null) {
         _fail(taskKey, uiTx('无法获取视频分P'));
         return;
       }
+      final resolvedCid = identity.cid;
       if (cid == null) {
         final resolvedTaskKey = _key(videoKey, target, resolvedCid);
         if (resolvedTaskKey != taskKey) {
-          _states.remove(taskKey);
+          // 不能只把状态搬到新键：封面按钮查的是旧键，搬走以后按钮永远不动。
+          _registerStateAlias(taskKey, resolvedTaskKey);
           taskKey = resolvedTaskKey;
           _set(
             taskKey,
@@ -269,6 +302,8 @@ abstract final class SubtitleTranslationBackgroundService {
         aid: aid?.toString(),
         bvid: bvid,
         cid: resolvedCid,
+        seasonId: identity.seasonId,
+        epId: identity.epId,
       );
       final tracks = switch (info) {
         Success(:final response) => response.subtitle?.subtitles,
@@ -288,24 +323,42 @@ abstract final class SubtitleTranslationBackgroundService {
         );
         return;
       }
+      var loadAttempts = 0;
+      var loadFailures = 0;
       final resolved = await SubtitleSourceResolver.resolve(
         tracks: List<Subtitle>.of(tracks),
         targetLanguage: target,
         forceChineseSource: force,
         loadCues: (candidate) async {
-          final url = candidate.subtitleUrl;
-          final body = url == null || url.isEmpty
-              ? null
-              : await VideoHttp.fetchSubtitleBody(url);
-          return body == null
-              ? const <SubtitleCue>[]
-              : SubtitleCues.fromBody(body);
+          loadAttempts++;
+          Object? lastError;
+          for (final url in candidate.subtitleUrlCandidates) {
+            try {
+              final body = await VideoHttp.fetchSubtitleBody(url);
+              if (body != null && body.isNotEmpty) {
+                return SubtitleCues.fromBody(body);
+              }
+            } catch (error) {
+              lastError = error;
+            }
+          }
+          if (lastError != null) {
+            loadFailures++;
+            throw lastError;
+          }
+          return const <SubtitleCue>[];
         },
       );
       if (resolved == null) {
-        // 有轨但都下不下来 / 时间轴不安全：对用户来说同样是「这个视频没有能用的
-        // 中文字幕」，给重试没有意义。
-        _noSource(taskKey, uiTx('这个视频没有可用的中文字幕'));
+        if (loadAttempts > 0 && loadFailures == loadAttempts) {
+          // 每条候选轨都是「下载抛异常」（断网、风控、404）：这是可恢复的失败，
+          // 必须给重试入口。以前一律归为 noSource，按钮置灰且点了没反应，
+          // 看起来就像功能坏了。
+          _fail(taskKey, uiTx('字幕下载失败，点击重试'));
+        } else {
+          // 能下载但确实没有可用的中文源（空 body / 时间轴不可用）。
+          _noSource(taskKey, uiTx('这个视频没有可用的中文字幕'));
+        }
         return;
       }
       if (resolved.kind == SubtitleSourceKind.nativeTarget) {
@@ -455,8 +508,13 @@ abstract final class SubtitleTranslationBackgroundService {
         await subscription.whenComplete;
         await completionPromotion;
         final progress = lastProgress;
-        if (progress != null &&
-            !progress.isComplete &&
+        if (progress == null) {
+          // 协调器正常情况下会先 emit 一次零进度；万一它没发（会话被复用、
+          // job 构造就失败等），这里必须收尾，否则状态永远停在 preparing。
+          if (_states[taskKey]?.isRunning ?? false) {
+            _fail(taskKey, uiTx('字幕翻译没有开始，点击重试'));
+          }
+        } else if (!progress.isComplete &&
             (_states[taskKey]?.isRunning ?? false)) {
           // 带上真实原因（AiApiException / FormatException / TimeoutException…）。
           // 重试若干轮仍无进展时协调器会主动收尾，这里就是那一刻。
@@ -491,7 +549,10 @@ abstract final class SubtitleTranslationBackgroundService {
 
   /// 后台任务结束时的用户反馈（单集）。
   static void _notifyOutcome(String taskKey) {
-    switch (_states[taskKey]?.phase) {
+    final state = _states[taskKey];
+    // B 站本来就有目标语言字幕：没有发生任何翻译，不该报「已预翻译完成」。
+    if (state?.nativeTrackAvailable == true) return;
+    switch (state?.phase) {
       case SubtitleTranslationTaskPhase.complete:
         SmartDialog.showToast(uiTx('字幕已预翻译完成'));
       case SubtitleTranslationTaskPhase.failed:
@@ -501,11 +562,83 @@ abstract final class SubtitleTranslationBackgroundService {
     }
   }
 
+  /// 补齐 `/x/player/wbi/v2` 所需的三件套：cid / ep_id / season_id。
+  ///
+  /// 普通视频走 ab2c；番剧（pgc）卡片只有 epId 或只有 seasonId、没有 bvid/aid 时，
+  /// 从番剧详情里按已知的 cid 或 epId 反查另外两个编号。以前番剧卡片/播放页的
+  /// 自动预翻译要么停在「无法获取视频分P」，要么只有 season_id 就发请求，
+  /// 被接口的 assert / 风控挡下来。
+  static Future<({int cid, int? epId, dynamic seasonId})?>
+  _resolvePlayableIdentity({
+    String? bvid,
+    int? aid,
+    int? cid,
+    int? epId,
+    dynamic seasonId,
+  }) async {
+    var resolvedCid = cid;
+    if (resolvedCid == null && (bvid != null || aid != null)) {
+      try {
+        resolvedCid = (await SearchHttp.ab2cWithDimension(
+          aid: aid,
+          bvid: bvid,
+        ))?.cid;
+      } catch (_) {
+        // 继续尝试番剧详情兜底。
+      }
+    }
+
+    var resolvedEpId = epId;
+    var resolvedSeasonId = seasonId;
+    // cid 已知但 epId 缺失时也要查：横版番剧卡片只带 seasonId，
+    // playInfo 需要 ep_id 才能拿到该集的字幕列表。
+    if ((resolvedCid == null || resolvedEpId == null) &&
+        (epId != null || seasonId != null)) {
+      try {
+        final info = await SearchHttp.pgcInfo(
+          seasonId: seasonId,
+          epId: epId,
+        );
+        if (info case Success(:final response)) {
+          resolvedSeasonId ??= response.seasonId;
+          for (final episode in response.episodes ?? const []) {
+            if (epId != null &&
+                episode.epId != epId &&
+                episode.id != epId) {
+              continue;
+            }
+            if (epId == null &&
+                resolvedCid != null &&
+                episode.cid != resolvedCid) {
+              continue;
+            }
+            final episodeCid = episode.cid;
+            if (episodeCid == null || episodeCid <= 0) continue;
+            resolvedCid ??= episodeCid;
+            resolvedEpId ??= episode.epId ?? episode.id;
+            if (resolvedCid != null && resolvedEpId != null) break;
+          }
+        }
+      } catch (_) {
+        // 拿不到编号时由调用方给出明确的失败提示。
+      }
+    }
+
+    if (resolvedCid == null || resolvedCid <= 0) return null;
+    return (
+      cid: resolvedCid,
+      epId: resolvedEpId,
+      seasonId: resolvedSeasonId,
+    );
+  }
+
   static Future<List<SubtitleTranslationTarget>> _resolveTranslationTargets({
     required String videoKey,
     required String bvid,
     int? aid,
     int? cid,
+    int? epId,
+    int? seasonId,
   }) async {
     try {
       final intro = await VideoHttp.videoIntro(bvid: bvid);
@@ -527,6 +660,8 @@ abstract final class SubtitleTranslationBackgroundService {
         bvid: bvid,
         aid: aid,
         cid: cid,
+        epId: epId,
+        seasonId: seasonId,
       ),
     ];
   }
@@ -572,34 +707,47 @@ abstract final class SubtitleTranslationBackgroundService {
           .where((state) => state.phase == SubtitleTranslationTaskPhase.failed)
           .length;
       final running = states.where((state) => state.isRunning).length;
+      // noSource（没有中文字幕）既不是 complete 也不是 failed，以前永远不被计入
+      // 完成条件，合集里只要有 1 个分P没字幕，父任务就永远停在「正在检查视频列表」，
+      // 定时器一直转、toast 永远不出现。这里把它当作「已处理、无需翻译」。
+      final skipped = states.where((state) => state.noSource).length;
+      final native =
+          states.where((state) => state.nativeTrackAvailable).length;
       final progress =
           states.fold<double>(
             0,
             (sum, state) =>
                 sum +
-                (state.phase == SubtitleTranslationTaskPhase.complete
+                (state.phase == SubtitleTranslationTaskPhase.complete ||
+                        state.noSource
                     ? 1
                     : state.progress),
           ) /
           targets.length;
-      if (completed == targets.length) {
+      if (running == 0 &&
+          completed + failed + skipped == targets.length) {
         finalized = true;
+        if (failed > 0) {
+          _fail(
+            parentTaskKey,
+            uiTxP('{0}/{1} 个分P失败，点击重试', [failed, targets.length]),
+          );
+          SmartDialog.showToast(uiTxP('{0}/{1} 个分P字幕预翻译失败', [
+            failed,
+            targets.length,
+          ]));
+          return;
+        }
         _markTaskComplete(parentTaskKey);
-        SmartDialog.showToast(uiTxP('全 {0} 个分P字幕已预翻译完成', [
-          targets.length,
-        ]));
-        return;
-      }
-      if (running == 0 && completed + failed == targets.length && failed > 0) {
-        finalized = true;
-        _fail(
-          parentTaskKey,
-          uiTxP('{0}/{1} 个分P失败，点击重试', [failed, targets.length]),
+        final withoutWork = skipped + native;
+        SmartDialog.showToast(
+          withoutWork > 0
+              ? uiTxP('全 {0} 个分P已处理（{1} 个无需翻译）', [
+                  targets.length,
+                  withoutWork,
+                ])
+              : uiTxP('全 {0} 个分P字幕已预翻译完成', [targets.length]),
         );
-        SmartDialog.showToast(uiTxP('{0}/{1} 个分P字幕预翻译失败', [
-          failed,
-          targets.length,
-        ]));
         return;
       }
       _set(
@@ -630,6 +778,8 @@ abstract final class SubtitleTranslationBackgroundService {
             bvid: target.bvid,
             aid: target.aid,
             cid: target.cid,
+            epId: target.epId,
+            seasonId: target.seasonId,
             force: force,
             // 批量里逐集不弹 toast，统一在 syncState 里汇报一次总数。
             notify: false,
@@ -754,6 +904,8 @@ abstract final class SubtitleTranslationBackgroundService {
 
   static void _set(String key, SubtitleTranslationTaskState state) {
     _states[key] = state;
+    final alias = _stateAliases[key];
+    if (alias != null) _states[alias] = state;
   }
 
   /// 源不存在（不是失败）：图标置灰、点按不再重试。
@@ -803,10 +955,16 @@ abstract final class SubtitleTranslationBackgroundService {
           artifact.targetLanguage,
           artifact.cid,
         );
+        // 卡片查询用的是无 cid 的键，重启后也要能看到「已翻译」。
+        final cardKey = _key(artifact.videoKey, artifact.targetLanguage);
+        _registerStateAlias(cardKey, taskKey);
         if (artifact.verifierVersion != SubtitleTextQuality.verifierVersion) {
-          _states[taskKey] = SubtitleTranslationTaskState(
-            phase: SubtitleTranslationTaskPhase.failed,
-            message: uiTx('旧译文需要重新校验，打开视频后自动进行'),
+          _set(
+            taskKey,
+            SubtitleTranslationTaskState(
+              phase: SubtitleTranslationTaskPhase.failed,
+              message: uiTx('旧译文需要重新校验，打开视频后自动进行'),
+            ),
           );
           continue;
         }
@@ -815,17 +973,25 @@ abstract final class SubtitleTranslationBackgroundService {
           cacheFile: cacheFile,
           vttFile: vttFile,
         )) {
-          _states[taskKey] = SubtitleTranslationTaskState(
-            phase: SubtitleTranslationTaskPhase.failed,
-            message: uiTx('已保存的译文需要校验或修复，点击重试'),
+          _set(
+            taskKey,
+            SubtitleTranslationTaskState(
+              phase: SubtitleTranslationTaskPhase.failed,
+              message: uiTx('已保存的译文需要校验或修复，点击重试'),
+            ),
           );
           continue;
         }
-        _completed.add(taskKey);
-        _states[taskKey] = SubtitleTranslationTaskState(
-          phase: SubtitleTranslationTaskPhase.complete,
-          progress: 1,
-          message: uiTx('已翻译并保存到设备'),
+        _completed
+          ..add(taskKey)
+          ..add(cardKey);
+        _set(
+          taskKey,
+          SubtitleTranslationTaskState(
+            phase: SubtitleTranslationTaskPhase.complete,
+            progress: 1,
+            message: uiTx('已翻译并保存到设备'),
+          ),
         );
       } catch (_) {
         // Invalid artifacts stay on disk for targeted repair, but are never

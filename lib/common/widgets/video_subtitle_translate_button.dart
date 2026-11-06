@@ -22,6 +22,8 @@ class VideoSubtitleTranslateButton extends StatefulWidget {
     this.bvid,
     this.aid,
     this.cid,
+    this.epId,
+    this.seasonId,
     this.bottom = 27,
     this.left = 7,
   });
@@ -30,6 +32,10 @@ class VideoSubtitleTranslateButton extends StatefulWidget {
   final String? bvid;
   final int? aid;
   final int? cid;
+
+  /// 番剧（pgc）单集没有 bvid/aid 时，靠这两个编号拉取字幕列表。
+  final int? epId;
+  final int? seasonId;
 
   /// 与 `CoverTranslateButton` 同一套锚点：封面翻译按钮的视觉块占 bottom 6..25，
   /// 这里取 27 留 2 像素缝隙，看起来是「贴着它上方」而不是另一个角落。
@@ -56,6 +62,8 @@ class _VideoSubtitleTranslateButtonState
         bvid: widget.bvid,
         aid: widget.aid,
         cid: widget.cid,
+        epId: widget.epId,
+        seasonId: widget.seasonId,
         force: force,
       ),
     );

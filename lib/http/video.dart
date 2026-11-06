@@ -28,6 +28,7 @@ import 'package:PiliPlus/models_new/video/video_ai_conclusion/data.dart';
 import 'package:PiliPlus/models_new/video/video_detail/data.dart';
 import 'package:PiliPlus/models_new/video/video_note_list/data.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/data.dart';
+import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
 import 'package:PiliPlus/models_new/video/video_relation/data.dart';
 import 'package:PiliPlus/models_new/video/video_shot/data.dart';
 import 'package:PiliPlus/utils/accounts.dart';
@@ -1045,7 +1046,10 @@ abstract final class VideoHttp {
     dynamic seasonId,
     dynamic epId,
   }) async {
-    assert(aid != null || bvid != null);
+    // 番剧（pgc）卡片可能只有 ep_id 或只有 season_id，没有 aid/bvid；
+    // 后台任务会尽量把 ep_id 反查出来，但拿不到时仍应带上 season_id 试一次，
+    // 而不是在 debug 构建里直接 assert 崩掉。
+    assert(aid != null || bvid != null || epId != null || seasonId != null);
     final res = await Request().get(
       Api.playInfo,
       queryParameters: await WbiSign.makSign({
@@ -1073,11 +1077,21 @@ abstract final class VideoHttp {
     }
   }
 
+  /// B 站 `subtitle_url` 是协议相对地址（`//host/...`），而 `subtitle_url_v2`
+  /// 常常已经是完整的 `https://...`。以前一律拼 `https:`，v2 会变成
+  /// `https:https://...` 直接请求失败。
+  static String _absoluteSubtitleUrl(String subtitleUrl) {
+    final url = subtitleUrl.trim();
+    if (url.startsWith('//')) return 'https:$url';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    return 'https://$url';
+  }
+
   static Future<String?> getSubtitles(
     String subtitleUrl, {
     SubtitleFormat format = .vtt,
   }) async {
-    final res = await Request().get("https:$subtitleUrl");
+    final res = await Request().get(_absoluteSubtitleUrl(subtitleUrl));
     if (res.data?['body'] case List list) {
       switch (format) {
         case .json:
@@ -1091,14 +1105,43 @@ abstract final class VideoHttp {
     return null;
   }
 
+  /// 主地址优先、v2 兜底。任一地址返回可用内容就停止。
+  static Future<String?> getSubtitlesFor(
+    Subtitle sub, {
+    SubtitleFormat format = .vtt,
+  }) async {
+    for (final url in sub.subtitleUrlCandidates) {
+      try {
+        final result = await getSubtitles(url, format: format);
+        if (result != null && result.trim().isNotEmpty) return result;
+      } catch (_) {
+        // 单个地址失败不该让整条字幕轨判死。
+      }
+    }
+    return null;
+  }
+
   static final _fillerWords = RegExp(
     r'(嗯+|啊+|额+|呃+|那个|就是说|然后呢|对吧|是吧|对不对|你知道吗|反正就是|基本上|说实话)',
   );
 
   /// Fetch raw subtitle body JSON list from URL.
   static Future<List?> fetchSubtitleBody(String subtitleUrl) async {
-    final res = await Request().get("https:$subtitleUrl");
+    final res = await Request().get(_absoluteSubtitleUrl(subtitleUrl));
     return res.data?['body'] as List?;
+  }
+
+  /// 同一条字幕轨的主/v2 地址依次尝试，返回第一个有内容的 body。
+  static Future<List?> fetchSubtitleBodyFor(Subtitle sub) async {
+    for (final url in sub.subtitleUrlCandidates) {
+      try {
+        final body = await fetchSubtitleBody(url);
+        if (body != null && body.isNotEmpty) return body;
+      } catch (_) {
+        // 单个地址失败不该让整条字幕轨判死。
+      }
+    }
+    return null;
   }
 
   /// Preprocess subtitle body JSON for AI analysis.
