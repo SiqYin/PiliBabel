@@ -1635,6 +1635,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     _lastActionWasDowngrade = false;
     _frozenVideoTicks = 0;
     _losslessVideoReopens = 0;
+    _frozenAudioTicks = 0;
+    _losslessAudioReopens = 0;
+    _lastAudioCheckPos = 0;
     videoStalled.value = false;
     // 换视频就换了候选列表，下标不再对应：黑名单必须清空
     _badLineIndexes.clear();
@@ -1696,6 +1699,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
           _videoPlayerController != null &&
           !_switchingLine) {
         _checkVideoTrackFrozen();
+        _checkAudioTrackLost();
       }
       return;
     }
@@ -1868,6 +1872,63 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// 判据用 mpv 的 `estimated-vf-fps`（**实测输出帧率**，真在出画时约等于
   /// container-fps，画面冻住时为 0）。拿不到这个属性时不做判定，宁可漏报也
   /// 不误报 —— 误报会去换线/降码率，代价比漏报大。
+  /// 音频轨丢失检测：视频在播但音频静默 → 无损重开。
+  ///
+  /// DASH EDL 把视频/音频合成一条源，音频分片单独失败时 video 照走、声音消失。
+  /// 用 mpv 的 `audio-params` 判断音频是否还在输出：空 = 音频轨没了。
+  /// 连续 [_frozenVideoAfterSec] 秒（复用视频冻结阈值）判丢失，先无损重开一次。
+  int _frozenAudioTicks = 0;
+  int _losslessAudioReopens = 0;
+  int _lastAudioCheckPos = 0;
+
+  bool _checkAudioTrackLost() {
+    if (onlyPlayAudio.value || isSeeking.value || isLive) {
+      _frozenAudioTicks = 0;
+      return false;
+    }
+    final pos = position.value;
+    if (pos <= _lastAudioCheckPos) {
+      _frozenAudioTicks = 0;
+      _lastAudioCheckPos = pos;
+      return false;
+    }
+    _lastAudioCheckPos = pos;
+    String? audioParams;
+    try {
+      audioParams = _videoPlayerController
+          ?.getProperty('audio-params')
+          .trim();
+    } catch (_) {
+      audioParams = null;
+    }
+    // audio-params 非空 = 音频在正常输出；null = 属性不可用，不判定
+    if (audioParams == null || audioParams.isNotEmpty) {
+      _frozenAudioTicks = 0;
+      return false;
+    }
+    _frozenAudioTicks++;
+    final frozenSec = _frozenAudioTicks * _stallTickSec;
+    if (frozenSec < _frozenVideoAfterSec) {
+      return false;
+    }
+    _frozenAudioTicks = 0;
+    // 同一条源重开一次：音频分片失败多半是这一次没挂上，重开同一条源就能恢复
+    if (_losslessAudioReopens < 1) {
+      final reopened = refreshPlayer();
+      if (reopened != null) {
+        _losslessAudioReopens++;
+        if (kDebugMode) {
+          debugPrint(
+            '[plPlayer] 音频轨丢失：position 在推进但 audio-params 为空，'
+            '无损重开一次（线路 $_lineIndex）',
+          );
+        }
+        return true;
+      }
+    }
+    return false;
+  }
+
   bool _checkVideoTrackFrozen() {
     if (onlyPlayAudio.value) {
       _frozenVideoTicks = 0;
@@ -2387,7 +2448,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
       ///completed
       stream.completed.listen((bool completed) {
-        if (completed) {
+        if (completed && !isSeeking.value) {
           playerStatus.value = .completed;
 
           for (final element in _statusListeners) {
@@ -2402,7 +2463,9 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       stream.position.listen((Duration position) {
         final posInSeconds = position.inSeconds;
 
-        if (posInSeconds != this.position.value) {
+        // seek 期间不更新 position：progress getter 用 seekPosition 显示，
+        // 避免 stream 的 position 与 seekPosition 交替导致进度条屏闪。
+        if (!isSeeking.value && posInSeconds != this.position.value) {
           this.position.value = posInSeconds;
 
           videoPlayerServiceHandler?.onPositionChange(position);
@@ -2410,8 +2473,10 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
           makeHeartBeat(posInSeconds);
         }
 
-        for (final element in _positionListeners) {
-          element(position);
+        if (!isSeeking.value) {
+          for (final element in _positionListeners) {
+            element(position);
+          }
         }
       }),
       stream.duration.listen(updateDuration),

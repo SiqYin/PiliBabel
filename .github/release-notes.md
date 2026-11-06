@@ -1,17 +1,15 @@
-### PiliBabel v3.6.9
+### PiliBabel v3.7.0
 
-**Polish: subtitle button sizing, first-run auto-setup, segment info translation, audio track language sync, and toast translation fixes.**
+**HiRes badge, audio player seek fixes, and video playback audio/progress recovery.**
 
-**Subtitle button sizing.** The AI subtitle translation button on video card covers now matches the height of the cover translate button for a cleaner, more uniform look.
+**HiRes badge.** A "HiRes" indicator now appears in the player's bottom control bar between the episode list and aspect-ratio buttons. It turns from grey to the theme color when the current audio track is Hi-Res lossless.
 
-**First-run auto-setup.** New installs now automatically detect the system language and enable AI translation — no dialog, no manual setup. A guided animation walks through the settings page, then a simple confirmation dialog appears. This runs only on fresh installs; updates and existing users are unaffected.
+**Audio player seek fix.** Dragging the progress bar no longer triggers premature auto-advance or unexpected pausing. The `completed` event is now ignored during drag operations.
 
-**Segment info translation.** The segment name shown in the player's bottom control bar (when tapping the screen) is now translated consistently with the segment labels on the progress bar.
+**Audio player re-entry fix.** Exiting and re-entering the audio-only player now correctly initializes the player, fixing the "00:00 and can't play" issue caused by the initialization flag not being reset.
 
-**Audio track language sync.** When the interface language changes, reopening a video now correctly re-evaluates which audio track to select. Previously the audio track was cached per-video and didn't follow language changes.
+**Video playback audio recovery.** Added automatic audio track loss detection: when video is playing but audio silently drops (DASH EDL audio stream failure), the player performs a lossless reopen to restore audio. Combined with the progress bar seek fix below.
 
-**Toast translation fixes.** Action feedback messages (like, coin, favorite, follow, pin, subscribe, mute, etc.) are now properly routed through the translation system. Server response messages are also translated. Added 16 new entries to the pre-translation list for instant display.
-
-> **Acknowledgement:** The subtitle translation system was originally contributed by [saukhoai](https://github.com/saukhoai) via [PR #2](https://github.com/SiqYin/PiliBabel/pull/2).
+**Video progress bar seek fix.** Seeking during playback no longer causes the progress bar to flash to the far right or flicker wildly. The `completed` event and position updates are now properly guarded during seek operations.
 
 Downloads are below.

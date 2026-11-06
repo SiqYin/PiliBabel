@@ -4,6 +4,7 @@ enum BottomControlType {
   next,
   time,
   episode,
+  hires,
   fit,
   subtitle,
   speed,

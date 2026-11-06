@@ -634,6 +634,11 @@ class AudioController extends GetxController
         if (!completed) {
           return;
         }
+        // 拖拽进度条期间 player 可能短暂报 completed（seek 到末尾附近），
+        // 不能当成真的播完去跳下一条或暂停。
+        if (isDragging) {
+          return;
+        }
         // 提前 EOF：mpv 看到的时长明显短于服务端下发的总时长，说明这条流被截断了，
         // 不是真的播完（用户看到的就是「播到某一刻自动暂停、再点播放跳回 00:00 不动」）。
         // 重取一次地址并从断点前一点续播；同一条流反复截断时最多重试 2 次。
@@ -1121,6 +1126,7 @@ class AudioController extends GetxController
     _subscriptions = null;
     player?.dispose();
     player = null;
+    _hasInit = false;
     animController.dispose();
     super.onClose();
   }
