@@ -1,15 +1,19 @@
-### PiliBabel v3.7.0
+### PiliBabel v3.7.1
 
-**HiRes badge, audio player seek fixes, and video playback audio/progress recovery.**
+**A smaller subtitle button, an explanation the first time you open the app, and auto pre-translation when you tap a video.**
 
-**HiRes badge.** A "HiRes" indicator now appears in the player's bottom control bar between the episode list and aspect-ratio buttons. It turns from grey to the theme color when the current audio track is Hi-Res lossless.
+**Subtitle button, now icon-only.** The "translate subtitles" action on a cover used to be an icon-plus-label pill, twice the width of the cover-translate button next to it. It is now a single icon with exactly the same metrics as the cover button (28×28 hit area, 13px glyph, black54, radius 4) and sits directly above it. Progress shows as a ring, completion as a check, failure as a refresh icon; tapping the whole button retranslates.
 
-**Audio player seek fix.** Dragging the progress bar no longer triggers premature auto-advance or unexpected pausing. The `completed` event is now ignored during drag operations.
+**Why "translate subtitles" always failed.** Starting a translation re-fetches `/x/player/v2` for the track list, and **that endpoint returns an empty list when you are not signed in — even for videos that really do have CC subtitles**. The old code only checked for `null`, so the empty list fell through to "cannot download a source subtitle" and was reported as a failure. That is why it failed every time and retrying never helped: there was no source to retry. An empty list is now its own state: not a failure, no retry offered, a muted `subtitles_off` icon instead, with separate wording for "not signed in" and "this video has no subtitles".
 
-**Audio player re-entry fix.** Exiting and re-entering the audio-only player now correctly initializes the player, fixing the "00:00 and can't play" issue caused by the initialization flag not being reset.
+**Failures no longer hide their cause.** The startup path used to swallow every exception behind one generic message. The message now carries the exception type, so a real fault becomes identifiable at a glance.
 
-**Video playback audio recovery.** Added automatic audio track loss detection: when video is playing but audio silently drops (DASH EDL audio stream failure), the player performs a lossless reopen to restore audio. Combined with the progress bar seek fix below.
+**First-run explainer.** The first time you reach the home feed, a dialog explains the two buttons at the bottom-left of a cover: the upper one pre-translates subtitles, the lower one reads the cover and translates the text on it. Dismissed with "Got it".
 
-**Video progress bar seek fix.** Seeking during playback no longer causes the progress bar to flash to the far right or flicker wildly. The `completed` event and position updates are now properly guarded during seek operations.
+**"AI translation is on" dialog — English, translated first.** Both onboarding dialogs are written in English and queued at the highest translation priority, so they read in your own language the moment they appear instead of opening in Chinese.
+
+**Tapping a video starts pre-translation.** As soon as the player page knows the bvid/aid/cid, the subtitle track is queued in the background — by the time the first frame is up, the translation is usually ready. Only the current part is queued; whole-collection batches stay on the cover button.
+
+**Not shown when it cannot work.** With Simplified Chinese as the target language, or with AI translation off, the subtitle button is no longer rendered at all.
 
 Downloads are below.
