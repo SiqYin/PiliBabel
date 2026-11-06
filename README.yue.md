@@ -163,11 +163,11 @@ paru -S pilinara-bin         # 或者經 AUR：pilinara-bin（預編譯）/ pili
 
 - **3.3.4** — 付費卡、小程式、話題集、訂閱卡四類動態卡片；修好首頁第一屏完全冇封面嘅問題；同步上游 PiliNara（開 App 黑狀態欄、殺程序後下載可以續、media-kit 升級、Wayland 黑屏迴避、快取影片可以揀音質）；對 3.0.5 以嚟新增嘅全部介面文字做 AI 翻譯稽核；呢份更新紀錄。
 
-- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+- **3.3.x —— 長尾。** 動態（P3）用 gRPC 渲染，加埋充電、小程式、話題集同訂閱嘅動態卡；首頁第一屏封面唔顯示修好；同步上游 PiliNara（黑色狀態欄、進程被殺後續傳、media-kit 更新、Wayland 黑畫面繞道）；最後一輪將圖片管線改成直連（同時修好「封面要下拉才會更新」同全站資料中斷），資料請求預設改為直連，音訊同影片改走多連線分段代理，拖動進度條嘅等待上限定喺 600 毫秒，並恢復「顯示完整標題」喺各畫面原本嘅行數行為。
 
-- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+- **3.4.0 —— 全面體檢。** 分析器降到 **0 錯誤／0 警告**，全部 44 個語言 README 補上 AI 翻譯說明，剩返嘅待辦同「同官方 App 嘅已知差異」寫入 `docs/`。
 
-- **3.5.0–3.7.0 — terminology, translation, subtitles, polish, and player fixes.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4. In 3.6.5 an embedded term no longer stops the rest of a paragraph from being translated, the glossary screen follows the app theme, the tables are on by default, and the version the app reports about itself now matches its release tag. 3.6.6 fixes surname parts of a name expanding to the full name, makes the glossary screen follow the app theme again (with working switches), and lets official glossary names override stale cached translations; 3.6.7 fixes the glossary counter stuck at 14/15 with every switch on, and repairs three tables whose displayed counts were wrong (Reverse: 1999 embedded nothing at all). 3.6.8 加入 AI 字幕翻譯：中文字幕會按上文下理分段翻譯，有即時緩衝、逐條音軌管理、離線越南語字典同埋可以揀嘅代理轉發（[saukhoai](https://github.com/saukhoai) 經 [PR #2](https://github.com/SiqYin/PiliBabel/pull/2) 貢獻）。3.6.9 調整字幕掣嘅比例、加首次啟動自動設定（辨識系統語言）、翻譯播放列嘅分段資料、畀音軌選擇跟住語言切換，仲補返未翻譯嘅操作提示。3.7.0 喺播放列加 HiRes 音質標記、修好聽視頻嘅拖曳同重入問題、加音軌遺失自動偵測同無損重開，亦修好拖進度條時嘅畫面閃爍。
+- **3.5.0–3.7.0 —— 術語、翻譯、字幕、打磨同播放器修正。** 術語表擴充到 **15 個詞表、五種語言**（12 款遊戲加上 hololive、NIJISANJI、偶像大師，共 11,600 條以上），並且識解析短名、多段名字嘅每一段，同埋句中嘅術語，每個詞表可以單獨關。另外：官方 AI 原聲翻譯聲軌跟隨介面語言、搜尋頁熱搜接入翻譯兼改成兩行、更新彈窗去掉 Markdown 符號同優先翻譯所以唔會再以中文開場、術語表可以自動檢查更新、開咗 AI 翻譯之後嘅卡頓已經解決。3.6.3 引入嘅閃退（開 AI 翻譯之後頁面空白再關 App）喺 3.6.4 修好。3.6.5 起，句中術語唔會再令整段漏翻、術語集頁面跟隨 App 主題、詞表預設全開、App 自報版本號同發佈 tag 一致。3.6.6 修正姓氏片段被展開成全名、術語集頁面重新跟隨主題（開關可用）、官方術語名可以覆蓋過期快取譯文；3.6.7 修正全開時計數仍顯示 14/15，同埋三張詞表顯示條數不實（重返未來 1999 之前一條都冇內嵌）。3.6.8 加入 AI 字幕翻譯：中文字幕按上文下理分段翻譯，有即時緩衝、逐條音軌管理、離線越南語字典同埋可以揀嘅代理轉發（[saukhoai](https://github.com/saukhoai) 經 [PR #2](https://github.com/SiqYin/PiliBabel/pull/2) 貢獻）。3.6.9 調整字幕掣嘅比例、加首次啟動自動設定（辨識系統語言）、翻譯播放列嘅分段資料、畀音軌選擇跟住語言切換，仲補返未翻譯嘅操作提示。3.7.0 喺播放列加 HiRes 音質標記、修好聽視頻嘅拖曳同重入問題、加音軌遺失自動偵測同無損重開，亦修好拖進度條時嘅畫面閃爍。
 
 ## 繼承功能清單（來自 PiliNara / PiliPlus）
 
@@ -258,4 +258,4 @@ PiliBabel 採用 **GNU General Public License v3.0（GPL-3.0）** —— 同 Pil
 
 ---
 
-> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。
+> **文件語言說明。** 呢份 README 同佢嘅譯本都係喺 AI 翻譯工具協助下撰寫同維護；如果各語言講法有出入，以英文版為準。

@@ -163,11 +163,11 @@ paru -S pilinara-bin         # або через AUR: pilinara-bin (готова
 
 - **3.3.4** — картки dynamics для платних дописів, мінізастосунків, добірок тем і підписок; виправлено відсутність обкладинок на першому екрані головної; внесено зміни з PiliNara (рядок стану, продовження завантаження після закриття процесу, оновлення media-kit, обхід чорного відео у Wayland, вибір якості звуку під час кешування); аудит AI-перекладу для всіх текстів інтерфейсу, доданих від 3.0.5; ця історія.
 
-- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+- **3.3.x — довгий хвіст.** Рендеринг динаміки (P3) через gRPC і картки динаміки для донатів, мінізастосунків, наборів тем і підписок; виправлено зникнення обкладинок на першому екрані головної; синхронізація з PiliNara (чорний рядок стану, докачування після завершення процесу, оновлення media-kit, обхід чорного відео на Wayland); далі завершальний прохід, який перевів конвеєр зображень на прямі з’єднання (виправив і «обкладинки потребують потягування для оновлення», і загальний збій даних), перевів запити даних за замовчуванням на прямі з’єднання, спрямував аудіо та відео через багатоз’єднувальний сегментований проксі, обмежив очікування перемотування 600 мс і повернув поведінку «показувати повну назву» на кожному екрані.
 
-- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+- **3.4.0 — повний аудит.** Аналізатор доведено до **0 помилок / 0 попереджень**, до всіх 44 мовних README додано примітку про ШІ-переклад, а залишок завдань і відомі відмінності поведінки від офіційного застосунку записано в `docs/`.
 
-- **3.5.0–3.7.0 — terminology, translation, subtitles, polish, and player fixes.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4. In 3.6.5 an embedded term no longer stops the rest of a paragraph from being translated, the glossary screen follows the app theme, the tables are on by default, and the version the app reports about itself now matches its release tag. 3.6.6 fixes surname parts of a name expanding to the full name, makes the glossary screen follow the app theme again (with working switches), and lets official glossary names override stale cached translations; 3.6.7 fixes the glossary counter stuck at 14/15 with every switch on, and repairs three tables whose displayed counts were wrong (Reverse: 1999 embedded nothing at all). 3.6.8 додає переклад субтитрів за допомогою ШІ: китайські субтитри перекладаються блоками з урахуванням контексту, з буферизацією в реальному часі, керуванням доріжками, офлайн-словником в'єтнамської мови та необов'язковою маршрутизацією через проксі (внесок [saukhoai](https://github.com/saukhoai) через [PR #2](https://github.com/SiqYin/PiliBabel/pull/2)). 3.6.9 вирівнює розмір кнопки субтитрів, додає автоналаштування під час першого запуску з визначенням мови системи, перекладає відомості про сегменти на панелі плеєра, узгоджує вибір звукової доріжки зі зміною мови та виправляє неперекладені повідомлення про дії. 3.7.0 додає позначку HiRes на панель плеєра, виправляє помилки перемотування й повторного входу в аудіоплеєрі, додає автоматичне виявлення втрати звукової доріжки з відновленням без втрат і усуває мерехтіння смуги прогресу відео під час перемотування.
+- **3.5.0–3.7.0 — термінологія, переклад, субтитри, полірування та виправлення плеєра.** Глосарій виріс до **15 таблиць п’ятьма мовами** (12 ігор плюс hololive, NIJISANJI і THE iDOLM@STER, понад 11 600 термінів) і навчився розбирати короткі імена, кожен фрагмент багаточастинного імені та терміни всередині речення, з окремим перемикачем для кожної таблиці. Крім того: офіційна доріжка ШІ-озвучення йде за мовою інтерфейсу, трендові запити в пошуку перекладаються й займають два рядки, вікно оновлення читається як звичайний текст, а не сирий Markdown, і перекладається першим, тож ніколи не відкривається китайською, автоматична перевірка оновлень таблиць глосарію, а затримка під час увімкненого ШІ-перекладу зникла. Збій, що з’явився в 3.6.3 (увімкнення ШІ-перекладу могло залишити сторінки порожніми й закрити застосунок), виправлено в 3.6.4. У 3.6.5 вбудований термін більше не зупиняє переклад решти абзацу, екран глосарію йде за темою застосунку, таблиці ввімкнені за замовчуванням, а версія, яку застосунок повідомляє про себе, збігається з тегом випуску. 3.6.6 виправляє розгортання частин прізвища в повне ім’я, повертає екрану глосарію дотримання теми (перемикачі працюють) і дозволяє офіційним назвам перекривати застарілі переклади з кешу; 3.6.7 виправляє лічильник, що застрягав на 14/15 при всіх увімкнених перемикачах, і неправильно показані числа трьох таблиць (Reverse: 1999 не містив жодного запису). 3.6.8 додає ШІ-переклад субтитрів: китайські субтитри перекладаються блоками з урахуванням контексту, з буферизацією в реальному часі, керуванням доріжками, офлайн-словником в’єтнамської мови та необов’язковою маршрутизацією через проксі (внесок [saukhoai](https://github.com/saukhoai) через [PR #2](https://github.com/SiqYin/PiliBabel/pull/2)). 3.6.9 вирівнює розмір кнопки субтитрів, додає автоналаштування під час першого запуску з визначенням мови системи, перекладає відомості про сегменти на панелі плеєра, узгоджує вибір звукової доріжки зі зміною мови та виправляє неперекладені повідомлення. 3.7.0 додає позначку HiRes на панель плеєра, виправляє помилки перемотування й повторного входу в аудіоплеєрі, додає автоматичне виявлення втрати звукової доріжки з відновленням без втрат і усуває мерехтіння смуги прогресу відео під час перемотування.
 
 ## Журнал успадкованих можливостей (з PiliNara / PiliPlus)
 
@@ -215,31 +215,31 @@ paru -S pilinara-bin         # або через AUR: pilinara-bin (готова
 
 ## Відмова від відповідальності
 
-PiliBabel is a personal, interest-driven project, provided **for learning and testing only**; please delete it within **24 hours** of download.
+PiliBabel — це особистий, заснований на інтересі проєкт, що надається **лише для навчання й тестування**; будь ласка, видаліть його протягом **24 годин** після завантаження.
 
-- PiliBabel is an **unofficial third-party** client and is **not affiliated with, endorsed by, or sponsored by bilibili**.
-- All APIs are gathered from official public endpoints; **no cracked, over-privileged, or paywall-bypassing content** is provided.
-- **AI translation runs on a third-party model endpoint.** By default that is bilibili's own free public Index-Translate service; if you switch to your own API, it is the endpoint you configured. Translation quality and compliance are the responsibility of the user and the chosen model provider; this project hosts **no model and no API key**.
-- Respect copyright and bilibili's Terms of Service. Use responsibly.
+- PiliBabel — це **неофіційний сторонній** клієнт, який **не пов’язаний із bilibili, не схвалений і не спонсорується нею**.
+- Усі API зібрано з офіційних публічних точок доступу; **жодного зламаного, надмірно привілейованого чи платного обхідного вмісту** не надається.
+- **ШІ-переклад працює через точку доступу сторонньої моделі.** За замовчуванням це власний безкоштовний публічний сервіс bilibili Index-Translate; якщо ви перемкнете на власний API, це буде налаштована вами точка доступу. За якість і відповідність перекладу відповідають користувач і обраний постачальник моделі; цей проєкт **не розміщує ні моделі, ні API-ключа**.
+- Поважайте авторські права та Умови надання послуг bilibili. Користуйтеся відповідально.
 
-With respect to the original and upstream authors for their open-source dedication:
+З повагою до оригінальних та upstream-авторів за їхню відданість відкритому коду:
 - [guozhigq/pilipala](https://github.com/guozhigq/pilipala)
 - [orz12/PiliPalaX](https://github.com/orz12/PiliPalaX)
 - [bggRGjQaUbCoE/PiliPlus](https://github.com/bggRGjQaUbCoE/PiliPlus)
-- [Starfallan/PiliNara](https://github.com/Starfallan/PiliNara) — the direct parent project of PiliBabel
-- [bilibili/Index-Translate](https://github.com/bilibili/Index-Translate) — the open-source translation model family the built-in engine calls
+- [Starfallan/PiliNara](https://github.com/Starfallan/PiliNara) — безпосередній батьківський проєкт PiliBabel
+- [bilibili/Index-Translate](https://github.com/bilibili/Index-Translate) — родина відкритих моделей перекладу, яку викликає вбудований рушій
 
-If any content infringes your rights, please contact us for takedown.
+Якщо якийсь вміст порушує ваші права, зв’яжіться з нами для видалення.
 
 <br/>
 
 ## Ліцензія
 
-PiliBabel is licensed under the **GNU General Public License v3.0 (GPL-3.0)** — the same license as PiliNara, PiliPlus and PiliPala. Because it is a derivative work, **PiliBabel must also be distributed under GPL-3.0**: you are free to use, study, share and modify it, provided you keep the same license, the copyright notices, and this license text. See [`LICENSE`](./LICENSE).
+PiliBabel ліцензовано за **GNU General Public License v3.0 (GPL-3.0)** — тією самою ліцензією, що й PiliNara, PiliPlus і PiliPala. Оскільки це похідна робота, **PiliBabel також має розповсюджуватися за GPL-3.0**: ви вільні використовувати, вивчати, поширювати й змінювати його за умови збереження тієї самої ліцензії, повідомлень про авторські права та цього тексту ліцензії. Див. [`LICENSE`](./LICENSE).
 
-Third-party components (Flutter packages, [`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect), [`media-kit`](https://github.com/media-kit/media-kit), [`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer), [`dio`](https://pub.dev/packages/dio), etc.) remain under their own licenses.
+Сторонні компоненти (пакети Flutter, [`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect), [`media-kit`](https://github.com/media-kit/media-kit), [`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer), [`dio`](https://pub.dev/packages/dio) тощо) залишаються під їхніми власними ліцензіями.
 
-The bundled **LXGW WenKai** typeface is licensed separately under the **SIL Open Font License 1.1**; its licence text ships inside the app as `assets/fonts/LXGWWenKai-OFL.txt`.
+Вбудований шрифт **LXGW WenKai** (霞鹜文楷) ліцензовано окремо за **SIL Open Font License 1.1**; текст ліцензії постачається разом із застосунком у `assets/fonts/LXGWWenKai-OFL.txt`.
 
 <br/>
 
@@ -249,12 +249,12 @@ The bundled **LXGW WenKai** typeface is licensed separately under the **SIL Open
 - [flutter_meedu_videoplayer](https://github.com/zezo357/flutter_meedu_videoplayer)
 - [media-kit](https://github.com/media-kit/media-kit)
 - [dio](https://pub.dev/packages/dio)
-- [Index-Translate](https://github.com/bilibili/Index-Translate) — bilibili's open-source translation model family, and the free public endpoint behind the built-in engine
-- [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — the open-source Chinese typeface bundled with the app, under the SIL Open Font License 1.1
-- and more
-- Inspired by bilibili's official "AI interface translation".
+- [Index-Translate](https://github.com/bilibili/Index-Translate) — родина відкритих моделей перекладу bilibili і безкоштовна публічна точка доступу за вбудованим рушієм
+- [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — відкритий китайський шрифт, вбудований у застосунок, за SIL Open Font License 1.1
+- та багато іншого
+- Натхненно офіційним «перекладом інтерфейсу ШІ» від bilibili.
 <br/>
 
 ---
 
-> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。
+> **Про мову документації.** Цей README та його переклади створюються й підтримуються з допомогою інструментів ШІ-перекладу; якщо формулювання видається неузгодженим, еталоном є англійська версія.
