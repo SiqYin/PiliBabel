@@ -2161,6 +2161,16 @@ static set glossaryDefaultsApplied(bool value) =>
   static set uiTranslateOnboarded(bool value) =>
       _setting.put(SettingBoxKey.uiTranslateOnboarded, value);
 
+  /// 首页「封面上的两个按钮」说明弹窗是否已经弹过。与
+  /// [uiTranslateUpgradeNoticeShown] 一样只记「弹过没有」，不记版本号。
+  static bool get coverButtonsHintShown => _setting.get(
+    SettingBoxKey.coverButtonsHintShown,
+    defaultValue: false,
+  );
+
+  static set coverButtonsHintShown(bool value) =>
+      _setting.put(SettingBoxKey.coverButtonsHintShown, value);
+
       /// 内置官方模型（Index-Translate）故障弹窗已被用户「明白了」过。
       /// 官方接口恢复正常时自动清掉，所以下一次故障仍会再提示一次。
       static bool get uiTranslateOutageDismissed => _setting.get(

@@ -3,6 +3,7 @@ import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/pages/setting/ui_translate/glossary_tables.dart';
 import 'package:PiliPlus/services/ui_translate/app_language.dart';
+import 'package:PiliPlus/services/ui_translate/onboarding.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_proxy.dart';
 import 'package:PiliPlus/services/ui_translate/translate_provider.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
@@ -123,6 +124,9 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
     // 新装自动开启：滚到 AI 翻译区 + 开关动画（语言已自动配置），弹单按钮弹窗。
     if (mode == kGuidedSetupAutoEnable) {
       controller.saveUiTranslateEnabled(true);
+      // 这两句先插到最高优先级队列：850ms 的开关动画放完，译文基本已经到了，
+      // 用户第一眼看到的就是自己的语言，而不是先英文再跳成译文。
+      UiTranslateService.precache(kOnboardingDialogStrings);
       await Future.delayed(const Duration(milliseconds: 850));
       if (!mounted) return;
       await showDialog<void>(
@@ -130,17 +134,13 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
         barrierDismissible: false,
         builder: (_) => Obx(
           () => AlertDialog(
-            title: Text(uiTx('已开启 AI 翻译')),
-            content: Text(
-              uiTx(
-                '已根据系统语言自动配置翻译语言，并开启 AI 翻译。'
-                '使用 B 站官方免费模型，无需 API 密钥。',
-              ),
-            ),
+            // 原文是英文（非中文用户也读得懂），译文走 uiTxUrgent。
+            title: Text(uiTxUrgent(kAutoEnabledTitle)),
+            content: Text(uiTxUrgent(kAutoEnabledBody)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text(uiTx('知道了')),
+                child: Text(uiTxUrgent(kAutoEnabledAction)),
               ),
             ],
           ),

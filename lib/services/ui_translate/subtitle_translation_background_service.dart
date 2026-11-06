@@ -142,7 +142,14 @@ abstract final class SubtitleTranslationBackgroundService {
       return;
     }
     if (!SubtitleTranslateService.needed) {
-      _fail(taskKey, uiTx('请先开启 AI 翻译并选择目标语言'));
+      // 失败原因分两种，说清楚才不会让人以为「重试」有用：
+      // 没开 AI 翻译 → 去设置里开；目标语言就是简体中文 → 没有可翻的东西。
+      _fail(
+        taskKey,
+        Get.isRegistered<UiTranslateService>() && UiTranslateService.to.enabled
+            ? uiTx('目标语言是简体中文，字幕无需翻译')
+            : uiTx('请先开启 AI 翻译并选择目标语言'),
+      );
       return;
     }
     if (bvid == null && aid == null) {
@@ -201,7 +208,14 @@ abstract final class SubtitleTranslationBackgroundService {
       return;
     }
     if (!SubtitleTranslateService.needed) {
-      _fail(taskKey, uiTx('请先开启 AI 翻译并选择目标语言'));
+      // 失败原因分两种，说清楚才不会让人以为「重试」有用：
+      // 没开 AI 翻译 → 去设置里开；目标语言就是简体中文 → 没有可翻的东西。
+      _fail(
+        taskKey,
+        Get.isRegistered<UiTranslateService>() && UiTranslateService.to.enabled
+            ? uiTx('目标语言是简体中文，字幕无需翻译')
+            : uiTx('请先开启 AI 翻译并选择目标语言'),
+      );
       return;
     }
     if (bvid == null && aid == null) {
@@ -427,8 +441,14 @@ abstract final class SubtitleTranslationBackgroundService {
       } finally {
         subscription.detach();
       }
-    } catch (_) {
-      _fail(taskKey, uiTx('无法开始翻译字幕，点击重试'));
+    } catch (error) {
+      // 别再把原因吞掉：以前这里只有一句「无法开始翻译」，出了必失败的问题
+      // 只能靠猜。模板里带上异常类型，既能让用户看懂，也不会给每条错误
+      // 造一条新的翻译词条。
+      _fail(
+        taskKey,
+        uiTxP('无法开始翻译字幕，点击重试（{0}）', ['${error.runtimeType}']),
+      );
     }
   }
 

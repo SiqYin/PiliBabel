@@ -244,6 +244,9 @@ abstract final class SettingBoxKey {
       glossaryDefaultsApplied = 'glossaryDefaultsApplied',
       uiTranslateOnboarded = 'uiTranslateOnboarded',
       uiTranslateUpgradeNoticeShown = 'uiTranslateUpgradeNoticeShown',
+
+      /// 首页「封面上的两个按钮」说明弹窗是否已经看过。
+      coverButtonsHintShown = 'coverButtonsHintShown',
       uiTranslateOutageDismissed = 'uiTranslateOutageDismissed',
       uiTranslateOutageSwitched = 'uiTranslateOutageSwitched',
       audioTrackFollowUiLang = 'audioTrackFollowUiLang';

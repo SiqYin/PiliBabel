@@ -78,6 +78,9 @@ class MainController extends GetxController
   void onReady() {
     super.onReady();
     showTranslationOnboardingIfNeeded();
+    // 首页首次可见时解释封面左下角那两个按钮。函数自己会等引导弹窗结束、
+    // 且当前路由回到首页之后才弹，所以这里不需要再串行 await。
+    showCoverButtonsHintIfNeeded();
     checkBuiltinTranslateOutage();
   }
 
