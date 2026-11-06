@@ -1,19 +1,17 @@
-### PiliBabel v3.7.1
+### PiliBabel v3.7.2
 
-**A smaller subtitle button, an explanation the first time you open the app, and auto pre-translation when you tap a video.**
+**Subtitle translation could never succeed. This release fixes the whole failure chain, and makes progress and outcome visible.**
 
-**Subtitle button, now icon-only.** The "translate subtitles" action on a cover used to be an icon-plus-label pill, twice the width of the cover-translate button next to it. It is now a single icon with exactly the same metrics as the cover button (28×28 hit area, 13px glyph, black54, radius 4) and sits directly above it. Progress shows as a ring, completion as a check, failure as a refresh icon; tapping the whole button retranslates.
+**Why every chunk failed.** The result validator rejected any output line that was identical to its source line. But simplified → traditional Chinese, Chinese → Japanese kanji words, names and numbers legitimately translate to the same string, so virtually every chunk threw and the track never finished. The per-line identity check is gone; only empty output is rejected. "The model just copied everything" is now judged per chunk (at least two lines with Han characters, 80% or more copied), and Chinese-family targets — Simplified, Traditional, Cantonese, Wu and Minnan — are exempt entirely.
 
-**Why "translate subtitles" always failed.** Starting a translation re-fetches `/x/player/v2` for the track list, and **that endpoint returns an empty list when you are not signed in — even for videos that really do have CC subtitles**. The old code only checked for `null`, so the empty list fell through to "cannot download a source subtitle" and was reported as a failure. That is why it failed every time and retrying never helped: there was no source to retry. An empty list is now its own state: not a failure, no retry offered, a muted `subtitles_off` icon instead, with separate wording for "not signed in" and "this video has no subtitles".
+**The batch fast path no longer kills a whole block.** An HTTP error, a proxy hiccup or a broken stream on the JSON-array request used to abort the block. It now falls back to the per-line template. Per-line output that gets stripped down to nothing no longer quietly returns the original text: it reports the failure instead.
 
-**Failures no longer hide their cause.** The startup path used to swallow every exception behind one generic message. The message now carries the exception type, so a real fault becomes identifiable at a glance.
+**A single bad cue no longer invalidates the entire track.** Zero-length and reversed timestamps are dropped while parsing, so one corrupt cue cannot trip the track-wide timeline check and make the app say "no usable subtitles".
 
-**First-run explainer.** The first time you reach the home feed, a dialog explains the two buttons at the bottom-left of a cover: the upper one pre-translates subtitles, the lower one reads the cover and translates the text on it. Dismissed with "Got it".
+**No more endless spinner after the red ring.** When no chunk could be produced, the coordinator kept retrying forever and never completed, leaving the UI spinning with neither an error nor a result. It now gives up after three consecutive rounds with no newly validated chunk. Startup failures also carry the real exception type (401, timeout, validation rejection) instead of one generic message.
 
-**"AI translation is on" dialog — English, translated first.** Both onboarding dialogs are written in English and queued at the highest translation priority, so they read in your own language the moment they appear instead of opening in Chinese.
+**You can now tell when it is done.** A single video shows a toast when pre-translation completes or fails; a whole collection reports once at the end ("all N parts pre-translated") instead of once per part.
 
-**Tapping a video starts pre-translation.** As soon as the player page knows the bvid/aid/cid, the subtitle track is queued in the background — by the time the first frame is up, the translation is usually ready. Only the current part is queued; whole-collection batches stay on the cover button.
-
-**Not shown when it cannot work.** With Simplified Chinese as the target language, or with AI translation off, the subtitle button is no longer rendered at all.
+**Signed-out error pages are translated.** "Account not signed in" and "Tap to retry" came straight from the Bilibili API as Chinese and were shown verbatim; they now go through the interface translator.
 
 Downloads are below.
