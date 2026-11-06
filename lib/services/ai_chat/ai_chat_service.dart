@@ -1,11 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_proxy.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
+import 'package:socks5_proxy/socks_client.dart';
 
 /// AI 接口请求异常，toString 输出带实际请求地址的用户可读文案
 class AiApiException implements Exception {
@@ -35,14 +39,50 @@ class AiPromptTemplate {
 }
 
 class AiChatService {
+  static Dio _subtitleProxyClient(SubtitleTranslationProxy proxy) {
+    final httpClient = HttpClient()..idleTimeout = const Duration(seconds: 15);
+    if (proxy.type == SubtitleTranslationProxyType.http) {
+      httpClient.findProxy = (_) => 'PROXY ${proxy.host}:${proxy.port}';
+      if (proxy.username != null && proxy.password != null) {
+        httpClient.authenticateProxy = (host, port, scheme, realm) async {
+          httpClient.addProxyCredentials(
+            host,
+            port,
+            realm ?? '',
+            HttpClientBasicCredentials(proxy.username!, proxy.password!),
+          );
+          return true;
+        };
+      }
+    } else {
+      SocksTCPClient.assignToHttpClient(
+        httpClient,
+        [
+          ProxySettings(
+            InternetAddress(proxy.host),
+            proxy.port,
+            username: proxy.username,
+            password: proxy.password,
+          ),
+        ],
+      );
+    }
+    return Dio()
+      ..httpClientAdapter = IOHttpClientAdapter(
+        createHttpClient: () => httpClient,
+      );
+  }
+
   static Options _options({Duration? receiveTimeout, String? apiKey}) {
     final key = apiKey ?? Pref.aiApiKey;
+    final timeout = receiveTimeout ?? const Duration(seconds: 60);
     return Options(
       headers: {
         'Content-Type': 'application/json',
         if (key.isNotEmpty) 'Authorization': 'Bearer $key',
       },
-      receiveTimeout: receiveTimeout ?? const Duration(seconds: 60),
+      sendTimeout: timeout,
+      receiveTimeout: timeout,
     );
   }
 
@@ -98,7 +138,10 @@ class AiChatService {
   }
 
   /// 将 Dio 异常翻译为带实际请求地址的 [AiApiException]
-  static Future<AiApiException> _requestError(String url, DioException e) async {
+  static Future<AiApiException> _requestError(
+    String url,
+    DioException e,
+  ) async {
     String detail;
     if (e.type == DioExceptionType.badResponse) {
       detail = _snippet(await _responseText(e.response));
@@ -107,8 +150,7 @@ class AiChatService {
       detail = switch (e.type) {
         DioExceptionType.connectionTimeout ||
         DioExceptionType.sendTimeout ||
-        DioExceptionType.receiveTimeout =>
-          uiTx('连接超时'),
+        DioExceptionType.receiveTimeout => uiTx('连接超时'),
         DioExceptionType.badCertificate => uiTx('证书校验失败'),
         DioExceptionType.cancel => uiTx('请求已取消'),
         _ => uiTxP('无法连接（{0}）', [e.message ?? e.error ?? e.type.name]),
@@ -151,12 +193,15 @@ class AiChatService {
           .where((e) => e.isNotEmpty)
           .toList();
     }
-    throw _logged(AiApiException(
-      url: url,
-      statusCode: res.statusCode,
-      detail: '响应不是模型列表，请检查接口地址与版本路径'
-          '${data == null ? '' : '（${_snippet(data.toString(), 200)}）'}',
-    ));
+    throw _logged(
+      AiApiException(
+        url: url,
+        statusCode: res.statusCode,
+        detail:
+            '响应不是模型列表，请检查接口地址与版本路径'
+            '${data == null ? '' : '（${_snippet(data.toString(), 200)}）'}',
+      ),
+    );
   }
 
   /// 非流式一次性补全，返回完整文本。供界面翻译等需要整段结果的场景使用。
@@ -197,18 +242,23 @@ class AiChatService {
           return message['content'] as String;
         }
       }
-      throw _logged(AiApiException(
+      throw _logged(
+        AiApiException(
+          url: url,
+          statusCode: res.statusCode,
+          detail:
+              '响应格式异常，未找到 choices[0].message.content'
+              '（${_snippet(data.toString(), 200)}）',
+        ),
+      );
+    }
+    throw _logged(
+      AiApiException(
         url: url,
         statusCode: res.statusCode,
-        detail: '响应格式异常，未找到 choices[0].message.content'
-            '（${_snippet(data.toString(), 200)}）',
-      ));
-    }
-    throw _logged(AiApiException(
-      url: url,
-      statusCode: res.statusCode,
-      detail: '响应不是 JSON 对象，请检查接口地址与版本路径',
-    ));
+        detail: '响应不是 JSON 对象，请检查接口地址与版本路径',
+      ),
+    );
   }
 
   /// Stream chat completion from {base}/chat/completions
@@ -219,6 +269,8 @@ class AiChatService {
     Map<String, dynamic>? extraBody,
     String? apiUrl,
     String? apiKey,
+    Duration? receiveTimeout,
+    SubtitleTranslationProxy? subtitleProxy,
   }) async* {
     final baseUrl = _baseUrl(apiUrl);
     if (baseUrl.isEmpty) throw Exception(uiTx('请先配置 API 地址'));
@@ -227,12 +279,20 @@ class AiChatService {
 
     final url = '$baseUrl/chat/completions';
     final opts = _options(
-      receiveTimeout: const Duration(minutes: 10),
+      receiveTimeout: receiveTimeout ?? const Duration(minutes: 10),
       apiKey: apiKey,
     )..responseType = ResponseType.stream;
     final Response<ResponseBody> response;
+    final client = subtitleProxy == null
+        ? Dio()
+        : _subtitleProxyClient(subtitleProxy);
+    final requestTimeout = receiveTimeout ?? const Duration(minutes: 10);
+    client.options
+      ..connectTimeout = requestTimeout
+      ..sendTimeout = requestTimeout
+      ..receiveTimeout = requestTimeout;
     try {
-      response = await Dio().post<ResponseBody>(
+      response = await client.post<ResponseBody>(
         url,
         data: jsonEncode({
           'model': useModel,
@@ -243,52 +303,67 @@ class AiChatService {
         options: opts,
       );
     } on DioException catch (e) {
+      client.close(force: true);
       throw await _requestError(url, e);
     }
 
-    final stream = response.data!.stream;
-
-    // 记录是否出现过 SSE data 行：200 但响应不是 SSE（如填错地址时服务器
-    // 返回 HTML 页面或完整 JSON）会静默产出空回复，需在流结束后报错
-    var sawData = false;
-    final nonSse = StringBuffer();
-    await for (final line in stream
-        .cast<List<int>>()
-        .transform(utf8.decoder)
-        .transform(const LineSplitter())) {
-      final trimmed = line.trim();
-      if (trimmed.isEmpty) continue;
-      if (!trimmed.startsWith('data:')) {
-        if (!sawData && nonSse.length < 300) nonSse.writeln(trimmed);
-        continue;
-      }
-      sawData = true;
-      final data = trimmed.replaceFirst('data:', '').trim();
-      if (data == '[DONE]') return;
-      if (data.isEmpty) continue;
+    try {
       try {
-        final json = jsonDecode(data) as Map<String, dynamic>;
-        final choices = json['choices'] as List?;
-        if (choices != null && choices.isNotEmpty) {
-          final delta = choices[0]['delta'] as Map<String, dynamic>?;
-          final content = delta?['content'] as String?;
-          if (content != null) {
-            yield content;
+        final stream = response.data!.stream;
+
+        // 记录是否出现过 SSE data 行：200 但响应不是 SSE（如填错地址时服务器
+        // 返回 HTML 页面或完整 JSON）会静默产出空回复，需在流结束后报错
+        var sawData = false;
+        final nonSse = StringBuffer();
+        await for (final line
+            in stream
+                .cast<List<int>>()
+                .transform(utf8.decoder)
+                .transform(const LineSplitter())) {
+          final trimmed = line.trim();
+          if (trimmed.isEmpty) continue;
+          if (!trimmed.startsWith('data:')) {
+            if (!sawData && nonSse.length < 300) nonSse.writeln(trimmed);
+            continue;
+          }
+          sawData = true;
+          final data = trimmed.replaceFirst('data:', '').trim();
+          if (data == '[DONE]') return;
+          if (data.isEmpty) continue;
+          try {
+            final json = jsonDecode(data) as Map<String, dynamic>;
+            final choices = json['choices'] as List?;
+            if (choices != null && choices.isNotEmpty) {
+              final delta = choices[0]['delta'] as Map<String, dynamic>?;
+              final content = delta?['content'] as String?;
+              if (content != null) {
+                yield content;
+              }
+            }
+          } catch (e) {
+            if (kDebugMode) debugPrint('SSE parse error: $e');
           }
         }
-      } catch (e) {
-        if (kDebugMode) debugPrint('SSE parse error: $e');
+        if (!sawData) {
+          final contentType = response.headers.value(Headers.contentTypeHeader);
+          throw _logged(
+            AiApiException(
+              url: url,
+              statusCode: response.statusCode,
+              detail:
+                  '未返回流式响应，请检查接口地址与版本路径'
+                  '${contentType == null ? '' : '（content-type: $contentType）'}'
+                  '${nonSse.isEmpty ? '' : '：${_snippet(nonSse.toString())}'}',
+            ),
+          );
+        }
+      } on DioException catch (e) {
+        throw await _requestError(url, e);
+      } finally {
+        client.close(force: true);
       }
-    }
-    if (!sawData) {
-      final contentType = response.headers.value(Headers.contentTypeHeader);
-      throw _logged(AiApiException(
-        url: url,
-        statusCode: response.statusCode,
-        detail: '未返回流式响应，请检查接口地址与版本路径'
-            '${contentType == null ? '' : '（content-type: $contentType）'}'
-            '${nonSse.isEmpty ? '' : '：${_snippet(nonSse.toString())}'}',
-      ));
+    } finally {
+      client.close(force: true);
     }
   }
 
@@ -297,7 +372,8 @@ class AiChatService {
   static final List<AiPromptTemplate> defaultTemplates = [
     AiPromptTemplate(
       name: '概貌总结',
-      prompt: '请对这个视频内容进行概貌总结。考虑到视频可能较长，请避免过度省略。\n'
+      prompt:
+          '请对这个视频内容进行概貌总结。考虑到视频可能较长，请避免过度省略。\n'
           '要求：\n'
           '1. 【核心主旨】用 1-2 句话精准概括视频的核心价值与主题。\n'
           '2. 【高光时刻】列出 3-5 个最具争议、最有趣或最重要的核心观点。\n'
@@ -306,7 +382,8 @@ class AiChatService {
     ),
     AiPromptTemplate(
       name: '详细分析',
-      prompt: '请对这个视频进行极具深度的拆解分析。请克服长文本的省略倾向，尽可能保留具体细节、案例和逻辑推演。\n'
+      prompt:
+          '请对这个视频进行极具深度的拆解分析。请克服长文本的省略倾向，尽可能保留具体细节、案例和逻辑推演。\n'
           '要求：\n'
           '1. 【结构脉络】根据视频的话题转换，将其划分为几个清晰的章节，每个章节必须标明时间跨度（如 `[01:00] - [15:30]`）。\n'
           '2. 【深度提取】在每个章节下，详细阐述其核心观点、使用的论据（如有案例请务必写出）。\n'
@@ -353,6 +430,8 @@ class AiChatService {
   }
 
   static void saveTemplates(List<AiPromptTemplate> templates) {
-    Pref.aiPromptTemplates = jsonEncode(templates.map((e) => e.toJson()).toList());
+    Pref.aiPromptTemplates = jsonEncode(
+      templates.map((e) => e.toJson()).toList(),
+    );
   }
 }

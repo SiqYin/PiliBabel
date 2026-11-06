@@ -254,5 +254,6 @@ The bundled **LXGW WenKai** typeface is licensed separately under the **SIL Open
 - [dio](https://pub.dev/packages/dio)
 - [Index-Translate](https://github.com/bilibili/Index-Translate) — bilibili's open-source translation model family, and the free public endpoint behind the built-in engine
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — the open-source Chinese typeface bundled with the app, under the SIL Open Font License 1.1
+- [saukhoai](https://github.com/saukhoai) — for contributing the AI subtitle translation system (chunked translation with context, realtime buffering, offline dictionary for Vietnamese, and proxy routing), via [PR #2](https://github.com/SiqYin/PiliBabel/pull/2)
 - and more
 - Inspired by bilibili's official "AI interface translation".

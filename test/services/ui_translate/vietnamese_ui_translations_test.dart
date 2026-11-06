@@ -1,0 +1,14 @@
+import 'package:PiliPlus/services/ui_translate/vietnamese_ui_translations.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+void main() {
+  test('returns an immediate Vietnamese translation for common UI labels', () {
+    expect(vietnameseUiTranslation('首页'), 'Trang chủ');
+    expect(vietnameseUiTranslation('AI 翻译'), 'AI Dịch');
+    expect(vietnameseUiTranslation('字幕'), 'Phụ đề');
+  });
+
+  test('does not claim dynamic content is a fixed UI label', () {
+    expect(vietnameseUiTranslation('Một tiêu đề video bất kỳ'), isNull);
+  });
+}

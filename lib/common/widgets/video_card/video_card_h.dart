@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
+import 'package:PiliPlus/common/widgets/video_subtitle_translate_button.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
@@ -177,8 +178,15 @@ class VideoCardH extends StatelessWidget {
                                 bottom: 6.0,
                                 type: .gray,
                               ),
-                          
-                            CoverTranslateButton(cover: videoItem.cover),],
+
+                            CoverTranslateButton(cover: videoItem.cover),
+                            VideoSubtitleTranslateButton(
+                              videoKey: videoItem.bvid ?? 'av:${videoItem.aid}',
+                              bvid: videoItem.bvid,
+                              aid: videoItem.aid,
+                              cid: videoItem.cid,
+                            ),
+                          ],
                         );
                       },
                     ),
@@ -223,7 +231,8 @@ class VideoCardH extends StatelessWidget {
               // 支离破碎，所以界面翻译开启时改成整句走 uiTx：放弃高亮，
               // 换取一条完整的译文标题。翻译没开时行为与原来完全一致。
               if (titleList?.isNotEmpty == true &&
-                  !(translate && UiTranslateService.contentTranslationActive())) {
+                  !(translate &&
+                      UiTranslateService.contentTranslationActive())) {
                 return Text.rich(
                   overflow: .ellipsis,
                   maxLines: Pref.videoTitleFull ? 4 : 2,
