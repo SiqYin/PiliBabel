@@ -2222,9 +2222,12 @@ class VideoDetailController extends GetxController
     subtitleTranslationRunning.value = true;
     subtitleTranslationStatus.value = uiTx('正在重试出错的字幕分块');
     final subscription = _subtitleSubscription;
-    if (subscription != null && !subscription.isCancelled) {
+    if (subscription != null && subscription.canRetry) {
       subscription.retryNow();
       return;
+    }
+    if (identical(_subtitleSubscription, subscription)) {
+      _subtitleSubscription = null;
     }
 
     final translatedSource = translatedSubtitleTrack?.sourceIndex;
@@ -2744,6 +2747,7 @@ class VideoDetailController extends GetxController
           concurrency: proxyPool.workerCount,
           contextOverlap: _subtitleContextOverlapForVideo,
           targetLanguage: target,
+          maxRetries: 0,
           translate: (lines) async {
             if (Pref.uiTranslateLang != target) {
               throw StateError('Subtitle language changed');
@@ -2809,7 +2813,9 @@ class VideoDetailController extends GetxController
           subtitleTranslationProgress.value = progress.ratio;
           subtitleTranslationRetryAvailable.value = progress.failedChunks > 0;
           subtitleTranslationRunning.value =
-              canStartTranslation && !progress.isComplete;
+              canStartTranslation &&
+              !progress.isComplete &&
+              !progress.retryExhausted;
           subtitleTranslationStatus.value =
               !canStartTranslation && !progress.isComplete
               ? uiTx('正在显示中文字幕；请开启AI翻译以翻译字幕')
@@ -2818,6 +2824,11 @@ class VideoDetailController extends GetxController
                   progress.verifiedCues,
                   progress.totalCues,
                 ])
+              : progress.retryExhausted
+              ? uiTxP(
+                  '字幕自动重试已暂停：已翻译{0}/{1}句（{2}%），点击重试继续',
+                  [progress.translatedCues, progress.totalCues, percent],
+                )
               : progress.failedChunks > 0
               ? uiTxP(
                   '字幕翻译将在后台重试：已处理{0}/{1}句（{2}%），'
@@ -2984,15 +2995,15 @@ class VideoDetailController extends GetxController
     if (_manualSubtitle && !translatedSelected) return;
 
     final waitForComplete = Pref.subtitleTranslationWaitForComplete;
+    final autoPauseForBuffer = Pref.subtitleTranslationAutoPauseForBuffer;
     final realtimeReady =
         progress.isComplete || SubtitleRealtimeBufferPolicy.canStart(progress);
-    final realtimeStarved =
-        !progress.isComplete &&
-        SubtitleRealtimeBufferPolicy.shouldPause(progress);
-    final mustWait = waitForComplete
-        ? !progress.isComplete
-        : (!translatedSelected && !realtimeReady) ||
-              (translatedSelected && realtimeStarved);
+    final mustWait = SubtitleRealtimeBufferPolicy.shouldBlockPlayback(
+      progress,
+      waitForComplete: waitForComplete,
+      autoPauseForBuffer: autoPauseForBuffer,
+      translatedTrackSelected: translatedSelected,
+    );
 
     if (mustWait) {
       if (!_manualSubtitle &&
@@ -3035,6 +3046,13 @@ class VideoDetailController extends GetxController
         update.generation,
         progress.renderRevision,
       );
+    }
+    if (_pausedForSubtitleTranslation &&
+        (progress.retryExhausted ||
+            (!waitForComplete && !autoPauseForBuffer))) {
+      _pausedForSubtitleTranslation = false;
+      await PlPlayerController.playIfExists();
+      return;
     }
     if (_pausedForSubtitleTranslation &&
         selectedSubtitleTrackId.value == update.trackId &&
@@ -3240,6 +3258,7 @@ class VideoDetailController extends GetxController
             concurrency: proxyPool.workerCount,
             contextOverlap: target.contextOverlap,
             targetLanguage: targetLanguage,
+            maxRetries: 0,
             cacheKey: cacheKey,
             onUpdate: onUpdate,
             translate: SubtitleTranslateService.translateChunk,

@@ -34,6 +34,8 @@ class SubtitleTranslationProgress {
     required this.remainingTimelineCovered,
     required this.renderRevision,
     required this.renderedChunks,
+    this.retryExhausted = false,
+    this.retryAttempt = 0,
   });
 
   final SubtitleTranslationPhase phase;
@@ -49,10 +51,33 @@ class SubtitleTranslationProgress {
   final bool remainingTimelineCovered;
   final int renderRevision;
   final List<int> renderedChunks;
+  final bool retryExhausted;
+  final int retryAttempt;
 
   bool get isComplete => phase == SubtitleTranslationPhase.ready;
 
   double get ratio => totalCues == 0 ? 0 : translatedCues / totalCues;
+
+  SubtitleTranslationProgress copyWith({
+    bool? retryExhausted,
+    int? retryAttempt,
+  }) => SubtitleTranslationProgress(
+    phase: phase,
+    completedChunks: completedChunks,
+    totalChunks: totalChunks,
+    processedCues: processedCues,
+    translatedCues: translatedCues,
+    verifiedCues: verifiedCues,
+    totalCues: totalCues,
+    failedChunks: failedChunks,
+    currentPositionCovered: currentPositionCovered,
+    coverageAheadSeconds: coverageAheadSeconds,
+    remainingTimelineCovered: remainingTimelineCovered,
+    renderRevision: renderRevision,
+    renderedChunks: renderedChunks,
+    retryExhausted: retryExhausted ?? this.retryExhausted,
+    retryAttempt: retryAttempt ?? this.retryAttempt,
+  );
 }
 
 abstract final class SubtitleRealtimeBufferPolicy {
@@ -68,6 +93,20 @@ abstract final class SubtitleRealtimeBufferPolicy {
       !progress.currentPositionCovered ||
       (!progress.remainingTimelineCovered &&
           progress.coverageAheadSeconds < pauseAheadSeconds);
+
+  static bool shouldBlockPlayback(
+    SubtitleTranslationProgress progress, {
+    required bool waitForComplete,
+    required bool autoPauseForBuffer,
+    required bool translatedTrackSelected,
+  }) {
+    if (progress.isComplete || progress.retryExhausted) return false;
+    if (waitForComplete) return true;
+    if (!autoPauseForBuffer) return false;
+    return translatedTrackSelected
+        ? shouldPause(progress)
+        : !canStart(progress);
+  }
 }
 
 typedef SubtitleTranslationUpdate = void Function(
@@ -675,8 +714,6 @@ abstract final class SubtitleCues {
 }
 
 class SubtitleTranslationJob {
-  static const _maxRetries = 2;
-
   SubtitleTranslationJob({
     required this.cues,
     required this.chunkSize,
@@ -689,9 +726,11 @@ class SubtitleTranslationJob {
     this.cacheDirectory,
     this.retryDelay = const Duration(milliseconds: 250),
     this.attemptTimeout = const Duration(seconds: 60),
+    this.maxRetries = 2,
     this.contextOverlap = 4,
     this.targetLanguage,
-  }) : _texts = cues.map((cue) => cue.text).toList();
+  }) : assert(maxRetries >= 0),
+       _texts = cues.map((cue) => cue.text).toList();
 
   final List<SubtitleCue> cues;
   final int chunkSize;
@@ -703,6 +742,7 @@ class SubtitleTranslationJob {
   final SubtitleTranslationUpdate onUpdate;
   final Duration retryDelay;
   final Duration attemptTimeout;
+  final int maxRetries;
   final int contextOverlap;
   final String? targetLanguage;
   final List<String> _texts;
@@ -995,7 +1035,7 @@ class SubtitleTranslationJob {
     List<String> context,
     List<String> translatedContext,
   ) async {
-    for (var attempt = 0; attempt <= _maxRetries; attempt++) {
+    for (var attempt = 0; attempt <= maxRetries; attempt++) {
       try {
         final request =
             translateWithContext?.call(source, context) ?? translate(source);
@@ -1011,7 +1051,7 @@ class SubtitleTranslationJob {
         );
       } catch (error, stackTrace) {
         // Local state changes cannot be fixed by retrying and must stop work.
-        if (_cancelled || error is StateError || attempt == _maxRetries) {
+        if (_cancelled || error is StateError || attempt == maxRetries) {
           Error.throwWithStackTrace(error, stackTrace);
         }
         final delay = Duration(

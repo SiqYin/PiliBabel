@@ -160,6 +160,78 @@ void main() {
     );
   });
 
+  test('realtime pause policy respects setting and retry exhaustion', () {
+    const progress = SubtitleTranslationProgress(
+      phase: SubtitleTranslationPhase.translating,
+      completedChunks: 1,
+      totalChunks: 5,
+      processedCues: 20,
+      translatedCues: 20,
+      verifiedCues: 0,
+      totalCues: 100,
+      failedChunks: 1,
+      currentPositionCovered: false,
+      coverageAheadSeconds: 0,
+      remainingTimelineCovered: false,
+      renderRevision: 1,
+      renderedChunks: [0],
+    );
+
+    expect(
+      SubtitleRealtimeBufferPolicy.shouldBlockPlayback(
+        progress,
+        waitForComplete: false,
+        autoPauseForBuffer: true,
+        translatedTrackSelected: true,
+      ),
+      isTrue,
+    );
+    expect(
+      SubtitleRealtimeBufferPolicy.shouldBlockPlayback(
+        progress,
+        waitForComplete: false,
+        autoPauseForBuffer: false,
+        translatedTrackSelected: true,
+      ),
+      isFalse,
+    );
+    expect(
+      SubtitleRealtimeBufferPolicy.shouldBlockPlayback(
+        progress.copyWith(retryExhausted: true),
+        waitForComplete: true,
+        autoPauseForBuffer: true,
+        translatedTrackSelected: true,
+      ),
+      isFalse,
+    );
+  });
+
+  test('production-style jobs delegate retry to the coordinator', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'pili_job_coordinator_retry_',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    var calls = 0;
+
+    final job = SubtitleTranslationJob(
+      cues: _cues(20),
+      chunkSize: 20,
+      concurrency: 1,
+      cacheKey: 'coordinator-owned-retry',
+      cacheDirectory: directory.path,
+      maxRetries: 0,
+      translate: (_) async {
+        calls++;
+        throw TimeoutException('provider unavailable');
+      },
+      onUpdate: (_, __) {},
+    );
+
+    await job.run();
+
+    expect(calls, 1);
+  });
+
   test(
     'later five-percent chunk never covers the current playback position',
     () async {

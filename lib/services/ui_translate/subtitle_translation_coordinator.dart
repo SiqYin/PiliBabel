@@ -32,6 +32,7 @@ class SubtitleTranslationCoordinator {
         SubtitleTranslationPriority.background,
     void Function()? onCompleted,
     SubtitleTranslationRetryDelay? retryDelay,
+    int maxAutomaticRetryRounds = 1,
   }) {
     var session = _sessions[key];
     if (session == null) {
@@ -41,6 +42,7 @@ class SubtitleTranslationCoordinator {
         onFinished: () => _sessions.remove(key),
         onCompleted: onCompleted,
         retryDelay: retryDelay,
+        maxAutomaticRetryRounds: maxAutomaticRetryRounds,
       );
       _sessions[key] = session;
     } else {
@@ -69,6 +71,8 @@ class SubtitleTranslationSubscription {
   /// 分块失败的真实原因（见 [SubtitleTranslationJob.lastError]）。
   Object? get lastError => _session.job.lastError;
 
+  bool get canRetry => !_detached && !_session.isFinished;
+
   void setPosition(int seconds) {
     if (!_detached) _session.job.setPosition(seconds);
   }
@@ -76,7 +80,7 @@ class SubtitleTranslationSubscription {
   /// Retry the existing failed chunks immediately without creating a second
   /// job or discarding chunks that have already passed validation.
   void retryNow() {
-    if (!_detached) _session.retryNow();
+    if (canRetry) _session.retryNow();
   }
 
   /// Stop receiving updates but deliberately keep the background translation.
@@ -102,6 +106,7 @@ class _SubtitleTranslationSession {
     required this.onFinished,
     this.onCompleted,
     SubtitleTranslationRetryDelay? retryDelay,
+    required this.maxAutomaticRetryRounds,
   }) {
     _retryDelay = retryDelay ?? _defaultRetryDelay;
     priorityHandle = SubtitleTranslationPriorityHandle(priority);
@@ -111,6 +116,7 @@ class _SubtitleTranslationSession {
   final SubtitleTranslationJobFactory _createJob;
   final void Function() onFinished;
   final void Function()? onCompleted;
+  final int maxAutomaticRetryRounds;
   late final SubtitleTranslationRetryDelay _retryDelay;
   final listeners = <int, SubtitleTranslationUpdate>{};
   late final SubtitleTranslationJob job;
@@ -126,11 +132,15 @@ class _SubtitleTranslationSession {
   int _bestTranslatedCues = 0;
   int _retryRequest = 0;
   int _consumedRetryRequest = 0;
+  int _consecutiveNoProgressRuns = 0;
+  bool _retryExhausted = false;
   Completer<void>? _retryWakeSignal;
 
   Future<void> get whenComplete => _completion.future;
 
   bool get isCancelled => _cancelled;
+
+  bool get isFinished => _finished;
 
   bool get hasLatestUpdate => _vtt != null && _progress != null;
 
@@ -151,10 +161,13 @@ class _SubtitleTranslationSession {
     if (_cancelled || _finished) return;
     _allowNewTranslation = true;
     _backgroundRetryAttempt = 0;
+    _consecutiveNoProgressRuns = 0;
+    _retryExhausted = false;
     _retryRequest++;
     priorityHandle.promote(SubtitleTranslationPriority.userRequested);
     final signal = _retryWakeSignal;
     if (signal != null && !signal.isCompleted) signal.complete();
+    _publishRetryState();
     _runFuture ??= _run();
   }
 
@@ -171,23 +184,13 @@ class _SubtitleTranslationSession {
     _finish();
   }
 
-  /// 连续多少轮「一个已校验分块都没新增」就放弃。
-  ///
-  /// 之前这里没有上限：所有分块都翻不出来时（接口拒绝、校验全不通过），
-  /// `job.run()` 每轮都返回、进度永远是 0，`whenComplete` 就永远不完成 ——
-  /// 调用方 `await` 住不放，UI 停在「翻译中」一直转圈，既不报错也不结束。
-  /// 现在连续 3 轮毫无进展就收尾，把失败交回给调用方去显示。
-  static const int _maxIdleRounds = 3;
-
   Future<void> _run() async {
-    var idleRounds = 0;
-    var gaveUp = false;
     try {
       await job.loadCached();
       while (!_cancelled) {
         if (_progress?.isComplete == true) break;
         if (!_allowNewTranslation) return;
-        final translatedBefore = _bestTranslatedCues;
+        final translatedBeforeRun = _bestTranslatedCues;
         try {
           await job.run();
         } catch (_) {
@@ -195,17 +198,19 @@ class _SubtitleTranslationSession {
           // shared session forever. The normal retry delay below applies.
         }
         if (_cancelled || _progress?.isComplete == true) break;
-        // 只有「有新的已校验分块」才算有进展；全失败时这一轮等于白跑。
-        idleRounds = _bestTranslatedCues > translatedBefore
-            ? 0
-            : idleRounds + 1;
-        if (idleRounds >= _maxIdleRounds) {
-          gaveUp = true;
-          break;
-        }
         if (_retryRequest != _consumedRetryRequest) {
           _consumedRetryRequest = _retryRequest;
           continue;
+        }
+        if (_bestTranslatedCues > translatedBeforeRun) {
+          _consecutiveNoProgressRuns = 0;
+        } else {
+          _consecutiveNoProgressRuns++;
+        }
+        if (_consecutiveNoProgressRuns > maxAutomaticRetryRounds) {
+          _retryExhausted = true;
+          _publishRetryState();
+          break;
         }
         // Preserve failed chunks and retry their exact indexes without
         // hammering a temporarily unavailable translation service.
@@ -214,15 +219,14 @@ class _SubtitleTranslationSession {
         _backgroundRetryAttempt = (_backgroundRetryAttempt + 1)
             .clamp(0, 3)
             .toInt();
+        _publishRetryState();
         await _waitForRetry(delay);
         _consumedRetryRequest = _retryRequest;
       }
     } finally {
       _runFuture = null;
       final completed = _progress?.isComplete == true;
-      // gaveUp 必须一起收尾：否则 break 出来以后既不 complete 也不 finish，
-      // 又会退回到「永远转圈」那种状态。
-      if (_cancelled || completed || gaveUp || !_allowNewTranslation) {
+      if (_cancelled || completed || !_allowNewTranslation || _retryExhausted) {
         _finish(completed: completed);
       }
     }
@@ -277,7 +281,27 @@ class _SubtitleTranslationSession {
       _backgroundRetryAttempt = 0;
     }
     _vtt = vtt;
-    _progress = progress;
+    _progress = progress.copyWith(
+      retryExhausted: false,
+      retryAttempt: _consecutiveNoProgressRuns,
+    );
+    _emitLatest();
+  }
+
+  void _publishRetryState() {
+    final progress = _progress;
+    if (progress == null) return;
+    _progress = progress.copyWith(
+      retryExhausted: _retryExhausted,
+      retryAttempt: _consecutiveNoProgressRuns,
+    );
+    _emitLatest();
+  }
+
+  void _emitLatest() {
+    final vtt = _vtt;
+    final progress = _progress;
+    if (vtt == null || progress == null) return;
     for (final listener in List<SubtitleTranslationUpdate>.from(
       listeners.values,
     )) {

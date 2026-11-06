@@ -509,6 +509,20 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                 setState(() {});
               },
             ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text(uiTx('实时字幕不足时自动暂停')),
+              subtitle: Text(
+                uiTx(
+                  '缓冲不足时暂停视频，译文达到60秒后自动继续；关闭后视频不中断，但未译区间可能暂时没有字幕',
+                ),
+              ),
+              value: Pref.subtitleTranslationAutoPauseForBuffer,
+              onChanged: (value) {
+                Pref.subtitleTranslationAutoPauseForBuffer = value;
+                setState(() {});
+              },
+            ),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.playlist_play_outlined),

@@ -203,4 +203,85 @@ void main() {
     subscription.retryNow();
     await subscription.whenComplete.timeout(const Duration(seconds: 2));
   });
+
+  test('stops automatic retry after bounded no-progress rounds', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'pili_coordinator_exhausted_',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    var calls = 0;
+    SubtitleTranslationProgress? latest;
+
+    final subscription = SubtitleTranslationCoordinator.attach(
+      key: 'bounded-retry',
+      allowNewTranslation: true,
+      maxAutomaticRetryRounds: 1,
+      retryDelay: (_, _) => Duration.zero,
+      createJob: (onUpdate, _) => SubtitleTranslationJob(
+        cues: _cues(20),
+        chunkSize: 20,
+        concurrency: 1,
+        cacheKey: 'bounded-retry',
+        cacheDirectory: directory.path,
+        maxRetries: 0,
+        translate: (_) async {
+          calls++;
+          throw TimeoutException('provider unavailable');
+        },
+        onUpdate: onUpdate,
+      ),
+      onUpdate: (_, progress) => latest = progress,
+    );
+
+    await subscription.whenComplete.timeout(const Duration(seconds: 2));
+
+    expect(calls, 2);
+    expect(latest?.retryExhausted, isTrue);
+    expect(latest?.retryAttempt, 2);
+    expect(latest?.failedChunks, 1);
+  });
+
+  test('a new session can retry after automatic retry is exhausted', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'pili_coordinator_restart_',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    var shouldFail = true;
+
+    SubtitleTranslationJob factory(
+      SubtitleTranslationUpdate onUpdate,
+      SubtitleTranslationPriorityHandle _,
+    ) => SubtitleTranslationJob(
+      cues: _cues(20),
+      chunkSize: 20,
+      concurrency: 1,
+      cacheKey: 'restart-after-exhaustion',
+      cacheDirectory: directory.path,
+      translate: (lines) async {
+        if (shouldFail) throw StateError('provider unavailable');
+        return lines.map((line) => 'vi $line').toList();
+      },
+      onUpdate: onUpdate,
+    );
+
+    final first = SubtitleTranslationCoordinator.attach(
+      key: 'restart-after-exhaustion',
+      allowNewTranslation: true,
+      maxAutomaticRetryRounds: 0,
+      retryDelay: (_, _) => Duration.zero,
+      createJob: factory,
+      onUpdate: (_, __) {},
+    );
+    await first.whenComplete.timeout(const Duration(seconds: 2));
+    expect(first.canRetry, isFalse);
+
+    shouldFail = false;
+    final second = SubtitleTranslationCoordinator.attach(
+      key: 'restart-after-exhaustion',
+      allowNewTranslation: true,
+      createJob: factory,
+      onUpdate: (_, __) {},
+    );
+    await second.whenComplete.timeout(const Duration(seconds: 2));
+  });
 }

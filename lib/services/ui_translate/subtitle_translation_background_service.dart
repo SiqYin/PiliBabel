@@ -351,6 +351,7 @@ abstract final class SubtitleTranslationBackgroundService {
           concurrency: pool.workerCount,
           contextOverlap: Pref.subtitleContextOverlap,
           targetLanguage: target,
+          maxRetries: 0,
           cacheKey: activeCacheKey,
           onUpdate: onUpdate,
           translate: SubtitleTranslateService.translateChunk,
@@ -377,6 +378,14 @@ abstract final class SubtitleTranslationBackgroundService {
         ),
         onUpdate: (vtt, progress) {
           lastProgress = progress;
+          if (progress.retryExhausted) {
+            _fail(
+              taskKey,
+              'Tự động thử lại đã dừng ở '
+              '${(progress.ratio * 100).round()}%, chạm để thử lại',
+            );
+            return;
+          }
           if (progress.isComplete && !completionScheduled) {
             completionScheduled = true;
             _set(
