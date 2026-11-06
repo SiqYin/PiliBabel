@@ -556,6 +556,33 @@ class VideoDetailController extends GetxController
     if (PlatformUtils.isMobile) {
       setupFullScreenQualitySwitch();
     }
+
+    _autoStartSubtitleTranslation();
+  }
+
+  /// 点开视频就相当于按了一次封面上的「翻译字幕」：视频在加载，字幕在后台先翻。
+  ///
+  /// 以前只有封面角落那个按钮能启动翻译，用户在播放页只能干等或退出重进。
+  /// 这里在拿到 bvid/aid/cid 的那一刻就排队，用户看到画面时译文往往已经就绪。
+  ///
+  /// * [SubtitleTranslateService.needed] 为 false（没开 AI 翻译，或目标语言就是
+  ///   简体中文）时直接返回 —— 没有可翻的东西，不该白跑一趟网络；
+  /// * `includeCollection: false`：只翻当前这一集/这一 P。整季批量仍然留给封面
+  ///   上那个按钮，避免「随手点开一集」就把整个合集塞进后台队列；
+  /// * 服务内部按 `videoKey/cid/语言` 去重，重复进同一个视频不会重复请求。
+  void _autoStartSubtitleTranslation() {
+    if (isFileSource || !SubtitleTranslateService.needed) return;
+    final key = bvid.isNotEmpty ? bvid : 'av$aid';
+    unawaited(
+      SubtitleTranslationBackgroundService.start(
+        videoKey: key,
+        bvid: bvid.isEmpty ? null : bvid,
+        aid: aid > 0 ? aid : null,
+        cid: cid.value > 0 ? cid.value : null,
+        // 合集批量留给封面按钮，这里只处理点开的这一集。
+        includeCollection: false,
+      ),
+    );
   }
 
   Future<void> getMediaList({

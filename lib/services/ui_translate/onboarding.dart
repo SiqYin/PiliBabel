@@ -11,6 +11,7 @@ import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 bool _showing = false;
+bool _coverHintShowing = false;
 
 /// 首次引导里默认选中的目标语言（系统语言匹配不到时的兜底）。
 const String onboardingFallbackLanguageCode = 'en';
@@ -111,6 +112,8 @@ Future<void> _autoSetupAndGuide(BuildContext context) async {
   // 自动开启
   controller.saveUiTranslateEnabled(true);
   Pref.uiTranslateOnboarded = true;
+  // 两个引导弹窗的文案先排队翻（最高优先级）：等页面动画走完再翻就晚了。
+  UiTranslateService.precache(kOnboardingDialogStrings);
 
   // 跳到设置页做引导动画（滚到 AI 翻译区 + 开关动画），结束后弹单按钮弹窗
   Get.toNamed('/aiTranslate', arguments: kGuidedSetupAutoEnable);
@@ -166,5 +169,111 @@ Future<void> _showUpgradeNotice(BuildContext context) async {
     // 带着「升级」模式跳过去：设置页会滚到 AI 翻译那一段，并直接弹出引擎选择器，
     // 想切回自备 API 的话伸手就能点。
     Get.toNamed('/aiTranslate', arguments: kGuidedSetupUpgrade);
+  }
+}
+
+
+/// 首页「封面上的两个按钮」说明弹窗的文案。
+///
+/// **故意写成英文**：这两句是「用户还没配好目标语言之前」就出现的说明，
+/// 中文原文会让非中文用户完全读不懂；英文原文 + 最高优先级翻译，才能保证
+/// 弹窗一出现就有译文。字符串集中在常量里，[UiTranslateService.precache]
+/// 与 `uiTxUrgent` 用的是同一份 key，不会因为插值产生新词条。
+const String kCoverButtonsHintTitle = 'Two buttons on every cover';
+const String kCoverButtonsHintTop =
+    'Top button: pre-translates this video\'s subtitles in the background.';
+const String kCoverButtonsHintBottom =
+    'Bottom button: reads the cover image and translates the text on it.';
+const String kCoverButtonsHintAction = 'Got it';
+
+/// 「已开启 AI 翻译」弹窗的文案（同样是英文原文 + 优先翻译）。
+const String kAutoEnabledTitle = 'AI translation is on';
+const String kAutoEnabledBody =
+    'The translation language was taken from your system language. '
+    'It runs on bilibili\'s free built-in model — no API key needed.';
+const String kAutoEnabledAction = 'Got it';
+
+/// 这两个弹窗里出现的所有文案，给 [UiTranslateService.precache] 预热用。
+const List<String> kOnboardingDialogStrings = [
+  kCoverButtonsHintTitle,
+  kCoverButtonsHintTop,
+  kCoverButtonsHintBottom,
+  kCoverButtonsHintAction,
+  kAutoEnabledTitle,
+  kAutoEnabledBody,
+  kAutoEnabledAction,
+];
+
+/// 首页首次可见时，说明封面左下角那两个按钮各是干什么的。
+///
+/// 触发条件（缺一不可）：
+/// * [Pref.coverButtonsHintShown] 还是 false —— 只弹一次；
+/// * 首次引导已经结束（[Pref.uiTranslateUpgradeNoticeShown]）—— 否则两个弹窗
+///   会叠在一起；
+/// * 当前路由是首页 `/` —— 用户被引导带去设置页时，不该在那里弹首页的说明。
+///
+/// 引导结束的时间点并不确定（用户可能停在设置页很久），所以这里用轮询而不是
+/// 固定延迟；等不到就放弃，下次启动再弹（标记只在用户真的看过之后才落）。
+Future<void> showCoverButtonsHintIfNeeded() async {
+  if (_coverHintShowing || Pref.coverButtonsHintShown) return;
+  _coverHintShowing = true;
+  try {
+    // 最多等 45 秒（90 × 500ms）：足够用户看完引导弹窗再退出设置页。
+    for (var tick = 0; tick < 90; tick++) {
+      if (Pref.coverButtonsHintShown) return;
+      final settled =
+          Pref.uiTranslateUpgradeNoticeShown && Get.currentRoute == '/';
+      if (settled && Get.context != null) break;
+      await Future<void>.delayed(const Duration(milliseconds: 500));
+      if (tick == 89) return;
+    }
+
+    // 排队翻这几句，弹出来时就已经是目标语言；uiTxUrgent 只是兜底。
+    UiTranslateService.precache(kOnboardingDialogStrings);
+
+    final context = Get.context;
+    if (context == null || !context.mounted) return;
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => Obx(
+        // uiTx 必须放在 Obx 里，译文晚到才能重建（见 1.0.1 的教训）。
+        () => AlertDialog(
+          title: Text(uiTxUrgent(kCoverButtonsHintTitle)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.subtitles_outlined, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(uiTxUrgent(kCoverButtonsHintTop))),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.translate, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(uiTxUrgent(kCoverButtonsHintBottom))),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(uiTxUrgent(kCoverButtonsHintAction)),
+            ),
+          ],
+        ),
+      ),
+    );
+    Pref.coverButtonsHintShown = true;
+  } finally {
+    _coverHintShowing = false;
   }
 }
