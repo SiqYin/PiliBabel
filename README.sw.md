@@ -35,7 +35,7 @@ bilibili (official public API)
         ▲
    PiliNara                    — fork ya PiliPlus (marekebisho ya kibinafsi)
         ▲
-   PiliBabel  ← you are here   — fork ya PiliNara
+   PiliBabel  ← uko hapa        — fork ya PiliNara
 ```
 
 PiliBabel inahifadhi **kila kipengele cha PiliNara / PiliPlus** (ona [kumbukumbu za vipengele vilivyorithiwa](#kumbukumbu-za-vipengele-vilivyorithiwa-kutoka-pilinara--piliplus) karibu na mwisho) na inaongeza **uwezo mkuu wa mamlaka mbili ambao wateja wa upstream hawana**:
