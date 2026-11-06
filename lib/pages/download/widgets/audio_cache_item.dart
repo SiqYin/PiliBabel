@@ -2,6 +2,7 @@ import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models_new/download/audio_cache_entry.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:material_ui/material_ui.dart';
+import 'package:get/get.dart';
 
 /// 缓存音频列表里的一项。
 class AudioCacheItem extends StatelessWidget {
@@ -81,11 +82,13 @@ class AudioCacheItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    entry.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(fontSize: 14, height: 1.25),
+                  Obx(
+                    () => Text(
+                      uiTx(entry.title),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 14, height: 1.25),
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -102,13 +105,15 @@ class AudioCacheItem extends StatelessWidget {
                   if (entry.ownerName case final name?)
                     Padding(
                       padding: const EdgeInsets.only(top: 2),
-                      child: Text(
-                        name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.outline,
+                      child: Obx(
+                        () => Text(
+                          uiTx(name),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.outline,
+                          ),
                         ),
                       ),
                     ),

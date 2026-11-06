@@ -1,0 +1,8 @@
+Total: 316, identity: 7, zh2vi: 309
+REMOVE: [Dịch lại phụ đề] = [Dịch lại phụ đề]
+REMOVE: [Xóa phụ đề đã dịch] = [Xóa phụ đề đã dịch]
+REMOVE: [Đã xóa phụ đề đã dịch] = [Đã xóa phụ đề đã dịch]
+REMOVE: [Không thể xóa phụ đề đã dịch] = [Không thể xóa phụ đề đã dịch]
+REMOVE: [Phụ đề nguồn có mốc thời gian lỗi; đang giữ phụ đề gốc] = [Phụ đề nguồn có mốc thời gian lỗi; đang ]
+REMOVE: [Bản dịch có mốc thời gian không hợp lệ; đang giữ phụ đề gốc] = [Bản dịch có mốc thời gian không hợp lệ; ]
+REMOVE: [Khôi phục phụ đề dịch] = [Khôi phục phụ đề dịch]

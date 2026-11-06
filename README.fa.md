@@ -153,7 +153,7 @@ paru -S pilinara-bin         # یا از طریق AUR: pilinara-bin (پیش‌س
 
 <br/>
 
-## تاریخچه تغییرات: 2.6.x → 3.3.4
+## تاریخچه تغییرات: 2.6.x → 3.6.7
 
 - **2.6.x** — ذخیره‌سازی صدا (ماژول‌های جدا برای ویدیو و صدا، حفظ آخرین انتخاب، ورودی در صفحه ویدیو، صفحه فقط صدا و پخش‌کننده صدا؛ قالب اصلی حفظ می‌شود؛ کیفیت قابل انتخاب) و دانلود روی دستگاه (گزینه مستقل منو: نخست ویدیو/صدا و سپس کیفیت؛ در نبود پوشه، انتخابگر فایل سیستم باز می‌شود).
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # یا از طریق AUR: pilinara-bin (پیش‌س
 - **3.2.0–3.3.3** — زیرساخت شبکه به سبک برنامه رسمی: اثر انگشت درخواست (buvid/fp/session_id/env)، جابه‌جایی میزبان‌های gRPC، میان‌گیر تلاش مجدد، سقف درخواست همزمان برای هر میزبان، پیش‌بارگذاری نخستین فید در راه‌اندازی سرد، پارامترهای رسمی رویداد فید، ترتیب نامزدهای CDN با جایگزین خارجی؛ پیش‌بارگذاری صفحه دوم، صف محدود پیش‌بارگذاری جلدها، پیش‌بارگذاری نشانی پخش؛ سپس نمایش داینامیک (P3) با gRPC و اصلاح خطای کامپایل مدت بافر در صفحه صدا و خطای تبدیل نوع در پیش‌بارگذاری دیدگاه‌ها که هر تلاش مجدد را بی‌درنگ ناموفق می‌کرد.
 
 - **3.3.4** — کارت‌های داینامیک برای نوشته‌های پرداختی، مینی‌اپ‌ها، مجموعه موضوع‌ها و اشتراک‌ها؛ رفع نبود کامل جلدها در نخستین صفحه خانه؛ همگام‌سازی با PiliNara (نوار وضعیت، ادامه دانلود پس از بستن فرایند، به‌روزرسانی media-kit، دور زدن ویدیوی سیاه در Wayland، انتخاب کیفیت صدا هنگام ذخیره‌سازی)؛ بازبینی ترجمه هوش مصنوعی برای همه متن‌های رابط افزوده‌شده از 3.0.5؛ همین تاریخچه.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.7 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4. In 3.6.5 an embedded term no longer stops the rest of a paragraph from being translated, the glossary screen follows the app theme, the tables are on by default, and the version the app reports about itself now matches its release tag. 3.6.6 fixes surname parts of a name expanding to the full name, makes the glossary screen follow the app theme again (with working switches), and lets official glossary names override stale cached translations; 3.6.7 fixes the glossary counter stuck at 14/15 with every switch on, and repairs three tables whose displayed counts were wrong (Reverse: 1999 embedded nothing at all).
 
 ## گزارش ویژگی‌های به‌ارث‌رسیده (از PiliNara / PiliPlus)
 
@@ -248,3 +254,8 @@ PiliBabel تحت **پروانهٔ عمومی همگانی GNU نسخهٔ 3.0 (GP
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — قلم متن‌باز چینی همراه‌شده با برنامه، تحت پروانهٔ آزاد قلم SIL نسخهٔ 1.1
 - و موارد دیگر
 - الهام‌گرفته از «ترجمهٔ رابط کاربری هوش مصنوعی» رسمی bilibili.
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

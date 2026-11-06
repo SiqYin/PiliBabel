@@ -6,6 +6,16 @@ This file records the PiliNara commit each sync of PiliBabel was based on.
 | 同步日期 | 上游分支 | 上游基准提交 | 上游提交时间 | 本仓库版本 | 同步方式 |
 | --- | --- | --- | --- | --- | --- |
 | 2026-10-26 | main | `b5694ccdaf6064b3bf582bfe7991936d508740b8` | 2026-10-24 20:21 | v3.3.4 | 逐项挑选并入（未做整包 merge） |
+| 2026-11-02 | main | 无新提交（`main` tip 仍为 `b5694ccda`） | 2026-10-24 11:55 UTC | v3.5.2 | 无需并入 |
+
+## 2026-11-02 检查记录（v3.5.2）
+
+- 上游 `Starfallan/PiliNara` 的 `main` tip = `b5694ccda`，与上次同步基准**完全一致**
+  （GitHub compare 返回 `status=identical`, `ahead_by=0`）。
+- 另外把上游全部 **97 个分支**的 tip 都查了一遍（按最后提交时间与基准 2026-10-24 比较），
+  **没有任何分支有晚于基准的提交**。
+- 结论：本轮**没有可并入的上游内容**，PiliBabel 侧也没有需要保留的冲突。
+  下次同步仍从这个基准继续。
 
 ## 同步方式（固定策略）
 

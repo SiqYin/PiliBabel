@@ -57,6 +57,16 @@ import 'package:get/get.dart';
 import 'package:hive_ce/hive.dart';
 import 'package:material_ui/material_ui.dart';
 
+/// 关键词过滤规则列表的匹配入口，语义等价于逐项独立匹配、命中任一。
+extension RegExpListMatch on List<RegExp> {
+  bool hasMatch(String input) {
+    for (final rule in this) {
+      if (rule.hasMatch(input)) return true;
+    }
+    return false;
+  }
+}
+
 abstract final class Pref {
   static final Box _setting = GStorage.setting;
   static final Box _video = GStorage.video;
@@ -947,6 +957,15 @@ abstract final class Pref {
   static bool get removeOnlyFansVideoDyn =>
       _setting.get(SettingBoxKey.removeOnlyFansVideoDyn, defaultValue: false);
 
+  static bool get removeDynVideoDyn =>
+      _setting.get(SettingBoxKey.removeDynVideoDyn, defaultValue: false);
+
+  static bool get blockAtOnlyReply =>
+      _setting.get(SettingBoxKey.blockAtOnlyReply, defaultValue: false);
+
+  static int? get blockReplyAtCount =>
+      _setting.get(SettingBoxKey.blockReplyAtCount);
+
   static bool get antiGoodsReply =>
       _setting.get(SettingBoxKey.antiGoodsReply, defaultValue: false);
 
@@ -1123,24 +1142,17 @@ abstract final class Pref {
   static String get banWordForDyn =>
       _setting.get(SettingBoxKey.banWordForDyn, defaultValue: '');
 
-  /// Helper method to parse ban word storage format into regex pattern
-  /// Supports both old (pipe-separated) and new (newline-separated) formats
-  /// Returns a regex pattern string with proper alternation
-  static String parseBanWordToRegex(String stored) {
-    if (stored.isEmpty) return '';
-
-    List<String> items;
-
-    // Check if it's the old pipe-separated format (no newlines)
+  /// 解析关键词存储串，返回列表项。
+  /// 支持旧格式（`|` 分隔）与新格式（`\n` 分隔）。
+  static List<String> parseBanWordItems(String stored) {
+    if (stored.isEmpty) return const [];
+    // 不含换行但含 `|`：可能是旧格式的多关键词，也可能是用户手写的一条正则
     if (!stored.contains('\n') && stored.contains('|')) {
-      // Old format: pipe-separated
-      // Heuristic: if it looks like multiple short items, it's old format
       final parts = stored
           .split('|')
           .map((e) => e.trim())
           .where((e) => e.isNotEmpty)
           .toList();
-
       if (parts.length > 1) {
         final hasComplexRegex = parts.any(
           (p) =>
@@ -1151,39 +1163,42 @@ abstract final class Pref {
               p.contains('^') ||
               p.contains('\$'),
         );
-
-        if (!hasComplexRegex) {
-          // Old format with simple keywords
-          items = parts;
-        } else {
-          // Single complex regex - use as-is
-          return stored;
-        }
+        // 含正则语法时整串视作一条正则，不拆
+        if (hasComplexRegex) return [stored];
       } else {
-        // Single item, keep as-is
-        return stored;
+        return [stored];
       }
-    } else {
-      // New format: newline-separated
-      items = stored
-          .split('\n')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
+      return parts;
     }
+    return stored
+        .split('\n')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+  }
 
-    if (items.isEmpty) return '';
+  /// 逐项编译关键词为独立正则，命中任一即过滤。
+  /// 单项非法时只跳过该项，不影响同列表其他项。
+  static List<RegExp> compileBanWord(String stored) {
+    final rules = <RegExp>[];
+    for (final item in parseBanWordItems(stored)) {
+      try {
+        rules.add(RegExp(item, caseSensitive: false));
+      } on FormatException catch (e) {
+        debugPrint('Invalid ban word pattern ignored: $item ($e)');
+      }
+    }
+    return rules;
+  }
 
-    // Build regex by joining all patterns with alternation
-    return items
-        .map((item) {
-          // If the item contains '|' and isn't already grouped, wrap it
-          if (item.contains('|') && !item.startsWith('(')) {
-            return '($item)';
-          }
-          return item;
-        })
-        .join('|');
+  /// 单项是否可以编译为正则，与 [compileBanWord] 使用同一套选项。
+  static bool isBanWordPatternValid(String pattern) {
+    try {
+      RegExp(pattern, caseSensitive: false);
+      return true;
+    } on FormatException {
+      return false;
+    }
   }
 
   static bool get enableLog =>
@@ -1422,9 +1437,14 @@ abstract final class Pref {
   static double get bufferSize =>
       _setting.get(SettingBoxKey.bufferSize, defaultValue: 32.0);
 
-  /// E2 媒体层多连接代理：0=关闭（默认）、1/2/4 条并发分片
+  /// E2 媒体层多连接代理：0=关闭、1=不分片直连、2/4=并发分片。
+  ///
+  /// **默认 2**（向官方靠拢）：单连接顺序拉流在高延迟线路上吃不满带宽，缓存会被
+  /// 播放追上而周期性卡顿，拖动到未缓存位置也只能单连接重拉（数秒甚至超时换线）。
+  /// MediaProxy 把一次 GET 拆成 2 段并发、拖动时断旧连接、异常自动 302 回源，
+  /// 因此默认开启的风险可控；仍可在设置里调回 0 关闭。
   static int get mediaProxyConns =>
-      _setting.get(SettingBoxKey.mediaProxyConns, defaultValue: 0);
+      _setting.get(SettingBoxKey.mediaProxyConns, defaultValue: 2);
 
   /// E3 动态接口：true=走 gRPC（与官方 App 同源），失败自动回退网页接口
   static bool get dynUseGrpc =>
@@ -1434,6 +1454,15 @@ abstract final class Pref {
   /// 默认开启——它只在系统解析失败后才介入，正常路径不受影响。
   static bool get dnsDoh =>
       _setting.get(SettingBoxKey.dnsDoh, defaultValue: true);
+
+  /// 数据请求是否直连（绕开本机 DnsProxy 自解析隧道）。
+  ///
+  /// 默认开启：自解析隧道(DnsProxy)的每条 CONNECT 都要重新自解析 + 建连 + TLS，
+  /// 且上游连接不复用，实测比直连慢 2~3 倍；自解析的收益（抗 DNS 劫持）在
+  /// 已经全程 HTTPS + SNI 的场景下基本没有实际意义。保留开关是为了遇到
+  /// 「直连被墙、自解析能通」的极端网络时能一键切回去。
+  static bool get netDirect =>
+      _setting.get(SettingBoxKey.netDirect, defaultValue: true);
 
   static double get bufferSec =>
       _setting.get(SettingBoxKey.bufferSec, defaultValue: 16.0);
@@ -1476,6 +1505,14 @@ abstract final class Pref {
   static set useAppPlayUrl(bool value) =>
       _setting.put(SettingBoxKey.useAppPlayUrl, value);
 
+  /// 直播流前向缓冲区大小（MB），0 表示跟随 [bufferSize] 的两倍
+  static double get liveBufferSize =>
+      _setting.get(SettingBoxKey.liveBufferSize, defaultValue: 0.0);
+
+  /// 直播流缓冲时长上限（s），0 表示不限制
+  static double get liveBufferSec =>
+      _setting.get(SettingBoxKey.liveBufferSec, defaultValue: 0.0);
+
   static Map<String, String> initBuffer([
     double playbackSpeed = 1.0,
     int? videoBitrate,
@@ -1509,15 +1546,40 @@ abstract final class Pref {
     };
   }
 
-  static Map<String, String> initLiveBuffer() {
-    // 直播没有回看窗口，前向缓冲越大只会让画面越落后于直播；这里单独夹紧在
-    // 2~8MB 档（4~16MB），不跟随点播那个更大的缓冲默认值。
-    return {
+  /// 直播流无后向缓冲，全部给前向（mpv 的 --demuxer-max-bytes 与
+  /// --demuxer-max-back-bytes）。未单独设置时沿用本仓库既有默认：
+  /// 前向缓冲按 [bufferSize] 夹紧在 2~8MB 后取两倍（即 4~16MB），
+  /// 不跟随点播那个更大的缓冲默认值。
+  static Map<String, String> initLiveBuffer() => buildLiveBuffer(
+    sizeMb: liveBufferSize,
+    sec: liveBufferSec,
+    fallbackSizeMb: bufferSize.clamp(2.0, 8.0),
+  );
+
+  /// 构造直播流使用的 mpv 额外参数。
+  ///
+  /// [sizeMb] 为前向缓冲大小（MB），小于等于 0 时使用
+  /// [fallbackSizeMb]（缺省为 [bufferSize]）的两倍；
+  /// [sec] 为缓冲时长上限（s），小于等于 0 时不限制。
+  @visibleForTesting
+  static Map<String, String> buildLiveBuffer({
+    double sizeMb = 0,
+    double sec = 0,
+    double? fallbackSizeMb,
+  }) {
+    final effectiveSizeMb = sizeMb > 0
+        ? sizeMb
+        : (fallbackSizeMb ?? bufferSize) * 2;
+    final buffer = <String, String>{
       'cache': 'yes',
-      'demuxer-max-bytes': (Pref.bufferSize.clamp(2.0, 8.0) * 0x200000)
-          .toStringAsFixed(0),
+      'demuxer-max-bytes': (effectiveSizeMb * 0x100000).toStringAsFixed(0),
       'demuxer-max-back-bytes': '0',
     };
+    if (sec > 0) {
+      buffer['cache-secs'] = sec.toStringAsFixed(3);
+      buffer['demuxer-hysteresis-secs'] = (sec / 1.5).toStringAsFixed(3);
+    }
+    return buffer;
   }
 
   /// C1.1 音频专用缓存档（对标官方 ijk 的音频缓存那套 FFP_PROP_INT64_AUDIO_CACHED_*）：
@@ -1876,6 +1938,104 @@ abstract final class Pref {
   static set uiTranslateLang(String value) =>
       _setting.put(SettingBoxKey.uiTranslateLang, value);
 
+  /// 每个字幕分块的句子数（10-40，默认 20）。
+  static int get subtitleChunkSize =>
+      (_setting.get(SettingBoxKey.subtitleChunkSize, defaultValue: 20) as int)
+          .clamp(10, 40)
+          .toInt();
+
+  static set subtitleChunkSize(int value) => _setting.put(
+    SettingBoxKey.subtitleChunkSize,
+    value.clamp(10, 40).toInt(),
+  );
+
+  /// 直连翻译并发数（1-5，默认 5）。
+  static int get subtitleConcurrency =>
+      (_setting.get(SettingBoxKey.subtitleConcurrency, defaultValue: 5) as int)
+          .clamp(1, 5)
+          .toInt();
+
+  static set subtitleConcurrency(int value) => _setting.put(
+    SettingBoxKey.subtitleConcurrency,
+    value.clamp(1, 5).toInt(),
+  );
+
+  /// 每个字幕分块前置的原文句数（0-8，默认 4）：保持人名称谓一致，
+  /// 又不改变被计时的待译句子。
+  static int get subtitleContextOverlap => (_setting.get(
+    SettingBoxKey.subtitleContextOverlap,
+    defaultValue: 4,
+  ) as int).clamp(0, 8).toInt();
+
+  static set subtitleContextOverlap(int value) => _setting.put(
+    SettingBoxKey.subtitleContextOverlap,
+    value.clamp(0, 8).toInt(),
+  );
+
+  /// 实时字幕是「译满 60 秒才开播」还是「边播边追」（默认后者）。
+  static bool get subtitleTranslationWaitForComplete => _setting.get(
+    SettingBoxKey.subtitleTranslationWaitForComplete,
+    defaultValue: false,
+  );
+
+  static set subtitleTranslationWaitForComplete(bool value) => _setting.put(
+    SettingBoxKey.subtitleTranslationWaitForComplete,
+    value,
+  );
+
+  static bool get subtitleTranslationPrefetchNext =>
+      subtitleTranslationPrefetchCount > 0;
+
+  static set subtitleTranslationPrefetchNext(bool value) =>
+      subtitleTranslationPrefetchCount = value ? 1 : 0;
+
+  /// 播放列表预翻译的后续分P数量（0-5；旧布尔开关自动迁移）。
+  static int get subtitleTranslationPrefetchCount {
+    final stored = _setting.get(
+      SettingBoxKey.subtitleTranslationPrefetchCount,
+    );
+    if (stored is num) return stored.toInt().clamp(0, 5).toInt();
+    final legacy = _setting.get(
+      SettingBoxKey.subtitleTranslationPrefetchNext,
+      defaultValue: true,
+    );
+    final migrated = legacy == false ? 0 : 1;
+    _setting.put(SettingBoxKey.subtitleTranslationPrefetchCount, migrated);
+    return migrated;
+  }
+
+  static set subtitleTranslationPrefetchCount(int value) => _setting.put(
+    SettingBoxKey.subtitleTranslationPrefetchCount,
+    value.clamp(0, 5).toInt(),
+  );
+
+  /// 字幕翻译代理（可选）：每行 ip:port[:user:pass]，空 = 纯直连。
+  static String get subtitleTranslationProxies =>
+      _setting.get(SettingBoxKey.subtitleTranslationProxies, defaultValue: '');
+
+  static set subtitleTranslationProxies(String value) =>
+      _setting.put(SettingBoxKey.subtitleTranslationProxies, value.trim());
+
+  static String get subtitleTranslationProxyType => _setting.get(
+    SettingBoxKey.subtitleTranslationProxyType,
+    defaultValue: 'http',
+  );
+
+  static set subtitleTranslationProxyType(String value) => _setting.put(
+    SettingBoxKey.subtitleTranslationProxyType,
+    value == 'socks5' ? 'socks5' : 'http',
+  );
+
+  /// 官方 AI 原声翻译声轨是否跟随界面语言自动选中。
+  ///
+  /// 只在**稿件本身下发了对应语言的官方声轨**时才生效，匹配不上就保持原声，
+  /// 绝不退而求其次挑「最接近的一门语言」（见 `VideoDetailController._autoTrackLang`）。
+  static bool get audioTrackFollowUiLang =>
+      _setting.get(SettingBoxKey.audioTrackFollowUiLang, defaultValue: true);
+
+  static set audioTrackFollowUiLang(bool value) =>
+      _setting.put(SettingBoxKey.audioTrackFollowUiLang, value);
+
   static String get uiTranslateModel =>
       _setting.get(SettingBoxKey.uiTranslateModel, defaultValue: '');
 
@@ -1942,6 +2102,46 @@ abstract final class Pref {
 
   static set uiTranslatePromptRevision(int value) =>
       _setting.put(SettingBoxKey.uiTranslatePromptRevision, value);
+
+  /// 术语表上次检查更新时间（毫秒）。
+  static int get glossaryLastChecked =>
+      _setting.get(SettingBoxKey.glossaryLastChecked, defaultValue: 0);
+
+  static set glossaryLastChecked(int value) =>
+      _setting.put(SettingBoxKey.glossaryLastChecked, value);
+/// 被用户关闭的术语表 id 集合。
+///
+/// 存「关掉的」而不是「开着的」：这样以后新增词表默认就是启用的，
+/// 不需要为老用户做迁移。
+static Set<String> get glossaryDisabledTables =>
+    (_setting.get(SettingBoxKey.glossaryDisabledTables, defaultValue: <String>[]) as List)
+        .map((e) => e.toString())
+        .toSet();
+
+static set glossaryDisabledTables(Set<String> value) =>
+    _setting.put(SettingBoxKey.glossaryDisabledTables, value.toList());
+
+/// 术语表「默认关闭」是否已落到存储里。
+///
+/// 用户要求所有词表默认关闭、由用户自己打开。这里用一个一次性标记实现：
+/// 首次读取时把当前全部词表写入 disabled 集合，之后完全尊重用户的选择。
+static bool get glossaryDefaultsApplied =>
+    _setting.get(SettingBoxKey.glossaryDefaultsApplied, defaultValue: false);
+
+static set glossaryDefaultsApplied(bool value) =>
+    _setting.put(SettingBoxKey.glossaryDefaultsApplied, value);
+
+  /// 远端术语表清单地址。默认用官方发布的清单，用户可改镜像。
+  static String get glossaryManifestUrl {
+    final v = _setting.get(SettingBoxKey.glossaryManifestUrl);
+    return (v is String && v.isNotEmpty) ? v : _defaultGlossaryManifestUrl;
+  }
+
+  static const String _defaultGlossaryManifestUrl =
+      'https://raw.githubusercontent.com/SiqYin/PiliBabel/main/docs/glossary-manifest.json';
+
+  static set glossaryManifestUrl(String value) =>
+      _setting.put(SettingBoxKey.glossaryManifestUrl, value);
 
   /// 升级告知是否已经弹过。**只用一次**：0.3.x 升到 1.0 会看到一次，
   /// 之后（哪怕是 1.0.0 → 1.0.1）都不再弹。

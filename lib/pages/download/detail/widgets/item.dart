@@ -73,6 +73,16 @@ class DetailItem extends StatelessWidget {
   final bool showMoreButton;
   //
   final MultiSelectBase controller;
+
+  /// 缓存失败（下载 / 音频 / 弹幕 / 取播放地址四种失败状态）。
+  ///
+  /// 放在类级别而不是 build 里：右上角菜单的方法也要用同一个判断，
+  /// 之前在 build 内定义局部变量，菜单方法里引用不到会编译报错。
+  bool get isFailed =>
+      entry.status == DownloadStatus.failDownload ||
+      entry.status == DownloadStatus.failDownloadAudio ||
+      entry.status == DownloadStatus.failDanmaku ||
+      entry.status == DownloadStatus.failPlayUrl;
   final bool? checked;
   final ValueChanged<BiliDownloadEntryInfo>? onSelect;
 
@@ -95,6 +105,17 @@ class DetailItem extends StatelessWidget {
       child: InkWell(
         onTap: enableTap
             ? () async {
+                // 缓存失败的条目：点击直接重试，而不是跳到「正在缓存」页 ——
+                // 那个页面只显示排队中的任务，失败项在那里什么也做不了，
+                // 用户会以为「点了没反应、也没有重新下载按钮」。
+                if (isFailed) {
+                  if (enableMultiSelect) {
+                    (onSelect ?? controller.onSelect).call(entry);
+                    return;
+                  }
+                  downloadService.startDownload(entry);
+                  return;
+                }
                 if (!canActInPlace) {
                   Get.to(const DownloadingPage());
                   return;
@@ -148,10 +169,19 @@ class DetailItem extends StatelessWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  AspectRatio(
-                    aspectRatio: Style.aspectRatio,
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
+                  // 封面高度**必须**自己钉死，理由：
+                  // 本 widget 同时被两种网格使用 ——「缓存视频 / 文件夹」是硬编码
+                  // mainAxisExtent: 100，而「正在缓存 / 下载搜索」走 GridMixin，
+                  // 后者会随「标题完全显示」加高到 148。横向卡片里封面是 AspectRatio，
+                  // 在 Row 中按可用高度反推宽度，所以只要不固定，在 GridMixin 那两页
+                  // 封面就会变大（这就是「改了又大回来」的原因）。
+                  // 取值必须按**最矮**的容器算：100 - 上下内边距各 5 = 90。
+                  SizedBox(
+                    height: Style.cardHCoverHeightCompact,
+                    child: AspectRatio(
+                      aspectRatio: Style.aspectRatio,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
                         final cover = File(
                           path.join(entry.entryDirPath, PathUtils.coverName),
                         );
@@ -193,12 +223,52 @@ CoverTranslateButton(cover: entry.cover),
                       },
                     ),
                   ),
+                  ),
                   if (entry.videoQuality case final videoQuality?)
                     PBadge(
                       text: VideoQuality.fromCode(videoQuality).shortDesc,
                       right: 6.0,
                       top: 6.0,
                       type: PBadgeType.gray,
+                    ),
+                  // 失败时在封面上直接放一个可见的「重试」按钮：
+                  // 之前失败只有藏在右上角菜单里的「重新缓存」，用户根本发现不了，
+                  // 反馈就是「没有重新下载的按钮」。
+                  if (isFailed)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Material(
+                        color: Colors.black54,
+                        borderRadius: const BorderRadius.vertical(
+                          bottom: Radius.circular(6),
+                        ),
+                        child: InkWell(
+                          onTap: () => downloadService.startDownload(entry),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 4),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(
+                                  Icons.refresh,
+                                  size: 14,
+                                  color: Colors.white,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  uiTx('重新缓存'),
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   if (progress != null)
                     ListenableBuilder(
@@ -275,41 +345,49 @@ CoverTranslateButton(cover: entry.cover),
                       spacing: 5,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          showTitle ? entry.title : entry.showTitle,
-                          textAlign: TextAlign.start,
-                          style: TextStyle(
-                            fontSize: theme.textTheme.bodyMedium!.fontSize,
-                            height: 1.42,
-                            letterSpacing: 0.3,
+                        Obx(
+                          () => Text(
+                            showTitle
+                                ? uiTxTight(entry.title)
+                                : uiTxTight(entry.showTitle),
+                            textAlign: TextAlign.start,
+                            style: TextStyle(
+                              fontSize: theme.textTheme.bodyMedium!.fontSize,
+                              height: 1.42,
+                              letterSpacing: 0.3,
+                            ),
+                            maxLines: showTitle
+                                ? entry.ep != null
+                                      ? 1
+                                      : 2
+                                : 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          maxLines: showTitle
-                              ? entry.ep != null
-                                    ? 1
-                                    : 2
-                              : 2,
-                          overflow: TextOverflow.ellipsis,
                         ),
                         if (showTitle) ...[
                           if (entry.pageData?.part case final part?)
                             if (part != entry.title)
-                              Text(
-                                part,
-                                maxLines: 1,
+                              Obx(
+                                () => Text(
+                                  uiTx(part),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: theme.colorScheme.onSurfaceVariant,
+                                  ),
+                                ),
+                              ),
+                          if (entry.ep?.showTitle case final showTitle?)
+                            Obx(
+                              () => Text(
+                                uiTx(showTitle),
+                                maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: theme.colorScheme.onSurfaceVariant,
                                 ),
-                              ),
-                          if (entry.ep?.showTitle case final showTitle?)
-                            Text(
-                              showTitle,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: theme.colorScheme.onSurfaceVariant,
                               ),
                             ),
                         ],
@@ -319,13 +397,20 @@ CoverTranslateButton(cover: entry.cover),
                       Positioned(
                         left: 0,
                         bottom: 0,
-                        child: Text(
-                          '${CacheManager.formatSize(entry.totalBytes)}${entry.ownerName != null ? '  ${entry.ownerName}' : ''}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            height: 1.6,
-                            color: outline,
-                          ),
+                        child: Obx(
+                          () {
+                            // 先在局部捕获 ownerName：直接内联在字符串里做 != null 判断不会提升
+                            // getter 类型（String?），uiTx 需要 String，这里显式绑定一次。
+                            final owner = entry.ownerName;
+                            return Text(
+                              '${CacheManager.formatSize(entry.totalBytes)}${owner != null ? '  ${uiTx(owner)}' : ''}',
+                              style: TextStyle(
+                                fontSize: 12,
+                                height: 1.6,
+                                color: outline,
+                              ),
+                            );
+                          },
                         ),
                       ),
                       if (showMoreButton)
@@ -414,14 +499,15 @@ CoverTranslateButton(cover: entry.cover),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              statusMsg,
+            // 状态文案接 AI 翻译：包在 Obx 里读 revision，译文异步回落后自动刷新。
+            Obx(() => Text(
+              uiTx(statusMsg),
               style: TextStyle(
                 fontSize: 12,
                 height: 1,
                 color: color,
               ),
-            ),
+            )),
             Text(
               progressStr,
               style: TextStyle(
@@ -463,9 +549,18 @@ CoverTranslateButton(cover: entry.cover),
             showStaticPositionMenu<void>(
               context: menuContext,
               items: [
+                if (isFailed)
+                  CustomPopupMenuItem<void>(
+                    height: 38,
+                    child: Text(
+                      uiTx('重新缓存'),
+                      style: const TextStyle(fontSize: 13),
+                    ),
+                    onTap: () => downloadService.startDownload(entry),
+                  ),
                 CustomPopupMenuItem<void>(
                   height: 38,
-                  child: Text(uiTx('查看详情页'), style: TextStyle(fontSize: 13)),
+                  child: Text(uiTx('查看详情页'), style: const TextStyle(fontSize: 13)),
                   onTap: () {
                     if (entry.ep case final ep?) {
                       if (ep.from == VideoType.pugv.name) {
@@ -495,7 +590,7 @@ CoverTranslateButton(cover: entry.cover),
                   CustomPopupMenuItem<void>(
                     height: 38,
                     child: Text(uiTx('打开本地文件夹'),
-                      style: TextStyle(fontSize: 13),
+                      style: const TextStyle(fontSize: 13),
                     ),
                     onTap: () async {
                       try {
@@ -527,7 +622,7 @@ CoverTranslateButton(cover: entry.cover),
                 if (canDel && Platform.isAndroid)
                   CustomPopupMenuItem<void>(
                     height: 38,
-                    child: Text(uiTx('导出'), style: TextStyle(fontSize: 13)),
+                    child: Text(uiTx('导出'), style: const TextStyle(fontSize: 13)),
                     onTap: () async {
                       if (!await ImageUtils.checkPermissionDependOnSdkInt()) {
                         return;
@@ -558,9 +653,11 @@ CoverTranslateButton(cover: entry.cover),
                 if (canDel)
                   CustomPopupMenuItem<void>(
                     height: 38,
-                    child: Text(
-                      deleteLabel,
-                      style: const TextStyle(fontSize: 13),
+                    child: Obx(
+                      () => Text(
+                        uiTx(deleteLabel),
+                        style: const TextStyle(fontSize: 13),
+                      ),
                     ),
                     onTap: () {
                       if (onDeleteRequested != null) {
@@ -577,7 +674,7 @@ CoverTranslateButton(cover: entry.cover),
                 if (canDel)
                   CustomPopupMenuItem<void>(
                     height: 38,
-                    child: Text(uiTx('更新弹幕'), style: TextStyle(fontSize: 13)),
+                    child: Text(uiTx('更新弹幕'), style: const TextStyle(fontSize: 13)),
                     onTap: () async {
                       final res = await downloadService.downloadDanmaku(
                         entry: entry,

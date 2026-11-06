@@ -81,7 +81,7 @@ class _WhisperPageState extends State<WhisperPage> {
                           child: Row(
                             children: [
                               e.type.icon,
-                              Text('  ${uiTx(e.title ?? '')}'),
+                              Text('  ${uiTx(e.title)}'),
                             ],
                           ),
                         ),

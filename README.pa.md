@@ -153,7 +153,7 @@ paru -S pilinara-bin         # ਜਾਂ AUR ਰਾਹੀਂ: pilinara-bin (ਪ�
 
 <br/>
 
-## ਤਬਦੀਲੀਆਂ ਦੀ ਸੂਚੀ: 2.6.x → 3.3.4
+## ਤਬਦੀਲੀਆਂ ਦੀ ਸੂਚੀ: 2.6.x → 3.6.7
 
 - **2.6.x** — ਆਡੀਓ ਕੈਸ਼ (ਵੀਡੀਓ ਅਤੇ ਆਡੀਓ ਲਈ ਵੱਖਰੇ ਮਾਡਿਊਲ, ਪਿਛਲੀ ਚੋਣ ਯਾਦ ਰਹਿੰਦੀ ਹੈ, ਵੀਡੀਓ ਪੰਨੇ, ਸਿਰਫ਼-ਆਡੀਓ ਪੰਨੇ ਅਤੇ ਆਡੀਓ ਪਲੇਅਰ ਵਿੱਚ ਐਂਟਰੀ; ਮੂਲ ਫਾਰਮੈਟ ਸੰਭਾਲਿਆ ਜਾਂਦਾ ਹੈ; ਕੁਆਲਿਟੀ ਚੁਣੀ ਜਾ ਸਕਦੀ ਹੈ) ਅਤੇ ਡਿਵਾਈਸ ’ਤੇ ਡਾਊਨਲੋਡ (ਵੱਖਰੀ ਮੀਨੂ ਆਈਟਮ: ਪਹਿਲਾਂ ਵੀਡੀਓ/ਆਡੀਓ, ਫਿਰ ਕੁਆਲਿਟੀ; ਫੋਲਡਰ ਸੈੱਟ ਨਾ ਹੋਵੇ ਤਾਂ ਸਿਸਟਮ ਫਾਈਲ ਚੋਣਕਾਰ ਖੁੱਲ੍ਹਦਾ ਹੈ)।
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # ਜਾਂ AUR ਰਾਹੀਂ: pilinara-bin (ਪ�
 - **3.2.0–3.3.3** — ਅਧਿਕਾਰਤ ਐਪ ਵਰਗਾ ਨੈੱਟਵਰਕ ਆਧਾਰ: ਬੇਨਤੀ ਫਿੰਗਰਪ੍ਰਿੰਟ (buvid/fp/session_id/env), gRPC ਹੋਸਟ ਫੇਲਓਵਰ, ਮੁੜ-ਕੋਸ਼ਿਸ਼ ਇੰਟਰਸੈਪਟਰ, ਪ੍ਰਤੀ ਹੋਸਟ ਇਕੱਠੇ ਬੇਨਤੀਆਂ ਦੀ ਹੱਦ, ਕੋਲਡ ਸਟਾਰਟ ਵਿੱਚ ਪਹਿਲੀ ਫੀਡ ਦੀ ਪੂਰਵ-ਲੋਡਿੰਗ, ਅਧਿਕਾਰਤ ਫੀਡ ਇਵੈਂਟ ਪੈਰਾਮੀਟਰ, ਵਿਦੇਸ਼ੀ ਬਦਲ ਸਮੇਤ CDN ਉਮੀਦਵਾਰਾਂ ਦਾ ਕ੍ਰਮ; ਦੂਜੇ ਪੰਨੇ ਦੀ ਪੂਰਵ-ਲੋਡਿੰਗ, ਸੀਮਤ ਕਵਰ ਪੂਰਵ-ਲੋਡ ਕਤਾਰ, ਪਲੇ-URL ਪੂਰਵ-ਲੋਡਿੰਗ; ਫਿਰ ਡਾਇਨੈਮਿਕ (P3) ਦੀ gRPC ਰੈਂਡਰਿੰਗ ਅਤੇ ਸੁਧਾਰ: ਆਡੀਓ ਪੰਨੇ ਦੀ ਬਫ਼ਰ ਮਿਆਦ ਦੀ ਕੰਪਾਈਲ ਗਲਤੀ ਅਤੇ ਟਿੱਪਣੀ ਪੂਰਵ-ਲੋਡਿੰਗ ਵਿੱਚ ਕਿਸਮ-ਬਦਲਾਅ ਦੀ ਗਲਤੀ, ਜਿਸ ਕਰਕੇ ਹਰ ਮੁੜ-ਕੋਸ਼ਿਸ਼ ਤੁਰੰਤ ਫੇਲ ਹੁੰਦੀ ਸੀ।
 
 - **3.3.4** — ਭੁਗਤਾਨ ਵਾਲੀਆਂ ਪੋਸਟਾਂ, ਮਿੰਨੀ-ਐਪ, ਵਿਸ਼ਾ ਸਮੂਹ ਅਤੇ ਸਬਸਕ੍ਰਿਪਸ਼ਨ ਕਾਰਡਾਂ ਲਈ ਡਾਇਨੈਮਿਕ ਕਾਰਡ; ਹੋਮ ਦੀ ਪਹਿਲੀ ਸਕਰੀਨ ’ਤੇ ਸਾਰੇ ਕਵਰ ਨਾ ਦਿਖਣ ਦੀ ਸਮੱਸਿਆ ਠੀਕ ਕੀਤੀ; PiliNara ਦੀਆਂ ਤਬਦੀਲੀਆਂ ਲਈਆਂ (ਸਟੇਟਸ ਬਾਰ, ਪ੍ਰੋਸੈਸ ਬੰਦ ਹੋਣ ਮਗਰੋਂ ਡਾਊਨਲੋਡ ਜਾਰੀ, media-kit ਅੱਪਡੇਟ, Wayland ਵਿੱਚ ਕਾਲਾ ਵੀਡੀਓ ਟਾਲਣਾ, ਕੈਸ਼ ਕਰਦਿਆਂ ਆਡੀਓ ਕੁਆਲਿਟੀ ਦੀ ਚੋਣ); 3.0.5 ਤੋਂ ਜੋੜੇ ਗਏ ਸਾਰੇ ਇੰਟਰਫ਼ੇਸ ਪਾਠ ਦਾ AI ਅਨੁਵਾਦ ਆਡਿਟ; ਇਹ ਸੂਚੀ।
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.7 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4. In 3.6.5 an embedded term no longer stops the rest of a paragraph from being translated, the glossary screen follows the app theme, the tables are on by default, and the version the app reports about itself now matches its release tag. 3.6.6 fixes surname parts of a name expanding to the full name, makes the glossary screen follow the app theme again (with working switches), and lets official glossary names override stale cached translations; 3.6.7 fixes the glossary counter stuck at 14/15 with every switch on, and repairs three tables whose displayed counts were wrong (Reverse: 1999 embedded nothing at all).
 
 ## ਵਿਰਾਸਤੀ ਫੀਚਰ ਸੂਚੀ (PiliNara / PiliPlus ਤੋਂ)
 
@@ -248,3 +254,8 @@ PiliBabel **GNU General Public License v3.0 (GPL-3.0)** ਹੇਠ ਲਾਇਸ�
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — SIL Open Font License 1.1 ਹੇਠ ਐਪ ਨਾਲ ਬੰਡਲ ਕੀਤਾ ਓਪਨ-ਸੋਰਸ ਚੀਨੀ ਫੌਂਟ
 - ਅਤੇ ਹੋਰ ਬਹੁਤ ਕੁਝ
 - bilibili ਦੀ ਅਧਿਕਾਰਿਕ "AI ਇੰਟਰਫੇਸ ਅਨੁਵਾਦ" ਤੋਂ ਪ੍ਰੇਰਿਤ।
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

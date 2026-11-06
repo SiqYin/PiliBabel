@@ -210,7 +210,7 @@ abstract class BaseVideoWebState<
         onChanged: (value) => pageStr = value,
         decoration: InputDecoration(
           labelText: uiTx('页数'),
-          border: OutlineInputBorder(),
+          border: const OutlineInputBorder(),
         ),
         inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         onFieldSubmitted: (_) {

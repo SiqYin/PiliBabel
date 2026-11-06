@@ -17,6 +17,7 @@ import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -126,7 +127,7 @@ class HistoryItem extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AspectRatio(
+                  SizedBox(height: Style.cardHCoverHeight, child: AspectRatio(
                     aspectRatio: Style.aspectRatio,
                     child: LayoutBuilder(
                       builder: (context, boxConstraints) {
@@ -198,7 +199,7 @@ class HistoryItem extends StatelessWidget {
                         );
                       },
                     ),
-                  ),
+                  )),
                   const SizedBox(width: 10),
                   content(theme),
                 ],
@@ -287,7 +288,10 @@ class HistoryItem extends StatelessWidget {
               height: 1.42,
               letterSpacing: 0.3,
             ),
-            maxLines: item.videos! > 1 ? 1 : 2,
+            // 保留原设计：多分 P 的历史条目平时只给 1 行、其它给 2 行；
+            // 打开「标题完全显示」后各自翻倍（1→2、2→4）。
+            maxLines:
+                (item.videos! > 1 ? 1 : 2) * (Pref.videoTitleFull ? 2 : 1),
             overflow: TextOverflow.ellipsis,
           ),
           if (item.history.business == 'pgc' &&

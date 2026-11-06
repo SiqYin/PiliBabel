@@ -1,0 +1,128 @@
+{
+ "schema": 1,
+ "generated_at": "2026-11-04T13:35:46",
+ "games": {
+  "ak": {
+   "version": "2026-11-02",
+   "rows": 5619,
+   "updated_at": "2026-11-04",
+   "hash": "13d66d92e219ed01",
+   "deps": {
+    "ArknightsGamedata": "2026-11-02T19:43:18Z"
+   }
+  },
+  "ba": {
+   "version": "2026-11-03",
+   "rows": 149,
+   "updated_at": "2026-11-04",
+   "hash": "68510bef9522ee72",
+   "deps": {
+    "bluearchive": "2026-11-03T00:06:18Z"
+   }
+  },
+  "bd": {
+   "version": "unknown",
+   "rows": 165,
+   "updated_at": "2026-11-04",
+   "hash": "71dec75ba756540a",
+   "deps": {}
+  },
+  "genshin": {
+   "version": "2026-10-31",
+   "rows": 11505,
+   "updated_at": "2026-11-04",
+   "hash": "48cef97f37adcb85",
+   "deps": {
+    "genshin-langdata": "2026-10-31T02:08:28Z"
+   }
+  },
+  "hi3": {
+   "version": "2026-11-03",
+   "rows": 401,
+   "updated_at": "2026-11-04",
+   "hash": "1c7fd2d0ed912797",
+   "deps": {
+    "honkaiimpact3": "2026-11-03T02:06:14Z"
+   }
+  },
+  "holo": {
+   "version": "unknown",
+   "rows": 83,
+   "updated_at": "2026-11-04",
+   "hash": "a5723087ec1d40eb",
+   "deps": {}
+  },
+  "hsr": {
+   "version": "2026-09-29",
+   "rows": 6301,
+   "updated_at": "2026-11-04",
+   "hash": "6301ccc4fddccf37",
+   "deps": {
+    "StarRailRes": "2026-09-29T14:21:44Z"
+   }
+  },
+  "imas": {
+   "version": "unknown",
+   "rows": 282,
+   "updated_at": "2026-11-04",
+   "hash": "18c599e02f20882c",
+   "deps": {}
+  },
+  "niji": {
+   "version": "unknown",
+   "rows": 239,
+   "updated_at": "2026-11-04",
+   "hash": "4fe552d8397a0fb8",
+   "deps": {}
+  },
+  "nikke": {
+   "version": "2026-11-02",
+   "rows": 211,
+   "updated_at": "2026-11-04",
+   "hash": "dc6480e58a71c4a7",
+   "deps": {
+    "nikke-goddess-of-victory-international": "2026-11-02T20:18:11Z"
+   }
+  },
+  "r1999": {
+   "version": "unknown",
+   "rows": 100,
+   "updated_at": "2026-11-04",
+   "hash": "4f25e645c0849657",
+   "deps": {}
+  },
+  "uma": {
+   "version": "unknown",
+   "rows": 321,
+   "updated_at": "2026-11-04",
+   "hash": "2b12c7e2f1a5c055",
+   "deps": {}
+  },
+  "wuwa": {
+   "version": "2026-11-03",
+   "rows": 1443,
+   "updated_at": "2026-11-04",
+   "hash": "c93ff8e0f84cda33",
+   "deps": {
+    "wutheringwaves": "2026-11-03T00:18:28Z"
+   }
+  },
+  "yh": {
+   "version": "unknown",
+   "rows": 25,
+   "updated_at": "2026-11-04",
+   "hash": "ed4032645e7afdc2",
+   "deps": {}
+  },
+  "zzz": {
+   "version": "3.2",
+   "rows": 4963,
+   "updated_at": "2026-11-04",
+   "hash": "1679730ef128b9c2",
+   "deps": {
+    "zzz-tr-db": "2026-10-25-7a7408865aa3",
+    "count": 2318
+   }
+  }
+ }
+}

@@ -3,7 +3,7 @@
     <h1>PiliBabel</h1>
     <p><b>一個有 AI 翻譯嘅第三方嗶哩嗶哩（Bilibili）客戶端。</b></p>
     <p>巴別塔 —— 拆咗語言嗰道牆，等每個人都可以用自己嘅語言睇 bilibili。</p>
-    <p>含 4 種中國少數民族語言同 3 種漢語方言嘅翻譯。</p>
+    <p>結合 bilibili 官方支援嘅 151 種語言，再加官方未收錄嘅 6 種 —— 繁體中文、簡體吳語、繁體吳語、大陸閩南語、臺灣閩南語同壯語 —— 整合成一份清單。</p>
     <p>內置 B 站官方免費翻譯模型，裝好就即刻用得，唔使 API Key。</p>
 </div>
 <!-- lang-switch:start -->
@@ -153,7 +153,7 @@ paru -S pilinara-bin         # 或者經 AUR：pilinara-bin（預編譯）/ pili
 
 <br/>
 
-## 更新紀錄：2.6.x → 3.3.4
+## 更新紀錄：2.6.x → 3.6.7
 
 - **2.6.x** — 音訊快取（影片同音訊兩個獨立模組，記住上次嘅選擇，影片頁、聽影片頁、音訊播放頁都有入口；保持原格式；音質可以揀）同埋下載到本機（獨立選單項目，先揀影片／音訊再揀畫質／音質，未設定過位置就直接開系統檔案管理員）。
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # 或者經 AUR：pilinara-bin（預編譯）/ pili
 - **3.2.0–3.3.3** — 向官方 Android 端靠攏嘅網絡底座：請求指紋（buvid/fp/session_id/env）、gRPC 主機故障切換、重試攔截器、單主機並發閘門、冷啟動首屏預取、官方 feed 事件參數、CDN 候選順序同海外兜底；資訊流第二屏預取、有界封面預取隊伍、播放網址預取；跟住係動態（P3）嘅 gRPC 渲染，同埋修好音訊頁緩衝長度嘅編譯錯誤、評論區預取型別轉換搞到重試秒失敗嘅問題。
 
 - **3.3.4** — 付費卡、小程式、話題集、訂閱卡四類動態卡片；修好首頁第一屏完全冇封面嘅問題；同步上游 PiliNara（開 App 黑狀態欄、殺程序後下載可以續、media-kit 升級、Wayland 黑屏迴避、快取影片可以揀音質）；對 3.0.5 以嚟新增嘅全部介面文字做 AI 翻譯稽核；呢份更新紀錄。
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.7 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4. In 3.6.5 an embedded term no longer stops the rest of a paragraph from being translated, the glossary screen follows the app theme, the tables are on by default, and the version the app reports about itself now matches its release tag. 3.6.6 fixes surname parts of a name expanding to the full name, makes the glossary screen follow the app theme again (with working switches), and lets official glossary names override stale cached translations; 3.6.7 fixes the glossary counter stuck at 14/15 with every switch on, and repairs three tables whose displayed counts were wrong (Reverse: 1999 embedded nothing at all).
 
 ## 繼承功能清單（來自 PiliNara / PiliPlus）
 
@@ -248,3 +254,8 @@ PiliBabel 採用 **GNU General Public License v3.0（GPL-3.0）** —— 同 Pil
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai)（霞鹜文楷）—— App 內嵌嘅開源中文字體，採 SIL Open Font License 1.1 授權
 - 仲有更多
 - 靈感嚟自 B 站官方嘅「AI 介面翻譯」。
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

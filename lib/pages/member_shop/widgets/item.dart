@@ -5,6 +5,7 @@ import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/models_new/space/space_shop/item.dart';
 import 'package:PiliPlus/utils/extension/theme_ext.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -50,7 +51,7 @@ CoverTranslateButton(cover: item.cover?.url),
                 children: [
                   Text(
                     uiTx(item.title!),
-                    maxLines: 2,
+                    maxLines: Pref.videoTitleFull ? 4 : 2,
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (belowLabels?.isNotEmpty == true)

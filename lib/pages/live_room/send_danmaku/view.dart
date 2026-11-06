@@ -182,7 +182,7 @@ class _ReplyPageState extends CommonRichTextPubPageState<LiveSendDmPanel> {
               decoration: InputDecoration(
                 hintText: uiTx("输入弹幕内容"),
                 border: InputBorder.none,
-                hintStyle: TextStyle(fontSize: 14),
+                hintStyle: const TextStyle(fontSize: 14),
               ),
             ),
           ),

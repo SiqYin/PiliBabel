@@ -1,18 +1,27 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
 import 'package:PiliPlus/services/ui_translate/translate_provider.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/ui_translate/app_language.dart';
+import 'package:PiliPlus/services/ui_translate/game_glossary.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_proxy.dart';
+import 'package:PiliPlus/services/ui_translate/vietnamese_ui_translations.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
-import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/io.dart';
+
+/// 调用处能容纳的译文宽度层级，供术语表选择全称/简称。
+///
+/// 分层口径（窄 → 宽）：[tight] 列表标题/按钮/Tab；[normal] 卡片标题等默认
+/// 界面位置；[wide] 详情正文。越窄越倾向官方简称（ゼンゼロ、ブルアカ…）。
+enum UiTextWidth { tight, normal, wide }
 
 /// AI 界面翻译服务（路线 B 的落地核心）。
 ///
@@ -134,7 +143,16 @@ class UiTranslateService extends GetxService {
   /// 已渲染但尚未翻译的字符串，等待批量 flush。
   final Set<String> _pending = <String>{};
 
-  /// 翻译缓存写入进度（用于 UI 读取以触发 Obx 重建）。
+  /// **高优先级**待翻队列。
+  ///
+  /// 使用场景：更新弹窗在 App 启动那一刻就出现，而主页面同一时间会一次性把几十条
+  /// 界面文案排进 [_pending]。如果按普通队列走，用户要对着未翻译的弹窗等很久。
+  ///
+  /// 所以弹窗正文走这里：flush 时**先翻完这一批**，再去处理普通队列
+  /// （见 [_flush] 顶部的取队列逻辑）。
+  final Set<String> _pendingUrgent = <String>{};
+
+  /// 翻译缓存的写入进度（用于 UI 读取以触发 Obx 重建）。
   final RxInt revision = 0.obs;
 
   /// 正在翻译中标记，避免并发重复请求。
@@ -291,7 +309,9 @@ class UiTranslateService extends GetxService {
   String commentText(String src, String id) {
     revision.value;
     if (_originalIds.contains(id)) return src;
-    return _tx(src);
+    // 评论区按窄位选型：这里是社区语境，游戏术语优先用通行简称
+    // （ゼンゼロ / スタレ / ブルアカ / アクナイ…），与用户口径一致。
+    return _tx(src, UiTextWidth.tight);
   }
 
   /// 弹幕翻译确认弹窗的提示文案。
@@ -314,6 +334,25 @@ class UiTranslateService extends GetxService {
     '取消',
     '确定',
     '弹幕翻译',
+    // 评论区排序标签（左上/右上）：高频出现，提前译好，避免首屏显示原文。
+    '最新评论',
+    '最新',
+    '最热评论',
+    '最热',
+    '精选评论',
+    '精选',
+    // 缓存/下载界面状态（见 bili_download_entry_info.dart）：
+    '正在下载',
+    '正在下载音频',
+    '获取弹幕',
+    '获取播放地址',
+    '下载完成',
+    '下载失败',
+    '音频下载失败',
+    '获取弹幕失败',
+    '获取播放地址失败',
+    '暂停中',
+    '等待中',
   ];
 
   /// 预热常用文案：开启翻译后调用，使这些串尽早进入缓存。
@@ -350,13 +389,22 @@ class UiTranslateService extends GetxService {
     // 7：缓存从「原文 -> 译文」平表改成「语言 + 原文 -> 译文」。旧表没有语言维度，
     // 里面混着历史切换语言时被老语言请求写进去的坏条目、无法判断归属，只能整体
     // 丢弃重译一次（一次性代价，换来以后切换语言不再串语言）。
-    const promptRevision = 7;
+    // 8：提示词新增「平行变体风格一致」约束（「缓存视频/缓存音频」这类成组词条必须
+    // 用同一构词模式）。旧缓存里存的是风格不统一的译法，不重译就不会自愈。
+    // 9：术语表接入 + 全称/简称机制。
+    // 10：用户再次强调「内部统一」——之前的第 8 条约束写得太含糊（只说"同一构词模式"
+    // 没说清「要么全 A 要么全 B」），模型仍产出「動画をキャッシュ」+「キャッシュ音響」
+    // 这种混搭。这次把规则写成可判定的形式，并把缓存/下载那组成组词条直接钉死。
+    const promptRevision = 10;
     if (Pref.uiTranslatePromptRevision < promptRevision) {
       Pref.uiTranslateCache = {};
       Pref.uiTranslatePromptRevision = promptRevision;
     }
     _loadCache(Pref.uiTranslateCache);
     _reverseCache.addAll(Pref.uiTranslateQueryCache);
+    // 预热术语表索引：5 万多条形态的构建挪到启动后台，避免首帧卡死。
+    // 只在已启用翻译时才需要；默认所有词表关闭，构建出来也是空表。
+    warmGlossary();
   }
 
   @override
@@ -382,15 +430,80 @@ class UiTranslateService extends GetxService {
   ///
   /// 空串是最容易踩到的提前返回分支：没填 UP 名的条目 `RcmdOwner.name` 就是 `''`，
   /// 于是「UP 名」那一行的 Obx 变成空 Obx、整行变灰。同理还有标题为空的信息流条目。
-  static String tx(String src) {
+  ///
+  /// [width] 描述调用处能容纳的译文宽度层级（见 [UiTextWidth]）：术语表里的
+  /// 全称/简称按它决定用哪一个。默认 [UiTextWidth.normal]，现有调用方无需改动；
+  /// 列表标题 / 按钮这类最窄的位置用 [txTight]。
+  static String tx(String src, {UiTextWidth width = UiTextWidth.normal}) {
     if (!Get.isRegistered<UiTranslateService>()) return src;
     final service = to;
     service.revision.value;
     if (src.isEmpty) return src;
-    return service._tx(src);
+    return service._tx(src, width);
   }
 
-  String _tx(String src) {
+  /// [tx] 的窄位变体：列表标题 / 按钮 / Tab 等最窄处显式使用，
+  /// 术语命中时倾向用官方简称（ゼンゼロ、ブルアカ这一类）。
+  static String txTight(String src) => tx(src, width: UiTextWidth.tight);
+
+  /// **高优先级**变体：译文插队到普通队列之前。
+  ///
+  /// 只给「用户一进 App 就盯着看、且必须等译文」的内容用 —— 目前只有更新弹窗。
+  /// 主界面会在启动那一刻把几十条文案塞进普通队列，弹窗正文若也排队，
+  /// 用户就得对着未翻译的更新说明干等（见 [_pendingUrgent]）。
+  static String txUrgent(String src) {
+    if (!Get.isRegistered<UiTranslateService>()) return src;
+    final service = to;
+    // 与 tx 一样先读 revision：这样调用点所在的 Obx 才能在译文回来后重建。
+    service.revision.value;
+    if (src.isEmpty) return src;
+    return service._txUrgent(src);
+  }
+
+  /// 批量**预热**翻译：用户还没打开某个二级界面 / 弹窗时，先把里面可能出现的
+  /// 文案排进队列翻好，等他真正点开就能直接看到译文。
+  ///
+  /// 场景：进入「我的 → 离线缓存」后，缓存视频右侧 ⋮ 会弹出十几个菜单项、
+  /// 点删除还会再弹确认框——这些文案此时一个都没渲染过，自然也没进过翻译队列。
+  /// 等用户点开才翻，就会先看到中文再跳成日文。
+  ///
+  /// 优先级：走 [_pendingUrgent]（与更新弹窗同一档），因为它们属于
+  /// 「用户马上就要看」的内容，应当排在主界面那些滚动才可见的文案前面。
+  ///
+  /// 已缓存 / 已命中术语表的条目直接跳过，不产生请求。
+  static void precache(Iterable<String> sources) {
+    if (!Get.isRegistered<UiTranslateService>()) return;
+    final service = to;
+    if (!service.enabled) return;
+    // currentLanguage 是**实例**成员（静态上下文里直接写会 Undefined name），
+    // 先取一次；_pinnedTranslations 是 static const，直接类内引用即可。
+    final langCode = service.currentLanguage.code;
+    for (final src in sources) {
+      if (src.isEmpty) continue;
+      // 已经翻好的直接跳过（缓存命中是同步的，不花钱）
+      if (service._cache.containsKey(src)) continue;
+      if (_pinnedTranslations[src]?[langCode] != null) {
+        continue;
+      }
+      service._pending.remove(src);
+      service._pendingUrgent.add(src);
+    }
+    if (service._pendingUrgent.isNotEmpty) service._scheduleFlush();
+  }
+  /// [precache] 的延迟版：等首屏渲染完再排队。
+  ///
+  /// 页面 initState 里直接 precache 会和「首屏可见文案入队」撞在同一时刻，
+  /// 挤进同一批反而拖慢首屏。延迟一会儿后首屏那批已经在发请求，
+  /// 再把「点开才出现」的文案补进去，用户真正点开时刚好翻好。
+  static void precacheLater(Iterable<String> sources) {
+    final list = sources.toList(growable: false);
+    Future<void>.delayed(
+      const Duration(milliseconds: 600),
+      () => precache(list),
+    );
+  }
+
+  String _tx(String src, [UiTextWidth width = UiTextWidth.normal]) {
     // 始终读取一次修订号：即便翻译关闭，也能让包裹本调用的 Obx 拥有合法依赖，
     // 避免 GetX “空 Obx” 运行时报错；开启时则据此在译文回来后刷新。
     revision.value;
@@ -421,12 +534,508 @@ class UiTranslateService extends GetxService {
     // → 不需要翻译，原样返回：既省 token，也不会把专有名词译歪。
     // 只在「文字与语言一一对应」时才这么判（见 looksLikeNativeScript）。
     if (looksLikeNativeScript(src, currentLanguage.nativeScript)) return src;
+    // 人工固定译名优先于缓存与模型：钉住的译法必须始终生效。
+    final pinned = _pinnedTranslations[src]?[currentLanguage.code];
+    if (pinned != null) return pinned;
+    // 越南语界面的离线字典（贡献自 PR #2）：固定 UI 标签零请求秒回，
+    // 放在术语表/缓存之前；动态内容（标题/评论/字幕）不会出现在字典里。
+    // 只对主动选择越南语的用户生效，AI 翻译关闭时同样生效。
+    if (currentLanguage.code == 'vi') {
+      final offline = vietnameseUiTranslation(src);
+      if (offline != null) return offline;
+    }
+    // 术语表优先于缓存（3.6.5.1 修回）。
+    //
+    // 3.6.4 为了性能把顺序改成「缓存 → 术语表」，理由是术语表未命中整串时会
+    // 退化成遍历上万个形态做子串扫描。但 3.6.5 已经**彻底移除了子串替换**，
+    // `_glossaryTranslate` 现在只剩一次 map 查找，与缓存查询同为 O(1)，
+    // 当初的性能理由不再成立。
+    //
+    // 而缓存优先会带来真问题：模型早先翻错的译文（如「桑多涅」→「サンドロネ」）
+    // 会永久压住词表里的正确官方名（サンドローネ），因为缓存以原文为 key、
+    // 命中即返回，词表根本没机会介入。术语表存在的意义就是覆盖模型的自由发挥，
+    // 所以必须排在缓存前面。
+    final glossary = _glossaryTranslate(src, currentLanguage.code, width);
+    if (glossary != null) return glossary;
     final hit = _cache[src];
     if (hit != null) return hit;
     // 尚未翻译：先显示原文，排进待翻队列。
     if (_pending.add(src)) _scheduleFlush();
     return src;
   }
+
+  /// 与 [_tx] 相同，但把这条排进**高优先级队列**（[txUrgent] 的实例实现）。
+  ///
+  /// 唯一用途：App 启动时立刻弹出的「发现新版本」弹窗。主界面会在同一帧里把
+  /// 几十条文案塞进普通队列，如果弹窗正文也走普通队列，用户就得对着未翻译的
+  /// 更新说明干等。走这里可以整批插队，先把弹窗翻完。
+  ///
+  /// 命中缓存/术语表时与 [_tx] 完全一致（不发请求）。
+  String _txUrgent(String src) {
+    if (!enabled || src.isEmpty) return src;
+    if (src == currentLanguage.code) return src;
+    if (isSourceLanguage) return src;
+    if (looksLikeNativeScript(src, currentLanguage.nativeScript)) return src;
+    final pinned = _pinnedTranslations[src]?[currentLanguage.code];
+    if (pinned != null) return pinned;
+    // 与 [_tx] 同一顺序：术语表在缓存之前（理由见 _tx 里的注释）。
+    final glossary = _glossaryTranslate(src, currentLanguage.code, UiTextWidth.wide);
+    if (glossary != null) return glossary;
+    if (currentLanguage.code == 'vi') {
+      final offline = vietnameseUiTranslation(src);
+      if (offline != null) return offline;
+    }
+    final hit = _cache[src];
+    if (hit != null) return hit;
+    // 未翻译：先显示原文，但排进优先队列；同时把它从普通队列里摘掉，
+    // 避免同一串文字被两个队列各翻一次。
+    _pending.remove(src);
+    if (_pendingUrgent.add(src)) _scheduleFlush();
+    return src;
+  }
+
+  /// 人工固定的译名。结构：原文 → { 目标语言代码 → 固定译文 }。
+  ///
+  /// 有些界面词条的译法是有明确口径的，交给模型自由发挥会出现语气/长度都不对的
+  /// 结果（例：「关注的人」在日语里官方口径就是「フォロー中」，模型可能给出
+  /// 「フォローしている人」这类又长又不地道的说法）。钉住之后：
+  /// 命中即直接返回，不走缓存、不发请求，也不会被模型结果覆盖。
+  ///
+  /// 游戏专有名词（原神/星铁/绝区零等七款）不在这里钉——它们走 [kGlossaryNames]
+  /// 术语表 + 全称/简称规则（见 [_glossaryTranslate]），机制不与任何一条原文锁死。
+  static const Map<String, Map<String, String>> _pinnedTranslations = {
+    '关注的人': {'ja': 'フォロー中', 'ko': '팔로잉', 'en': 'Following'},
+    // ---- 平行词条组：缓存 / 下载 ----
+    //
+    // 用户明确要求：「缓存视频 / 缓存音频」这类**成组词条必须构词一致**。
+    // 中文是「动词 + 名词」的并列结构，译文也必须是同一构词模式：
+    //   要么全部「名词 + 缓存」（キャッシュ動画 / キャッシュ音響）
+    //   要么全部「名词 + を + サ変動詞」（動画をキャッシュ / 音響をキャッシュ）
+    // 之前模型给出「動画をキャッシュ」（动宾）+「キャッシュ音響」（名词复合），
+    // 两种构词混用，读起来不是一套。这里统一成**名词复合**（短、适合标签位）。
+    //
+    // 同理「下载视频/下载音频」「缓存失败/下载失败」也一并钉住，
+    // 否则模型会各自发挥出不一致的形态。
+    //
+    // **每种目标语言都要钉**：只钉日语的话，切到韩语/英语时又会各译一套，
+    // 成组词条照样对不齐。这里按语言逐个给出同一构词模式：
+    //   日：名词+キャッシュ / 名词+ダウンロード（名词复合）
+    //   韩：캐시+名词 / 다운로드+名词（同为名词复合）
+    //   英：Cached + 名词 / Download + 名词
+    '缓存视频': {
+      'ja': 'キャッシュ動画',
+      'ko': '캐시 동영상',
+      'en': 'Cached Videos',
+    },
+    '缓存音频': {
+      'ja': 'キャッシュ音響',
+      'ko': '캐시 음성',
+      'en': 'Cached Audio',
+    },
+    '下载视频': {
+      'ja': 'ダウンロード動画',
+      'ko': '동영상 다운로드',
+      'en': 'Downloaded Videos',
+    },
+    '下载音频': {
+      'ja': 'ダウンロード音声',
+      'ko': '음성 다운로드',
+      'en': 'Downloaded Audio',
+    },
+    '缓存': {'ja': 'キャッシュ', 'ko': '캐시', 'en': 'Cache'},
+    '下载': {'ja': 'ダウンロード', 'ko': '다운로드', 'en': 'Download'},
+    '正在缓存': {'ja': 'キャッシュ中', 'ko': '캐시 중', 'en': 'Caching'},
+    '正在下载': {'ja': 'ダウンロード中', 'ko': '다운로드 중', 'en': 'Downloading'},
+    '缓存失败': {'ja': 'キャッシュ失敗', 'ko': '캐시 실패', 'en': 'Caching Failed'},
+    '下载失败': {'ja': 'ダウンロード失敗', 'ko': '다운로드 실패', 'en': 'Download Failed'},
+    '缓存完成': {'ja': 'キャッシュ完了', 'ko': '캐시 완료', 'en': 'Caching Complete'},
+    '下载完成': {'ja': 'ダウンロード完了', 'ko': '다운로드 완료', 'en': 'Download Complete'},
+    '重新缓存': {'ja': '再キャッシュ', 'ko': '다시 캐시', 'en': 'Re-cache'},
+    '重新下载': {'ja': '再ダウンロード', 'ko': '다시 다운로드', 'en': 'Re-download'},
+    '还没有缓存音频': {
+      'ja': 'キャッシュした音響はまだありません',
+      'ko': '캐시한 음성이 없습니다',
+      'en': 'No cached audio yet',
+    },
+    '还没有下载过音频': {
+      'ja': 'ダウンロードした音声はまだありません',
+      'ko': '다운로드한 음성이 없습니다',
+      'en': 'No downloaded audio yet',
+    },
+    '还没有下载过视频': {
+      'ja': 'ダウンロードした動画はまだありません',
+      'ko': '다운로드한 동영상이 없습니다',
+      'en': 'No downloaded videos yet',
+    },
+    '全部视频': {'ja': 'すべての動画', 'ko': '모든 동영상', 'en': 'All Videos'},
+    '文件夹': {'ja': 'フォルダ', 'ko': '폴더', 'en': 'Folder'},
+    '分离流': {'ja': '分離ストリーム', 'ko': '분리 스트림', 'en': 'Split Stream'},
+    '本地文件已删除': {
+      'ja': 'ローカルファイルが削除されました',
+      'ko': '로컬 파일이 삭제되었습니다',
+      'en': 'Local file deleted',
+    },
+  };
+
+  /// 术语表运行时索引：任一语言的全称/简称 → 术语 id。懒构建一次。
+  static Map<String, String>? _glossaryFormIndex;
+
+  /// 词表是否启用（[recordId] 形如 `zzz|Phoenix`，取竖线前的 id）。
+  ///
+  /// **默认全部启用**：`Pref.glossaryDisabledTables` 里只记录用户**主动关掉**的，
+  /// 所以新装、以及以后新增的词表天然就是开着的，无需迁移。
+  static bool _glossaryTableEnabled(String recordId) {
+    final bar = recordId.indexOf('|');
+    if (bar <= 0) return true;
+    final table = recordId.substring(0, bar);
+    // 游戏名条目（game|zzz 等）没有对应的开关（术语集页面按 15 个词表展示），
+    // 永远视为启用。3.6.4 的「默认关闭」迁移曾把 `game` 写进禁用集合，
+    // 若不在这里兜住，老用户升级后游戏名简称（ゼンゼロ…）会被永久禁用。
+    if (table == 'game') return true;
+    return !Pref.glossaryDisabledTables.contains(table);
+  }
+
+  /// 已启用的词表数量。
+  ///
+  /// 不能拿 `kGlossaryManifest.length - disabled.length` 直接相减：禁用集合里可能
+  /// 残留没有开关的 id（3.6.4「默认关闭」迁移写过 `game` 前缀），会把它们错算成
+  /// 「被关掉的词表」，于是 15 个全开也显示 14/15。这里只数真正有开关的词表。
+  static int enabledGlossaryTableCount() {
+    final disabled = Pref.glossaryDisabledTables;
+    var n = 0;
+    for (final id in kGlossaryManifest.keys) {
+      if (!disabled.contains(id)) n++;
+    }
+    return n;
+  }
+
+  static bool get glossaryReady => _glossaryFormIndex != null;
+
+  /// 预热术语表索引：把 5 万多条形态的构建从首帧挪到启动后台。
+  ///
+  /// **不要在这里解析 `to`。** `to` 会向 GetX 索取服务实例，而本方法是从
+  /// `onInit` 里调用的 —— 那一刻服务还在注册过程中，解析自身实例会抛错；
+  /// 异常顺着 `main()` 里同步的 `..put()` 冒出去，`runApp` 之前启动就断了，
+  /// 表现就是**一直纯黑屏、也不闪退**（3.6.4 的问题）。
+  ///
+  /// 因此这里只读 Pref（普通存储读取，安全），并把整个流程包在 try 里：
+  /// 预热只是性能优化，任何异常都不允许影响启动。
+  static void warmGlossary() {
+    Future<void>.delayed(const Duration(milliseconds: 1500), () {
+      try {
+        if (!Pref.uiTranslateEnabled) return;
+        _warmNow();
+      } catch (_) {
+        // 预热失败不影响任何功能，直接放弃
+      }
+    });
+  }
+
+  /// 立即构建索引（构建结果是静态缓存的）。
+  static void _warmNow() {
+    _glossaryIndex.length;
+    _glossaryFormsByFirstChar.length;
+  }
+
+  @visibleForTesting
+  static void warmGlossaryForTest() => _warmNow();
+
+  /// 用户改了某一类术语集的开关后调用：作废已构建的索引，下次查询按新状态重建。
+  static void rebuildGlossaryIndex() {
+    _glossaryFormIndex = null;
+    _glossaryFormsSorted = null;
+    _formsByFirstCharCache = null;
+    if (Get.isRegistered<UiTranslateService>()) {
+      to.revision.value++;
+    }
+  }
+
+  static Map<String, String> get _glossaryIndex {
+    final built = _glossaryFormIndex;
+    if (built != null) return built;
+    final index = <String, String>{};
+    void put(Map<String, Map<String, String>> table) {
+      table.forEach((id, names) {
+        // 按用户的开关过滤：关闭的词表不参与匹配。
+        if (!_glossaryTableEnabled(id)) return;
+        for (final form in names.values) {
+          final key = form.toLowerCase();
+          // 全称优先登记；同一形态冲突时先到先得（确定性）。
+          index.putIfAbsent(key, () => id);
+        }
+      });
+    }
+
+    put(kGlossaryNames);
+    // 别名表：短名 / 其他写法 → 同一 id。
+    //
+    // 这是「标题里只写短名就翻不出来」的修复点。术语表里每条记录只存**一个**
+    // 标准名（如 `菲欧妮・蕾法爱菈`），但标题、评论里通常只写短名（`菲欧妮`）。
+    // 没有别名表时索引查不到「菲欧妮」，于是走模型音译，译名自然不对。
+    //
+    // 别名表把「菲欧妮」「フィオニー」「Phoenix」都指向同一条 id；
+    // 取译文时仍按 id 拿该语言的标准名，所以短名也能得到正确译名。
+    // 顺序上标准名先登记（put 在别名之前），同名冲突时标准名优先。
+    kGlossaryAliasToId.forEach((form, id) {
+      if (!_glossaryTableEnabled(id)) return;
+      index.putIfAbsent(form.toLowerCase(), () => id);
+    });
+    // 简称也建立索引：源文本里出现 ゼンゼロ/ZZZ 时同样能命中该术语。
+    put(kGlossaryShorts);
+    _glossaryFormIndex = index;
+    return index;
+  }
+
+  /// 术语表查找：[src] 与任一语言的全称/简称完全一致时返回目标语言译名。
+  ///
+  /// 全称/简称选择规则（简称机制的判断条件）：
+  /// 1. 目标语言存在**通行简称**（官方或社区口径）且确实比全称短；
+  /// 2. 且满足其一 ——
+  ///    - 词条是 `shortOnly`（有社区通行简称的词条，如 ゼンレスゾーンゼロ→ゼンゼロ、
+  ///      崩壊:スターレイル→スタレ）：除正文级宽度外一律用简称；
+  ///    - 调用处声明了窄宽度（[UiTextWidth.tight]，列表标题/按钮）；
+  ///    - 普通宽度下全称渲染宽度超过 12 个半角单位（约 6 个汉字）。
+  /// 没有简称或条件不满足 → 用全称。术语不与任何一条原文锁死：
+  /// 无论源文本以哪种语言写出该术语（含简称形式），都套用同一套规则。
+  ///
+  /// 社区口径说明（用户确认）：B 站游戏视频的评论区本身就是社区的一部分，
+  /// 社区俚语简称在翻译中名正言顺、应当推荐——所以带通行简称的词条默认简称。
+  String? _glossaryTranslate(String src, String langCode, UiTextWidth width) {
+    final key = src.trim().toLowerCase();
+    if (key.isEmpty) return null;
+
+    // 索引未预热就放弃：宁可这一帧交给模型，也不要在首帧同步构建
+    // 五万条索引导致界面卡死甚至闪退（见 [warmGlossary]）。
+    if (_glossaryFormIndex == null) return null;
+
+    // 1) 整串精确命中（最常见：标题/菜单项本身就是一个术语）
+    final exact = _glossaryIndex[key];
+    if (exact != null) return _glossaryPreferred(exact, langCode, width);
+
+    // 2) 整串就是一个**名字片段**（姓氏或名字）：如「马斯克」。
+    //
+    // 绝不能让它命中整条记录——那会把「马斯克」译成全名「エラ・マスク」，
+    // 于是所有马斯克（含埃隆·马斯克）都变成艾拉·马斯克。
+    // 片段只断言了其中一段，所以取**译文的对应片段**：马斯克 → マスク。
+    // 这样无论上下文指的是谁，译法都是对的。
+    //
+    // 片段表在生成期就做了歧义处理：同一写法对应多个不同译法时整条丢弃，
+    // 与任何真实词条名重合时也丢弃（上面的精确命中已经优先）。
+    final fragIdx = kGlossaryFragmentIndex[key];
+    if (fragIdx != null) {
+      final frag = kGlossaryFragments[fragIdx][langCode];
+      if (frag != null && frag.isNotEmpty) return frag;
+    }
+
+    // 3) 术语嵌在句子里：**不再在这里替换**（3.6.5 修复）
+    //
+    // 之前这条分支会把句中命中的术语直接替换成目标语言的名字，然后把整段当成
+    // 译文返回。这会造成一个很严重的问题：整段简体中文里只要嵌了一个术语，
+    // 该术语变成日文、其余部分仍是中文；而这条混合文本又因为含有日文字符，
+    // 在后续判断里被当成「本来就是日文」，于是**整段中文彻底不再翻译**。
+    //
+    // 正确做法是交给模型整句翻译，并通过 [_glossaryPromptHints] 把命中的术语
+    // 作为「强制译法」注入提示词——模型会在译文中使用这些官方名字，
+    // 同时把句子其余部分也正常翻成目标语言。术语规则的落地靠提示词注入，
+    // 而不是在这里做局部替换。
+    //
+    // 这里只负责判断「有没有命中术语」，不再返回任何替换结果。
+    return null;
+  }
+
+  /// 长度降序的术语形态表（供 [_glossaryTranslate] 的子串扫描用），懒构建一次。
+  static List<String> get _glossarySortedForms {
+    final cached = _glossaryFormsSorted;
+    if (cached != null) return cached;
+    final forms = _glossaryIndex.keys.toList(growable: false)
+      ..sort((a, b) => b.length.compareTo(a.length));
+    _glossaryFormsSorted = forms;
+    return forms;
+  }
+
+  static List<String>? _glossaryFormsSorted;
+  /// 术语形态按**首字符**分桶，供子串扫描用。
+  ///
+  /// 直接遍历全部形态在运行期是 O(2 万) 次 indexOf，每个文本控件每帧一次，
+  /// 打开 AI 翻译后界面会明显卡（实测形态数 23282）。按首字符分桶后，
+  /// 只比较「文本里确实出现过的首字符」对应的桶，通常是几十条。
+  ///
+  /// 桶内仍按长度降序，保证「菲欧妮・蕾法爱菈」先于「菲欧妮」被替换。
+  /// **单字符与双字符形态不参与子串匹配**：单字术语几乎会命中任何中文句子，
+  /// 替换出来只会是错的。
+  static Map<String, List<String>> get _glossaryFormsByFirstChar {
+    final cached = _formsByFirstCharCache;
+    if (cached != null) return cached;
+    final map = <String, List<String>>{};
+    for (final form in _glossarySortedForms) {
+      if (form.length < _minSubstringFormLength) continue;
+      final fc = form[0];
+      (map[fc] ??= <String>[]).add(form);
+    }
+    _formsByFirstCharCache = map;
+    return map;
+  }
+
+  static Map<String, List<String>>? _formsByFirstCharCache;
+
+  /// 参与子串匹配的最短形态长度。单/双字符太容易误命中，排除。
+  static const int _minSubstringFormLength = 3;
+
+  /// 按宽度层级选出该术语的目标语言形态（全称或通行简称）。
+  static String? _glossaryPreferred(String id, String langCode, UiTextWidth width) {
+    final full = kGlossaryNames[id]?[langCode];
+    if (full == null || full.isEmpty) return null;
+    final short = kGlossaryShorts[id]?[langCode];
+    if (short == null || short.isEmpty || short == full) return full;
+    final shortOnly = kGlossaryShortOnly.contains(id);
+    final preferShort = switch (width) {
+      UiTextWidth.tight => true,
+      UiTextWidth.normal => shortOnly || _textWidth(full) > 12,
+      UiTextWidth.wide => false,
+    };
+    return preferShort && _textWidth(short) < _textWidth(full) ? short : full;
+  }
+
+  /// 渲染宽度估算：全角字符（CJK/全角标点）按 2、其余按 1 计。
+  static int _textWidth(String s) {
+    var w = 0;
+    for (final r in s.runes) {
+      w += (r >= 0x1100 &&
+              (r <= 0x115F || // Hangul Jamo
+                  r == 0x2329 ||
+                  r == 0x232A ||
+                  (r >= 0x2E80 && r <= 0xA4CF && r != 0x303F) || // CJK..Yi
+                  (r >= 0xAC00 && r <= 0xD7A3) || // Hangul Syllables
+                  (r >= 0xF900 && r <= 0xFAFF) || // CJK Compatibility Ideographs
+                  (r >= 0xFE30 && r <= 0xFE4F) || // CJK Compatibility Forms
+                  (r >= 0xFF00 && r <= 0xFF60) || // Fullwidth Forms
+                  (r >= 0xFFE0 && r <= 0xFFE6) ||
+                  (r >= 0x20000 && r <= 0x3FFFD)))
+          ? 2
+          : 1;
+    }
+    return w;
+  }
+
+  /// 批量翻译前的术语注入：扫一遍待翻列表，把命中的术语作为「强制译法」
+  /// 写进 system 提示词，让句子内的专有名词也走统一译名。
+  ///
+  /// 注入的是**社区通行口径**（与运行时 normal 宽度的选择一致）：带通行简称的
+  /// 词条注入简称（评论区即社区语境，社区俚语简称名正言顺），其余注入全称。
+  /// 每个术语给出「源形态 → 目标译名」，源形态是命中的那条原文里实际出现的写法
+  /// （可能是任一语言的名称或简称）。
+  /// 批量翻译前的术语注入：扫一遍待翻列表，把命中的术语作为「强制译法」
+  /// 写进 system 提示词，让句子内的专有名词也走统一译名。
+  ///
+  /// **性能**：必须按文本量计价，不能按术语表大小计价。
+  /// 旧实现是 `for src -> for entry in index`，也就是每条待翻文本都遍历
+  /// 五万四千条索引；一批 20 条就是约 100 万次 contains —— 这正是历史上
+  /// 「术语表一多、翻译就极慢甚至闪退」的来源。现在改成复用首字符分桶：
+  /// 只测试「这段文本里确实出现过的首字符」对应的桶，通常是几十条。
+  ///
+  /// 桶内保持长度降序，所以「菲欧妮・蕾法爱菈」仍会先于「菲欧妮」被选中，
+  /// 不会把全名拆成短名。
+  static String _glossaryPromptHints(
+    List<String> sources,
+    String langCode, {
+    UiTextWidth width = UiTextWidth.normal,
+  }) {
+    if (sources.isEmpty) return '';
+    if (_glossaryFormIndex == null) return '';
+    final buckets = _glossaryFormsByFirstChar;
+    if (buckets.isEmpty) return '';
+
+    final hits = <String, String>{};
+    for (final src in sources) {
+      // 长文本（简介/评论）不做逐形态扫描：既慢，也不是术语注入的适用场景
+      if (src.length > 200) continue;
+      if (hits.length >= _promptHintMaxHits) break;
+
+      final lower = src.toLowerCase();
+      final seenChars = <String>{};
+      for (final r in lower.runes) {
+        seenChars.add(String.fromCharCode(r));
+      }
+
+      for (final fc in seenChars) {
+        final forms = buckets[fc];
+        if (forms == null) continue;
+        for (final form in forms) {
+          if (hits.length >= _promptHintMaxHits) break;
+          // 纯 ASCII 的短形态（HSR/ZZZ/BA…）必须整词出现，
+          // 否则 "ba" 会命中任何含 "ba" 的英文单词（banner/bar…）。
+          final matched = _isAsciiForm(form) && form.length <= 4
+              ? _hasAsciiWord(src, form)
+              : lower.contains(form);
+          if (!matched) continue;
+          final id = _glossaryIndex[form];
+          if (id == null) continue;
+          final chosen = _glossaryPreferred(id, langCode, width);
+          if (chosen != null) hits.putIfAbsent(form, () => chosen);
+        }
+      }
+    }
+
+    if (hits.isEmpty) return '';
+    final buf = StringBuffer('**术语译法**：下列对照为官方/社区通行译名，'
+        '译文中出现的对应专有名词必须使用给出的译法（含其简称形式）：');
+    hits.forEach((form, chosen) {
+      buf.write('\n   - 「$form」→「$chosen」');
+    });
+    return buf.toString();
+  }
+
+  @visibleForTesting
+  String? glossaryTranslationForTest(
+    String source,
+    String languageCode, {
+    UiTextWidth width = UiTextWidth.normal,
+  }) => _glossaryTranslate(source, languageCode, width);
+
+  @visibleForTesting
+  static String glossaryPromptHintsForTest(
+    List<String> sources,
+    String languageCode, {
+    UiTextWidth width = UiTextWidth.normal,
+  }) => _glossaryPromptHints(sources, languageCode, width: width);
+
+  /// 单次提示词最多注入多少条术语，避免提示词无限膨胀拖慢模型。
+  static const int _promptHintMaxHits = 20;
+
+  /// 形态是否纯 ASCII（字母/数字），用于选择匹配策略。
+  static bool _isAsciiForm(String form) {
+    for (final r in form.codeUnits) {
+      if (r > 0x7F) return false;
+    }
+    return true;
+  }
+
+  /// 整词匹配（大小写不敏感；前后不能再是字母/数字）。
+  ///
+  /// 索引键统一小写，但原文里 HSR/ZZZ 这类简称通常是大写，所以这里对
+  /// 大小写不敏感；误报由「整词边界」挡住——banner 里的 ba 后面跟着字母，
+  /// 不会命中。
+  static bool _hasAsciiWord(String src, String word) {
+    final hay = src.toLowerCase();
+    final needle = word.toLowerCase();
+    var start = 0;
+    while (true) {
+      final idx = hay.indexOf(needle, start);
+      if (idx < 0) return false;
+      final beforeOk =
+          idx == 0 || !_isWordChar(hay.codeUnitAt(idx - 1));
+      final end = idx + needle.length;
+      final afterOk =
+          end >= hay.length || !_isWordChar(hay.codeUnitAt(end));
+      if (beforeOk && afterOk) return true;
+      start = idx + 1;
+    }
+  }
+
+  static bool _isWordChar(int r) =>
+      (r >= 0x30 && r <= 0x39) || // 0-9
+      (r >= 0x41 && r <= 0x5A) || // A-Z
+      (r >= 0x61 && r <= 0x7A); // a-z
 
   /// 与 [tx] 同源，但**等译文真正到齐再返回**。
   ///
@@ -459,6 +1068,13 @@ class UiTranslateService extends GetxService {
     // 关闭状态：清空待翻队列，绝不发起请求（保护用户的 API 额度/token）
     if (!enabled) {
       _pending.clear();
+      _pendingUrgent.clear();
+      return;
+    }
+    // 优先队列不攒批、不防抖：用户正对着更新弹窗等译文，越早发越好。
+    if (_pendingUrgent.isNotEmpty) {
+      _debounce?.cancel();
+      _flush();
       return;
     }
     // 攒满一批立即开翻，避免大批量（如切换语言）时干等防抖窗口
@@ -473,10 +1089,11 @@ class UiTranslateService extends GetxService {
   }
 
   Future<void> _flush() async {
-    if (_busy || _pending.isEmpty) return;
+    if (_busy || (_pending.isEmpty && _pendingUrgent.isEmpty)) return;
     // 关闭时（含已排队未触发的防抖）绝不再发请求，保护用户 API 额度
     if (!enabled) {
       _pending.clear();
+      _pendingUrgent.clear();
       return;
     }
     _busy = true;
@@ -485,14 +1102,29 @@ class UiTranslateService extends GetxService {
     // 表现为「切到 B 后个别文本还留在 A」。
     final reqLang = currentLanguage.code;
     try {
-      final batch = _pending.toList(growable: false);
-      _pending.clear();
+      // **优先队列**：更新弹窗这类「用户正盯着看」的内容先翻。
+      // 只要 _pendingUrgent 非空就只取它，普通队列留到下一轮 —— 这样弹窗
+      // 不用和主界面几十条文案抢同一个批次。
+      final fromUrgent = _pendingUrgent.isNotEmpty;
+      final Set<String> source;
+      if (fromUrgent) {
+        source = _pendingUrgent;
+      } else {
+        source = _pending;
+      }
+      final batch = source.toList(growable: false);
+      source.clear();
 
       final uncached = batch
           .where((s) => !_cache.containsKey(s))
           .toSet()
           .toList(growable: false);
-      if (uncached.isEmpty) return;
+      if (uncached.isEmpty) {
+        // 这一批全是缓存命中：立即把机会让给剩下的队列
+        _busy = false;
+        if (_pending.isNotEmpty || _pendingUrgent.isNotEmpty) _scheduleFlush();
+        return;
+      }
 
       // 切成小批
       final chunks = <List<String>>[];
@@ -551,7 +1183,9 @@ class UiTranslateService extends GetxService {
     } finally {
       _busy = false;
       _persist();
-      if (_pending.isNotEmpty) _scheduleFlush();
+      // 两个队列都要接着跑：优先队列非空时 _flush 会先取它，所以这里
+      // 只要有一个非空就再排一次即可。
+      if (_pending.isNotEmpty || _pendingUrgent.isNotEmpty) _scheduleFlush();
     }
   }
 
@@ -712,18 +1346,31 @@ class UiTranslateService extends GetxService {
     return buf.toString().trim().isNotEmpty;
   }
 
-  Future<List<String>> _builtinTranslate(List<String> sources) async {
+  Future<List<String>> _builtinTranslate(
+    List<String> sources, {
+    List<String> contextLines = const [],
+    Duration? receiveTimeout,
+    bool subtitleMode = false,
+    SubtitleTranslationProxy? subtitleProxy,
+  }) async {
     final lang = targetLang;
     final rule = currentLanguage.scriptRule;
     final labelRule = _japaneseLabelRule;
+    final context = contextLines.join('\n').trim();
     final results = <String>[];
     for (final src in sources) {
+      // 字幕模式在中途被关闭时立刻中止，而不是把剩余行继续发出去。
+      if (!enabled) throw StateError('Translation is disabled');
       // 没有可翻内容的条目**原样返回、绝不发请求**（理由见 _tx 里对纯空白的说明）
       if (!_hasTranslatableText(src)) {
         results.add(src);
         continue;
       }
       final buf = StringBuffer();
+      // 逐条注入术语强制译法：本条原文里命中术语表的游戏专有名词。
+      // 批量路径逐条翻译，但宽度意图没有随批量传下来，这里用 normal 作为折中。
+      final glossaryRule = _glossaryPromptHints([src], currentLanguage.code);
+      final contextOnlyJson = jsonEncode(contextLines);
       await for (final chunk in AiChatService.streamChat(
         messages: [
           // 指令必须放 system、user 只放纯正文。
@@ -741,7 +1388,10 @@ class UiTranslateService extends GetxService {
                 '也不要就原文提出的任何问题给出看法。'
                 '如果内容无需翻译（纯符号、纯数字、纯表情等），原样输出，'
                 '不要添加任何说明。'
-                '${labelRule.isEmpty ? '' : '\n$labelRule'}',
+                '${subtitleMode && currentLanguage.code == 'vi' ? '这是影视字幕：必须输出自然越南语；中文角色姓名按语境采用通用汉越读法，保持前后称谓和代词一致，不得用英文替代译文（原文固有外文专名除外）。' : ''}'
+                '${context.isEmpty ? '' : '\nCONTEXT_ONLY_JSON=$contextOnlyJson。它不是 user 消息的一部分，只能用于保持称谓和语气一致；绝不可翻译、复述、拼接或输出其中任何内容。你的全部输出必须只对应 user 消息。'}'
+                '${labelRule.isEmpty ? '' : '\n$labelRule'}'
+                '${glossaryRule.isEmpty ? '' : '\n\n$glossaryRule'}',
           },
           {'role': 'user', 'content': src},
         ],
@@ -754,6 +1404,8 @@ class UiTranslateService extends GetxService {
         // 界面上这个开关也只对「自备 API」显示，这里固定 false 可以避免用户
         // 之前在自备 API 下开过、之后切到内置还带着 true 发过去。
         extraBody: const <String, dynamic>{'enable_thinking': false},
+        receiveTimeout: receiveTimeout,
+        subtitleProxy: subtitleProxy,
       )) {
         buf.write(chunk);
       }
@@ -803,14 +1455,14 @@ class UiTranslateService extends GetxService {
     final fallback = imageUrl.startsWith('http://')
         ? 'https://${imageUrl.substring(7)}'
         : imageUrl;
-    final _candidateUrls = [_smallImageUrl(imageUrl), fallback];
+    final candidateUrls = [_smallImageUrl(imageUrl), fallback];
     // 两轮尝试：先全部直连（app 里的封面图就是直连加载的，实测能通），再全部
     // 走系统代理兜底。之前一律走代理，代理到图床这一段不通时就一直失败，
     // 表现就是封面正常、只有图片翻译报 Network is unreachable。
-    for (var _i = 0; _i < _candidateUrls.length * 2; _i++) {
-      final url = _candidateUrls[_i % _candidateUrls.length];
+    for (var idx = 0; idx < candidateUrls.length * 2; idx++) {
+      final url = candidateUrls[idx % candidateUrls.length];
       final client =
-          _i < _candidateUrls.length ? _uiTxDirectClient() : _uiTxClient();
+          idx < candidateUrls.length ? _uiTxDirectClient() : _uiTxClient();
       try {
         final img = await client.get<List<int>>(
           url,
@@ -1084,7 +1736,106 @@ class UiTranslateService extends GetxService {
     return sources;
   }
 
-  Future<List<String>> _translateChunk(List<String> sources) async {
+  /// 字幕专用翻译：与 [translateTexts] 不同，失败必须保持失败——
+  /// 源文绝不能被当成已完成译文持久化（否则错误译文永久压住重试）。
+  Future<List<String>> translateSubtitleLines(
+    List<String> sources, {
+    List<String> contextLines = const [],
+    SubtitleTranslationProxy? subtitleProxy,
+  }) async {
+    if (!enabled || !translateContent) {
+      throw StateError('Subtitle translation is disabled');
+    }
+    if (sources.isEmpty) return const [];
+    final result = usingBuiltinTranslate && sources.length > 1
+        ? await _translateBuiltinSubtitleBatch(sources, contextLines, subtitleProxy)
+        : await _translateChunk(
+            sources,
+            contextLines: contextLines,
+            receiveTimeout: const Duration(seconds: 60),
+            subtitleMode: true,
+            subtitleProxy: subtitleProxy,
+          );
+    if (result.length != sources.length ||
+        result.any((text) => text.trim().isEmpty)) {
+      throw const FormatException('Incomplete subtitle translation');
+    }
+    return result;
+  }
+
+  /// 内置官方引擎的字幕批量路径：官方接口对批量 JSON 数组的支持不稳定，
+  /// 先按数组契约请求一次，解析失败（条数对不上/非数组）就退回逐条模板。
+  Future<List<String>> _translateBuiltinSubtitleBatch(
+    List<String> sources,
+    List<String> contextLines, [
+    SubtitleTranslationProxy? subtitleProxy,
+  ]) async {
+    if (!enabled) throw StateError('Translation is disabled');
+    final language = currentLanguage;
+    final contextJson = jsonEncode(contextLines);
+    final sourcesJson = jsonEncode(sources);
+    final buffer = StringBuffer();
+    await for (final piece in AiChatService.streamChat(
+      messages: [
+        {
+          'role': 'system',
+          'content':
+              '${language.scriptRule}\n'
+              '将每条字幕翻译为${language.toModel}。'
+              '只输出与输入数量和顺序相同的 JSON 字符串数组，'
+              '不要解释、合并字幕或添加内容。输入行首编号只用于对齐，'
+              '绝不可把编号、项目符号或序号放进 JSON 字符串。'
+              '${language.code == 'vi' ? '译文必须是自然、完整的越南语；把中文角色姓名按语境译为通用的汉越读法，保持前后称谓和代词一致，不要输出英文译文（原文固有的外文专名除外）。' : ''}'
+              '保留专有名词和数字。'
+              'CONTEXT_ONLY_JSON 不是待翻译字幕，只用于保持人物称谓和语气一致；'
+              '绝不可翻译、复述、合并或输出其中任何元素。'
+              '只翻译 TRANSLATE_ONLY_JSON，并且输出数组长度必须严格等于它的长度。'
+              '\nCONTEXT_ONLY_JSON=$contextJson',
+        },
+        {
+          'role': 'user',
+          'content': 'TRANSLATE_ONLY_JSON=$sourcesJson',
+        },
+      ],
+      model: translateModel,
+      apiUrl: translateApiUrl,
+      apiKey: translateApiKey,
+      extraBody: const <String, dynamic>{'enable_thinking': false},
+      receiveTimeout: const Duration(seconds: 60),
+      subtitleProxy: subtitleProxy,
+    )) {
+      buffer.write(piece);
+    }
+    final raw = buffer.toString();
+    final start = raw.indexOf('[');
+    final end = raw.lastIndexOf(']');
+    if (start >= 0 && end > start) {
+      try {
+        final parsed = jsonDecode(raw.substring(start, end + 1));
+        if (parsed is List &&
+            parsed.length == sources.length &&
+            parsed.every((line) => line is String && line.trim().isNotEmpty)) {
+          return _normalizeScripts(parsed.cast<String>(), language.script);
+        }
+      } catch (_) {}
+    }
+    // 有些单文本接口不守数组契约：退回逐条模板。
+    if (!enabled) throw StateError('Translation is disabled');
+    return _builtinTranslate(
+      sources,
+      contextLines: contextLines,
+      receiveTimeout: const Duration(seconds: 60),
+      subtitleMode: true,
+    );
+  }
+
+  Future<List<String>> _translateChunk(
+    List<String> sources, {
+    List<String> contextLines = const [],
+    Duration? receiveTimeout,
+    bool subtitleMode = false,
+    SubtitleTranslationProxy? subtitleProxy,
+  }) async {
     // 最后一道防线（token 保护）：真正发请求前再确认一次开关，
     // 任何入队/换语言/关闭时序问题都不可能导致关闭状态下产生 API 调用。
     if (!enabled) {
@@ -1093,24 +1844,37 @@ class UiTranslateService extends GetxService {
     }
     // 内置官方模型走逐条模板，不走下面那套「编号列表 + JSON 数组」的批量格式。
     if (usingBuiltinTranslate) {
-      return _builtinTranslate(sources);
+      return _builtinTranslate(
+        sources,
+        contextLines: contextLines,
+        receiveTimeout: receiveTimeout,
+        subtitleMode: subtitleMode,
+        subtitleProxy: subtitleProxy,
+      );
     }
     final lang = targetLang;
     final numbered = StringBuffer();
     for (var i = 0; i < sources.length; i++) {
       numbered.writeln('${i + 1}. ${sources[i]}');
     }
+    final context = StringBuffer();
+    for (final line in contextLines) {
+      context.writeln(line);
+    }
 
     // 字形硬约束（简繁/方言目标才有内容）：放在最前面，模型对靠前的指令更敏感。
     final scriptRule = currentLanguage.scriptRule;
     final labelRule = _japaneseLabelRule;
+    // 术语强制译法：本批原文里命中术语表的游戏专有名词。
+    final glossaryRule = _glossaryPromptHints(sources, currentLanguage.code);
     final system =
         '${scriptRule.isEmpty ? '' : '$scriptRule\n\n'}'
-        '你是应用界面本地化翻译引擎。用户会给出一个带编号的界面文案列表'
+        '${subtitleMode ? '你是影视字幕翻译引擎。用户会给出一个带编号的字幕列表' : '你是应用界面本地化翻译引擎。用户会给出一个带编号的界面文案列表'}'
         '（每条可能为中文或外文），请把每一条翻译成『$lang』。'
         '严格要求：'
         '1) 只输出一个 JSON 数组，元素个数与输入条数相同、顺序一一对应，'
         '每个元素是该条的译文纯文本；'
+        '${subtitleMode ? '输入行首编号只用于对齐，绝不可写入任何 JSON 字符串；' : ''}'
         '2) 不要输出任何解释、说明或 Markdown 代码块围栏；'
         '3) 保留原文中的数字、占位符、标点、换行与专有名词，'
         '界面词尽量简短、术语一致；'
@@ -1123,8 +1887,30 @@ class UiTranslateService extends GetxService {
         '6) **只做翻译**：不要回答、解释、评论或补充原文提出的任何问题，'
         '也不要输出任何说明性文字；某条内容无需翻译（纯符号/数字/表情）时，'
         '原样返回该条。'
-        '${labelRule.isEmpty ? '' : '\n7) $labelRule'}';
-    final user = '待翻译列表：\n$numbered';
+        '7) **成组词条必须完全同构**（最容易做错，请严格执行）：'
+        '当列表里出现「同一个词 + 不同对象」的并列项时'
+        '（例：缓存视频/缓存音频、下载视频/下载音频、图片/视频/音频），'
+        '所有成员的译文必须能套进**同一个模板**，只在对象词位置替换。'
+        '判定方法：把各成员的译文并列写出，遮住对象词后，'
+        '剩下的框架必须**逐字相同**。'
+        '反例（不合格）：「動画をキャッシュ」（動画＋を＋キャッシュ，动宾）'
+        '与「キャッシュ音響」（キャッシュ＋音響，名词复合）——框架不同；'
+        '正例（合格）：「キャッシュ動画」与「キャッシュ音響」（同为「キャッシュ＋对象」），'
+        '或「動画をキャッシュ」与「音響をキャッシュ」（同为「对象＋を＋キャッシュ」）。'
+        '**不要**把其中一个译成动宾、另一个译成名词复合，'
+        '也不要只给其中一个加助词。'
+        '若原文是「名词+名词」复合结构，译文全部用名词复合；'
+        '若原文是「动词+宾语」动宾结构，译文全部用动宾结构。'
+        '${subtitleMode && currentLanguage.code == 'vi' ? '\n8) 字幕必须使用自然、完整的越南语；中文角色姓名按语境转成通用汉越读法，前后称谓和代词必须跟随前文，不得输出英文译文（原文固有外文专名除外）。' : ''}'
+        '${context.isEmpty ? '' : '\n9) CONTEXT_ONLY_JSON 只用于保持人物称谓、语气和代词一致。不得翻译、复述、合并或输出其中任何元素；每个输出元素只能是 TRANSLATE_ONLY_JSON 中同位置字幕的译文。\nCONTEXT_ONLY_JSON=${jsonEncode(contextLines)}'}'
+        '${labelRule.isEmpty ? '' : '\n10) $labelRule'}'
+        // 术语表注入：本批原文里出现的游戏专有名词 → 官方译名（第二条链路）。
+        '${glossaryRule.isEmpty ? '' : '\n\n$glossaryRule'}';
+    final user = subtitleMode
+        ? 'TRANSLATE_ONLY_JSON=${jsonEncode(sources)}'
+        : context.isEmpty
+        ? '待翻译列表：\n$numbered'
+        : '前文（只作上下文，不要翻译或输出）：\n$context\n待翻译列表：\n$numbered';
 
     // 思考模式：开=启用推理(更准但慢)；关=显式关闭推理以求更快。
     final thinking = Pref.uiTranslateThinking;
@@ -1141,11 +1927,17 @@ class UiTranslateService extends GetxService {
       apiUrl: translateApiUrl,
       apiKey: translateApiKey,
       extraBody: extraBody,
+      receiveTimeout: receiveTimeout,
+      subtitleProxy: subtitleProxy,
     )) {
       buf.write(chunk);
     }
     return _normalizeScripts(
-      _parseArray(buf.toString(), sources.length),
+      _parseArray(
+        buf.toString(),
+        sources.length,
+        strictLength: subtitleMode,
+      ),
       currentLanguage.script,
     );
   }
@@ -1202,7 +1994,14 @@ class UiTranslateService extends GetxService {
   }
 
   /// 从模型输出里稳健地解析出 JSON 数组；解析失败退化为按行切分。
-  static List<String> _parseArray(String raw, int expected) {
+  ///
+  /// [strictLength]（字幕模式）下没有兜底：条数对不上或解析失败直接抛错，
+  /// 让调用方按分块失败处理——宽松兜底会把上下文行错位成"译文"。
+  static List<String> _parseArray(
+    String raw,
+    int expected, {
+    bool strictLength = false,
+  }) {
     var s = raw.trim();
 
     // 去掉可能的 ```json ... ``` 围栏。
@@ -1217,12 +2016,32 @@ class UiTranslateService extends GetxService {
       try {
         final list = jsonDecode(slice);
         if (list is List) {
+          if (strictLength) {
+            if (list.length != expected ||
+                list.any((value) => value is! String)) {
+              throw const FormatException(
+                'Subtitle output included context or changed line count',
+              );
+            }
+            return list.cast<String>();
+          }
           return List.generate(
             expected,
             (i) => i < list.length ? list[i].toString() : '',
           );
         }
-      } catch (_) {}
+      } on FormatException {
+        if (strictLength) rethrow;
+      } catch (_) {
+        if (strictLength) {
+          throw const FormatException('Subtitle output is not valid JSON');
+        }
+      }
+    }
+    if (strictLength) {
+      throw const FormatException(
+        'Subtitle output must be one exact JSON string array',
+      );
     }
     // 兜底：按行切分（模型偶尔输出裸行）。
     final lines = raw
@@ -1326,6 +2145,20 @@ class UiTranslateService extends GetxService {
 /// 需在被 Obx（或任何读取了 UiTranslateService 修订号）的构建里调用，
 /// 才能在异步译文回来后自动刷新；否则仅在界面重建时取到缓存译文。
 String uiTx(String src) => UiTranslateService.tx(src);
+
+/// 窄位便捷入口：列表标题 / 卡片标题 / 按钮 / Tab 这类空间紧张的位置用它。
+///
+/// 命中的游戏术语会倾向用**通行简称**（ゼンゼロ、スタレ、ブルアカ、アクナイ…），
+/// 详见 [UiTextWidth.tight]。与 [uiTx] 的区别只在术语选型，其余行为完全一致
+/// （同一份缓存、同一套队列），两者混用不会导致重复翻译。
+String uiTxTight(String src) =>
+    UiTranslateService.tx(src, width: UiTextWidth.tight);
+
+/// **高优先级**入口：译文会插队到普通队列之前。
+///
+/// 只给「用户一进 App 就盯着看、且必须等译文」的内容用 —— 目前只有更新弹窗。
+/// 普通界面文案请继续用 [uiTx] / [uiTxTight]，否则会把启动优化白做。
+String uiTxUrgent(String src) => UiTranslateService.txUrgent(src);
 
 /// 带占位符的模板翻译：把含 `{0}`/`{1}`… 的整句模板作为一个稳定 key 送翻译，
 /// 再把参数回填（提示词已要求模型保留 `{n}` 占位符）。用于 `'共 {0} 条'` 这类句子。

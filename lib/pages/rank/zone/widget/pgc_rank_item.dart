@@ -8,6 +8,7 @@ import 'package:PiliPlus/models/common/stat_type.dart';
 import 'package:PiliPlus/models_new/pgc/pgc_rank/pgc_rank_item_model.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 
 class PgcRankItem extends StatelessWidget {
@@ -39,7 +40,7 @@ class PgcRankItem extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AspectRatio(
+              SizedBox(height: Style.cardHCoverHeight, child: AspectRatio(
                 aspectRatio: 3 / 4,
                 child: LayoutBuilder(
                   builder: (context, constraints) {
@@ -56,7 +57,7 @@ CoverTranslateButton(cover: item.cover),
 ]);
                   },
                 ),
-              ),
+              )),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -68,7 +69,7 @@ CoverTranslateButton(cover: item.cover),
                     if (item.newEp?.indexShow?.isNotEmpty == true) ...[
                       Text(
                         item.newEp!.indexShow!,
-                        maxLines: 1,
+                        maxLines: Pref.videoTitleFull ? 2 : 1,
                         style: TextStyle(
                           fontSize: 12,
                           height: 1,

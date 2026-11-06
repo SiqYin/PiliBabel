@@ -26,6 +26,16 @@ try {
         throw 'version not found'
     }
 
+    # 版本自洽校验：tag 的数字部分必须与 pubspec 的 x.y.z 一致。
+    # 之前发 v3.6.4.1 时 pubspec 还是 3.6.4，APP 自报 3.6.4、却看到更新的 tag，
+    # 于是反复提示更新。这里直接拦住这类不一致的发布。
+    if ($env:GITHUB_REF_NAME -and $env:GITHUB_REF_NAME -match '^v?(\d+(?:\.\d+)*)$') {
+        $tagVersion = $matches[1]
+        if ($tagVersion -ne $versionName) {
+            throw "tag $env:GITHUB_REF_NAME does not match pubspec version $versionName"
+        }
+    }
+
     $updatedContent | Set-Content -Path 'pubspec.yaml' -Encoding UTF8
 
     $buildTime = [int]([DateTimeOffset]::Now.ToUnixTimeSeconds())

@@ -17,7 +17,6 @@ import 'package:PiliPlus/common/widgets/translucent_row.dart';
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show ReplyInfo, ReplyControl, Content, Url, ReplyControl_VoteOption, Emote;
 import 'package:PiliPlus/grpc/reply.dart';
-import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/reply.dart';
 import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
@@ -240,7 +239,7 @@ class ReplyItemGrpc extends StatelessWidget {
                     ),
                     if (replyItem.replyControl.hasLocation())
                       Text(
-                        ' • ${uiTx(replyItem.replyControl.location ?? '')}',
+                        ' • ${uiTx(replyItem.replyControl.location)}',
                         style: TextStyle(
                           fontSize: 11,
                           color: colorScheme.outline,
@@ -413,74 +412,6 @@ class ReplyItemGrpc extends StatelessWidget {
     );
   }
 
-  Widget _buildTranslateBtn(
-    BuildContext context,
-    ColorScheme colorScheme,
-    ReplyControl replyControl,
-    TextStyle textStyle,
-    ButtonStyle buttonStyle,
-  ) {
-    late bool isProcessing = false;
-    final color = replyControl.showTranslation
-        ? colorScheme.primary
-        : colorScheme.outline.withValues(alpha: 0.8);
-    return SizedBox(
-      height: 32,
-      child: TextButton(
-        style: buttonStyle,
-        onPressed: () async {
-          if (replyControl.showTranslation) {
-            replyControl.showTranslation = false;
-            (context as Element).markNeedsBuild();
-          } else {
-            if (isProcessing) {
-              return;
-            }
-            if (replyItem.hasTranslatedContent()) {
-              replyControl.showTranslation = true;
-              (context as Element).markNeedsBuild();
-              return;
-            }
-            isProcessing = true;
-            final res = await ReplyGrpc.translateReply(
-              type: replyItem.type,
-              oid: replyItem.oid,
-              rpid: replyItem.id,
-            );
-            if (res case Success(:final response)) {
-              final item = response.translatedReplies[replyItem.id];
-              if (item != null && item.hasTranslatedContent()) {
-                replyControl.showTranslation = true;
-                replyItem.translatedContent = item.translatedContent;
-                if (context.mounted) {
-                  (context as Element).markNeedsBuild();
-                }
-              } else {
-                SmartDialog.showToast(uiTx('翻译结果为空'));
-              }
-            } else if (res case Error(:final errMsg)) {
-              SmartDialog.showToast(uiTx('翻译失败: $errMsg'));
-            }
-            isProcessing = false;
-          }
-        },
-        child: Row(
-          spacing: 3,
-          mainAxisSize: .min,
-          children: [
-            Icon(Icons.translate, size: 16, color: color),
-            Text(
-              // 同样补上翻译：这个按钮目前全项目没有调用点（死代码），
-              // 但若日后重新启用，别让它又变成未翻译文案。
-              uiTx(replyControl.showTranslation ? '原文' : '翻译'),
-              style: textStyle.copyWith(color: color),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget buttonAction(
     BuildContext context,
     ColorScheme colorScheme,
@@ -582,21 +513,40 @@ class ReplyItemGrpc extends StatelessWidget {
           const SizedBox(width: 2),
         ],
         if (replyControl.cardLabels.isNotEmpty) ...[
-          Text(
-            // cardLabels 是服务端下发的中文标签（如「UP主觉得很赞」），需经 uiTx 翻译。
-            // 外层 Obx 已无条件读过 revision，所以译文到达后会跟着刷新。
-            // 逐条翻译而不是先拼接：拼接会让「A+B」这种组合各自成为独立缓存 key。
-            dialogBtn != null
-                ? uiTx(replyControl.cardLabels.first.textContent)
-                : replyControl.cardLabels
-                      .map((e) => uiTx(e.textContent))
-                      .join('  '),
-            style: textStyle.copyWith(color: colorScheme.secondary),
+          // 这些标签是服务端下发的中文（如「UP主觉得很赞」「相互关注」），经 AI 翻译后
+          // 可能显著变长。三条要求：
+          //   1) 不能把右侧的点赞等按钮挤出屏幕（用 Expanded 限制在剩余空间内）；
+          //   2) 多个标签必须**保持左右并排**（官方就是左「UP主觉得很赞」、右「相互关注」），
+          //      不能做成上下堆叠；
+          //   3) 但**每个标签各自独立折行**，绝不能拼成一个字符串再折 —— 拼接后折行会
+          //      跨标签断开，出现「いいねしま／した 相互フォロー」这种把词劈开的怪样子。
+          // 所以这里用横向 Row，每个标签是一个独立的 Flexible + Text（各自最多两行，
+          // 译文不长就不折），标签之间留间距。
+          Expanded(
+            child: Row(
+              spacing: 8,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                for (final label
+                    in dialogBtn != null
+                        ? replyControl.cardLabels.take(1)
+                        : replyControl.cardLabels)
+                  Flexible(
+                    child: Text(
+                      // 逐条翻译而不是先拼接：拼接会让「A+B」这种组合各自成为独立缓存 key。
+                      uiTx(label.textContent),
+                      style: textStyle.copyWith(color: colorScheme.secondary),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(width: 2),
-        ],
+        ] else
+          const Spacer(),
         ?dialogBtn,
-        const Spacer(),
         ZanButtonGrpc(replyItem: replyItem),
         const SizedBox(width: 5),
       ],
@@ -678,7 +628,7 @@ class ReplyItemGrpc extends StatelessWidget {
                             ),
                             style: TextStyle(color: colorScheme.primary),
                             recognizer: NoDeadlineTapGestureRecognizer()
-                              ..onTap = () async {
+                              ..onTap = () {
                                 feedBack();
                                 Get.toNamed(
                                   '/member?mid=${childReply.member.mid}',
@@ -825,7 +775,7 @@ class ReplyItemGrpc extends StatelessWidget {
         TextSpan(
           text: isCv
               ? uiTxComment('[笔记] ', id)
-              : uiTxComment(url.title ?? '', id),
+              : uiTxComment(url.title, id),
           style: TextStyle(color: colorScheme.primary),
           recognizer: NoDeadlineTapGestureRecognizer()
             ..onTap = () {

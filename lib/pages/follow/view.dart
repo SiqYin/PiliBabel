@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/services/ui_translate/prewarm_strings.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
@@ -48,6 +49,8 @@ class _FollowPageState extends State<FollowPage>
   @override
   void initState() {
     super.initState();
+    // 预翻译：本页 ⋮ 菜单/确认框是「点开才渲染」，提前排队。
+    PrewarmStrings.warmSocial();
     _followController = Get.put(FollowController(_tag), tag: _tag);
   }
 
@@ -137,7 +140,7 @@ class _FollowPageState extends State<FollowPage>
                     spacing: 10,
                     mainAxisSize: .min,
                     children: [
-                      Icon(Icons.block, size: 19),
+                      const Icon(Icons.block, size: 19),
                       Text(uiTx('黑名单管理')),
                     ],
                   ),
@@ -255,7 +258,7 @@ class _FollowPageState extends State<FollowPage>
                 },
               );
             },
-            child: Text(uiTx('修改名称'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('修改名称'), style: const TextStyle(fontSize: 14)),
           ),
           DialogOption(
             onPressed: () {
@@ -267,7 +270,7 @@ class _FollowPageState extends State<FollowPage>
                 onConfirm: () => _followController.onDelTag(index, item.tagid!),
               );
             },
-            child: Text(uiTx('删除分组'), style: TextStyle(fontSize: 14)),
+            child: Text(uiTx('删除分组'), style: const TextStyle(fontSize: 14)),
           ),
         ],
       ),

@@ -1,4 +1,5 @@
 import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
+import 'package:PiliPlus/common/widgets/video_subtitle_translate_button.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
@@ -110,12 +111,21 @@ class VideoCardH extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: .start,
                 children: [
-                  AspectRatio(
-                    aspectRatio: Style.aspectRatio,
-                    child: LayoutBuilder(
-                      builder: (context, boxConstraints) {
-                        final double maxWidth = boxConstraints.maxWidth;
-                        final double maxHeight = boxConstraints.maxHeight;
+                  // 封面高度必须固定，不能跟着格子高度走。
+                  //
+                  // 这里是横向卡片：封面用 AspectRatio，而 Row 给子项的宽度是无限的，
+                  // AspectRatio 会**按可用高度**反推宽度。格子高度一旦因为「标题展开
+                  // 四行」而加高（110 → 148），封面就会跟着放大、把右侧文字挤成细条。
+                  // 所以把封面钉死成原来的高度（旧格子 110 - 上下 padding 各 5 = 100），
+                  // 多出来的高度只留给右侧内容区的标题。
+                  SizedBox(
+                    height: Style.cardHCoverHeight,
+                    child: AspectRatio(
+                      aspectRatio: Style.aspectRatio,
+                      child: LayoutBuilder(
+                        builder: (context, boxConstraints) {
+                          final double maxWidth = boxConstraints.maxWidth;
+                          final double maxHeight = boxConstraints.maxHeight;
 
                         final progress = videoItem.progress;
 
@@ -129,7 +139,7 @@ class VideoCardH extends StatelessWidget {
                             ),
                             if (videoItem.badge case final badge?)
                               PBadge(
-                                text: uiTx(badge ?? ''),
+                                text: uiTx(badge),
                                 top: 6.0,
                                 right: 6.0,
                                 type: switch (badge) {
@@ -168,11 +178,19 @@ class VideoCardH extends StatelessWidget {
                                 bottom: 6.0,
                                 type: .gray,
                               ),
-                          
-                            CoverTranslateButton(cover: videoItem.cover),],
+
+                            CoverTranslateButton(cover: videoItem.cover),
+                            VideoSubtitleTranslateButton(
+                              videoKey: videoItem.bvid ?? 'av:${videoItem.aid}',
+                              bvid: videoItem.bvid,
+                              aid: videoItem.aid,
+                              cid: videoItem.cid,
+                            ),
+                          ],
                         );
                       },
                     ),
+                  ),
                   ),
                   const SizedBox(width: 10),
                   content(theme),
@@ -213,7 +231,8 @@ class VideoCardH extends StatelessWidget {
               // 支离破碎，所以界面翻译开启时改成整句走 uiTx：放弃高亮，
               // 换取一条完整的译文标题。翻译没开时行为与原来完全一致。
               if (titleList?.isNotEmpty == true &&
-                  !(translate && UiTranslateService.contentTranslationActive())) {
+                  !(translate &&
+                      UiTranslateService.contentTranslationActive())) {
                 return Text.rich(
                   overflow: .ellipsis,
                   maxLines: Pref.videoTitleFull ? 4 : 2,
@@ -239,7 +258,7 @@ class VideoCardH extends StatelessWidget {
                 );
               }
               return Text(
-                uiTx(videoItem.title),
+                uiTxTight(videoItem.title),
                 textAlign: .start,
                 style: TextStyle(
                   fontSize: theme.textTheme.bodyMedium!.fontSize,
@@ -247,7 +266,9 @@ class VideoCardH extends StatelessWidget {
                   letterSpacing: 0.3,
                   color: isClicked ? theme.colorScheme.outline : null,
                 ),
-                maxLines: 2,
+                // 与未翻译路径保持一致：也要跟随「标题展开」设置，
+                // 否则开了翻译就永远只有 2 行，和关翻译时看到的行数不一样。
+                maxLines: Pref.videoTitleFull ? 4 : 2,
                 overflow: .ellipsis,
               );
             }),

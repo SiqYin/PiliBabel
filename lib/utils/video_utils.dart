@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+
 import 'dart:async';
 
 import 'package:PiliPlus/models/common/video/audio_quality.dart';
@@ -229,19 +230,20 @@ abstract final class VideoUtils {
 
   static void clearBadHosts() => badHosts.clear();
 
-  static String _firstUsable(Iterable<String> urls, {Set<String>? excludeHosts}) {
+  static String _firstUsable(
+    Iterable<String> urls, {
+    Set<String>? excludeHosts,
+  }) {
     final list = urls.toList();
     if (list.isEmpty) {
       return '';
     }
     final usable = (excludeHosts == null || excludeHosts.isEmpty)
         ? list
-        : list
-              .where((url) {
-                final host = hostOf(url);
-                return host == null || !excludeHosts.contains(host);
-              })
-              .toList();
+        : list.where((url) {
+            final host = hostOf(url);
+            return host == null || !excludeHosts.contains(host);
+          }).toList();
     if (usable.isEmpty) {
       return list.first;
     }
@@ -456,10 +458,6 @@ abstract final class VideoUtils {
     List<int>? acceptQuality,
     int preferQuality,
   ) {
-    if (acceptQuality != null && acceptQuality.isNotEmpty) {
-      return acceptQuality.findTargetMedia((e) => e, preferQuality);
-    }
-
     return videoList
         .findTargetMedia((e) => e.quality.code, preferQuality)
         .quality
@@ -487,22 +485,34 @@ abstract final class VideoUtils {
       preferQuality,
     );
 
-    final targetFormat = supportFormats.firstWhere(
-      (e) => e.quality == targetQuality,
-      orElse: () => supportFormats.first,
-    );
-
-    final targetDecode = VideoUtils.selectCodec(
-      targetFormat.codecs!,
-      preferCodecs,
-    );
-
     final targetQaVideoList = videoList
         .where((e) => e.quality.code == targetQuality)
         .toList();
 
+    // `acceptQuality` and `supportFormats` can temporarily describe a stream
+    // that the returned DASH list does not contain. Choose only real streams.
+    final targetFormat = supportFormats.firstWhere(
+      (e) => e.quality == targetQuality,
+      orElse: () => FormatItem(
+        quality: targetQuality,
+        codecs: targetQaVideoList
+            .map((e) => e.codecs)
+            .whereType<String>()
+            .toList(),
+      ),
+    );
+    final codecs = [
+      ...?targetFormat.codecs,
+      ...targetQaVideoList.map((e) => e.codecs).whereType<String>(),
+    ].where((e) => e.isNotEmpty).toSet();
+    final targetDecode = codecs.isEmpty
+        ? VideoDecodeFormatType.AVC
+        : VideoUtils.selectCodec(codecs, preferCodecs);
+
     final targetVideo = targetQaVideoList.firstWhere(
-      (e) => targetDecode.codes.any(e.codecs!.startsWith),
+      (e) => targetDecode.codes.any(
+        (code) => e.codecs?.startsWith(code) ?? false,
+      ),
       orElse: () => targetQaVideoList.first,
     );
 

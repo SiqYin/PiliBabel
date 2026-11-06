@@ -1,14 +1,21 @@
-### PiliBabel v3.3.4
+### PiliBabel v3.6.8
 
-**Dynamics cards, a home-feed cover fix, and an upstream sync.**
+**Adds AI-powered subtitle translation: real-time Chinese→target-language subtitles with context-aware chunked translation, offline dictionary for Vietnamese, and optional proxy routing.**
 
-- The dynamics (P3) timeline now renders four card types that were previously dropped or shown as blanks: paid/charging posts, applets, topic sets, and subscription cards.
-- Fixed the home feed's first screen showing no covers at all. The cold-start prefetch entries are consumed as the first page, and those entries do not always carry a top-level `cover`; the cover is now read from the item's `args`/`pic` fallbacks, and a prefetch page that yields no cover at all is treated as a miss so the normal feed request runs instead.
-- Upstream PiliNara changes are in: the status bar going dark when the app opens, downloads that were waiting resuming after the process is killed, the media-kit and companion package upgrade, the Wayland black-video workaround, and selectable audio quality when caching a video.
-- AI-translation audit of every interface string added since 3.0.5. One string was missing: the "audio quality" label and the quality menu items in the download panel now go through the same AI translation path as the rest of the UI.
-- The README changelog was rewritten from scratch for all 44 language versions, covering everything from 2.6.x through 3.3.4.
-- Upstream sync baseline for this release: Starfallan/PiliNara at commit `b5694ccd` (2026-10-24). The baseline is written down in `UPSTREAM-SYNC.md` so the next sync knows where to start.
+**Core subtitle translation engine.** Chinese subtitles are split into 20-cue chunks with 4 lines of overlap context for consistent character names and pronouns. Each chunk is translated independently with retry, timeout, and quality validation (residual Han detection, timing integrity, context-echo rejection). Completed translations are checkpointed to disk and survive app restarts.
 
-Everything from v3.3.3 is included as well: the comment-section hotfix (the first-page prefetch was casting `Success<MainListReply?>` to `LoadingState<MainListReply>`, so the cast threw before any network work and every retry replayed the same broken cache entry), the v3.3.2 DNS resolution instrumentation and encrypted-DNS fallback switch, the host table, speed scores shared with the connection layer, second-screen feed prefetch with generation-based de-duplication, feed `idx` semantics, the audio page's buffered range and cache statistics, host health in stream selection, and the "load more replies" wording.
+**Realtime buffering.** Playback starts when 60 seconds of translated subtitles are available ahead; auto-pauses if coverage drops below 15 seconds. The translation queue prioritizes the current playback position, then nearby chunks, then future segments. Seeking immediately reprioritizes work.
+
+**Subtitle track management.** A new track list appears in the player's subtitle menu: Bilibili's own tracks (including official AI translations) plus a live AI-translated track with progress labels. Manual per-part selection is remembered for the session. A compact card-cover button on video cards shows translation status and offers one-tap retranslation.
+
+**Vietnamese offline dictionary.** 309 common UI labels are instantly translated offline when Vietnamese is selected as the interface language — no API call, no network round trip. Falls through to the AI translation pipeline for dynamic content.
+
+**Optional HTTP/SOCKS5 proxy routing.** Translation requests can be routed through user-configured proxies (6 concurrent slots per proxy) to accelerate subtitle translation. The device's direct connection is always available as a fallback; invalid proxy configuration never blocks translation.
+
+**Settings.** New subtitle section: chunk size (10–40 cues), concurrency (1–5), context overlap (0–8 lines), wait-for-complete toggle, playlist prefetch (0–5 videos), and proxy configuration.
+
+**Bonus fixes:** QR code refresh race condition, and video quality/codec selection tolerance when the DASH stream list doesn't match the declared formats.
+
+> **Acknowledgement:** The subtitle translation system was originally contributed by [saukhoai](https://github.com/saukhoai) via [PR #2](https://github.com/SiqYin/PiliBabel/pull/2). We adapted and integrated the core engine, generalized it for all target languages, and merged the Vietnamese offline dictionary and proxy routing as optional features. Thank you for this substantial contribution!
 
 Downloads are below.
