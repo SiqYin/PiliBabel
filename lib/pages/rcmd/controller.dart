@@ -129,13 +129,16 @@ class RcmdController extends CommonListController {
     return Success(merged);
   }
 
-  /// 预取本批后半段的封面：首屏（两列网格约 4~6 张）立即可见不需要预取，
-  /// 之后的条目提前进缓存。不抛异常、不阻塞数据返回。
+  /// 预取本批的封面：把所有条目（含首屏可见的几张）都提前进缓存，滚到对应条时
+  /// 直接命中，不再等网络。首屏几格此前靠 cache 控件自身的懒加载，一旦那个瞬间
+  /// 网络响应慢/偶发失败就会留成空图（errorBuilder 只显示占位），需要下拉刷新让
+  /// 整个列表重建才会重新加载——所以这里不跳过首屏，而是整批并全量并发预取。
+  /// 不抛异常、不阻塞数据返回。
   void _prefetchTailCovers(List<BaseRcmdVideoItemModel> list) {
     try {
-      if (list.length > 6) {
+      if (list.isNotEmpty) {
         ImageUtils.prefetchImages(
-          list.skip(6).take(_prefetchCovers).map((e) => e.cover),
+          list.take(_prefetchCovers).map((e) => e.cover),
         );
       }
     } catch (_) {}

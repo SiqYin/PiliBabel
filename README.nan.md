@@ -173,7 +173,7 @@ paru -S pilinara-bin         # 抑是對 AUR：pilinara-bin（現成的建置）
 
 <br/>
 
-## 更新記錄：2.6.x → 3.3.4
+## 更新記錄：2.6.x → 3.6.7
 
 - **2.6.x** — 音訊快取（影片佮音訊兩个獨立模組，會記牢頂改的選擇，影片頁、聽影片頁、音訊播放頁攏有入口；保持原格式；音質會使揀）佮下載到本機（獨立的選單項目，先揀影片／音訊才揀畫質／音質，若無設過所在就直接開系統的檔案管理員）。
 
@@ -182,6 +182,12 @@ paru -S pilinara-bin         # 抑是對 AUR：pilinara-bin（現成的建置）
 - **3.2.0–3.3.3** — 倚官方 Android 端的網路底座：請求指紋（buvid/fp/session_id/env）、gRPC 主機故障切換、重試攔截器、單主機並發閘門、冷啟動首屏預取、官方 feed 事件參數、CDN 候選順序佮海外兜底；資訊流第二屏預取、有界的封面預取隊伍、播放網址預取；才來是動態（P3）的 gRPC 渲染，佮修好音訊頁緩衝長度的編譯錯誤、評論區預取型別轉換造成重試秒失敗的問題。
 
 - **3.3.4** — 付費卡、小程式、話題集、訂閱卡四類動態卡片；修好首頁第一屏攏無封面的問題；同步上游 PiliNara（開 App 烏狀態列、刣掉程序後下載會使續、media-kit 升級、Wayland 烏屏迴避、快取影片會使揀音質）；對 3.0.5 以來加的全部介面文字做 AI 翻譯稽核；這份更新記錄。
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.7 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4. In 3.6.5 an embedded term no longer stops the rest of a paragraph from being translated, the glossary screen follows the app theme, the tables are on by default, and the version the app reports about itself now matches its release tag. 3.6.6 fixes surname parts of a name expanding to the full name, makes the glossary screen follow the app theme again (with working switches), and lets official glossary names override stale cached translations; 3.6.7 fixes the glossary counter stuck at 14/15 with every switch on, and repairs three tables whose displayed counts were wrong (Reverse: 1999 embedded nothing at all).
 
 ## 繼承功能清單（來自 PiliNara / PiliPlus）
 
@@ -271,3 +277,8 @@ The bundled **LXGW WenKai** typeface is licensed separately under the **SIL Open
 ## 註記
 
 這份 README 是 AI 寫的，用詞佮文法可能會有疏誤。
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

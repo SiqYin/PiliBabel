@@ -14,16 +14,29 @@ abstract final class CacheManager {
 
   /// 图片下载统一用这一个 client。
   ///
-  /// 此前图片由图片库内部自建连接：每张图一条新连接、带裸 Dart UA、没有
-  /// Referer，海外访问图片域既慢又容易被降速。这里换成共享 HttpClient
-  /// （keep-alive 复用连接）+ 浏览器 UA + Referer，与 App 其它请求的
-  /// 指纹保持一致。
+  /// 两个要点，缺一都会让图要么加载不出、要么把整机网络拖死：
+  ///
+  /// 1) **不走本机 DNS 解析代理（findProxy = DIRECT）**。main.dart 的
+  ///    `_CustomHttpOverrides` 会把所有 `HttpClient` 的 findProxy 指向
+  ///    `DnsProxy`（127.0.0.1 的 CONNECT 隧道）。图片数量巨大且每张图片都会
+  ///    新开一条隧道，一旦并发上来就把代理的 socket / 事件循环挤爆，连带
+  ///    API 数据请求（同样经由该代理）一起饿死——表现为首页、动态、收藏、
+  ///    历史全部加载不出来。图片域名（hdslb 等）用系统解析完全够用，
+  ///    不需要自解析，所以这里明确直连，把代理留给数据请求。
+  /// 2) **并发上限放大到 32**。此前是 6：首屏几十张封面抢 6 个槽位，抢不到
+  ///    的落在连接超时上，errorBuilder 落回灰占位且不再自动重试，只能下拉
+  ///    刷新重建 widget 才重新加载（v3.0.5 图片是库默认的无上限并发，没有这个
+  ///    现象）。直连之后不再有代理可挤，放大到 32 即可贴近 v3.0.5 的并行度，
+  ///    又不至于把文件句柄用光。
   static final http.Client _imageClient = _ImageHttpClient(
     IOClient(
       HttpClient()
         ..userAgent = BrowserUa.pc
         ..idleTimeout = const Duration(seconds: 15)
-        ..maxConnectionsPerHost = 6,
+        ..maxConnectionsPerHost = 32
+        // 关键字：绕开 DnsProxy，图片直连。HttpOverrides 已经给它挂上了代理，
+        // 这里在同一实例上再覆盖一次，确保生效。
+        ..findProxy = ((_) => 'DIRECT'),
     ),
   );
 
@@ -40,10 +53,10 @@ abstract final class CacheManager {
             : getTemporaryDirectory,
     maxNrOfCacheLength: Pref.maxCacheSize.toInt(),
     httpClientFactory: () => _imageClient,
-    // 此前不设任何超时：一张图卡住就一直挂着，页面永远是占位块。连接 10s、
-    // 数据块间隔 30s（只限制「多久没来数据」，不会掐断慢速下载）。
+    // 只限制「多久没来数据」，不掐断慢速下载：连接 15s、数据块间隔 30s。
+    // 有上限并发 + 直连后，这里主要用来兜住真正卡死的连接，避免永远占位块。
     connectionParameters: ConnectionParameters(
-      connectionTimeout: const Duration(seconds: 10),
+      connectionTimeout: const Duration(seconds: 15),
       requestTimeout: const Duration(seconds: 30),
     ),
   ).then((i) => manager = i);

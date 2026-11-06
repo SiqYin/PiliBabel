@@ -2,6 +2,7 @@ import 'dart:io' show Platform;
 import 'dart:math';
 
 import 'package:PiliPlus/common/assets.dart';
+import 'package:PiliPlus/services/ui_translate/prewarm_strings.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/flutter/pop_scope.dart';
@@ -88,7 +89,6 @@ import 'package:material_ui/material_ui.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get/get.dart';
-import 'package:material_ui/material_ui.dart';
 import 'package:screen_brightness_platform_interface/screen_brightness_platform_interface.dart';
 
 class VideoDetailPageV extends StatefulWidget {
@@ -263,6 +263,8 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
   @override
   void initState() {
     super.initState();
+    // 预翻译：本页 ⋮ 菜单/确认框是「点开才渲染」，提前排队。
+    PrewarmStrings.warmVideo();
     VideoStackManager.increment(); // 追踪视频页面层级
     final bool fromPip = Get.arguments['fromPip'] ?? false;
     final String? targetContextKey = PipOverlayService.contextKeyFromArgs(
@@ -554,10 +556,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
         // 同样刷新 ReplyController
         if (videoDetailController.showReply) {
           try {
-            final replyController = Get.find<VideoReplyController>(
-              tag: heroTag,
-            );
-            replyController.update();
+            Get.find<VideoReplyController>(tag: heroTag).update();
             _logSponsorBlock('Forced UI refresh for VideoReplyController');
           } catch (e) {
             _logSponsorBlock('Failed to refresh VideoReplyController: $e');
@@ -892,7 +891,7 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
 
   @override
   // 返回当前页面时
-  void didPopNext() async {
+  Future<void> didPopNext() async {
     super.didPopNext();
 
     if (videoDetailController.plPlayerController.isCloseAll) {
@@ -2954,27 +2953,27 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
     final additionalControllers = <String, dynamic>{};
     if (videoDetailController.showReply) {
       try {
-        final replyController = Get.find<VideoReplyController>(tag: heroTag);
-        replyController.isEnteringPip = true;
+        final replyController = Get.find<VideoReplyController>(tag: heroTag)
+          ..isEnteringPip = true;
         additionalControllers['reply'] = replyController;
       } catch (_) {}
     }
     if (videoDetailController.isFileSource) {
       try {
-        final intro = Get.find<LocalIntroController>(tag: heroTag);
-        intro.isEnteringPip = true;
+        final intro = Get.find<LocalIntroController>(tag: heroTag)
+          ..isEnteringPip = true;
         additionalControllers['intro'] = intro;
       } catch (_) {}
     } else if (videoDetailController.isUgc) {
       try {
-        final intro = Get.find<UgcIntroController>(tag: heroTag);
-        intro.isEnteringPip = true;
+        final intro = Get.find<UgcIntroController>(tag: heroTag)
+          ..isEnteringPip = true;
         additionalControllers['intro'] = intro;
       } catch (_) {}
     } else {
       try {
-        final intro = Get.find<PgcIntroController>(tag: heroTag);
-        intro.isEnteringPip = true;
+        final intro = Get.find<PgcIntroController>(tag: heroTag)
+          ..isEnteringPip = true;
         additionalControllers['intro'] = intro;
       } catch (_) {}
     }

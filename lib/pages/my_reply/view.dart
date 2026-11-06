@@ -1,4 +1,7 @@
+import 'dart:typed_data';
+
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/dialog/export_import.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
@@ -25,6 +28,12 @@ class MyReply extends StatefulWidget {
 
   @override
   State<MyReply> createState() => _MyReplyState();
+
+  static Map<String, Uint8List> json2ReplyProto(List<dynamic> list) => {
+    for (var e in list)
+      e['id'].toString(): (ReplyInfo.create()..mergeFromProto3Json(e))
+          .writeToBuffer(),
+  };
 }
 
 class _MyReplyState extends State<MyReply> with DynMixin {
@@ -181,11 +190,7 @@ class _MyReplyState extends State<MyReply> with DynMixin {
   }
 
   Future<void> _onImport(List<dynamic> list) async {
-    await GStorage.reply!.putAll({
-      for (var e in list)
-        e['id'].toString(): (ReplyInfo.create()..mergeFromProto3Json(e))
-            .writeToBuffer(),
-    });
+    await GStorage.reply!.putAll(MyReply.json2ReplyProto(list));
     if (mounted) {
       _initReply();
       setState(() {});

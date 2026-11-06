@@ -79,7 +79,7 @@ class _WhisperLinkSettingPageState extends State<WhisperLinkSettingPage> {
           ListTile(
             dense: true,
             onTap: _controller.report,
-            title: Text(uiTx('举报'), style: TextStyle(fontSize: 14)),
+            title: Text(uiTx('举报'), style: const TextStyle(fontSize: 14)),
             trailing: Icon(
               Icons.keyboard_arrow_right,
               color: theme.colorScheme.outline,
@@ -95,7 +95,7 @@ class _WhisperLinkSettingPageState extends State<WhisperLinkSettingPage> {
     return ListTile(
       dense: true,
       onTap: () => _controller.setBlock(isBlocked),
-      title: Text(uiTx('加入黑名单'), style: TextStyle(fontSize: 14)),
+      title: Text(uiTx('加入黑名单'), style: const TextStyle(fontSize: 14)),
       trailing: Transform.scale(
         alignment: Alignment.centerRight,
         scale: 0.8,
@@ -192,7 +192,7 @@ class _WhisperLinkSettingPageState extends State<WhisperLinkSettingPage> {
                 ListTile(
                   dense: true,
                   onTap: () => _controller.setPush(response.pushSetting == 0),
-                  title: Text(uiTx('接收消息推送'), style: TextStyle(fontSize: 14)),
+                  title: Text(uiTx('接收消息推送'), style: const TextStyle(fontSize: 14)),
                   subtitle: Text(uiTx('若关闭此开关，你将不再收到该账号的图文消息与稿件推送，但通知类消息不受影响'),
                     style: subTitleS,
                   ),
@@ -211,7 +211,7 @@ class _WhisperLinkSettingPageState extends State<WhisperLinkSettingPage> {
                 () => ListTile(
                   dense: true,
                   onTap: _controller.setPin,
-                  title: Text(uiTx('置顶聊天'), style: TextStyle(fontSize: 14)),
+                  title: Text(uiTx('置顶聊天'), style: const TextStyle(fontSize: 14)),
                   trailing: Transform.scale(
                     alignment: Alignment.centerRight,
                     scale: 0.8,
@@ -241,7 +241,7 @@ class _WhisperLinkSettingPageState extends State<WhisperLinkSettingPage> {
             ? ListTile(
                 dense: true,
                 onTap: () => _controller.setMute(response.first.setting == 1),
-                title: Text(uiTx('消息免打扰'), style: TextStyle(fontSize: 14)),
+                title: Text(uiTx('消息免打扰'), style: const TextStyle(fontSize: 14)),
                 trailing: Transform.scale(
                   alignment: Alignment.centerRight,
                   scale: 0.8,

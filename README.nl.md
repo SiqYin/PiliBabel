@@ -153,7 +153,7 @@ paru -S pilinara-bin         # of via AUR: pilinara-bin (voorgebouwd) / pilinara
 
 <br/>
 
-## Wijzigingslog: 2.6.x → 3.3.4
+## Wijzigingslog: 2.6.x → 3.6.7
 
 - **2.6.x** — audiocache (aparte modules voor video en audio, onthoudt de laatste keuze, ingangen op de videopagina, de alleen-audio-pagina en in de audiospeler; oorspronkelijk formaat blijft behouden; kwaliteit kiesbaar) en downloaden naar het apparaat (eigen menu-item: eerst video/audio, dan kwaliteit; zonder ingestelde map opent de systeem-bestandskiezer).
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # of via AUR: pilinara-bin (voorgebouwd) / pilinara
 - **3.2.0–3.3.3** — netwerkbasis in de stijl van de officiële app: vingerafdruk van verzoeken (buvid/fp/session_id/env), failover van gRPC-hosts, retry-interceptor, limiet op gelijktijdige verzoeken per host, voorladen van de eerste feed bij een koude start, officiële feed-gebeurtenisparameters, volgorde van CDN-kandidaten met buitenlandse reserves; voorladen van de tweede pagina, begrensde wachtrij voor het voorladen van omslagen, voorladen van afspeel-URL's; daarna weergave van dynamics (P3) via gRPC en correcties: compileerfout in de buffertijd op de audiopagina en typefout bij het voorladen van reacties waardoor elke nieuwe poging direct mislukte.
 
 - **3.3.4** — dynamics-kaarten voor betaalde berichten, mini-apps, themaverzamelingen en abonnementen; het probleem waarbij het eerste scherm van de startpagina helemaal geen omslagen toonde is opgelost; wijzigingen van PiliNara overgenomen (statusbalk, download hervatten na het sluiten van het proces, update van media-kit, zwarte video in Wayland omzeild, keuze van audiokwaliteit bij cachen); controle van AI-vertaling voor alle interfacetekst die sinds 3.0.5 is toegevoegd; deze log.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.7 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4. In 3.6.5 an embedded term no longer stops the rest of a paragraph from being translated, the glossary screen follows the app theme, the tables are on by default, and the version the app reports about itself now matches its release tag. 3.6.6 fixes surname parts of a name expanding to the full name, makes the glossary screen follow the app theme again (with working switches), and lets official glossary names override stale cached translations; 3.6.7 fixes the glossary counter stuck at 14/15 with every switch on, and repairs three tables whose displayed counts were wrong (Reverse: 1999 embedded nothing at all).
 
 ## Log van overgeërfde functies (van PiliNara / PiliPlus)
 
@@ -248,3 +254,8 @@ Het meegeleverde lettertype **LXGW WenKai** is apart gelicentieerd onder de **SI
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — het open-source Chinese lettertype dat met de app wordt meegeleverd, onder de SIL Open Font License 1.1
 - en meer
 - Geïnspireerd door bilibili's officiële "AI-interfacevertaling".
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

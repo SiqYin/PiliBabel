@@ -194,7 +194,7 @@ class _DynamicsPageState extends CommonPageState<DynamicsPage>
                     .map(
                       (e) => Obx(() {
                         UiTranslateService.to.revision.value;
-                        return Tab(text: uiTx(e.label));
+                        return Tab(text: uiTxTight(e.label));
                       }),
                     )
                     .toList(),

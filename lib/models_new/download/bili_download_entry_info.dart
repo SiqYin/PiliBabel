@@ -84,7 +84,7 @@ class BiliDownloadEntryInfo with MultiSelectData {
             items: [
               CustomPopupMenuItem<void>(
                 height: 38,
-                child: Text(uiTx('查看详情页'), style: TextStyle(fontSize: 13)),
+                child: Text(uiTx('查看详情页'), style: const TextStyle(fontSize: 13)),
                 onTap: () {
                   if (ep case final ep?) {
                     if (ep.from == VideoType.pugv.name) {
@@ -115,7 +115,7 @@ class BiliDownloadEntryInfo with MultiSelectData {
                 CustomPopupMenuItem<void>(
                   height: 38,
                   child: Text(uiTx('打开本地文件夹'),
-                    style: TextStyle(fontSize: 13),
+                    style: const TextStyle(fontSize: 13),
                   ),
                   onTap: () async {
                     try {
@@ -139,7 +139,7 @@ class BiliDownloadEntryInfo with MultiSelectData {
                 CustomPopupMenuItem<void>(
                   height: 38,
                   child: Text(uiTx('复制缓存路径'),
-                    style: TextStyle(fontSize: 13),
+                    style: const TextStyle(fontSize: 13),
                   ),
                   onTap: () => Utils.copyText(entryDirPath),
                 ),

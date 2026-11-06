@@ -153,7 +153,7 @@ paru -S pilinara-bin         # o tramite AUR: pilinara-bin (precompilato) / pili
 
 <br/>
 
-## Cronologia delle modifiche: 2.6.x → 3.3.4
+## Cronologia delle modifiche: 2.6.x → 3.6.7
 
 - **2.6.x** — cache audio (moduli separati per video e audio, memorizza l'ultima scelta, voci nella pagina video, in quella solo audio e nel lettore audio; formato originale conservato; qualità selezionabile) e download sul dispositivo (voce di menu dedicata: prima video/audio, poi la qualità; senza cartella impostata si apre il selettore di sistema).
 
@@ -166,6 +166,12 @@ paru -S pilinara-bin         # o tramite AUR: pilinara-bin (precompilato) / pili
 - **3.3.0–3.3.3** — rendering delle dinamiche (P3) via gRPC, poi correzioni: errore di compilazione sulla durata del buffer nella pagina audio e mancata conversione di tipo nel precaricamento dei commenti, che faceva fallire ogni tentativo all'istante.
 
 - **3.3.4** — schede dinamiche per contenuti a pagamento, mini-app, raccolte di argomenti e abbonamenti; risolto il primo schermo della home senza copertine; allineamento con PiliNara (barra di stato, ripresa dei download dopo la chiusura del processo, aggiornamento di media-kit, aggiramento del video nero su Wayland, scelta della qualità audio durante la cache); verifica della traduzione AI per tutti i testi di interfaccia aggiunti da 3.0.5; questa cronologia.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.7 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4. In 3.6.5 an embedded term no longer stops the rest of a paragraph from being translated, the glossary screen follows the app theme, the tables are on by default, and the version the app reports about itself now matches its release tag. 3.6.6 fixes surname parts of a name expanding to the full name, makes the glossary screen follow the app theme again (with working switches), and lets official glossary names override stale cached translations; 3.6.7 fixes the glossary counter stuck at 14/15 with every switch on, and repairs three tables whose displayed counts were wrong (Reverse: 1999 embedded nothing at all).
 
 ## Registro delle funzionalità ereditate (da PiliNara / PiliPlus)
 
@@ -252,3 +258,8 @@ Il carattere **LXGW WenKai** incluso è concesso separatamente sotto la **SIL Op
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — il carattere cinese open-source incluso nell'app, sotto la SIL Open Font License 1.1
 - e altro
 - Ispirato alla "traduzione dell'interfaccia tramite IA" ufficiale di bilibili.
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

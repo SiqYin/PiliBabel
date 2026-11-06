@@ -20,9 +20,10 @@ import 'package:PiliPlus/models_new/video/video_detail/data.dart';
 import 'package:PiliPlus/models_new/video/video_detail/episode.dart' as ugc;
 import 'package:PiliPlus/models_new/video/video_detail/page.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
-import 'package:PiliPlus/pages/danmaku/controller.dart';
 import 'package:PiliPlus/services/download/download_manager.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_source_resolver.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_artifact.dart';
 import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:PiliPlus/utils/danmaku_utils.dart';
 import 'package:PiliPlus/utils/extension/file_ext.dart';
@@ -34,6 +35,7 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart' as path;
 import 'package:synchronized/synchronized.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 
 // ref https://github.com/10miaomiao/bilimiao2/blob/master/bilimiao-download/src/main/java/cn/a10miaomiao/bilimiao/download/DownloadService.kt
 
@@ -42,13 +44,12 @@ class DownloadService extends GetxService {
   static const _indexFile = 'index.json';
   static const _maxDanmakuConcurrency = 4;
 
-
   /// 弹幕下载锁：批量更新时外层 Future.wait 会并发调用多次 downloadDanmaku，
   /// 此锁确保同一时间只有一个视频在下载弹幕，避免总并发超过 _maxDanmakuConcurrency。
   final _danmakuLock = Lock();
 
   final flagNotifier = SetNotifier();
-  final completedEntryNotifier = Set<ValueChanged<BiliDownloadEntryInfo>>();
+  final completedEntryNotifier = <ValueChanged<BiliDownloadEntryInfo>>{};
   final waitDownloadQueue = RxList<BiliDownloadEntryInfo>();
   final downloadList = <BiliDownloadEntryInfo>[];
 
@@ -353,6 +354,12 @@ class DownloadService extends GetxService {
   /// 调用 downloadDanmaku 的最长等待（含排队等弹幕锁）
   static const Duration _danmakuCallBudget = Duration(seconds: 75);
 
+  /// 单次取播放地址的最长等待。playurl 响应体大、海外慢，内部已放宽到
+  /// receive 30s，但 gRPC PlayView 没有内建超时；这里给整段加一个硬上限，
+  /// 防止「获取播放地址」阶段无限悬挂（用户看到的就是永远停在“获取播放地址”）。
+  /// 超时变成异常，被外层重试循环捕获；试满次数后转 failPlayUrl + toast，用户有反馈。
+  static const Duration _playUrlCallBudget = Duration(seconds: 45);
+
   /// 建立流程的代号：每次开始/切换都自增，旧的流程靠它自我作废。
   /// 有了它就**不再需要下载锁**——锁会被卡住的网络请求长期占死，
   /// 表现正是「正在下载却卡住时，点其它等待中的视频毫无反应」。
@@ -436,7 +443,7 @@ class DownloadService extends GetxService {
   void _warnIfSetupSlow(int gen) {
     Timer(const Duration(seconds: 12), () {
       if (gen == _setupGen && _setupDepth > 0) {
-        SmartDialog.showToast('${uiTx('缓存建立中，阶段：')}${_phase}');
+        SmartDialog.showToast('${uiTx('缓存建立中，阶段：')}$_phase');
       }
     });
   }
@@ -451,46 +458,46 @@ class DownloadService extends GetxService {
     }
     _phase = 'danmaku-wait-lock';
     return _danmakuLock.synchronized<bool>(() async {
-    final danmakuFile = File(
-      path.join(entry.entryDirPath, PathUtils.danmakuName),
-    );
-    if (isUpdate || !danmakuFile.existsSync()) {
-      try {
-        if (!isUpdate && _setupOwns(entry)) {
-          _updateCurStatus(DownloadStatus.getDanmaku);
-        }
-        final seg = (entry.totalTimeMilli / DmUtils.segLength).ceil();
-        if (seg <= 0) {
-          throw StateError('Invalid danmaku segment count: $seg');
-        }
-
-        // 弹幕不是播放必需，而海外 grpc 有可能整段挂死：这里给一个总时限。
-        // 以前它挂住会连带把整条下载流程占死——表现就是「正在下载」长期不动、
-        // 点队列里其它等待项也没反应。
-        final bytes = await _fetchDanmakuBytes(
-          cid,
-          seg,
-        ).timeout(_danmakuBudget, onTimeout: () => null);
-        if (bytes == null) {
-          // 超时/风控/分段不全：不落盘（文件存在即代表完整，之后可再更新）。
-          // 首次缓存不因此中断视频下载；手动「更新弹幕」则如实返回失败。
-          return !isUpdate;
-        }
-        await danmakuFile.writeAsBytes(bytes);
-
-        return true;
-      } catch (e) {
-        if (!isUpdate) {
-          if (_setupOwns(entry)) {
-            _updateCurStatus(DownloadStatus.failDanmaku);
-            _ensureQueueRunning();
+      final danmakuFile = File(
+        path.join(entry.entryDirPath, PathUtils.danmakuName),
+      );
+      if (isUpdate || !danmakuFile.existsSync()) {
+        try {
+          if (!isUpdate && _setupOwns(entry)) {
+            _updateCurStatus(DownloadStatus.getDanmaku);
           }
+          final seg = (entry.totalTimeMilli / DmUtils.segLength).ceil();
+          if (seg <= 0) {
+            throw StateError('Invalid danmaku segment count: $seg');
+          }
+
+          // 弹幕不是播放必需，而海外 grpc 有可能整段挂死：这里给一个总时限。
+          // 以前它挂住会连带把整条下载流程占死——表现就是「正在下载」长期不动、
+          // 点队列里其它等待项也没反应。
+          final bytes = await _fetchDanmakuBytes(
+            cid,
+            seg,
+          ).timeout(_danmakuBudget, onTimeout: () => null);
+          if (bytes == null) {
+            // 超时/风控/分段不全：不落盘（文件存在即代表完整，之后可再更新）。
+            // 首次缓存不因此中断视频下载；手动「更新弹幕」则如实返回失败。
+            return !isUpdate;
+          }
+          await danmakuFile.writeAsBytes(bytes);
+
+          return true;
+        } catch (e) {
+          if (!isUpdate) {
+            if (_setupOwns(entry)) {
+              _updateCurStatus(DownloadStatus.failDanmaku);
+              _ensureQueueRunning();
+            }
+          }
+          if (kDebugMode) SmartDialog.showToast(e.toString());
+          return false;
         }
-        if (kDebugMode) SmartDialog.showToast(e.toString());
-        return false;
       }
-    }
-    return true;
+      return true;
     });
   }
 
@@ -550,10 +557,10 @@ class DownloadService extends GetxService {
       } else {
         return;
       }
-      if (subtitleList == null || subtitleList.isEmpty) return;
+      final availableSubtitles = subtitleList ?? const <Subtitle>[];
 
       final vttResults = await Future.wait(
-        subtitleList.map((sub) async {
+        availableSubtitles.map((sub) async {
           if (sub.subtitleUrl?.isNotEmpty != true) return null;
           try {
             return await VideoHttp.getSubtitles(sub.subtitleUrl!);
@@ -571,10 +578,10 @@ class DownloadService extends GetxService {
       }
 
       final successfulSubs = <Subtitle>[];
-      for (int i = 0; i < subtitleList.length; i++) {
+      for (int i = 0; i < availableSubtitles.length; i++) {
         final vtt = vttResults[i];
         if (vtt == null) continue;
-        final sub = subtitleList[i];
+        final sub = availableSubtitles[i];
         try {
           await File(
             path.join(subsDir.path, PathUtils.subtitleVttName(sub.lan)),
@@ -582,18 +589,41 @@ class DownloadService extends GetxService {
           successfulSubs.add(sub);
         } catch (_) {}
       }
+
+      // 缓存视频时顺带保存已完成的译文轨（跟随当前界面目标语言）。
+      final targetLang = Pref.uiTranslateLang;
+      final targetTag = SubtitleSourceResolver.primaryLanguageTag(targetLang);
+      final translatedArtifact =
+          await SubtitleTranslationArtifactRegistry.shared.findForPart(
+            videoKey: entry.bvid,
+            cid: cid,
+            targetLanguage: targetLang,
+          );
+      if (translatedArtifact != null) {
+        final translatedFile = File(translatedArtifact.vttFilePath);
+        if (await translatedFile.exists()) {
+          await translatedFile.copy(
+            path.join(
+              subsDir.path,
+              PathUtils.subtitleVttName('$targetTag-app-ai'),
+            ),
+          );
+          successfulSubs.add(
+            Subtitle(
+              lan: '$targetTag-app-ai',
+              lanDoc: '${UiTranslateService.to.currentLanguage.name} (AI)',
+              isAi: false,
+            ),
+          );
+        }
+      }
       if (successfulSubs.isEmpty) return;
 
       final indexJson = successfulSubs
           .map(
             (sub) => {
               'lan': sub.lan,
-              'lan_doc': sub.isAi
-                  ? sub.lanDoc!.substring(
-                      0,
-                      sub.lanDoc!.length - '（AI）'.length,
-                    )
-                  : sub.lanDoc ?? '',
+              'lan_doc': sub.lanDoc?.replaceFirst('（AI）', '') ?? '',
               'subtitle_url': sub.subtitleUrl ?? '',
               'subtitle_url_v2': sub.subtitleUrlV2,
               'type': sub.isAi ? 1 : 0,
@@ -777,14 +807,22 @@ class DownloadService extends GetxService {
             ep: entry.ep,
             source: entry.source,
             pageData: entry.pageData,
-          );
+          ).timeout(_playUrlCallBudget);
           break;
         } catch (e) {
+          // 超时（我加的硬上限触发）或网络异常：非「不存在」类的可重试错误就退避重试。
+          // 试满次数后不再抛原始异常（TimeOutException 是一串英文时间戳，用户看不懂），
+          // 而是掷一个可翻译的友好原因，交给外层 catch 转 failPlayUrl + toast。
+          final isTimeout = e is TimeoutException;
           final msg = e.toString();
-          if (playUrlAttempt >= maxPlayUrlAttempts || msg.contains('不存在')) {
-            rethrow;
+          final permanent = msg.contains('不存在');
+          if (!permanent && playUrlAttempt < maxPlayUrlAttempts) {
+            await Future.delayed(Duration(seconds: 2 * playUrlAttempt));
+          } else {
+            throw isTimeout
+                ? '获取播放地址超时，请检查网络后重试'
+                : (permanent ? '该视频的播放地址不可用' : e);
           }
-          await Future.delayed(Duration(seconds: 2 * playUrlAttempt));
         }
         if (!_isCurrentSetup(entry, gen)) {
           return;
@@ -855,7 +893,8 @@ class DownloadService extends GetxService {
         case Type2 mediaFileInfo:
           late final DownloadManager videoMgr;
           videoMgr = DownloadManager(
-            urls: downloadResult.videoUrls ??
+            urls:
+                downloadResult.videoUrls ??
                 <String>[mediaFileInfo.video.first.baseUrl],
             path: path.join(videoDir.path, PathUtils.videoNameType2),
             onReceiveProgress: (p, t) {
@@ -875,8 +914,7 @@ class DownloadService extends GetxService {
           if (audio != null && audio.isNotEmpty) {
             late final DownloadManager audioMgr;
             audioMgr = DownloadManager(
-              urls: downloadResult.audioUrls ??
-                  <String>[audio.first.baseUrl],
+              urls: downloadResult.audioUrls ?? <String>[audio.first.baseUrl],
               path: path.join(videoDir.path, PathUtils.audioNameType2),
               onReceiveProgress: (p, t) {
                 if (identical(_audioDownloadManager, audioMgr)) {
@@ -1154,7 +1192,7 @@ class DownloadService extends GetxService {
         ep: entry.ep,
         source: entry.source,
         pageData: entry.pageData,
-      );
+      ).timeout(_playUrlCallBudget);
       final mediaFileInfo = result.mediaFileInfo;
       if (mediaFileInfo is Type2 && mediaFileInfo.audio?.isNotEmpty == true) {
         if (curDownload.value?.cid != entry.cid) {
@@ -1163,8 +1201,8 @@ class DownloadService extends GetxService {
         }
         late final DownloadManager audioMgr;
         audioMgr = DownloadManager(
-          urls: result.audioUrls ??
-              <String>[mediaFileInfo.audio!.first.baseUrl],
+          urls:
+              result.audioUrls ?? <String>[mediaFileInfo.audio!.first.baseUrl],
           path: path.join(
             entry.entryDirPath,
             entry.typeTag,
@@ -1256,7 +1294,8 @@ class DownloadService extends GetxService {
     // 所以它们出现而下载器却已不在，说明任务消失/静默死亡，需要重新驱动队列。
     // 注意不含 getDanmaku/getPlayUrl —— 那两个是建立过程中的正常状态，此时
     // 本来就没有下载器，误判会把正在建立的项重启一遍。
-    final orphan = cur.status == DownloadStatus.downloading ||
+    final orphan =
+        cur.status == DownloadStatus.downloading ||
         cur.status == DownloadStatus.audioDownloading;
     if (!failed && !orphan) {
       return;

@@ -11,10 +11,11 @@ import 'package:PiliPlus/models_new/space/space_audio/item.dart';
 import 'package:PiliPlus/pages/audio/view.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:material_ui/material_ui.dart';
 
 class MemberAudioItem extends StatelessWidget {
-  const MemberAudioItem({super.key, required this.item});
+  const MemberAudioItem(this.item, {super.key});
 
   final SpaceAudioItem item;
 
@@ -42,7 +43,7 @@ class MemberAudioItem extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              AspectRatio(
+              SizedBox(height: Style.cardHCoverHeight, child: AspectRatio(
                 aspectRatio: 1,
                 child: LayoutBuilder(
                   builder:
@@ -60,7 +61,7 @@ CoverTranslateButton(cover: item.cover),
 ]);
                       },
                 ),
-              ),
+              )),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -69,7 +70,7 @@ CoverTranslateButton(cover: item.cover),
                   children: [
                     Text(
                       uiTx(item.title!),
-                      maxLines: 2,
+                      maxLines: Pref.videoTitleFull ? 4 : 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 3),

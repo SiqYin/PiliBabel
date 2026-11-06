@@ -17,7 +17,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
 # update when release
-version: 3.3.4+1
+version: 3.6.8+1
 environment:
   sdk: ">=3.13.0"
   flutter: 3.47.2
@@ -33,6 +33,13 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
+
+  # 下载到本地时，用 FFmpeg 把 DASH 分离流（视频轨 + 音频轨）**无转码合并**成
+  # 一个可直接播放的 MP4。用 `_min` 变体：只做容器层 remux（-c copy），不需要
+  # x264/x265 这类编码器，因此体积最小、且不含任何 GPL 组件。
+  # 原生库随 App 打包（Android 进 APK 的 .so，Windows/Linux 进安装包的 dll/so），
+  # 用户机器上不需要另外安装 ffmpeg。
+  ffmpeg_kit_flutter_new_min: ^3.6.7
 
   app_links: ^7.1.1
   archive: ^4.0.0
@@ -162,6 +169,7 @@ dependencies:
   screen_retriever: ^0.2.0
   share_plus: ^13.1.0
   stream_transform: ^2.1.1
+  socks5_proxy: ^2.1.2
   super_sliver_list:
     git:
       url: https://github.com/bggRGjQaUbCoE/super_sliver_list.git
@@ -173,6 +181,7 @@ dependencies:
   vector_math: ^2.2.0
   wakelock_plus: ^1.2.8
   waterfall_flow: ^3.1.0
+  flutter_staggered_grid_view: ^0.7.0
   web_socket_channel: ^3.0.3
   webdav_client:
     git:

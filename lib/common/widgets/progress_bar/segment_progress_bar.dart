@@ -176,7 +176,6 @@ class ViewPointSegmentProgressBar extends StatelessWidget {
 class _ViewPointSegmentProgressBar
     extends BaseSegmentProgressBar<ViewPointSegment> {
   const _ViewPointSegmentProgressBar({
-    super.key,
     super.height,
     required super.segments,
     this.onSeek,
@@ -201,10 +200,10 @@ class _ViewPointSegmentProgressBar
     renderObject
       ..height = height
       ..segments = segments
-      ..onSeek = onSeek;
-    // segments 没变时上面的 setter 不会触发重绘，这里显式标脏，
-    // 保证译文到位后进度条上的分段名跟着重画。
-    renderObject.markNeedsPaint();
+      ..onSeek = onSeek
+      // segments 没变时上面的 setter 不会触发重绘，这里显式标脏，
+      // 保证译文到位后进度条上的分段名跟着重画。
+      ..markNeedsPaint();
   }
 }
 
@@ -421,7 +420,7 @@ class ViewPointDividerBar extends LeafRenderObjectWidget {
 
   @override
   RenderObject createRenderObject(BuildContext context) {
-    return _RenderViewPointDividerBar(
+    return RenderViewPointDividerBar(
       segments: segments,
       progress: progress,
       dotRadius: dotRadius,
@@ -431,7 +430,7 @@ class ViewPointDividerBar extends LeafRenderObjectWidget {
   @override
   void updateRenderObject(
     BuildContext context,
-    _RenderViewPointDividerBar renderObject,
+    RenderViewPointDividerBar renderObject,
   ) {
     renderObject
       ..segments = segments
@@ -440,14 +439,12 @@ class ViewPointDividerBar extends LeafRenderObjectWidget {
   }
 }
 
-class _RenderViewPointDividerBar extends RenderBox {
-  _RenderViewPointDividerBar({
-    required List<ViewPointSegment> segments,
-    required double progress,
-    required double dotRadius,
-  }) : _segments = segments,
-       _progress = progress,
-       _dotRadius = dotRadius;
+class RenderViewPointDividerBar extends RenderBox {
+  RenderViewPointDividerBar({
+    required this._segments,
+    required this._progress,
+    required this._dotRadius,
+  });
 
   List<ViewPointSegment> _segments;
   set segments(List<ViewPointSegment> value) {

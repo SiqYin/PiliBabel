@@ -1372,10 +1372,12 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   /// lavf（ffmpeg 的 http 协议）侧的媒体流参数。
   ///
   /// * `reconnect*`：断流自动重连，海外抖动必备。
+  /// * `reconnect_delay_max=2`：重连等待上限压到 2 秒。原来是 10 秒——一旦断流
+  ///   就干等最多 10 秒，表现就是「卡一下被进度条追上」，和官方几乎无感的差距来源。
   /// * `multiple_requests=1`：允许在**同一条**连接上发多次 Range 请求，
   ///   换线/重开时不必重新握手（此前只开单次请求，重连等于重来一遍）。
   static const String _lavfReconnect =
-      'reconnect=1,reconnect_streamed=1,reconnect_delay_max=10,'
+      'reconnect=1,reconnect_streamed=1,reconnect_delay_max=2,'
       'multiple_requests=1';
 
   /// 已经做过 DNS 预热的媒体域名（同一域名只解析一次）。
@@ -1888,7 +1890,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     try {
       final raw = _videoPlayerController
           ?.getProperty('estimated-vf-fps')
-          ?.trim();
+          .trim();
       if (raw != null && raw.isNotEmpty) {
         vfps = double.tryParse(raw) ?? -1;
       }
@@ -2276,7 +2278,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
             audio.isNotEmpty)
         ? src.audioUrls[next % src.audioUrls.length]
         : audio;
-    final at = player.state.position ?? Duration.zero;
+    final at = player.state.position;
     try {
       await player.open(
         Media(
@@ -2537,8 +2539,16 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
     Future<void> seek() async {
       if (isSeek) {
-        /// 拖动进度条调节时，不等待第一帧，防止抖动
-        await _videoPlayerController?.stream.buffer.first;
+        /// 拖动进度条调节时，不等待第一帧，防止抖动。
+        ///
+        /// 但这个等待必须有上限：拖动到未缓存位置时，缓冲事件可能长时间不来
+        /// （界面就是卡在「99%」或黑屏），原来无超时的 await 会让 seek 永远不
+        /// 执行，用户看到的正是「拖过去以后一直不动」。给 600ms 上限，
+        /// 到点照样执行 seek，由内核自己去取新位置的数据。
+        await _videoPlayerController?.stream.buffer.first.timeout(
+          const Duration(milliseconds: 600),
+          onTimeout: () => Duration.zero,
+        );
       }
       danmakuController?.clear();
       try {
@@ -3465,6 +3475,8 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     }
 
     final completer = _autoAudioRestoreCompleter = Completer<bool>();
+    // ignore: cancel_subscriptions — 该订阅由 _finishAutoAudioRestoreWait 统一 cancel
+    // （见下方 _autoAudioRestoreSubscription?.cancel()），不在这里就地取消。
     final subscription = player.stream.videoParams.listen((_) {
       if (!_isAutoAudioRestoreCurrent(restoreGeneration)) {
         _finishAutoAudioRestoreWait(false);

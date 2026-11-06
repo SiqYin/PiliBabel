@@ -281,7 +281,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
             _buildItem(
               Row(
                 children: [
-                  Text(uiTx('字体：'), style: TextStyle(fontWeight: .bold)),
+                  Text(uiTx('字体：'), style: const TextStyle(fontWeight: .bold)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: StaticPopupMenuButton<String>(
@@ -351,7 +351,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
             _buildItem(
               Row(
                 children: [
-                  Text(uiTx('字重：'), style: TextStyle(fontWeight: .bold)),
+                  Text(uiTx('字重：'), style: const TextStyle(fontWeight: .bold)),
                   const SizedBox(
                     width: 40,
                     child: Text(
@@ -386,10 +386,10 @@ class _FontSettingPageState extends State<FontSettingPage> {
             _buildItem(
               Row(
                 children: [
-                  Text(uiTx('字号：'), style: TextStyle(fontWeight: .bold)),
+                  Text(uiTx('字号：'), style: const TextStyle(fontWeight: .bold)),
                   SizedBox(
                     width: 40,
-                    child: Text(uiTx('小'), style: TextStyle(fontSize: 11.9)),
+                    child: Text(uiTx('小'), style: const TextStyle(fontSize: 11.9)),
                   ),
                   Expanded(
                     child: Slider(
@@ -410,7 +410,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
                     width: 50,
                     child: Align(
                       alignment: .centerRight,
-                      child: Text(uiTx('大'), style: TextStyle(fontSize: 22.4)),
+                      child: Text(uiTx('大'), style: const TextStyle(fontSize: 22.4)),
                     ),
                   ),
                 ],
@@ -443,7 +443,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
             _buildItem(
               Row(
                 children: [
-                  Text(uiTx('弹幕：'), style: TextStyle(fontWeight: .bold)),
+                  Text(uiTx('弹幕：'), style: const TextStyle(fontWeight: .bold)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: StaticPopupMenuButton<Object>(

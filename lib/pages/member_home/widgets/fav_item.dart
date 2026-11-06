@@ -6,11 +6,12 @@ import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models_new/space/space_fav/list.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 class MemberFavItem extends StatelessWidget {
-  const MemberFavItem({super.key, required this.item});
+  const MemberFavItem(this.item, {super.key});
 
   final SpaceFavItemModel item;
 
@@ -58,7 +59,7 @@ CoverTranslateButton(cover: item.cover),
                   children: [
                     Text(
                       uiTx(item.title!),
-                      maxLines: 2,
+                      maxLines: Pref.videoTitleFull ? 4 : 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const Spacer(),

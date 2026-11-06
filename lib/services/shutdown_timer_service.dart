@@ -27,7 +27,6 @@ enum _ShutdownType with EnumWithLabel {
   ;
 
   /// 展示用原文；翻译放在 getter 里（const 枚举值没法在定义处调 uiTx）。
-  @override
   final String _label;
   const _ShutdownType(this._label);
 

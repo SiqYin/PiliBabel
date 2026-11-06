@@ -5,6 +5,7 @@ import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/stat/stat.dart';
 import 'package:PiliPlus/models/common/stat_type.dart';
 import 'package:PiliPlus/models_new/article/article_list/article.dart';
+import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -42,7 +43,7 @@ class ArticleListItem extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (item.imageUrls?.isNotEmpty == true)
-                AspectRatio(
+                SizedBox(height: Style.cardHCoverHeight, child: AspectRatio(
                   aspectRatio: Style.aspectRatio,
                   child: LayoutBuilder(
                     builder: (context, boxConstraints) {
@@ -56,20 +57,20 @@ CoverTranslateButton(cover: item.imageUrls!.first),
 ]);
                     },
                   ),
-                ),
+                )),
               Expanded(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      uiTx(item.title!),
+                      uiTxTight(item.title!),
                       style: const TextStyle(
                         fontSize: 14,
                         height: 1.42,
                         letterSpacing: 0.3,
                       ),
-                      maxLines: 2,
+                      maxLines: Pref.videoTitleFull ? 4 : 2,
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 3),

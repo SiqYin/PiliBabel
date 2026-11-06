@@ -153,7 +153,7 @@ paru -S pilinara-bin         # eller via AUR: pilinara-bin (præ-bygget) / pilin
 
 <br/>
 
-## Ændringslog: 2.6.x → 3.3.4
+## Ændringslog: 2.6.x → 3.6.7
 
 - **2.6.x** — lydcache (adskilte moduler til video og lyd, husker sidste valg, indgange på videosiden, på lydsiden og i afspilleren; originalformatet bevares; kvalitet kan vælges) og download til enheden (eget menupunkt: først video/lyd, derefter kvalitet; uden en valgt mappe åbnes systemets filvælger).
 
@@ -162,6 +162,12 @@ paru -S pilinara-bin         # eller via AUR: pilinara-bin (præ-bygget) / pilin
 - **3.2.0–3.3.3** — netværksfundament i den officielle apps stil: anmodningsfingeraftryk (buvid/fp/session_id/env), failover for gRPC-værter, retry-interceptor, grænse for samtidige anmodninger pr. vært, forudindlæsning af første feed ved kold start, officielle feed-hændelsesparametre, CDN-kandidaternes rækkefølge med udenlandske reserver; forudindlæsning af anden side, afgrænset kø til forudindlæsning af forsider, forudindlæsning af afspilnings-URL'er; derefter gengivelse af dynamik (P3) via gRPC samt rettelser: kompileringsfejl i buffertiden på lydsiden og typefejl i forudindlæsningen af kommentarer, som fik hvert nyt forsøg til at fejle øjeblikkeligt.
 
 - **3.3.4** — dynamikkort til betalte opslag, mini-apps, emnesamlinger og abonnementer; fejlen hvor hjemmeskærmens første side mistede alle forsider er rettet; opdateringer fra PiliNara er hentet ind (statuslinje, genoptagelse af download efter procesafslutning, opdatering af media-kit, omgåelse af sort video i Wayland, valg af lydkvalitet ved cache); AI-oversættelsesrevision af al grænsefladetekst tilføjet siden 3.0.5; denne log.
+
+- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+
+- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+
+- **3.5.0–3.6.7 — terminology and translation polish.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4. In 3.6.5 an embedded term no longer stops the rest of a paragraph from being translated, the glossary screen follows the app theme, the tables are on by default, and the version the app reports about itself now matches its release tag. 3.6.6 fixes surname parts of a name expanding to the full name, makes the glossary screen follow the app theme again (with working switches), and lets official glossary names override stale cached translations; 3.6.7 fixes the glossary counter stuck at 14/15 with every switch on, and repairs three tables whose displayed counts were wrong (Reverse: 1999 embedded nothing at all).
 
 ## Arvet funktionslog (fra PiliNara / PiliPlus)
 
@@ -248,3 +254,8 @@ Den medfølgende skrifttype **LXGW WenKai** er licenseret separat under **SIL Op
 - [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — den åbne kinesiske skrifttype, der er bundlet med appen, under SIL Open Font License 1.1
 - og mere
 - Inspireret af bilibilis officielle »AI-brugergrænsefladeoversættelse«.
+<br/>
+
+---
+
+> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。

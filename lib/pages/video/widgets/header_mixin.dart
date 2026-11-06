@@ -177,7 +177,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                     SizedBox(
                       height: 45,
                       child: Center(
-                        child: Text(uiTx('弹幕设置'), style: TextStyle(fontSize: 14)),
+                        child: Text(uiTx('弹幕设置'), style: const TextStyle(fontSize: 14)),
                       ),
                     ),
                     const SizedBox(height: 10),
@@ -590,7 +590,7 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                           Expanded(
                             child: Center(
                               child: Text(uiTx('视频参数'),
-                                style: TextStyle(fontSize: 14),
+                                style: const TextStyle(fontSize: 14),
                               ),
                             ),
                           ),
@@ -621,15 +621,15 @@ mixin HeaderMixin<T extends StatefulWidget> on State<T> {
                     ),
                     buildAudioDelay(plPlayerController.audioDelayMs.value),
                     Padding(
-                      padding: EdgeInsets.only(top: 4),
+                      padding: const EdgeInsets.only(top: 4),
                       child: Text(uiTx('音频延迟：正值延后音频（画面相对提前），负值延后画面（音频相对提前）'),
-                        style: TextStyle(fontSize: 12),
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
                     Padding(
-                      padding: EdgeInsets.only(top: 4, bottom: 14),
+                      padding: const EdgeInsets.only(top: 4, bottom: 14),
                       child: Text(uiTx('部分设备或视频输出驱动可能不支持画面调节'),
-                        style: TextStyle(fontSize: 12),
+                        style: const TextStyle(fontSize: 12),
                       ),
                     ),
                   ],

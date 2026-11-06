@@ -12,7 +12,18 @@ abstract final class HttpString {
 
   /// gRPC 接口的主备主机：官方是「原生 gRPC 走 grpc.biliapi.net，Failover 走
   /// app.bilibili.com」，这里保持同样的顺序，实际顺序再按实测健康度调整。
-  static const List<String> grpcHosts = [grpcBaseUrl, appBaseUrl];
+  /// 顺序即优先级：app.bilibili.com 必须排在前面。
+  ///
+  /// grpc.biliapi.net 是官方原生 gRPC 主机，但它把 Grpc-Status 放在 HTTP/2
+  /// 的 trailer 里；我们用 Dio 走 HTTP/1.1 请求，读不到 trailer，于是
+  /// Grpc-Status 头缺失、每次调用都被判成失败（界面上就是「点击重试」，
+  /// 兜底文案显示 grpc-status: unknown —— unknown 正是「头不存在」的默认值，
+  /// 真的返回非 0 会打印数字）。app.bilibili.com 是 App 侧代理主机，
+  /// 同样的请求它把 Grpc-Status 直接放进响应头，能正常读到。
+  /// 3.0.5 之前一直用 appBaseUrl，评论/动态这些 gRPC 接口都是好的；
+  /// 改成 grpcBaseUrl 优先之后它们全挂，所以这里把顺序换回来，
+  /// grpc.biliapi.net 退居 Failover。
+  static const List<String> grpcHosts = [appBaseUrl, grpcBaseUrl];
 
   /// A2.1 主机清单表：主机 / 用途 / 是否走 gRPC / 是否参与故障切换。
   /// 这份表是「主机清单」的唯一登记处：新增主机先在这里写清用途，

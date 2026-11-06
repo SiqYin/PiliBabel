@@ -229,7 +229,7 @@ abstract final class RequestUtils {
                     afterMod?.call(result.contains(-10) ? -10 : 2);
                   }
                 },
-                child: Text(uiTx('设置分组'), style: TextStyle(fontSize: 14)),
+                child: Text(uiTx('设置分组'), style: const TextStyle(fontSize: 14)),
               ),
               DialogOption(
                 onPressed: () async {
@@ -246,7 +246,7 @@ abstract final class RequestUtils {
                     res.toast();
                   }
                 },
-                child: Text(uiTx('取消关注'), style: TextStyle(fontSize: 14)),
+                child: Text(uiTx('取消关注'), style: const TextStyle(fontSize: 14)),
               ),
             ],
           ),
