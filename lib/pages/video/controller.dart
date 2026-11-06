@@ -2236,8 +2236,10 @@ class VideoDetailController extends GetxController
         ? translatedSource
         : subtitles.indexWhere((subtitle) => subtitle.langTag == 'zh');
     if (sourceIndex < 0) {
+      // 没有中文字幕轨：重试多少次都不会有结果，别把「重试」按钮摆出来。
       subtitleTranslationRunning.value = false;
-      subtitleTranslationRetryAvailable.value = true;
+      subtitleTranslationRetryAvailable.value = false;
+      subtitleTranslationStatus.value = uiTx('这个视频没有可用的中文字幕');
       return;
     }
     await _startSubtitleTranslation(

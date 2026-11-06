@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/search.dart';
 import 'package:PiliPlus/http/video.dart';
+import 'package:PiliPlus/services/account_service.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_source_resolver.dart';
@@ -37,6 +38,7 @@ class SubtitleTranslationTaskState {
     this.progress = 0,
     this.message,
     this.nativeTrackAvailable = false,
+    this.noSource = false,
   });
 
   final SubtitleTranslationTaskPhase phase;
@@ -45,6 +47,13 @@ class SubtitleTranslationTaskState {
 
   /// 本站（Bilibili）已提供目标语言字幕，无需 AI 翻译。
   final bool nativeTrackAvailable;
+
+  /// 这个视频根本没有可用的中文字幕轨。
+  ///
+  /// 必须和「失败」分开：B 站大多数视频没有 CC 字幕，按下按钮必然没东西可翻。
+  /// 以前这种情况被当成失败（红图标 + 「点击重试」），看起来像功能坏了，而重试
+  /// 永远不可能成功 —— 因为源本来就不存在。
+  final bool noSource;
 
   bool get isRunning =>
       phase == SubtitleTranslationTaskPhase.preparing ||
@@ -261,8 +270,18 @@ abstract final class SubtitleTranslationBackgroundService {
         Success(:final response) => response.subtitle?.subtitles,
         _ => null,
       };
-      if (tracks == null) {
-        _fail(taskKey, uiTx('无法获取字幕列表'));
+      if (tracks == null || tracks.isEmpty) {
+        // 实测：未登录时 /x/player/v2 对**有 CC 的视频**也返回空列表，
+        // 所以空列表要先分辨「没登录」和「真没字幕」——两者的处理完全不同。
+        final loggedIn =
+            Get.isRegistered<AccountService>() &&
+            Get.find<AccountService>().isLogin.value;
+        _noSource(
+          taskKey,
+          loggedIn
+              ? uiTx('这个视频没有可用的中文字幕')
+              : uiTx('字幕需要登录后才能获取，请先登录'),
+        );
         return;
       }
       final resolved = await SubtitleSourceResolver.resolve(
@@ -280,7 +299,9 @@ abstract final class SubtitleTranslationBackgroundService {
         },
       );
       if (resolved == null) {
-        _fail(taskKey, uiTx('无法下载用于翻译的源字幕'));
+        // 有轨但都下不下来 / 时间轴不安全：对用户来说同样是「这个视频没有能用的
+        // 中文字幕」，给重试没有意义。
+        _noSource(taskKey, uiTx('这个视频没有可用的中文字幕'));
         return;
       }
       if (resolved.kind == SubtitleSourceKind.nativeTarget) {
@@ -696,6 +717,14 @@ abstract final class SubtitleTranslationBackgroundService {
 
   static void _set(String key, SubtitleTranslationTaskState state) {
     _states[key] = state;
+  }
+
+  /// 源不存在（不是失败）：图标置灰、点按不再重试。
+  static void _noSource(String key, String message) {
+    _set(
+      key,
+      SubtitleTranslationTaskState(message: message, noSource: true),
+    );
   }
 
   static void _fail(String key, String message) {
