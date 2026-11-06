@@ -610,7 +610,7 @@ class DownloadService extends GetxService {
           translatedArtifact.verifierVersion ==
               SubtitleTextQuality.verifierVersion) {
         final translatedFile = File(translatedArtifact.vttFilePath);
-        if (await translatedFile.exists()) {
+        if (translatedFile.existsSync()) {
           // 索引里可能还留着旧校验版本/损坏产物；启动态会失败并等待重译，
           // 缓存导出同样不能把这类文件复制进离线视频。
           final translatedVtt = await translatedFile.readAsString();

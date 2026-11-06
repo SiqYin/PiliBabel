@@ -76,13 +76,15 @@ class _PlDanmakuState extends State<PlDanmaku> {
     playerController
       ..addStatusLister(playerListener)
       ..addPositionListener(videoPositionListen);
-    // 开启弹幕翻译时立即清屏，下一拍以译文重新添加
+    // 开启弹幕翻译时立即清屏，下一拍以译文重新添加；
+    // 同时把已加载的整段弹幕批量送进翻译缓存，避免逐条排队赶不上出生时刻。
     _danmakuTranslateWorker = ever(
       UiTranslateService.to.danmakuTranslate,
       (bool on) {
         if (on) {
           _preTranslateCursor = 0;
           _controller?.clear();
+          _plDanmakuController.pretranslateLoadedDanmaku();
         }
       },
     );

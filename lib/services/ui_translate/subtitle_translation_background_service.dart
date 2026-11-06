@@ -156,7 +156,7 @@ abstract final class SubtitleTranslationBackgroundService {
     var removed = false;
     try {
       final file = SubtitleTranslationJob.cacheFileFor(cacheKey, cues);
-      if (await file.exists()) {
+      if (file.existsSync()) {
         await file.delete();
         removed = true;
       }
@@ -980,7 +980,7 @@ abstract final class SubtitleTranslationBackgroundService {
       canonicalCacheKey,
       cues,
     );
-    if (!await source.exists()) {
+    if (!source.existsSync()) {
       throw const FileSystemException('Replacement subtitle cache is missing');
     }
     await destination.parent.create(recursive: true);
@@ -1019,7 +1019,7 @@ abstract final class SubtitleTranslationBackgroundService {
     try {
       await temp.rename(vttFile.path);
     } on FileSystemException {
-      if (await vttFile.exists()) await vttFile.delete();
+      if (vttFile.existsSync()) await vttFile.delete();
       await temp.rename(vttFile.path);
     }
     final artifact = SubtitleTranslationArtifact(
@@ -1044,7 +1044,7 @@ abstract final class SubtitleTranslationBackgroundService {
     return SubtitleTranslationArtifactRegistry.shared.registerVerified(
       artifact,
       verify: () async {
-        if (!await vttFile.exists()) return false;
+        if (!vttFile.existsSync()) return false;
         return SubtitleTranslationOutput.isCompleteTranslatedVtt(
           cues,
           await vttFile.readAsString(),
@@ -1101,7 +1101,7 @@ abstract final class SubtitleTranslationBackgroundService {
       try {
         final cacheFile = File(artifact.cacheFilePath);
         final vttFile = File(artifact.vttFilePath);
-        if (!await cacheFile.exists() || !await vttFile.exists()) continue;
+        if (!cacheFile.existsSync() || !vttFile.existsSync()) continue;
         // 旧版合集批量产物把 cid 拼进 videoKey，这里归一到统一身份键，
         // 否则重启后状态键与封面按钮/播放页查询键对不上。
         final stateVideoKey = artifact.stateVideoKey;

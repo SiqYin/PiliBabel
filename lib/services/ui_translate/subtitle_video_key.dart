@@ -1,4 +1,28 @@
+import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_job.dart';
+
+/// 旧版译文轨命名（`<主标签>-app-ai`，如 `zh-app-ai`）读取期迁移：
+/// 从 `lanDoc` 里携带的「生成时目标语言自称」恢复完整目标代码
+/// （`zh-Hant-app-ai`）。3.7.3 起写完整代码；旧文件没有字形子标签，
+/// 中文家族目标下会被一律拒挂（正确的旧译文也被迫重翻）。恢复不出来
+/// 就原样返回——宁可重翻，绝不把另一种字形的旧译文挂给当前目标。
+///
+/// 例：`legacyAppAiLanFor('zh-app-ai', '繁體中文 (AI)')` → `zh-Hant-app-ai`；
+/// `legacyAppAiLanFor('zh-app-ai', 'Tiếng Việt (AI)')` → 原样（主标签对不上）。
+String legacyAppAiLanFor(String lan, String? lanDoc) {
+  const suffix = '-app-ai';
+  final normalized = lan.toLowerCase().replaceAll('_', '-');
+  if (!normalized.endsWith(suffix)) return lan;
+  final prefix = normalized.substring(0, normalized.length - suffix.length);
+  if (prefix.contains('-')) return lan; // 已是完整代码
+  final doc = (lanDoc ?? '').trim();
+  if (doc.isEmpty) return lan;
+  for (final language in appLanguages) {
+    if (language.code.toLowerCase().split('-').first != prefix) continue;
+    if (doc.startsWith(language.name)) return '${language.code}$suffix';
+  }
+  return lan;
+}
 
 /// 下载缓存里的 AI 译文轨（`...-app-ai`）能否直接挂给当前目标语言。
 ///

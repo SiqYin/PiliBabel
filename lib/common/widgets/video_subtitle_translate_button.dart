@@ -130,6 +130,12 @@ class _VideoSubtitleTranslateButtonState
         final hint = state.message ?? label;
         final isComplete = state.phase == SubtitleTranslationTaskPhase.complete;
         final isFailed = state.phase == SubtitleTranslationTaskPhase.failed;
+        // 进度画满（100%）就立刻呈现完成态，不等 phase 翻转：
+        // 以前「圆环画完整一圈」后要等后台把 phase 改成 complete 才变勾，
+        // 中间任何一步慢了/卡了，用户看到的就是一个不消失的整圆环，
+        // 完全没有「已经翻完了」的提示。环满即勾，且保持不变。
+        final hitDone = state.isRunning && state.progress >= 1;
+        final showCheck = isComplete || hitDone;
         return Tooltip(
           message: hint,
           // 完成态点一下 = 重翻一次；失败态点一下 = 重试。之前这两个动作挂在
@@ -155,21 +161,25 @@ class _VideoSubtitleTranslateButtonState
                     color: Colors.black54,
                     borderRadius: BorderRadius.circular(4),
                   ),
-                  child: state.isRunning
-                      ? SizedBox(
-                          width: 13,
-                          height: 13,
-                          child: CircularProgressIndicator(
-                            value:
-                                state.phase ==
-                                    SubtitleTranslationTaskPhase.translating
-                                ? state.progress
-                                : null,
-                            strokeWidth: 2,
-                            color: color,
-                          ),
-                        )
-                      : Icon(icon, size: 13, color: color),
+                child: state.isRunning && !showCheck
+                    ? SizedBox(
+                        width: 17,
+                        height: 17,
+                        child: CircularProgressIndicator(
+                          value:
+                              state.phase ==
+                                  SubtitleTranslationTaskPhase.translating
+                              ? state.progress
+                              : null,
+                          strokeWidth: 2,
+                          color: color,
+                        ),
+                      )
+                    : Icon(
+                        showCheck ? Icons.check : icon,
+                        size: 14,
+                        color: showCheck ? Colors.greenAccent : color,
+                      ),
                 ),
               ),
             ),

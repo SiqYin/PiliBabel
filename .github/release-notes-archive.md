@@ -26,6 +26,668 @@ Release 正文由 `.github/release-notes.md` 提供，只放**当前这一版**�
 
 Downloads are below.
 
+### PiliBabel v3.7.2
+
+**Subtitle translation could never succeed. This release fixes the whole failure chain, and makes progress and outcome visible.**
+
+**Why every chunk failed.** The result validator rejected any output line that was identical to its source line. But simplified → traditional Chinese, Chinese → Japanese kanji words, names and numbers legitimately translate to the same string, so virtually every chunk threw and the track never finished. The per-line identity check is gone; only empty output is rejected. "The model just copied everything" is now judged per chunk (at least two lines with Han characters, 80% or more copied), and Chinese-family targets — Simplified, Traditional, Cantonese, Wu and Minnan — are exempt entirely.
+
+**The batch fast path no longer kills a whole block.** An HTTP error, a proxy hiccup or a broken stream on the JSON-array request used to abort the block. It now falls back to the per-line template. Per-line output that gets stripped down to nothing no longer quietly returns the original text: it reports the failure instead.
+
+**A single bad cue no longer invalidates the entire track.** Zero-length and reversed timestamps are dropped while parsing, so one corrupt cue cannot trip the track-wide timeline check and make the app say "no usable subtitles".
+
+**No more endless spinner after the red ring.** When no chunk could be produced, the coordinator kept retrying forever and never completed, leaving the UI spinning with neither an error nor a result. It now gives up after three consecutive rounds with no newly validated chunk. Startup failures also carry the real exception type (401, timeout, validation rejection) instead of one generic message.
+
+**You can now tell when it is done.** A single video shows a toast when pre-translation completes or fails; a whole collection reports once at the end ("all N parts pre-translated") instead of once per part.
+
+**Signed-out error pages are translated.** "Account not signed in" and "Tap to retry" came straight from the Bilibili API as Chinese and were shown verbatim; they now go through the interface translator.
+
+Downloads are below.
+
+### PiliBabel v3.7.1
+
+**A smaller subtitle button, an explanation the first time you open the app, and auto pre-translation when you tap a video.**
+
+**Subtitle button, now icon-only.** The "translate subtitles" action on a cover used to be an icon-plus-label pill, twice the width of the cover-translate button next to it. It is now a single icon with exactly the same metrics as the cover button (28×28 hit area, 13px glyph, black54, radius 4) and sits directly above it. Progress shows as a ring, completion as a check, failure as a refresh icon; tapping the whole button retranslates.
+
+**Why "translate subtitles" always failed.** Starting a translation re-fetches `/x/player/v2` for the track list, and **that endpoint returns an empty list when you are not signed in — even for videos that really do have CC subtitles**. The old code only checked for `null`, so the empty list fell through to "cannot download a source subtitle" and was reported as a failure. That is why it failed every time and retrying never helped: there was no source to retry. An empty list is now its own state: not a failure, no retry offered, a muted `subtitles_off` icon instead, with separate wording for "not signed in" and "this video has no subtitles".
+
+**Failures no longer hide their cause.** The startup path used to swallow every exception behind one generic message. The message now carries the exception type, so a real fault becomes identifiable at a glance.
+
+**First-run explainer.** The first time you reach the home feed, a dialog explains the two buttons at the bottom-left of a cover: the upper one pre-translates subtitles, the lower one reads the cover and translates the text on it. Dismissed with "Got it".
+
+**"AI translation is on" dialog — English, translated first.** Both onboarding dialogs are written in English and queued at the highest translation priority, so they read in your own language the moment they appear instead of opening in Chinese.
+
+**Tapping a video starts pre-translation.** As soon as the player page knows the bvid/aid/cid, the subtitle track is queued in the background — by the time the first frame is up, the translation is usually ready. Only the current part is queued; whole-collection batches stay on the cover button.
+
+**Not shown when it cannot work.** With Simplified Chinese as the target language, or with AI translation off, the subtitle button is no longer rendered at all.
+
+Downloads are below.
+
+### PiliBabel v3.7.0
+
+**HiRes badge, audio player seek fixes, and video playback audio/progress recovery.**
+
+**HiRes badge.** A "HiRes" indicator now appears in the player's bottom control bar between the episode list and aspect-ratio buttons. It turns from grey to the theme color when the current audio track is Hi-Res lossless.
+
+**Audio player seek fix.** Dragging the progress bar no longer triggers premature auto-advance or unexpected pausing. The `completed` event is now ignored during drag operations.
+
+**Audio player re-entry fix.** Exiting and re-entering the audio-only player now correctly initializes the player, fixing the "00:00 and can't play" issue caused by the initialization flag not being reset.
+
+**Video playback audio recovery.** Added automatic audio track loss detection: when video is playing but audio silently drops (DASH EDL audio stream failure), the player performs a lossless reopen to restore audio. Combined with the progress bar seek fix below.
+
+**Video progress bar seek fix.** Seeking during playback no longer causes the progress bar to flash to the far right or flicker wildly. The `completed` event and position updates are now properly guarded during seek operations.
+
+Downloads are below.
+
+### PiliBabel v3.6.9
+
+**Polish: subtitle button sizing, first-run auto-setup, segment info translation, audio track language sync, and toast translation fixes.**
+
+**Subtitle button sizing.** The AI subtitle translation button on video card covers now matches the height of the cover translate button for a cleaner, more uniform look.
+
+**First-run auto-setup.** New installs now automatically detect the system language and enable AI translation — no dialog, no manual setup. A guided animation walks through the settings page, then a simple confirmation dialog appears. This runs only on fresh installs; updates and existing users are unaffected.
+
+**Segment info translation.** The segment name shown in the player's bottom control bar (when tapping the screen) is now translated consistently with the segment labels on the progress bar.
+
+**Audio track language sync.** When the interface language changes, reopening a video now correctly re-evaluates which audio track to select. Previously the audio track was cached per-video and didn't follow language changes.
+
+**Toast translation fixes.** Action feedback messages (like, coin, favorite, follow, pin, subscribe, mute, etc.) are now properly routed through the translation system. Server response messages are also translated. Added 16 new entries to the pre-translation list for instant display.
+
+> **Acknowledgement:** The subtitle translation system was originally contributed by [saukhoai](https://github.com/saukhoai) via [PR #2](https://github.com/SiqYin/PiliBabel/pull/2).
+
+Downloads are below.
+
+### PiliBabel v3.6.8
+
+**Adds AI-powered subtitle translation: real-time Chinese→target-language subtitles with context-aware chunked translation, offline dictionary for Vietnamese, and optional proxy routing.**
+
+**Core subtitle translation engine.** Chinese subtitles are split into 20-cue chunks with 4 lines of overlap context for consistent character names and pronouns. Each chunk is translated independently with retry, timeout, and quality validation (residual Han detection, timing integrity, context-echo rejection). Completed translations are checkpointed to disk and survive app restarts.
+
+**Realtime buffering.** Playback starts when 60 seconds of translated subtitles are available ahead; auto-pauses if coverage drops below 15 seconds. The translation queue prioritizes the current playback position, then nearby chunks, then future segments. Seeking immediately reprioritizes work.
+
+**Subtitle track management.** A new track list appears in the player's subtitle menu: Bilibili's own tracks (including official AI translations) plus a live AI-translated track with progress labels. Manual per-part selection is remembered for the session. A compact card-cover button on video cards shows translation status and offers one-tap retranslation.
+
+**Vietnamese offline dictionary.** 309 common UI labels are instantly translated offline when Vietnamese is selected as the interface language — no API call, no network round trip. Falls through to the AI translation pipeline for dynamic content.
+
+**Optional HTTP/SOCKS5 proxy routing.** Translation requests can be routed through user-configured proxies (6 concurrent slots per proxy) to accelerate subtitle translation. The device's direct connection is always available as a fallback; invalid proxy configuration never blocks translation.
+
+**Settings.** New subtitle section: chunk size (10–40 cues), concurrency (1–5), context overlap (0–8 lines), wait-for-complete toggle, playlist prefetch (0–5 videos), and proxy configuration.
+
+**Bonus fixes:** QR code refresh race condition, and video quality/codec selection tolerance when the DASH stream list doesn't match the declared formats.
+
+> **Acknowledgement:** The subtitle translation system was originally contributed by [saukhoai](https://github.com/saukhoai) via [PR #2](https://github.com/SiqYin/PiliBabel/pull/2). We adapted and integrated the core engine, generalized it for all target languages, and merged the Vietnamese offline dictionary and proxy routing as optional features. Thank you for this substantial contribution!
+
+Downloads are below.
+
+### PiliBabel v3.6.7
+
+**Fixes "14/15 glossary tables enabled" showing even with all switches on, and audits every per-table count.**
+
+**The 14/15 bug.** When v3.6.4 introduced "off by default", the migration wrote *every* embedded id prefix into the disabled set — including `game`, the prefix of the 8 game-title entries (`game|zzz`, `game|hsr`, …). The glossary screen only renders the 15 tables that appear in the manifest and has no switch for `game`, so turning all 15 switches on still left `game` stuck in the disabled set, and the counter (`tables − disabled.count`) sat permanently at 14/15. Worse, those 8 game-name rows (the short names like ゼンゼロ / スタレ) were silently disabled at runtime too.
+
+Now the count no longer subtracts: it walks the manifest tables and checks each against the disabled set, shared by both the settings tile and the glossary page. `game` is always treated as enabled (it has no switch), and the page sanitises legacy leftovers from the stored set on load, so affected installs heal themselves.
+
+**Per-table counts, audited one by one:**
+- *Reverse: 1999* displayed **0 terms**: all 100 rows had their category reverted to `term` by an earlier rebuild and were excluded from embedding. Fixed — 100/100 now embedded.
+- *BanG Dream!* was 3 rows short and *Neverness to Everness* 1 short: band and organisation names (CRYCHIC, sumimi, Glitter☆Green, 环) were filtered out by the category whitelist. They are exactly the proper nouns that appear in titles, so the whitelist now includes them; both tables match their harvested totals.
+- Template residue scrubbed from values (`37}}`, `{{rubi`, a key containing a newline, 69 rows with `{{tt` tails) so junk can never surface as a translation.
+
+Where a table embeds fewer terms than it was harvested with (Genshin Impact, Honkai: Star Rail, Zenless Zone Zero, Wuthering Waves), that is by design — only the core subset ships in-app. The subtitle now reads "N terms embedded" instead of "N terms", so the number matches what it actually measures.
+
+Embedded terms: 11,637 → **11,741**.
+
+Downloads are below.
+
+### PiliBabel v3.6.6
+
+**Three fixes: a surname fragment translating as a full name, the glossary page rendering as two unclickable purple labels, and correct glossary names being masked by stale cache.**
+
+**"马斯克" came out as "エラ・マスク".** Name fragments split out of a multi-part name were registered as aliases pointing at the *whole* record, so the fragment `马斯克` (Musk) resolved to the full name of `艾拉·马斯克` (Ella Musk) — every Elon Musk title turned into Ella Musk. Fragments now go through a dedicated table that maps each fragment to the *corresponding fragment* of the translation: `马斯克 → マスク`, `蕾法爱菈 → レファエラ`. A fragment only asserts one part of a name, so this is correct regardless of who the text is about.
+
+The table is built conservatively: a mapping is only created when **every language in the record splits into the same number of parts** (otherwise we do not guess); a spelling that maps to more than one different translation is dropped entirely (e.g. `艾拉` is ambiguous, so it goes to the model); and a spelling that is itself a real entry is dropped so standalone entries always win (`菲欧妮` still resolves through its own record). 137,000 harmful fragment aliases were also cleaned out of the source data.
+
+**The glossary page showed only two purple labels, and nothing was clickable.** That page mistakenly used `SwitchListTile.adaptive` from `flutter/material` inside a bare `Scaffold`, while the rest of the app uses `material_ui` — only its widgets follow the app's light/dark themes and colour palettes. It now uses `SimpleScaffold` with `material_ui`'s `SwitchListTile`, wraps the page in `Obx` so translations refresh as they arrive, and no longer hard-codes the section heading colour.
+
+**"桑多涅" came out as "サンドロネ" instead of the glossary's "サンドローネ".** In 3.6.4 the lookup order was changed to cache-first for performance, which let an earlier wrong model translation permanently shadow the correct official name in the glossary — the cache is keyed by source text and returns on hit, so the glossary never got a chance. Since 3.6.5 removed the expensive substring scan, `_glossaryTranslate` is now a single O(1) lookup, so the original performance rationale no longer applies. The order is back to **glossary before cache**, in both `_tx` and `_txUrgent`.
+
+Downloads are below.
+
+### PiliBabel v3.6.5
+
+**Fixes a serious translation bug, makes the glossary screen follow your theme, restores the tables to on-by-default, and repairs a self-reported version mismatch that caused endless update prompts.**
+
+**The translation bug.** Terms found *inside* a sentence used to be substituted in place, and that resulting string was returned as the finished translation. So with a Japanese interface and a Simplified-Chinese paragraph, a single embedded term became Japanese while the rest stayed Chinese — and because that mixed string now contained Japanese, later checks concluded it was already Japanese and never translated it at all. The whole paragraph was left untranslated.
+
+Now an embedded term is no longer substituted. The paragraph goes to the model as normal, and the matched terms are injected into the prompt as forced translations, so the model uses the official names while translating the rest of the sentence properly.
+
+**Short names are used in titles again.** A title containing 绝区零 was showing the full name ゼンレスゾーンゼロ instead of the short form ゼンゼロ. The glossary already picks short vs. full form by text width, but the prompt-injection step hard-coded the "normal" width and never received the caller's intent. The width is now threaded through, so narrow contexts such as titles keep using the short form.
+
+**The glossary screen follows the theme.** It previously used a bare `Scaffold` with untinted switches, so under a dark theme or a custom palette it rendered as a white background with black text and purple buttons. It now uses the same `SimpleScaffold` + `ViewSafeArea` as the settings pages, and takes every colour from `Theme.of(context).colorScheme`.
+
+**Glossary tables are on by default again.** All 15 are enabled out of the box; you can still switch off individual works on the glossary page.
+
+**Fixed the version the app reports about itself.** v3.6.4.1 was tagged `v3.6.4.1` while `pubspec.yaml` still said `3.6.4`. The app derives its reported version only from pubspec, so it believed it was 3.6.4, saw a newer tag, and kept prompting to update forever. Flutter's `version:` field only accepts `x.y.z+build`, so the rule is that the tag's numeric part must equal pubspec's `x.y.z`. `build.ps1` now verifies this and fails the build when they disagree, so a self-contradictory release cannot ship again.
+
+**Performance.** The term-injection scan now uses the same first-character bucketing as the in-sentence matcher. Its cost went from scaling with the glossary (54,000 comparisons per string) to scaling with the text (a few dozen), so a large glossary can no longer make translation slow or crash the app.
+
+Downloads are below.
+
+### PiliBabel v3.6.4.1
+
+**Urgent fix: v3.6.4 opened to a permanent black screen.**
+
+**What happened.** To move glossary index construction off the first frame, v3.6.4 called `warmGlossary()` at the end of `UiTranslateService.onInit()`, and that method read the service's own settings through `to`. But `onInit` runs while the service is *still being registered* — resolving `to` at that moment throws. The exception escaped `onInit`, and `onInit` is invoked from a synchronous `..put()` inside `main()`, before `runApp()`. Startup therefore aborted before the first frame was ever built: a black screen that never goes away, and no crash either, because there is no frame loop left to crash.
+
+**The fix.** `warmGlossary()` no longer touches `to`. It reads `Pref.uiTranslateEnabled` directly and wraps the whole warm-up in `try`, so a failed warm-up can never affect startup. Warm-up is purely an optimisation; it should never be able to break launching.
+
+Also restored a doc comment that had been dropped from `rebuildGlossaryIndex`, and fixed a missing newline at end of file.
+
+Everything from v3.6.4 is included, of course: the single-pass term scan, the background index warm-up, and all glossary tables defaulting to off.
+
+Downloads are below.
+
+### PiliBabel v3.6.4
+
+**Urgent fix: with v3.6.3, turning AI translation on could leave pages blank and then crash the app. This release also switches every glossary table to off by default.**
+
+**What went wrong.** v3.6.3 added in-sentence term matching using a loop that replaced a term, rescanned from the start, and repeated while anything still matched. But most glossary forms are *self-containing* — measured 45,601 out of 53,953 have a translation whose lowercase form still contains the source form (the key `genshin impact` translates to `Genshin Impact`, and Japanese names are often identical to the Japanese key). So the same form was found again after replacement, the loop never ended, and each pass allocated another growing string buffer until the process ran out of memory and was killed. That is what you saw: open a page, nothing loads, then it closes itself.
+
+It now uses a **single-pass cursor scan**: on a hit the cursor jumps past the matched source, and text already written never takes part in further matching. Termination is guaranteed by construction rather than depending on the data.
+
+**A second hazard, also fixed.** The glossary index and its buckets were built lazily on first use — which happened during the first frame of a page, synchronously, over 50,000 entries. That alone could freeze the frame. The index is now warmed up in the background shortly after launch, and the hot path simply skips the glossary until it is ready, so it can never block rendering.
+
+**All glossary tables now default to off.** The 15 built-in tables are no longer enabled automatically; open Settings → Terms and turn on the ones you care about. This also removes the overhead of matching against tables you never asked for.
+
+Downloads are below.
+
+### PiliBabel v3.6.3
+
+**Fixes the lag when AI translation is on, turns the glossary into a page with per-table switches, adds hololive / NIJISANJI / THE iDOLM@STER, and fills every table in five languages.**
+
+**Fixed the lag (important).** With AI translation on, the UI felt sluggish; turning it off made it smooth again. The cause: every translation lookup ran a glossary search first, and on a miss that degraded into scanning 50,000+ term forms by substring — once per widget per frame. Now the translation cache is consulted first, the substring scan only runs on short strings (≤80 chars), and terms are bucketed by their first character: measured comparisons drop from 53,953 to 18–323 per title, i.e. 167–2,997× fewer.
+
+**The glossary is now its own page.** The settings entry is renamed to "术语集" (Glossary) and opens a dedicated page that lists all 15 tables under two sections — games and franchises — each with its own switch, **all enabled by default**. You can turn off a game you don't play so its proper nouns are not applied to unrelated contexts.
+
+**Three new tables:** hololive (83 talents), NIJISANJI (239 livers) and THE iDOLM@STER (282 characters).
+
+**All 15 tables now cover five languages** (Simplified Chinese, Traditional Chinese, English, Japanese, Korean) with no gaps in the 769 newly added records. 1,236 of those values were filled in from community-standard names and are tagged with their provenance so they can be reviewed later.
+
+**Fixed "Check for updates" always failing.** The manifest URL pointed at a `glossary` branch that never existed, so it always returned 404. It now ships with the main branch at `docs/glossary-manifest.json`.
+
+**Fixed two untranslated strings:** the description under "Audio track follows UI language" and the note under the app-language selector. They did call the translation helper, but were not wrapped in the reactive `Obx` that rebuilds when a translation arrives, so they stayed Chinese forever.
+
+Also repaired 36 BanG Dream rows whose Japanese name was the literal `{{ruby` — leftover template fragments from an earlier parse.
+
+Downloads are below.
+
+### PiliBabel v3.6.2
+
+**Glossary overhaul: short forms and name fragments now resolve, terms inside sentences match, four new games, consistent word formation for grouped labels, and pre-translated dialogs on sub-screens.**
+
+**Short names and every name fragment now resolve** — this was the real cause of "Phoenix still comes out wrong in Japanese". The glossary used to store exactly one standard name per language, while titles and comments use short forms. The harvester did collect aliases, but the generator silently dropped them. Full names are now split into **every fragment**: `菲欧妮・蕾法爱菈` → `菲欧妮` + `蕾法爱菈` + the full name, likewise for `フィオニー・レファエラ` and `Phoenix Reffaella`. 12,280 aliases ship (ambiguous common words are filtered out to avoid false hits).
+
+**Terms inside sentences match too.** Previously the whole string had to equal a term, so titles like "【绝区零】菲欧妮实战演示" never matched and went straight to the model. It now tries exact match first, then scans the sentence for known terms (longest form first) and substitutes them.
+
+**Four new games.** Umamusume (321 entries), BanG Dream! (101 — MyGO and Ave Mujica are bands inside that game, so one source covers them), Reverse: 1999 (100) and Neverness to Everness (25).
+
+**Grouped labels share one word-formation pattern.** Chinese "缓存视频 / 缓存音频" is "action + object", so the translation must be structurally identical. The model used to mix "動画をキャッシュ" (verb + object) with "キャッシュ音響" (noun compound); the whole group is now pinned to the noun-compound form, and the prompt rule was rewritten into something checkable.
+
+**Dialogs on sub-screens are pre-translated.** Opening the offline-cache, settings or "Mine" hubs now queues the menu items and confirm dialogs that only appear on tap (maintained in a new `PrewarmStrings` file), so they are already translated when the user opens them.
+
+The Zenless Zone Zero table also went from 2,907 rows (634 empty placeholders) to **4,965 rows at 99.8% coverage in four languages**.
+
+Downloads are below.
+
+### PiliBabel v3.6.1
+
+**Found new community data sources and filled in the Japanese/Korean proper nouns for Wuthering Waves and Honkai Impact 3rd.**
+
+**Wuthering Waves Japanese names: 28 → 58 entries.** The data comes from `wikiwiki.jp/w-w`, a Japanese community wiki last modified 2026-10-29 whose table covers up to version 3.8. Fandom has no Japanese sub-wiki for this game, the official site is a single-page app, and the third-party APIs that used to work are gone — this is currently the only source with *current* Japanese names. Newly covered includes リリー (3.8), 鎖暝 (3.7) and 景燃 (3.6).
+
+**Honkai Impact 3rd: Japanese 19 → 33 entries, Korean 0 → 27 entries.** The Japanese names come from `wikiwiki.jp/houkai3rd` (its sidebar groups all 90 battlesuits under their valkyrie), and the Korean names from the `붕괴3rd/발키리` page on `namu.wiki` (last edited 2026-09-24).
+
+The two wikis organise names differently from the mainland BWIKI (valkyrie/battlesuit vs. character) and share no ids, so the mapping was aligned valkyrie by valkyrie by hand. Where a pair could not be confirmed it was left blank rather than guessed.
+
+**Still missing:** Korean names for Wuthering Waves, English names for Honkai Impact 3rd, and Korean names for some Genshin NPCs — these genuinely do not exist in any public source I could find. Details are in `docs/outstanding.md` section 9.
+
+Downloads are below.
+
+### PiliBabel v3.6.0
+
+**Update dialog: page markup is stripped, and its translation now jumps the queue so you no longer stare at an untranslated dialog.**
+
+**No more markup symbols.** The update description comes from a GitHub Release and is raw Markdown. It was displayed as-is, so bold markers, backticks, heading hashes, leading dashes and link syntax all showed up literally in the dialog. It is now flattened to plain text first — code blocks, inline code, images, links, headings, blockquotes, list markers, horizontal rules, bold/italic/strikethrough and tables are all removed, leaving only readable content and line structure.
+
+**The update dialog's translation is now top priority.** The dialog appears the instant the app launches, which is exactly when the main UI pushes dozens of strings into the translation queue. The dialog body used to queue up alongside them, so its translation often took a long time to arrive. It now uses a **separate high-priority queue**:
+
+- the priority queue is neither batched nor debounced — it dispatches immediately
+- each translation round drains the priority queue first, before the normal queue
+- the two queues are mutually exclusive, so no string is ever translated twice
+
+Net effect: right after launch, the update dialog's translation shows up first and the rest of the UI follows.
+
+Downloads are below.
+
+### PiliBabel v3.5.9
+
+**Fixes trending keywords growing to three lines: it should be one line → two lines.**
+
+In v3.5.6, when trending keywords were made to wrap onto a second line, `maxLines` was written as `full ? 3 : 1` — so expanding produced **three** lines instead of the intended two, which is why many trending entries showed an extra blank line.
+
+It is now `full ? 2 : 1`: **one line by default, two lines when "show full title" is enabled.**
+
+The third line was originally reserved out of concern that a label would get clipped when the text filled two full lines. But the label is a `WidgetSpan` that flows with the text rather than occupying its own line, so two lines are enough for the keyword plus its label.
+
+Downloads are below.
+
+### PiliBabel v3.5.8
+
+**Zenless Zone Zero glossary greatly expanded; glossary can now check for updates; live rooms can save their cover.**
+
+**Zenless Zone Zero glossary switched to a living source.** The previous source stopped updating in July 2024 and only covered versions 1.0/1.1, which is why Chinese/Japanese/Korean coverage sat at 6%. It now uses a community-reviewed multilingual glossary (tagged up to version 3.3): rows **1057 → 2907**, Simplified Chinese **94 → 2270**, Japanese **61 → 2256**, Korean **61 → 2257**.
+
+**Glossary update check.** Settings → AI Translate now has a "Game glossary" entry. It can be checked manually, and will also check itself at most once per 24 hours. The check only fetches a few-KB version manifest (no term data), then compares per-game version and hash; if something moved it reports "N game glossaries can be updated". The manifest URL can be pointed at your own mirror via `Pref.glossaryManifestUrl`.
+
+**Live room "save cover".** The live-room overflow menu previously offered only copy link / share room / open in browser / share to messages — **there was no way to save the cover**. It has been added, reusing the exact same save implementation as the video page's "save cover". The entry is hidden when no cover is available.
+
+**Still incomplete (missing upstream data, not a missing feature):** Japanese/Korean names for Wuthering Waves, EN/JA/KO names for Honkai Impact 3rd, and Korean names for some Genshin NPCs do not exist in any public source I could find. Details are in `docs/outstanding.md` section 9.
+
+Downloads are below.
+
+### PiliBabel v3.5.6
+
+**Search: trending keywords are translated and laid out on two lines. Listen-only page: the media session state is fixed. Subtitles: the track matching the app language is picked automatically.**
+
+- **Trending entries, two lines** - each trending keyword may wrap to two lines and its badge
+  moves to a second row. A translation is usually much longer than the Chinese original, and
+  keeping the badge inline squeezed the keyword into an ellipsis. The layout follows the
+  **标题完全显示** switch (renamed from 视频标题完全显示 in this release); turn it off and the
+  single-line layout comes back.
+- **Listen-only page media session** - that page drives its own media_kit player and has no
+  `PlPlayerController`, while the handler only reported state when one existed. As a result the
+  page never reported anything: the play/pause icon and progress in the notification and the
+  system media panel stayed at their initial values. The gate now also accepts the page's own
+  playing-state callback.
+- **Subtitles follow the app language** - with the default subtitle preference, a track matching
+  the app language is selected when one exists (Japanese UI plus a Japanese subtitle track shows
+  it directly, no translation pass). Without such a track the previous behaviour stands: open the
+  Chinese track and translate it in the background.
+- The full ranking page (bilibili 热搜) follows the same line-count switch.
+
+中文摘要：本版把热搜条目改成上下两行（关键词最多两行、小标签另起一行），跟随设置里的
+「标题完全显示」（原「视频标题完全显示」，本版改名）；「完整榜单」页同步。修好听视频页
+从不向系统上报媒体会话状态的问题（该页没有 `PlPlayerController`，被「有播放器才上报」
+的门槛挡掉），通知栏与系统媒体面板的播放/暂停图标和进度现在是对的。字幕方面：字幕偏好
+保持默认时优先选与界面语言一致的那条轨，没有才退回「开中文轨并翻译」。
+
+### PiliBabel v3.5.5
+
+**Added: AI translation for the search page's trending keywords.**
+
+- The two section titles - `大家都在搜` and `搜索发现` - were hard-coded Chinese; they now
+  follow the app language.
+- The trending keywords themselves are translated, as is the recommendation reason some
+  entries carry (`recommend_reason`). Tapping an entry still searches the **original**
+  keyword, so the translated display never changes the query.
+- The same applies to the full ranking page (`完整榜单` / bilibili 热搜).
+- The little badges next to entries are **not** translated, because they are images:
+  `直播中` is a bundled animation (`assets/images/live/live.gif`), and `新` / `独家` / `梗`
+  and friends are server-provided icon images (the `icon` field). Text baked into an image
+  can't be swapped by text translation.
+- All three spots are wrapped in `Obx`, so translations show up as soon as they come back
+  instead of requiring a page reload.
+
+中文摘要：本版把搜索页的热搜接入了 AI 翻译——「大家都在搜」「搜索发现」两个标题、热搜
+条目的关键词、部分条目右侧的推荐理由，以及「完整榜单」页的榜单条目都会跟随界面语言；
+点进去搜索仍然使用原文关键词。条目后面的小标签（「直播中」是内置动图，「新 / 独家 / 梗」
+是服务端下发的图标图片）是图片，没有接翻译。三处都包了 `Obx`，译文回来后自动刷新。
+
+### PiliBabel v3.5.4
+
+**Added: official "AI original-voice translation" audio tracks now follow the app
+language. Fixed: switching tracks was silent; headphone pause key did nothing.**
+
+- **New — audio track follows the app language.** When a video ships one of
+  Bilibili's official AI-dubbed tracks (the player's `AI原声翻译（Beta）` list) and
+  that list contains a track matching the app language, the track is selected
+  automatically when the video opens, with a one-time toast. Toggle:
+  Settings → AI translation → **声轨跟随界面语言** (on by default).
+  - **Rule**: if Bilibili doesn't offer the app language, playback stays on the
+    original audio. A Korean interface with only English/Japanese available does
+    **not** fall back to "the closest language", and no local dubbing is
+    synthesized (evaluated and deliberately rejected). The reverse also works: a
+    foreign-language video carrying an AI Chinese track switches to Chinese when
+    the interface is Chinese.
+  - No auto-switch while logged out: anonymous `cur_language` is silently ignored
+    by the server, so switching would only make the UI lie about the audio. We
+    also trust **only the server's echo** — if `cur_language` doesn't come back
+    equal to the language we asked for, playback stays on the original audio.
+  - The switch happens **before playback starts** (you never hear the original
+    track first), is attempted once per part, respects a manual choice
+    (including "关闭翻译"), and carries the chosen language across parts.
+- **Fixed: switching the audio track produced no audio change.** By default the
+  media URLs come from the official APP source (gRPC `PlayView`), and
+  `PlayViewReq` has **no language parameter at all** — Web's `language` metadata
+  was merely copied onto the APP result. So the UI said "English" while the
+  audio stayed Mandarin: the feature was broken under default settings. When a
+  language is requested we now stay on the Web source (the two token families
+  require opposite request fingerprints — APP links must not send `Referer`, Web
+  links must — so video-from-APP + audio-from-Web is not an option either).
+- **Fixed: the headphone play/pause key could play but never pause.**
+  `audio_service`'s Android side routes `KEYCODE_MEDIA_PLAY`, `PAUSE`,
+  `PLAY_PAUSE` and `HEADSETHOOK` all into `handler.click(MediaButton.media)`
+  (the key always means "toggle", never "pause"), and the default implementation
+  decides using `playbackState.playing` — the state we **report to the system**,
+  which is only updated when `setPlaybackState` passes three gates (background
+  playback enabled, a media item registered, a `PlPlayerController` instance
+  alive). The 听视频 (listen-only) page drives its own media_kit `Player` and has
+  no `PlPlayerController`, so that reported value stayed at its initial `false`
+  and every key press took the `play()` branch. We now override `click()` and
+  read the **actual** player state.
+
+中文摘要：本版新增「声轨跟随界面语言」——稿件带官方 AI 原声翻译声轨且有与界面语言一致
+的一轨时，开播前自动选中（AI 翻译设置页，默认开）；官方没有对应语种就保持原声，不做
+就近兜底、不做本地合成。同时修两个问题：① 默认「直链走 APP 同源」时 `PlayViewReq`
+没有语言参数，导致切换声轨后界面显示已切、声音仍是原声（现在指定语言就不走 APP 同源）；
+② 戴耳机时播放/暂停键按得出播放、按不出暂停——`audio_service` 把这几种按键全部路由到
+`click()`，而默认实现看的是「上报给系统」的播放状态，听视频页没有 `PlPlayerController`
+实例、那份状态永远停在初始的 `false`，现在改读真实播放状态。
+
+### PiliBabel v3.5.3
+
+**Fixed: "Cache audio" on the video page was actually caching video.**
+
+- **Symptom.** Opening 音频缓存 from a video's ⋮ menu showed the same cache-video
+  panel, and tapping an entry cached the video instead of producing an audio
+  file. Only the 听视频 page's cache-audio button behaved correctly.
+- **Root cause.** The cache panel (`DownloadPanel`) is shared by video and audio,
+  but its `isAudio` flag was used **only** to choose which module the
+  "view cache" button jumps to. The tap handler was hard-wired to
+  `downloadVideo` / `downloadBangumi` — the audio path was never connected.
+- **Fix.**
+  - New `_onAudioCache()` shares `AudioCacheService` with the 听视频 page and
+    writes a plain audio file (m4a/flac…) at the quality chosen in the panel.
+    For multi-part videos the part inherits its parent episode's aid/bvid/cover,
+    so episodes in a season no longer collapse onto the same video.
+  - `_onDownload` routes to the audio path right after the "multi-part videos
+    need an explicit part" check, so the interaction matches the video panel.
+  - **Cache state is now checked per module**: audio against
+    `AudioCacheService.isCached`, video against `cidSet` — previously an
+    already-cached video made audio caching silently skip as "already cached".
+  - The audio panel hides the **video** quality selector (it had no effect on
+    the output and was misleading) and keeps only audio quality.
+  - "Cache all" goes through the same entry point and follows the audio path.
+
+中文摘要：修复视频页「音频缓存」实际缓存视频的问题。根因是视频/音频共用的缓存面板里，
+`isAudio` 只用于「查看缓存」的跳转，点条目永远走视频下载分支，音频链路没接上。
+现在音频走与「听视频」页相同的 `AudioCacheService`、按所选音质落盘纯音频文件；
+分P 继承所属分集的 aid/bvid；缓存状态按模块分开判断；音频面板只保留音质选择。
+
+Downloads are below.
+
+### PiliBabel v3.5.2
+
+**Short names now actually apply where they matter: titles and the comment
+section.** Plus the two previous releases are summarised below.
+
+- **The abbreviation rule is wired up — 31 UI surfaces.** Until now `txTight()`
+  existed but nothing called it, so the full/short rule never fired. It now
+  covers:
+  - **23 list / card titles** — video cards (H/V), dynamic video & extra cards,
+    live cards, embedded opus cards, audio lists, download list & detail,
+    article list, search suggestions, messages, member pages;
+  - **7 navigation labels** — home tabs, the three bottom-bar variants, drawer,
+    rail (including the rail width measurement, which must render the same
+    form as the label or the width comes out wrong);
+  - **the comment section** — comment bodies now pick the short form too,
+    because a comment section *is* the community.
+- **Result (same data, measured):**
+
+  | Term | Title / comments | Body text |
+  |---|---|---|
+  | 绝区零 | ゼンゼロ / 젠존제 / ZZZ | ゼンレスゾーンゼロ / 젠레스 존 제로 / Zenless Zone Zero |
+  | 崩坏：星穹铁道 | スタレ / 붕스 / HSR | 崩壊:スターレイル / 붕괴: 스타레일 / Honkai: Star Rail |
+  | 蔚蓝档案 | ブルアカ / 블아 / BA | ブルーアーカイブ / 블루 아카이브 / Blue Archive |
+  | 明日方舟 | アクナイ / 명방 / AK | アークナイツ / 명일방주 / Arknights |
+
+- New helper `uiTxTight(src)`. Glossary entries marked as *inferred* are **live
+  and in normal use** — the yellow highlight in the reference sheet only
+  distinguishes official sources from inferred ones; it is not a to-do.
+
+中文摘要：简称机制此前只有实现、没有调用方，实际没生效。本版接入 **31 处窄位界面**——
+列表/卡片标题 23 处、导航标签 7 处（含侧栏宽度测量，必须与渲染同形态）、
+评论区正文（评论区本身就是社区语境）。效果：标题与评论区用 ゼンゼロ / スタレ /
+ブルアカ / アクナイ 这类通行简称，正文才用全称。术语表中标记为「推断」的条目
+**已正常启用**，标黄只用于区分来源，不是待办。
+
+---
+
+### PiliBabel v3.5.1
+
+**New: Arknights (明日方舟) glossary — the 8th game.**
+**Fixed: three kinds of error popups (malformed retry URL / credential leak / type-error crash).**
+
+- **Arknights glossary (5,663 terms).** Official data from all five servers
+  (CN 简中 / TW 繁中 / EN / JA / KR, `ArknightsAssets/ArknightsGamedata` client
+  data tables, auto-synced daily), joined by the same in-game IDs — official
+  text, not machine translation. Covers operators / NPCs / enemies / items /
+  skills. Traditional Chinese comes straight from the TW server (no conversion).
+  Game title carries community short forms per our slang-first policy:
+  アークナイツ→**アクナイ**, 명일방주→**명방**, Arknights→**AK**.
+- **Fixed the malformed retry URL (`https://https//app.bilibili.com/...`).**
+  The host list stores full URLs (`https://app.bilibili.com`), but the
+  host-switch retry composed `scheme://$host` with it, producing
+  `https://https://app.bilibili.com` — exactly the broken URL in the error
+  popups; every such retry was doomed. Worse, the "current host" comparison
+  compared a bare hostname against full URLs and never matched, so host
+  switching had never actually switched. Both fixed.
+- **Fixed error popups leaking the full request URL.** Toasts appended the raw
+  request URI, whose query string contains `access_key` / `sign` credentials —
+  one screenshot and they are out. Popups now show only `scheme://host + path`
+  (truncated), with a space between message and URL.
+- **Hardened the cookie header handling.** dio headers are
+  `Map<String, dynamic>`; when the cookie header holds a List, the previous
+  `as String?` cast threw
+  `type 'List<dynamic>' is not a subtype of type 'String'` — the most likely
+  source of that popup. Both String and List are now accepted. Per user
+  decision, raw type-error text is still shown verbatim (to help future
+  diagnosis) until the root cause is fully pinned down.
+
+中文摘要：新增《明日方舟》术语表（五服官方数据按 ID 对齐，5663 条，繁中为台服官方数据）；
+修复换主机重试拼出 `https://https//...` 坏地址（且换主机从未真正生效）的根因；
+修复错误弹窗泄露带 `access_key`/`sign` 的完整 URL（现只显示 host+path 并截断）；
+兼容 cookie 头为 List 时的类型崩溃，类型错误信息按要求保留上屏以便查证。
+
+---
+
+### PiliBabel v3.5.0
+
+**New: game glossary + full/short name mechanism.** UI translation now uses
+official localized names for game proper nouns instead of leaving them to the
+model.
+
+- **Seven games, five languages, ~4,900 core terms embedded**: Genshin Impact /
+  Honkai: Star Rail / Zenless Zone Zero / Wuthering Waves / Honkai Impact 3rd /
+  Blue Archive / Goddess of Victory: NIKKE. Sources: official HoYoWiki API,
+  game-extracted text (StarRailRes / ZenlessRes), and community wikis
+  (Fandom / BWIKI), aligned by official IDs — not machine translation.
+- **Two activation paths**: (1) exact match — any-language full or short form of
+  a term returns the official name directly (no cache, no request, cannot be
+  overridden by the model); (2) prompt injection — terms found in the batch are
+  forced onto the model via the system prompt.
+- **Full/short name mechanism (no longer hard-coded per phrase)**: official and
+  community short forms (ゼンレスゾーンゼロ→ゼンゼロ, 崩壊:スターレイル→スタレ,
+  ブルーアーカイブ→ブルアカ, Wuthering Waves→WuWa…) are first-class. Bilibili
+  gaming comment sections *are* the community, so community slang is legitimate
+  and preferred: any term with an established short form defaults to it;
+  body-text width expands to the full name. New `txTight()` for narrow spots
+  (list titles / buttons / tabs).
+- The old hard-coded `'绝区零': 'ゼンゼロ'` pin was removed — it now falls out of
+  the general mechanism. Prompt revision +1 (9): old translation caches are
+  retranslated once after upgrade.
+
+中文摘要：内嵌七款游戏五语核心术语表（约 4900 条，官方渠道按 ID 精确对齐）；
+命中术语直接返回官方译名 + 批量翻译注入提示词双链路；全称/简称通用机制——
+社区俚语简称（ゼンゼロ/スタレ/ブルアカ/WuWa 等）直接转正、默认使用，
+正文宽度才展开全称；移除「绝区零→ゼンゼロ」硬编码。
+
+Downloads are below.
+
+### PiliBabel v3.4.10
+
+**The real root cause: an invalid `4096` bit OR-ed into `fnval` made **every audio stream fetch** be rejected with `-400 请求错误`. This is why "video downloads all work, audio downloads all fail".**
+
+**Symptom.** Every "download audio to local" attempt failed with `错误(-400): 请求错误`, with byte-identical text, while "download video to local" worked fine.
+
+**Root cause.** The two audio fetch paths (download-audio and cache-audio) sent `fnval: 4048 | 4096` = **8144**. Per the bilibili playurl spec, `fnval` is a bitmask whose valid bits are only `1` (mp4) / `16` (dash) / `32` / `64` (HDR) / `128` (4K) / `256` (Dolby) — **`4096` is not a valid bit**. The video DASH path uses the default `4048` and always worked; adding `4096` makes the whole request invalid, so the server rejects it at the parameter-parsing stage with `-400`. That is also why it failed every single time with exactly the same message.
+
+**Fix.** Both paths are back to `fnval: 4048` without the 4096 bit. Hi-Res tracks are delivered as part of the DASH response anyway; that bit was never needed.
+
+Note: this has nothing to do with the audio/video merging feature — merging runs *after* a successful fetch, so a failed fetch never reaches it.
+
+Downloads are below.
+
+### PiliBabel v3.4.9
+
+**Fixes `-400 请求错误` when downloading video/audio to a local folder: play-url parameters now come from the authoritative video-detail response.**
+
+The v3.4.8 diagnostic release revealed the real error: `错误(-400): 请求错误` — meaning the **request parameters themselves were invalid**, not a login or risk-control problem.
+
+**Root cause.** The working "cache audio" path uses the authoritative values returned by the video-detail API (`videoDetail.aid / bvid / cid`). "Download to local" instead used page state — `aid`, `bvid`, and `seasonCid ?? cid.value`. Here `seasonCid` is the **item selected inside a collection**, which is not always the cid currently being played. Whenever the two fall out of sync (just switched part, just tapped a collection entry, detail not loaded yet), `cid` no longer matches `bvid`, and the server rejects the request with `-400 请求错误`.
+
+**Fix.** Both download calls now **prefer the authoritative `aid` / `bvid` / `cid` from the detail response**, falling back to page state only when unavailable. `cid` no longer uses `seasonCid` but the currently playing one — matching where the audio-cache path gets its parameters.
+
+Downloads are below.
+
+### PiliBabel v3.4.8
+
+**Diagnostic release: a failed play-url fetch now shows the server's actual reason instead of a bare generic message.**
+
+In v3.4.7 the failure toast contained only "failed to fetch stream, cannot download locally" with no cause at all — because all three fetch paths only matched the `Success` case and **discarded the code / message the server returned**.
+
+This release adds `_fetchErrReason`, which appends `Error.errMsg` to the message, e.g. "failed to fetch stream, cannot download locally: 错误(-404): …". A failure now immediately tells you whether it is a login/session problem, risk control, a video with no audio stream, or a bad URL — no more guessing.
+
+Everything else (bangumi parameter fix, persistent failed records for retry, 绝区零 → ゼンゼロ) is as in v3.4.7.
+
+Downloads are below.
+
+### PiliBabel v3.4.7
+
+**Fixes "failed to fetch stream" when downloading audio/video to a local folder; failed fetches now leave a retryable record; Japanese "绝区零" is pinned to "ゼンゼロ".**
+
+**Root cause of the stream-fetch failure (a genuine bug).** All three fetch paths in the download service (single-file video / DASH high-quality video / audio) hard-coded `videoType: VideoType.ugc` and **never passed `seasonId` / `epid`**. A bangumi (PGC) item requires `ep_id` / `season_id` when requesting `playurl`; without them the server simply returns no stream — so the whole download fails at the very first step and the user sees "failed to fetch stream, cannot download locally". This explains why **some** videos always failed: every bangumi-type item hit it. All three paths now use `epId == null ? ugc : pgc` and carry `epid` / `seasonId`; the video page passes them down as well (null for UGC).
+
+**Failed fetches now leave a record.** Previously a fetch failure only showed a toast — nothing appeared in the list, so the user could neither see "this one was attempted and failed" nor retry. A `failed` record is now written, visible under "Offline cache → Download video / Download audio", where the user can tap "Re-download" to retry. (The placeholder path never creates a real file; the record's `failed` flag is what the list keys on.)
+
+**Japanese pinned translation:** `绝区零` → `ゼンゼロ` (a game proper noun; the model tends to produce long, inconsistent renderings like 「ゼンレスゾーンゼロ」, so it is pinned via the manual translation table).
+
+Downloads are below.
+
+### PiliBabel v3.4.6
+
+**The offline-cache screen is now four sibling tabs; translation gains a "parallel variants share one style" rule; the APK slimming takes effect.**
+
+**Cache screen restructured.** "Mine → Offline cache" used to offer three entries — Cached videos / Cached audio / Download status — and the last one required another tap into a second-level page that held Download video / Download audio. All four are now **sibling tabs on one level**: **Cached videos / Cached audio / Download video / Download audio**. No more nested navigation. (The old "Download status" page is kept for existing entry points, but the main screen no longer requires it.)
+
+**New translation rule: parallel variants must share one style.** The model previously rendered structurally parallel items in inconsistent styles — e.g. in Japanese it turned the "cache video" label into a verb phrase while rendering "cache audio" as a noun compound, so the two did not read as a set. The prompt now requires that structurally parallel items use **the same word-formation pattern** — same word order and same grammatical form, differing only in the object noun. If the source is "noun + noun", the translation is a noun compound; if it is "verb + object", the translation is verb + object. This applies to **every target language**, not just Japanese. Because the cache holds the old, inconsistent translations, `promptRevision` is bumped to 8 so those entries are re-translated once.
+
+**APK slimming.** The release build now passes `--target-platform android-arm,android-arm64` (alongside `abiFilters`), dropping the x86/x86_64 FFmpeg native libraries. This release exists to verify the actual size reduction.
+
+Downloads are below.
+
+### PiliBabel v3.4.5
+
+**Fixes the leftover silent video after merging in v3.4.4: a folder used to end up with both "xxx (1080P+).mp4" (silent) and "xxx (合并).mp4" (with sound).**
+
+**Cause.** The merged output was given a **new name** via `uniquePath` (`title (合并).mp4`), and only then did the code try to delete the original video track. The deletion was a single `deleteSync`, but the downloader had only just closed its write handle — on some platforms (especially Windows) the file is briefly still held open. The delete failed, the failure was silently swallowed, and the silent original video stayed behind. Hence two files.
+
+**Fix.**
+1. Merging now writes to a **temporary file** and only moves it into place after a non-empty check, so a half-written output can never be left behind.
+2. Deleting the split tracks now **retries** (up to 6 attempts, 150 ms apart) to let the holding process release the handle.
+3. After a successful delete, the merged file is **renamed to the original video's name** (quality suffix preserved, e.g. `title (1080P+).mp4`) — so the folder ends up with exactly **one** file, named consistently with single-file tiers, and no stray "(合并)" file.
+4. If the original video track genuinely cannot be deleted (extreme locking), the merged file is kept and its path returned — better an extra file than losing the one the user can actually play.
+
+**No "(合并)" in the exported filename.** The merged output finally uses the **video's own title** (quality suffix preserved, e.g. `title (1080P+).mp4`). The parenthesis marker was only an internal implementation detail and has no business appearing in a filename the user sees.
+
+**Smaller APK.** Bundling FFmpeg had pushed the APK from 75.9 MB to 105.2 MB. The `_min` variant is already the smallest feature set, but it ships `.so` files for five CPU architectures by default. It is now limited to the two a phone actually needs — `arm64-v8a` (modern devices) and `armeabi-v7a` (older 32-bit ones) — dropping x86/x86_64, which only emulators and a handful of ChromeOS devices use. This should save well over ten megabytes. Desktop builds (Windows/Linux) are unaffected.
+
+Downloads are below.
+
+### PiliBabel v3.4.4
+
+**High-quality downloads are now merged into a single playable video, and the false "file deleted" warning during downloads is fixed.**
+
+- **High-quality downloads (1080P60 / 4K / HDR / Dolby / 8K) are merged automatically.** At those tiers bilibili only serves a DASH **split stream**, so the files on disk used to be "video track + audio track" — neither playable on its own, and users would wonder why an extra audio file appeared. Once both tracks finish downloading, the FFmpeg bundled inside the app performs a **container-level remux (`-c copy`, no re-encoding)** into a single MP4 with the index moved to the front (`-movflags +faststart`), playable by double-clicking; the two split files are then deleted. If merging fails, the split tracks are kept and the app says so explicitly — never "you downloaded it and got nothing". **No quality tier is restricted**; every tier remains selectable.
+- **FFmpeg ships inside the app** via `ffmpeg_kit_flutter_new_min` (smallest variant, no GPL components). On Android it goes into the APK's native libraries, on Windows/Linux into the installer — **users never have to install ffmpeg themselves**, and behaviour is identical on all three platforms. (Android minSdk raised to 24 accordingly; Linux builds now install `libjson-glib-dev`.)
+- **No more false "local file deleted" while downloading.** `fileMissing` checks the file live, and during a download the file hasn't been written yet, so it was always true — the UI showed a progress bar and a red "file deleted" line at the same time. A new `shouldCheckIntegrity` (only when done or failed) gates the check; both the red line and the "re-download / clean record" menu now use it.
+
+Downloads are below.
+
+### PiliBabel v3.4.3
+
+**Fixes a regression introduced in v3.4.2: cache-screen covers grew again.**
+
+**Cause.** In v3.4.2 I removed the fixed cover height from `DetailItem` on the grounds that "its grid uses a fixed `mainAxisExtent` of 100". **That premise was wrong** — `DetailItem` is reused by two different grids:
+- "Cached videos / Folders": hard-coded `mainAxisExtent: 100`
+- "Currently caching / Download search": uses `GridMixin`, which grows to 148 when "show full title" is enabled
+
+With no fixed height, it derived its cover from the available height again on the latter two pages, so the cover grew back.
+
+**Fix.** `DetailItem` again pins its own cover height, computed against the **shortest** container: `100 − 5 px padding top and bottom = 90`. A new constant `Style.cardHCoverHeightCompact` documents this, so a future change can't re-break it by reasoning about only one of the two containers.
+
+**Full audit included.** Every horizontal-card cover was scanned: the other 26 are already pinned; the 9 unpinned ones were verified to be **vertical** cards (cover inside a `Column`, width-driven, unaffected by container height), and only `DownloadFolderCard` sits in a `Row` — but it is used solely by the fixed-height-100 grid, so it is safe.
+
+Downloads are below.
+
+### PiliBabel v3.4.2
+
+**Root-cause fix for the "video cover grows" family of bugs, plus two layout defects on the cache screen.**
+
+- **The cover-height contract is now a single constant** (`Style.cardHCoverHeight`). The root cause: in a horizontal card the cover uses `AspectRatio`, and a `Row` gives children unbounded width — so `AspectRatio` derives its **width from the available height**. Grid `mainAxisExtent` in turn grows by 38 when "show full title" is on, which meant **every card had to remember to pin its own cover height**. That contract was duplicated across 20+ files, so it could only be fixed one reported card at a time. 26 horizontal cards and skeletons now use the shared constant: extra cell height goes to the text column only, and cover size is constant.
+- **Cache screen: "cover shrank but the text column didn't narrow back".** `DetailItem` (cached videos / currently caching / folders) lives in a grid whose `mainAxisExtent` is a fixed 100, so it never needed a fixed-height box; an extra `SizedBox` taller than the available height (100 − 5 px padding top and bottom = 90) squeezed the cover while the row still allocated the old width to the text column. Removed — proportions are correct again.
+- **Module bar scrolls horizontally.** "Cache video / Cache audio / Download status" get noticeably longer in some languages; a fixed `Row` pushed the right-most label off-screen with no way to see it. It now scrolls sideways when needed.
+- **"Download status" is no longer tinted with the theme colour.** It is an entry point, not a module switch, so it now uses exactly the same styling as an unselected module button (`colorScheme.outline`, 13 px) instead of looking selected.
+
+Downloads are below.
+
+### PiliBabel v3.4.1
+
+**Three cache/download fixes, plus automatic collection sub-folders for local downloads.**
+
+- **Failed cache items can be retried now.** Previously, tapping a failed item jumped to the "Currently caching" page — which only lists queued tasks, so a failed entry could do nothing there — while "Re-cache" was buried in the top-right menu. The result was exactly "there is no re-download button and tapping does nothing". Now:
+  - tapping a failed item **re-caches it directly**;
+  - the cover shows a **visible "Re-cache" button**, no menu needed.
+- **Covers in "Currently caching / cache list" no longer grow.** `DetailItem`'s cover is also a `Row` + `AspectRatio` (width derived from available height), so it grew when "show full title" made the grid cell taller. It is now pinned to its original height.
+- **The cache/download pages open on the tab that matches the entry point.**
+  - "Cache video" → the cache screen opens on **Cached videos**; "Cache audio" → **Cached audio**. (Previously it always reused whatever module you last visited, so tapping "cache audio" could land on audio and tapping "cache video" could also land on audio.)
+  - "Download video / Download audio" → the download screen opens on the matching tab.
+- **Automatic collection sub-folders.** When downloading to a local folder, if the video belongs to a collection (`ugc_season`), a sub-folder named after the **collection title** is created inside your chosen folder; a plain multi-part video uses the video title instead. Later episodes of the same collection land in the same folder automatically. Collection names are sanitised (illegal characters such as `\ / : * ? " < > |` removed, over-long names truncated).
+
+Downloads are below.
+
+### PiliBabel v3.4.0
+
+**Wrap-up release for this whole round (3.0.5 → 3.4.0).** This is the version that closes the round.
+
+The round's theme was overseas-network experience, parity with the official app, and landing the AI translation layer. What 3.4.0 itself does:
+
+- **Analyzer cleaned up** — `flutter analyze` reports **0 errors / 0 warnings**; infos went **373 → 53** (the remainder are items deliberately kept, itemised with reasons in `docs/outstanding.md`). 296 `prefer_const_constructors` and friends were fixed in bulk via CI's `dart fix --apply`; the rest (cascades, anonymous types, `onReorder` migration, `cancel_subscriptions`, context guards) were done by hand and verified by a real compile.
+- **Second pass on video-cover sizing** — thirteen more cards (history, favourites for videos/bangumi/columns/notes, member favourites, member search, season series, rankings, article search, subscriptions, comment search, and the bangumi skeleton) still enlarged their cover when "show full title" made the grid cell taller. All covers are now pinned to their original height, so the toggle no longer changes cover size anywhere.
+- **UP (uploader) profile translation completed** — the "大会员 / 年度大会员" badge, the personal signature, "xx 人为 TA 充电" and "xx 人加入大航海", the IP-location line and the uploader's own category tags (both come from the same server-provided `spaceTag`), the "主页 / 动态 / 投稿" tab titles, every follow-button state, the follow date, and "等 N 人也关注了 TA" now all go through `uiTx` / `uiTxP`.
+- **Documentation closed out** — all 44 language READMEs carry an AI-translation note; the English and Chinese README changelogs are brought up to 3.4.0; what is outstanding, what is blocked, what was deliberately not done, and how the app knowingly differs from the official client are documented in `docs/outstanding.md` and `docs/known-differences-vs-official.md`.
+- **Repository tidied** — every temporary `diag/**` diagnostic branch deleted; only `feat/ai-ui-translate` and `main` remain on the remote (plus the local working branch `work/v3.3.7-fixes`).
+- **Explicitly not doing**: swapping the player kernel (decided for this round), migrating the home feed / main search / dynamics main feed to gRPC (missing proto definitions, or the gRPC payload degrades rich text).
+
+The three changes from this round that matter most to users:
+1. **Image pipeline now connects directly** — fixes "covers only appear after a pull-to-refresh" and removes the tunnel-flooding failure that had taken the whole data layer down.
+2. **Data requests connect directly by default** — noticeably faster loading than 3.0.5, with a switch to revert.
+3. **Audio and video use multi-connection segmented transfer by default** — the buffer keeps ahead of the playhead, seeking is much faster, and it no longer crashes or hangs.
+
+See the README's "Changelog: 2.6.x → 3.4.0" and the individual 3.3.x entries below for the full itemisation.
+
+Downloads are below.
+
 ### PiliBabel v3.3.6
 
 **gRPC host order fix - the comment section and the dynamic feed work again.**

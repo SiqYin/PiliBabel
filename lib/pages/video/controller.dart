@@ -1984,7 +1984,7 @@ class VideoDetailController extends GetxController
           .convert(utf8.encode('$trackId\n$vtt'))
           .toString();
       final file = File(path.join(directory.path, '$fingerprint.vtt'));
-      if (!await file.exists()) {
+      if (!file.existsSync()) {
         final temp = File(
           '${file.path}.${DateTime.now().microsecondsSinceEpoch}.tmp',
         );
@@ -1992,8 +1992,8 @@ class VideoDetailController extends GetxController
         try {
           await temp.rename(file.path);
         } on FileSystemException {
-          if (await file.exists()) {
-            if (await temp.exists()) await temp.delete();
+          if (file.existsSync()) {
+            if (temp.existsSync()) await temp.delete();
           } else {
             rethrow;
           }
@@ -2044,8 +2044,13 @@ class VideoDetailController extends GetxController
         // `vi-app-ai`，其它语言缓存的译文会被当成普通外挂字幕；
         // 现在按语言精确匹配，多条候选取贴合度最高的那条。
         if (sub.isAppAiTrack) {
-          if (!cachedTranslationLanMatches(sub.lan, currentTarget)) continue;
-          final rank = Subtitle.langScore(sub.lan, currentTarget);
+          // 旧版主标签命名（zh-app-ai）读取期迁移：从 lanDoc 恢复完整目标
+          // 代码，正确的旧译文不再被误杀，字形不符仍拒挂。
+          final effectiveLan = legacyAppAiLanFor(sub.lan, sub.lanDoc);
+          if (!cachedTranslationLanMatches(effectiveLan, currentTarget)) {
+            continue;
+          }
+          final rank = Subtitle.langScore(effectiveLan, currentTarget);
           if (rank >= translatedRank) {
             translatedRank = rank;
             translatedVtt = await File(vttPath).readAsString();
@@ -2606,7 +2611,7 @@ class VideoDetailController extends GetxController
       try {
         await temp.rename(vttFile.path);
       } on FileSystemException {
-        if (await vttFile.exists()) await vttFile.delete();
+        if (vttFile.existsSync()) await vttFile.delete();
         await temp.rename(vttFile.path);
       }
       final artifact = SubtitleTranslationArtifact(
@@ -2635,7 +2640,7 @@ class VideoDetailController extends GetxController
           .registerVerified(
             artifact,
             verify: () async {
-              if (!await vttFile.exists()) return false;
+              if (!vttFile.existsSync()) return false;
               return SubtitleTranslationOutput.isCompleteTranslatedVtt(
                 cues,
                 await vttFile.readAsString(),
@@ -3323,7 +3328,7 @@ class VideoDetailController extends GetxController
             existing.verifierVersion == SubtitleTextQuality.verifierVersion) {
           try {
             final file = File(existing.vttFilePath);
-            if (await file.exists() &&
+            if (file.existsSync() &&
                 SubtitleTranslationOutput.isCompleteTranslatedVtt(
                   selectedCues,
                   await file.readAsString(),
@@ -3515,12 +3520,12 @@ class VideoDetailController extends GetxController
           .convert(utf8.encode('$bvid/${cid.value}/$subIdx\n$vtt'))
           .toString();
       final file = File(path.join(directory.path, '$fingerprint.vtt'));
-      if (!await file.exists()) {
+      if (!file.existsSync()) {
         final temp = File(
           '${file.path}.${DateTime.now().microsecondsSinceEpoch}.tmp',
         );
         await temp.writeAsBytes(utf8.encode(vtt), flush: true);
-        if (await file.exists()) {
+        if (file.existsSync()) {
           await temp.delete();
           return file.path;
         }
@@ -3530,8 +3535,8 @@ class VideoDetailController extends GetxController
           // Two subtitle refreshes may materialize the same VTT together. The
           // first writer owns the content-addressed file; the second can use
           // it instead of reporting a false subtitle-load failure.
-          if (await file.exists()) {
-            if (await temp.exists()) await temp.delete();
+          if (file.existsSync()) {
+            if (temp.existsSync()) await temp.delete();
             return file.path;
           }
           rethrow;

@@ -10,6 +10,7 @@ import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/services/ui_translate/game_glossary.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_proxy.dart';
+import 'package:PiliPlus/services/ui_translate/translation_queue_policy.dart';
 import 'package:PiliPlus/services/ui_translate/vietnamese_ui_translations.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
@@ -157,6 +158,7 @@ class UiTranslateService extends GetxService {
 
   /// 正在翻译中标记，避免并发重复请求。
   bool _busy = false;
+  bool _lastFlushTookUrgent = false;
 
   Timer? _debounce;
   Timer? _persistTimer;
@@ -482,8 +484,13 @@ class UiTranslateService extends GetxService {
   /// 点删除还会再弹确认框——这些文案此时一个都没渲染过，自然也没进过翻译队列。
   /// 等用户点开才翻，就会先看到中文再跳成日文。
   ///
-  /// 优先级：走 [_pendingUrgent]（与更新弹窗同一档），因为它们属于
-  /// 「用户马上就要看」的内容，应当排在主界面那些滚动才可见的文案前面。
+  /// 优先级：**普通队列**。预热是「点开才出现」的推测性内容，不属于
+  /// 「用户正盯着看」——3.6.7 评估（PROGRESS-3.6.4-3.6.7 §六）确认把预热
+  /// 灌进 `_pendingUrgent` 会让优先队列排他取空 15~40s，下拉刷新的新标题
+  /// 被饿死。`_pendingUrgent` 只留 [txUrgent]（更新弹窗等真阻塞 UI）。
+  ///
+  /// 同步可得的字符串（钉扎译名、越南语离线词典、原文语言、同书写系统）
+  /// 直接跳过：`uiTx()` 渲染时同步返回，排进队列只会浪费请求额度。
   ///
   /// 已缓存 / 已命中术语表的条目直接跳过，不产生请求。
   static void precache(Iterable<String> sources) {
@@ -493,6 +500,9 @@ class UiTranslateService extends GetxService {
     // currentLanguage 是**实例**成员（静态上下文里直接写会 Undefined name），
     // 先取一次；_pinnedTranslations 是 static const，直接类内引用即可。
     final langCode = service.currentLanguage.code;
+    // 简体中文目标下 uiTx 对一切同步返回原文，预热没有意义。
+    if (service.isSourceLanguage) return;
+    final nativeScript = service.currentLanguage.nativeScript;
     for (final src in sources) {
       if (src.isEmpty) continue;
       // 已经翻好的直接跳过（缓存命中是同步的，不花钱）
@@ -500,10 +510,11 @@ class UiTranslateService extends GetxService {
       if (_pinnedTranslations[src]?[langCode] != null) {
         continue;
       }
-      service._pending.remove(src);
-      service._pendingUrgent.add(src);
+      if (langCode == 'vi' && vietnameseUiTranslation(src) != null) continue;
+      if (looksLikeNativeScript(src, nativeScript)) continue;
+      service._pending.add(src);
     }
-    if (service._pendingUrgent.isNotEmpty) service._scheduleFlush();
+    if (service._pending.isNotEmpty) service._scheduleFlush();
   }
   /// [precache] 的延迟版：等首屏渲染完再排队。
   ///
@@ -1117,10 +1128,16 @@ class UiTranslateService extends GetxService {
     // 表现为「切到 B 后个别文本还留在 A」。
     final reqLang = currentLanguage.code;
     try {
-      // **优先队列**：更新弹窗这类「用户正盯着看」的内容先翻。
-      // 只要 _pendingUrgent 非空就只取它，普通队列留到下一轮 —— 这样弹窗
-      // 不用和主界面几十条文案抢同一个批次。
-      final fromUrgent = _pendingUrgent.isNotEmpty;
+      // **队列选择**：优先队列（更新弹窗这类「用户正盯着看」的）先翻，
+      // 但两队列都非空时**交替**取——排他取空曾让预热把下拉刷新的新标题
+      // 饿死 15~40s（PROGRESS-3.6.4-3.6.7 §六）。策略见
+      // [nextFlushFromUrgent]（纯函数，带回归测试）。
+      final fromUrgent = nextFlushFromUrgent(
+        urgentNotEmpty: _pendingUrgent.isNotEmpty,
+        pendingNotEmpty: _pending.isNotEmpty,
+        lastFlushTookUrgent: _lastFlushTookUrgent,
+      );
+      _lastFlushTookUrgent = fromUrgent;
       final Set<String> source;
       if (fromUrgent) {
         source = _pendingUrgent;
@@ -1788,6 +1805,64 @@ class UiTranslateService extends GetxService {
       throw const FormatException('Incomplete subtitle translation');
     }
     return result;
+  }
+
+  /// 弹幕批量预翻译的在飞去重：分段合并/开关切换会多次触发，
+  /// 同一条弹幕在上一批还没回来前不重复发请求。
+  final Set<String> _danmakuPreInFlight = <String>{};
+
+  /// **弹幕批量预翻译**：整段弹幕分批请求一次翻好、直接写进缓存，渲染时
+  /// `uiTx` 同步命中。
+  ///
+  /// 背景：弹幕以前只在播放位置前 15 秒逐条 `uiTx` 入队，而内置引擎对普通
+  /// 队列是**逐条请求**——热门视频 15 秒窗口里几百条弹幕根本翻不完，弹幕
+  /// 出生那一刻译文未到就永远显示原文（画布条目只渲染一次），表现为
+  /// 「弹幕翻译没有生效」。弹幕分段加载时整段批量预翻，译文在出生前就绪。
+  Future<void> pretranslateDanmaku(Iterable<String> contents) async {
+    if (!enabled || !translateContent || isSourceLanguage) return;
+    final langCode = currentLanguage.code;
+    final nativeScript = currentLanguage.nativeScript;
+    final batch = <String>[];
+    final seen = <String>{};
+    for (final src in contents) {
+      if (src.isEmpty || !seen.add(src)) continue;
+      if (!_hasTranslatableText(src)) continue;
+      if (_cache.containsKey(src)) continue;
+      if (_danmakuPreInFlight.contains(src)) continue;
+      if (_pinnedTranslations[src]?[langCode] != null) continue;
+      if (langCode == 'vi' && vietnameseUiTranslation(src) != null) continue;
+      if (looksLikeNativeScript(src, nativeScript)) continue;
+      batch.add(src);
+    }
+    const size = 20;
+    for (var i = 0; i < batch.length; i += size) {
+      final end = i + size < batch.length ? i + size : batch.length;
+      final chunk = batch.sublist(i, end);
+      _danmakuPreInFlight.addAll(chunk);
+      try {
+        final translated = await translateSubtitleLines(chunk);
+        var changed = false;
+        final bucket = _cacheByLang.putIfAbsent(
+          langCode,
+          () => <String, String>{},
+        );
+        for (var j = 0; j < chunk.length && j < translated.length; j++) {
+          final value = translated[j].trim();
+          if (value.isNotEmpty && value != chunk[j]) {
+            bucket[chunk[j]] = value;
+            changed = true;
+          }
+        }
+        if (changed) {
+          if (langCode == currentLanguage.code) _bumpRevisionSoon();
+          _schedulePersist();
+        }
+      } catch (_) {
+        // 单批失败不影响其余批次与播放：渲染端继续用原文/后到译文。
+      } finally {
+        _danmakuPreInFlight.removeAll(chunk);
+      }
+    }
   }
 
   /// 内置官方引擎的字幕批量路径：官方接口对批量 JSON 数组的支持不稳定，

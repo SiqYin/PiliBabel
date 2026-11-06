@@ -340,6 +340,37 @@ void main() {
         'fallback-key',
       );
     });
+
+    test('旧主标签译文轨从 lanDoc 恢复完整目标代码', () {
+      // 繁中目标生成的旧文件：zh-app-ai + lanDoc 自称「繁體中文」→ 恢复成
+      // 规范代码 zh-TW（AppLanguage 清单里的正式条目），精确匹配、不再被
+      // 中文家族规则误杀，也不挂给简体目标。
+      expect(
+        legacyAppAiLanFor('zh-app-ai', '繁體中文 (AI)'),
+        'zh-TW-app-ai',
+      );
+      expect(
+        legacyAppAiLanFor('zh-app-ai', '简体中文 (AI)'),
+        'zh-CN-app-ai',
+      );
+      // 越南语旧文件恢复后不变（本来就只有主标签）。
+      expect(
+        legacyAppAiLanFor('vi-app-ai', 'Tiếng Việt (AI)'),
+        'vi-app-ai',
+      );
+      // lanDoc 缺失/对不上 → 原样返回，宁可重翻不挂错字形。
+      expect(legacyAppAiLanFor('zh-app-ai', null), 'zh-app-ai');
+      expect(
+        legacyAppAiLanFor('zh-app-ai', 'Tiếng Việt (AI)'),
+        'zh-app-ai',
+      );
+      // 已是完整代码 / 非译文轨：不动。
+      expect(
+        legacyAppAiLanFor('zh-Hant-app-ai', '繁體中文 (AI)'),
+        'zh-Hant-app-ai',
+      );
+      expect(legacyAppAiLanFor('ai-zh', '中文'), 'ai-zh');
+    });
   });
 
   group('3.7.3 轨道模型边界', () {

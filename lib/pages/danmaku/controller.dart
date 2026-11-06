@@ -9,6 +9,7 @@ import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/danmaku_options.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/danmaku_merge/models.dart';
 import 'package:PiliPlus/utils/danmaku_merge/worker_client.dart';
@@ -17,6 +18,7 @@ import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart' show rootBundle;
+import 'package:get/get.dart';
 import 'package:path/path.dart' as path;
 
 class PlDanmakuController {
@@ -348,6 +350,25 @@ class PlDanmakuController {
 
       final pos = element.progress ~/ 100;
       (_dmSegMap[pos] ??= []).add(element);
+    }
+    // 弹幕批量预翻译：整段弹幕入表就立刻批量入译，出生前译文就绪。
+    // 逐条 uiTx + 15 秒窗口赶不上内置引擎的单条请求速度（详见
+    // UiTranslateService.pretranslateDanmaku），这里整段批量才真正生效。
+    pretranslateLoadedDanmaku();
+  }
+
+  /// 把已入表的全部弹幕批量送进翻译缓存（幂等：已缓存的直接跳过）。
+  void pretranslateLoadedDanmaku() {
+    if (!Get.isRegistered<UiTranslateService>()) return;
+    final service = UiTranslateService.to;
+    if (!service.danmakuTranslate.value) return;
+    final contents = <String>[
+      for (final list in _dmSegMap.values)
+        for (final element in list)
+          if (element.mode != 7) element.content,
+    ];
+    if (contents.isNotEmpty) {
+      unawaited(service.pretranslateDanmaku(contents));
     }
   }
 
