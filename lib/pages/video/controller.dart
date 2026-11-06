@@ -1241,13 +1241,15 @@ class VideoDetailController extends GetxController
   /// 用户在本条稿件（cid）上手动选过声轨（含「关闭翻译」），本次不再自动干预。
   int? _trackUserPickedCid;
 
-  /// 按 cid 记住「这条稿件能切到哪一门外语声轨」（空串 = 没有可切的）。
+  /// 按 `cid:目标语言` 记住「这条稿件能切到哪一门外语声轨」（空串 = 没有可切的）。
   ///
   /// 自动切轨原本每次开播都要**多一次串行 playurl**：先取默认声轨拿到语言列表，
   /// 命中再带 `cur_language` 重取。实测只有约 2.7% 的稿件带官方 AI 声轨，也就是
   /// 绝大多数稿件白付这一次请求（首帧多 150~400ms）。记住结果之后，同一条稿件
   /// 再看时直接按已知语言取流，不再多这一次往返。
-  static final Map<int, String> _langPickCache = {};
+  ///
+  /// **键里带目标语言**：切换界面语言后缓存自动失效，声轨跟随新语言重新选。
+  static final Map<String, String> _langPickCache = {};
 
   void setLanguage(String language) {
     if (currLang.value == language) return;
@@ -1296,7 +1298,8 @@ class VideoDetailController extends GetxController
         _trackUserPickedCid != cid.value &&
         Pref.audioTrackFollowUiLang &&
         isLoginVideo) {
-      final cached = _langPickCache[cid.value];
+      final langKey = '${cid.value}:${Pref.uiTranslateLang}';
+      final cached = _langPickCache[langKey];
       if (cached != null && cached.isNotEmpty) {
         knownLang = cached;
         _autoTrackTriedCid = cid.value;
@@ -1337,7 +1340,7 @@ class VideoDetailController extends GetxController
           );
         }
       } else {
-        _langPickCache.remove(cid.value);
+        _langPickCache.remove('${cid.value}:${Pref.uiTranslateLang}');
         _autoTrackTriedCid = null;
       }
     }
@@ -1350,7 +1353,7 @@ class VideoDetailController extends GetxController
         if (_autoTrackTriedCid != cid.value) {
           _autoTrackTriedCid = cid.value;
           final wanted = _autoTrackLang(response.language?.items);
-          _langPickCache[cid.value] = wanted ?? '';
+          _langPickCache['${cid.value}:${Pref.uiTranslateLang}'] = wanted ?? '';
           if (wanted != null) {
             final switched = await VideoHttp.videoUrl(
               cid: cid.value,

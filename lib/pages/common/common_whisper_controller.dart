@@ -42,7 +42,7 @@ abstract class CommonWhisperController<R>
         list.insert(0, list.removeAt(index));
       }
       loadingState.refresh();
-      SmartDialog.showToast('${isTop ? '移除' : ''}置顶成功');
+      SmartDialog.showToast(isTop ? uiTx('移除置顶') : uiTx('置顶成功'));
     } else {
       res.toast();
     }

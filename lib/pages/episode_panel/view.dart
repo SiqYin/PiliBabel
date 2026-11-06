@@ -622,7 +622,7 @@ CoverTranslateButton(cover: cover),
             seasonId: widget.seasonId,
           );
           if (res.isSuccess) {
-            SmartDialog.showToast('${response ? '取消' : ''}订阅成功');
+            SmartDialog.showToast(response ? uiTx('取消订阅') : uiTx('订阅成功'));
             _favState!.value = Success(!response);
             widget.ugcIntroController?.seasonFavState[widget.seasonId] =
                 !response;

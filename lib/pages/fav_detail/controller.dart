@@ -198,7 +198,7 @@ class FavDetailController
       folderInfo
         ..value.favState = isFav ? 0 : 1
         ..refresh();
-      SmartDialog.showToast('${isFav ? '取消' : ''}收藏成功');
+      SmartDialog.showToast(isFav ? uiTx('取消收藏') : uiTx('收藏成功'));
     } else {
       res.toast();
     }

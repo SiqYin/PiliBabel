@@ -101,8 +101,8 @@ class _VideoSubtitleTranslateButtonState
             behavior: HitTestBehavior.opaque,
             onTap: state.isRunning || isComplete ? null : _start,
             child: Container(
-              constraints: const BoxConstraints(minWidth: 54, minHeight: 28),
-              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 3),
+              height: 28,
+              padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
               decoration: BoxDecoration(
                 color: Colors.black54,
                 borderRadius: BorderRadius.circular(4),
@@ -112,8 +112,8 @@ class _VideoSubtitleTranslateButtonState
                 children: [
                   if (state.isRunning)
                     SizedBox(
-                      width: 12,
-                      height: 12,
+                      width: 13,
+                      height: 13,
                       child: CircularProgressIndicator(
                         value:
                             state.phase ==
@@ -126,23 +126,23 @@ class _VideoSubtitleTranslateButtonState
                     )
                   else
                     Icon(icon, size: 13, color: color),
-                  const SizedBox(width: 3),
+                  const SizedBox(width: 2),
                   Text(
                     label,
-                    style: const TextStyle(color: Colors.white, fontSize: 9),
+                    style: const TextStyle(color: Colors.white, fontSize: 8),
                   ),
                   if (isComplete) ...[
-                    const SizedBox(width: 2),
+                    const SizedBox(width: 1),
                     Tooltip(
                       message: uiTx('重新翻译字幕'),
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () => _start(force: true),
                         child: const Padding(
-                          padding: EdgeInsets.all(2),
+                          padding: EdgeInsets.all(1),
                           child: Icon(
                             Icons.refresh,
-                            size: 13,
+                            size: 11,
                             color: Colors.white,
                           ),
                         ),

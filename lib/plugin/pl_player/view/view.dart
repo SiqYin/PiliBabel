@@ -597,7 +597,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 color: Colors.white,
                 fontSize: 12,
               );
-              String displayTitle = currentTitle;
+              String displayTitle = uiTx(currentTitle);
               // Padding(6x2) + gap(4) + chevron(~10) = 26
               final maxTextW = maxW - 26.0;
 
