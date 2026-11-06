@@ -8,9 +8,9 @@
 
 ---
 
-## 一、需要你在真机上验证的（我无法代劳）
+## 一、需要在真机上人工验证的（代码侧无法自动化确认）
 
-清单第 91–102 条。其中多数**代码侧已经改过**，只是还没得到你的实测确认：
+清单第 91–102 条。其中多数**代码侧已经改过**，只是尚未完成真机实测确认：
 
 | # | 验证内容 | 代码侧状态 |
 |---|---|---|
@@ -32,7 +32,7 @@
 - **更新推送（第 83 条）**：逻辑已修，但「收不到」的最可能原因仍是**装的 debug 包**
   （`update.dart` 里 `if (kDebugMode) return;`）。判定方法：看「我的 - 关于」的 Build Time，
   版本号后缀带 commit 短哈希就是 debug / 本地构建。
-- **首页视频封面（第 80 条）**：已随 3.3.12~3.3.14 的图片管线改动修复，待你确认。
+- **首页视频封面（第 80 条）**：已随 3.3.12~3.3.14 的图片管线改动修复，待真机确认。
 
 ---
 
@@ -93,7 +93,7 @@
 
 ## 六、已知差异（记录在 `docs/known-differences-vs-official.md`，非待办）
 
-- 缓冲区填充节奏：官方「匀速跟随」，我们「临界补充」（你明确要求先记录、暂不改）
+- 缓冲区填充节奏：官方「匀速跟随」，我们「临界补充」（按既定决定先记录、暂不改）
 - `MediaProxy` 相对官方 ijk 多连接分片的简化点
 - 首页 feed / 动态 / 主搜索仍走 REST（原因见第二节）
 
@@ -116,7 +116,7 @@
 | # | 事项 | 为什么还没底 |
 |---|---|---|
 | 1 | 耳机播放/暂停键（`49cc5be85`） | 根因确定（`audio_service` 把 PLAY/PAUSE/PLAY_PAUSE/HEADSETHOOK 全路由到 `click(MediaButton.media)`，默认实现看的是**上报给系统**的 `playbackState.playing`），但修复只在本机做了括号配平静检，**没真机按过一次** |
-| 2 | 同一根因的**未修完部分**：`setPlaybackState` 的三道门槛（后台播放开关 / mediaItem 已注册 / `PlPlayerController` 实例存在）我**没动**，只改了按键判定路径。所以「听视频」页在通知栏 / 系统媒体面板里的播放-暂停**图标**可能仍是错的（上报值停在 `false`） | 动门槛会影响通知栏形态，没实测不敢改 |
+| 2 | 同一根因的**未修完部分**：`setPlaybackState` 的三道门槛（后台播放开关 / mediaItem 已注册 / `PlPlayerController` 实例存在）**未改动**，只改了按键判定路径。所以「听视频」页在通知栏 / 系统媒体面板里的播放-暂停**图标**可能仍是错的（上报值停在 `false`） | 动门槛会影响通知栏形态，未实测故未改 |
 | 3 | Windows SMTC / Linux MPRIS 的媒体键**没查** | 本轮只顺着 Android 的 `MediaButtonReceiver` → `handler.click()` 这条链查。注意本仓库用的是 **audio_service 的 fork**（`bggRGjQaUbCoE/audio_service`，ref `main`，见 pubspec.lock:100-108），Windows 侧的 SMTC 很可能是这个 fork 补的（`audio_handler.dart:320` 有「Windows SMTC 弹窗由 shell 进程渲染」的注释），Linux 走 `audio_service_mpris`；**这两条链路是否同样只看上报的 `playing` 完全没验** |
 | 4 | 声轨跟随界面语言（`40ed8bc8c`）实际效果 | 依赖「登录后 `cur_language` 真的换流」——匿名实测被服务端直接忽略，带登录态从没验过。代码只认服务端回显（回显不匹配就当失败、照原声播），所以**不会谎称切换成功**，但也可能**永远切不动** |
 
@@ -127,7 +127,7 @@
 | 5 | **gRPC `Playurl.ai_audio` 仍未解析**：官方 APP 是「一条响应并列各语言音轨」（`AIAudioItem{audio_info: repeated DashItem, subtitle_lang}`），比 Web 的 `cur_language` 换流更优（开播前不多一次请求） | `playershared.pb.dart:7923` 的 getter 无人引用。等真机确认它非空再上，不拿播放主链路赌 |
 | 6 | **下载 / 音频缓存不传语言** → 缓存下来的永远是原声 | `audio_cache_service.dart:275`、`local_download_service.dart:363/455/826`、`http/download.dart:46`。要先定「同一 cid 的多语言缓存怎么共存」（现 key 是 `bvid_cid`） |
 | 7 | **`Dash` 按 `id`（音质码）去重**，同音质不同语言的轨会被 merge 掉 | `url.dart:534-544` `BaseItemExt.merge` 用 `(id, codecid)` 做键。做 5 之前必须先解决，否则多语言轨会被折叠成一条 |
-| 8 | `subtitle_lang` / `video_detext` 没消费 | 字幕侧靠 `Subtitle.langScore` 间接覆盖（`ai-en` 会归一化成 `en`），但「切到 en 轨后字幕是否真的跟着走 `ai-en`、两条链路时序会不会打架」**未验证**；`video_detext=true` 时服务端下发的是擦掉烧录字幕的画面，我们没有提示 |
+| 8 | `subtitle_lang` / `video_detext` 没消费 | 字幕侧靠 `Subtitle.langScore` 间接覆盖（`ai-en` 会归一化成 `en`），但「切到 en 轨后字幕是否真的跟着走 `ai-en`、两条链路时序会不会打架」**未验证**；`video_detext=true` 时服务端下发的是擦掉烧录字幕的画面，当前版本没有提示 |
 | 9 | 自动切轨会多一次串行 playurl | 只在「支持且命中」的稿件上发生（实测热榜 2.7%），首帧约多 150–400ms。没做「按 cid 记住支持哪些语言」的缓存 |
 | 10 | 语种覆盖本身很窄 | 实测只有 `en`/`ja`，且命中的 3 条**全部只有 en**；界面语言是韩/法/德/俄时这功能等于不存在 |
 
