@@ -1,4 +1,4 @@
-### PiliBabel v3.7.0
+### PiliBabel v3.6.8
 
 **Adds AI-powered subtitle translation: real-time Chinese→target-language subtitles with context-aware chunked translation, offline dictionary for Vietnamese, and optional proxy routing.**
 
@@ -16,6 +16,6 @@
 
 **Bonus fixes:** QR code refresh race condition, and video quality/codec selection tolerance when the DASH stream list doesn't match the declared formats.
 
-> **Credit:** The subtitle translation system was originally contributed by [saukhoai](https://github.com/saukhoai) via [PR #2](https://github.com/SiqYin/PiliBabel/pull/2). We adapted and integrated the core engine, generalized it for all target languages, and merged the Vietnamese offline dictionary and proxy routing as optional features.
+> **Acknowledgement:** The subtitle translation system was originally contributed by [saukhoai](https://github.com/saukhoai) via [PR #2](https://github.com/SiqYin/PiliBabel/pull/2). We adapted and integrated the core engine, generalized it for all target languages, and merged the Vietnamese offline dictionary and proxy routing as optional features. Thank you for this substantial contribution!
 
 Downloads are below.
