@@ -102,7 +102,7 @@ Future<void> showTranslationOnboardingIfNeeded() async {
 Future<void> _autoSetupAndGuide(BuildContext context) async {
   final controller = Get.isRegistered<AiSettingController>()
       ? Get.find<AiSettingController>()
-      : Get.put(AiSettingController>();
+      : Get.put(AiSettingController());
 
   // 自动识别系统语言并配置
   final lang = detectSystemLanguageCode();
