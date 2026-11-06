@@ -10,6 +10,7 @@ import 'package:PiliPlus/http/search.dart';
 import 'package:PiliPlus/models/home/rcmd/result.dart';
 import 'package:PiliPlus/models/model_rec_video_item.dart';
 import 'package:PiliPlus/models_new/video/video_detail/dimension.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_video_key.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
@@ -94,10 +95,11 @@ class VideoCardV extends StatelessWidget {
     );
     // 没有任何可定位编号时不显示字幕按钮，避免所有卡片共用
     // 'av:null' 状态键（点一个视频，所有卡片一起转圈）。
-    final subtitleVideoKey = videoItem.bvid ??
-        (videoItem.goto == 'bangumi' && videoItem.param != null
-            ? 'ep${videoItem.param}'
-            : (videoItem.aid != null ? 'av:${videoItem.aid}' : null));
+    final subtitleVideoKey = subtitleVideoKeyFor(
+      bvid: videoItem.bvid,
+      aid: videoItem.aid,
+      epId: videoItem.goto == 'bangumi' ? videoItem.param : null,
+    );
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -150,7 +152,7 @@ class VideoCardV extends StatelessWidget {
                             ),
 
                           CoverTranslateButton(cover: videoItem.cover),
-                          if (subtitleVideoKey != null)
+                          if (subtitleVideoKey.isNotEmpty)
                             VideoSubtitleTranslateButton(
                               videoKey: subtitleVideoKey,
                               bvid: videoItem.bvid,

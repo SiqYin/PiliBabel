@@ -22,7 +22,6 @@ import 'package:PiliPlus/models_new/video/video_detail/page.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
 import 'package:PiliPlus/services/download/download_manager.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
-import 'package:PiliPlus/services/ui_translate/subtitle_source_resolver.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_artifact.dart';
 import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:PiliPlus/utils/danmaku_utils.dart';
@@ -592,7 +591,11 @@ class DownloadService extends GetxService {
 
       // 缓存视频时顺带保存已完成的译文轨（跟随当前界面目标语言）。
       final targetLang = Pref.uiTranslateLang;
-      final targetTag = SubtitleSourceResolver.primaryLanguageTag(targetLang);
+      // 译文轨必须带上**完整**目标语言代码（含简/繁字形与地区）。
+      // 以前只写主标签（`zh-app-ai`），用户在简体/繁體/粵語之间切换界面语言后，
+      // 旧译文轨仍会被当成「现成译文」直接挂载，显示的全是另一种字形。
+      // 旧格式只有主标签，读取侧会保守地不把它挂给带字形的中文目标。
+      final translatedLan = '$targetLang-app-ai';
       final translatedArtifact =
           await SubtitleTranslationArtifactRegistry.shared.findForPart(
             videoKey: entry.bvid,
@@ -605,12 +608,12 @@ class DownloadService extends GetxService {
           await translatedFile.copy(
             path.join(
               subsDir.path,
-              PathUtils.subtitleVttName('$targetTag-app-ai'),
+              PathUtils.subtitleVttName(translatedLan),
             ),
           );
           successfulSubs.add(
             Subtitle(
-              lan: '$targetTag-app-ai',
+              lan: translatedLan,
               lanDoc: '${UiTranslateService.to.currentLanguage.name} (AI)',
               isAi: false,
             ),

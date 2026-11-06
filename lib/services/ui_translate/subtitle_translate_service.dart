@@ -33,8 +33,9 @@ abstract final class SubtitleTranslateService {
     return service.enabled && service.translateContent;
   }
 
-  /// 这条轨是不是中文轨。`langTag` 已归一化（`ai-zh` → `zh`、`zh-Hant` → `zh`）。
-  static bool isChineseTrack(Subtitle sub) => sub.langTag == 'zh';
+  /// 这条轨能不能作为中文源交给 AI 翻译（中文家族轨都算，但排除
+  /// 我们自己落盘的 `-app-ai` 译文轨）。判定统一放在 `Subtitle` 上。
+  static bool isChineseTrack(Subtitle sub) => sub.isChineseSourceTrack;
 
   /// 含中日韩汉字就认为需要翻译，纯数字/符号/拉丁文的行原样保留。
   static bool _isCjk(String s) => SubtitleTextQuality.containsHan(s);

@@ -1083,7 +1083,11 @@ abstract final class VideoHttp {
   static String _absoluteSubtitleUrl(String subtitleUrl) {
     final url = subtitleUrl.trim();
     if (url.startsWith('//')) return 'https:$url';
-    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    // v2 地址偶尔是大写 scheme；不区分大小写才不会拼出 `https://HTTPS://...`。
+    final lower = url.toLowerCase();
+    if (lower.startsWith('http://') || lower.startsWith('https://')) {
+      return url;
+    }
     return 'https://$url';
   }
 

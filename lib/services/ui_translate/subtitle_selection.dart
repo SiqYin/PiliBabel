@@ -30,7 +30,7 @@ abstract final class SubtitleSelectionPolicy {
           bestTarget = i;
         }
       }
-      if (track.langTag == 'zh') {
+      if (track.isChineseSourceTrack) {
         // Bilibili's AI track is normally the more complete speech-recognition
         // transcript. Use it as the translation source first; callers still
         // retry with the regular track when this track cannot be loaded.

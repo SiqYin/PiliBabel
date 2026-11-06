@@ -855,6 +855,14 @@ class HeaderControlState extends State<HeaderControl>
                             jsonDecode(sub)['body'],
                           );
                           if (!mounted) return;
+                          // 全部条目都被时间轴清洗掉时 json2Vtt 返回空串。
+                          // 以前照样挂一条「空字幕」，用户看到的是加载成功但一个字都没有。
+                          if (sub.trim().isEmpty) {
+                            SmartDialog.showToast(
+                              uiTx('字幕文件里没有可用的字幕条目'),
+                            );
+                            return;
+                          }
                           videoDetailCtr.vttSubtitles[length] = (
                             isData: true,
                             id: sub,

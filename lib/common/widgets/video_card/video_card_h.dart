@@ -11,6 +11,7 @@ import 'package:PiliPlus/common/widgets/video_popup_menu.dart';
 import 'package:PiliPlus/http/search.dart';
 import 'package:PiliPlus/models/horizontal_video_model.dart';
 import 'package:PiliPlus/models_new/video/video_detail/dimension.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_video_key.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
@@ -50,10 +51,11 @@ class VideoCardH extends StatelessWidget {
     final theme = Theme.of(context);
     // 没有任何可定位编号时不显示字幕按钮，避免所有卡片共用一个
     // 'av:null' 状态键（点一个视频，所有卡片一起转圈）。
-    final subtitleVideoKey = videoItem.bvid ??
-        (videoItem.aid != null
-            ? 'av:${videoItem.aid}'
-            : (videoItem.seasonId != null ? 'ss${videoItem.seasonId}' : null));
+    final subtitleVideoKey = subtitleVideoKeyFor(
+      bvid: videoItem.bvid,
+      aid: videoItem.aid,
+      seasonId: videoItem.seasonId,
+    );
     return Material(
       type: .transparency,
       child: Stack(
@@ -186,7 +188,7 @@ class VideoCardH extends StatelessWidget {
                               ),
 
                             CoverTranslateButton(cover: videoItem.cover),
-                            if (subtitleVideoKey != null)
+                            if (subtitleVideoKey.isNotEmpty)
                               VideoSubtitleTranslateButton(
                                 videoKey: subtitleVideoKey,
                                 bvid: videoItem.bvid,

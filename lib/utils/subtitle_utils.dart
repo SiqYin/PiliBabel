@@ -1,4 +1,5 @@
 import 'package:PiliPlus/models/common/enum_with_label.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_job.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 
 enum SubtitleFormat implements EnumWithLabel {
@@ -17,7 +18,10 @@ abstract final class SubtitleUtils {
   /// 播放页拿到的源字幕就是 `getSubtitles` 用本文件从 B 站 JSON 生成的 VTT；
   /// 以前零长度/倒序/空文本条目照样写进去，随后被整轨时间轴检查一票否决，
   /// 表现为「源字幕时间轴异常」且无法重试。这里在生成期就清掉。
-  static List<Map> _validItems(List list) => [
+  /// 与后台 `SubtitleCues.fromBody` 共用同一套时间轴清洗规则，避免
+  /// 「播放页 json2Vtt 生成的轨」和「后台解析的轨」在重叠 cue 上结论不同。
+  static List<SubtitleCue> _validCues(List list) =>
+      SubtitleCues.sanitizeTimeline([
     for (final item in list)
       if (item is Map &&
           item['from'] is num &&
@@ -26,8 +30,12 @@ abstract final class SubtitleUtils {
           (item['from'] as num) >= 0 &&
           (item['to'] as num) > (item['from'] as num) &&
           (item['content'] as String).trim().isNotEmpty)
-        item.cast<String, dynamic>(),
-  ];
+        SubtitleCue(
+          _vttTimecode(item['from'] as num),
+          _vttTimecode(item['to'] as num),
+          (item['content'] as String).trim(),
+        ),
+  ]);
 
   static String _vttTimecode(num seconds) {
     final h = (seconds ~/ 3600).toString().padLeft(2, '0');
@@ -39,35 +47,24 @@ abstract final class SubtitleUtils {
   }
 
   static String json2Vtt(List list) {
-    final items = _validItems(list);
-    final sb = StringBuffer('WEBVTT\n\n')
-      ..writeAll(
-        items.map(
-          (item) =>
-              '${_vttTimecode(item['from'])} --> ${_vttTimecode(item['to'])}\n${item['content'].trim()}',
-        ),
-        '\n\n',
-      );
-    return sb.toString();
+    final cues = _validCues(list);
+    // 全部 cue 都不可用时必须返回空串：以前返回 "WEBVTT\n\n"，
+    // `getSubtitlesFor` 的 `trim().isNotEmpty` 判成下载成功，播放页挂上一条
+    // 空字幕轨，后台却又按「没有字幕」处理，两边对不上且永远翻不出来。
+    if (cues.isEmpty) return '';
+    return SubtitleCues.toVtt(cues, [for (final cue in cues) cue.text]);
   }
 
-  static String _srtTimecode(num seconds) {
-    final h = (seconds ~/ 3600).toString().padLeft(2, '0');
-    seconds %= 3600;
-    final m = (seconds ~/ 60).toString().padLeft(2, '0');
-    seconds %= 60;
-    final s = seconds.toInt();
-    final ms = ((seconds - s) * 1000).round().toString().padLeft(3, '0');
-    return '$h:$m:${s.toString().padLeft(2, '0')},$ms';
-  }
+  static String _srtStamp(String vttStamp) => vttStamp.replaceAll('.', ',');
 
   static String json2Srt(List list) {
-    final items = _validItems(list);
+    final cues = _validCues(list);
+    if (cues.isEmpty) return '';
     final sb = StringBuffer()
       ..writeAll(
-        items.mapIndexed(
-          (i, e) =>
-              '${i + 1}\n${_srtTimecode(e['from'])} --> ${_srtTimecode(e['to'])}\n${e['content'].trim()}',
+        cues.mapIndexed(
+          (i, cue) =>
+              '${i + 1}\n${_srtStamp(cue.start)} --> ${_srtStamp(cue.end)}\n${cue.text}',
         ),
         '\n\n',
       );

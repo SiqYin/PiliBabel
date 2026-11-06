@@ -9,6 +9,7 @@ class Subtitle implements Comparable<Subtitle> {
     required this.lan,
     this.lanDoc,
     this.subtitleUrl,
+    this.subtitleUrlV2,
     this.isAi = false,
   });
 
@@ -45,13 +46,31 @@ class Subtitle implements Comparable<Subtitle> {
   /// B 站同一门语言会用多种写法下发（`zh-CN` / `zh-Hans` / `ai-zh`），而
   /// 「按界面语言挑轨」只关心是不是同一门语言，所以一律收敛到主语言：
   /// `ai-en` → `en`、`zh-Hant` → `zh`。取不到时返回空串。
-  String get langTag => _primaryOf(_stripAiPrefix(lan));
+  String get langTag => primaryLanguageTag(lan);
+
+  /// 任意语言代码 → 主语言子标签（`zh-Hant` → `zh`、`ai-zh` → `zh`）。
+  /// 译文轨的语言标识、下载缓存文件名都走这里，避免各处自己 `replaceFirst`。
+  static String primaryLanguageTag(String code) =>
+      _primaryOf(_stripAiPrefix(code));
+
+  /// 我们自己翻译并落盘的译文轨（下载缓存里形如 `<主标签>-app-ai`）。
+  /// 它不是 B 站下发的源轨，绝不能被当成中文源再翻一遍。
+  bool get isAppAiTrack => lan.toLowerCase().endsWith('-app-ai');
+
+  /// 可以作为「中文源」交给 AI 翻译的轨：中文家族（含粤/吴/闽南等）都算，
+  /// 但排除我们自己生成的译文轨。
+  ///
+  /// 之前各处散写 `langTag == 'zh'`，既漏掉中文家族轨，又可能把
+  /// `zh-app-ai` 这种译文轨当成源轨。选源相关代码应统一用这个判据。
+  bool get isChineseSourceTrack =>
+      !isAppAiTrack && _chinesePrimaryTags.contains(langTag);
 
   static String _stripAiPrefix(String code) {
-    if (code == 'ai') {
+    final value = code.toLowerCase();
+    if (value == 'ai') {
       return '';
     }
-    return code.startsWith('ai-') ? code.substring(3) : code;
+    return value.startsWith('ai-') ? value.substring(3) : value;
   }
 
   static String _primaryOf(String code) {
@@ -140,7 +159,7 @@ class Subtitle implements Comparable<Subtitle> {
   /// 会被判成「还没有译文」，于是又从中文源重翻一遍。
   bool isNativeTarget(String targetLanguage) {
     if (langScore(lan, targetLanguage) < 2) return false;
-    if (lan.toLowerCase().endsWith('-app-ai')) return true;
+    if (isAppAiTrack) return true;
     final a = _stripAiPrefix(lan).toLowerCase();
     final b = _stripAiPrefix(targetLanguage).toLowerCase();
     return !(_scriptOf(a) == null && _scriptOf(b) == 'hant');

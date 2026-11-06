@@ -1,4 +1,5 @@
 import 'package:PiliPlus/models_new/video/video_detail/data.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_video_key.dart';
 
 class SubtitleTranslationTarget {
   const SubtitleTranslationTarget({
@@ -39,11 +40,18 @@ List<SubtitleTranslationTarget> subtitleTranslationTargetsFromDetail({
     if (cid == null || !seenCids.add(cid)) return;
     final resolvedBvid = _nonEmpty(bvid);
     final resolvedAid = aid;
-    if (resolvedBvid == null && resolvedAid == null) return;
-    final identity = '${resolvedBvid ?? 'av$resolvedAid'}/$cid';
+    // videoKey 必须与封面按钮、播放页、自动预翻译完全一致。以前合集子任务
+    // 用 '<bvid>/<cid>'，产物 makeKey 里就多了一段 cid：批量翻完的产物
+    // 播放页 find 不到，打开视频又从头翻一遍。cid 本来就在状态键和产物键里
+    // 单独存在，videoKey 不需要再重复它。
+    final videoKey = subtitleVideoKeyFor(
+      bvid: resolvedBvid,
+      aid: resolvedAid,
+    );
+    if (videoKey.isEmpty) return;
     targets.add(
       SubtitleTranslationTarget(
-        videoKey: identity,
+        videoKey: videoKey,
         bvid: resolvedBvid,
         aid: resolvedAid,
         cid: cid,

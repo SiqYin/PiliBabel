@@ -86,8 +86,9 @@ class _VideoSubtitleTranslateButtonState
         );
         final theme = Theme.of(context);
         final hasNativeTrack = state.nativeTrackAvailable;
-        // 「这个视频没有中文字幕」不是失败：图标置灰、不显示进度、点了也不重试。
-        // 以前它走 failed 分支，红图标 + 「重试」，用户点多少次都是同样的结果。
+        // 「这个视频没有中文字幕」不是失败：图标置灰、不显示进度。
+        // 以前它走 failed 分支，红图标 + 「重试」，用户点多少次都是同样的结果；
+        // 但也不能把点击彻底禁掉 —— 未登录导致的空字幕列表，登录后要能点回来。
         final (label, icon, color) = state.noSource
             ? (
                 state.message ?? uiTx('没有可用的中文字幕'),
@@ -135,9 +136,14 @@ class _VideoSubtitleTranslateButtonState
           // 胶囊里那个 1px 内边距的小刷新图标上，现在整块按钮就是一个大靶子。
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: state.isRunning || state.noSource
+            // noSource（没有中文字幕）不是失败，图标置灰；但仍然允许点一下重查：
+            // 未登录时 B 站对有 CC 的视频也返回空字幕列表，用户登录后必须能
+            // 直接点这个按钮恢复，否则状态会永久停在置灰、点不动。
+            onTap: state.isRunning
                 ? null
-                : () => _start(force: isComplete || isFailed),
+                : () => _start(
+                    force: isComplete || isFailed || state.noSource,
+                  ),
             child: SizedBox(
               width: 28,
               height: 28,

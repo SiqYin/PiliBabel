@@ -55,7 +55,7 @@ abstract final class SubtitleSourceResolver {
     }
 
     final candidates = <({Subtitle track, List<SubtitleCue> cues})>[];
-    for (final track in tracks.where((track) => track.langTag == 'zh')) {
+    for (final track in tracks.where((track) => track.isChineseSourceTrack)) {
       try {
         final cues = await loadCues(track);
         if (cues.isEmpty || !SubtitleCues.hasSafePlaybackTimeline(cues)) {
@@ -82,12 +82,9 @@ abstract final class SubtitleSourceResolver {
     );
   }
 
-  static String _primaryLanguage(String value) {
-    final normalized = value.toLowerCase().replaceFirst('ai-', '');
-    return normalized.split(RegExp('[-_]')).first;
-  }
-
   /// 目标语言代码 → 主要语言子标签（'vi' / 'zh-Hant' → 'zh'），
-  /// 供译文轨的语言标识与轨道匹配使用。
-  static String primaryLanguageTag(String value) => _primaryLanguage(value);
+  /// 供译文轨的语言标识与轨道匹配使用。与轨道模型共用同一套归一化，
+  /// 以前这里用 `replaceFirst('ai-', '')`，遇到中间的 `ai-` 会误删。
+  static String primaryLanguageTag(String value) =>
+      Subtitle.primaryLanguageTag(value);
 }

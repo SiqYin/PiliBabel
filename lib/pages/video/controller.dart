@@ -75,6 +75,7 @@ import 'package:PiliPlus/services/ui_translate/subtitle_translation_artifact.dar
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_background_service.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_coordinator.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_job.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_video_key.dart';
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
 import 'package:PiliPlus/utils/extension/iterable_ext.dart';
 import 'package:PiliPlus/utils/accounts.dart';
@@ -115,6 +116,7 @@ import 'package:PiliPlus/services/download/local_download_service.dart';
 
 typedef _SubtitlePrefetchTarget = ({
   String bvid,
+  String videoKey,
   int cid,
   int? epId,
   int? seasonId,
@@ -570,15 +572,26 @@ class VideoDetailController extends GetxController
   /// * `includeCollection: false`：只翻当前这一集/这一 P。整季批量仍然留给封面
   ///   上那个按钮，避免「随手点开一集」就把整个合集塞进后台队列；
   /// * 服务内部按 `videoKey/cid/语言` 去重，重复进同一个视频不会重复请求。
+  /// 字幕状态/产物/缓存共用的视频身份键。
+  ///
+  /// 以前自动预翻译用 `ep<epId>`，播放页其余 8 处查询、重翻、删除译文、
+  /// 产物注册却一律用 `bvid`（番剧是空串），两边对不上：后台翻完了播放页
+  /// 还显示没开始，重翻又另起一个任务。全部统一到 [subtitleVideoKeyFor]。
+  String get _subtitleVideoKey => subtitleVideoKeyFor(
+    bvid: bvid,
+    aid: aid > 0 ? aid : null,
+    epId: epId,
+    seasonId: seasonId,
+  );
+
   void _autoStartSubtitleTranslation() {
     if (isFileSource || !SubtitleTranslateService.needed) return;
     final resolvedBvid = bvid.isEmpty ? null : bvid;
     final resolvedAid = aid > 0 ? aid : null;
-    // 番剧卡片/播放页可能既没有 bvid 也没有 aid，只有 epId。
-    final key = resolvedBvid ??
-        (resolvedAid != null
-            ? 'av$resolvedAid'
-            : (epId != null ? 'ep$epId' : '$aid'));
+    final key = _subtitleVideoKey;
+    // 四级编号都没有时不要启动：以前会退化成 '$aid'（'0'），让所有这类
+    // 视频共用一个状态键，后台任务也必然失败。
+    if (key.isEmpty) return;
     unawaited(
       SubtitleTranslationBackgroundService.start(
         videoKey: key,
@@ -2017,7 +2030,9 @@ class VideoDetailController extends GetxController
 
     final validSubs = <Subtitle>[];
     final localVtts = <int, ({bool isData, String id})>{};
+    final currentTarget = Pref.uiTranslateLang;
     String? translatedVtt;
+    var translatedRank = -1;
     for (final sub in loaded) {
       final vttPath = path.join(
         entry.entryDirPath,
@@ -2025,11 +2040,16 @@ class VideoDetailController extends GetxController
         PathUtils.subtitleVttName(sub.lan),
       );
       if (File(vttPath).existsSync()) {
-        // 下载服务按「目标语言主标签」保存译文轨（`<lang>-app-ai`）。
-        // 以前这里写死越南语 `vi-app-ai`，其它语言缓存的译文会被当成
-        // 一条普通外挂字幕，永远挂不到「AI 译文」轨上。
-        if (sub.lan.endsWith('-app-ai')) {
-          translatedVtt = await File(vttPath).readAsString();
+        // 下载服务保存译文轨（`...-app-ai`）。以前这里写死越南语
+        // `vi-app-ai`，其它语言缓存的译文会被当成普通外挂字幕；
+        // 现在按语言精确匹配，多条候选取贴合度最高的那条。
+        if (sub.isAppAiTrack) {
+          if (!cachedTranslationLanMatches(sub.lan, currentTarget)) continue;
+          final rank = Subtitle.langScore(sub.lan, currentTarget);
+          if (rank >= translatedRank) {
+            translatedRank = rank;
+            translatedVtt = await File(vttPath).readAsString();
+          }
           continue;
         }
         localVtts[validSubs.length] = (isData: false, id: vttPath);
@@ -2132,7 +2152,7 @@ class VideoDetailController extends GetxController
     if (manual &&
         translateManualSource &&
         index > 0 &&
-        sub?.langTag == 'zh' &&
+        sub?.isChineseSourceTrack == true &&
         Pref.uiTranslateLang != 'zh-CN' &&
         !isClosed &&
         generation == _subtitleGeneration &&
@@ -2179,14 +2199,14 @@ class VideoDetailController extends GetxController
   /// already mounted in the player remains available until replacement is
   /// complete. The background service promotes the replacement atomically.
   bool get showRetranslateCurrentSubtitle =>
-      subtitles.any((subtitle) => subtitle.langTag == 'zh');
+      subtitles.any((subtitle) => subtitle.isChineseSourceTrack);
 
   bool get canRetranslateCurrentSubtitle =>
       showRetranslateCurrentSubtitle &&
       SubtitleTranslateService.needed &&
       !subtitleTranslationRunning.value &&
       !SubtitleTranslationBackgroundService.stateFor(
-        videoKey: bvid,
+        videoKey: _subtitleVideoKey,
         cid: cid.value,
       ).isRunning;
 
@@ -2196,7 +2216,7 @@ class VideoDetailController extends GetxController
           (subtitleTranslationRunning.value &&
               translatedSubtitleTrack?.isComplete != true) ||
           SubtitleTranslationBackgroundService.stateFor(
-                videoKey: bvid,
+                videoKey: _subtitleVideoKey,
                 cid: cid.value,
               ).phase ==
               SubtitleTranslationTaskPhase.failed);
@@ -2206,13 +2226,13 @@ class VideoDetailController extends GetxController
       SubtitleTranslateService.needed &&
       (_subtitleSubscription != null ||
           !SubtitleTranslationBackgroundService.stateFor(
-            videoKey: bvid,
+            videoKey: _subtitleVideoKey,
             cid: cid.value,
           ).isRunning);
 
   bool get canDeleteTranslatedSubtitle {
     final state = SubtitleTranslationBackgroundService.stateFor(
-      videoKey: bvid,
+      videoKey: _subtitleVideoKey,
       cid: cid.value,
     );
     return canRestoreTranslatedSubtitle &&
@@ -2243,9 +2263,9 @@ class VideoDetailController extends GetxController
         translatedSource != null &&
             translatedSource >= 0 &&
             translatedSource < subtitles.length &&
-            subtitles[translatedSource].langTag == 'zh'
+            subtitles[translatedSource].isChineseSourceTrack
         ? translatedSource
-        : subtitles.indexWhere((subtitle) => subtitle.langTag == 'zh');
+        : subtitles.indexWhere((subtitle) => subtitle.isChineseSourceTrack);
     if (sourceIndex < 0) {
       // 没有中文字幕轨：重试多少次都不会有结果，别把「重试」按钮摆出来。
       subtitleTranslationRunning.value = false;
@@ -2271,7 +2291,7 @@ class VideoDetailController extends GetxController
     subtitleTranslationProgress.value = 0;
     subtitleTranslationStatus.value = uiTx('正在准备重新翻译字幕');
     await SubtitleTranslationBackgroundService.start(
-      videoKey: bvid,
+      videoKey: _subtitleVideoKey,
       bvid: bvid.isEmpty ? null : bvid,
       aid: aid > 0 ? aid : null,
       cid: cid.value,
@@ -2285,7 +2305,7 @@ class VideoDetailController extends GetxController
     // so this controller can refresh the player only after promotion finishes.
     while (!isClosed && generation == _subtitleGeneration) {
       final state = SubtitleTranslationBackgroundService.stateFor(
-        videoKey: bvid,
+        videoKey: _subtitleVideoKey,
         cid: cid.value,
         language: target,
       );
@@ -2324,9 +2344,10 @@ class VideoDetailController extends GetxController
       if (cues.isEmpty) return;
       final target = Pref.uiTranslateLang;
       final sourceLan = subtitles[sourceIndex].lan;
-      final cacheKey = '$bvid/${cid.value}/$sourceLan/$target';
+      final cacheKey =
+          '$_subtitleVideoKey/${cid.value}/$sourceLan/$target';
       await SubtitleTranslationBackgroundService.removeCachedTranslation(
-        videoKey: bvid,
+        videoKey: _subtitleVideoKey,
         cid: cid.value,
         language: target,
         cacheKey: cacheKey,
@@ -2334,7 +2355,7 @@ class VideoDetailController extends GetxController
       );
       if (translated.cacheIdentity case final sourceIdentity?) {
         await SubtitleTranslationArtifactRegistry.shared.removeMatching(
-          videoKey: bvid,
+          videoKey: _subtitleVideoKey,
           cid: cid.value,
           targetLanguage: target,
           sourceLan: sourceLan,
@@ -2433,7 +2454,7 @@ class VideoDetailController extends GetxController
       await setSubtitle(idx <= 0 ? 0 : idx);
       if (idx > 0 &&
           SubtitleTranslateService.needed &&
-          subtitles[idx - 1].langTag == 'zh' &&
+          subtitles[idx - 1].isChineseSourceTrack &&
           Pref.uiTranslateLang != 'zh-CN') {
         unawaited(
           _startSubtitleTranslation(
@@ -2509,7 +2530,7 @@ class VideoDetailController extends GetxController
       final index = i + 1;
       final candidate = subtitles[i];
       final isAi = candidate.isAi || candidate.lan.startsWith('ai-');
-      if (index == currentIndex || candidate.langTag != 'zh' || isAi) {
+      if (index == currentIndex || !candidate.isChineseSourceTrack || isAi) {
         continue;
       }
       final uri = await _resolveVttUri(i);
@@ -2732,7 +2753,7 @@ class VideoDetailController extends GetxController
         _subtitleProxiesForVideo,
         directWorkers: _subtitleConcurrencyForVideo,
       );
-      final videoKey = bvid;
+      final videoKey = _subtitleVideoKey;
       final partCid = cid.value;
       final sessionKey = '$videoKey/$partCid/${track.lan}/$target';
       final sourceIdentity = SubtitleTranslationJob.cacheIdentity(
@@ -3148,6 +3169,11 @@ class VideoDetailController extends GetxController
         final rawEpId = entry?.epId ?? entry?.id;
         targets.add((
           bvid: nextBvid,
+          videoKey: subtitleVideoKeyFor(
+            bvid: nextBvid,
+            epId: rawEpId is int ? rawEpId : null,
+            seasonId: seasonId,
+          ),
           cid: nextCid,
           epId: rawEpId is int ? rawEpId : null,
           // seasonId 与这一集有没有 epId 无关：以前被写成同一个条件，
@@ -3172,11 +3198,13 @@ class VideoDetailController extends GetxController
   static Future<void> _prefetchPlaylistSubtitle(
     _SubtitlePrefetchTarget target,
   ) async {
-    final prefetchKey = '${target.bvid}/${target.cid}/${target.targetLanguage}';
+    final videoKey = target.videoKey;
+    if (videoKey.isEmpty) return;
+    final prefetchKey = '$videoKey/${target.cid}/${target.targetLanguage}';
     if (!_subtitlePrefetchInFlight.add(prefetchKey)) return;
     try {
       final playInfo = await VideoHttp.playInfo(
-        bvid: target.bvid,
+        bvid: target.bvid.isEmpty ? null : target.bvid,
         cid: target.cid,
         seasonId: target.seasonId,
         epId: target.epId,
@@ -3195,13 +3223,24 @@ class VideoDetailController extends GetxController
             target.targetLanguage,
             canTranslate: SubtitleTranslateService.needed,
           );
-          if (!selection.translate || selection.index == 0) return;
+          if (selection.index == 0) return;
           final candidate = choices[selection.index - 1];
           final body = await VideoHttp.fetchSubtitleBodyFor(candidate);
           final parsed = body == null
               ? const <SubtitleCue>[]
               : SubtitleCues.fromBody(body);
-          if (parsed.isNotEmpty) {
+          final usable =
+              parsed.isNotEmpty &&
+              SubtitleCues.hasSafePlaybackTimeline(parsed);
+          if (!selection.translate) {
+            // B 站偶尔会列出一条下载即 404 / 空 body 的目标语言轨。
+            // 主链路 SubtitleSourceResolver 会验证后回退中文源；预取以前
+            // 看到「有现成译文」就直接 return，于是这一集永远没有译文。
+            if (usable) return;
+            choices.remove(candidate);
+            continue;
+          }
+          if (usable) {
             sourceTrack = candidate;
             cues = parsed;
             break;
@@ -3213,7 +3252,7 @@ class VideoDetailController extends GetxController
         final selectedCues = cues;
         final targetLanguage = target.targetLanguage;
         final cacheKey =
-            '${target.bvid}/${target.cid}/${selectedSourceTrack.lan}/$targetLanguage';
+            '$videoKey/${target.cid}/${selectedSourceTrack.lan}/$targetLanguage';
         final proxyPool = SubtitleTranslationProxyPool.shared(
           target.proxies,
           directWorkers: target.concurrency,
@@ -3223,7 +3262,7 @@ class VideoDetailController extends GetxController
           selectedCues,
         );
         final existing = await SubtitleTranslationArtifactRegistry.shared.find(
-          videoKey: target.bvid,
+          videoKey: videoKey,
           cid: target.cid,
           targetLanguage: targetLanguage,
           sourceLan: selectedSourceTrack.lan,
@@ -3293,7 +3332,7 @@ class VideoDetailController extends GetxController
         if (vtt != null) {
           final registered =
               await SubtitleTranslationBackgroundService.registerCompletedArtifact(
-                videoKey: target.bvid,
+                videoKey: videoKey,
                 cid: target.cid,
                 targetLanguage: targetLanguage,
                 sourceLan: selectedSourceTrack.lan,
@@ -3304,7 +3343,7 @@ class VideoDetailController extends GetxController
               );
           if (registered) {
             SubtitleTranslationBackgroundService.markComplete(
-              videoKey: target.bvid,
+              videoKey: videoKey,
               cid: target.cid,
               language: targetLanguage,
             );

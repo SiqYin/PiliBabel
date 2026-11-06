@@ -9,6 +9,7 @@ import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/services/account_service.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
+import 'package:PiliPlus/services/ui_translate/prewarm_strings.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_source_resolver.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_text_quality.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translate_service.dart';
@@ -16,51 +17,19 @@ import 'package:PiliPlus/services/ui_translate/subtitle_translation_artifact.dar
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_coordinator.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_job.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_proxy.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_task_state.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_targets.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_video_key.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+
+// 状态模型以前定义在本文件里，其它文件通过 import 本文件拿到类型。
+// 移到纯 Dart 文件后仍 re-export，保持所有既有 import 不变。
+export 'package:PiliPlus/services/ui_translate/subtitle_task_state.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart' as path;
-
-enum SubtitleTranslationTaskPhase {
-  idle,
-  preparing,
-  translating,
-  verifying,
-  complete,
-  failed,
-}
-
-class SubtitleTranslationTaskState {
-  const SubtitleTranslationTaskState({
-    this.phase = SubtitleTranslationTaskPhase.idle,
-    this.progress = 0,
-    this.message,
-    this.nativeTrackAvailable = false,
-    this.noSource = false,
-  });
-
-  final SubtitleTranslationTaskPhase phase;
-  final double progress;
-  final String? message;
-
-  /// 本站（Bilibili）已提供目标语言字幕，无需 AI 翻译。
-  final bool nativeTrackAvailable;
-
-  /// 这个视频根本没有可用的中文字幕轨。
-  ///
-  /// 必须和「失败」分开：B 站大多数视频没有 CC 字幕，按下按钮必然没东西可翻。
-  /// 以前这种情况被当成失败（红图标 + 「点击重试」），看起来像功能坏了，而重试
-  /// 永远不可能成功 —— 因为源本来就不存在。
-  final bool noSource;
-
-  bool get isRunning =>
-      phase == SubtitleTranslationTaskPhase.preparing ||
-      phase == SubtitleTranslationTaskPhase.translating ||
-      phase == SubtitleTranslationTaskPhase.verifying;
-}
 
 /// Starts subtitle translation from a card and keeps it alive after the card
 /// (or its page) leaves the widget tree. Finished jobs share the same cache
@@ -68,11 +37,18 @@ class SubtitleTranslationTaskState {
 abstract final class SubtitleTranslationBackgroundService {
   static final RxMap<String, SubtitleTranslationTaskState> _states =
       <String, SubtitleTranslationTaskState>{}.obs;
-  /// 封面按钮通常没有 cid（查询键 `bvid/语言`），而后台任务解析出 cid 后会改用
-  /// `bvid/cid/语言`。两者必须指向同一份状态，否则按钮永远停在「翻译字幕」不动。
-  static final Map<String, String> _stateAliases = {};
+  /// 封面按钮通常没有 cid（查询键 `bvid/语言`），后台任务解析出 cid 后改用
+  /// `bvid/cid/语言`。一个视频可能有多个分P（多个 cid），所以这里是
+  /// **一对多**：cardKey → 所有分P的任务键，查询时聚合，而不是让最后一个
+  /// cid 的状态覆盖前面所有分P（单跳别名会误报「已完成」或「还在翻译」）。
+  static final Map<String, Set<String>> _cardTaskKeys = {};
+  static final Map<String, String> _taskCardKeys = {};
   static final Set<String> _completed = {};
   static final Set<String> _activeBatchTaskKeys = {};
+  /// 「已受理但还没走到第一次 `_set`」的入口键。没有它，连点两次按钮会同时
+  /// 通过状态检查，同一份任务被 attach 两遍，完成时第二次「替换缓存 → 重命名」
+  /// 必然失败，把已经成功的任务改成 failed。
+  static final Set<String> _startingKeys = {};
   static Future<void>? _loadFuture;
   static Future<void> _writeTail = Future.value();
 
@@ -81,22 +57,61 @@ abstract final class SubtitleTranslationBackgroundService {
     int? cid,
     String? language,
   }) {
-    final key = _key(videoKey, language ?? Pref.uiTranslateLang, cid);
+    final lang = language ?? Pref.uiTranslateLang;
+    final key = _key(videoKey, lang, cid);
+    // 合集父任务的状态由 syncState 直接写在一个键上，不能被子任务聚合覆盖。
+    if (_activeBatchTaskKeys.contains(key)) {
+      return _states[key] ?? const SubtitleTranslationTaskState();
+    }
     final direct = _states[key];
-    if (direct != null) return direct;
-    final alias = _stateAliases[key];
-    return (alias == null ? null : _states[alias]) ??
-        const SubtitleTranslationTaskState();
+    final cardKey = _key(videoKey, lang);
+    final tasks = _cardTaskKeys[cid == null ? key : cardKey];
+    if (cid != null) {
+      // 播放页带 cid 的精确查询：优先自己那条任务，其次卡片启动态，最后聚合。
+      if (direct != null) return direct;
+      final cardState = _states[cardKey];
+      if (cardState != null) return cardState;
+      if (tasks != null && tasks.isNotEmpty) return _aggregateCardState(tasks);
+      return const SubtitleTranslationTaskState();
+    }
+    // 封面按钮（无 cid）：有多个分P就聚合，否则看启动态/自身状态。
+    if (tasks != null && tasks.isNotEmpty) return _aggregateCardState(tasks);
+    return direct ?? const SubtitleTranslationTaskState();
   }
 
-  /// 把「无 cid 的查询键」与「解析出 cid 后的任务键」双向绑定。
-  static void _registerStateAlias(String a, String b) {
-    if (a == b) return;
-    _stateAliases[a] = b;
-    _stateAliases[b] = a;
+  /// 把「无 cid 的卡片键」与「解析出 cid 后的任务键」登记为一对多关系。
+  static void _registerCardTask(String cardKey, String taskKey) {
+    if (cardKey == taskKey) return;
+    (_cardTaskKeys[cardKey] ??= <String>{}).add(taskKey);
+    _taskCardKeys[taskKey] = cardKey;
   }
 
-  static Future<void> ensureInitialized() => _loadFuture ??= _loadIndex();
+  /// 从登记过的分P任务键取出状态，交给 [aggregateCardStates] 汇总。
+  static SubtitleTranslationTaskState _aggregateCardState(
+    Set<String> taskKeys,
+  ) => aggregateCardStates(
+    taskKeys
+        .map((key) => _states[key])
+        .whereType<SubtitleTranslationTaskState>(),
+  );
+
+  static bool _subtitleFeedbackPrewarmed = false;
+
+  static Future<void> ensureInitialized() {
+    // 封面按钮在首页推荐流里就会出现，不一定经过 warmVideo()/warmCommon()。
+    // 字幕服务第一次被碰到的时机就是这里，单独把反馈文案排一次队，
+    // 否则任务结束时才第一次 uiTx，toast 一闪而过只显示中文。
+    if (!_subtitleFeedbackPrewarmed) {
+      _subtitleFeedbackPrewarmed = true;
+      PrewarmStrings.warmSubtitle();
+    }
+    // 索引加载失败（磁盘 IO 异常等）不能把服务永久锁死：`_loadFuture` 会一直
+    // 是一个 errored Future，此后每个字幕任务的 ensureInitialized 都直接抛，
+    // 表现为「点多少次都立刻失败」。失败时清掉缓存，让下一次可以重试。
+    return _loadFuture ??= _loadIndex().catchError((Object _) {
+      _loadFuture = null;
+    });
+  }
 
   static void markComplete({
     required String videoKey,
@@ -112,8 +127,8 @@ abstract final class SubtitleTranslationBackgroundService {
 
   static void _markTaskComplete(String taskKey) {
     _completed.add(taskKey);
-    final alias = _stateAliases[taskKey];
-    if (alias != null) _completed.add(alias);
+    final cardKey = _taskCardKeys[taskKey];
+    if (cardKey != null) _completed.add(cardKey);
     _set(
       taskKey,
       SubtitleTranslationTaskState(
@@ -147,8 +162,17 @@ abstract final class SubtitleTranslationBackgroundService {
       // Clearing an optional cache must never affect the original subtitle.
     }
     _completed.remove(taskKey);
-    final alias = _stateAliases[taskKey];
-    if (alias != null) _completed.remove(alias);
+    final cardKey = _taskCardKeys[taskKey];
+    if (cardKey != null) {
+      // 还有别的分P已完成时，卡片级的完成标记不能一起删掉。
+      final others = _cardTaskKeys[cardKey];
+      final anyOtherComplete =
+          others?.any(
+            (key) => key != taskKey && _completed.contains(key),
+          ) ??
+          false;
+      if (!anyOtherComplete) _completed.remove(cardKey);
+    }
     _set(taskKey, const SubtitleTranslationTaskState());
     await _saveIndex();
     return removed;
@@ -167,6 +191,42 @@ abstract final class SubtitleTranslationBackgroundService {
     await ensureInitialized();
     final target = Pref.uiTranslateLang;
     final taskKey = _key(videoKey, target, cid);
+    // 连点两次时两个 continuation 都可能在下一次 `_set` 之前看到 null，
+    // 于是同一份任务被 attach 两遍；完成阶段会各跑一次「替换缓存 → 重命名
+    // canonical」，第二次 rename 找不到源文件而抛错，把已经成功的任务改成
+    // failed。这里用一个入口锁把重复启动挡在门外。
+    if (!_startingKeys.add(taskKey)) return;
+    try {
+      await _startUnlocked(
+        videoKey: videoKey,
+        bvid: bvid,
+        aid: aid,
+        cid: cid,
+        epId: epId,
+        seasonId: seasonId,
+        target: target,
+        taskKey: taskKey,
+        force: force,
+        includeCollection: includeCollection,
+      );
+    } finally {
+      _startingKeys.remove(taskKey);
+    }
+  }
+
+  /// [start] 的实现体。入口锁由 [start] 持有，这里不再做重复启动判断。
+  static Future<void> _startUnlocked({
+    required String videoKey,
+    String? bvid,
+    int? aid,
+    int? cid,
+    int? epId,
+    int? seasonId,
+    required String target,
+    required String taskKey,
+    required bool force,
+    required bool includeCollection,
+  }) async {
     final current = _states[taskKey];
     if (current?.isRunning == true ||
         (!force && current?.phase == SubtitleTranslationTaskPhase.complete)) {
@@ -287,7 +347,7 @@ abstract final class SubtitleTranslationBackgroundService {
         final resolvedTaskKey = _key(videoKey, target, resolvedCid);
         if (resolvedTaskKey != taskKey) {
           // 不能只把状态搬到新键：封面按钮查的是旧键，搬走以后按钮永远不动。
-          _registerStateAlias(taskKey, resolvedTaskKey);
+          _registerCardTask(taskKey, resolvedTaskKey);
           taskKey = resolvedTaskKey;
           _set(
             taskKey,
@@ -309,7 +369,13 @@ abstract final class SubtitleTranslationBackgroundService {
         Success(:final response) => response.subtitle?.subtitles,
         _ => null,
       };
-      if (tracks == null || tracks.isEmpty) {
+      if (tracks == null) {
+        // playInfo 失败（断网 / 风控 / 接口降级没下发 subtitle 字段）不是
+        // 「这个视频没有字幕」：给可重试的 failed，别把按钮置灰到点不动。
+        _fail(taskKey, uiTx('字幕下载失败，点击重试'));
+        return;
+      }
+      if (tracks.isEmpty) {
         // 实测：未登录时 /x/player/v2 对**有 CC 的视频**也返回空列表，
         // 所以空列表要先分辨「没登录」和「真没字幕」——两者的处理完全不同。
         final loggedIn =
@@ -380,8 +446,17 @@ abstract final class SubtitleTranslationBackgroundService {
         proxies,
         directWorkers: Pref.subtitleConcurrency,
       );
-      final cacheKey =
-          '${bvid ?? 'av$aid'}/$resolvedCid/${sourceTrack.lan}/$target';
+      // 缓存/产物必须挂在统一身份键下：番剧没有 bvid，旧写法会退化成
+      // `avnull`，而播放页用的是 `ep<epId>`，后台翻完了播放页既找不到产物、
+      // 也删不掉缓存。普通视频的 videoKey 仍是 bvid，旧缓存继续命中。
+      final cacheVideoKey = subtitleCacheVideoKeyFor(
+        videoKey: videoKey,
+        bvid: bvid,
+        aid: aid,
+        epId: epId,
+        seasonId: seasonId,
+      );
+      final cacheKey = '$cacheVideoKey/$resolvedCid/${sourceTrack.lan}/$target';
       // A retranslation gets an isolated checkpoint. The canonical cache stays
       // available to the player until all replacement chunks have succeeded.
       final activeCacheKey = force
@@ -450,7 +525,7 @@ abstract final class SubtitleTranslationBackgroundService {
                     );
                   }
                   final registered = await registerCompletedArtifact(
-                    videoKey: bvid ?? 'av$aid',
+                    videoKey: cacheVideoKey,
                     cid: resolvedCid,
                     targetLanguage: target,
                     sourceLan: sourceTrack.lan,
@@ -794,8 +869,24 @@ abstract final class SubtitleTranslationBackgroundService {
         for (var i = 0; i < targets.length.clamp(1, 3); i++) runNext(),
       ]);
       syncState();
+    } catch (error) {
+      // 某个分P抛出未预期异常时，Future.wait 会提前结束。以前 finally 里
+      // 只调 syncState()，此时子任务多半还是 idle → 父任务被写成 preparing，
+      // 定时器又已经 cancel，于是永远转圈、没有任何失败提示。
+      if (!finalized) {
+        finalized = true;
+        _fail(
+          parentTaskKey,
+          uiTxP('无法开始翻译字幕，点击重试（{0}）', ['${error.runtimeType}']),
+        );
+      }
     } finally {
       timer.cancel();
+      if (!finalized) {
+        // 兜底：绝不让父任务停在 preparing。
+        finalized = true;
+        _fail(parentTaskKey, uiTx('字幕翻译没有开始，点击重试'));
+      }
       syncState();
       _activeBatchTaskKeys.remove(parentTaskKey);
     }
@@ -904,8 +995,8 @@ abstract final class SubtitleTranslationBackgroundService {
 
   static void _set(String key, SubtitleTranslationTaskState state) {
     _states[key] = state;
-    final alias = _stateAliases[key];
-    if (alias != null) _states[alias] = state;
+    // 不再把状态镜像覆盖到 cardKey：卡片查询时按所有分P实时聚合，
+    // 否则最后一个分P的状态会把前面所有分P盖掉（单跳别名的老问题）。
   }
 
   /// 源不存在（不是失败）：图标置灰、点按不再重试。
@@ -950,14 +1041,17 @@ abstract final class SubtitleTranslationBackgroundService {
         final cacheFile = File(artifact.cacheFilePath);
         final vttFile = File(artifact.vttFilePath);
         if (!await cacheFile.exists() || !await vttFile.exists()) continue;
+        // 旧版合集批量产物把 cid 拼进 videoKey，这里归一到统一身份键，
+        // 否则重启后状态键与封面按钮/播放页查询键对不上。
+        final stateVideoKey = artifact.stateVideoKey;
         final taskKey = _key(
-          artifact.videoKey,
+          stateVideoKey,
           artifact.targetLanguage,
           artifact.cid,
         );
         // 卡片查询用的是无 cid 的键，重启后也要能看到「已翻译」。
-        final cardKey = _key(artifact.videoKey, artifact.targetLanguage);
-        _registerStateAlias(cardKey, taskKey);
+        final cardKey = _key(stateVideoKey, artifact.targetLanguage);
+        _registerCardTask(cardKey, taskKey);
         if (artifact.verifierVersion != SubtitleTextQuality.verifierVersion) {
           _set(
             taskKey,

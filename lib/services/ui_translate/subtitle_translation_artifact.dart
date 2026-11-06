@@ -33,6 +33,16 @@ class SubtitleTranslationArtifact {
   final String vttFilePath;
   final DateTime completedAt;
 
+  /// 3.7.2 及更早版本的合集批量子任务把 `'<videoKey>/<cid>'` 当 videoKey，
+  /// 统一身份键之后这类旧记录仍要能归并到正确的任务键上，否则重启后
+  /// 封面按钮/播放页看不到「已翻译」。
+  String get stateVideoKey {
+    final suffix = '/$cid';
+    return videoKey.endsWith(suffix)
+        ? videoKey.substring(0, videoKey.length - suffix.length)
+        : videoKey;
+  }
+
   static String makeKey({
     required String videoKey,
     required int cid,
@@ -140,7 +150,18 @@ class SubtitleTranslationArtifactRegistry {
       sourceLan: sourceLan,
       sourceIdentity: sourceIdentity,
     );
-    return _artifacts[key];
+    final exact = _artifacts[key];
+    if (exact != null) return exact;
+    // 旧版合集批量子任务用 '<videoKey>/<cid>' 作 videoKey；回退一次，
+    // 让用户已经翻好的译文不会因为这次身份键统一而全部作废。
+    final legacyKey = SubtitleTranslationArtifact.makeKey(
+      videoKey: '$videoKey/$cid',
+      cid: cid,
+      targetLanguage: targetLanguage,
+      sourceLan: sourceLan,
+      sourceIdentity: sourceIdentity,
+    );
+    return _artifacts[legacyKey];
   }
 
   Future<SubtitleTranslationArtifact?> findForPart({
@@ -153,7 +174,8 @@ class SubtitleTranslationArtifactRegistry {
         _artifacts.values
             .where(
               (artifact) =>
-                  artifact.videoKey == videoKey &&
+                  (artifact.videoKey == videoKey ||
+                      artifact.videoKey == '$videoKey/$cid') &&
                   artifact.cid == cid &&
                   artifact.targetLanguage == targetLanguage,
             )
@@ -169,7 +191,14 @@ class SubtitleTranslationArtifactRegistry {
     await initialize();
     if (!await verify()) return false;
     _artifacts[artifact.key] = artifact;
-    await _save();
+    try {
+      await _save();
+    } catch (_) {
+      // 索引写失败时不能把这条产物留在内存里当成「已完成」：
+      // 否则本次会话会显示已翻译，重启后索引里却没有，用户点重翻也无从下手。
+      _artifacts.remove(artifact.key);
+      rethrow;
+    }
     return true;
   }
 

@@ -24,11 +24,9 @@ void main() {
       );
 
       expect(targets.map((item) => item.cid), [103, 101, 102]);
-      expect(targets.map((item) => item.videoKey).toSet(), {
-        'BV-list/101',
-        'BV-list/102',
-        'BV-list/103',
-      });
+      // 3.7.3 起合集子任务的 videoKey 与封面按钮/播放页完全一致，
+      // cid 只存在于状态键和产物键里，不再重复拼进 videoKey。
+      expect(targets.map((item) => item.videoKey).toSet(), {'BV-list'});
     },
   );
 
@@ -85,7 +83,7 @@ void main() {
 
     expect(targets.single.bvid, isNull);
     expect(targets.single.aid, 99);
-    expect(targets.single.videoKey, 'av99/991');
+    expect(targets.single.videoKey, 'av99');
   });
 
   test('deduplicates repeated cids and includes a missing selected part', () {

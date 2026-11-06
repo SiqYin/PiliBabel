@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_artifact.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_selection.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_source_resolver.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_task_state.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_job.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_video_key.dart';
 import 'package:PiliPlus/utils/subtitle_utils.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -231,6 +236,411 @@ void main() {
       });
       expect(onlyV2.subtitleUrlCandidates, ['https://hdslb.com/b.json']);
       expect(onlyV2.isNativeTarget('zh-CN'), isTrue);
+    });
+  });
+
+  group('3.7.3 统一视频身份键', () {
+    test('按 bvid → aid → epId → seasonId 降级，没有编号时返回空串', () {
+      expect(
+        subtitleVideoKeyFor(bvid: 'BV1xx', aid: 1, epId: 2, seasonId: 3),
+        'BV1xx',
+      );
+      expect(subtitleVideoKeyFor(aid: 123), 'av123');
+      expect(subtitleVideoKeyFor(epId: 456, seasonId: 789), 'ep456');
+      expect(subtitleVideoKeyFor(seasonId: 789), 'ss789');
+      expect(subtitleVideoKeyFor(seasonId: '789'), 'ss789');
+      expect(subtitleVideoKeyFor(), isEmpty);
+      expect(subtitleVideoKeyFor(bvid: '  ', aid: 0, epId: 0), isEmpty);
+    });
+
+    test('番剧封面按钮、播放页自动预翻译、重翻共用同一个键', () {
+      const epId = 654321;
+      // 竖版推荐卡片：goto == 'bangumi' 时 param 就是 ep_id。
+      final card = subtitleVideoKeyFor(
+        bvid: null,
+        aid: null,
+        epId: epId,
+      );
+      // 播放页：bvid 为空串、aid 为 0，只剩 epId/seasonId。
+      final player = subtitleVideoKeyFor(
+        bvid: '',
+        aid: 0,
+        epId: epId,
+        seasonId: 9988,
+      );
+      expect(card, player);
+      expect(card, 'ep654321');
+      // 以前播放页一律用 bvid（''），两边永远对不上。
+      expect(player, isNot(''));
+    });
+
+    test('普通视频的键仍然是 bvid，不影响既有缓存', () {
+      expect(
+        subtitleVideoKeyFor(
+          bvid: 'BV1xx411c7mD',
+          aid: 170001,
+          seasonId: 1,
+        ),
+        'BV1xx411c7mD',
+      );
+    });
+
+    test('后台写缓存/产物必须复用调用方传进来的统一键', () {
+      // 番剧：播放页传 ep<epId>，bvid/aid 都是空。以前后台硬写
+      // `bvid ?? 'av$aid'` 会得到 `avnull`，产物挂到播放页查不到的键下。
+      expect(
+        subtitleCacheVideoKeyFor(videoKey: 'ep654321', epId: 654321),
+        'ep654321',
+      );
+      // 普通视频：键仍是 bvid，旧缓存/旧产物继续命中。
+      expect(
+        subtitleCacheVideoKeyFor(
+          videoKey: 'BV1xx411c7mD',
+          bvid: 'BV1xx411c7mD',
+          aid: 170001,
+        ),
+        'BV1xx411c7mD',
+      );
+      // 调用方没给键时才回退推导，且不会拼出 `avnull`。
+      expect(
+        subtitleCacheVideoKeyFor(videoKey: '', epId: 654321),
+        'ep654321',
+      );
+      expect(
+        subtitleCacheVideoKeyFor(videoKey: '', aid: 170001),
+        'av170001',
+      );
+      expect(subtitleCacheVideoKeyFor(videoKey: ''), isEmpty);
+    });
+  });
+
+  group('3.7.3 轨道模型边界', () {
+    test('AI 前缀大小写容错，译文轨能被单独识别', () {
+      expect(_track('AI-ZH').langTag, 'zh');
+      expect(_track('zh-app-ai').isAppAiTrack, isTrue);
+      expect(_track('ZH-App-Ai').isAppAiTrack, isTrue);
+      expect(_track('zh-CN').isAppAiTrack, isFalse);
+    });
+
+    test('中文源轨覆盖中文家族，但不包含自己生成的译文轨', () {
+      for (final lan in [
+        'zh-CN',
+        'zh-Hant',
+        'ai-zh',
+        'yue-Hans',
+        'wuu',
+        'nan-TW',
+        'cmn',
+      ]) {
+        expect(_track(lan).isChineseSourceTrack, isTrue, reason: lan);
+      }
+      for (final lan in ['zh-app-ai', 'vi', 'en-US', 'ja']) {
+        expect(_track(lan).isChineseSourceTrack, isFalse, reason: lan);
+      }
+    });
+
+    test('构造函数也能设置 v2 地址', () {
+      final sub = Subtitle(lan: 'zh-CN', subtitleUrlV2: '//x/b.json');
+      expect(sub.subtitleUrlCandidates, ['//x/b.json']);
+    });
+  });
+
+  group('3.7.3 下载与时间轴', () {
+    test('整条轨都不可用时 json2Vtt / json2Srt 返回空串', () {
+      final bad = [
+        {'from': 0, 'to': 0, 'content': '零长度'},
+        {'from': 5, 'to': 4, 'content': '倒序'},
+        {'from': -1, 'to': 2, 'content': '负数'},
+        {'from': 1, 'to': 2, 'content': '   '},
+      ];
+      expect(SubtitleUtils.json2Vtt(bad), isEmpty);
+      expect(SubtitleUtils.json2Srt(bad), isEmpty);
+    });
+
+    test('json2Vtt 与后台 fromBody 用同一套重叠清洗规则', () {
+      final body = [
+        for (var i = 0; i < 5; i++)
+          {'from': 1.0, 'to': 3.0, 'content': '叠$i'},
+        {'from': 10.0, 'to': 11.0, 'content': '正常'},
+      ];
+      final fromJob = SubtitleCues.fromBody(body);
+      final fromVtt = SubtitleCues.fromVtt(SubtitleUtils.json2Vtt(body));
+      expect(fromVtt.length, fromJob.length);
+      for (var i = 0; i < fromVtt.length; i++) {
+        expect(fromVtt[i].start, fromJob[i].start);
+        expect(fromVtt[i].end, fromJob[i].end);
+        expect(fromVtt[i].text, fromJob[i].text);
+      }
+      expect(SubtitleCues.hasSafePlaybackTimeline(fromVtt), isTrue);
+    });
+
+    test('json2Srt 时间戳用逗号且序号连续', () {
+      final srt = SubtitleUtils.json2Srt([
+        {'from': 1.5, 'to': 2.5, 'content': '一'},
+        {'from': 3, 'to': 4, 'content': '二'},
+      ]);
+      expect(srt, contains('00:00:01,500 --> 00:00:02,500'));
+      expect(srt, contains('2\n00:00:03,000'));
+    });
+  });
+
+  group('3.7.3 选源一致性', () {
+    test('选轨策略把中文家族轨当中文源，但不把译文轨当源', () {
+      final choice = SubtitleSelectionPolicy.choose(
+        [_track('yue-Hans')],
+        'vi',
+        canTranslate: true,
+      );
+      expect(choice.translate, isTrue);
+      expect(choice.index, 1);
+      expect(_track('zh-app-ai').isChineseSourceTrack, isFalse);
+    });
+
+    test('后台源解析也接受中文家族轨', () async {
+      final resolved = await SubtitleSourceResolver.resolve(
+        tracks: [_track('yue-Hans')],
+        targetLanguage: 'vi',
+        loadCues: (_) async => _sequential(2),
+      );
+      expect(resolved?.kind, SubtitleSourceKind.chineseTranslation);
+    });
+
+    test('主语言归一在轨道模型与解析器上一致', () {
+      expect(Subtitle.primaryLanguageTag('zh-Hant'), 'zh');
+      expect(Subtitle.primaryLanguageTag('AI-ZH'), 'zh');
+      expect(SubtitleSourceResolver.primaryLanguageTag('zh-Hant'), 'zh');
+      expect(SubtitleSourceResolver.primaryLanguageTag('yue-Hans'), 'yue');
+    });
+  });
+
+  group('3.7.3 翻译校验与落盘', () {
+    test('日语/韩语目标不会因为合法汉字词与原文相同被整块拒收', () {
+      final source = ['東京', '学校', '先生', '学生'];
+      for (final target in ['ja', 'ja-JP', 'ko', 'ko-KR']) {
+        expect(
+          () => SubtitleTranslationOutput.sanitizeAndValidate(
+            source,
+            List<String>.of(source),
+            targetLanguage: target,
+          ),
+          returnsNormally,
+          reason: target,
+        );
+      }
+      final cues = _sequential(4);
+      final vtt = SubtitleCues.toVtt(
+        cues,
+        [for (final cue in cues) cue.text],
+      );
+      expect(
+        SubtitleTranslationOutput.isCompleteTranslatedVtt(
+          cues,
+          vtt,
+          targetLanguage: 'ja',
+        ),
+        isTrue,
+      );
+    });
+
+    test('不使用汉字的目标仍然拒绝整块照抄', () {
+      final source = ['你好', '世界', '谢谢', '再见'];
+      expect(
+        () => SubtitleTranslationOutput.sanitizeAndValidate(
+          source,
+          List<String>.of(source),
+          targetLanguage: 'en',
+        ),
+        throwsA(isA<FormatException>()),
+      );
+      expect(
+        () => SubtitleTranslationOutput.sanitizeAndValidate(
+          source,
+          List<String>.of(source),
+          targetLanguage: 'vi',
+        ),
+        throwsA(isA<FormatException>()),
+      );
+    });
+  });
+
+  group('3.7.3 下载译文轨字形', () {
+    test('新格式必须精确匹配目标语言', () {
+      expect(cachedTranslationLanMatches('zh-Hant-app-ai', 'zh-Hant'), isTrue);
+      expect(cachedTranslationLanMatches('yue-Hans-app-ai', 'yue-Hans'), isTrue);
+      expect(cachedTranslationLanMatches('zh-Hant-app-ai', 'zh-CN'), isFalse);
+      expect(cachedTranslationLanMatches('zh-CN-app-ai', 'zh-Hant'), isFalse);
+      expect(cachedTranslationLanMatches('vi-app-ai', 'vi'), isTrue);
+    });
+
+    test('旧格式不带字形，中文家族目标不挂载', () {
+      expect(cachedTranslationLanMatches('zh-app-ai', 'zh-CN'), isFalse);
+      expect(cachedTranslationLanMatches('zh-app-ai', 'zh-Hant'), isFalse);
+      expect(cachedTranslationLanMatches('yue-app-ai', 'yue-Hans'), isFalse);
+    });
+
+    test('旧格式非中文目标仍兼容，且不会串到别的语言', () {
+      expect(cachedTranslationLanMatches('vi-app-ai', 'vi-VN'), isTrue);
+      expect(cachedTranslationLanMatches('en-app-ai', 'en'), isTrue);
+      expect(cachedTranslationLanMatches('vi-app-ai', 'ja'), isFalse);
+    });
+
+    test('下划线与大小写归一', () {
+      expect(cachedTranslationLanMatches('ZH_HANT-app-ai', 'zh-Hant'), isTrue);
+    });
+  });
+
+  group('3.7.3 乱序时间轴', () {
+    test('乱序 VTT 先稳定排序，合法 cue 一条不少', () {
+      const vtt = 'WEBVTT\n\n'
+          '00:00:10.000 --> 00:00:11.000\n尾句\n\n'
+          '00:00:00.000 --> 00:00:01.000\n首句\n\n'
+          '00:00:01.000 --> 00:00:02.000\n次句\n\n';
+      final cues = SubtitleCues.fromVtt(vtt);
+      expect(cues.length, 3);
+      expect(cues.map((cue) => cue.text), ['首句', '次句', '尾句']);
+      expect(SubtitleCues.hasSafePlaybackTimeline(cues), isTrue);
+    });
+
+    test('乱序 B 站 body 不会被前面那条长 cue 挡掉', () {
+      final body = [
+        {'from': 20.0, 'to': 21.0, 'content': '尾句'},
+        {'from': 0.0, 'to': 1.0, 'content': '首句'},
+        {'from': 1.0, 'to': 2.0, 'content': '次句'},
+      ];
+      expect(
+        SubtitleCues.fromBody(body).map((cue) => cue.text),
+        ['首句', '次句', '尾句'],
+      );
+      expect(SubtitleUtils.json2Vtt(body), contains('首句'));
+    });
+
+    test('同一时刻保持原顺序，最多保留 3 条重叠', () {
+      const vtt = 'WEBVTT\n\n'
+          '00:00:00.000 --> 00:00:01.000\nA\n\n'
+          '00:00:00.000 --> 00:00:01.000\nB\n\n'
+          '00:00:00.000 --> 00:00:01.000\nC\n\n'
+          '00:00:00.000 --> 00:00:01.000\nD\n\n';
+      final cues = SubtitleCues.fromVtt(vtt);
+      expect(cues.map((cue) => cue.text), ['A', 'B', 'C']);
+      expect(SubtitleCues.hasSafePlaybackTimeline(cues), isTrue);
+    });
+  });
+
+  group('3.7.3 多分P状态聚合', () {
+    const idle = SubtitleTranslationTaskState();
+    const slow = SubtitleTranslationTaskState(
+      phase: SubtitleTranslationTaskPhase.translating,
+      progress: 0.2,
+    );
+    const fast = SubtitleTranslationTaskState(
+      phase: SubtitleTranslationTaskPhase.translating,
+      progress: 0.9,
+    );
+    const complete = SubtitleTranslationTaskState(
+      phase: SubtitleTranslationTaskPhase.complete,
+      progress: 1,
+    );
+    const failed = SubtitleTranslationTaskState(
+      phase: SubtitleTranslationTaskPhase.failed,
+    );
+    const noSource = SubtitleTranslationTaskState(noSource: true);
+
+    SubtitleTranslationTaskState aggregate(
+      List<SubtitleTranslationTaskState> states,
+    ) => aggregateCardStates(states);
+
+    test('一个分P完成、另一个还在跑时不能谎报已完成', () {
+      final state = aggregate([complete, fast]);
+      expect(state.isRunning, isTrue);
+      expect(state.phase, SubtitleTranslationTaskPhase.translating);
+    });
+
+    test('多个分P在跑时显示进度最低的那个', () {
+      expect(aggregate([fast, slow]).progress, 0.2);
+    });
+
+    test('任一失败就给可重试的失败态', () {
+      expect(
+        aggregate([complete, failed, complete]).phase,
+        SubtitleTranslationTaskPhase.failed,
+      );
+    });
+
+    test('全部完成 / 无需翻译才显示完成', () {
+      expect(
+        aggregate([complete, complete]).phase,
+        SubtitleTranslationTaskPhase.complete,
+      );
+      expect(
+        aggregate([complete, noSource]).phase,
+        SubtitleTranslationTaskPhase.complete,
+      );
+      // 有分P还没开始时不能谎报完成：显示准备中 + 已完成比例。
+      final partial = aggregate([complete, idle]);
+      expect(partial.phase, SubtitleTranslationTaskPhase.preparing);
+      expect(partial.progress, 0.5);
+      expect(aggregate([idle, idle]).phase, SubtitleTranslationTaskPhase.idle);
+    });
+
+    test('空列表返回 idle', () {
+      expect(aggregate([]).phase, SubtitleTranslationTaskPhase.idle);
+    });
+  });
+
+  group('3.7.3 批量产物键兼容', () {
+    SubtitleTranslationArtifact artifact(String videoKey) =>
+        SubtitleTranslationArtifact(
+          key: SubtitleTranslationArtifact.makeKey(
+            videoKey: videoKey,
+            cid: 123,
+            targetLanguage: 'vi',
+            sourceLan: 'zh-CN',
+            sourceIdentity: 'src',
+          ),
+          videoKey: videoKey,
+          cid: 123,
+          targetLanguage: 'vi',
+          sourceLan: 'zh-CN',
+          sourceIdentity: 'src',
+          cueCount: 1,
+          verifierVersion: 2,
+          cacheFilePath: 'cache.json',
+          vttFilePath: 'track.vtt',
+          completedAt: DateTime(2026, 1, 1),
+        );
+
+    test('旧版批量 videoKey 归一到统一身份键', () {
+      expect(artifact('BV1xx/123').stateVideoKey, 'BV1xx');
+      expect(artifact('BV1xx').stateVideoKey, 'BV1xx');
+    });
+
+    test('产物注册表能按新键查到旧版批量产物', () async {
+      final dir = await Directory.systemTemp.createTemp('pb_artifact_');
+      addTearDown(() {
+        if (dir.existsSync()) dir.deleteSync(recursive: true);
+      });
+      final registry = SubtitleTranslationArtifactRegistry(
+        directoryPath: dir.path,
+      );
+      final registered = await registry.registerVerified(
+        artifact('BV1xx/123'),
+        verify: () => true,
+      );
+      expect(registered, isTrue);
+      final found = await registry.find(
+        videoKey: 'BV1xx',
+        cid: 123,
+        targetLanguage: 'vi',
+        sourceLan: 'zh-CN',
+        sourceIdentity: 'src',
+      );
+      expect(found, isNotNull);
+      final forPart = await registry.findForPart(
+        videoKey: 'BV1xx',
+        cid: 123,
+        targetLanguage: 'vi',
+      );
+      expect(forPart, isNotNull);
     });
   });
 }

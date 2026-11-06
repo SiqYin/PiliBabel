@@ -321,12 +321,18 @@ abstract final class SubtitleTranslationOutput {
   ///
   /// 判据：带汉字的行里 80% 以上与原文一字不差，且至少 2 行。
   /// 单行块不判（「了解」→「了解」这种合法情况无法区分）。
+  ///
+  /// **必须和播放页的 [targetUsesHan] 用同一个豁免范围**：中文家族之外，
+  /// 日语（汉字词）、韩语（汉字词）的译文也合法地带汉字且常与原文一字不差。
+  /// 以前这里只豁免 `isChineseFamilyTarget`，日语/韩语目标每一块都会被
+  /// 判成「照抄原文」→ 整条轨永远翻不出来，而播放页却已经放宽了检查。
+  /// 对真正不使用汉字的目标（en/fr/...）仍然保留照抄判定。
   static void _rejectCopiedSource(
     List<String> source,
     List<String> output,
     String? targetLanguage,
   ) {
-    if (isChineseFamilyTarget(targetLanguage)) return;
+    if (targetUsesHan(targetLanguage)) return;
     var hanLines = 0;
     var copied = 0;
     for (var i = 0; i < source.length && i < output.length; i++) {
@@ -601,17 +607,31 @@ abstract final class SubtitleCues {
   /// ② 丢掉会造成 4 条及以上字幕同时叠在一起的 cue（mpv 会一次全画出来）。
   /// 只删多余 cue，不改动保留下来的任何时间戳，译文与源轨仍然一一对应。
   static List<SubtitleCue> sanitizeTimeline(List<SubtitleCue> cues) {
-    final kept = <SubtitleCue>[];
-    final activeEnds = <double>[];
-    for (final cue in cues) {
+    // 先按起始时间做**稳定排序**：外部/本地 VTT 的 cue 不一定按时间排列，
+    // 以前直接按输入顺序扫，前面一条长 cue 的 end 会一直留在 activeEnds 里，
+    // 后面所有早于它的合法 cue 都被当成「第 4 条重叠」丢掉 —— 整轨只剩一句。
+    // 稳定排序保证同一时刻的 cue 仍保持原顺序，不会改变重叠判定的语义。
+    final ordered = <({int index, double start, double end, SubtitleCue cue})>[];
+    for (var i = 0; i < cues.length; i++) {
+      final cue = cues[i];
       final start = _seconds(cue.start);
       final end = _seconds(cue.end);
       if (start == null || end == null || start < 0 || end <= start) continue;
+      ordered.add((index: i, start: start, end: end, cue: cue));
+    }
+    ordered.sort((a, b) {
+      final byStart = a.start.compareTo(b.start);
+      return byStart != 0 ? byStart : a.index.compareTo(b.index);
+    });
+
+    final kept = <SubtitleCue>[];
+    final activeEnds = <double>[];
+    for (final entry in ordered) {
       // WebVTT 的结束时间是排他的：恰好在这一刻结束的 cue 已不占位置。
-      activeEnds.removeWhere((activeEnd) => activeEnd <= start);
+      activeEnds.removeWhere((activeEnd) => activeEnd <= entry.start);
       if (activeEnds.length >= 3) continue;
-      activeEnds.add(end);
-      kept.add(cue);
+      activeEnds.add(entry.end);
+      kept.add(entry.cue);
     }
     return kept;
   }
