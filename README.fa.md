@@ -35,7 +35,7 @@ bilibili (official public API)
         ▲
    PiliNara                    — فورکی از PiliPlus (تغییرهای شخصی)
         ▲
-   PiliBabel  ← you are here   — فورکی از PiliNara
+   PiliBabel  ← اینجا هستید     — فورکی از PiliNara
 ```
 
 PiliBabel **تمام ویژگی‌های PiliNara / PiliPlus** را حفظ می‌کند (به [گزارش ویژگی‌های به‌ارث‌رسیده](#گزارش-ویژگیهای-بهارثرسیده-از-pilinara--piliplus) نزدیک انتهای سند نگاه کنید) و **دو قابلیت اصلی که کلاینت‌های بالادستی ندارند** را اضافه می‌کند:

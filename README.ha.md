@@ -35,7 +35,7 @@ bilibili (official public API)
         ▲
    PiliNara                    — fork ɗin PiliPlus (gyare-gyaren sirri)
         ▲
-   PiliBabel  ← you are here   — fork ɗin PiliNara
+   PiliBabel  ← kana nan        — fork ɗin PiliNara
 ```
 
 PiliBabel tana kiyaye **kowane fasalin PiliNara / PiliPlus** (duba [rahoton fasalolin da aka gada](#rahoton-fasalolin-da-aka-gada-daga-pilinara--piliplus) kusa da ƙasa) kuma tana ƙara **manyu iyawa biyu da app ɗin upstream basu da su**:
