@@ -112,13 +112,19 @@ class SubtitleTranslationProxyPool {
   SubtitleTranslationProxyPool(
     List<SubtitleTranslationProxy> proxies, {
     required int directWorkers,
-  }) : this._(proxies, directWorkers: directWorkers);
+    Duration routeAcquireTimeout = const Duration(seconds: 60),
+  }) : this._(
+         proxies,
+         directWorkers: directWorkers,
+         routeAcquireTimeout: routeAcquireTimeout,
+       );
 
   factory SubtitleTranslationProxyPool.shared(
     List<SubtitleTranslationProxy> proxies, {
     required int directWorkers,
+    Duration routeAcquireTimeout = const Duration(seconds: 60),
   }) {
-    final key = _configurationKey(proxies, directWorkers);
+    final key = _configurationKey(proxies, directWorkers, routeAcquireTimeout);
     final existing = _sharedPools.remove(key);
     if (existing != null) {
       _sharedPools[key] = existing;
@@ -127,6 +133,7 @@ class SubtitleTranslationProxyPool {
     final pool = SubtitleTranslationProxyPool._(
       proxies,
       directWorkers: directWorkers,
+      routeAcquireTimeout: routeAcquireTimeout,
     );
     _sharedPools[key] = pool;
     return pool;
@@ -135,6 +142,7 @@ class SubtitleTranslationProxyPool {
   SubtitleTranslationProxyPool._(
     List<SubtitleTranslationProxy> proxies, {
     required int directWorkers,
+    required this.routeAcquireTimeout,
   }) : assert(directWorkers >= 1),
        _capacity = directWorkers + proxies.length * workersPerProxy,
        _slots = [
@@ -147,6 +155,7 @@ class SubtitleTranslationProxyPool {
        directWorkers = directWorkers;
 
   final int directWorkers;
+  final Duration routeAcquireTimeout;
   final int _capacity;
   final List<SubtitleTranslationProxy?> _slots;
   final Set<SubtitleTranslationProxy> _proxies;
@@ -205,16 +214,23 @@ class SubtitleTranslationProxyPool {
   Future<SubtitleTranslationProxy?> _acquire(
     SubtitleTranslationPriority priority,
     SubtitleTranslationPriorityHandle? priorityHandle,
-  ) {
+  ) async {
     final route = _takeAvailableRoute();
-    if (route.$1) return Future.value(route.$2);
+    if (route.$1) return route.$2;
     final waiter = _ProxyWaiter(
       priority: priority,
       priorityHandle: priorityHandle,
       sequence: _nextWaiterSequence++,
     );
     _waiters.add(waiter);
-    return waiter.completer.future;
+    try {
+      return await waiter.completer.future.timeout(routeAcquireTimeout);
+    } on TimeoutException {
+      // Future.timeout does not cancel the original future. Remove the waiter
+      // so an abandoned request cannot later steal a released route.
+      _waiters.remove(waiter);
+      rethrow;
+    }
   }
 
   void _release(SubtitleTranslationProxy? route) {
@@ -279,14 +295,9 @@ class SubtitleTranslationProxyPool {
   static String _configurationKey(
     List<SubtitleTranslationProxy> proxies,
     int directWorkers,
+    Duration routeAcquireTimeout,
   ) =>
-      '$directWorkers|${proxies.map((proxy) => [
-        proxy.type.index,
-        proxy.host,
-        proxy.port,
-        proxy.username ?? '',
-        proxy.password ?? '',
-      ].join(':')).join('|')}';
+      '$directWorkers|${routeAcquireTimeout.inMilliseconds}|${proxies.map((proxy) => [proxy.type.index, proxy.host, proxy.port, proxy.username ?? '', proxy.password ?? ''].join(':')).join('|')}';
 }
 
 class _ProxyWaiter {
