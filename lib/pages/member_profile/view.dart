@@ -408,7 +408,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               Get.back();
             }
           } else {
-            SmartDialog.showToast(res.data['message']);
+            SmartDialog.showToast(uiTx(res.data['message'].toString()));
           }
         });
   }
@@ -536,7 +536,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     }
                   });
                 } else {
-                  SmartDialog.showToast(res.data['message']);
+                  SmartDialog.showToast(uiTx(res.data['message'].toString()));
                 }
                 if (PlatformUtils.isMobile && imagePath != null) {
                   File(imagePath).tryDel();

@@ -20,10 +20,13 @@ import 'package:get/get.dart';
 /// * [kGuidedSetupFirstRun]：新装用户 —— 打开开关（开关自己播放动画）→ 弹语言列表
 /// * [kGuidedSetupUpgrade]：从旧版升级的用户 —— 直接弹「翻译引擎」，让他一眼看到
 ///   已切到内置模型，想切回自备 API 也伸手就能点
+/// * [kGuidedSetupAutoEnable]：新装自动开启 —— 滚到 AI 翻译区 + 开关动画 →
+///   弹「已开启」单按钮弹窗（系统语言已自动配置，无需选择）
 ///
 /// 目的是让用户完整看一遍「这些设置在哪、长什么样」，而不是被丢一个弹窗就完事。
 const String kGuidedSetupFirstRun = 'guidedTranslateFirstRun';
 const String kGuidedSetupUpgrade = 'guidedTranslateUpgrade';
+const String kGuidedSetupAutoEnable = 'guidedTranslateAutoEnable';
 
 /// 官方接口故障时：替用户切到「自备 API」。
 const String kGuidedSetupOutageCustom = 'guidedTranslateOutageCustom';
@@ -117,7 +120,36 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
       return;
     }
 
-    // 新装用户：当着面把开关打开（开关会自己播放一次动画），再弹语言列表。
+    // 新装自动开启：滚到 AI 翻译区 + 开关动画（语言已自动配置），弹单按钮弹窗。
+    if (mode == kGuidedSetupAutoEnable) {
+      controller.saveUiTranslateEnabled(true);
+      await Future.delayed(const Duration(milliseconds: 850));
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => Obx(
+          () => AlertDialog(
+            title: Text(uiTx('已开启 AI 翻译')),
+            content: Text(
+              uiTx(
+                '已根据系统语言自动配置翻译语言，并开启 AI 翻译。'
+                '使用 B 站官方免费模型，无需 API 密钥。',
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(uiTx('知道了')),
+              ),
+            ],
+          ),
+        ),
+      );
+      return;
+    }
+
+    // 新装用户（旧路径）：当着面把开关打开（开关会自己播放一次动画），再弹语言列表。
     controller.saveUiTranslateEnabled(true);
     await Future.delayed(const Duration(milliseconds: 850));
     if (!mounted) return;

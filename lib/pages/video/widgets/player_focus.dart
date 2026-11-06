@@ -216,7 +216,7 @@ class PlayerFocus extends StatelessWidget {
               isMuted ? 0 : plPlayerController.volume.value * 100,
             );
             plPlayerController.isMuted = isMuted;
-            SmartDialog.showToast('${isMuted ? '' : '取消'}静音');
+            SmartDialog.showToast(isMuted ? uiTx('静音') : uiTx('取消静音'));
           }
           return true;
 

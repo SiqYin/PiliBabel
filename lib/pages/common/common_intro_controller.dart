@@ -288,7 +288,7 @@ mixin FavMixin on TripleMixin {
         updateFavCount(newVal ? 1 : -1);
         hasFav.value = newVal;
       }
-      SmartDialog.showToast('${newVal ? '' : '取消'}收藏成功');
+      SmartDialog.showToast(newVal ? uiTx('收藏成功') : uiTx('取消收藏'));
     } else {
       result.toast();
     }

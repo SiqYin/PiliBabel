@@ -121,7 +121,7 @@ class PgcIntroController extends CommonIntroController {
     final newVal = !hasLike.value;
     final result = await VideoHttp.likeVideo(bvid: bvid, type: newVal);
     if (result case Success(:final response)) {
-      SmartDialog.showToast(newVal ? response : uiTx('取消赞'));
+      SmartDialog.showToast(newVal ? uiTx(response) : uiTx('取消赞'));
       pgcItem.stat?.like += newVal ? 1 : -1;
       hasLike.value = newVal;
     } else {
@@ -323,7 +323,7 @@ class PgcIntroController extends CommonIntroController {
     if (result case Success(:final response)) {
       isFollowed.value = true;
       followStatus.value = 2;
-      SmartDialog.showToast(response);
+      SmartDialog.showToast(uiTx(response));
     } else {
       result.toast();
     }
@@ -334,7 +334,7 @@ class PgcIntroController extends CommonIntroController {
     final result = await VideoHttp.pgcDel(seasonId: pgcItem.seasonId);
     if (result case Success(:final response)) {
       isFollowed.value = false;
-      SmartDialog.showToast(response);
+      SmartDialog.showToast(uiTx(response));
     } else {
       result.toast();
     }
@@ -347,7 +347,7 @@ class PgcIntroController extends CommonIntroController {
     );
     if (result case Success(:final response)) {
       followStatus.value = status;
-      SmartDialog.showToast(response);
+      SmartDialog.showToast(uiTx(response));
     } else {
       result.toast();
     }
@@ -493,7 +493,7 @@ class PgcIntroController extends CommonIntroController {
         : await FavHttp.addFavPugv(seasonId!);
     if (res.isSuccess) {
       this.isFav.toggle();
-      SmartDialog.showToast('${isFav ? '取消' : ''}收藏成功');
+      SmartDialog.showToast(isFav ? uiTx('取消收藏') : uiTx('收藏成功'));
     } else {
       res.toast();
     }

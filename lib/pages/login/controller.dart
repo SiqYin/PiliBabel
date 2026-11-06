@@ -359,7 +359,7 @@ class LoginPageController extends GetxController
     // if ((passwordFormKey.currentState as FormState).validate()) {
     final webKeyRes = await LoginHttp.getWebKey();
     if (!webKeyRes['status']) {
-      SmartDialog.showToast(webKeyRes['msg']);
+      SmartDialog.showToast(uiTx(webKeyRes['msg'].toString()));
       return;
     }
     String salt = webKeyRes['data']['hash'];
@@ -381,7 +381,7 @@ class LoginPageController extends GetxController
         return;
       }
       if (data['status'] == 2) {
-        SmartDialog.showToast(data['message']);
+        SmartDialog.showToast(uiTx(data['message'].toString()));
         // return;
         //{"code":0,"message":"0","ttl":1,"data":{"status":2,"message":"本次登录环境存在风险, 需使用手机号进行验证或绑定","url":"https://passport.bilibili.com/h5-app/passport/risk/verify?tmp_token=9e785433940891dfa78f033fb7928181&request_id=e5a6d6480df04097870be56c6e60f7ef&source=risk","token_info":null,"cookie_info":null,"sso":null,"is_new":false,"is_tourist":false}}
         String url = data['url']!;
@@ -596,7 +596,7 @@ class LoginPageController extends GetxController
           getCaptcha(geeGt, geeChallenge, loginByPassword);
           break;
         default:
-          SmartDialog.showToast(res['msg']);
+          SmartDialog.showToast(uiTx(res['msg'].toString()));
           // login failed
           break;
       }
@@ -625,7 +625,7 @@ class LoginPageController extends GetxController
     }
     final webKeyRes = await LoginHttp.getWebKey();
     if (!webKeyRes['status']) {
-      SmartDialog.showToast(webKeyRes['msg']);
+      SmartDialog.showToast(uiTx(webKeyRes['msg'].toString()));
       return;
     }
     String key = webKeyRes['data']['key'];
@@ -642,7 +642,7 @@ class LoginPageController extends GetxController
       await setAccount(data['token_info'], data['cookie_info']['cookies']);
       Get.back();
     } else {
-      SmartDialog.showToast(res['msg']);
+      SmartDialog.showToast(uiTx(res['msg'].toString()));
     }
   }
 
@@ -655,7 +655,7 @@ class LoginPageController extends GetxController
     // String? guestId;
     // final webKeyRes = await LoginHttp.getWebKey();
     // if (!webKeyRes['status']) {
-    //   SmartDialog.showToast(webKeyRes['msg']);
+    //   SmartDialog.showToast(uiTx(webKeyRes['msg'].toString()));
     // } else {
     //   String key = webKeyRes['data']['key'];
     //   final guestIdRes = await LoginHttp.getGuestId(key);
@@ -759,7 +759,7 @@ class LoginPageController extends GetxController
           getCaptcha(geeGt!, geeChallenge!, sendSmsCode);
           break;
         default:
-          SmartDialog.showToast(res['msg']);
+          SmartDialog.showToast(uiTx(res['msg'].toString()));
           break;
       }
     }

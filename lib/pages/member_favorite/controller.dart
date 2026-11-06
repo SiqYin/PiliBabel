@@ -108,7 +108,7 @@ class MemberFavoriteCtr
           favEnd.value = true;
         }
       } else {
-        SmartDialog.showToast(res.data['message']);
+        SmartDialog.showToast(uiTx(res.data['message'].toString()));
       }
     } catch (e) {
       SmartDialog.showToast(e.toString());
@@ -145,7 +145,7 @@ class MemberFavoriteCtr
           subEnd.value = true;
         }
       } else {
-        SmartDialog.showToast(res.data['message']);
+        SmartDialog.showToast(uiTx(res.data['message'].toString()));
       }
     } catch (e) {
       SmartDialog.showToast(e.toString());
