@@ -78,7 +78,15 @@ class _VideoSubtitleTranslateButtonState
         );
         final theme = Theme.of(context);
         final hasNativeTrack = state.nativeTrackAvailable;
-        final (label, icon, color) = switch (state.phase) {
+        // 「这个视频没有中文字幕」不是失败：图标置灰、不显示进度、点了也不重试。
+        // 以前它走 failed 分支，红图标 + 「重试」，用户点多少次都是同样的结果。
+        final (label, icon, color) = state.noSource
+            ? (
+                state.message ?? uiTx('没有可用的中文字幕'),
+                Icons.subtitles_off_outlined,
+                Colors.white54,
+              )
+            : switch (state.phase) {
           SubtitleTranslationTaskPhase.complete => (
             uiTx(hasNativeTrack ? 'B站已有译文' : '已翻译'),
             Icons.check,
@@ -119,7 +127,7 @@ class _VideoSubtitleTranslateButtonState
           // 胶囊里那个 1px 内边距的小刷新图标上，现在整块按钮就是一个大靶子。
           child: GestureDetector(
             behavior: HitTestBehavior.opaque,
-            onTap: state.isRunning
+            onTap: state.isRunning || state.noSource
                 ? null
                 : () => _start(force: isComplete || isFailed),
             child: SizedBox(
