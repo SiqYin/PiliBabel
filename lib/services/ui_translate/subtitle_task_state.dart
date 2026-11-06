@@ -12,6 +12,18 @@ enum SubtitleTranslationTaskPhase {
   failed,
 }
 
+/// 任务状态键：`videoKey/语言`（卡片口径）或 `videoKey/cid/语言`（具体分P）。
+String subtitleTaskStateKey(String videoKey, String language, [int? cid]) =>
+    cid == null ? '$videoKey/$language' : '$videoKey/$cid/$language';
+
+/// 批量（合集 / 多P）父任务的状态键。
+///
+/// **必须与任何分P的键都不同**：以前父任务直接用「选中那一P」的任务键，
+/// 于是父任务被当成那个分P「仍在运行」——那个分P永远不会启动，批量的
+/// running 计数永远降不到 0，卡片就一直转圈、永远不完成（3.7.6 修）。
+String subtitleBatchStateKey(String videoKey, String language, [int? cid]) =>
+    '${subtitleTaskStateKey(videoKey, language, cid)}#batch';
+
 class SubtitleTranslationTaskState {
   const SubtitleTranslationTaskState({
     this.phase = SubtitleTranslationTaskPhase.idle,

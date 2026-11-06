@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:PiliPlus/common/widgets/translate_progress_ring.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:dio/dio.dart';
@@ -140,16 +141,26 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
                 color: Colors.black54,
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: _loading
-                  ? const SizedBox(
-                      width: 13,
-                      height: 13,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.translate, size: 13, color: Colors.white),
+              child: SizedBox(
+                width: 17,
+                height: 17,
+                child: Center(
+                  child: _loading
+                      ? const TranslateProgressRing(
+                          color: Colors.white,
+                          // 识图没有服务端进度：顺时针填到 90% 左右等结果。
+                          // 环的尺寸/描边与上方翻译按钮共用一套（17 / 2），
+                          // 以前这里是 13 的不定态转圈，两个按钮一大一小。
+                          estimateTarget: 0.9,
+                          estimateDuration: Duration(seconds: 20),
+                        )
+                      : const Icon(
+                          Icons.translate,
+                          size: 14,
+                          color: Colors.white,
+                        ),
+                ),
+              ),
             ),
           ),
         ),

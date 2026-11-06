@@ -1766,7 +1766,7 @@ class UiTranslateService extends GetxService {
       u = u.substring(0, u.length - 1);
     }
     if (u.isEmpty) return '';
-    return u.contains('/v1') ? u : '\$u/v1';
+    return u.contains('/v1') ? u : '$u/v1';
   }
 
   /// 供字幕这类大段正文复用：把一批文本翻成当前界面语言。

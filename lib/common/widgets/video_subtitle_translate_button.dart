@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:PiliPlus/common/widgets/translate_progress_ring.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translate_service.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_background_service.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
@@ -161,25 +162,32 @@ class _VideoSubtitleTranslateButtonState
                     color: Colors.black54,
                     borderRadius: BorderRadius.circular(4),
                   ),
-                child: state.isRunning && !showCheck
-                    ? SizedBox(
-                        width: 17,
-                        height: 17,
-                        child: CircularProgressIndicator(
-                          value:
-                              state.phase ==
-                                  SubtitleTranslationTaskPhase.translating
-                              ? state.progress
-                              : null,
-                          strokeWidth: 2,
-                          color: color,
-                        ),
-                      )
-                    : Icon(
-                        showCheck ? Icons.check : icon,
-                        size: 14,
-                        color: showCheck ? Colors.greenAccent : color,
-                      ),
+                child: SizedBox(
+                  width: 17,
+                  height: 17,
+                  child: Center(
+                    child: state.isRunning && !showCheck
+                        ? TranslateProgressRing(
+                            // 只有「翻译中」有真实进度；准备中/校验中是
+                            // 未知进度，交给组件做顺时针缓动（以前传 null
+                            // 会变成永远转圈的不定态，看着像坏掉）。
+                            value:
+                                state.phase ==
+                                    SubtitleTranslationTaskPhase.translating
+                                ? state.progress
+                                : null,
+                            color: color,
+                            // 准备中只是拉字幕列表，别装成已经翻了 90%。
+                            estimateTarget: 0.12,
+                            estimateDuration: const Duration(seconds: 5),
+                          )
+                        : Icon(
+                            showCheck ? Icons.check : icon,
+                            size: 14,
+                            color: showCheck ? Colors.greenAccent : color,
+                          ),
+                  ),
+                ),
                 ),
               ),
             ),

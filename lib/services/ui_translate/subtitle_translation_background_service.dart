@@ -45,7 +45,16 @@ abstract final class SubtitleTranslationBackgroundService {
   static final Map<String, Set<String>> _cardTaskKeys = {};
   static final Map<String, String> _taskCardKeys = {};
   static final Set<String> _completed = {};
+
+  /// 合集/多P 批量任务的状态键。**必须与任何分P的任务键不同**：
+  /// 以前父任务直接写在「选中那一P」的任务键上，`stateFor` 于是把父任务
+  /// 当成那一P的「仍在运行」，`_startSingle` 也据此早退、那一P永远不开始，
+  /// 批量收尾条件（running == 0）永远不成立 —— 卡片一直是环，永远不完成。
   static final Set<String> _activeBatchTaskKeys = {};
+
+  /// cardKey → 批量父任务的键。批量在跑时，卡片/播放页看到的是整组进度；
+  /// 批量结束后解绑，回落到各分P自己的状态。
+  static final Map<String, String> _cardBatchKeys = {};
 
   /// 「已受理但还没走到第一次 `_set`」的入口键。没有它，连点两次按钮会同时
   /// 通过状态检查，同一份任务被 attach 两遍，完成时第二次「替换缓存 → 重命名」
@@ -61,12 +70,21 @@ abstract final class SubtitleTranslationBackgroundService {
   }) {
     final lang = language ?? Pref.uiTranslateLang;
     final key = _key(videoKey, lang, cid);
-    // 合集父任务的状态由 syncState 直接写在一个键上，不能被子任务聚合覆盖。
-    if (_activeBatchTaskKeys.contains(key)) {
-      return _states[key] ?? const SubtitleTranslationTaskState();
+    final cardKey = _key(videoKey, lang);
+    // 合集/多P 批量：整组的状态优先，否则卡片只能看到某个分P的进度。
+    // 只在批量仍在跑时接管；批量收尾后解绑，回落到分P状态/聚合。
+    final batchKey = _cardBatchKeys[cardKey];
+    if (batchKey != null) {
+      final batch = _states[batchKey];
+      // 批量失败要一直显示到用户重试：整组里失败的可能是不属于这张卡片
+      // 视频key 的分P，靠子任务聚合是看不出来的。
+      if (batch != null &&
+          (batch.isRunning ||
+              batch.phase == SubtitleTranslationTaskPhase.failed)) {
+        return batch;
+      }
     }
     final direct = _states[key];
-    final cardKey = _key(videoKey, lang);
     final tasks = _cardTaskKeys[cid == null ? key : cardKey];
     if (cid != null) {
       // 播放页带 cid 的精确查询：优先自己那条任务，其次卡片启动态，最后聚合。
@@ -96,6 +114,42 @@ abstract final class SubtitleTranslationBackgroundService {
         .map((key) => _states[key])
         .whereType<SubtitleTranslationTaskState>(),
   );
+
+  /// 批量内部聚合专用：**只看分P自己的状态**，绝不返回批量父状态。
+  ///
+  /// 父状态与分P状态混在一起是「永远转圈」的根因：父任务被当成某个分P仍在
+  /// 运行，`syncState` 的 running 计数永远大于 0，收尾条件不成立。
+  static SubtitleTranslationTaskState _taskStateFor({
+    required String videoKey,
+    int? cid,
+    String? language,
+  }) {
+    final lang = language ?? Pref.uiTranslateLang;
+    final key = _key(videoKey, lang, cid);
+    final direct = _states[key];
+    if (direct != null) return direct;
+    if (cid != null) {
+      final cardState = _states[_key(videoKey, lang)];
+      if (cardState != null) return cardState;
+    }
+    final tasks = _cardTaskKeys[cid == null ? key : _key(videoKey, lang)];
+    if (tasks != null && tasks.isNotEmpty) return _aggregateCardState(tasks);
+    return const SubtitleTranslationTaskState();
+  }
+
+  /// 批量父任务的状态键：加 `#batch` 后缀，保证与任何 `bvid/cid/语言`
+  /// 形态的分P任务键都不相等。
+  static String _batchKey(String videoKey, String language, int? cid) =>
+      subtitleBatchStateKey(videoKey, language, cid);
+
+  static void _bindBatch(String cardKey, String batchKey) {
+    _cardBatchKeys[cardKey] = batchKey;
+  }
+
+  static void _unbindBatch(String cardKey, String batchKey) {
+    if (_cardBatchKeys[cardKey] == batchKey) _cardBatchKeys.remove(cardKey);
+    _activeBatchTaskKeys.remove(batchKey);
+  }
 
   static bool _subtitleFeedbackPrewarmed = false;
 
@@ -251,31 +305,52 @@ abstract final class SubtitleTranslationBackgroundService {
     }
 
     if (includeCollection && bvid != null) {
+      // 预检态写在一个**独立键**上：`taskKey` 很可能正是批量里第一个分P
+      // 的任务键，把「正在检查视频列表」写在那里会让那个分P被判定为
+      // 「已在运行」而永远不启动，批量也就永远收不了尾（一直转圈）。
+      final batchKey = _batchKey(videoKey, target, cid);
+      final cardKey = _key(videoKey, target);
+      _bindBatch(cardKey, batchKey);
       _set(
-        taskKey,
+        batchKey,
         SubtitleTranslationTaskState(
           phase: SubtitleTranslationTaskPhase.preparing,
           message: uiTx('正在检查视频列表'),
         ),
       );
-      final targets = await _resolveTranslationTargets(
-        videoKey: videoKey,
-        bvid: bvid,
-        aid: aid,
-        cid: cid,
-        epId: epId,
-        seasonId: seasonId,
-      );
+      List<SubtitleTranslationTarget> targets;
+      try {
+        targets = await _resolveTranslationTargets(
+          videoKey: videoKey,
+          bvid: bvid,
+          aid: aid,
+          cid: cid,
+          epId: epId,
+          seasonId: seasonId,
+        );
+      } catch (error) {
+        // 以前这里没有兜底：预检抛错时状态永远停在 preparing，按钮一直转圈。
+        _unbindBatch(cardKey, batchKey);
+        _states.remove(batchKey);
+        _fail(
+          taskKey,
+          uiTxP('无法开始翻译字幕，点击重试（{0}）', ['${error.runtimeType}']),
+        );
+        return;
+      }
       if (targets.length > 1) {
         await _startBatch(
           parentVideoKey: videoKey,
-          parentCid: cid,
+          batchKey: batchKey,
           targets: targets,
           language: target,
           force: force,
         );
         return;
       }
+      // 单集：撤掉预检态，交给 _startSingle 自己的准备态。
+      _unbindBatch(cardKey, batchKey);
+      _states.remove(batchKey);
     }
 
     await _startSingle(
@@ -304,6 +379,14 @@ abstract final class SubtitleTranslationBackgroundService {
     await ensureInitialized();
     final target = Pref.uiTranslateLang;
     var taskKey = _key(videoKey, target, cid);
+    // 这张卡片上已经收尾（完成/失败）的批量绑定要先作废，否则父任务那条
+    // 失败态会一直盖住本次单集重试/播放页接管的结果。
+    final callerCard = _key(videoKey, target);
+    final boundBatch = _cardBatchKeys[callerCard];
+    if (boundBatch != null && _states[boundBatch]?.isRunning != true) {
+      _cardBatchKeys.remove(callerCard);
+      _activeBatchTaskKeys.remove(boundBatch);
+    }
     var shouldNotifyOutcome = notify;
     final current = _states[taskKey];
     if (current?.isRunning == true ||
@@ -333,6 +416,15 @@ abstract final class SubtitleTranslationBackgroundService {
         message: uiTx('正在获取字幕'),
       ),
     );
+    // 兜底看门狗：预检阶段任何一步异常退出（未捕获的异常、接口不回包）都
+    // 不能让按钮永远停在「准备中」。真正开始翻译后由进度/协调器接管。
+    final watchdog = Timer(const Duration(seconds: 120), () {
+      final state = _states[taskKey];
+      if (state != null &&
+          state.phase == SubtitleTranslationTaskPhase.preparing) {
+        _fail(taskKey, uiTx('获取字幕超时，点击重试'));
+      }
+    });
     try {
       final identity = await _resolvePlayableIdentity(
         bvid: bvid,
@@ -380,6 +472,10 @@ abstract final class SubtitleTranslationBackgroundService {
           shouldNotifyOutcome = false;
           return;
         }
+        // 旧键上那条「准备中」必须清掉。播放页/带 cid 的卡片查询是**精确键
+        // 优先**（stateFor 里 direct 先返回），留着它就是一条永不结束的僵尸
+        // 状态：界面一直转圈，而真正的任务在另一个键上早就跑完了。
+        _states.remove(taskKey);
         taskKey = resolvedTaskKey;
         _set(
           taskKey,
@@ -637,6 +733,7 @@ abstract final class SubtitleTranslationBackgroundService {
         uiTxP('无法开始翻译字幕，点击重试（{0}）', ['${error.runtimeType}']),
       );
     } finally {
+      watchdog.cancel();
       // 结果反馈：完成给一句话，失败也给一句话。
       // 之前只有封面按钮那个小图标从「转圈」变成对勾，用户根本注意不到。
       if (shouldNotifyOutcome) _notifyOutcome(taskKey);
@@ -781,13 +878,17 @@ abstract final class SubtitleTranslationBackgroundService {
 
   static Future<void> _startBatch({
     required String parentVideoKey,
-    required int? parentCid,
+    required String batchKey,
     required List<SubtitleTranslationTarget> targets,
     required String language,
     required bool force,
   }) async {
-    final parentTaskKey = _key(parentVideoKey, language, parentCid);
+    // 父任务必须用独立键（`...#batch`）。以前直接用「选中那一P」的任务键，
+    // stateFor 会把父任务当成那一P仍在运行 —— 那个分P不启动、批量永不收尾。
+    final parentTaskKey = batchKey;
+    final parentCardKey = _key(parentVideoKey, language);
     _activeBatchTaskKeys.add(parentTaskKey);
+    _bindBatch(parentCardKey, parentTaskKey);
     _completed.remove(parentTaskKey);
     if (force) {
       // Keep the old subtitle cache usable, but reset display markers so an
@@ -804,6 +905,8 @@ abstract final class SubtitleTranslationBackgroundService {
 
     void finishBatch() {
       monitor?.cancel();
+      // 只退出「活跃」集合；cardKey 的绑定保留到下次启动/成功收尾，
+      // 失败态才不会被聚合结果（可能全是 idle）盖成「准备中」。
       _activeBatchTaskKeys.remove(parentTaskKey);
     }
 
@@ -811,7 +914,8 @@ abstract final class SubtitleTranslationBackgroundService {
       if (finalized) return;
       final states = [
         for (final target in targets)
-          stateFor(
+          // 只读分P自己的状态：这里绝不能拿到父任务状态，否则 running 永不为 0。
+          _taskStateFor(
             videoKey: target.videoKey,
             cid: target.cid,
             language: language,
@@ -933,7 +1037,7 @@ abstract final class SubtitleTranslationBackgroundService {
       syncState();
       if (!finalized) {
         final stillRunning = targets.any(
-          (target) => stateFor(
+          (target) => _taskStateFor(
             videoKey: target.videoKey,
             cid: target.cid,
             language: language,
@@ -1078,8 +1182,10 @@ abstract final class SubtitleTranslationBackgroundService {
     );
   }
 
+  /// 状态键的唯一来源放在纯 Dart 文件里，便于回归测试直接验证
+  /// 「批量父键 ≠ 任何分P键」这条硬约束。
   static String _key(String videoKey, String language, [int? cid]) =>
-      cid == null ? '$videoKey/$language' : '$videoKey/$cid/$language';
+      subtitleTaskStateKey(videoKey, language, cid);
 
   static File get _indexFile => File(
     path.join(appSupportDirPath, 'subtitle_translations', 'video_index.json'),

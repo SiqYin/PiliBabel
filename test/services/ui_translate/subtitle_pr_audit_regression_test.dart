@@ -706,4 +706,35 @@ void main() {
       expect(forPart, isNotNull);
     });
   });
+
+  group('3.7.6 批量父状态键不得与分P键相同', () {
+    // 以前父任务直接用「选中那一P」的任务键，于是：
+    //   1) stateFor 把父任务当成那个分P「仍在运行」→ 批量的 running 计数
+    //      永远降不到 0 → 卡片一直转圈、永远不完成；
+    //   2) _startSingle 看到自己那条「准备中」直接早退 → 那一P永远不启动。
+    test('父键与被选中分P的键不相等', () {
+      final child = subtitleTaskStateKey('BV1xx', 'ja', 111);
+      final batch = subtitleBatchStateKey('BV1xx', 'ja', 111);
+      expect(batch, isNot(child));
+      expect(child, isNot(startsWith('#')));
+    });
+
+    test('父键与卡片键、以及合集里其它分P的键都不相等', () {
+      final batch = subtitleBatchStateKey('BV1xx', 'ja', 111);
+      expect(batch, isNot(subtitleTaskStateKey('BV1xx', 'ja')));
+      for (final cid in [111, 222, 333]) {
+        expect(batch, isNot(subtitleTaskStateKey('BV1xx', 'ja', cid)));
+      }
+      for (final key in ['BV1yy', 'BV1zz']) {
+        expect(batch, isNot(subtitleTaskStateKey(key, 'ja', 111)));
+      }
+    });
+
+    test('父键仍以分P键为前缀，便于按前缀定位', () {
+      final child = subtitleTaskStateKey('BV1xx', 'ja', 111);
+      final batch = subtitleBatchStateKey('BV1xx', 'ja', 111);
+      expect(batch, startsWith(child));
+      expect(batch, endsWith('#batch'));
+    });
+  });
 }
