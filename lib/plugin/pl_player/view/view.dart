@@ -25,6 +25,7 @@ import 'package:PiliPlus/models/common/sponsor_block/action_type.dart';
 import 'package:PiliPlus/models/common/sponsor_block/post_segment_model.dart';
 import 'package:PiliPlus/models/common/sponsor_block/segment_type.dart';
 import 'package:PiliPlus/models/common/super_resolution_type.dart';
+import 'package:PiliPlus/models/common/video/audio_quality.dart';
 import 'package:PiliPlus/models/common/video/video_quality.dart';
 import 'package:PiliPlus/models/video/play/url.dart';
 import 'package:PiliPlus/models_new/video/video_detail/episode.dart' as ugc;
@@ -723,6 +724,28 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         },
       ),
 
+      /// HiRes 无损标识：音频满足 HiRes 时显示主题色，否则白色
+      BottomControlType.hires => Obx(
+        () {
+          final audioQa = videoDetailController.currentAudioQa;
+          final isHiRes = audioQa == AudioQuality.hiRes;
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(
+              'HiRes',
+              style: TextStyle(
+                color: isHiRes
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.white54,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+              ),
+            ),
+          );
+        },
+      ),
+
       /// 画面比例
       BottomControlType.fit => Obx(
         () {
@@ -1152,6 +1175,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       if (isNotFileSource && plPlayerController.showDmChart) .dmChart,
       if (plPlayerController.isAnim) .superResolution,
       if (isNotFileSource && anySeason) .episode,
+      .hires,
       if (flag) .fit,
       if (isNotFileSource) .aiTranslate,
       .subtitle,
