@@ -221,6 +221,14 @@ abstract final class SettingBoxKey {
       aiPromptTemplates = 'aiPromptTemplates';
 
   static const String uiTranslateEnabled = 'uiTranslateEnabled',
+      subtitleChunkSize = 'subtitleChunkSize',
+      subtitleConcurrency = 'subtitleConcurrency',
+      subtitleContextOverlap = 'subtitleContextOverlap',
+      subtitleTranslationWaitForComplete = 'subtitleTranslationWaitForComplete',
+      subtitleTranslationPrefetchNext = 'subtitleTranslationPrefetchNext',
+      subtitleTranslationPrefetchCount = 'subtitleTranslationPrefetchCount',
+      subtitleTranslationProxies = 'subtitleTranslationProxies',
+      subtitleTranslationProxyType = 'subtitleTranslationProxyType',
       uiTranslateProvider = 'uiTranslateProvider',
       uiTranslateLang = 'uiTranslateLang',
       uiTranslateModel = 'uiTranslateModel',
@@ -233,7 +241,7 @@ abstract final class SettingBoxKey {
       glossaryLastChecked = 'glossaryLastChecked',
       glossaryManifestUrl = 'glossaryManifestUrl',
       glossaryDisabledTables = 'glossaryDisabledTables',
-  glossaryDefaultsApplied = 'glossaryDefaultsApplied',
+      glossaryDefaultsApplied = 'glossaryDefaultsApplied',
       uiTranslateOnboarded = 'uiTranslateOnboarded',
       uiTranslateUpgradeNoticeShown = 'uiTranslateUpgradeNoticeShown',
       uiTranslateOutageDismissed = 'uiTranslateOutageDismissed',

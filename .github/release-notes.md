@@ -1,18 +1,21 @@
-### PiliBabel v3.6.7
+### PiliBabel v3.7.0
 
-**Fixes "14/15 glossary tables enabled" showing even with all switches on, and audits every per-table count.**
+**Adds AI-powered subtitle translation: real-time Chinese→target-language subtitles with context-aware chunked translation, offline dictionary for Vietnamese, and optional proxy routing.**
 
-**The 14/15 bug.** When v3.6.4 introduced "off by default", the migration wrote *every* embedded id prefix into the disabled set — including `game`, the prefix of the 8 game-title entries (`game|zzz`, `game|hsr`, …). The glossary screen only renders the 15 tables that appear in the manifest and has no switch for `game`, so turning all 15 switches on still left `game` stuck in the disabled set, and the counter (`tables − disabled.count`) sat permanently at 14/15. Worse, those 8 game-name rows (the short names like ゼンゼロ / スタレ) were silently disabled at runtime too.
+**Core subtitle translation engine.** Chinese subtitles are split into 20-cue chunks with 4 lines of overlap context for consistent character names and pronouns. Each chunk is translated independently with retry, timeout, and quality validation (residual Han detection, timing integrity, context-echo rejection). Completed translations are checkpointed to disk and survive app restarts.
 
-Now the count no longer subtracts: it walks the manifest tables and checks each against the disabled set, shared by both the settings tile and the glossary page. `game` is always treated as enabled (it has no switch), and the page sanitises legacy leftovers from the stored set on load, so affected installs heal themselves.
+**Realtime buffering.** Playback starts when 60 seconds of translated subtitles are available ahead; auto-pauses if coverage drops below 15 seconds. The translation queue prioritizes the current playback position, then nearby chunks, then future segments. Seeking immediately reprioritizes work.
 
-**Per-table counts, audited one by one:**
-- *Reverse: 1999* displayed **0 terms**: all 100 rows had their category reverted to `term` by an earlier rebuild and were excluded from embedding. Fixed — 100/100 now embedded.
-- *BanG Dream!* was 3 rows short and *Neverness to Everness* 1 short: band and organisation names (CRYCHIC, sumimi, Glitter☆Green, 环) were filtered out by the category whitelist. They are exactly the proper nouns that appear in titles, so the whitelist now includes them; both tables match their harvested totals.
-- Template residue scrubbed from values (`37}}`, `{{rubi`, a key containing a newline, 69 rows with `{{tt` tails) so junk can never surface as a translation.
+**Subtitle track management.** A new track list appears in the player's subtitle menu: Bilibili's own tracks (including official AI translations) plus a live AI-translated track with progress labels. Manual per-part selection is remembered for the session. A compact card-cover button on video cards shows translation status and offers one-tap retranslation.
 
-Where a table embeds fewer terms than it was harvested with (Genshin Impact, Honkai: Star Rail, Zenless Zone Zero, Wuthering Waves), that is by design — only the core subset ships in-app. The subtitle now reads "N terms embedded" instead of "N terms", so the number matches what it actually measures.
+**Vietnamese offline dictionary.** 309 common UI labels are instantly translated offline when Vietnamese is selected as the interface language — no API call, no network round trip. Falls through to the AI translation pipeline for dynamic content.
 
-Embedded terms: 11,637 → **11,741**.
+**Optional HTTP/SOCKS5 proxy routing.** Translation requests can be routed through user-configured proxies (6 concurrent slots per proxy) to accelerate subtitle translation. The device's direct connection is always available as a fallback; invalid proxy configuration never blocks translation.
+
+**Settings.** New subtitle section: chunk size (10–40 cues), concurrency (1–5), context overlap (0–8 lines), wait-for-complete toggle, playlist prefetch (0–5 videos), and proxy configuration.
+
+**Bonus fixes:** QR code refresh race condition, and video quality/codec selection tolerance when the DASH stream list doesn't match the declared formats.
+
+> **Credit:** The subtitle translation system was originally contributed by [saukhoai](https://github.com/saukhoai) via [PR #2](https://github.com/SiqYin/PiliBabel/pull/2). We adapted and integrated the core engine, generalized it for all target languages, and merged the Vietnamese offline dictionary and proxy routing as optional features.
 
 Downloads are below.

@@ -1938,6 +1938,94 @@ abstract final class Pref {
   static set uiTranslateLang(String value) =>
       _setting.put(SettingBoxKey.uiTranslateLang, value);
 
+  /// 每个字幕分块的句子数（10-40，默认 20）。
+  static int get subtitleChunkSize =>
+      (_setting.get(SettingBoxKey.subtitleChunkSize, defaultValue: 20) as int)
+          .clamp(10, 40)
+          .toInt();
+
+  static set subtitleChunkSize(int value) => _setting.put(
+    SettingBoxKey.subtitleChunkSize,
+    value.clamp(10, 40).toInt(),
+  );
+
+  /// 直连翻译并发数（1-5，默认 5）。
+  static int get subtitleConcurrency =>
+      (_setting.get(SettingBoxKey.subtitleConcurrency, defaultValue: 5) as int)
+          .clamp(1, 5)
+          .toInt();
+
+  static set subtitleConcurrency(int value) => _setting.put(
+    SettingBoxKey.subtitleConcurrency,
+    value.clamp(1, 5).toInt(),
+  );
+
+  /// 每个字幕分块前置的原文句数（0-8，默认 4）：保持人名称谓一致，
+  /// 又不改变被计时的待译句子。
+  static int get subtitleContextOverlap => (_setting.get(
+    SettingBoxKey.subtitleContextOverlap,
+    defaultValue: 4,
+  ) as int).clamp(0, 8).toInt();
+
+  static set subtitleContextOverlap(int value) => _setting.put(
+    SettingBoxKey.subtitleContextOverlap,
+    value.clamp(0, 8).toInt(),
+  );
+
+  /// 实时字幕是「译满 60 秒才开播」还是「边播边追」（默认后者）。
+  static bool get subtitleTranslationWaitForComplete => _setting.get(
+    SettingBoxKey.subtitleTranslationWaitForComplete,
+    defaultValue: false,
+  );
+
+  static set subtitleTranslationWaitForComplete(bool value) => _setting.put(
+    SettingBoxKey.subtitleTranslationWaitForComplete,
+    value,
+  );
+
+  static bool get subtitleTranslationPrefetchNext =>
+      subtitleTranslationPrefetchCount > 0;
+
+  static set subtitleTranslationPrefetchNext(bool value) =>
+      subtitleTranslationPrefetchCount = value ? 1 : 0;
+
+  /// 播放列表预翻译的后续分P数量（0-5；旧布尔开关自动迁移）。
+  static int get subtitleTranslationPrefetchCount {
+    final stored = _setting.get(
+      SettingBoxKey.subtitleTranslationPrefetchCount,
+    );
+    if (stored is num) return stored.toInt().clamp(0, 5).toInt();
+    final legacy = _setting.get(
+      SettingBoxKey.subtitleTranslationPrefetchNext,
+      defaultValue: true,
+    );
+    final migrated = legacy == false ? 0 : 1;
+    _setting.put(SettingBoxKey.subtitleTranslationPrefetchCount, migrated);
+    return migrated;
+  }
+
+  static set subtitleTranslationPrefetchCount(int value) => _setting.put(
+    SettingBoxKey.subtitleTranslationPrefetchCount,
+    value.clamp(0, 5).toInt(),
+  );
+
+  /// 字幕翻译代理（可选）：每行 ip:port[:user:pass]，空 = 纯直连。
+  static String get subtitleTranslationProxies =>
+      _setting.get(SettingBoxKey.subtitleTranslationProxies, defaultValue: '');
+
+  static set subtitleTranslationProxies(String value) =>
+      _setting.put(SettingBoxKey.subtitleTranslationProxies, value.trim());
+
+  static String get subtitleTranslationProxyType => _setting.get(
+    SettingBoxKey.subtitleTranslationProxyType,
+    defaultValue: 'http',
+  );
+
+  static set subtitleTranslationProxyType(String value) => _setting.put(
+    SettingBoxKey.subtitleTranslationProxyType,
+    value == 'socks5' ? 'socks5' : 'http',
+  );
+
   /// 官方 AI 原声翻译声轨是否跟随界面语言自动选中。
   ///
   /// 只在**稿件本身下发了对应语言的官方声轨**时才生效，匹配不上就保持原声，

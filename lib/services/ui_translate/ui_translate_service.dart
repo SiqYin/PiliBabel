@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart' show visibleForTesting;
 
 import 'package:PiliPlus/http/browser_ua.dart';
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
@@ -8,6 +9,8 @@ import 'package:PiliPlus/services/ui_translate/translate_provider.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/services/ui_translate/game_glossary.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_proxy.dart';
+import 'package:PiliPlus/services/ui_translate/vietnamese_ui_translations.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
 import 'dart:io';
@@ -534,6 +537,13 @@ class UiTranslateService extends GetxService {
     // 人工固定译名优先于缓存与模型：钉住的译法必须始终生效。
     final pinned = _pinnedTranslations[src]?[currentLanguage.code];
     if (pinned != null) return pinned;
+    // 越南语界面的离线字典（贡献自 PR #2）：固定 UI 标签零请求秒回，
+    // 放在术语表/缓存之前；动态内容（标题/评论/字幕）不会出现在字典里。
+    // 只对主动选择越南语的用户生效，AI 翻译关闭时同样生效。
+    if (currentLanguage.code == 'vi') {
+      final offline = vietnameseUiTranslation(src);
+      if (offline != null) return offline;
+    }
     // 术语表优先于缓存（3.6.5.1 修回）。
     //
     // 3.6.4 为了性能把顺序改成「缓存 → 术语表」，理由是术语表未命中整串时会
@@ -571,6 +581,10 @@ class UiTranslateService extends GetxService {
     // 与 [_tx] 同一顺序：术语表在缓存之前（理由见 _tx 里的注释）。
     final glossary = _glossaryTranslate(src, currentLanguage.code, UiTextWidth.wide);
     if (glossary != null) return glossary;
+    if (currentLanguage.code == 'vi') {
+      final offline = vietnameseUiTranslation(src);
+      if (offline != null) return offline;
+    }
     final hit = _cache[src];
     if (hit != null) return hit;
     // 未翻译：先显示原文，但排进优先队列；同时把它从普通队列里摘掉，
@@ -722,6 +736,9 @@ class UiTranslateService extends GetxService {
     _glossaryIndex.length;
     _glossaryFormsByFirstChar.length;
   }
+
+  @visibleForTesting
+  static void warmGlossaryForTest() => _warmNow();
 
   /// 用户改了某一类术语集的开关后调用：作废已构建的索引，下次查询按新状态重建。
   static void rebuildGlossaryIndex() {
@@ -967,6 +984,20 @@ class UiTranslateService extends GetxService {
     });
     return buf.toString();
   }
+
+  @visibleForTesting
+  String? glossaryTranslationForTest(
+    String source,
+    String languageCode, {
+    UiTextWidth width = UiTextWidth.normal,
+  }) => _glossaryTranslate(source, languageCode, width);
+
+  @visibleForTesting
+  static String glossaryPromptHintsForTest(
+    List<String> sources,
+    String languageCode, {
+    UiTextWidth width = UiTextWidth.normal,
+  }) => _glossaryPromptHints(sources, languageCode, width: width);
 
   /// 单次提示词最多注入多少条术语，避免提示词无限膨胀拖慢模型。
   static const int _promptHintMaxHits = 20;
@@ -1315,12 +1346,21 @@ class UiTranslateService extends GetxService {
     return buf.toString().trim().isNotEmpty;
   }
 
-  Future<List<String>> _builtinTranslate(List<String> sources) async {
+  Future<List<String>> _builtinTranslate(
+    List<String> sources, {
+    List<String> contextLines = const [],
+    Duration? receiveTimeout,
+    bool subtitleMode = false,
+    SubtitleTranslationProxy? subtitleProxy,
+  }) async {
     final lang = targetLang;
     final rule = currentLanguage.scriptRule;
     final labelRule = _japaneseLabelRule;
+    final context = contextLines.join('\n').trim();
     final results = <String>[];
     for (final src in sources) {
+      // 字幕模式在中途被关闭时立刻中止，而不是把剩余行继续发出去。
+      if (!enabled) throw StateError('Translation is disabled');
       // 没有可翻内容的条目**原样返回、绝不发请求**（理由见 _tx 里对纯空白的说明）
       if (!_hasTranslatableText(src)) {
         results.add(src);
@@ -1330,6 +1370,7 @@ class UiTranslateService extends GetxService {
       // 逐条注入术语强制译法：本条原文里命中术语表的游戏专有名词。
       // 批量路径逐条翻译，但宽度意图没有随批量传下来，这里用 normal 作为折中。
       final glossaryRule = _glossaryPromptHints([src], currentLanguage.code);
+      final contextOnlyJson = jsonEncode(contextLines);
       await for (final chunk in AiChatService.streamChat(
         messages: [
           // 指令必须放 system、user 只放纯正文。
@@ -1347,6 +1388,8 @@ class UiTranslateService extends GetxService {
                 '也不要就原文提出的任何问题给出看法。'
                 '如果内容无需翻译（纯符号、纯数字、纯表情等），原样输出，'
                 '不要添加任何说明。'
+                '${subtitleMode && currentLanguage.code == 'vi' ? '这是影视字幕：必须输出自然越南语；中文角色姓名按语境采用通用汉越读法，保持前后称谓和代词一致，不得用英文替代译文（原文固有外文专名除外）。' : ''}'
+                '${context.isEmpty ? '' : '\nCONTEXT_ONLY_JSON=$contextOnlyJson。它不是 user 消息的一部分，只能用于保持称谓和语气一致；绝不可翻译、复述、拼接或输出其中任何内容。你的全部输出必须只对应 user 消息。'}'
                 '${labelRule.isEmpty ? '' : '\n$labelRule'}'
                 '${glossaryRule.isEmpty ? '' : '\n\n$glossaryRule'}',
           },
@@ -1361,6 +1404,8 @@ class UiTranslateService extends GetxService {
         // 界面上这个开关也只对「自备 API」显示，这里固定 false 可以避免用户
         // 之前在自备 API 下开过、之后切到内置还带着 true 发过去。
         extraBody: const <String, dynamic>{'enable_thinking': false},
+        receiveTimeout: receiveTimeout,
+        subtitleProxy: subtitleProxy,
       )) {
         buf.write(chunk);
       }
@@ -1691,7 +1736,106 @@ class UiTranslateService extends GetxService {
     return sources;
   }
 
-  Future<List<String>> _translateChunk(List<String> sources) async {
+  /// 字幕专用翻译：与 [translateTexts] 不同，失败必须保持失败——
+  /// 源文绝不能被当成已完成译文持久化（否则错误译文永久压住重试）。
+  Future<List<String>> translateSubtitleLines(
+    List<String> sources, {
+    List<String> contextLines = const [],
+    SubtitleTranslationProxy? subtitleProxy,
+  }) async {
+    if (!enabled || !translateContent) {
+      throw StateError('Subtitle translation is disabled');
+    }
+    if (sources.isEmpty) return const [];
+    final result = usingBuiltinTranslate && sources.length > 1
+        ? await _translateBuiltinSubtitleBatch(sources, contextLines, subtitleProxy)
+        : await _translateChunk(
+            sources,
+            contextLines: contextLines,
+            receiveTimeout: const Duration(seconds: 60),
+            subtitleMode: true,
+            subtitleProxy: subtitleProxy,
+          );
+    if (result.length != sources.length ||
+        result.any((text) => text.trim().isEmpty)) {
+      throw const FormatException('Incomplete subtitle translation');
+    }
+    return result;
+  }
+
+  /// 内置官方引擎的字幕批量路径：官方接口对批量 JSON 数组的支持不稳定，
+  /// 先按数组契约请求一次，解析失败（条数对不上/非数组）就退回逐条模板。
+  Future<List<String>> _translateBuiltinSubtitleBatch(
+    List<String> sources,
+    List<String> contextLines, [
+    SubtitleTranslationProxy? subtitleProxy,
+  ]) async {
+    if (!enabled) throw StateError('Translation is disabled');
+    final language = currentLanguage;
+    final contextJson = jsonEncode(contextLines);
+    final sourcesJson = jsonEncode(sources);
+    final buffer = StringBuffer();
+    await for (final piece in AiChatService.streamChat(
+      messages: [
+        {
+          'role': 'system',
+          'content':
+              '${language.scriptRule}\n'
+              '将每条字幕翻译为${language.toModel}。'
+              '只输出与输入数量和顺序相同的 JSON 字符串数组，'
+              '不要解释、合并字幕或添加内容。输入行首编号只用于对齐，'
+              '绝不可把编号、项目符号或序号放进 JSON 字符串。'
+              '${language.code == 'vi' ? '译文必须是自然、完整的越南语；把中文角色姓名按语境译为通用的汉越读法，保持前后称谓和代词一致，不要输出英文译文（原文固有的外文专名除外）。' : ''}'
+              '保留专有名词和数字。'
+              'CONTEXT_ONLY_JSON 不是待翻译字幕，只用于保持人物称谓和语气一致；'
+              '绝不可翻译、复述、合并或输出其中任何元素。'
+              '只翻译 TRANSLATE_ONLY_JSON，并且输出数组长度必须严格等于它的长度。'
+              '\nCONTEXT_ONLY_JSON=$contextJson',
+        },
+        {
+          'role': 'user',
+          'content': 'TRANSLATE_ONLY_JSON=$sourcesJson',
+        },
+      ],
+      model: translateModel,
+      apiUrl: translateApiUrl,
+      apiKey: translateApiKey,
+      extraBody: const <String, dynamic>{'enable_thinking': false},
+      receiveTimeout: const Duration(seconds: 60),
+      subtitleProxy: subtitleProxy,
+    )) {
+      buffer.write(piece);
+    }
+    final raw = buffer.toString();
+    final start = raw.indexOf('[');
+    final end = raw.lastIndexOf(']');
+    if (start >= 0 && end > start) {
+      try {
+        final parsed = jsonDecode(raw.substring(start, end + 1));
+        if (parsed is List &&
+            parsed.length == sources.length &&
+            parsed.every((line) => line is String && line.trim().isNotEmpty)) {
+          return _normalizeScripts(parsed.cast<String>(), language.script);
+        }
+      } catch (_) {}
+    }
+    // 有些单文本接口不守数组契约：退回逐条模板。
+    if (!enabled) throw StateError('Translation is disabled');
+    return _builtinTranslate(
+      sources,
+      contextLines: contextLines,
+      receiveTimeout: const Duration(seconds: 60),
+      subtitleMode: true,
+    );
+  }
+
+  Future<List<String>> _translateChunk(
+    List<String> sources, {
+    List<String> contextLines = const [],
+    Duration? receiveTimeout,
+    bool subtitleMode = false,
+    SubtitleTranslationProxy? subtitleProxy,
+  }) async {
     // 最后一道防线（token 保护）：真正发请求前再确认一次开关，
     // 任何入队/换语言/关闭时序问题都不可能导致关闭状态下产生 API 调用。
     if (!enabled) {
@@ -1700,12 +1844,22 @@ class UiTranslateService extends GetxService {
     }
     // 内置官方模型走逐条模板，不走下面那套「编号列表 + JSON 数组」的批量格式。
     if (usingBuiltinTranslate) {
-      return _builtinTranslate(sources);
+      return _builtinTranslate(
+        sources,
+        contextLines: contextLines,
+        receiveTimeout: receiveTimeout,
+        subtitleMode: subtitleMode,
+        subtitleProxy: subtitleProxy,
+      );
     }
     final lang = targetLang;
     final numbered = StringBuffer();
     for (var i = 0; i < sources.length; i++) {
       numbered.writeln('${i + 1}. ${sources[i]}');
+    }
+    final context = StringBuffer();
+    for (final line in contextLines) {
+      context.writeln(line);
     }
 
     // 字形硬约束（简繁/方言目标才有内容）：放在最前面，模型对靠前的指令更敏感。
@@ -1715,11 +1869,12 @@ class UiTranslateService extends GetxService {
     final glossaryRule = _glossaryPromptHints(sources, currentLanguage.code);
     final system =
         '${scriptRule.isEmpty ? '' : '$scriptRule\n\n'}'
-        '你是应用界面本地化翻译引擎。用户会给出一个带编号的界面文案列表'
+        '${subtitleMode ? '你是影视字幕翻译引擎。用户会给出一个带编号的字幕列表' : '你是应用界面本地化翻译引擎。用户会给出一个带编号的界面文案列表'}'
         '（每条可能为中文或外文），请把每一条翻译成『$lang』。'
         '严格要求：'
         '1) 只输出一个 JSON 数组，元素个数与输入条数相同、顺序一一对应，'
         '每个元素是该条的译文纯文本；'
+        '${subtitleMode ? '输入行首编号只用于对齐，绝不可写入任何 JSON 字符串；' : ''}'
         '2) 不要输出任何解释、说明或 Markdown 代码块围栏；'
         '3) 保留原文中的数字、占位符、标点、换行与专有名词，'
         '界面词尽量简短、术语一致；'
@@ -1746,10 +1901,16 @@ class UiTranslateService extends GetxService {
         '也不要只给其中一个加助词。'
         '若原文是「名词+名词」复合结构，译文全部用名词复合；'
         '若原文是「动词+宾语」动宾结构，译文全部用动宾结构。'
-        '${labelRule.isEmpty ? '' : '\n8) $labelRule'}'
+        '${subtitleMode && currentLanguage.code == 'vi' ? '\n8) 字幕必须使用自然、完整的越南语；中文角色姓名按语境转成通用汉越读法，前后称谓和代词必须跟随前文，不得输出英文译文（原文固有外文专名除外）。' : ''}'
+        '${context.isEmpty ? '' : '\n9) CONTEXT_ONLY_JSON 只用于保持人物称谓、语气和代词一致。不得翻译、复述、合并或输出其中任何元素；每个输出元素只能是 TRANSLATE_ONLY_JSON 中同位置字幕的译文。\nCONTEXT_ONLY_JSON=${jsonEncode(contextLines)}'}'
+        '${labelRule.isEmpty ? '' : '\n10) $labelRule'}'
         // 术语表注入：本批原文里出现的游戏专有名词 → 官方译名（第二条链路）。
         '${glossaryRule.isEmpty ? '' : '\n\n$glossaryRule'}';
-    final user = '待翻译列表：\n$numbered';
+    final user = subtitleMode
+        ? 'TRANSLATE_ONLY_JSON=${jsonEncode(sources)}'
+        : context.isEmpty
+        ? '待翻译列表：\n$numbered'
+        : '前文（只作上下文，不要翻译或输出）：\n$context\n待翻译列表：\n$numbered';
 
     // 思考模式：开=启用推理(更准但慢)；关=显式关闭推理以求更快。
     final thinking = Pref.uiTranslateThinking;
@@ -1766,11 +1927,17 @@ class UiTranslateService extends GetxService {
       apiUrl: translateApiUrl,
       apiKey: translateApiKey,
       extraBody: extraBody,
+      receiveTimeout: receiveTimeout,
+      subtitleProxy: subtitleProxy,
     )) {
       buf.write(chunk);
     }
     return _normalizeScripts(
-      _parseArray(buf.toString(), sources.length),
+      _parseArray(
+        buf.toString(),
+        sources.length,
+        strictLength: subtitleMode,
+      ),
       currentLanguage.script,
     );
   }
@@ -1827,7 +1994,14 @@ class UiTranslateService extends GetxService {
   }
 
   /// 从模型输出里稳健地解析出 JSON 数组；解析失败退化为按行切分。
-  static List<String> _parseArray(String raw, int expected) {
+  ///
+  /// [strictLength]（字幕模式）下没有兜底：条数对不上或解析失败直接抛错，
+  /// 让调用方按分块失败处理——宽松兜底会把上下文行错位成"译文"。
+  static List<String> _parseArray(
+    String raw,
+    int expected, {
+    bool strictLength = false,
+  }) {
     var s = raw.trim();
 
     // 去掉可能的 ```json ... ``` 围栏。
@@ -1842,12 +2016,32 @@ class UiTranslateService extends GetxService {
       try {
         final list = jsonDecode(slice);
         if (list is List) {
+          if (strictLength) {
+            if (list.length != expected ||
+                list.any((value) => value is! String)) {
+              throw const FormatException(
+                'Subtitle output included context or changed line count',
+              );
+            }
+            return list.cast<String>();
+          }
           return List.generate(
             expected,
             (i) => i < list.length ? list[i].toString() : '',
           );
         }
-      } catch (_) {}
+      } on FormatException {
+        if (strictLength) rethrow;
+      } catch (_) {
+        if (strictLength) {
+          throw const FormatException('Subtitle output is not valid JSON');
+        }
+      }
+    }
+    if (strictLength) {
+      throw const FormatException(
+        'Subtitle output must be one exact JSON string array',
+      );
     }
     // 兜底：按行切分（模型偶尔输出裸行）。
     final lines = raw

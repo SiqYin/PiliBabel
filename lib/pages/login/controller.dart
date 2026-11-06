@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+
 import 'dart:async';
 import 'dart:io';
 
@@ -51,6 +52,7 @@ class LoginPageController extends GetxController
   Timer? smsSendCooldownTimer;
 
   bool _isReq = false;
+  int _qrRequestId = 0;
   bool _isImportingWebLogin = false;
 
   static const Set<String> _requiredWebLoginCookies = {
@@ -68,6 +70,7 @@ class LoginPageController extends GetxController
 
   @override
   void onClose() {
+    _qrRequestId++;
     tabController
       ..removeListener(_handleTabChange)
       ..dispose();
@@ -82,10 +85,24 @@ class LoginPageController extends GetxController
   }
 
   Future<void> refreshQRCode() async {
-    final res = await LoginHttp.getHDcode();
+    final requestId = ++_qrRequestId;
+    qrCodeTimer?.cancel();
+    _isReq = false;
+    qrCodeLeftTime.value = 180;
+    statusQRCode.value = '';
+    codeInfo.value = LoadingState.loading();
+
+    late final LoadingState<({String authCode, String url})> res;
+    try {
+      res = await LoginHttp.getHDcode();
+    } catch (e) {
+      res = Error(e.toString());
+    }
+    // A slower earlier refresh must not overwrite the latest QR code.
+    if (requestId != _qrRequestId) return;
+
+    codeInfo.value = res;
     if (res case Success(:final response)) {
-      qrCodeTimer?.cancel();
-      codeInfo.value = res;
       qrCodeTimer = Timer.periodic(const Duration(milliseconds: 1000), (t) {
         final left = 180 - t.tick;
         if (left <= 0) {
@@ -98,23 +115,31 @@ class LoginPageController extends GetxController
         if (_isReq || tabController.index != 2) return;
 
         _isReq = true;
-        LoginHttp.codePoll(response.authCode).then((value) async {
-          _isReq = false;
-          if (value['status']) {
-            t.cancel();
-            statusQRCode.value = uiTx('扫码成功');
-            await setAccount(
-              value['data'],
-              value['data']['cookie_info']['cookies'],
-            );
-            Get.back();
-          } else if (value['code'] == 86038) {
-            t.cancel();
-            qrCodeLeftTime.value = 0;
-          } else {
-            statusQRCode.value = value['msg'];
-          }
-        });
+        LoginHttp.codePoll(response.authCode)
+            .then((value) async {
+              _isReq = false;
+              if (requestId != _qrRequestId) return;
+              if (value['status']) {
+                t.cancel();
+                statusQRCode.value = uiTx('扫码成功');
+                await setAccount(
+                  value['data'],
+                  value['data']['cookie_info']['cookies'],
+                );
+                Get.back();
+              } else if (value['code'] == 86038) {
+                t.cancel();
+                qrCodeLeftTime.value = 0;
+              } else {
+                statusQRCode.value = value['msg'];
+              }
+            })
+            .catchError((Object e) {
+              _isReq = false;
+              if (requestId == _qrRequestId) {
+                statusQRCode.value = uiTx('无法检查二维码状态，将自动重试');
+              }
+            });
       });
     }
   }
@@ -397,7 +422,8 @@ class LoginPageController extends GetxController
               horizontal: 16,
               vertical: 12,
             ),
-            title: Text(uiTx("本次登录需要验证您的手机号"),
+            title: Text(
+              uiTx("本次登录需要验证您的手机号"),
               textAlign: TextAlign.center,
             ),
             content: Column(
@@ -480,7 +506,8 @@ class LoginPageController extends GetxController
               ),
               TextButton(
                 onPressed: Get.back,
-                child: Text(uiTx("取消"),
+                child: Text(
+                  uiTx("取消"),
                   style: TextStyle(color: ThemeUtils.theme.colorScheme.outline),
                 ),
               ),
@@ -798,7 +825,8 @@ class LoginPageController extends GetxController
               TextSpan(
                 children: [
                   TextSpan(text: uiTx('账号切换')),
-                  TextSpan(text: uiTx('\nmid为0时使用匿名'),
+                  TextSpan(
+                    text: uiTx('\nmid为0时使用匿名'),
                     style: TextStyle(fontSize: 14, color: colorScheme.outline),
                   ),
                 ],
@@ -875,7 +903,10 @@ class LoginPageController extends GetxController
         actions: [
           TextButton(
             onPressed: Get.back,
-            child: Text(uiTx('取消'), style: TextStyle(color: colorScheme.outline)),
+            child: Text(
+              uiTx('取消'),
+              style: TextStyle(color: colorScheme.outline),
+            ),
           ),
           TextButton(
             onPressed: () {

@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+
 import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
@@ -37,6 +38,7 @@ import 'package:PiliPlus/pages/video/introduction/pgc/controller.dart';
 import 'package:PiliPlus/pages/video/post_panel/popup_menu_text.dart';
 import 'package:PiliPlus/pages/video/post_panel/view.dart';
 import 'package:PiliPlus/pages/video/widgets/header_control.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_playback_track.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/bottom_control_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_status.dart';
@@ -547,7 +549,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                       padding: const EdgeInsets.only(left: 30),
                       value: type,
                       onTap: () => plPlayerController.setShader(type),
-                      child: Text(uiTx(type.label),
+                      child: Text(
+                        uiTx(type.label),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 13,
@@ -559,7 +562,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             },
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(uiTx(type.label),
+              child: Text(
+                uiTx(type.label),
                 style: const TextStyle(color: Colors.white, fontSize: 13),
               ),
             ),
@@ -787,7 +791,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 PopupMenuItem<String>(
                   height: 35,
                   value: '',
-                  child: Text(uiTx("关闭翻译"),
+                  child: Text(
+                    uiTx("关闭翻译"),
                     style: const TextStyle(color: Colors.white, fontSize: 13),
                   ),
                 ),
@@ -820,12 +825,18 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       /// 字幕
       BottomControlType.subtitle => Obx(
         () {
-          if (videoDetailController.subtitles.isNotEmpty) {
-            final val = videoDetailController.vttSubtitlesIndex.value;
-            return StaticPopupMenuButton<int>(
-              tooltip: uiTx('字幕'),
+          if (videoDetailController.subtitlePlaybackTracks.isNotEmpty) {
+            final selectedId =
+                videoDetailController.selectedSubtitleTrackId.value;
+            final translationRunning =
+                videoDetailController.subtitleTranslationRunning.value;
+            final translationProgress =
+                videoDetailController.subtitleTranslationProgress.value;
+            return StaticPopupMenuButton<String>(
+              tooltip: translationRunning
+                  ? videoDetailController.subtitleTranslationStatus.value
+                  : uiTx('字幕'),
               requestFocus: false,
-              initialValue: val,
               color: Colors.black.withValues(alpha: 0.8),
               menuPadding: EdgeInsets.zero,
               menuItemOuterPadding: EdgeInsets.zero,
@@ -833,41 +844,125 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               itemBuilder: (context) {
                 // 只有一条字幕时退回旧版单列菜单
                 // 两条以上才用主/副双栏面板
-                if (videoDetailController.subtitles.length < 2) {
+                if (videoDetailController.subtitlePlaybackTracks.length < 2) {
                   return [
-                    PopupMenuItem<int>(
-                      value: 0,
+                    if (videoDetailController.showRetryCurrentSubtitle)
+                      PopupMenuItem<String>(
+                        enabled: videoDetailController.canRetryCurrentSubtitle,
+                        height: 35,
+                        onTap: videoDetailController.retryCurrentSubtitle,
+                        child: Text(
+                          uiTx('重试'),
+                          style: TextStyle(
+                            color: videoDetailController.canRetryCurrentSubtitle
+                                ? Colors.white
+                                : Colors.white38,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    if (videoDetailController.showRetranslateCurrentSubtitle)
+                      PopupMenuItem<String>(
+                        enabled:
+                            videoDetailController.canRetranslateCurrentSubtitle,
+                        height: 35,
+                        onTap: videoDetailController.retranslateCurrentSubtitle,
+                        child: Text(
+                          uiTx('重新翻译字幕'),
+                          style: TextStyle(
+                            color:
+                                videoDetailController
+                                    .canRetranslateCurrentSubtitle
+                                ? Colors.white
+                                : Colors.white38,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    if (videoDetailController.canDeleteTranslatedSubtitle)
+                      PopupMenuItem<String>(
+                        height: 35,
+                        onTap: videoDetailController
+                            .deleteCurrentTranslatedSubtitle,
+                        child: Text(
+                          uiTx('删除译文轨'),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    const PopupMenuDivider(height: 1),
+                    PopupMenuItem<String>(
+                      value: SubtitlePlaybackTrack.offId,
                       height: 35,
-                      onTap: () => videoDetailController.setSubtitle(0),
-                      child: Text(uiTx("关闭字幕"),
+                      onTap: () => videoDetailController.setSubtitleById(
+                        SubtitlePlaybackTrack.offId,
+                        manual: true,
+                      ),
+                      child: Text(
+                        uiTx('关闭字幕'),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 13,
                         ),
                       ),
                     ),
-                    ...videoDetailController.subtitles.mapIndexed((i, e) {
-                      return PopupMenuItem<int>(
-                        value: i + 1,
+                    ...videoDetailController.subtitlePlaybackTracks.map((e) {
+                      return PopupMenuItem<String>(
+                        value: e.id,
                         height: 35,
-                        onTap: () => videoDetailController.setSubtitle(i + 1),
+                        onTap: () => videoDetailController.setSubtitleById(
+                          e.id,
+                          manual: true,
+                        ),
                         child: Text(
-                          e.lanDoc ?? e.lan,
+                          e.label,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const .new(color: Colors.white, fontSize: 13),
                         ),
                       );
                     }),
+                    PopupMenuItem<String>(
+                      enabled: false,
+                      height: 38,
+                      child: Obx(
+                        () => Text(
+                          videoDetailController.subtitleTranslationStatus.value,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ),
                   ];
                 }
                 return [
                   // 主/副字幕双栏选择面板,点击不关闭菜单,可连续设置
-                  PopupMenuItem<int>(
+                  PopupMenuItem<String>(
                     enabled: false,
                     padding: EdgeInsets.zero,
                     child: _SubtitleSelectPanel(
                       controller: videoDetailController,
+                    ),
+                  ),
+                  PopupMenuItem<String>(
+                    enabled: false,
+                    height: 38,
+                    child: Obx(
+                      () => Text(
+                        videoDetailController.subtitleTranslationStatus.value,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                        ),
+                      ),
                     ),
                   ),
                 ];
@@ -875,17 +970,38 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               child: SizedBox(
                 width: widgetWidth,
                 height: 30,
-                child: val == 0
-                    ? const Icon(
-                        Icons.closed_caption_off_outlined,
-                        size: 22,
-                        color: Colors.white,
-                      )
-                    : const Icon(
-                        Icons.closed_caption_off_rounded,
-                        size: 22,
-                        color: Colors.white,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    selectedId == SubtitlePlaybackTrack.offId
+                        ? const Icon(
+                            Icons.closed_caption_off_outlined,
+                            size: 22,
+                            color: Colors.white,
+                          )
+                        : const Icon(
+                            Icons.closed_caption_off_rounded,
+                            size: 22,
+                            color: Colors.white,
+                          ),
+                    if (translationRunning)
+                      Positioned(
+                        left: 4,
+                        right: 4,
+                        bottom: 1,
+                        child: LinearProgressIndicator(
+                          value: translationProgress > 0
+                              ? translationProgress.clamp(0.0, 1.0).toDouble()
+                              : null,
+                          minHeight: 2,
+                          backgroundColor: Colors.white24,
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                            Colors.lightBlueAccent,
+                          ),
+                        ),
                       ),
+                  ],
+                ),
               ),
             );
           }
@@ -1212,7 +1328,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                 borderRadius: const .all(.circular(6)),
                 color: colorScheme.secondaryContainer,
               ),
-              child: Text(uiTx('松开手指，取消进退'),
+              child: Text(
+                uiTx('松开手指，取消进退'),
                 style: TextStyle(color: colorScheme.onSecondaryContainer),
               ),
             ),
@@ -1551,8 +1668,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           size: 20,
           color: Colors.white,
         ),
-        onLongPress: (Platform.isAndroid || kDebugMode) &&
-                !plPlayerController.isLive
+        onLongPress:
+            (Platform.isAndroid || kDebugMode) && !plPlayerController.isLive
             ? screenshotWebp
             : null,
         onTap: plPlayerController.takeScreenshot,
@@ -1577,7 +1694,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     final isLive = plPlayerController.isLive;
     // 锁定按钮显示在右侧：与截图按钮同组垂直居中
     final lockBtnOnRight =
-        plPlayerController.showFsLockBtnRight && plPlayerController.showFsLockBtn;
+        plPlayerController.showFsLockBtnRight &&
+        plPlayerController.showFsLockBtn;
 
     final child = Stack(
       fit: StackFit.passthrough,
@@ -1633,8 +1751,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                     // 内容只在提示可见时计算并缓存；淡出期间直接复用成品，
                     // 避免恢复速度时文案里的数字被实时刷新
                     if (!hint.isNone) {
-                      final speedText =
-                          uiTxP('{0}x播放', [plPlayerController.playbackSpeed]);
+                      final speedText = uiTxP('{0}x播放', [
+                        plPlayerController.playbackSpeed,
+                      ]);
                       _speedLockToastContent = switch (hint) {
                         SpeedLockHint.swipeUpToLock => (
                           const SpeedLockArrows(),
@@ -1719,9 +1838,11 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               ignoring: true,
               child: Obx(
                 () {
-                  final desktopPreview = PlatformUtils.isDesktop &&
+                  final desktopPreview =
+                      PlatformUtils.isDesktop &&
                       plPlayerController.showDesktopProgressFeedback.value;
-                  final opacity = desktopPreview ||
+                  final opacity =
+                      desktopPreview ||
                           (!PlatformUtils.isDesktop &&
                               plPlayerController.isSeeking.value)
                       ? 1.0
@@ -2223,56 +2344,56 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                         ),
                       ),
                     ] else if (ctr.videoStalled.value) ...[
-                    // 「音频在走、视频不出画」：不再只是转圈 —— 明确告诉用户画面还
-                    // 没出来，点一下即按同线路、同画质、当前位置重载（refreshPlayer）。
-                    const Icon(
-                      Icons.image_outlined,
-                      color: Colors.white,
-                      size: 26,
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      uiTx('画面加载中，点击重试'),
-                      style: const TextStyle(
+                      // 「音频在走、视频不出画」：不再只是转圈 —— 明确告诉用户画面还
+                      // 没出来，点一下即按同线路、同画质、当前位置重载（refreshPlayer）。
+                      const Icon(
+                        Icons.image_outlined,
                         color: Colors.white,
-                        fontSize: 13,
+                        size: 26,
                       ),
-                    ),
-                    ] else ...[
-                    Image.asset(
-                      Assets.buffering,
-                      height: 25,
-                      cacheHeight: 25.cacheSize(context),
-                      semanticLabel: uiTx("加载中"),
-                      color: Colors.white,
-                    ),
-                    if (percent != null) ...[
                       const SizedBox(height: 10),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(2),
-                        child: SizedBox(
-                          height: 3,
-                          width: 64,
-                          child: LinearProgressIndicator(
-                            value: percent / 100,
-                            backgroundColor: Colors.white24,
-                            valueColor: const AlwaysStoppedAnimation(
-                              Colors.white,
+                      Text(
+                        uiTx('画面加载中，点击重试'),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ] else ...[
+                      Image.asset(
+                        Assets.buffering,
+                        height: 25,
+                        cacheHeight: 25.cacheSize(context),
+                        semanticLabel: uiTx("加载中"),
+                        color: Colors.white,
+                      ),
+                      if (percent != null) ...[
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(2),
+                          child: SizedBox(
+                            height: 3,
+                            width: 64,
+                            child: LinearProgressIndicator(
+                              value: percent / 100,
+                              backgroundColor: Colors.white24,
+                              valueColor: const AlwaysStoppedAnimation(
+                                Colors.white,
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '$percent%',
-                        // tabularFigures 让数字等宽，百分比跳动时不会左右抖
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontFeatures: [FontFeature.tabularFigures()],
+                        const SizedBox(height: 6),
+                        Text(
+                          '$percent%',
+                          // tabularFigures 让数字等宽，百分比跳动时不会左右抖
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
                     ],
                   ],
                 ),
@@ -2406,8 +2527,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
               minScale: plPlayerController.enableShrinkVideoSize ? 0.75 : 1,
               maxScale: 2.0,
               boundaryMargin: plPlayerController.enableShrinkVideoSize
-                            ? const .all(double.infinity)
-                            : .zero,
+                  ? const .all(double.infinity)
+                  : .zero,
               panAxis: .aligned,
               transformationController: _transformationController,
               childKey: _videoKey,
@@ -2506,11 +2627,15 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
                     return false;
                   },
                   itemBuilder: (context) => WebpPreset.values
-                      .map((i) => PopupMenuItem(value: i, child: Text(uiTx(i.name))))
+                      .map(
+                        (i) =>
+                            PopupMenuItem(value: i, child: Text(uiTx(i.name))),
+                      )
                       .toList(),
                   getSelectTitle: (i) => '${i.name}(${i.desc})',
                 ),
-                Text(uiTx('*转码使用CPU，速度可能慢于播放，请不要选择过长的时间段或过高画质'),
+                Text(
+                  uiTx('*转码使用CPU，速度可能慢于播放，请不要选择过长的时间段或过高画质'),
                   style: theme.textTheme.bodySmall,
                 ),
               ],
@@ -2518,7 +2643,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             actions: [
               TextButton(
                 onPressed: Get.back,
-                child: Text(uiTx('取消'),
+                child: Text(
+                  uiTx('取消'),
                   style: TextStyle(
                     color: theme.colorScheme.outline,
                   ),
@@ -2557,7 +2683,8 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
     SmartDialog.showLoading(
       backType: SmartBackType.normal,
-      builder: (_) => LoadingWidget(progress: progress, msg: uiTx('正在保存，可能需要较长时间')),
+      builder: (_) =>
+          LoadingWidget(progress: progress, msg: uiTx('正在保存，可能需要较长时间')),
       onDismiss: () async {
         if (progress.value < 1.0) {
           mpv.dispose();
@@ -2834,9 +2961,10 @@ class _SubtitleSelectPanel extends StatelessWidget {
 
   Widget _column({
     required String title,
-    required int selectedIndex,
-    required int disabledIndex,
-    required ValueChanged<int> onSelect,
+    required String selectedId,
+    required String disabledId,
+    required ValueChanged<String> onSelect,
+    bool showActions = false,
   }) {
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -2846,18 +2974,44 @@ class _SubtitleSelectPanel extends StatelessWidget {
           height: 32,
           child: Center(child: Text(title, style: _headerStyle)),
         ),
+        if (showActions && controller.showRetryCurrentSubtitle)
+          _item(
+            label: uiTx('重试'),
+            selected: false,
+            disabled: !controller.canRetryCurrentSubtitle,
+            onTap: controller.retryCurrentSubtitle,
+          ),
+        if (showActions && controller.showRetranslateCurrentSubtitle)
+          _item(
+            label: uiTx('重新翻译字幕'),
+            selected: false,
+            disabled: !controller.canRetranslateCurrentSubtitle,
+            onTap: controller.retranslateCurrentSubtitle,
+          ),
+        if (showActions && controller.canDeleteTranslatedSubtitle)
+          _item(
+            label: uiTx('删除译文轨'),
+            selected: false,
+            disabled: false,
+            onTap: controller.deleteCurrentTranslatedSubtitle,
+          ),
+        if (showActions &&
+            (controller.showRetryCurrentSubtitle ||
+                controller.showRetranslateCurrentSubtitle ||
+                controller.canDeleteTranslatedSubtitle))
+          const Divider(height: 1, color: Colors.white24),
         _item(
           label: uiTx('关闭'),
-          selected: selectedIndex == 0,
+          selected: selectedId == SubtitlePlaybackTrack.offId,
           disabled: false,
-          onTap: () => onSelect(0),
+          onTap: () => onSelect(SubtitlePlaybackTrack.offId),
         ),
-        ...controller.subtitles.mapIndexed(
-          (i, e) => _item(
-            label: e.lanDoc ?? e.lan,
-            selected: selectedIndex == i + 1,
-            disabled: disabledIndex == i + 1,
-            onTap: () => onSelect(i + 1),
+        ...controller.subtitlePlaybackTracks.map(
+          (track) => _item(
+            label: track.label,
+            selected: selectedId == track.id,
+            disabled: disabledId == track.id,
+            onTap: () => onSelect(track.id),
           ),
         ),
       ],
@@ -2868,8 +3022,8 @@ class _SubtitleSelectPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(
       () {
-        final primary = controller.vttSubtitlesIndex.value;
-        final secondary = controller.vttSecondarySubtitlesIndex.value;
+        final primary = controller.selectedSubtitleTrackId.value;
+        final secondary = controller.selectedSecondarySubtitleTrackId.value;
         return SizedBox(
           width: 300,
           child: IntrinsicHeight(
@@ -2879,9 +3033,13 @@ class _SubtitleSelectPanel extends StatelessWidget {
                 Expanded(
                   child: _column(
                     title: uiTx('主字幕'),
-                    selectedIndex: primary,
-                    disabledIndex: secondary,
-                    onSelect: controller.setSubtitle,
+                    selectedId: primary,
+                    disabledId: secondary,
+                    onSelect: (trackId) => controller.setSubtitleById(
+                      trackId,
+                      manual: true,
+                    ),
+                    showActions: true,
                   ),
                 ),
                 const VerticalDivider(
@@ -2892,9 +3050,9 @@ class _SubtitleSelectPanel extends StatelessWidget {
                 Expanded(
                   child: _column(
                     title: uiTx('副字幕'),
-                    selectedIndex: secondary,
-                    disabledIndex: primary,
-                    onSelect: controller.setSecondarySubtitle,
+                    selectedId: secondary,
+                    disabledId: primary,
+                    onSelect: controller.setSecondarySubtitleById,
                   ),
                 ),
               ],
