@@ -105,6 +105,12 @@ const Map<String, String> vietnameseUiTranslations = <String, String>{
   '字幕翻译启动失败，正在保留原字幕': 'Không thể khởi động dịch phụ đề; đang giữ phụ đề gốc',
   '字幕译文已缓存，播放器暂时显示原字幕':
       'Bản dịch phụ đề đã được lưu; trình phát tạm hiển thị phụ đề gốc',
+  // 字幕轨道名（固定 UI 标签，必须离线秒回——旧版硬编码的越南语标签）。
+  // 与 SubtitlePlaybackTrack.bilibili 的标签模板一一对应。
+  '中文（AI 识别）': 'Tiếng Trung (AI gốc)',
+  '中文（原文）': 'Tiếng Trung (gốc)',
+  '{0}（Bilibili AI）': '{0} (Bilibili AI)',
+  '{0}（Bilibili 官方）': '{0} (Bilibili)',
   '弹幕': 'Bình luận bay',
   '发送弹幕': 'Gửi bình luận bay',
   '评论': 'Bình luận',

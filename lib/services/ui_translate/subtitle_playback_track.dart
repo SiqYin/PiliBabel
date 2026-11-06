@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
+import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:crypto/crypto.dart';
 
@@ -88,6 +89,17 @@ class SubtitlePlaybackTrack {
     cacheIdentity: cacheIdentity ?? this.cacheIdentity,
   );
 
+  /// 固定 UI 标签的同步本地化：先查离线词典（人工钉扎/越南语，不依赖服务
+  /// 注册、零请求秒回），未命中再走常规 `uiTx` 管道（跟随界面语言，未译
+  /// 模板入队异步补译）。占位符 `{0}` 与模板一起查、查到后回填。
+  static String _label(String template, String langCode, [String? arg]) {
+    String fill(String value) =>
+        arg == null ? value : value.replaceAll('{0}', arg);
+    final offline = UiTranslateService.txOffline(template, langCode);
+    if (offline != null) return fill(offline);
+    return fill(uiTx(template));
+  }
+
   static SubtitlePlaybackTrack bilibili({
     required Subtitle subtitle,
     required int sourceIndex,
@@ -99,12 +111,19 @@ class SubtitlePlaybackTrack {
     final isTarget = subtitle.isNativeTarget(targetLanguage);
     // 标签跟随界面语言：中文源轨永远明确标注，目标语言轨标注来源，
     // 其余轨沿用 B 站自带的 lanDoc（如「英语」）。
-    final targetName = UiTranslateService.to.currentLanguage.name;
+    // 语言自称（Tiếng Việt / English / 日本語）从 targetLanguage 推导，
+    // 不依赖 UiTranslateService 注册：轨道名描述的是**轨道自身的语言**，
+    // 且各调用点传入的 targetLanguage 就是 Pref.uiTranslateLang（界面语言）。
+    final targetName = appLanguageByCode(targetLanguage).name;
     final label = switch ((subtitle.langTag, isTarget, subtitle.isAi)) {
-      ('zh', _, true) => uiTx('中文（AI 识别）'),
-      ('zh', _, false) => uiTx('中文（原文）'),
-      (_, true, true) => uiTxP('{0}（Bilibili AI）', [targetName]),
-      (_, true, false) => uiTxP('{0}（Bilibili 官方）', [targetName]),
+      ('zh', _, true) => _label('中文（AI 识别）', targetLanguage),
+      ('zh', _, false) => _label('中文（原文）', targetLanguage),
+      (_, true, true) => _label('{0}（Bilibili AI）', targetLanguage, targetName),
+      (_, true, false) => _label(
+        '{0}（Bilibili 官方）',
+        targetLanguage,
+        targetName,
+      ),
       _ => subtitle.lanDoc ?? subtitle.lan,
     };
     final sourceIdentity = sha256

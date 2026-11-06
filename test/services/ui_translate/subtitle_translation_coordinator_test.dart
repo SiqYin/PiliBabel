@@ -203,4 +203,47 @@ void main() {
     subscription.retryNow();
     await subscription.whenComplete.timeout(const Duration(seconds: 2));
   });
+
+  test('gives up after three no-progress rounds instead of hanging', () async {
+    final directory = await Directory.systemTemp.createTemp(
+      'pili_coordinator_idle_',
+    );
+    addTearDown(() => directory.delete(recursive: true));
+    var calls = 0;
+    final failed = Completer<void>();
+    SubtitleTranslationProgress? lastProgress;
+    final subscription = SubtitleTranslationCoordinator.attach(
+      key: 'idle-give-up',
+      allowNewTranslation: true,
+      retryDelay: (_, _) => Duration.zero,
+      createJob: (onUpdate, _) => SubtitleTranslationJob(
+        cues: _cues(20),
+        chunkSize: 20,
+        concurrency: 1,
+        cacheKey: 'idle-give-up',
+        cacheDirectory: directory.path,
+        translate: (lines) {
+          calls++;
+          throw StateError('provider unavailable');
+        },
+        onUpdate: onUpdate,
+      ),
+      onUpdate: (_, progress) {
+        lastProgress = progress;
+        if (progress.failedChunks > 0 && !failed.isCompleted) {
+          failed.complete();
+        }
+      },
+    );
+
+    await failed.future;
+    await subscription.whenComplete.timeout(const Duration(seconds: 2));
+
+    // StateError 属于本地不可重试错误：每轮 job.run 只请求一次，
+    // 协调器连续 3 轮无进展后必须收尾。
+    expect(calls, 3);
+    expect(lastProgress!.isComplete, isFalse);
+    expect(lastProgress!.failedChunks, 1);
+    expect(subscription.lastError, isA<StateError>());
+  });
 }

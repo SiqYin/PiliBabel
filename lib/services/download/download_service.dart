@@ -22,7 +22,9 @@ import 'package:PiliPlus/models_new/video/video_detail/page.dart';
 import 'package:PiliPlus/models_new/video/video_play_info/subtitle.dart';
 import 'package:PiliPlus/services/download/download_manager.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_text_quality.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_artifact.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_translation_job.dart';
 import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:PiliPlus/utils/danmaku_utils.dart';
 import 'package:PiliPlus/utils/extension/file_ext.dart';
@@ -560,9 +562,10 @@ class DownloadService extends GetxService {
 
       final vttResults = await Future.wait(
         availableSubtitles.map((sub) async {
-          if (sub.subtitleUrl?.isNotEmpty != true) return null;
           try {
-            return await VideoHttp.getSubtitles(sub.subtitleUrl!);
+            // 主地址与 subtitle_url_v2 都要试：B 站存在只下发 v2 的轨，
+            // 旧代码只读 subtitleUrl，缓存后的视频会少一条甚至全部字幕。
+            return await VideoHttp.getSubtitlesFor(sub);
           } catch (_) {
             return null;
           }
@@ -596,28 +599,37 @@ class DownloadService extends GetxService {
       // 旧译文轨仍会被当成「现成译文」直接挂载，显示的全是另一种字形。
       // 旧格式只有主标签，读取侧会保守地不把它挂给带字形的中文目标。
       final translatedLan = '$targetLang-app-ai';
-      final translatedArtifact =
-          await SubtitleTranslationArtifactRegistry.shared.findForPart(
+      final translatedArtifact = await SubtitleTranslationArtifactRegistry
+          .shared
+          .findForPart(
             videoKey: entry.bvid,
             cid: cid,
             targetLanguage: targetLang,
           );
-      if (translatedArtifact != null) {
+      if (translatedArtifact != null &&
+          translatedArtifact.verifierVersion ==
+              SubtitleTextQuality.verifierVersion) {
         final translatedFile = File(translatedArtifact.vttFilePath);
         if (await translatedFile.exists()) {
-          await translatedFile.copy(
-            path.join(
-              subsDir.path,
-              PathUtils.subtitleVttName(translatedLan),
-            ),
-          );
-          successfulSubs.add(
-            Subtitle(
-              lan: translatedLan,
-              lanDoc: '${UiTranslateService.to.currentLanguage.name} (AI)',
-              isAi: false,
-            ),
-          );
+          // 索引里可能还留着旧校验版本/损坏产物；启动态会失败并等待重译，
+          // 缓存导出同样不能把这类文件复制进离线视频。
+          final translatedVtt = await translatedFile.readAsString();
+          final translatedCues = SubtitleCues.fromVtt(translatedVtt);
+          final translatedIntact =
+              translatedCues.length == translatedArtifact.cueCount &&
+              SubtitleCues.hasSafePlaybackTimeline(translatedCues);
+          if (translatedIntact) {
+            await File(
+              path.join(subsDir.path, PathUtils.subtitleVttName(translatedLan)),
+            ).writeAsString(translatedVtt);
+            successfulSubs.add(
+              Subtitle(
+                lan: translatedLan,
+                lanDoc: '${UiTranslateService.to.currentLanguage.name} (AI)',
+                isAi: false,
+              ),
+            );
+          }
         }
       }
       if (successfulSubs.isEmpty) return;

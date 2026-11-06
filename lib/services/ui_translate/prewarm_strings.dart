@@ -158,6 +158,12 @@ abstract final class PrewarmStrings {
     '{0}（校验中）',
     '{0}（翻译中 {1}%）',
     '{0}（重试中 {1}%）',
+    // 播放轨的固定轨道名（subtitle_playback_track.dart 的字面量）。
+    // 越南语界面有离线词典秒回；其他语言靠这里的预热尽早入队。
+    '中文（AI 识别）',
+    '中文（原文）',
+    '{0}（Bilibili AI）',
+    '{0}（Bilibili 官方）',
     '准备中',
     '校验中',
     '翻译字幕',

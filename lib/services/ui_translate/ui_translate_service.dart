@@ -446,6 +446,21 @@ class UiTranslateService extends GetxService {
   /// 术语命中时倾向用官方简称（ゼンゼロ、ブルアカ这一类）。
   static String txTight(String src) => tx(src, width: UiTextWidth.tight);
 
+  /// **离线**固定译名查询：不依赖服务注册、不读设置、不入队，查不到返回 null。
+  ///
+  /// 给「固定 UI 标签」在构建期同步取词用（如字幕轨道名）：这些标签的语义由
+  /// 调用方传入的 [langCode]（目标语言）决定，与界面当前的运行期状态无关。
+  /// 查词顺序与 [_tx] 一致：人工钉扎表 → 越南语离线词典。
+  ///
+  /// 没命中时调用方应回退到 [tx] / [uiTxP] 走常规管道（跟随界面语言、
+  /// 未命中的模板排进翻译队列异步补译）。
+  static String? txOffline(String src, String langCode) {
+    final pinned = _pinnedTranslations[src]?[langCode];
+    if (pinned != null) return pinned;
+    if (langCode == 'vi') return vietnameseUiTranslation(src);
+    return null;
+  }
+
   /// **高优先级**变体：译文插队到普通队列之前。
   ///
   /// 只给「用户一进 App 就盯着看、且必须等译文」的内容用 —— 目前只有更新弹窗。

@@ -161,9 +161,9 @@ void main() {
             SubtitleCue('00:00:02.000', '00:00:03.000', source[2]),
           ],
           'WEBVTT\n\n'
-              '00:00:00.000 --> 00:00:01.000\n${source[0]}\n\n'
-              '00:00:01.000 --> 00:00:02.000\n${source[1]}\n\n'
-              '00:00:02.000 --> 00:00:03.000\n${source[2]}\n\n',
+          '00:00:00.000 --> 00:00:01.000\n${source[0]}\n\n'
+          '00:00:01.000 --> 00:00:02.000\n${source[1]}\n\n'
+          '00:00:02.000 --> 00:00:03.000\n${source[2]}\n\n',
           targetLanguage: 'zh-Hant',
         ),
         isTrue,
@@ -312,6 +312,34 @@ void main() {
       );
       expect(subtitleCacheVideoKeyFor(videoKey: ''), isEmpty);
     });
+
+    test('身份解析出 bvid 后必须升级到播放页的规范键', () {
+      // 竖版番剧卡片启动时只有 epId；pgc 详情解析出 bvid 后，
+      // 播放页/产物/缓存必须统一到 bvid，否则同一集会翻两遍。
+      expect(
+        subtitleResolvedVideoKeyFor(
+          callerVideoKey: 'ep654321',
+          bvid: 'BV1pgc',
+          epId: 654321,
+          seasonId: 9988,
+        ),
+        'BV1pgc',
+      );
+      // 只有 seasonId 的卡片解析到 epId 时，用 ep 键与播放页对齐。
+      expect(
+        subtitleResolvedVideoKeyFor(
+          callerVideoKey: 'ss9988',
+          epId: 654321,
+          seasonId: 9988,
+        ),
+        'ep654321',
+      );
+      // 解析不出任何编号时不丢掉调用方键，供错误提示/调试定位。
+      expect(
+        subtitleResolvedVideoKeyFor(callerVideoKey: 'fallback-key'),
+        'fallback-key',
+      );
+    });
   });
 
   group('3.7.3 轨道模型边界', () {
@@ -359,8 +387,7 @@ void main() {
 
     test('json2Vtt 与后台 fromBody 用同一套重叠清洗规则', () {
       final body = [
-        for (var i = 0; i < 5; i++)
-          {'from': 1.0, 'to': 3.0, 'content': '叠$i'},
+        for (var i = 0; i < 5; i++) {'from': 1.0, 'to': 3.0, 'content': '叠$i'},
         {'from': 10.0, 'to': 11.0, 'content': '正常'},
       ];
       final fromJob = SubtitleCues.fromBody(body);
@@ -466,7 +493,10 @@ void main() {
   group('3.7.3 下载译文轨字形', () {
     test('新格式必须精确匹配目标语言', () {
       expect(cachedTranslationLanMatches('zh-Hant-app-ai', 'zh-Hant'), isTrue);
-      expect(cachedTranslationLanMatches('yue-Hans-app-ai', 'yue-Hans'), isTrue);
+      expect(
+        cachedTranslationLanMatches('yue-Hans-app-ai', 'yue-Hans'),
+        isTrue,
+      );
       expect(cachedTranslationLanMatches('zh-Hant-app-ai', 'zh-CN'), isFalse);
       expect(cachedTranslationLanMatches('zh-CN-app-ai', 'zh-Hant'), isFalse);
       expect(cachedTranslationLanMatches('vi-app-ai', 'vi'), isTrue);
@@ -491,7 +521,8 @@ void main() {
 
   group('3.7.3 乱序时间轴', () {
     test('乱序 VTT 先稳定排序，合法 cue 一条不少', () {
-      const vtt = 'WEBVTT\n\n'
+      const vtt =
+          'WEBVTT\n\n'
           '00:00:10.000 --> 00:00:11.000\n尾句\n\n'
           '00:00:00.000 --> 00:00:01.000\n首句\n\n'
           '00:00:01.000 --> 00:00:02.000\n次句\n\n';
@@ -515,7 +546,8 @@ void main() {
     });
 
     test('同一时刻保持原顺序，最多保留 3 条重叠', () {
-      const vtt = 'WEBVTT\n\n'
+      const vtt =
+          'WEBVTT\n\n'
           '00:00:00.000 --> 00:00:01.000\nA\n\n'
           '00:00:00.000 --> 00:00:01.000\nB\n\n'
           '00:00:00.000 --> 00:00:01.000\nC\n\n'

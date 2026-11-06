@@ -1,9 +1,8 @@
 import 'dart:async' show StreamSubscription, Timer;
-import 'dart:convert' show jsonDecode, utf8;
+import 'dart:convert' show jsonDecode, jsonEncode, utf8;
 import 'dart:io' show Platform, File;
 import 'dart:typed_data' show Uint8List;
 
-import 'package:PiliPlus/common/constants.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/dialog/report.dart';
@@ -11,7 +10,6 @@ import 'package:PiliPlus/common/widgets/dialog/simple_dialog_option.dart';
 import 'package:PiliPlus/common/widgets/marquee.dart';
 import 'package:PiliPlus/http/danmaku.dart';
 import 'package:PiliPlus/http/danmaku_block.dart';
-import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/http/live.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/video.dart';
@@ -42,11 +40,9 @@ import 'package:PiliPlus/services/shutdown_timer_service.dart'
     show shutdownTimerService, ShutdownPanel;
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/accounts.dart';
-import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:PiliPlus/utils/android/bindings.g.dart';
 import 'package:PiliPlus/utils/connectivity_utils.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
-import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
@@ -60,7 +56,6 @@ import 'package:PiliPlus/utils/video_utils.dart';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:canvas_danmaku/canvas_danmaku.dart';
 import 'package:collection/collection.dart';
-import 'package:dio/dio.dart';
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show compute, kDebugMode;
@@ -1201,31 +1196,18 @@ class HeaderControlState extends State<HeaderControl>
   }
 
   Future<Uint8List?> _loadSubtitleJsonBytes(Subtitle item) async {
-    final url = item.subtitleUrl;
-    if (url == null || url.isEmpty) return null;
-    final res = await Request.dio.get<Uint8List>(
-      url.http2https,
-      options: Options(
-        responseType: ResponseType.bytes,
-        headers: Constants.baseHeaders,
-        extra: {'account': const NoAccount()},
-      ),
-    );
-    if (res.statusCode != 200) return null;
+    // 只下发 subtitle_url_v2 的轨也要能导出：走统一的候选地址解析。
+    final body = await VideoHttp.fetchSubtitleBodyFor(item);
+    if (body == null || body.isEmpty) return null;
     return Uint8List.fromList(
-      Request.responseBytesDecoder(
-        res.data!,
-        res.headers.map,
-      ),
+      utf8.encode(jsonEncode({'body': body})),
     );
   }
 
   Future<Uint8List?> _loadSubtitleVttBytes(int index, Subtitle item) async {
     var subtitle = videoDetailCtr.vttSubtitles[index];
     if (subtitle == null) {
-      final url = item.subtitleUrl;
-      if (url == null || url.isEmpty) return null;
-      final res = await VideoHttp.getSubtitles(url);
+      final res = await VideoHttp.getSubtitlesFor(item);
       if (res == null) return null;
       subtitle = (isData: true, id: res);
       videoDetailCtr.vttSubtitles[index] = subtitle;
@@ -1302,10 +1284,8 @@ class HeaderControlState extends State<HeaderControl>
                     case .vtt:
                       bytes = await _loadSubtitleVttBytes(i, item);
                     case .srt:
-                      final url = item.subtitleUrl;
-                      if (url == null || url.isEmpty) return;
-                      final subtitle = await VideoHttp.getSubtitles(
-                        url,
+                      final subtitle = await VideoHttp.getSubtitlesFor(
+                        item,
                         format: .srt,
                       );
                       if (subtitle == null) return;

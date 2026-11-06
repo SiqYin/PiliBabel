@@ -2344,8 +2344,7 @@ class VideoDetailController extends GetxController
       if (cues.isEmpty) return;
       final target = Pref.uiTranslateLang;
       final sourceLan = subtitles[sourceIndex].lan;
-      final cacheKey =
-          '$_subtitleVideoKey/${cid.value}/$sourceLan/$target';
+      final cacheKey = '$_subtitleVideoKey/${cid.value}/$sourceLan/$target';
       await SubtitleTranslationBackgroundService.removeCachedTranslation(
         videoKey: _subtitleVideoKey,
         cid: cid.value,
@@ -2578,13 +2577,17 @@ class VideoDetailController extends GetxController
   }) async {
     if (!_artifactPromotionInFlight.add(sourceIdentity)) return;
     try {
+      final uiStillActive = !isClosed && generation == _subtitleGeneration;
       if (!SubtitleTranslationOutput.isCompleteTranslatedVtt(
         cues,
         vtt,
         targetLanguage: targetLanguage,
       )) {
-        if (!isClosed && generation == _subtitleGeneration) {
+        if (uiStillActive) {
           subtitleTranslationRunning.value = false;
+          // 校验失败后必须给重试入口：只把 running 关掉，
+          // 菜单会既不显示“重试”也不结束进度条。
+          subtitleTranslationRetryAvailable.value = true;
           subtitleTranslationStatus.value = uiTx(
             '译文未完成或仍含中文，将只重试出错分块',
           );
@@ -2640,13 +2643,22 @@ class VideoDetailController extends GetxController
               );
             },
           );
-      if (!registered) return;
+      if (!registered) {
+        if (uiStillActive) {
+          subtitleTranslationRunning.value = false;
+          subtitleTranslationRetryAvailable.value = true;
+          subtitleTranslationStatus.value = uiTx(
+            '译文未通过校验或无法保存，点击重试',
+          );
+        }
+        return;
+      }
       SubtitleTranslationBackgroundService.markComplete(
         videoKey: videoKey,
         cid: partCid,
         language: targetLanguage,
       );
-      if (isClosed || generation != _subtitleGeneration) return;
+      if (!uiStillActive) return;
       final current = subtitlePlaybackTracks.firstWhereOrNull(
         (track) => track.id == 'subtitle:translated:$sourceIdentity',
       );
@@ -2667,6 +2679,17 @@ class VideoDetailController extends GetxController
       subtitleTranslationProgress.value = 1;
       subtitleTranslationRunning.value = false;
       subtitleTranslationStatus.value = uiTx('译文已校验并保存到设备');
+    } catch (error) {
+      // 这个 future 是 unawaited 挂进事件循环的：不 catch 的话，
+      // 磁盘/索引异常会变成未处理异常，UI 却永远停在“正在保存”。
+      if (!isClosed && generation == _subtitleGeneration) {
+        subtitleTranslationRunning.value = false;
+        subtitleTranslationRetryAvailable.value = true;
+        subtitleTranslationStatus.value = uiTxP(
+          '无法开始翻译字幕，点击重试（{0}）',
+          ['${error.runtimeType}'],
+        );
+      }
     } finally {
       _artifactPromotionInFlight.remove(sourceIdentity);
     }
@@ -2766,6 +2789,10 @@ class VideoDetailController extends GetxController
       final prefetchTargets = _capturePlaylistSubtitleTargets(
         _subtitlePrefetchCountForVideo,
       );
+      // 协调器主动放弃（连续 3 轮无进展）时 whenComplete 会完成，但最后一次
+      // onUpdate 仍可能带着 failedChunks、running=true。以前这里只清理监听，
+      // 播放页底部的字幕进度条就永远停在“翻译中”。
+      SubtitleTranslationProgress? latestProgress;
       final subscription = SubtitleTranslationCoordinator.attach(
         key: sourceIdentity,
         allowNewTranslation: canStartTranslation,
@@ -2823,6 +2850,7 @@ class VideoDetailController extends GetxController
         ),
         onUpdate: (vtt, progress) {
           if (isClosed || generation != _subtitleGeneration) return;
+          latestProgress = progress;
           final timelineValid = progress.isComplete
               ? SubtitleCues.hasSameTimeline(cues, vtt)
               : SubtitleCues.hasTimelineSubset(cues, vtt);
@@ -2957,6 +2985,30 @@ class VideoDetailController extends GetxController
             _subtitlePositionWorker = null;
             _subtitleSubscription = null;
           }
+          if (isClosed ||
+              generation != _subtitleGeneration ||
+              !canStartTranslation) {
+            return;
+          }
+          final progress = latestProgress;
+          if (progress != null && progress.isComplete) return;
+          // 会话已经结束但译文没有完成：必须在这里落成“失败/可重试”，
+          // 否则播放页的 LinearProgressIndicator 会永远转下去。
+          subtitleTranslationRunning.value = false;
+          subtitleTranslationRetryAvailable.value = true;
+          subtitleTranslationProgress.value = progress?.ratio ?? 0;
+          final failedChunks = progress?.failedChunks ?? 0;
+          final cause = subscription.lastError;
+          subtitleTranslationStatus.value = progress == null
+              ? uiTx('字幕翻译没有开始，点击重试')
+              : failedChunks > 0
+              ? (cause == null
+                    ? uiTxP('还有 {0} 个分块出错，点击重试', [failedChunks])
+                    : uiTxP('还有 {0} 个分块出错（{1}），点击重试', [
+                        failedChunks,
+                        '${cause.runtimeType}',
+                      ]))
+              : uiTx('字幕翻译没有开始，点击重试');
         }),
       );
     } catch (error, stackTrace) {
@@ -3230,8 +3282,7 @@ class VideoDetailController extends GetxController
               ? const <SubtitleCue>[]
               : SubtitleCues.fromBody(body);
           final usable =
-              parsed.isNotEmpty &&
-              SubtitleCues.hasSafePlaybackTimeline(parsed);
+              parsed.isNotEmpty && SubtitleCues.hasSafePlaybackTimeline(parsed);
           if (!selection.translate) {
             // B 站偶尔会列出一条下载即 404 / 空 body 的目标语言轨。
             // 主链路 SubtitleSourceResolver 会验证后回退中文源；预取以前

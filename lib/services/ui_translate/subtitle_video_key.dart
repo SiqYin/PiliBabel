@@ -73,3 +73,26 @@ String subtitleCacheVideoKeyFor({
         epId: epId,
         seasonId: seasonId,
       );
+
+/// 身份解析完成后的**规范键**。
+///
+/// 与 [subtitleCacheVideoKeyFor] 不同，这里优先使用解析出的真实编号：
+/// 竖版番剧卡片启动时只有 `epId`（键是 `ep<id>`），但 pgc 详情解析出 bvid 后，
+/// 播放页会以 bvid 为键。若继续沿用调用方的 `ep<id>`，同一集会被翻两遍，
+/// 播放页也查不到卡片任务刚写下的产物。只有在所有编号都解析失败时，
+/// 才退回调用方传入的键。
+String subtitleResolvedVideoKeyFor({
+  required String callerVideoKey,
+  String? bvid,
+  int? aid,
+  int? epId,
+  Object? seasonId,
+}) {
+  final resolved = subtitleVideoKeyFor(
+    bvid: bvid,
+    aid: aid,
+    epId: epId,
+    seasonId: seasonId,
+  );
+  return resolved.isNotEmpty ? resolved : callerVideoKey;
+}
