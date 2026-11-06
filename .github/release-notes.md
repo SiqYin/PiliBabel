@@ -1,15 +1,13 @@
-### PiliBabel v3.7.5
+### PiliBabel v3.7.6
 
-**Danmaku translation now actually works — and the queue, the cover button and the archive got their long-overdue fixes.**
+**Both cover buttons now share one clockwise-filling progress ring, and collection jobs can finally finish.**
 
-**Bullet comments arrive translated instead of mostly Chinese.** Danmaku used to be queued for translation one line at a time just 15 seconds ahead of the playhead, while the built-in engine issues one request per line — popular videos could never keep up, and a comment whose translation missed its birth moment displayed the original forever (canvas items render once). Whole segments are now batch pre-translated the moment they load, so comments appear in the target language from the first frame; toggling the switch warms everything already loaded too.
+**The ring is a determinate progress indicator again.** Whenever there was no exact progress to show (preparing, verifying, image recognition), the button fell back to an indeterminate spinner: it spun forever, so you could neither see how far along it was nor tell whether it had ended. Every state now renders a real arc that fills clockwise from nothing; without a server-side progress value it follows a gentle estimate until the true progress (or the finished state) takes over.
 
-**Freshly refreshed titles no longer starve behind pre-warmed labels.** Pre-translation used to dump 200+ strings into the top-priority queue and drain it exclusively, leaving newly pulled titles waiting tens of seconds. Pre-warming now feeds the normal queue, and the two queues take turns, so new titles get service within a round or two.
+**The image button matches the translate button.** The upper button had already been enlarged to a 17-pixel ring, while the lower one below it was still a 13-pixel circle — two different controls sitting side by side. Both now share one progress-ring widget (17 pixels, 2-pixel stroke, visible track) and matching icon sizes.
 
-**The cover button's ring turns into a checkmark the moment it fills.** It used to stop at a complete circle with no completion cue at all. Now a filled ring becomes a small green check and stays; the ring itself is larger with a bigger hollow centre, making progress easier to read while loading.
+**Collection / multi-part batches no longer spin forever.** The batch parent used to write its state onto the very task key of the part you had selected, so that part was treated as "already running" and never started; the batch's running count could never drop to zero, which left the button spinning with no way to complete. The parent now lives on its own state key (`…#batch`), so batches finish properly and the selected part really gets translated.
 
-**Old translated tracks are reused instead of retranslated.** Legacy tracks named by bare language tags (`zh-app-ai`) now recover their full target code from metadata, so a Traditional Chinese translation made months ago is found again when you switch back; wrong-script files are still refused.
-
-**Housekeeping.** The release-notes archive is complete again (34 versions from 3.4.0 to 3.7.2 recovered from history), and 17 slow async file checks were modernised. A deeper speed pass on the subtitle chunk pipeline is evaluated and deferred to the next release.
+**Zombie states cleared.** After a task key is upgraded (`ep<id>` → `BV…`), the leftover "preparing" state on the old key is removed instead of being read back as a never-ending status; the pre-flight stage gained a fallback and a watchdog, so no unexpected exit can leave a button stuck in "preparing" any more. A custom API base URL without `/v1` is also no longer mangled into a literal `$u/v1`, which used to break every request.
 
 Downloads are below.
