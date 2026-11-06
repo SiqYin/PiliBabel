@@ -53,7 +53,7 @@ abstract final class SubtitleTranslationBackgroundService {
   static final Set<String> _activeBatchTaskKeys = {};
 
   /// cardKey → 批量父任务的键。批量在跑时，卡片/播放页看到的是整组进度；
-  /// 批量结束后解绑，回落到各分P自己的状态。
+  /// 批量结束后不再优先采用（失败态保留到用户重试），回落到各分P自己的状态。
   static final Map<String, String> _cardBatchKeys = {};
 
   /// 「已受理但还没走到第一次 `_set`」的入口键。没有它，连点两次按钮会同时
