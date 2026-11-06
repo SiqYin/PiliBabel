@@ -183,11 +183,11 @@ paru -S pilinara-bin         # 抑是對 AUR：pilinara-bin（現成的建置）
 
 - **3.3.4** — 付費卡、小程式、話題集、訂閱卡四類動態卡片；修好首頁第一屏攏無封面的問題；同步上游 PiliNara（開 App 烏狀態列、刣掉程序後下載會使續、media-kit 升級、Wayland 烏屏迴避、快取影片會使揀音質）；對 3.0.5 以來加的全部介面文字做 AI 翻譯稽核；這份更新記錄。
 
-- **3.3.x — the long tail.** Dynamics gRPC rendering and dynamic cards; home first-screen covers fixed; an upstream PiliNara sync; then a wrap-up pass that reworked the image pipeline to connect directly, moved data requests to direct connections by default, routed audio and video through a multi-connection segmented proxy, capped seek waits at 600 ms, and restored the per-screen "show full title" behaviour.
+- **3.3.x —— 長尾。** 動態（P3）用 gRPC 渲染，閣有充電、小程式、話題集佮訂閱的動態卡；首頁第一屏封面無顯示修好；同步上游 PiliNara（烏色狀態列、進程予人刣掉後續傳、media-kit 更新、Wayland 烏畫面閃避）；上尾一輪共圖片管線改做直連（同時修好「封面愛下拉才會更新」佮全站資料中斷），資料請求預設改做直連，音訊佮影片改走多連線分段代理，拖振動條的等待上限定佇 600 毫秒，閣恢復「顯示完整標題」佇各畫面原本的行數行為。
 
-- **3.4.0 — the audit.** Analyzer brought to 0 errors / 0 warnings, all 44 language READMEs given an AI-translation note, the remaining backlog and the known behaviour differences versus the official app written down in `docs/`.
+- **3.4.0 —— 全面體檢。** 分析器降到 **0 錯誤／0 警告**，全部 44 個語言 README 補上 AI 翻譯說明，賰的待辦佮「佮官方 App 的已知差異」寫入 `docs/`。
 
-- **3.5.0–3.7.0 — terminology, translation, subtitles, polish, and player fixes.** The glossary grew to 15 tables in five languages (12 games plus hololive, NIJISANJI and THE iDOLM@STER, 11,600+ terms) and learned to resolve short names, every fragment of a multi-part name and terms inside a sentence, with a switch per table. Also: the official AI voice-over track can follow the interface language, trending keywords are translated and given two lines, the update dialog reads as plain text and is translated first, automatic update checking for the glossary tables, and the stutter with AI translation on is gone. A crash introduced in 3.6.3, where turning AI translation on could leave pages blank and then close the app, is fixed in 3.6.4. In 3.6.5 an embedded term no longer stops the rest of a paragraph from being translated, the glossary screen follows the app theme, the tables are on by default, and the version the app reports about itself now matches its release tag. 3.6.6 fixes surname parts of a name expanding to the full name, makes the glossary screen follow the app theme again (with working switches), and lets official glossary names override stale cached translations; 3.6.7 fixes the glossary counter stuck at 14/15 with every switch on, and repairs three tables whose displayed counts were wrong (Reverse: 1999 embedded nothing at all). 3.6.8 加 AI 字幕翻譯：華語字幕會照頂下文分段翻譯，有即時緩衝、逐條音軌管理、離線越南語字典佮會使揀的代理轉運（[saukhoai](https://github.com/saukhoai) 透過 [PR #2](https://github.com/SiqYin/PiliBabel/pull/2) 貢獻）。3.6.9 調整字幕鈕仔的比例、加第一擺開起來的自動設定（辨識系統語言）、翻譯播放列的段資訊、予音軌選擇綴語言切換，閣補起猶未翻譯的操作提示。3.7.0 佇播放列加 HiRes 音質標記、修好聽影片的拖動佮重入問題、加音軌拍無去的自動偵測佮無損重開，閣修好拖進度條時畫面的閃爍。
+- **3.5.0–3.7.0 —— 術語、翻譯、字幕、打磨佮播放器修正。** 術語表擴充到 **15 個詞表、五種語言**（12 款遊戲加上 hololive、NIJISANJI、偶像大師，共 11,600 條以上），閣會使解析短名、多段名字的每一段，佮句中的術語，逐個詞表會使單獨關。另外：官方 AI 原聲翻譯聲軌綴介面語言、搜尋頁熱搜接入翻譯兼改成兩行、更新彈窗去掉 Markdown 符號閣優先翻譯所以袂閣以中文開場、術語表會使自動檢查更新、開 AI 翻譯了後的卡頓已經解決。3.6.3 引入的閃退（開 AI 翻譯了後頁面空白才關 App）佇 3.6.4 修好。3.6.5 起，句中術語袂閣害整段落漏翻、術語集頁面綴 App 主題、詞表預設全開、App 家己報的版本號佮發佈 tag 一致。3.6.6 修正姓氏片段予人展開做全名、術語集頁面重新綴主題（開關會用）、官方術語名會使蓋過期的快取譯文；3.6.7 修正全開時計數猶原顯示 14/15，閣有三張詞表顯示條數無實（重返未來 1999 進前一條攏無內嵌）。3.6.8 加入 AI 字幕翻譯：中文字幕照頂下文分段翻譯，有即時緩衝、逐條音軌管理、離線越南語字典佮會使揀的代理轉運（[saukhoai](https://github.com/saukhoai) 透過 [PR #2](https://github.com/SiqYin/PiliBabel/pull/2) 貢獻）。3.6.9 調整字幕鈕仔的比例、加第一擺開起來的自動設定（辨識系統語言）、翻譯播放列的段資訊、予音軌選擇綴語言切換，閣補起猶未翻譯的操作提示。3.7.0 佇播放列加 HiRes 音質標記、修好聽影片的拖動佮重入問題、加音軌拍無去的自動偵測佮無損重開，閣修好拖進度條時畫面的閃爍。
 
 ## 繼承功能清單（來自 PiliNara / PiliPlus）
 
@@ -235,31 +235,31 @@ paru -S pilinara-bin         # 抑是對 AUR：pilinara-bin（現成的建置）
 
 ## 免責聲明
 
-PiliBabel is a personal, interest-driven project, provided **for learning and testing only**; please delete it within **24 hours** of download.
+PiliBabel 是一个人的、興趣導向的專案，**只供學習佮測試用**；下載了後請佇 **24 小時**內刪除。
 
-- PiliBabel is an **unofficial third-party** client and is **not affiliated with, endorsed by, or sponsored by bilibili**.
-- All APIs are gathered from official public endpoints; **no cracked, over-privileged, or paywall-bypassing content** is provided.
-- **AI translation runs on a third-party model endpoint.** By default that is bilibili's own free public Index-Translate service; if you switch to your own API, it is the endpoint you configured. Translation quality and compliance are the responsibility of the user and the chosen model provider; this project hosts **no model and no API key**.
-- Respect copyright and bilibili's Terms of Service. Use responsibly.
+- PiliBabel 是**非官方的第三方**客戶端，**佮 bilibili 無任何隸屬、背書抑是贊助關係**。
+- 所有 API 攏對官方公開端點收集來；**無提供任何破解、提權抑是繞過付費牆的內容**。
+- **AI 翻譯是走第三方的模型端點。**預設是用 bilibili 家己免費公開的 Index-Translate 服務；你若換做家己的 API，彼就是你設定的端點。翻譯品質佮合規由使用者佮所選的模型供應商負責；本專案**無架模型、嘛無 API key**。
+- 請尊重著作權佮 bilibili 的服務條款，負責任咧使用。
 
-With respect to the original and upstream authors for their open-source dedication:
+感謝原始作者佮上游作者對開源的奉獻：
 - [guozhigq/pilipala](https://github.com/guozhigq/pilipala)
 - [orz12/PiliPalaX](https://github.com/orz12/PiliPalaX)
 - [bggRGjQaUbCoE/PiliPlus](https://github.com/bggRGjQaUbCoE/PiliPlus)
-- [Starfallan/PiliNara](https://github.com/Starfallan/PiliNara) — the direct parent project of PiliBabel
-- [bilibili/Index-Translate](https://github.com/bilibili/Index-Translate) — the open-source translation model family the built-in engine calls
+- [Starfallan/PiliNara](https://github.com/Starfallan/PiliNara) — PiliBabel 的直接母專案
+- [bilibili/Index-Translate](https://github.com/bilibili/Index-Translate) — 內建引擎呼叫的開源翻譯模型家族
 
-If any content infringes your rights, please contact us for takedown.
+若有任何內容侵犯你的權利，請聯絡阮落架。
 
 <br/>
 
 ## 開源協議
 
-PiliBabel is licensed under the **GNU General Public License v3.0 (GPL-3.0)** — the same license as PiliNara, PiliPlus and PiliPala. Because it is a derivative work, **PiliBabel must also be distributed under GPL-3.0**: you are free to use, study, share and modify it, provided you keep the same license, the copyright notices, and this license text. See [`LICENSE`](./LICENSE).
+PiliBabel 以 **GNU General Public License v3.0（GPL-3.0）** 授權，佮 PiliNara、PiliPlus、PiliPala 用同一個授權。因為是衍生作品，**PiliBabel 嘛必須用 GPL-3.0 散布**：你會使自由使用、研究、分享佮修改，前提是保留同款的授權、著作權聲明佮這份授權文本。請看 [`LICENSE`](./LICENSE)。
 
-Third-party components (Flutter packages, [`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect), [`media-kit`](https://github.com/media-kit/media-kit), [`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer), [`dio`](https://pub.dev/packages/dio), etc.) remain under their own licenses.
+第三方元件（Flutter 套件、[`bilibili-API-collect`](https://github.com/SocialSisterYi/bilibili-API-collect)、[`media-kit`](https://github.com/media-kit/media-kit)、[`flutter_meedu_videoplayer`](https://github.com/zezo357/flutter_meedu_videoplayer)、[`dio`](https://pub.dev/packages/dio) 等等）猶原照in家己的授權。
 
-The bundled **LXGW WenKai** typeface is licensed separately under the **SIL Open Font License 1.1**; its licence text ships inside the app as `assets/fonts/LXGWWenKai-OFL.txt`.
+隨附的 **霞鹜文楷（LXGW WenKai）** 字體另外以 **SIL Open Font License 1.1** 授權；授權文本隨 App 附佇 `assets/fonts/LXGWWenKai-OFL.txt`。
 
 <br/>
 
@@ -269,10 +269,10 @@ The bundled **LXGW WenKai** typeface is licensed separately under the **SIL Open
 - [flutter_meedu_videoplayer](https://github.com/zezo357/flutter_meedu_videoplayer)
 - [media-kit](https://github.com/media-kit/media-kit)
 - [dio](https://pub.dev/packages/dio)
-- [Index-Translate](https://github.com/bilibili/Index-Translate) — bilibili's open-source translation model family, and the free public endpoint behind the built-in engine
-- [LXGW WenKai](https://github.com/lxgw/LxgwWenKai) (霞鹜文楷) — the open-source Chinese typeface bundled with the app, under the SIL Open Font License 1.1
-- and more
-- Inspired by bilibili's official "AI interface translation".
+- [Index-Translate](https://github.com/bilibili/Index-Translate) — bilibili 的開源翻譯模型家族，嘛是內建引擎後壁彼个免費公開端點
+- [LXGW WenKai](https://github.com/lxgw/LxgwWenKai)（霞鹜文楷） — 隨 App 附的開源中文字體，以 SIL Open Font License 1.1 授權
+- 閣有真濟
+- 靈感來自 bilibili 官方的「AI 介面翻譯」。
 
 ## 註記
 
@@ -281,4 +281,4 @@ The bundled **LXGW WenKai** typeface is licensed separately under the **SIL Open
 
 ---
 
-> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。
+> **文件語言說明。** 這份 README 佮伊的譯本攏是佇 AI 翻譯工具的協助下撰寫佮維護；若各語言的講法有出入，以英文版為準。

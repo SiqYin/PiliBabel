@@ -262,4 +262,4 @@ PiliBabel은 **GNU General Public License v3.0(GPL-3.0)** 으로 배포됩니다
 
 ---
 
-> **Documentation language note / 文档语言说明.** This README and its translations are written and maintained with the help of AI translation tooling; the English version is the reference if any wording looks inconsistent. 本仓库的 README 及各语言译文在 AI 翻译工具的协助下撰写与维护；若各语言版本表述不一致，以英文版为准。
+> **문서 언어 안내.** 이 README와 번역본은 AI 번역 도구의 도움을 받아 작성·유지됩니다. 표현이 서로 어긋나 보이면 영어판을 기준으로 합니다.
