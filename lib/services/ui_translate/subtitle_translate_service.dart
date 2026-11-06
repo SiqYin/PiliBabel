@@ -69,9 +69,12 @@ abstract final class SubtitleTranslateService {
       throw const FormatException('Subtitle translation changed or failed');
     }
     for (var i = 0; i < indices.length; i++) {
-      final source = lines[indices[i]].trim();
       final value = output[i].trim();
-      if (value.isEmpty || value == source) {
+      // 只拒绝「空译文」。**不再逐行拒绝「与原文相同」**：
+      // 簡→繁、中→日汉字词、人名/数字行本来就会一字不差，
+      // 逐行判死等于让整块（进而整条轨）永远失败。
+      // 「模型整块没翻」由 SubtitleTranslationJob._rejectCopiedSource 按块判定。
+      if (value.isEmpty) {
         throw const FormatException('Subtitle translation unavailable');
       }
       translated[indices[i]] = value;

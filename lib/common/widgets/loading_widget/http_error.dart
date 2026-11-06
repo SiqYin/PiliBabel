@@ -1,5 +1,6 @@
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/widgets/selection_text.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:material_ui/material_ui.dart';
 
@@ -33,7 +34,9 @@ class HttpError extends StatelessWidget {
         Padding(
           padding: const .symmetric(horizontal: 16, vertical: 5),
           child: SelectionText(
-            errMsg ?? '没有数据',
+            // 「账号未登录」「点击重试」这些是 B 站接口直接返回的中文，
+            // 以前原样塞进界面，非中文用户看到的就是中文。这里统一过一遍 uiTx。
+            uiTx(errMsg ?? '没有数据'),
             textAlign: .center,
             style: theme.textTheme.titleSmall,
           ),
@@ -46,7 +49,7 @@ class HttpError extends StatelessWidget {
               backgroundColor: theme.colorScheme.primary.withAlpha(20),
             ),
             child: Text(
-              btnText ?? '点击重试',
+              uiTx(btnText ?? '点击重试'),
               style: TextStyle(color: theme.colorScheme.primary),
             ),
           ),

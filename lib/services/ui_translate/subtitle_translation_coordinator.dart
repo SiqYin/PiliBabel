@@ -66,6 +66,9 @@ class SubtitleTranslationSubscription {
 
   bool get isCancelled => _session.isCancelled;
 
+  /// 分块失败的真实原因（见 [SubtitleTranslationJob.lastError]）。
+  Object? get lastError => _session.job.lastError;
+
   void setPosition(int seconds) {
     if (!_detached) _session.job.setPosition(seconds);
   }
@@ -168,12 +171,23 @@ class _SubtitleTranslationSession {
     _finish();
   }
 
+  /// 连续多少轮「一个已校验分块都没新增」就放弃。
+  ///
+  /// 之前这里没有上限：所有分块都翻不出来时（接口拒绝、校验全不通过），
+  /// `job.run()` 每轮都返回、进度永远是 0，`whenComplete` 就永远不完成 ——
+  /// 调用方 `await` 住不放，UI 停在「翻译中」一直转圈，既不报错也不结束。
+  /// 现在连续 3 轮毫无进展就收尾，把失败交回给调用方去显示。
+  static const int _maxIdleRounds = 3;
+
   Future<void> _run() async {
+    var idleRounds = 0;
+    var gaveUp = false;
     try {
       await job.loadCached();
       while (!_cancelled) {
         if (_progress?.isComplete == true) break;
         if (!_allowNewTranslation) return;
+        final translatedBefore = _bestTranslatedCues;
         try {
           await job.run();
         } catch (_) {
@@ -181,6 +195,14 @@ class _SubtitleTranslationSession {
           // shared session forever. The normal retry delay below applies.
         }
         if (_cancelled || _progress?.isComplete == true) break;
+        // 只有「有新的已校验分块」才算有进展；全失败时这一轮等于白跑。
+        idleRounds = _bestTranslatedCues > translatedBefore
+            ? 0
+            : idleRounds + 1;
+        if (idleRounds >= _maxIdleRounds) {
+          gaveUp = true;
+          break;
+        }
         if (_retryRequest != _consumedRetryRequest) {
           _consumedRetryRequest = _retryRequest;
           continue;
@@ -198,7 +220,9 @@ class _SubtitleTranslationSession {
     } finally {
       _runFuture = null;
       final completed = _progress?.isComplete == true;
-      if (_cancelled || completed || !_allowNewTranslation) {
+      // gaveUp 必须一起收尾：否则 break 出来以后既不 complete 也不 finish，
+      // 又会退回到「永远转圈」那种状态。
+      if (_cancelled || completed || gaveUp || !_allowNewTranslation) {
         _finish(completed: completed);
       }
     }

@@ -225,6 +225,7 @@ abstract final class SubtitleTranslationOutput {
           targetLanguage: targetLanguage,
         ),
     ];
+    _rejectCopiedSource(source, normalized, targetLanguage);
     _rejectMergedContext(
       source: source,
       output: normalized,
@@ -264,6 +265,40 @@ abstract final class SubtitleTranslationOutput {
       return true;
     } on FormatException {
       return false;
+    }
+  }
+
+  /// 目标语言是否属于中文家族（简繁/粤语/吴语/闽南语）。
+  ///
+  /// 这些目标本来就该有大量行与原文一字不差（「好的」→「好的」），
+  /// 任何「照抄」判定都必须豁免，否则整条轨必挂。
+  static bool _isChineseFamilyTarget(String? targetLanguage) {
+    final target = (targetLanguage ?? '').toLowerCase();
+    return target.startsWith('zh') ||
+        target.startsWith('yue') ||
+        target.startsWith('wuw') ||
+        target.startsWith('nan');
+  }
+
+  /// 整块级别的「模型根本没翻」判定。
+  ///
+  /// 判据：带汉字的行里 80% 以上与原文一字不差，且至少 2 行。
+  /// 单行块不判（「了解」→「了解」这种合法情况无法区分）。
+  static void _rejectCopiedSource(
+    List<String> source,
+    List<String> output,
+    String? targetLanguage,
+  ) {
+    if (_isChineseFamilyTarget(targetLanguage)) return;
+    var hanLines = 0;
+    var copied = 0;
+    for (var i = 0; i < source.length && i < output.length; i++) {
+      if (!SubtitleTextQuality.containsHan(source[i])) continue;
+      hanLines++;
+      if (output[i] == source[i].trim()) copied++;
+    }
+    if (hanLines >= 2 && copied >= (hanLines * 0.8).ceil()) {
+      throw const FormatException('Subtitle translation copied source');
     }
   }
 
@@ -424,9 +459,10 @@ abstract final class SubtitleTranslationOutput {
       throw const FormatException('Subtitle translation echoed prompt data');
     }
     final sourceHasHan = SubtitleTextQuality.containsHan(source);
-    if (sourceHasHan && normalized == source.trim()) {
-      throw const FormatException('Subtitle translation copied source');
-    }
+    // 逐行「和原文一样」不能判死：簡體→繁體、中文→日文（汉字词）、
+    // 以及人名/数字行，本来就有大量行译文与原文完全相同。以前这里逐行抛异常，
+    // 中文家族目标（繁中/粤语/吴语/闽南语）几乎每一块都会挂 → 整片永远翻不出来。
+    // 「模型整体拒绝翻译」改在 _rejectCopiedSource 里按块判定。
     if (targetLanguage?.toLowerCase().startsWith('vi') == true &&
         SubtitleTextQuality.containsHan(normalized)) {
       throw const FormatException(
@@ -487,7 +523,10 @@ abstract final class SubtitleCues {
           item['from'] is num &&
           item['to'] is num &&
           item['content'] is String &&
-          (item['content'] as String).trim().isNotEmpty)
+          (item['content'] as String).trim().isNotEmpty &&
+          // 丢掉零长度/倒序的坏 cue：hasSafePlaybackTimeline 是「整条轨」判定，
+          // 一条坏 cue 会让整条字幕被判不可用（界面表现为「没有可用字幕」）。
+          (item['to'] as num) > (item['from'] as num))
         SubtitleCue(
           _time(item['from'] as num),
           _time(item['to'] as num),
@@ -686,6 +725,13 @@ class SubtitleTranslationJob {
   Future<void> _checkpointTail = Future.value();
 
   int get total => (cues.length + chunkSize - 1) ~/ chunkSize;
+
+  /// 最近一次分块翻译失败的真实原因（接口错误、校验不通过等）。
+  ///
+  /// 只用于把失败原因显示给用户/写进日志：以前所有异常都在 `_worker` 里被吞掉，
+  /// 上层只知道「N 个分块出错」，不知道是 401、超时还是校验拒绝。
+  Object? get lastError => _lastError;
+  Object? _lastError;
 
   static String cacheIdentity(String cacheKey, List<SubtitleCue> cues) {
     final source = cues
@@ -932,8 +978,9 @@ class SubtitleTranslationJob {
         }
         _promoteProvisionalChunks();
         _translatedCues = _cueCount(_completedChunks);
-      } catch (_) {
+      } catch (error) {
         if (_cancelled) return;
+        _lastError = error;
         _provisionalChunks.remove(next);
         _failedChunkIndexes.add(next);
       }

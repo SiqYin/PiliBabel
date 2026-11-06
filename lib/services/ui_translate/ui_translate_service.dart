@@ -1413,6 +1413,10 @@ class UiTranslateService extends GetxService {
       // 安全网：模型会在译文中间插入自己的说明句（见 _stripMetaNotes）。
       // 这里把说明句剥离掉、保留正常译文；剥完什么都不剩才退回原文。
       final out = _stripMetaNotes(raw).trim();
+      if (out.isEmpty && _hasTranslatableText(src)) {
+        // 以前这里静默返回原文，上层只会看到「译文与原文相同」的含糊失败。
+        throw const FormatException('Subtitle translation returned nothing');
+      }
       results.add(out.isEmpty ? src : out);
     }
     return _normalizeScripts(results, currentLanguage.script);
@@ -1775,8 +1779,9 @@ class UiTranslateService extends GetxService {
     final contextJson = jsonEncode(contextLines);
     final sourcesJson = jsonEncode(sources);
     final buffer = StringBuffer();
-    await for (final piece in AiChatService.streamChat(
-      messages: [
+    try {
+      await for (final piece in AiChatService.streamChat(
+        messages: [
         {
           'role': 'system',
           'content':
@@ -1797,14 +1802,19 @@ class UiTranslateService extends GetxService {
           'content': 'TRANSLATE_ONLY_JSON=$sourcesJson',
         },
       ],
-      model: translateModel,
-      apiUrl: translateApiUrl,
-      apiKey: translateApiKey,
-      extraBody: const <String, dynamic>{'enable_thinking': false},
-      receiveTimeout: const Duration(seconds: 60),
-      subtitleProxy: subtitleProxy,
-    )) {
-      buffer.write(piece);
+        model: translateModel,
+        apiUrl: translateApiUrl,
+        apiKey: translateApiKey,
+        extraBody: const <String, dynamic>{'enable_thinking': false},
+        receiveTimeout: const Duration(seconds: 60),
+        subtitleProxy: subtitleProxy,
+      )) {
+        buffer.write(piece);
+      }
+    } catch (_) {
+      // 批量（JSON 数组）只是省请求数的快路径：接口 4xx/5xx、代理抖动、
+      // 流中断都不该让整块字幕判死。这里吞掉，交给下面的逐条模板重来一次。
+      if (!enabled) throw StateError('Translation is disabled');
     }
     final raw = buffer.toString();
     final start = raw.indexOf('[');
