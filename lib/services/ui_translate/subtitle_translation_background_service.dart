@@ -20,6 +20,7 @@ import 'package:PiliPlus/services/ui_translate/subtitle_translation_targets.dart
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:path/path.dart' as path;
 
@@ -198,6 +199,8 @@ abstract final class SubtitleTranslationBackgroundService {
       aid: aid,
       cid: cid,
       force: force,
+      // 合集逐集翻译时不要每集弹一次 toast，收尾由 _startBatch 统一提示。
+      notify: false,
     );
   }
 
@@ -207,6 +210,7 @@ abstract final class SubtitleTranslationBackgroundService {
     int? aid,
     int? cid,
     bool force = false,
+    bool notify = true,
   }) async {
     await ensureInitialized();
     final target = Pref.uiTranslateLang;
@@ -454,9 +458,17 @@ abstract final class SubtitleTranslationBackgroundService {
         if (progress != null &&
             !progress.isComplete &&
             (_states[taskKey]?.isRunning ?? false)) {
+          // 带上真实原因（AiApiException / FormatException / TimeoutException…）。
+          // 重试若干轮仍无进展时协调器会主动收尾，这里就是那一刻。
+          final cause = subscription.lastError;
           _fail(
             taskKey,
-            uiTxP('还有 {0} 个分块出错，点击重试', [progress.failedChunks]),
+            cause == null
+                ? uiTxP('还有 {0} 个分块出错，点击重试', [progress.failedChunks])
+                : uiTxP('还有 {0} 个分块出错（{1}），点击重试', [
+                    progress.failedChunks,
+                    '${cause.runtimeType}',
+                  ]),
           );
         }
       } finally {
@@ -470,6 +482,22 @@ abstract final class SubtitleTranslationBackgroundService {
         taskKey,
         uiTxP('无法开始翻译字幕，点击重试（{0}）', ['${error.runtimeType}']),
       );
+    } finally {
+      // 结果反馈：完成给一句话，失败也给一句话。
+      // 之前只有封面按钮那个小图标从「转圈」变成对勾，用户根本注意不到。
+      if (notify) _notifyOutcome(taskKey);
+    }
+  }
+
+  /// 后台任务结束时的用户反馈（单集）。
+  static void _notifyOutcome(String taskKey) {
+    switch (_states[taskKey]?.phase) {
+      case SubtitleTranslationTaskPhase.complete:
+        SmartDialog.showToast(uiTx('字幕已预翻译完成'));
+      case SubtitleTranslationTaskPhase.failed:
+        SmartDialog.showToast(uiTx('字幕预翻译失败，可点按钮重试'));
+      default:
+        break;
     }
   }
 
@@ -557,6 +585,9 @@ abstract final class SubtitleTranslationBackgroundService {
       if (completed == targets.length) {
         finalized = true;
         _markTaskComplete(parentTaskKey);
+        SmartDialog.showToast(uiTxP('全 {0} 个分P字幕已预翻译完成', [
+          targets.length,
+        ]));
         return;
       }
       if (running == 0 && completed + failed == targets.length && failed > 0) {
@@ -565,6 +596,10 @@ abstract final class SubtitleTranslationBackgroundService {
           parentTaskKey,
           uiTxP('{0}/{1} 个分P失败，点击重试', [failed, targets.length]),
         );
+        SmartDialog.showToast(uiTxP('{0}/{1} 个分P字幕预翻译失败', [
+          failed,
+          targets.length,
+        ]));
         return;
       }
       _set(
@@ -596,6 +631,8 @@ abstract final class SubtitleTranslationBackgroundService {
             aid: target.aid,
             cid: target.cid,
             force: force,
+            // 批量里逐集不弹 toast，统一在 syncState 里汇报一次总数。
+            notify: false,
           );
         }
       }
