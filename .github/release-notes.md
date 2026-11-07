@@ -1,4 +1,6 @@
-### PiliBabel v3.7.9
+### PiliBabel v3.7.10
+
+**Re-release of v3.7.9 (right-to-left interface mirroring) — the v3.7.9 build failed in CI's Flutter setup step (infrastructure), so the same content ships as v3.7.10.**
 
 **Right-to-left interface mirroring: when the interface language is written RTL (Arabic, Hebrew, Uyghur and other Arabic/Hebrew-script variants), navigation, lists, alignment and paddings mirror automatically — while images and video content never flip and the player timeline stays left-to-right.**
 
