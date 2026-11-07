@@ -1,13 +1,11 @@
-### PiliBabel v3.7.8
+### PiliBabel v3.7.9
 
-**Momentum release: the first-launch intro covers all three buttons, opening a video auto-starts danmaku pre-translation, danmaku pre-translation matches subtitle speed via the same concurrent worker pool, and cover vision requests are serialized in click order with retry — 504s heal themselves.**
+**Right-to-left interface mirroring: when the interface language is written RTL (Arabic, Hebrew, Uyghur and other Arabic/Hebrew-script variants), navigation, lists, alignment and paddings mirror automatically — while images and video content never flip and the player timeline stays left-to-right.**
 
-**Three-button intro.** The first-launch popup now explains the danmaku, subtitle and cover-translation buttons (previously it described only two).
+**Automatic mirroring.** The whole app switches to RTL layout for RTL languages: Flutter mirrors navigation bars, lists, text alignment and paddings. Switching the interface language takes effect immediately.
 
-**Auto-start danmaku.** Opening a video now automatically starts danmaku pre-translation for that part, right next to the automatic subtitle pre-translation.
+**Content never flips.** Images, cover art and video are content, not chrome — they are excluded from mirroring. The player (timeline, gestures, controls) is pinned left-to-right, following the universal convention for video playback.
 
-**Danmaku speed.** Danmaku pre-translation switches from sequential batch requests to the same concurrent worker pool that makes subtitles feel instant (up to 5 parallel batches).
-
-**Cover vision reliability.** Vision requests are serialized in click order — tapping several covers at once no longer breaks the first ones — with automatic retries (2s/5s backoff) on 504/gateway timeouts and connection drops. Raw DioException dumps are no longer fed to the translation model; errors surface as short friendly messages.
+**Direction-aware overlays.** The cover's three-button translate column and duration badges are anchored to the reading side of the card, switching sides in RTL.
 
 Downloads are below.

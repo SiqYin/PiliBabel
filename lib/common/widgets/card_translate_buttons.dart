@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/video_danmaku_translate_button.dart';
 import 'package:PiliPlus/common/widgets/video_subtitle_translate_button.dart';
@@ -82,6 +84,9 @@ class _CardTranslateButtonsState extends State<CardTranslateButtons> {
 
     // 三层监听嵌套：识图（ValueNotifier）→ 字幕/弹幕（Obx，读 RxMap 注册依赖）。
     // 任一信号变化都会重算三个 bottom，AnimatedPositioned 接管过渡动画。
+    // RTL：竖列贴「文字起始侧」——LTR 贴左、RTL 贴右（栈不自动镜像 Positioned，
+    // 这里手工切 left/right）。图标/徽章等封面内容本身不做镜像。
+    final rtl = Directionality.of(context) == ui.TextDirection.rtl;
     return Positioned.fill(
       child: ValueListenableBuilder<bool>(
         valueListenable: _coverLoading,
@@ -102,7 +107,8 @@ class _CardTranslateButtonsState extends State<CardTranslateButtons> {
                   key: const ValueKey('danmaku'),
                   duration: const Duration(milliseconds: 200),
                   curve: Curves.easeInOut,
-                  left: 7,
+                  left: rtl ? null : 7,
+              right: rtl ? 7 : null,
                   bottom: dmBottom,
                   child: VideoDanmakuTranslateButton(
                     videoKey: widget.videoKey,
@@ -119,7 +125,8 @@ class _CardTranslateButtonsState extends State<CardTranslateButtons> {
                   key: const ValueKey('subtitle'),
                   duration: const Duration(milliseconds: 200),
                   curve: Curves.easeInOut,
-                  left: 7,
+                  left: rtl ? null : 7,
+              right: rtl ? 7 : null,
                   bottom: subBottom,
                   child: VideoSubtitleTranslateButton(
                     videoKey: widget.videoKey,
@@ -135,7 +142,8 @@ class _CardTranslateButtonsState extends State<CardTranslateButtons> {
                 key: const ValueKey('cover'),
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeInOut,
-                left: 7,
+                left: rtl ? null : 7,
+              right: rtl ? 7 : null,
                 bottom: _coverBottom,
                 child: CoverTranslateButton(
                   cover: widget.cover,

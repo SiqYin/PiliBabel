@@ -2499,7 +2499,13 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         ),
       );
     }
-    return child;
+    // RTL 豁免（3.7.9）：视频时间轴永远从左到右——即使界面语言是从右到左
+    // 书写（阿拉伯语/希伯来语/维吾尔语），播放器（画面、进度条、手势方向、
+    // 控制条布局）也不镜像，这是所有视频应用的国际惯例。
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: child,
+    );
   }
 
   Widget get _videoWidget {

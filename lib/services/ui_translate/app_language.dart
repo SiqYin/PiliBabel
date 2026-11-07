@@ -36,6 +36,21 @@ class AppLanguage {
   /// 官方清单外的只有我们自己加的那几种（繁體中文、吴语、闽南语、壮语）。
   final bool official;
 
+  /// 是否为**从右到左书写的语言**（界面需要镜像适配）。
+  ///
+  /// 判据（3.7.9）：
+  /// * 主代码是 `ar`（阿拉伯语）、`he`（希伯来语）、`ug`（维吾尔——我国规范
+  ///   用阿拉伯字母书写，从右向左）；
+  /// * 扩展代码的文字系统后缀是 `arab` / `hebr` / `thaa` / `syrc`。
+  ///   注意 `urd-latn` 这类**拉丁转写**不是 RTL——后缀判定天然排除。
+  bool get isRtl {
+    final c = code.toLowerCase();
+    if (c == 'ar' || c == 'he' || c == 'ug') return true;
+    final parts = c.split('-');
+    if (parts.length < 2) return false;
+    return const {'arab', 'hebr', 'thaa', 'syrc'}.contains(parts.last);
+  }
+
   /// 变体所属的组，值是**基准条目的 [name]**。
   ///
   /// 官方自己就把地区 / 字形变体拆成了独立条目（阿拉伯语 5 条、库尔德语 3 条、

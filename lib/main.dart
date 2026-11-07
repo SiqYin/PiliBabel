@@ -18,6 +18,7 @@ import 'package:PiliPlus/services/download/download_service.dart';
 import 'package:PiliPlus/services/logger.dart';
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/services/ui_translate/glossary_update_service.dart';
 import 'package:PiliPlus/utils/cache_manager.dart';
 import 'package:PiliPlus/utils/calc_window_position.dart';
@@ -428,9 +429,17 @@ class MyApp extends StatelessWidget {
         child: child!,
       );
     }
-    return BackDetector(
-      onBack: _onBack,
-      child: child,
+    // RTL 镜像（3.7.9）：界面语言为从右向左书写（阿拉伯语/希伯来语/维吾尔语
+    // 及各 arab/hebr 文字变体）时，整层切到 RTL——Flutter 会自动镜像导航、
+    // 列表、对齐与 padding；图片、视频等实际内容不参与镜像。播放器内部
+    // （时间轴/手势）单独强制 LTR，见 pl_player 的 view。
+    final rtl = appLanguageByCode(Pref.uiTranslateLang).isRtl;
+    return Directionality(
+      textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
+      child: BackDetector(
+        onBack: _onBack,
+        child: child,
+      ),
     );
   }
 

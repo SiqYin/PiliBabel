@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'dart:async';
 
 import 'package:PiliPlus/common/widgets/translate_progress_ring.dart';
@@ -246,8 +248,11 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
     if (widget.embedded) {
       return button;
     }
+    // RTL：整列贴文字起始侧（镜像后贴右）。图片内容本身不镜像。
+    final rtl = Directionality.of(context) == ui.TextDirection.rtl;
     return Positioned(
-      left: widget.left,
+      left: rtl ? null : widget.left,
+      right: rtl ? widget.left : null,
       bottom: widget.bottom,
       child: button,
     );

@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:PiliPlus/common/widgets/card_translate_buttons.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
@@ -129,7 +131,15 @@ class VideoCardV extends StatelessWidget {
                           if (videoItem.duration > 0)
                             PBadge(
                               bottom: 6,
-                              right: 7,
+                              // RTL：时长徽章换到另一侧（镜像），画面内容不镜像。
+                              left: Directionality.of(context) ==
+                                      ui.TextDirection.rtl
+                                  ? 7.0
+                                  : null,
+                              right: Directionality.of(context) ==
+                                      ui.TextDirection.rtl
+                                  ? null
+                                  : 7,
                               size: .small,
                               type: .gray,
                               text: DurationUtils.formatDuration(
