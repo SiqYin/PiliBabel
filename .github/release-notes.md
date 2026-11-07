@@ -8,4 +8,6 @@
 
 **Intro updated.** The first-launch popup now describes the buttons as left (cover translation), middle (subtitles) and right (danmaku).
 
+**Tablet landscape fix.** The left navigation drawer's width is now recomputed reactively as translations land — long translated labels (e.g. タイムライン) no longer overflow the selection pill.
+
 Downloads are below.

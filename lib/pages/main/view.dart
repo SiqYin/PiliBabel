@@ -457,15 +457,19 @@ class _MainAppState extends PopScopeState<MainApp>
   Widget _sideBar() {
     if (_mainController.navigationBars.length > 1) {
       if (context.isTablet && _mainController.optTabletNav) {
-        return Padding(
-          padding: const .only(top: 25),
-          child: MediaQuery.removePadding(
-            context: context,
-            removeRight: true,
-            child: DrawerTheme(
-              data: DrawerThemeData(width: _drawerWidth(context)),
-              child: Obx(
-                () => NavigationDrawer(
+        // 宽度必须随翻译到货重算（3.8.0）：_drawerWidth 依赖 txTight 的译文，
+        // 首帧只有中文原文、量出来偏窄；译文落到缓存 bump revision 后，
+        // 外层 Obx 重建才会把抽屉/指示框撑到译文的实际宽度。
+        // 以前宽度在 Obx 外算死，译文比原文长时标签会溢出指示框（平板横屏）。
+        return Obx(
+          () => Padding(
+            padding: const .only(top: 25),
+            child: MediaQuery.removePadding(
+              context: context,
+              removeRight: true,
+              child: DrawerTheme(
+                data: DrawerThemeData(width: _drawerWidth(context)),
+                child: NavigationDrawer(
                   /// apply `lib/scripts/navigation_drawer.patch`
                   flex: 5,
                   backgroundColor: Colors.transparent,
