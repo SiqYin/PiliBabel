@@ -62,6 +62,15 @@ class _VideoDanmakuTranslateButtonState
     );
   }
 
+  /// 运行中点按 = 取消；已完成点按 = 撤销并清缓存（3.7.12）。
+  void _cancelOrUndo() {
+    DanmakuPretranslateService.cancelOrUndo(
+      videoKey: widget.videoKey,
+      cid: widget.cid,
+    );
+    SmartDialog.showToast(uiTx('已取消并清除弹幕缓存'));
+  }
+
   @override
   Widget build(BuildContext context) {
     // 与字幕按钮同一口径：AI 翻译关着 / 目标简中 / 弹幕翻译开关没开时不渲染。
@@ -116,9 +125,11 @@ class _VideoDanmakuTranslateButtonState
         message: hint,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
-          onTap: state.isRunning
-              ? null
-              : () => _start(force: isComplete || isFailed || state.noSource),
+          // 三态点按（3.7.12）：运行中 = 取消；已完成 = 撤销；其余 = 开始。
+          onTap:
+              state.isRunning || isComplete
+              ? _cancelOrUndo
+              : () => _start(force: isFailed || state.noSource),
           child: SizedBox(
             width: 28,
             height: 28,

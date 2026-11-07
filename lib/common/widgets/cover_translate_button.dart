@@ -62,6 +62,8 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
   bool _done = false;
   int _downloadPercent = 0;
   bool _downloadDone = false;
+  CancelToken? _cancelToken;
+  bool _cancelRequested = false;
 
   @override
   void initState() {
@@ -86,7 +88,15 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
   }
 
   Future<void> _onTap() async {
-    if (_loading) return;
+    // 三态点按（3.7.12）：加载中 = 取消；已完成 = 撤销；其余 = 开始。
+    if (_loading) {
+      _cancelVision();
+      return;
+    }
+    if (_done) {
+      _undoCover();
+      return;
+    }
     final cover0 = widget.cover;
     if (cover0 == null || cover0.isEmpty) {
       SmartDialog.showToast(uiTx('这张封面没有可用的图片地址'));
@@ -106,6 +116,8 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
       _downloadPercent = 0;
       _downloadDone = false;
     });
+    _cancelRequested = false;
+    _cancelToken = CancelToken();
     widget.loadingNotifier?.value = true;
     SmartDialog.showToast(uiTx('正在翻译图片…'));
 
@@ -120,6 +132,7 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
         final text = await UiTranslateService.to
             .describeImage(
               cover,
+              cancelToken: _cancelToken,
               onDownloadProgress: (percent) {
                 if (!mounted) return;
                 setState(() => _downloadPercent = percent);
@@ -144,6 +157,11 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
       msg = await UiTranslateService.to.txAsync(_friendlyVisionError(e));
     }
 
+    if (_cancelRequested) {
+      // 用户已取消：_cancelVision 已复位状态，这里直接退出，不弹结果窗。
+      _cancelRequested = false;
+      return;
+    }
     if (mounted) {
       setState(() {
         _loading = false;
@@ -188,6 +206,30 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
     } catch (e) {
       SmartDialog.showToast(await uiTxPAsync('弹窗失败：{0}', [e]));
     }
+  }
+
+  /// 加载中点按 = 取消：中止在途请求、复位状态（3.7.12）。
+  /// 图片翻译没有持久缓存（结果只展示在弹窗里），取消即等于清干净。
+  void _cancelVision() {
+    _cancelRequested = true;
+    _cancelToken?.cancel('user cancelled');
+    if (mounted) {
+      setState(() {
+        _loading = false;
+        _downloadPercent = 0;
+        _downloadDone = false;
+      });
+    }
+    widget.loadingNotifier?.value = false;
+    SmartDialog.showToast(uiTx('已取消封面翻译'));
+  }
+
+  /// 完成后点按 = 撤销：完成标记清除，图标回到初始态（3.7.12）。
+  void _undoCover() {
+    final cover = widget.cover;
+    if (cover != null) CoverTranslateButton._doneCovers.remove(cover);
+    if (mounted) setState(() => _done = false);
+    SmartDialog.showToast(uiTx('已撤销封面翻译'));
   }
 
   @override

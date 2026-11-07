@@ -46,6 +46,15 @@ abstract final class SubtitleTranslationBackgroundService {
   static final Map<String, String> _taskCardKeys = {};
   static final Set<String> _completed = {};
 
+  /// 运行中任务的取消句柄（3.7.12）：卡片按钮点运行中的按钮 = 取消。
+  static final Map<String, SubtitleTranslationSubscription>
+  _activeSubscriptions = <String, SubtitleTranslationSubscription>{};
+
+  /// 取消时清理检查点文件所需的元数据（检查点文件名依赖 cues，无法反推）。
+  static final Map<String, ({String activeCacheKey, List<SubtitleCue> cues})>
+  _activeJobMeta =
+      <String, ({String activeCacheKey, List<SubtitleCue> cues})>{};
+
   /// 合集/多P 批量任务的状态键。**必须与任何分P的任务键不同**：
   /// 以前父任务直接写在「选中那一P」的任务键上，`stateFor` 于是把父任务
   /// 当成那一P的「仍在运行」，`_startSingle` 也据此早退、那一P永远不开始，
@@ -194,6 +203,79 @@ abstract final class SubtitleTranslationBackgroundService {
       ),
     );
     unawaited(_saveIndex());
+  }
+
+  /// 卡片按钮的取消（运行中）/撤销（已完成）入口（3.7.12）。
+  ///
+  /// * 运行中：取消协调器会话、删检查点、状态复位——已写入的译文缓存一并清除
+  ///   （检查点文件即译文缓存本体，删除即清理）。
+  /// * 已完成：删除该视频/分P/语言的全部产物（vtt + 检查点）与注册表条目。
+  ///   播放页已挂载的译文轨不强制卸载（重新打开视频即回到原文）。
+  static void cancelOrUndo({
+    required String videoKey,
+    int? cid,
+    String? language,
+  }) {
+    final lang = language ?? Pref.uiTranslateLang;
+    final taskKey = _key(videoKey, lang, cid);
+
+    final subscription = _activeSubscriptions[taskKey];
+    if (subscription != null) {
+      subscription.cancel();
+      final meta = _activeJobMeta[taskKey];
+      if (meta != null) {
+        try {
+          final file = SubtitleTranslationJob.cacheFileFor(
+            meta.activeCacheKey,
+            meta.cues,
+          );
+          if (file.existsSync()) file.deleteSync();
+        } catch (_) {
+          // 清理失败不影响取消本身：任务已停，下次启动会重新评估缓存。
+        }
+      }
+      if (identical(_activeSubscriptions[taskKey], subscription)) {
+        _activeSubscriptions.remove(taskKey);
+      }
+      _activeJobMeta.remove(taskKey);
+      _completed.remove(taskKey);
+      _set(taskKey, const SubtitleTranslationTaskState());
+      return;
+    }
+
+    if (!_completed.contains(taskKey)) return;
+    unawaited(() async {
+      try {
+        for (final artifact
+            in await SubtitleTranslationArtifactRegistry.shared.list()) {
+          if (artifact.targetLanguage != lang) continue;
+          if (artifact.videoKey != videoKey) continue;
+          if (cid != null && artifact.cid != cid) continue;
+          try {
+            final vtt = File(artifact.vttFilePath);
+            if (vtt.existsSync()) vtt.deleteSync();
+            final cache = File(artifact.cacheFilePath);
+            if (cache.existsSync()) cache.deleteSync();
+          } catch (_) {
+            // 文件删除失败不阻塞注册表清理：下次撤销/删除会再试。
+          }
+          await SubtitleTranslationArtifactRegistry.shared.remove(artifact.key);
+        }
+      } catch (_) {}
+      _completed.remove(taskKey);
+      final cardKey = _taskCardKeys[taskKey];
+      if (cardKey != null) {
+        final others = _cardTaskKeys[cardKey];
+        final anyOtherComplete =
+            others?.any(
+              (key) => key != taskKey && _completed.contains(key),
+            ) ??
+            false;
+        if (!anyOtherComplete) _completed.remove(cardKey);
+      }
+      _set(taskKey, const SubtitleTranslationTaskState());
+      await _saveIndex();
+    }());
   }
 
   /// Removes one durable track cache and its card/player completion marker.
@@ -696,6 +778,11 @@ abstract final class SubtitleTranslationBackgroundService {
           );
         },
       );
+      _activeSubscriptions[taskKey] = subscription;
+      _activeJobMeta[taskKey] = (
+        activeCacheKey: activeCacheKey,
+        cues: sourceCues,
+      );
       try {
         await subscription.whenComplete;
         await completionPromotion;
@@ -723,6 +810,10 @@ abstract final class SubtitleTranslationBackgroundService {
         }
       } finally {
         subscription.detach();
+        if (identical(_activeSubscriptions[taskKey], subscription)) {
+          _activeSubscriptions.remove(taskKey);
+        }
+        _activeJobMeta.remove(taskKey);
       }
     } catch (error) {
       // 别再把原因吞掉：以前这里只有一句「无法开始翻译」，出了必失败的问题

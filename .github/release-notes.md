@@ -1,7 +1,9 @@
-### PiliBabel v3.7.11
+### PiliBabel v3.7.12
 
-**The three cover buttons switch from a vertical column to a horizontal row: cover translation anchored at the corner, then subtitles, then danmaku — with the same grow/settle animation and push-aside adaptation now moving along the row, and RTL mirroring following the reading direction.**
+**Cancel/undo for the three cover buttons: tap while loading stops the job and wipes its caches; tap a finished one (green check) to revoke it too — even a successful translation can always be taken back.**
 
-The cover translate button stays exactly where it was; the other two buttons extend sideways from it. When any button grows during loading it pushes the ones after it outward and pulls them back when done — identical to the previous vertical behavior, just along the row. In right-to-left interface languages the row mirrors to extend from the right corner.
+**Cancel while loading.** Tapping a loading button stops its job and resets it: the cover request is aborted via its cancellation token; the subtitle coordinator session is cancelled and its checkpoint deleted; danmaku segment fetching and translation batches drain without further network calls. Everything already written to caches is removed.
+
+**Undo when done.** Tapping a finished button (green checkmark) revokes it: subtitle artifacts (VTT + checkpoint) are deleted from the registry; the danmaku source-text list (persisted per task) is removed from the translation cache; the cover completion marker resets. The button returns to its initial state and can be started again at any time.
 
 Downloads are below.

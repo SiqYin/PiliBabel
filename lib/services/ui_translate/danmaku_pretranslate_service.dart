@@ -57,6 +57,14 @@ abstract final class DanmakuPretranslateService {
   static Future<void>? _loadFuture;
   static Future<void> _writeTail = Future.value();
 
+  /// 已请求取消的任务键（3.7.12）：分段拉取与翻译批次在检查点观察并排空。
+  static final Set<String> _cancelRequested = <String>{};
+
+  /// 每个任务收集到的源文本（取消/撤销时按它清缓存）。完成任务落盘持久化，
+  /// 重启后撤销仍能精准清缓存。
+  static final Map<String, List<String>> _taskContents =
+      <String, List<String>>{};
+
   /// 拉全部分段的上限：6 分钟一段，40 段 = 4 小时。超长的视频按前 4 小时算，
   /// 避免异常时长（直播回放之类）把任务拖成无底洞。
   static const int _maxSegments = 40;
@@ -186,6 +194,10 @@ abstract final class DanmakuPretranslateService {
       final seen = <String>{};
       var fetched = 0;
       for (var seg = 0; seg < segmentCount; seg++) {
+        if (_cancelRequested.contains(runningKey)) {
+          _cleanupCancelled(runningKey, contents);
+          return;
+        }
         _set(
           runningKey,
           DanmakuPretranslateState(
@@ -217,6 +229,11 @@ abstract final class DanmakuPretranslateService {
         return;
       }
 
+      _taskContents[runningKey] = contents;
+      if (_cancelRequested.contains(runningKey)) {
+        _cleanupCancelled(runningKey, contents);
+        return;
+      }
       _set(
         runningKey,
         DanmakuPretranslateState(
@@ -226,6 +243,7 @@ abstract final class DanmakuPretranslateService {
       );
       await UiTranslateService.to.pretranslateDanmaku(
         contents,
+        isCancelled: () => _cancelRequested.contains(runningKey),
         onProgress: (translated, total) {
           // 分段抓取占前 20%，翻译占后 80%。
           _set(
@@ -239,6 +257,10 @@ abstract final class DanmakuPretranslateService {
         },
       );
 
+      if (_cancelRequested.contains(runningKey)) {
+        _cleanupCancelled(runningKey, contents);
+        return;
+      }
       _completed.add(runningKey);
       _set(
         runningKey,
@@ -249,10 +271,95 @@ abstract final class DanmakuPretranslateService {
         ),
       );
       unawaited(_saveIndex());
+      unawaited(_saveContents(runningKey, contents));
       SmartDialog.showToast(uiTx('弹幕已预翻译完成'));
     } catch (e) {
       _fail(taskKey, uiTx('弹幕预翻译失败，可点按钮重试'));
     }
+  }
+
+  /// 取消收尾：把该任务已写入缓存的所有源文本清掉，状态复位为未开始。
+  static void _cleanupCancelled(String runningKey, List<String> contents) {
+    UiTranslateService.to.removeCachedTranslations(contents);
+    _taskContents.remove(runningKey);
+    _cancelRequested.remove(runningKey);
+    _states[runningKey] = const DanmakuPretranslateState();
+  }
+
+  /// 取消（运行中）或撤销（已完成）：清缓存、清持久标记、状态复位。
+  static void cancelOrUndo({
+    required String videoKey,
+    int? cid,
+    String? language,
+  }) {
+    final taskKey = _key(videoKey, language ?? Pref.uiTranslateLang, cid);
+    final state = _states[taskKey];
+    if (state?.isRunning == true) {
+      _cancelRequested.add(taskKey);
+      // 分段拉取/翻译循环会在检查点观察取消并自行清缓存；这里兜底把
+      // 「准备中但还没收集到任何内容」的状态也复位。
+      Future<void>.delayed(const Duration(milliseconds: 600), () {
+        if (_cancelRequested.contains(taskKey)) {
+          _cleanupCancelled(
+            taskKey,
+            _taskContents[taskKey] ?? const <String>[],
+          );
+        }
+      });
+      return;
+    }
+    if (state?.phase == DanmakuPretranslatePhase.complete ||
+        _completed.contains(taskKey)) {
+      final contents = _taskContents[taskKey] ?? _loadContents(taskKey);
+      if (contents.isNotEmpty) {
+        UiTranslateService.to.removeCachedTranslations(contents);
+      }
+      _completed.remove(taskKey);
+      _taskContents.remove(taskKey);
+      _deleteContents(taskKey);
+      _states[taskKey] = const DanmakuPretranslateState();
+      unawaited(_saveIndex());
+    }
+  }
+
+  static File _contentsFile(String taskKey) => File(
+    path.join(appSupportDirPath, 'danmaku_pretranslate', '$taskKey.json'),
+  );
+
+  static Future<void> _saveContents(String taskKey, List<String> contents) async {
+    _writeTail = _writeTail.then((_) async {
+      try {
+        final file = _contentsFile(taskKey);
+        await file.parent.create(recursive: true);
+        final temp = File('${file.path}.tmp');
+        await temp.writeAsString(jsonEncode({'contents': contents}), flush: true);
+        await temp.rename(file.path);
+      } catch (_) {
+        // 内容清单写失败只影响「撤销」的精准清理，不影响真实缓存。
+      }
+    });
+    return _writeTail;
+  }
+
+  static List<String> _loadContents(String taskKey) {
+    try {
+      final file = _contentsFile(taskKey);
+      if (!file.existsSync()) return const <String>[];
+      final decoded =
+          jsonDecode(file.readAsStringSync()) as Map<String, dynamic>;
+      final items = decoded['contents'];
+      if (items is! List) return const <String>[];
+      return items.whereType<String>().toList(growable: false);
+    } catch (_) {
+      return const <String>[];
+    }
+  }
+
+  static void _deleteContents(String taskKey) {
+    try {
+      final file = _contentsFile(taskKey);
+      if (file.existsSync()) file.deleteSync();
+    } catch (_) {}
   }
 
   /// 视频时长（毫秒）。UGC 走 videoIntro（秒 → ×1000）；
@@ -332,6 +439,12 @@ abstract final class DanmakuPretranslateService {
           progress: 1,
           message: uiTxStaticDone,
         );
+      }
+      // 撤销功能（3.7.12）：为已完成的任务恢复源文本清单（懒加载亦可，
+      // 这里直接载入——清单通常几十 KB）。
+      for (final item in _completed.toList()) {
+        final contents = _loadContents(item);
+        if (contents.isNotEmpty) _taskContents[item] = contents;
       }
     } catch (_) {
       // 索引损坏只影响「已完成」标记的回显，不影响真实翻译缓存。

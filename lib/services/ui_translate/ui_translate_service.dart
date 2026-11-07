@@ -1909,9 +1909,31 @@ class UiTranslateService extends GetxService {
   /// 队列是**逐条请求**——热门视频 15 秒窗口里几百条弹幕根本翻不完，弹幕
   /// 出生那一刻译文未到就永远显示原文（画布条目只渲染一次），表现为
   /// 「弹幕翻译没有生效」。弹幕分段加载时整段批量预翻，译文在出生前就绪。
+  /// 从持久缓存里移除一批源文本的译文（3.7.12 取消/撤销弹幕预翻译用）。
+  ///
+  /// 键不存在时静默跳过；有实际删除才 bump revision 与落盘。
+  void removeCachedTranslations(
+    Iterable<String> sources, {
+    String? langCode,
+  }) {
+    final code = langCode ?? currentLanguage.code;
+    final bucket = _cacheByLang[code];
+    if (bucket == null) return;
+    var removed = false;
+    for (final src in sources) {
+      if (bucket.remove(src) != null) removed = true;
+      _danmakuPreInFlight.remove(src);
+    }
+    if (removed) {
+      if (code == currentLanguage.code) _bumpRevisionSoon();
+      _schedulePersist();
+    }
+  }
+
   Future<void> pretranslateDanmaku(
     Iterable<String> contents, {
     void Function(int translated, int total)? onProgress,
+    bool Function()? isCancelled,
   }) async {
     if (!enabled || !translateContent || isSourceLanguage) return;
     final langCode = currentLanguage.code;
@@ -1946,6 +1968,13 @@ class UiTranslateService extends GetxService {
         if (my >= chunks.length) return;
         next++;
         final chunk = chunks[my];
+        // 取消：把剩余分块全部按「已处理」排空，不再发任何网络请求。
+        if (isCancelled?.call() ?? false) {
+          _danmakuPreInFlight.removeAll(chunk);
+          doneCues += chunk.length;
+          onProgress?.call(doneCues, batch.length);
+          continue;
+        }
         _danmakuPreInFlight.addAll(chunk);
         try {
           final translated = await translateSubtitleLines(

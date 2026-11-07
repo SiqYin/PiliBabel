@@ -66,6 +66,15 @@ class _VideoSubtitleTranslateButtonState
     );
   }
 
+  /// 运行中点按 = 取消；已完成点按 = 撤销并清缓存（3.7.12）。
+  void _cancelOrUndo() {
+    SubtitleTranslationBackgroundService.cancelOrUndo(
+      videoKey: widget.videoKey,
+      cid: widget.cid,
+    );
+    SmartDialog.showToast(uiTx('已取消并清除字幕缓存'));
+  }
+
   @override
   Widget build(BuildContext context) {
     // 没开 AI 翻译、或目标语言就是简体中文时，这个按钮没有任何可做的事：
@@ -139,11 +148,11 @@ class _VideoSubtitleTranslateButtonState
           // noSource（没有中文字幕）不是失败，图标置灰；但仍然允许点一下重查：
           // 未登录时 B 站对有 CC 的视频也返回空字幕列表，用户登录后必须能
           // 直接点这个按钮恢复，否则状态会永久停在置灰、点不动。
-          onTap: state.isRunning
-              ? null
-              : () => _start(
-                  force: isComplete || isFailed || state.noSource,
-                ),
+          // 三态点按（3.7.12）：运行中 = 取消；已完成 = 撤销；其余 = 开始。
+          onTap:
+              state.isRunning || isComplete
+              ? _cancelOrUndo
+              : () => _start(force: isFailed || state.noSource),
           child: SizedBox(
             width: 28,
             height: 28,
