@@ -1,9 +1,11 @@
-### PiliBabel v3.7.12
+### PiliBabel v3.8.0
 
-**Cancel/undo for the three cover buttons: tap while loading stops the job and wipes its caches; tap a finished one (green check) to revoke it too — even a successful translation can always be taken back.**
+**Danmaku now switch from Chinese to their translation in place: a bullet comment that went out before its translation was ready flips to the translated text automatically the moment the translation lands — no replay, no restart. Plus: the three cover buttons become a horizontal row, and the first-launch intro describes them left/middle/right.**
 
-**Cancel while loading.** Tapping a loading button stops its job and resets it: the cover request is aborted via its cancellation token; the subtitle coordinator session is cancelled and its checkpoint deleted; danmaku segment fetching and translation batches drain without further network calls. Everything already written to caches is removed.
+**In-place danmaku swap.** The canvas_danmaku renderer is now vendored into the repo, letting a flying danmaku item replace its content mid-flight (paragraph rebuilt, flight path and timing untouched). The player scans live items whenever the translation cache updates and swaps any item still showing its Chinese source.
 
-**Undo when done.** Tapping a finished button (green checkmark) revokes it: subtitle artifacts (VTT + checkpoint) are deleted from the registry; the danmaku source-text list (persisted per task) is removed from the translation cache; the cover completion marker resets. The button returns to its initial state and can be started again at any time.
+**Horizontal cover buttons.** The three buttons (cover, subtitles, danmaku) are now laid out left-to-right at the cover's bottom-left corner, with the grow/settle and push-aside animation adapted to the row; RTL languages mirror the row.
+
+**Intro updated.** The first-launch popup now describes the buttons as left (cover translation), middle (subtitles) and right (danmaku).
 
 Downloads are below.

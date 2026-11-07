@@ -101,7 +101,14 @@ class _PlDanmakuState extends State<PlDanmaku> {
     }
   }
 
-  // 播放器状态监听
+  /// 上次做过「原文→译文」原位换文扫描的 revision（3.8.0）。
+  int _lastSwapRevision = -1;
+
+  /// 添加时译文尚未就绪、等待原位换文的源文本集合（3.8.0）。
+  /// 只扫这些条目：已换成译文的/本来就是译文的不再当源文入队。
+  final Set<String> _awaitingSwapSources = <String>{};
+
+  /// 播放器状态监听
   void playerListener(PlayerStatus status) {
     if (_controller case final controller?) {
       if (status.isPlaying) {
@@ -152,6 +159,16 @@ class _PlDanmakuState extends State<PlDanmaku> {
           }
         }
         _preTranslateCursor = to;
+      }
+    }
+
+    // 原位换文（3.8.0）：预译/即时翻译陆续落缓存后，把仍在屏上飞行、
+    // 显示着原文的条目替换为译文（revision 变化才扫描，一次线性遍历）。
+    if (UiTranslateService.to.danmakuTranslate.value) {
+      final revision = UiTranslateService.to.revision.value;
+      if (revision != _lastSwapRevision) {
+        _lastSwapRevision = revision;
+        _swapTranslatedInFlight();
       }
     }
 
@@ -210,11 +227,22 @@ class _PlDanmakuState extends State<PlDanmaku> {
           }
           // If itemFontSize is null, canvas_danmaku uses global fontSize from DanmakuOption
           
+          final showText = UiTranslateService.to.danmakuTranslate.value
+              ? uiTx(e.content)
+              : e.content;
+          // 译文未就绪（uiTx 原样返回）→ 记入等待换文集合，
+          // 缓存到达后由 _swapTranslatedInFlight 原位切换（3.8.0）。
+          if (showText == e.content &&
+              UiTranslateService.to.danmakuTranslate.value &&
+              !UiTranslateService.to.isSourceLanguage) {
+            _awaitingSwapSources.add(e.content);
+            if (_awaitingSwapSources.length > 600) {
+              _awaitingSwapSources.clear();
+            }
+          }
           _controller!.addDanmaku(
             DanmakuContentItem(
-              UiTranslateService.to.danmakuTranslate.value
-                  ? uiTx(e.content)
-                  : e.content,
+              showText,
               color: blockColorful
                   ? Colors.white
                   : DmUtils.decimalToColor(e.color),
@@ -239,6 +267,39 @@ class _PlDanmakuState extends State<PlDanmaku> {
   }
 
   @override
+  /// 原位换文（3.8.0）：遍历画布活体条目，凡是「显示的还是原文、而缓存里
+  /// 已经有了译文」的，直接替换内容并作废其图像缓存——下一帧即按译文绘制，
+  /// 飞行轨迹不变。mode 7 高级弹幕不做（同 add 时口径）。
+  void _swapTranslatedInFlight() {
+    if (_controller == null || _awaitingSwapSources.isEmpty) return;
+    final service = UiTranslateService.to;
+    if (!service.enabled || service.isSourceLanguage) return;
+    for (final track in _controller!.scrollDanmaku) {
+      for (final item in track) {
+        final current = item.content.text;
+        if (!_awaitingSwapSources.contains(current)) continue;
+        final translated = UiTranslateService.tx(current);
+        if (translated != current) {
+          item.replaceContent(translated);
+          _awaitingSwapSources.remove(current);
+        }
+      }
+    }
+    for (final item in _controller!.staticDanmaku) {
+      if (item == null) continue;
+      final current = item.content.text;
+      if (!_awaitingSwapSources.contains(current)) continue;
+      final translated = UiTranslateService.tx(current);
+      if (translated != current) {
+        item.replaceContent(translated);
+        _awaitingSwapSources.remove(current);
+      }
+    }
+    // specialDanmaku（mode 7 高级弹幕）不支持换文，与添加时口径一致。
+    // 上限保护：集合超限时整体清空（最坏情形是个别条目停在原文）。
+    if (_awaitingSwapSources.length > 600) _awaitingSwapSources.clear();
+  }
+
   void dispose() {
     if (kDebugMode) {
       debugPrint(

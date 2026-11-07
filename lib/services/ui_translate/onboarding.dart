@@ -181,12 +181,12 @@ Future<void> _showUpgradeNotice(BuildContext context) async {
 /// 与 `uiTxUrgent` 用的是同一份 key，不会因为插值产生新词条。
 const String kCoverButtonsHintTitle = 'Three buttons on every cover';
 const String kCoverButtonsHintTop =
-    'Top button: pre-translates this video\'s danmaku (bullet comments) in '
+    'Right button: pre-translates this video\'s danmaku (bullet comments) in '
     'the background.';
 const String kCoverButtonsHintMiddle =
     'Middle button: pre-translates this video\'s subtitles in the background.';
 const String kCoverButtonsHintBottom =
-    'Bottom button: reads the cover image and translates the text on it.';
+    'Left button: reads the cover image and translates the text on it.';
 const String kCoverButtonsHintAction = 'Got it';
 
 /// 「已开启 AI 翻译」弹窗的文案（同样是英文原文 + 优先翻译）。
