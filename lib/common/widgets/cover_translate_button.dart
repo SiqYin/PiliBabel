@@ -137,8 +137,9 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
       msg = await UiTranslateService.to.txAsync(
           '请求超时：识图比纯文字翻译慢，网络不好时更明显。可以点左下角「再次检测」重试');
     } catch (e) {
-      // 用 uiTxP 模板而不是先插值再 uiTx：否则每个不同的错误内容都会变成一条新词条
-      msg = await uiTxPAsync('请求出错：{0}', [e]);
+      // 不把原始异常文本送进翻译模型（以前 DioException 原文会被模型"翻译"
+      // 成一大段说明书，见 504 截图），这里映射成固定短句再走翻译。
+      msg = await UiTranslateService.to.txAsync(_friendlyVisionError(e));
     }
 
     if (mounted) {
@@ -250,6 +251,31 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
       bottom: widget.bottom,
       child: button,
     );
+  }
+
+  /// 把识图链路的异常映射成固定短句：重试已在上游做过（5xx/连接中断各两次
+  /// 退避重试），走到这里的都是重试后仍然失败的情况，给用户一句话即可。
+  static String _friendlyVisionError(Object e) {
+    if (e is DioException) {
+      final code = e.response?.statusCode ?? 0;
+      if (code >= 500) {
+        return '图片翻译服务暂时不可用（HTTP $code），请稍后再试';
+      }
+      switch (e.type) {
+        case DioExceptionType.connectionError:
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+          return '连接中断或超时，请检查网络后重试';
+        default:
+          break;
+      }
+    }
+    final text = e.toString();
+    if (text.contains('图片下载失败')) return '封面图片下载失败，请稍后再试';
+    if (text.contains('接口返回内容为空')) return '接口没有返回内容，请稍后再试';
+    if (text.contains('动图不支持翻译')) return '动图不支持翻译';
+    return '图片翻译请求失败，请稍后再试';
   }
 }
 

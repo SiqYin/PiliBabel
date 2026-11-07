@@ -1505,11 +1505,47 @@ class UiTranslateService extends GetxService {
   /// Index-Translate 支持图片输入（`image_url` 走 OpenAI 兼容格式，由服务端
   /// 自行抓取图片）。返回可直接展示的文案；识别不到文字时模型会按提示词
   /// 回一句说明，所以这里不做二次判断。失败返回 null，由界面兜底。
+  /// 识图请求的**全局串行队列**（3.7.8）。
+  ///
+  /// 内置识图接口（index-translate 网关）对并发请求不友好：同时点多个封面
+  /// 翻译时，后发请求会把先发请求的连接挤掉（表现是「完全なヘッダーを受信
+  /// する前に接続が閉じられました」这种连接中断），先点的那个反而失败。
+  /// 这里把所有识图请求串成一条 FIFO 链：点击顺序 = 提交顺序 = 出结果顺序，
+  /// 一个请求完整结束（含重试）才轮到下一个。
+  static Future<void> _visionQueue = Future<void>.value();
+
+  /// 对外入口：串行队列包装。点击顺序 = 提交顺序 = 出结果顺序（3.7.8）。
+  Future<String?> describeImage(
+    String imageUrl, {
+    bool isLongImage = false,
+    void Function(int percent)? onDownloadProgress,
+    void Function()? onDownloadComplete,
+    CancelToken? cancelToken,
+  }) {
+    final completer = Completer<void>();
+    final prev = _visionQueue;
+    _visionQueue = completer.future;
+    // 前一个识图请求失败不得阻塞队列；自己的异常原样抛给调用方。
+    return prev
+        .then((_) {})
+        .catchError((_) {})
+        .then(
+          (_) => _describeImageInner(
+            imageUrl,
+            isLongImage: isLongImage,
+            onDownloadProgress: onDownloadProgress,
+            onDownloadComplete: onDownloadComplete,
+            cancelToken: cancelToken,
+          ),
+        )
+        .whenComplete(() => completer.complete());
+  }
+
   /// [isLongImage] 为真时走长图分支：只出译文、不列原文，超时也放宽。
   /// [onDownloadProgress] 回调图片下载百分比（0~100），[cancelToken] 供弹窗「关闭」中断。
   /// [onDownloadComplete] 在图片字节到手（即将进入模型推理阶段）时回调一次，
   /// 供按钮把进度环从「真实下载进度」切到「推理估计进度」。
-  Future<String?> describeImage(
+  Future<String?> _describeImageInner(
     String imageUrl, {
     bool isLongImage = false,
     void Function(int percent)? onDownloadProgress,
@@ -1653,29 +1689,39 @@ class UiTranslateService extends GetxService {
       receiveTimeout: const Duration(seconds: 300),
     );
 
-    Response<Map<String, dynamic>> res;
-    try {
-      res = await _uiTxClient().post<Map<String, dynamic>>(
-        uri,
-        options: opts,
-        data: body(dataUri),
-      );
-    } on DioException catch (e) {
-      final code = e.response?.statusCode ?? 0;
-      if (code >= 500) {
-        // 服务端不认 data URI 时退回直发图片地址，由服务端自己抓图
-        _dropUiTxClient();
+    // 重试策略（3.7.8）：504/5xx 网关超时与连接中断都是瞬时故障——第一次
+    // 5xx 后换「直发图片地址由服务端抓图」再试，之后按 2s/5s 退避再各试一次；
+    // 非瞬时错误（4xx 等）原样抛出。以前一次 504 就把整段异常原文弹给用户。
+    Response<Map<String, dynamic>>? res;
+    var useDataUri = true;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) {
+        await Future<void>.delayed(Duration(seconds: attempt == 1 ? 2 : 5));
+      }
+      try {
         res = await _uiTxClient().post<Map<String, dynamic>>(
           uri,
           options: opts,
-          data: body(imageUrl),
+          data: body(useDataUri ? dataUri : imageUrl),
         );
-      } else {
-        rethrow;
+        break;
+      } on DioException catch (e) {
+        final code = e.response?.statusCode ?? 0;
+        final transient =
+            code >= 500 ||
+            e.type == DioExceptionType.connectionError ||
+            e.type == DioExceptionType.connectionTimeout;
+        if (code >= 500) _dropUiTxClient();
+        if (code >= 500 && attempt == 0) useDataUri = false;
+        if (!transient || attempt == 2) rethrow;
       }
     }
+    final visionRes = res;
+    if (visionRes == null) {
+      throw Exception('接口返回内容为空');
+    }
 
-    final choices = res.data?['choices'];
+    final choices = visionRes.data?['choices'];
     if (choices is List && choices.isNotEmpty) {
       final message = choices.first['message'];
       final content = message is Map ? message['content'] : null;
@@ -1683,7 +1729,7 @@ class UiTranslateService extends GetxService {
         return _cleanImageOutput(content);
       }
     }
-    throw Exception('接口返回内容为空（HTTP ${res.statusCode}）');
+    throw Exception('接口返回内容为空（HTTP ${visionRes.statusCode}）');
   }
 
   /// 模型在图里文字很少时会退化成无限重复（补空条目，或整段循环刷同一两句），
@@ -1882,42 +1928,59 @@ class UiTranslateService extends GetxService {
       if (looksLikeNativeScript(src, nativeScript)) continue;
       batch.add(src);
     }
+    // 并发 worker 池（与 SubtitleTranslationJob 同一架构，3.7.8）：
+    // 以前是单协程顺序逐批 await，几千条弹幕要串行跑几百个请求——弹幕
+    // 预翻译的「慢」全部来自这里；字幕之所以及时，靠的就是 N 路并发。
+    // 并发度复用字幕/代理同一开关（Pref.subtitleConcurrency，1~5），
+    // Dart 单 isolate 里 `next++` 在同步段完成，无需加锁。
     const size = 20;
+    final chunks = <List<String>>[
+      for (var i = 0; i < batch.length; i += size)
+        batch.sublist(i, i + size < batch.length ? i + size : batch.length),
+    ];
     var doneCues = 0;
-    for (var i = 0; i < batch.length; i += size) {
-      final end = i + size < batch.length ? i + size : batch.length;
-      final chunk = batch.sublist(i, end);
-      _danmakuPreInFlight.addAll(chunk);
-      try {
-        final translated = await translateSubtitleLines(
-          chunk,
-          // 弹幕与评论区同属社区语境：提示词按简称选型（tight→简称）。
-          hintWidth: UiTextWidth.tight,
-        );
-        var changed = false;
-        final bucket = _cacheByLang.putIfAbsent(
-          langCode,
-          () => <String, String>{},
-        );
-        for (var j = 0; j < chunk.length && j < translated.length; j++) {
-          final value = translated[j].trim();
-          if (value.isNotEmpty && value != chunk[j]) {
-            bucket[chunk[j]] = value;
-            changed = true;
+    var next = 0;
+    Future<void> worker() async {
+      while (true) {
+        final my = next;
+        if (my >= chunks.length) return;
+        next++;
+        final chunk = chunks[my];
+        _danmakuPreInFlight.addAll(chunk);
+        try {
+          final translated = await translateSubtitleLines(
+            chunk,
+            // 弹幕与评论区同属社区语境：提示词按简称选型（tight→简称）。
+            hintWidth: UiTextWidth.tight,
+          );
+          var changed = false;
+          final bucket = _cacheByLang.putIfAbsent(
+            langCode,
+            () => <String, String>{},
+          );
+          for (var j = 0; j < chunk.length && j < translated.length; j++) {
+            final value = translated[j].trim();
+            if (value.isNotEmpty && value != chunk[j]) {
+              bucket[chunk[j]] = value;
+              changed = true;
+            }
           }
+          if (changed) {
+            if (langCode == currentLanguage.code) _bumpRevisionSoon();
+            _schedulePersist();
+          }
+        } catch (_) {
+          // 单批失败不影响其余批次与播放：渲染端继续用原文/后到译文。
+        } finally {
+          _danmakuPreInFlight.removeAll(chunk);
+          doneCues += chunk.length;
+          onProgress?.call(doneCues, batch.length);
         }
-        if (changed) {
-          if (langCode == currentLanguage.code) _bumpRevisionSoon();
-          _schedulePersist();
-        }
-      } catch (_) {
-        // 单批失败不影响其余批次与播放：渲染端继续用原文/后到译文。
-      } finally {
-        _danmakuPreInFlight.removeAll(chunk);
-        doneCues += chunk.length;
-        onProgress?.call(doneCues, batch.length);
       }
     }
+
+    final concurrency = Pref.subtitleConcurrency.clamp(1, 5).toInt();
+    await Future.wait(List.generate(concurrency, (_) => worker()));
   }
 
   /// 内置官方引擎的字幕批量路径：官方接口对批量 JSON 数组的支持不稳定，

@@ -173,15 +173,18 @@ Future<void> _showUpgradeNotice(BuildContext context) async {
 }
 
 
-/// 首页「封面上的两个按钮」说明弹窗的文案。
+/// 首页「封面上的三个按钮」说明弹窗的文案。
 ///
 /// **故意写成英文**：这两句是「用户还没配好目标语言之前」就出现的说明，
 /// 中文原文会让非中文用户完全读不懂；英文原文 + 最高优先级翻译，才能保证
 /// 弹窗一出现就有译文。字符串集中在常量里，[UiTranslateService.precache]
 /// 与 `uiTxUrgent` 用的是同一份 key，不会因为插值产生新词条。
-const String kCoverButtonsHintTitle = 'Two buttons on every cover';
+const String kCoverButtonsHintTitle = 'Three buttons on every cover';
 const String kCoverButtonsHintTop =
-    'Top button: pre-translates this video\'s subtitles in the background.';
+    'Top button: pre-translates this video\'s danmaku (bullet comments) in '
+    'the background.';
+const String kCoverButtonsHintMiddle =
+    'Middle button: pre-translates this video\'s subtitles in the background.';
 const String kCoverButtonsHintBottom =
     'Bottom button: reads the cover image and translates the text on it.';
 const String kCoverButtonsHintAction = 'Got it';
@@ -193,10 +196,11 @@ const String kAutoEnabledBody =
     'It runs on bilibili\'s free built-in model — no API key needed.';
 const String kAutoEnabledAction = 'Got it';
 
-/// 这两个弹窗里出现的所有文案，给 [UiTranslateService.precache] 预热用。
+/// 这些弹窗里出现的所有文案，给 [UiTranslateService.precache] 预热用。
 const List<String> kOnboardingDialogStrings = [
   kCoverButtonsHintTitle,
   kCoverButtonsHintTop,
+  kCoverButtonsHintMiddle,
   kCoverButtonsHintBottom,
   kCoverButtonsHintAction,
   kAutoEnabledTitle,
@@ -247,9 +251,18 @@ Future<void> showCoverButtonsHintIfNeeded() async {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(Icons.subtitles_outlined, size: 18),
+                  const Icon(Icons.comment_outlined, size: 18),
                   const SizedBox(width: 8),
                   Expanded(child: Text(uiTxUrgent(kCoverButtonsHintTop))),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.subtitles_outlined, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(uiTxUrgent(kCoverButtonsHintMiddle))),
                 ],
               ),
               const SizedBox(height: 10),

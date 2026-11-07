@@ -72,6 +72,7 @@ import 'package:PiliPlus/services/ui_translate/subtitle_prefetch_policy.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_source_resolver.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_text_quality.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_artifact.dart';
+import 'package:PiliPlus/services/ui_translate/danmaku_pretranslate_service.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_background_service.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_coordinator.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_job.dart';
@@ -560,6 +561,7 @@ class VideoDetailController extends GetxController
     }
 
     _autoStartSubtitleTranslation();
+    _autoStartDanmakuTranslation();
   }
 
   /// 点开视频就相当于按了一次封面上的「翻译字幕」：视频在加载，字幕在后台先翻。
@@ -603,6 +605,22 @@ class VideoDetailController extends GetxController
         // 合集批量留给封面按钮，这里只处理点开的这一集。
         includeCollection: false,
       ),
+    );
+  }
+
+  /// 点开视频同样自动预翻译弹幕：与字幕同口径（只这一集、按身份键去重）。
+  /// 弹幕分段/时长由服务内部自行解析，拿不到就静默放弃，绝不打扰播放。
+  void _autoStartDanmakuTranslation() {
+    if (isFileSource || !DanmakuPretranslateService.needed) return;
+    final key = _subtitleVideoKey;
+    if (key.isEmpty) return;
+    DanmakuPretranslateService.start(
+      videoKey: key,
+      bvid: bvid.isEmpty ? null : bvid,
+      aid: aid > 0 ? aid : null,
+      cid: cid.value > 0 ? cid.value : null,
+      epId: epId,
+      seasonId: seasonId,
     );
   }
 
