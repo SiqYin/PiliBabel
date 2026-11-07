@@ -14,6 +14,14 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 /// 视频封面、评论区图片、专栏插图共用这一个按钮；动图由服务层拦掉。
 /// 只在点击时发请求，不预取，所以列表里刷再多封面也不会有额外开销。
 ///
+/// 尺寸口径（与上方弹幕/字幕两按钮完全一致，见 CardTranslateButtons）：
+/// 平常/完成是**小号**（13 图标 + 3 内边距 = 19 视觉块），点击加载时变**大号**
+/// （17 进度环 → 23 视觉块），完成后显示绿色小对勾并缩回小号。
+///
+/// 进度环是**真实进度**：图片下载阶段用 dio 的字节回调（0~100%，映射到环的
+/// 0~55%）；下载完成进入模型推理后没有服务端进度，环按缓动估计从 55% 爬向
+/// 95%，拿到译文瞬间跳到 100% 并弹结果弹窗。
+///
 /// 弹窗与更新弹窗同一套写法（SmartDialog + AlertDialog + ColorScheme），
 /// 主题跟随 App；失败时把真实错误原文显示出来，便于定位。
 class CoverTranslateButton extends StatefulWidget {
@@ -23,6 +31,8 @@ class CoverTranslateButton extends StatefulWidget {
     this.bottom = 6,
     this.left = 7,
     this.isLongPic = false,
+    this.loadingNotifier,
+    this.embedded = false,
   });
 
   final String? cover;
@@ -31,12 +41,47 @@ class CoverTranslateButton extends StatefulWidget {
   /// 长图（高度/宽度超过阈值、界面上带「长图」角标的那种）走带进度的弹窗
   final bool isLongPic;
 
+  /// 加载状态外发（卡片三按钮组据此联动排版）：true = 大号加载中。
+  final ValueNotifier<bool>? loadingNotifier;
+
+  /// 嵌入 CardTranslateButtons 时为 true：不再自带 Positioned（位置由
+  /// 按钮组统一编排），只渲染按钮本体。
+  final bool embedded;
+
+  /// 本会话里已翻译完成的封面：卡片重建（Obx 刷新/滚动回收）不丢完成态。
+  static final Set<String> _doneCovers = <String>{};
+
   @override
   State<CoverTranslateButton> createState() => _CoverTranslateButtonState();
 }
 
 class _CoverTranslateButtonState extends State<CoverTranslateButton> {
   bool _loading = false;
+  bool _done = false;
+  int _downloadPercent = 0;
+  bool _downloadDone = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final cover = widget.cover;
+    if (cover != null && CoverTranslateButton._doneCovers.contains(cover)) {
+      _done = true;
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant CoverTranslateButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final cover = widget.cover;
+    if (cover != oldWidget.cover) {
+      _done = cover != null && CoverTranslateButton._doneCovers.contains(cover);
+      _loading = false;
+      _downloadPercent = 0;
+      _downloadDone = false;
+      widget.loadingNotifier?.value = false;
+    }
+  }
 
   Future<void> _onTap() async {
     if (_loading) return;
@@ -53,7 +98,13 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
       );
       return;
     }
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _done = false;
+      _downloadPercent = 0;
+      _downloadDone = false;
+    });
+    widget.loadingNotifier?.value = true;
     SmartDialog.showToast(uiTx('正在翻译图片…'));
 
     String msg;
@@ -65,7 +116,17 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
         // 识图比纯文字翻译慢得多（下封面 + 传 base64 图 + 视觉模型推理），
         // dio 那层给的是 60s 发送 / 120s 接收，这里不能掐得比它还早。
         final text = await UiTranslateService.to
-            .describeImage(cover)
+            .describeImage(
+              cover,
+              onDownloadProgress: (percent) {
+                if (!mounted) return;
+                setState(() => _downloadPercent = percent);
+              },
+              onDownloadComplete: () {
+                if (!mounted) return;
+                setState(() => _downloadDone = true);
+              },
+            )
             .timeout(const Duration(seconds: 120));
         msg = (text?.trim().isNotEmpty == true)
             ? text!
@@ -81,11 +142,17 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
     }
 
     if (mounted) {
-      setState(() => _loading = false);
+      setState(() {
+        _loading = false;
+        if (widget.cover != null) {
+          _done = true;
+          CoverTranslateButton._doneCovers.add(widget.cover!);
+        }
+      });
     }
+    widget.loadingNotifier?.value = false;
     try {
-      // 和更新弹窗用同一套写法：SmartDialog + AlertDialog + ColorScheme，
-      // 主题跟随 App，不再是自绘的黑底容器
+      // 和更新弹窗用同一套写法：SmartDialog + AlertDialog + ColorScheme，主题跟随 App
       await SmartDialog.show(
         animationType: SmartAnimationType.centerFade_otherSlide,
         builder: (context) {
@@ -107,7 +174,6 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
                 child: Text(uiTx('再次检测')),
               ),
               // 右下角：满意就直接关掉
-              // 两个按钮都用默认主色：给「关闭」单独上灰色会让人以为它不可点
               TextButton(
                 onPressed: SmartDialog.dismiss,
                 child: Text(uiTx('关闭')),
@@ -123,41 +189,51 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
-      left: widget.left,
-      bottom: widget.bottom,
-      // 视觉上还是原来的小按钮，但点击区是 28x28 的实心命中块，手指不容易点空
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: _onTap,
-        child: SizedBox(
-          width: 28,
-          height: 28,
-          child: Align(
-            alignment: Alignment.bottomLeft,
-            child: Container(
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(4),
-              ),
+    // 小号 = 13 图标 + 3×2 内边距 = 19；大号（加载中）= 17 环 + 6 = 23。
+    final block = _loading ? 23.0 : 19.0;
+    final content = _loading ? 17.0 : 13.0;
+    final Widget button = GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _onTap,
+      child: SizedBox(
+        width: 28,
+        height: 28,
+        child: Align(
+          alignment: Alignment.bottomLeft,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeInOut,
+            width: block,
+            height: block,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: Colors.black54,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
               child: SizedBox(
-                width: 17,
-                height: 17,
+                key: ValueKey(
+                  '$_loading$_done$_downloadPercent$_downloadDone',
+                ),
+                width: content,
+                height: content,
                 child: Center(
                   child: _loading
-                      ? const TranslateProgressRing(
+                      ? TranslateProgressRing(
                           color: Colors.white,
-                          // 识图没有服务端进度：顺时针填到 90% 左右等结果。
-                          // 环的尺寸/描边与上方翻译按钮共用一套（17 / 2），
-                          // 以前这里是 13 的不定态转圈，两个按钮一大一小。
-                          estimateTarget: 0.9,
-                          estimateDuration: Duration(seconds: 20),
+                          // 下载阶段是真实字节进度（映射到环 0~55%）；
+                          // 下载完成进入推理后按缓动估计爬向 95%。
+                          value: _downloadDone
+                              ? null
+                              : (_downloadPercent / 100) * 0.55,
+                          estimateTarget: 0.95,
+                          estimateDuration: const Duration(seconds: 35),
                         )
-                      : const Icon(
-                          Icons.translate,
-                          size: 14,
-                          color: Colors.white,
+                      : Icon(
+                          _done ? Icons.check : Icons.translate,
+                          size: 13,
+                          color: _done ? Colors.greenAccent : Colors.white,
                         ),
                 ),
               ),
@@ -165,6 +241,14 @@ class _CoverTranslateButtonState extends State<CoverTranslateButton> {
           ),
         ),
       ),
+    );
+    if (widget.embedded) {
+      return button;
+    }
+    return Positioned(
+      left: widget.left,
+      bottom: widget.bottom,
+      child: button,
     );
   }
 }

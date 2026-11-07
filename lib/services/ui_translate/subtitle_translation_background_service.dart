@@ -426,7 +426,7 @@ abstract final class SubtitleTranslationBackgroundService {
       }
     });
     try {
-      final identity = await _resolvePlayableIdentity(
+      final identity = await resolvePlayableIdentity(
         bvid: bvid,
         aid: aid,
         cid: cid,
@@ -770,7 +770,7 @@ abstract final class SubtitleTranslationBackgroundService {
       dynamic seasonId,
     })?
   >
-  _resolvePlayableIdentity({
+  resolvePlayableIdentity({
     String? bvid,
     int? aid,
     int? cid,

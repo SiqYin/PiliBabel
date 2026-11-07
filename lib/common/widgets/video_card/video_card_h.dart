@@ -1,5 +1,4 @@
-import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
-import 'package:PiliPlus/common/widgets/video_subtitle_translate_button.dart';
+import 'package:PiliPlus/common/widgets/card_translate_buttons.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
@@ -187,15 +186,16 @@ class VideoCardH extends StatelessWidget {
                                 type: .gray,
                               ),
 
-                            CoverTranslateButton(cover: videoItem.cover),
-                            if (subtitleVideoKey.isNotEmpty)
-                              VideoSubtitleTranslateButton(
-                                videoKey: subtitleVideoKey,
-                                bvid: videoItem.bvid,
-                                aid: videoItem.aid,
-                                cid: videoItem.cid,
-                                seasonId: videoItem.seasonId,
-                              ),
+                            CardTranslateButtons(
+                              cover: videoItem.cover,
+                              videoKey: subtitleVideoKey,
+                              bvid: videoItem.bvid,
+                              aid: videoItem.aid,
+                              cid: videoItem.cid,
+                              seasonId: videoItem.seasonId,
+                              showSubtitle: subtitleVideoKey.isNotEmpty,
+                              showDanmaku: subtitleVideoKey.isNotEmpty,
+                            ),
                           ],
                         );
                       },
@@ -287,7 +287,7 @@ class VideoCardH extends StatelessWidget {
             () => Text(
               "$pubdate${remarkedName(
                 videoItem.owner.mid,
-                uiTx(videoItem.owner.name ?? ''),
+                uiTxWide(videoItem.owner.name ?? ''),
               )}",
               maxLines: 1,
               style: TextStyle(

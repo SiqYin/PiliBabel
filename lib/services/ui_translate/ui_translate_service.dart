@@ -144,6 +144,14 @@ class UiTranslateService extends GetxService {
   /// 已渲染但尚未翻译的字符串，等待批量 flush。
   final Set<String> _pending = <String>{};
 
+  /// 每个待翻源串入队时声明的**术语选型宽度**。
+  ///
+  /// 同一个词在不同界面位置要用不同形态（标题 tight→简称、UP 主名 wide→全称），
+  /// 而批量翻译走的是同一支队列——宽度不在入队时记下来，flush 时就只剩
+  /// 默认的 normal，简称/全称的分野会在批量化这一步被抹平。
+  /// 与 [_pending] 同生命周期：flush 取走即清。
+  final Map<String, UiTextWidth> _pendingWidth = <String, UiTextWidth>{};
+
   /// **高优先级**待翻队列。
   ///
   /// 使用场景：更新弹窗在 App 启动那一刻就出现，而主页面同一时间会一次性把几十条
@@ -448,6 +456,9 @@ class UiTranslateService extends GetxService {
   /// 术语命中时倾向用官方简称（ゼンゼロ、ブルアカ这一类）。
   static String txTight(String src) => tx(src, width: UiTextWidth.tight);
 
+  /// 宽松位置（UP 主名字等署名场景）的术语选型：**一律全称**。
+  static String txWide(String src) => tx(src, width: UiTextWidth.wide);
+
   /// **离线**固定译名查询：不依赖服务注册、不读设置、不入队，查不到返回 null。
   ///
   /// 给「固定 UI 标签」在构建期同步取词用（如字幕轨道名）：这些标签的语义由
@@ -587,6 +598,8 @@ class UiTranslateService extends GetxService {
     if (hit != null) return hit;
     // 尚未翻译：先显示原文，排进待翻队列。
     if (_pending.add(src)) _scheduleFlush();
+    // 记录入队宽度：flush 时按它选简称/全称（见 _pendingWidth）。
+    _pendingWidth[src] = width;
     return src;
   }
 
@@ -616,6 +629,9 @@ class UiTranslateService extends GetxService {
     // 未翻译：先显示原文，但排进优先队列；同时把它从普通队列里摘掉，
     // 避免同一串文字被两个队列各翻一次。
     _pending.remove(src);
+    _pendingWidth.remove(src);
+    // 优先队列按 wide 选型（与上方内联查询一致）。
+    _pendingWidth[src] = UiTextWidth.wide;
     if (_pendingUrgent.add(src)) _scheduleFlush();
     return src;
   }
@@ -826,7 +842,7 @@ class UiTranslateService extends GetxService {
   ///
   /// 社区口径说明（用户确认）：B 站游戏视频的评论区本身就是社区的一部分，
   /// 社区俚语简称在翻译中名正言顺、应当推荐——所以带通行简称的词条默认简称。
-  String? _glossaryTranslate(String src, String langCode, UiTextWidth width) {
+  static String? _glossaryTranslate(String src, String langCode, UiTextWidth width) {
     final key = src.trim().toLowerCase();
     if (key.isEmpty) return null;
 
@@ -965,6 +981,7 @@ class UiTranslateService extends GetxService {
     List<String> sources,
     String langCode, {
     UiTextWidth width = UiTextWidth.normal,
+    Map<String, UiTextWidth>? widths,
   }) {
     if (sources.isEmpty) return '';
     if (_glossaryFormIndex == null) return '';
@@ -973,6 +990,8 @@ class UiTranslateService extends GetxService {
 
     final hits = <String, String>{};
     for (final src in sources) {
+      // 每源宽度：入队时声明的宽度优先（标题 tight→简称、UP 名 wide→全称）。
+      final srcWidth = widths?[src] ?? width;
       // 长文本（简介/评论）不做逐形态扫描：既慢，也不是术语注入的适用场景
       if (src.length > 200) continue;
       if (hits.length >= _promptHintMaxHits) break;
@@ -996,7 +1015,7 @@ class UiTranslateService extends GetxService {
           if (!matched) continue;
           final id = _glossaryIndex[form];
           if (id == null) continue;
-          final chosen = _glossaryPreferred(id, langCode, width);
+          final chosen = _glossaryPreferred(id, langCode, srcWidth);
           if (chosen != null) hits.putIfAbsent(form, () => chosen);
         }
       }
@@ -1012,7 +1031,7 @@ class UiTranslateService extends GetxService {
   }
 
   @visibleForTesting
-  String? glossaryTranslationForTest(
+  static String? glossaryTranslationForTest(
     String source,
     String languageCode, {
     UiTextWidth width = UiTextWidth.normal,
@@ -1023,7 +1042,8 @@ class UiTranslateService extends GetxService {
     List<String> sources,
     String languageCode, {
     UiTextWidth width = UiTextWidth.normal,
-  }) => _glossaryPromptHints(sources, languageCode, width: width);
+    Map<String, UiTextWidth>? widths,
+  }) => _glossaryPromptHints(sources, languageCode, width: width, widths: widths);
 
   /// 单次提示词最多注入多少条术语，避免提示词无限膨胀拖慢模型。
   static const int _promptHintMaxHits = 20;
@@ -1147,6 +1167,14 @@ class UiTranslateService extends GetxService {
       final batch = source.toList(growable: false);
       source.clear();
 
+      // 带走这一批的宽度声明（普通队列按 _tx 入队时的宽度；优先队列全是 wide）
+      final batchWidths = <String, UiTextWidth>{
+        for (final s in batch) s: _pendingWidth[s] ?? UiTextWidth.normal,
+      };
+      for (final s in batch) {
+        _pendingWidth.remove(s);
+      }
+
       final uncached = batch
           .where((s) => !_cache.containsKey(s))
           .toSet()
@@ -1176,7 +1204,12 @@ class UiTranslateService extends GetxService {
           if (my >= chunks.length) return;
           next++;
           final chunk = chunks[my];
-          final translated = await _translateChunk(chunk).catchError((_) {
+          final translated = await _translateChunk(
+            chunk,
+            widths: {
+              for (final s in chunk) s: batchWidths[s] ?? UiTextWidth.normal,
+            },
+          ).catchError((_) {
             return <String>[];
           });
           var changed = false;
@@ -1384,6 +1417,7 @@ class UiTranslateService extends GetxService {
     Duration? receiveTimeout,
     bool subtitleMode = false,
     SubtitleTranslationProxy? subtitleProxy,
+    Map<String, UiTextWidth>? widths,
   }) async {
     final lang = targetLang;
     final rule = currentLanguage.scriptRule;
@@ -1400,8 +1434,12 @@ class UiTranslateService extends GetxService {
       }
       final buf = StringBuffer();
       // 逐条注入术语强制译法：本条原文里命中术语表的游戏专有名词。
-      // 批量路径逐条翻译，但宽度意图没有随批量传下来，这里用 normal 作为折中。
-      final glossaryRule = _glossaryPromptHints([src], currentLanguage.code);
+      // 宽度随源携带（见 _pendingWidth）：标题 tight→简称、UP 名 wide→全称。
+      final glossaryRule = _glossaryPromptHints(
+        [src],
+        currentLanguage.code,
+        widths: {src: widths?[src] ?? UiTextWidth.normal},
+      );
       final contextOnlyJson = jsonEncode(contextLines);
       await for (final chunk in AiChatService.streamChat(
         messages: [
@@ -1469,10 +1507,13 @@ class UiTranslateService extends GetxService {
   /// 回一句说明，所以这里不做二次判断。失败返回 null，由界面兜底。
   /// [isLongImage] 为真时走长图分支：只出译文、不列原文，超时也放宽。
   /// [onDownloadProgress] 回调图片下载百分比（0~100），[cancelToken] 供弹窗「关闭」中断。
+  /// [onDownloadComplete] 在图片字节到手（即将进入模型推理阶段）时回调一次，
+  /// 供按钮把进度环从「真实下载进度」切到「推理估计进度」。
   Future<String?> describeImage(
     String imageUrl, {
     bool isLongImage = false,
     void Function(int percent)? onDownloadProgress,
+    void Function()? onDownloadComplete,
     CancelToken? cancelToken,
   }) async {
     final base = _normalizeApiBase(translateApiUrl);
@@ -1527,6 +1568,7 @@ class UiTranslateService extends GetxService {
         final data = img.data;
         if (data != null && data.isNotEmpty) {
           bytes = data;
+          onDownloadComplete?.call();
           break;
         }
       } catch (e) {
@@ -1786,11 +1828,13 @@ class UiTranslateService extends GetxService {
     List<String> sources, {
     List<String> contextLines = const [],
     SubtitleTranslationProxy? subtitleProxy,
+    UiTextWidth hintWidth = UiTextWidth.normal,
   }) async {
     if (!enabled || !translateContent) {
       throw StateError('Subtitle translation is disabled');
     }
     if (sources.isEmpty) return const [];
+    final widths = {for (final s in sources) s: hintWidth};
     final result = usingBuiltinTranslate && sources.length > 1
         ? await _translateBuiltinSubtitleBatch(sources, contextLines, subtitleProxy)
         : await _translateChunk(
@@ -1799,6 +1843,7 @@ class UiTranslateService extends GetxService {
             receiveTimeout: const Duration(seconds: 60),
             subtitleMode: true,
             subtitleProxy: subtitleProxy,
+            widths: widths,
           );
     if (result.length != sources.length ||
         result.any((text) => text.trim().isEmpty)) {
@@ -1818,7 +1863,10 @@ class UiTranslateService extends GetxService {
   /// 队列是**逐条请求**——热门视频 15 秒窗口里几百条弹幕根本翻不完，弹幕
   /// 出生那一刻译文未到就永远显示原文（画布条目只渲染一次），表现为
   /// 「弹幕翻译没有生效」。弹幕分段加载时整段批量预翻，译文在出生前就绪。
-  Future<void> pretranslateDanmaku(Iterable<String> contents) async {
+  Future<void> pretranslateDanmaku(
+    Iterable<String> contents, {
+    void Function(int translated, int total)? onProgress,
+  }) async {
     if (!enabled || !translateContent || isSourceLanguage) return;
     final langCode = currentLanguage.code;
     final nativeScript = currentLanguage.nativeScript;
@@ -1835,12 +1883,17 @@ class UiTranslateService extends GetxService {
       batch.add(src);
     }
     const size = 20;
+    var doneCues = 0;
     for (var i = 0; i < batch.length; i += size) {
       final end = i + size < batch.length ? i + size : batch.length;
       final chunk = batch.sublist(i, end);
       _danmakuPreInFlight.addAll(chunk);
       try {
-        final translated = await translateSubtitleLines(chunk);
+        final translated = await translateSubtitleLines(
+          chunk,
+          // 弹幕与评论区同属社区语境：提示词按简称选型（tight→简称）。
+          hintWidth: UiTextWidth.tight,
+        );
         var changed = false;
         final bucket = _cacheByLang.putIfAbsent(
           langCode,
@@ -1861,6 +1914,8 @@ class UiTranslateService extends GetxService {
         // 单批失败不影响其余批次与播放：渲染端继续用原文/后到译文。
       } finally {
         _danmakuPreInFlight.removeAll(chunk);
+        doneCues += chunk.length;
+        onProgress?.call(doneCues, batch.length);
       }
     }
   }
@@ -1943,6 +1998,7 @@ class UiTranslateService extends GetxService {
     Duration? receiveTimeout,
     bool subtitleMode = false,
     SubtitleTranslationProxy? subtitleProxy,
+    Map<String, UiTextWidth>? widths,
   }) async {
     // 最后一道防线（token 保护）：真正发请求前再确认一次开关，
     // 任何入队/换语言/关闭时序问题都不可能导致关闭状态下产生 API 调用。
@@ -1958,6 +2014,7 @@ class UiTranslateService extends GetxService {
         receiveTimeout: receiveTimeout,
         subtitleMode: subtitleMode,
         subtitleProxy: subtitleProxy,
+        widths: widths,
       );
     }
     final lang = targetLang;
@@ -1974,7 +2031,11 @@ class UiTranslateService extends GetxService {
     final scriptRule = currentLanguage.scriptRule;
     final labelRule = _japaneseLabelRule;
     // 术语强制译法：本批原文里命中术语表的游戏专有名词。
-    final glossaryRule = _glossaryPromptHints(sources, currentLanguage.code);
+    final glossaryRule = _glossaryPromptHints(
+      sources,
+      currentLanguage.code,
+      widths: widths,
+    );
     final system =
         '${scriptRule.isEmpty ? '' : '$scriptRule\n\n'}'
         '${subtitleMode ? '你是影视字幕翻译引擎。用户会给出一个带编号的字幕列表' : '你是应用界面本地化翻译引擎。用户会给出一个带编号的界面文案列表'}'
@@ -2261,6 +2322,10 @@ String uiTx(String src) => UiTranslateService.tx(src);
 /// （同一份缓存、同一套队列），两者混用不会导致重复翻译。
 String uiTxTight(String src) =>
     UiTranslateService.tx(src, width: UiTextWidth.tight);
+
+/// 宽松位置（UP 主名字等署名场景）：术语**一律全称**，其余行为与 [uiTx] 一致。
+String uiTxWide(String src) =>
+    UiTranslateService.tx(src, width: UiTextWidth.wide);
 
 /// **高优先级**入口：译文会插队到普通队列之前。
 ///

@@ -1,13 +1,13 @@
-### PiliBabel v3.7.6
+### PiliBabel v3.7.7
 
-**Both cover buttons now share one clockwise-filling progress ring, and collection jobs can finally finish.**
+**The cover buttons become a three-button column — danmaku, subtitles, cover — with uniform size states, smooth layout shifts, real progress on the cover ring, a dedicated danmaku button, and uploader names always in full glossary form.**
 
-**The ring is a determinate progress indicator again.** Whenever there was no exact progress to show (preparing, verifying, image recognition), the button fell back to an indeterminate spinner: it spun forever, so you could neither see how far along it was nor tell whether it had ended. Every state now renders a real arc that fills clockwise from nothing; without a server-side progress value it follows a gentle estimate until the true progress (or the finished state) takes over.
+**Three-button column.** The cover now stacks three buttons top-to-bottom: danmaku, subtitles, cover translation. Every button is small at rest (13px icon), grows while loading (17px progress ring) and settles back to a small green checkmark when done. Whenever one button grows, the ones above it slide up smoothly to keep the edges from overlapping — any combination of the three loading at once stays clean.
 
-**The image button matches the translate button.** The upper button had already been enlarged to a 17-pixel ring, while the lower one below it was still a 13-pixel circle — two different controls sitting side by side. Both now share one progress-ring widget (17 pixels, 2-pixel stroke, visible track) and matching icon sizes.
+**Danmaku pre-translation button.** Tapping the new top button fetches every 6-minute danmaku segment of the video up front and batch-translates all of it into the persistent cache; a green checkmark means entering the player shows bullet comments already translated. Completion state survives app restarts.
 
-**Collection / multi-part batches no longer spin forever.** The batch parent used to write its state onto the very task key of the part you had selected, so that part was treated as "already running" and never started; the batch's running count could never drop to zero, which left the button spinning with no way to complete. The parent now lives on its own state key (`…#batch`), so batches finish properly and the selected part really gets translated.
+**Cover ring, real progress.** The cover translation ring now shows the actual download progress of the cover image (0–55%), then eases toward 95% while the vision model thinks, and completes the moment the result dialog opens — with the same green checkmark as the other two buttons.
 
-**Zombie states cleared.** After a task key is upgraded (`ep<id>` → `BV…`), the leftover "preparing" state on the old key is removed instead of being read back as a never-ending status; the pre-flight stage gained a fallback and a watchdog, so no unexpected exit can leave a button stuck in "preparing" any more. A custom API base URL without `/v1` is also no longer mangled into a literal `$u/v1`, which used to break every request.
+**Full names for uploaders.** Uploader names always use the full glossary form now, while titles and comments keep the community short forms. スターレイル also gained its standalone short form スタレ (previously only the prefixed 崩壊:スターレイル was in the glossary, so the bare form never matched at all).
 
 Downloads are below.

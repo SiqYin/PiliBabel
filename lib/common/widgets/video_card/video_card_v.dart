@@ -1,5 +1,4 @@
-import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
-import 'package:PiliPlus/common/widgets/video_subtitle_translate_button.dart';
+import 'package:PiliPlus/common/widgets/card_translate_buttons.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/image_save.dart';
@@ -151,17 +150,18 @@ class VideoCardV extends StatelessWidget {
                               fontSize: 10,
                             ),
 
-                          CoverTranslateButton(cover: videoItem.cover),
-                          if (subtitleVideoKey.isNotEmpty)
-                            VideoSubtitleTranslateButton(
-                              videoKey: subtitleVideoKey,
-                              bvid: videoItem.bvid,
-                              aid: videoItem.aid,
-                              cid: videoItem.cid,
-                              epId: videoItem.goto == 'bangumi'
-                                  ? videoItem.param
-                                  : null,
-                            ),
+                          CardTranslateButtons(
+                            cover: videoItem.cover,
+                            videoKey: subtitleVideoKey,
+                            bvid: videoItem.bvid,
+                            aid: videoItem.aid,
+                            cid: videoItem.cid,
+                            epId: videoItem.goto == 'bangumi'
+                                ? videoItem.param
+                                : null,
+                            showSubtitle: subtitleVideoKey.isNotEmpty,
+                            showDanmaku: subtitleVideoKey.isNotEmpty,
+                          ),
                         ],
                       );
                     },
@@ -246,14 +246,14 @@ class VideoCardV extends StatelessWidget {
                     () => Text(
                       remarkedName(
                         videoItem.owner.mid,
-                        uiTx(videoItem.owner.name.toString()),
+                        uiTxWide(videoItem.owner.name.toString()),
                       ),
                       maxLines: 1,
                       overflow: .clip,
                       semanticsLabel:
                           'UP：${remarkedName(
                             videoItem.owner.mid,
-                            uiTx(videoItem.owner.name.toString()),
+                            uiTxWide(videoItem.owner.name.toString()),
                           )}',
                       style: TextStyle(
                         height: 1.5,

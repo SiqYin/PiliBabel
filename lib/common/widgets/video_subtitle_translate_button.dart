@@ -4,14 +4,16 @@ import 'package:PiliPlus/common/widgets/translate_progress_ring.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translate_service.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_background_service.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
-/// 视频封面左下角的「翻译字幕」按钮（纯图标）。
+/// 视频封面左下角的「翻译字幕」按钮（纯图标，居中一层）。
 ///
-/// 位置和尺寸与 `CoverTranslateButton` 完全一致，叠在它正上方一点点：
-/// 两个按钮是同一套视觉（28×28 命中区、3 的内边距、13 的图标、black54 圆角 4），
-/// 区别只在图标本身 —— 上方字幕、下方识图翻译。
+/// 尺寸/状态机与下方识图按钮、上方弹幕按钮完全一致（见 CardTranslateButtons）：
+/// 平常/完成是**小号**（13 图标 → 19 视觉块），点击加载时变**大号**（17 环 → 23），
+/// 完成显示绿色小对勾并缩回小号，失败显示刷新图标（点一下重试）。
+/// 位置由 CardTranslateButtons 统一编排，本组件只渲染按钮本体。
 ///
 /// 之前这里是「图标 + 文字」的小胶囊（还带一个额外的重试图标），在封面上比
 /// 旁边的翻译按钮宽一倍，挤在角落很显眼。文案改由 Tooltip 承载，按钮本体只留
@@ -25,8 +27,6 @@ class VideoSubtitleTranslateButton extends StatefulWidget {
     this.cid,
     this.epId,
     this.seasonId,
-    this.bottom = 27,
-    this.left = 7,
   });
 
   final String videoKey;
@@ -37,11 +37,6 @@ class VideoSubtitleTranslateButton extends StatefulWidget {
   /// 番剧（pgc）单集没有 bvid/aid 时，靠这两个编号拉取字幕列表。
   final int? epId;
   final int? seasonId;
-
-  /// 与 `CoverTranslateButton` 同一套锚点：封面翻译按钮的视觉块占 bottom 6..25，
-  /// 这里取 27 留 2 像素缝隙，看起来是「贴着它上方」而不是另一个角落。
-  final double bottom;
-  final double left;
 
   @override
   State<VideoSubtitleTranslateButton> createState() =>
@@ -57,6 +52,7 @@ class _VideoSubtitleTranslateButtonState
   }
 
   void _start({bool force = false}) {
+    SmartDialog.showToast(uiTx('正在翻译字幕…'));
     unawaited(
       SubtitleTranslationBackgroundService.start(
         videoKey: widget.videoKey,
@@ -74,126 +70,129 @@ class _VideoSubtitleTranslateButtonState
   Widget build(BuildContext context) {
     // 没开 AI 翻译、或目标语言就是简体中文时，这个按钮没有任何可做的事：
     // 以前它照样出现，点一下立刻失败，看起来像坏了。干脆不渲染。
-    // 仍然包在 Positioned 里、只把内容缩成 0，避免改变 Stack 的布局模型。
-    return Positioned(
-      left: widget.left,
-      bottom: widget.bottom,
-      child: !SubtitleTranslateService.needed
-          ? const SizedBox.shrink()
-          : Obx(() {
-        final state = SubtitleTranslationBackgroundService.stateFor(
-          videoKey: widget.videoKey,
-          cid: widget.cid,
-        );
-        final theme = Theme.of(context);
-        final hasNativeTrack = state.nativeTrackAvailable;
-        // 「这个视频没有中文字幕」不是失败：图标置灰、不显示进度。
-        // 以前它走 failed 分支，红图标 + 「重试」，用户点多少次都是同样的结果；
-        // 但也不能把点击彻底禁掉 —— 未登录导致的空字幕列表，登录后要能点回来。
-        final (label, icon, color) = state.noSource
-            ? (
-                state.message ?? uiTx('没有可用的中文字幕'),
-                Icons.subtitles_off_outlined,
-                Colors.white54,
-              )
-            : switch (state.phase) {
-          SubtitleTranslationTaskPhase.complete => (
-            uiTx(hasNativeTrack ? 'B站已有译文' : '已翻译'),
-            Icons.check,
-            Colors.greenAccent,
-          ),
-          SubtitleTranslationTaskPhase.failed => (
-            uiTx('重试'),
-            Icons.refresh,
-            theme.colorScheme.errorContainer,
-          ),
-          SubtitleTranslationTaskPhase.preparing => (
-            uiTx('准备中'),
-            Icons.hourglass_top,
-            Colors.white,
-          ),
-          SubtitleTranslationTaskPhase.translating => (
-            '${(state.progress * 100).round()}%',
-            Icons.subtitles_outlined,
-            Colors.white,
-          ),
-          SubtitleTranslationTaskPhase.verifying => (
-            uiTx('校验中'),
-            Icons.verified_outlined,
-            Colors.white,
-          ),
-          SubtitleTranslationTaskPhase.idle => (
-            uiTx('翻译字幕'),
-            Icons.subtitles_outlined,
-            Colors.white,
-          ),
-        };
-        final hint = state.message ?? label;
-        final isComplete = state.phase == SubtitleTranslationTaskPhase.complete;
-        final isFailed = state.phase == SubtitleTranslationTaskPhase.failed;
-        // 进度画满（100%）就立刻呈现完成态，不等 phase 翻转：
-        // 以前「圆环画完整一圈」后要等后台把 phase 改成 complete 才变勾，
-        // 中间任何一步慢了/卡了，用户看到的就是一个不消失的整圆环，
-        // 完全没有「已经翻完了」的提示。环满即勾，且保持不变。
-        final hitDone = state.isRunning && state.progress >= 1;
-        final showCheck = isComplete || hitDone;
-        return Tooltip(
-          message: hint,
-          // 完成态点一下 = 重翻一次；失败态点一下 = 重试。之前这两个动作挂在
-          // 胶囊里那个 1px 内边距的小刷新图标上，现在整块按钮就是一个大靶子。
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            // noSource（没有中文字幕）不是失败，图标置灰；但仍然允许点一下重查：
-            // 未登录时 B 站对有 CC 的视频也返回空字幕列表，用户登录后必须能
-            // 直接点这个按钮恢复，否则状态会永久停在置灰、点不动。
-            onTap: state.isRunning
-                ? null
-                : () => _start(
-                    force: isComplete || isFailed || state.noSource,
-                  ),
-            child: SizedBox(
-              width: 28,
-              height: 28,
-              child: Align(
-                alignment: Alignment.bottomLeft,
-                child: Container(
-                  padding: const EdgeInsets.all(3),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                child: SizedBox(
-                  width: 17,
-                  height: 17,
-                  child: Center(
-                    child: state.isRunning && !showCheck
-                        ? TranslateProgressRing(
-                            // 只有「翻译中」有真实进度；准备中/校验中是
-                            // 未知进度，交给组件做顺时针缓动（以前传 null
-                            // 会变成永远转圈的不定态，看着像坏掉）。
-                            value:
-                                state.phase ==
-                                    SubtitleTranslationTaskPhase.translating
-                                ? state.progress
-                                : null,
-                            color: color,
-                            // 准备中只是拉字幕列表，别装成已经翻了 90%。
-                            estimateTarget: 0.12,
-                            estimateDuration: const Duration(seconds: 5),
-                          )
-                        : Icon(
-                            showCheck ? Icons.check : icon,
-                            size: 14,
-                            color: showCheck ? Colors.greenAccent : color,
-                          ),
-                  ),
+    if (!SubtitleTranslateService.needed) return const SizedBox.shrink();
+    return Obx(() {
+      final state = SubtitleTranslationBackgroundService.stateFor(
+        videoKey: widget.videoKey,
+        cid: widget.cid,
+      );
+      final theme = Theme.of(context);
+      final hasNativeTrack = state.nativeTrackAvailable;
+      // 「这个视频没有中文字幕」不是失败：图标置灰、不显示进度。
+      // 以前它走 failed 分支，红图标 + 「重试」，用户点多少次都是同样的结果；
+      // 但也不能把点击彻底禁掉 —— 未登录导致的空字幕列表，登录后要能点回来。
+      final (label, icon, color) = state.noSource
+          ? (
+              state.message ?? uiTx('没有可用的中文字幕'),
+              Icons.subtitles_off_outlined,
+              Colors.white54,
+            )
+          : switch (state.phase) {
+              SubtitleTranslationTaskPhase.complete => (
+                uiTx(hasNativeTrack ? 'B站已有译文' : '已翻译'),
+                Icons.check,
+                Colors.greenAccent,
+              ),
+              SubtitleTranslationTaskPhase.failed => (
+                uiTx('重试'),
+                Icons.refresh,
+                theme.colorScheme.errorContainer,
+              ),
+              SubtitleTranslationTaskPhase.preparing => (
+                uiTx('准备中'),
+                Icons.hourglass_top,
+                Colors.white,
+              ),
+              SubtitleTranslationTaskPhase.translating => (
+                '${(state.progress * 100).round()}%',
+                Icons.subtitles_outlined,
+                Colors.white,
+              ),
+              SubtitleTranslationTaskPhase.verifying => (
+                uiTx('校验中'),
+                Icons.verified_outlined,
+                Colors.white,
+              ),
+              SubtitleTranslationTaskPhase.idle => (
+                uiTx('翻译字幕'),
+                Icons.subtitles_outlined,
+                Colors.white,
+              ),
+            };
+      final hint = state.message ?? label;
+      final isComplete = state.phase == SubtitleTranslationTaskPhase.complete;
+      final isFailed = state.phase == SubtitleTranslationTaskPhase.failed;
+      // 进度画满（100%）就立刻呈现完成态，不等 phase 翻转：
+      // 以前「圆环画完整一圈」后要等后台把 phase 改成 complete 才变勾，
+      // 中间任何一步慢了/卡了，用户看到的就是一个不消失的整圆环。
+      final hitDone = state.isRunning && state.progress >= 1;
+      final showCheck = isComplete || hitDone;
+      final isRunning = state.isRunning && !showCheck;
+      // 小号 = 13 图标 + 3×2 内边距 = 19；大号（加载中）= 17 环 + 6 = 23。
+      final block = isRunning ? 23.0 : 19.0;
+      final content = isRunning ? 17.0 : 13.0;
+      return Tooltip(
+        message: hint,
+        // 完成态点一下 = 重翻一次；失败态点一下 = 重试。
+        child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          // noSource（没有中文字幕）不是失败，图标置灰；但仍然允许点一下重查：
+          // 未登录时 B 站对有 CC 的视频也返回空字幕列表，用户登录后必须能
+          // 直接点这个按钮恢复，否则状态会永久停在置灰、点不动。
+          onTap: state.isRunning
+              ? null
+              : () => _start(
+                  force: isComplete || isFailed || state.noSource,
                 ),
+          child: SizedBox(
+            width: 28,
+            height: 28,
+            child: Align(
+              alignment: Alignment.bottomLeft,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeInOut,
+                width: block,
+                height: block,
+                padding: const EdgeInsets.all(3),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: SizedBox(
+                    key: ValueKey('$isRunning$showCheck${state.phase}'),
+                    width: content,
+                    height: content,
+                    child: Center(
+                      child: isRunning
+                          ? TranslateProgressRing(
+                              // 只有「翻译中」有真实进度；准备中/校验中是
+                              // 未知进度，交给组件做顺时针缓动。
+                              value:
+                                  state.phase ==
+                                      SubtitleTranslationTaskPhase.translating
+                                  ? state.progress
+                                  : null,
+                              color: color,
+                              // 准备中只是拉字幕列表，别装成已经翻了 90%。
+                              estimateTarget: 0.12,
+                              estimateDuration: const Duration(seconds: 5),
+                            )
+                          : Icon(
+                              showCheck ? Icons.check : icon,
+                              size: 13,
+                              color: showCheck ? Colors.greenAccent : color,
+                            ),
+                    ),
+                  ),
                 ),
               ),
             ),
           ),
-        );
-      }),
-    );
+        ),
+      );
+    });
   }
 }

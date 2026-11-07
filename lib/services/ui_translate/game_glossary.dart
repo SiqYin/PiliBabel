@@ -1,6 +1,6 @@
 // 由 glossary/make_glossary_dart.py 自动生成 —— 勿手改。
 // 内嵌核心术语：角色/武器/圣遗物/组织/地点 + 游戏名全称简称。
-// 全量表（11741 条全部数据）保留在 glossary/build/*.json，按需再扩。
+// 全量表（11742 条全部数据）保留在 glossary/build/*.json，按需再扩。
 
 /// 游戏术语表：`kGlossaryNames` 全称、`kGlossaryShorts` 通行简称、
 /// `kGlossaryShortOnly` 默认用简称的词条。口径：社区俚语简称直接转正、
@@ -9,6 +9,7 @@
 const Map<String, Map<String, String>> kGlossaryNames = {
   'game|genshin': {'en': 'Genshin Impact', 'ja': '原神', 'ko': '원신', 'zh-CN': '原神', 'zh-TW': '原神'},
   'game|hsr': {'en': 'Honkai: Star Rail', 'ja': '崩壊:スターレイル', 'ko': '붕괴: 스타레일', 'zh-CN': '崩坏：星穹铁道', 'zh-TW': '崩壞：星穹鐵道'},
+  'game|hsr_bare': {'en': 'Star Rail', 'ja': 'スターレイル', 'ko': '스타레일', 'zh-CN': '星穹铁道', 'zh-TW': '星穹鐵道'},
   'game|zzz': {'en': 'Zenless Zone Zero', 'ja': 'ゼンレスゾーンゼロ', 'ko': '젠레스 존 제로', 'zh-CN': '绝区零', 'zh-TW': '絕區零'},
   'game|hi3': {'en': 'Honkai Impact 3rd', 'ja': '崩壊3rd', 'ko': '붕괴3rd', 'zh-CN': '崩坏3', 'zh-TW': '崩壞3'},
   'game|wuwa': {'en': 'Wuthering Waves', 'ja': '鳴潮', 'ko': '명조', 'zh-CN': '鸣潮', 'zh-TW': '鳴潮'},
@@ -11753,6 +11754,7 @@ const Map<String, Map<String, String>> kGlossaryNames = {
 const Map<String, Map<String, String>> kGlossaryShorts = {
   'game|genshin': {'en': 'Genshin'},
   'game|hsr': {'en': 'HSR', 'ja': 'スタレ', 'ko': '붕스'},
+  'game|hsr_bare': {'en': 'HSR', 'ja': 'スタレ', 'ko': '붕스'},
   'game|zzz': {'en': 'ZZZ', 'ja': 'ゼンゼロ', 'ko': '젠존제'},
   'game|hi3': {'en': 'HI3'},
   'game|wuwa': {'en': 'WuWa'},
@@ -11764,6 +11766,7 @@ const Map<String, Map<String, String>> kGlossaryShorts = {
 const Set<String> kGlossaryShortOnly = {
   'game|genshin',
   'game|hsr',
+  'game|hsr_bare',
   'game|zzz',
   'game|hi3',
   'game|wuwa',
