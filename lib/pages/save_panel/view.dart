@@ -512,7 +512,7 @@ CoverTranslateButton(cover: cover!),
                                   Align(
                                     alignment: .centerLeft,
                                     child: Image.asset(
-                                      Assets.logo2,
+                                      Assets.logo,
                                       width: 100,
                                       cacheWidth: 100.cacheSize(context),
                                       color: colorScheme.onSurfaceVariant,

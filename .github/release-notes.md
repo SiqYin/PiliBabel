@@ -8,6 +8,8 @@
 
 **Intro updated.** The first-launch popup now describes the buttons as left (cover translation), middle (subtitles) and right (danmaku).
 
+**Icon refresh.** The green legacy castle badge shown on "submitted a video/article" entries in the feed (and the save panel) now uses the current black-blue gradient PiliBabel icon; the unused legacy asset was removed.
+
 **Tablet landscape fix.** The left navigation drawer's width is now recomputed reactively as translations land — long translated labels (e.g. タイムライン) no longer overflow the selection pill.
 
 Downloads are below.

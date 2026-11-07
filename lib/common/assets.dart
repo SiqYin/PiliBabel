@@ -2,7 +2,6 @@ abstract final class Assets {
   static const digitalNum = 'digital_id_num';
 
   static const logo = 'assets/images/logo/logo.png';
-  static const logo2 = 'assets/images/logo/logo_2.png';
   static const logoIco = 'assets/images/logo/ico/app_icon.ico';
   static const logoLarge = 'assets/images/logo/desktop/logo_large.png';
 

@@ -169,7 +169,7 @@ class _UpPanelState extends State<UpPanel> {
           width: 38,
           height: 38,
           cacheWidth: 38.cacheSize(context),
-          Assets.logo2,
+          Assets.logo,
           color: Colors.white,
         ),
       );
