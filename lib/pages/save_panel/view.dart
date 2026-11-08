@@ -509,13 +509,14 @@ CoverTranslateButton(cover: cover!),
                                         ],
                                       ),
                                     ),
+                                  // 同 up_panel 的「全部」头像：logo 本体近满幅，
+                                  // 整图着色只会剩单色圆块——直显 logo 本尊
                                   Align(
                                     alignment: .centerLeft,
                                     child: Image.asset(
                                       Assets.logo,
                                       width: 100,
                                       cacheWidth: 100.cacheSize(context),
-                                      color: colorScheme.onSurfaceVariant,
                                     ),
                                   ),
                                 ],

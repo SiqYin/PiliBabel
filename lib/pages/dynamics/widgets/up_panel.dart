@@ -160,18 +160,15 @@ class _UpPanelState extends State<UpPanel> {
 
     Widget avatar;
     if (isAll) {
-      avatar = DecoratedBox(
-        decoration: const BoxDecoration(
-          shape: .circle,
-          color: Color(0xFF5CB67B),
-        ),
-        child: Image.asset(
-          width: 38,
-          height: 38,
-          cacheWidth: 38.cacheSize(context),
-          Assets.logo,
-          color: Colors.white,
-        ),
+      // 现行 logo 本体是近满幅深蓝渐变圆+白色标记，不能整图着色：
+      // 着色会把全部非透明像素刷成单色，只剩一个纯白圆盘（旧 logo2 是
+      // 91.7% 透明的轮廓图，着色才有「剪影」效果；3.8.0 换图时漏删）。
+      // 官方「全部」头像即 App 图标样式，直接显示 logo 本尊。
+      avatar = Image.asset(
+        width: 38,
+        height: 38,
+        cacheWidth: 38.cacheSize(context),
+        Assets.logo,
       );
     } else {
       avatar = Padding(
