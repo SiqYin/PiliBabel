@@ -1,3 +1,11 @@
+### PiliBabel v3.8.2
+
+**Hotfix on top of 3.8.1: switching mirrored layouts no longer blanks the screen, and the language search gets a second round of polish.**
+
+**Mirror-switch black screen fixed.** The flip transition introduced in 3.8.1 mounted the app twice during the animation — two live copies of the same navigator under one GlobalKey — which black-screened the app when switching into or out of mirrored languages, in both directions. The flip is now a single-tree two-phase animation: the current view rotates edge-on, the direction swaps in place at that instant, and the view unfolds again under the new direction. The navigator is never duplicated and no page state is lost.
+
+**Language search, round two.** Pasted autonyms often carry invisible bidirectional control characters (RLM, isolates, zero-width spaces) that made matches fail even when the text looked right — they are stripped before comparison now. The search field also adapts its text direction to the typed content, so an RTL autonym aligns right even while the interface is still LTR; results update in realtime as you type, with no Enter needed; and the first-strong-direction detection no longer treats neutral characters (spaces, punctuation) as left-to-right.
+
 ### PiliBabel v3.8.1
 
 **Wrap-up of the 3.7-era translation work, plus a flip transition for interface mirroring and a language-search fix.**
