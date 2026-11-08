@@ -3002,7 +3002,7 @@ class VideoDetailController extends GetxController
         subscription.setPosition,
       );
       unawaited(
-        subscription.whenComplete.then((_) {
+        subscription.whenComplete.then((_) async {
           if (identical(_subtitleSubscription, subscription)) {
             _subtitlePositionWorker?.dispose();
             _subtitlePositionWorker = null;
@@ -3020,6 +3020,12 @@ class VideoDetailController extends GetxController
           subtitleTranslationRunning.value = false;
           subtitleTranslationRetryAvailable.value = true;
           subtitleTranslationProgress.value = progress?.ratio ?? 0;
+          // 会话已经放弃（连续无进展收尾）或失败结束：还停在「为翻译暂停」
+          // 就永远等不到恢复条件——这里直接恢复播放，重试交给手动入口。
+          if (_pausedForSubtitleTranslation) {
+            _pausedForSubtitleTranslation = false;
+            await PlPlayerController.playIfExists();
+          }
           final failedChunks = progress?.failedChunks ?? 0;
           final cause = subscription.lastError;
           subtitleTranslationStatus.value = progress == null
@@ -3097,15 +3103,22 @@ class VideoDetailController extends GetxController
     if (_manualSubtitle && !translatedSelected) return;
 
     final waitForComplete = Pref.subtitleTranslationWaitForComplete;
+    final autoPauseForBuffer = Pref.subtitleTranslationAutoPauseForBuffer;
+    // 之前因缓冲不足被暂停、而当前设置已不再要求暂停：先恢复播放，
+    // 再走下面的常规判定（他的方案里 retryExhausted 也会触发恢复；
+    // 我们这边会话放弃统一在 whenComplete 处理）。
+    if (_pausedForSubtitleTranslation && !waitForComplete && !autoPauseForBuffer) {
+      _pausedForSubtitleTranslation = false;
+      await PlPlayerController.playIfExists();
+    }
     final realtimeReady =
         progress.isComplete || SubtitleRealtimeBufferPolicy.canStart(progress);
-    final realtimeStarved =
-        !progress.isComplete &&
-        SubtitleRealtimeBufferPolicy.shouldPause(progress);
-    final mustWait = waitForComplete
-        ? !progress.isComplete
-        : (!translatedSelected && !realtimeReady) ||
-              (translatedSelected && realtimeStarved);
+    final mustWait = SubtitleRealtimeBufferPolicy.shouldBlockPlayback(
+      progress,
+      waitForComplete: waitForComplete,
+      autoPauseForBuffer: autoPauseForBuffer,
+      translatedTrackSelected: translatedSelected,
+    );
 
     if (mustWait) {
       if (!_manualSubtitle &&

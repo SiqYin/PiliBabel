@@ -69,6 +69,23 @@ abstract final class SubtitleRealtimeBufferPolicy {
       !progress.currentPositionCovered ||
       (!progress.remainingTimelineCovered &&
           progress.coverageAheadSeconds < pauseAheadSeconds);
+
+  /// 播放是否应被字幕翻译阻塞。集中判定替代散在调用方的内联逻辑：
+  /// waitForComplete 最高优先；关掉「实时不足自动暂停」后译文轨被选中
+  /// 时缓冲不足也不再暂停（原字幕/已译区间照常显示）；其余沿用原判据。
+  static bool shouldBlockPlayback(
+    SubtitleTranslationProgress progress, {
+    required bool waitForComplete,
+    required bool autoPauseForBuffer,
+    required bool translatedTrackSelected,
+  }) {
+    if (progress.isComplete) return false;
+    if (waitForComplete) return true;
+    if (!autoPauseForBuffer) return false;
+    return translatedTrackSelected
+        ? shouldPause(progress)
+        : !canStart(progress);
+  }
 }
 
 typedef SubtitleTranslationUpdate = void Function(

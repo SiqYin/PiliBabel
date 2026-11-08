@@ -125,4 +125,34 @@ void main() {
     expect(identical(first, second), isTrue);
     expect(first.workerCount, 8);
   });
+
+  test(
+    'timed out waiter is removed and cannot steal a released route',
+    () async {
+      final pool = SubtitleTranslationProxyPool(
+        const [],
+        directWorkers: 1,
+        routeAcquireTimeout: const Duration(milliseconds: 20),
+      );
+      final releaseFirst = Completer<void>();
+      final firstStarted = Completer<void>();
+      final first = pool.run((_) async {
+        firstStarted.complete();
+        await releaseFirst.future;
+        return 'first';
+      });
+      await firstStarted.future;
+
+      await expectLater(
+        pool.run((_) async => 'abandoned'),
+        throwsA(isA<TimeoutException>()),
+      );
+      expect(pool.waitingCount, 0);
+
+      releaseFirst.complete();
+      expect(await first, 'first');
+      expect(await pool.run((_) async => 'next'), 'next');
+      expect(pool.waitingCount, 0);
+    },
+  );
 }

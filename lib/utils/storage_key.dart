@@ -225,6 +225,8 @@ abstract final class SettingBoxKey {
       subtitleConcurrency = 'subtitleConcurrency',
       subtitleContextOverlap = 'subtitleContextOverlap',
       subtitleTranslationWaitForComplete = 'subtitleTranslationWaitForComplete',
+      subtitleTranslationAutoPauseForBuffer =
+          'subtitleTranslationAutoPauseForBuffer',
       subtitleTranslationPrefetchNext = 'subtitleTranslationPrefetchNext',
       subtitleTranslationPrefetchCount = 'subtitleTranslationPrefetchCount',
       subtitleTranslationProxies = 'subtitleTranslationProxies',

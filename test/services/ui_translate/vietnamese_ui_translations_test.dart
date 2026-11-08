@@ -6,6 +6,18 @@ void main() {
     expect(vietnameseUiTranslation('首页'), 'Trang chủ');
     expect(vietnameseUiTranslation('AI 翻译'), 'AI Dịch');
     expect(vietnameseUiTranslation('字幕'), 'Phụ đề');
+    expect(
+      vietnameseUiTranslation('实时字幕不足时自动暂停'),
+      'Tự dừng khi thiếu phụ đề realtime',
+    );
+    expect(
+      vietnameseUiTranslation('正在重试出错的字幕分块'),
+      'Đang thử lại phần phụ đề bị lỗi',
+    );
+    expect(
+      vietnameseUiTranslation('等翻译完成再播放'),
+      'Chờ dịch xong rồi phát video',
+    );
   });
 
   test('does not claim dynamic content is a fixed UI label', () {

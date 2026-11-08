@@ -1983,6 +1983,17 @@ abstract final class Pref {
     value,
   );
 
+  /// 实时字幕缓冲不足时是否自动暂停视频（默认开启）。
+  static bool get subtitleTranslationAutoPauseForBuffer => _setting.get(
+    SettingBoxKey.subtitleTranslationAutoPauseForBuffer,
+    defaultValue: true,
+  );
+
+  static set subtitleTranslationAutoPauseForBuffer(bool value) => _setting.put(
+    SettingBoxKey.subtitleTranslationAutoPauseForBuffer,
+    value,
+  );
+
   static bool get subtitleTranslationPrefetchNext =>
       subtitleTranslationPrefetchCount > 0;
 

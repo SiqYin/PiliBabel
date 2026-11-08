@@ -1,3 +1,15 @@
+### PiliBabel v3.8.4
+
+**Merge of hardening contributed by saukhoai (PRs #3 and #4), adapted to the current codebase.**
+
+**Proxy routes can no longer jam.** Waiting for a translation proxy route now times out after 60 seconds; a timed-out request removes itself from the waiting queue, so an abandoned waiter can no longer steal a slot that was just released. The timeout is part of the shared pool identity, covered by a regression test.
+
+**Realtime pause is now a setting.** A new switch — "auto-pause when realtime subtitles fall behind" (on by default, matching the previous behavior) — decides whether playback may pause while the translated track buffers ahead; turn it off and the video keeps playing, with gaps simply showing original subtitles. The blocking rules moved into one policy function, and playback always resumes when a subtitle translation job gives up instead of staying paused on a dead session.
+
+**More Vietnamese labels.** Eleven fixed UI labels around subtitle context, waiting/prefetch settings and retry states now carry offline Vietnamese translations (contributed by saukhoai).
+
+Not merged (already superseded by the 3.7.3+ subtitle rework in this codebase): his subtitle track-label decoupling and retry-ownership bounds — labels are already resolved without the GetX service and stuck sessions are already capped and surfaced as a retryable failure.
+
 ### PiliBabel v3.8.3
 
 **Icon fix: the dynamics "all uploaders" avatar and the save panel's brand mark render the real logo again.**
