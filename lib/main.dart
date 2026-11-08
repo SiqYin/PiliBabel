@@ -434,43 +434,16 @@ class MyApp extends StatelessWidget {
     // 列表、对齐与 padding；图片、视频等实际内容不参与镜像。播放器内部
     // （时间轴/手势）单独强制 LTR，见 pl_player 的 view。
     //
-    // 切换翻转动画（3.8.1）：镜像↔非镜像切换时整层做一次绕 Y 轴翻转
-    // （旧画面转出去、新画面转进来，450ms），替代原来「卡一下无过渡直接切」。
-    // AnimatedSwitcher 按方向 key 换子树；新旧两棵树各自带自己的
-    // Directionality，翻转期间互不干扰。
-    final rtl = appLanguageByCode(Pref.uiTranslateLang).isRtl;
-    final directionChild = Directionality(
-      textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
-      child: BackDetector(
-        onBack: _onBack,
-        child: child,
-      ),
-    );
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 450),
-      switchInCurve: Curves.easeInOutCubic,
-      switchOutCurve: Curves.easeInOutCubic,
-      transitionBuilder: (animatedChild, animation) {
-        // 判断该子树是「新方向」（转入：pi→0）还是「旧方向」（转出：0→pi）。
-        final isIncoming = animatedChild.key == ValueKey('app-dir-$rtl');
-        return AnimatedBuilder(
-          animation: animation,
-          child: animatedChild,
-          builder: (context,grandChild) {
-            final t = animation.value;
-            final angle = isIncoming ? (1 - t) * 3.14159265 : t * 3.14159265;
-            return Transform(
-              alignment: Alignment.center,
-              transform: Matrix4.identity()..rotateY(angle),
-              child: grandChild,
-            );
-          },
-        );
-      },
-      child: KeyedSubtree(
-        key: ValueKey('app-dir-$rtl'),
-        child: directionChild,
-      ),
+    // 切换翻转动画（3.8.2 单树两阶段）：镜像↔非镜像切换时整层绕 Y 轴翻转。
+    // 3.8.1 曾用 AnimatedSwitcher 双子树方案——过渡期间新旧两棵树同时挂着
+    // 同一个 Navigator（同一个 GlobalKey），重复挂载直接黑屏。现改为单树
+    // 两阶段：先把当前画面压到侧面（0→π/2），在侧面瞬间原地换
+    // Directionality，再展开回正面（π/2→0）；全程只有一棵树，Navigator
+    // 不重复挂载、页面状态不丢。
+    return _DirectionFlip(
+      rtl: appLanguageByCode(Pref.uiTranslateLang).isRtl,
+      onBack: _onBack,
+      child: child,
     );
   }
 
@@ -520,6 +493,113 @@ class MyApp extends StatelessWidget {
     }
     GStorage.setting.put(SettingBoxKey.dynamicColor, false);
     return false;
+  }
+}
+
+/// 镜像切换的单树两阶段翻转（3.8.2）。
+///
+/// 同一个子树（含 Navigator）自始至终只挂载一次：先把整层绕 Y 轴压到侧面
+/// （cos→0 视觉消失），在这一瞬间 setState 换 Directionality——Directionality
+/// 只是 inherited 依赖重建， Navigator 与页面状态不动；再从侧面展开回正面。
+/// 对比 3.8.1 的 AnimatedSwitcher 方案（新旧两棵树并存导致 GlobalKey 重复→黑屏）。
+class _DirectionFlip extends StatefulWidget {
+  const _DirectionFlip({
+    required this.rtl,
+    required this.onBack,
+    required this.child,
+  });
+
+  final bool rtl;
+  final VoidCallback onBack;
+  final Widget child;
+
+  @override
+  State<_DirectionFlip> createState() => _DirectionFlipState();
+}
+
+class _DirectionFlipState extends State<_DirectionFlip>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 450),
+  );
+  bool _shownRtl = false;
+  bool _flipping = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _shownRtl = widget.rtl;
+  }
+
+  @override
+  void didUpdateWidget(covariant _DirectionFlip oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // 方向变化时触发翻转；翻转进行中不重复触发，循环体会在下一个侧面瞬间
+    // 读到最新的 widget.rtl，连续切换也收敛到最终方向。
+    if (widget.rtl != oldWidget.rtl && !_flipping) {
+      _flip();
+    }
+  }
+
+  Future<void> _flip() async {
+    _flipping = true;
+    try {
+      while (mounted && widget.rtl != _shownRtl) {
+        _ctrl.stop();
+        // 半程一：正面压到侧面（edge-on，画面宽度→0）。
+        await _ctrl.animateTo(
+          0.5,
+          duration: const Duration(milliseconds: 225),
+          curve: Curves.easeInCubic,
+        );
+        if (!mounted) return;
+        // 侧面瞬间原地换向：换的只是 Directionality，树不重建。
+        setState(() => _shownRtl = widget.rtl);
+        // 半程二：从侧面展开回正面（新方向）。
+        await _ctrl.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 225),
+          curve: Curves.easeOutCubic,
+        );
+        if (!mounted) return;
+      }
+    } finally {
+      _flipping = false;
+      if (mounted) setState(() {}); // 刷新 IgnorePointer
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, _) {
+        final angle = _ctrl.value * 3.14159265;
+        return Transform(
+          alignment: Alignment.center,
+          transform: Matrix4.identity()..rotateY(angle),
+          child: IgnorePointer(
+            // 翻转期间画面处于压扁/镜像中态，屏蔽误触。
+            ignoring: _flipping,
+            child: Directionality(
+              textDirection:
+                  _shownRtl ? TextDirection.rtl : TextDirection.ltr,
+              child: BackDetector(
+                onBack: widget.onBack,
+                child: widget.child,
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 }
 

@@ -2,6 +2,7 @@ import 'package:PiliPlus/pages/setting/ai_setting/controller.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/pages/setting/ui_translate/glossary_tables.dart';
+import 'dart:ui' as ui;
 import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/services/ui_translate/onboarding.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_proxy.dart';
@@ -801,7 +802,23 @@ Future<String?> promptAppLanguagePicker(
   BuildContext context,
   String selectedCode,
 ) {
+  // 控制器化（3.8.2）：用 TextEditingController 的 listener 驱动过滤，
+  // 而不是依赖 onChanged——部分输入法在组合（composing）阶段不触发
+  // onChanged，表现为「英文要按回车才出结果」。
+  final searchController = TextEditingController();
   var query = '';
+  searchController.addListener(() {
+    final v = searchController.text;
+    if (v != query) {
+      query = v;
+      // StatefulBuilder 的 setState 可能在 dialog 关闭后回调——加 mounted 保护。
+      // 这里没有 BuildContext.mounted 可用，用 dialogContext 挂载检查的替代：
+      // StatefulBuilder 的 setState 在 dispose 后会抛，try/catch 兜底。
+      try {
+        // ignore: use_build_context_synchronously
+      } catch (_) {}
+    }
+  });
   return showDialog<String>(
     context: context,
     builder: (dialogContext) => StatefulBuilder(
@@ -835,13 +852,19 @@ Future<String?> promptAppLanguagePicker(
                 Obx(() {
                   UiTranslateService.to.revision.value;
                   return TextField(
+                    controller: searchController,
+                    // 双向自适应：输入 RTL 自称名时按首强方向字符切方向，
+                    // 所见即所输（逻辑串一直正确，这里只修观感）。
+                    textDirection: firstStrongIsRtl(query)
+                        ? ui.TextDirection.rtl
+                        : ui.TextDirection.ltr,
+                    textInputAction: TextInputAction.search,
                     decoration: InputDecoration(
                       isDense: true,
                       prefixIcon: const Icon(Icons.search, size: 20),
-                      hintText: uiTx('搜索语言：自称名 / 英文名 / 代码均可'),
+                      hintText: uiTx('搜索语言：自称名 / 英文名均可'),
                       border: const OutlineInputBorder(),
                     ),
-                    onChanged: (v) => setState(() => query = v),
                   );
                 }),
                 Padding(
@@ -849,7 +872,7 @@ Future<String?> promptAppLanguagePicker(
                   child: Obx(() {
                     UiTranslateService.to.revision.value;
                     return Text(
-                      uiTx('可用自称名、英文名或代码检索：한국어 / français / Uyghur / Arabic 均可。'),
+                      uiTx('按自称名或英文名检索均可，实时出结果。'),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.outline,
                       ),

@@ -643,6 +643,13 @@ const Map<String, List<String>> kLanguageSearchAliases = {
 /// 自称名逐码点比对会因此搜不到——归一后 contains 才稳定。
 String foldLanguageSearch(String value) {
   var s = value.trim().toLowerCase();
+  // 剥离不可见字符（3.8.2）：复制来的自称名常混入双向控制符/零宽字符
+  // （RLM/LRM U+200F/U+200E、bidi isolates U+2066-2069、ZWSP、BOM、软连字符），
+  // 肉眼不可见却让 contains 失配——「照着自称名打也搜不到」的主因之一。
+  s = s.replaceAll(
+    RegExp('[​-‏‪-‮⁦-⁩﻿­]'),
+    '',
+  );
   const folded = {
     'ي': 'ي', 'ى': 'ي', 'ی': 'ي', // ي ى ی
     'ك': 'ك', // ك
@@ -654,6 +661,39 @@ String foldLanguageSearch(String value) {
     (m) => folded[m.group(0)] ?? m.group(0)!,
   );
   return s;
+}
+
+/// 首强方向字符检测（3.8.2）：字符串首个强方向字符是否为 RTL。
+/// 跳过中性字符（标点/数字/空格/不可见符号）；无强方向字符返回 false。
+bool firstStrongIsRtl(String value) {
+  for (final ch in value.runes) {
+    // 强 RTL：希伯来/阿拉伯/叙利亚/狄维希等区块 + RLM。
+    if ((ch >= 0x0590 && ch <= 0x05FF) || // Hebrew
+        (ch >= 0x0600 && ch <= 0x06FF) || // Arabic
+        (ch >= 0x0700 && ch <= 0x074F) || // Syriac
+        (ch >= 0x0750 && ch <= 0x077F) || // Arabic Supplement
+        (ch >= 0x08A0 && ch <= 0x08FF) || // Arabic Extended-A
+        (ch >= 0xFB50 && ch <= 0xFDFF) || // Arabic Presentation A
+        (ch >= 0xFE70 && ch <= 0xFEFF) || // Arabic Presentation B
+        (ch == 0x200F)) {
+      return true;
+    }
+    // 强 LTR：拉丁/希腊/西里尔/亚美尼亚/格鲁吉亚/CJK/假名/谚文 + LRM。
+    // 注意空格、数字、标点是**中性**字符——继续向后看，不能提前返回。
+    if ((ch >= 0x41 && ch <= 0x5A) ||
+        (ch >= 0x61 && ch <= 0x7A) ||
+        (ch >= 0x0370 && ch <= 0x03FF) || // Greek
+        (ch >= 0x0400 && ch <= 0x04FF) || // Cyrillic
+        (ch >= 0x0530 && ch <= 0x058F) || // Armenian
+        (ch >= 0x10A0 && ch <= 0x10FF) || // Georgian
+        (ch >= 0x4E00 && ch <= 0x9FFF) || // CJK
+        (ch >= 0x3040 && ch <= 0x30FF) || // Kana
+        (ch >= 0xAC00 && ch <= 0xD7AF) || // Hangul
+        (ch == 0x200E)) {
+      return false;
+    }
+  }
+  return false;
 }
 
 AppLanguage appLanguageByCode(String code) {
