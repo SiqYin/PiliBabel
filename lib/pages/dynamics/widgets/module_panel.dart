@@ -1,6 +1,7 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
+import 'dart:ui' as ui;
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/grpc/bilibili/app/listener/v1.pbenum.dart'
@@ -267,7 +268,12 @@ CoverTranslateButton(cover: major.medialist!.cover),
 ]),
                 ),
                 PBadge(
-                  right: 6,
+                  left: Directionality.of(context) == ui.TextDirection.rtl
+                      ? 6
+                      : null,
+                  right: Directionality.of(context) == ui.TextDirection.rtl
+                      ? null
+                      : 6,
                   top: 6,
                   text: major.medialist!.badge?.text,
                 ),

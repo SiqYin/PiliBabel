@@ -433,12 +433,43 @@ class MyApp extends StatelessWidget {
     // 及各 arab/hebr 文字变体）时，整层切到 RTL——Flutter 会自动镜像导航、
     // 列表、对齐与 padding；图片、视频等实际内容不参与镜像。播放器内部
     // （时间轴/手势）单独强制 LTR，见 pl_player 的 view。
+    //
+    // 切换翻转动画（3.8.1）：镜像↔非镜像切换时整层做一次绕 Y 轴翻转
+    // （旧画面转出去、新画面转进来，450ms），替代原来「卡一下无过渡直接切」。
+    // AnimatedSwitcher 按方向 key 换子树；新旧两棵树各自带自己的
+    // Directionality，翻转期间互不干扰。
     final rtl = appLanguageByCode(Pref.uiTranslateLang).isRtl;
-    return Directionality(
+    final directionChild = Directionality(
       textDirection: rtl ? TextDirection.rtl : TextDirection.ltr,
       child: BackDetector(
         onBack: _onBack,
         child: child,
+      ),
+    );
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 450),
+      switchInCurve: Curves.easeInOutCubic,
+      switchOutCurve: Curves.easeInOutCubic,
+      transitionBuilder: (animatedChild, animation) {
+        // 判断该子树是「新方向」（转入：pi→0）还是「旧方向」（转出：0→pi）。
+        final isIncoming = animatedChild.key == ValueKey('app-dir-$rtl');
+        return AnimatedBuilder(
+          animation: animation,
+          child: animatedChild,
+          builder: (context,grandChild) {
+            final t = animation.value;
+            final angle = isIncoming ? (1 - t) * 3.14159265 : t * 3.14159265;
+            return Transform(
+              alignment: Alignment.center,
+              transform: Matrix4.identity()..rotateY(angle),
+              child: grandChild,
+            );
+          },
+        );
+      },
+      child: KeyedSubtree(
+        key: ValueKey('app-dir-$rtl'),
+        child: directionChild,
       ),
     );
   }

@@ -1,3 +1,5 @@
+import 'dart:ui' as ui;
+
 import 'package:PiliPlus/common/widgets/card_translate_buttons.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -148,7 +150,14 @@ class VideoCardH extends StatelessWidget {
                               PBadge(
                                 text: uiTx(badge),
                                 top: 6.0,
-                                right: 6.0,
+                                left: Directionality.of(context) ==
+                                        ui.TextDirection.rtl
+                                    ? 6.0
+                                    : null,
+                                right: Directionality.of(context) ==
+                                        ui.TextDirection.rtl
+                                    ? null
+                                    : 6.0,
                                 type: switch (badge) {
                                   '充电专属' => .error,
                                   _ => .primary,
@@ -159,7 +168,14 @@ class VideoCardH extends StatelessWidget {
                                 text: progress == -1
                                     ? '已看完'
                                     : '${DurationUtils.formatDuration(progress)}/${DurationUtils.formatDuration(videoItem.duration)}',
-                                right: 6,
+                                left: Directionality.of(context) ==
+                                        ui.TextDirection.rtl
+                                    ? 6
+                                    : null,
+                                right: Directionality.of(context) ==
+                                        ui.TextDirection.rtl
+                                    ? null
+                                    : 6,
                                 bottom: 8,
                                 type: .gray,
                               ),
@@ -210,7 +226,8 @@ class VideoCardH extends StatelessWidget {
           ),
           Positioned(
             bottom: 0,
-            right: 12,
+            left: Directionality.of(context) == ui.TextDirection.rtl ? 12 : null,
+            right: Directionality.of(context) == ui.TextDirection.rtl ? null : 12,
             width: 29,
             height: 29,
             child: VideoPopupMenu(

@@ -583,6 +583,79 @@ const AppLanguage defaultAppLanguage = AppLanguage(
   chineseFamily: true,
 );
 
+/// 语言搜索别名（3.8.1）：自称名是非拉丁文字（阿拉伯/希伯来/天城体等）时，
+/// 用英文/中文别名也能搜到——维吾尔语的自称 'ئۇيغۇرچە' 没法用普通键盘直接打出。
+/// 键一律小写；匹配走 contains。
+const Map<String, List<String>> kLanguageSearchAliases = {
+  'ar': ['arabic', 'arabiya', '阿拉伯语', '阿拉伯'],
+  'he': ['hebrew', '希伯来语', '希伯来'],
+  'ug': ['uyghur', 'uighur', 'uyghurche', '维吾尔语', '维吾尔'],
+  'fas-arab': ['persian', 'farsi', '波斯语', '波斯'],
+  'urd-arab': ['urdu', '乌尔都语'],
+  'urd-latn': ['urdu', '乌尔都语'],
+  'ckb-arab': ['kurdish', 'sorani', 'kurd', '库尔德语', '库尔德'],
+  'kmr-latn': ['kurdish', 'kurmanji', '库尔德语'],
+  'sdh-arab': ['kurdish', 'sorani', '库尔德语'],
+  'pbt-arab': ['pashto', 'pushto', '普什图语'],
+  'ary-arab': ['arabic', 'moroccan arabic', '摩洛哥阿拉伯语'],
+  'arz-arab': ['arabic', 'egyptian arabic', '埃及阿拉伯语'],
+  'ars-arab': ['arabic', 'najdi arabic', '内志阿拉伯语'],
+  'apc-arab': ['arabic', 'levantine arabic', '黎凡特阿拉伯语'],
+  'snd-arab': ['sindhi', '信德语'],
+  'azb-arab': ['south azerbaijani', '南阿塞拜疆语'],
+  'ydd-hebr': ['yiddish', '意第绪语'],
+  'div-thaa': ['divehi', 'dhivehi', '迪维希语'],
+  'bo': ['tibetan', '藏语', '藏文'],
+  'th': ['thai', '泰语'],
+  'mya-mymr': ['burmese', 'myanmar', '缅甸语'],
+  'khm-khmr': ['khmer', 'cambodian', '高棉语'],
+  'kat-geor': ['georgian', '格鲁吉亚语'],
+  'hye-armn': ['armenian', '亚美尼亚语'],
+  'hyw-armn': ['armenian', '西亚美尼亚语'],
+  'amh-ethi': ['amharic', '阿姆哈拉语'],
+  'tir-ethi': ['tigrinya', '提格雷尼亚语'],
+  'ben-beng': ['bengali', 'bangla', '孟加拉语'],
+  'asm-beng': ['assamese', '阿萨姆语'],
+  'npi-deva': ['nepali', '尼泊尔语'],
+  'mar-deva': ['marathi', '马拉地语'],
+  'tam-taml': ['tamil', '泰米尔语'],
+  'tel-telu': ['telugu', '泰卢固语'],
+  'kan-knda': ['kannada', '卡纳达语'],
+  'mal-mlym': ['malayalam', '马拉雅拉姆语'],
+  'guj-gujr': ['gujarati', '古吉拉特语'],
+  'pan-guru': ['punjabi', '旁遮普语'],
+  'sin-sinh': ['sinhala', '僧伽罗语'],
+  'ory-orya': ['odia', 'oriya', '奥里亚语'],
+  'lao-laoo': ['lao', '老挝语'],
+  'ukr-cyrl': ['ukrainian', '乌克兰语'],
+  'bel-cyrl': ['belarusian', '白俄罗斯语'],
+  'bul-cyrl': ['bulgarian', '保加利亚语'],
+  'srp-cyrl': ['serbian', '塞尔维亚语'],
+  'ell-grek': ['greek', '希腊语'],
+  'hun-latn': ['hungarian', '匈牙利语'],
+  'ces-latn': ['czech', '捷克语'],
+};
+
+/// 搜索折叠：小写 + 阿拉伯文字母变体归一。
+///
+/// 阿拉伯/维吾尔/波斯文字的同形异码字母（ي/ى/ی 三形 Yeh、ك/ک 两形 Kaf、
+/// ه/ة/ە 三形 Heh、ؤ/ئ/ء Hamza）在不同键盘布局下产出不同码点，
+/// 自称名逐码点比对会因此搜不到——归一后 contains 才稳定。
+String foldLanguageSearch(String value) {
+  var s = value.trim().toLowerCase();
+  const folded = {
+    'ي': 'ي', 'ى': 'ي', 'ی': 'ي', // ي ى ی
+    'ك': 'ك', // ك
+    'ة': 'ه', 'ه': 'ه', 'ە': 'ه', // ة ه ە
+    'ؤ': 'ء', 'ئ': 'ء', 'ء': 'ء', // ؤ ئ ء
+  };
+  s = s.replaceAllMapped(
+    RegExp('[يىیكةهەؤئء]'),
+    (m) => folded[m.group(0)] ?? m.group(0)!,
+  );
+  return s;
+}
+
 AppLanguage appLanguageByCode(String code) {
   for (final l in appLanguages) {
     if (l.code == code) return l;

@@ -154,7 +154,14 @@ class VideoCardV extends StatelessWidget {
                             PBadge(
                               text: uiTx('充电专属'),
                               top: 6,
-                              right: 6,
+                              left: Directionality.of(context) ==
+                                      ui.TextDirection.rtl
+                                  ? 6
+                                  : null,
+                              right: Directionality.of(context) ==
+                                      ui.TextDirection.rtl
+                                  ? null
+                                  : 6,
                               size: .small,
                               type: .error,
                               fontSize: 10,
@@ -184,7 +191,9 @@ class VideoCardV extends StatelessWidget {
         ),
         if (videoItem.goto == 'av')
           Positioned(
-            right: -5,
+            // RTL 镜像（3.8.1）：⋮ 菜单跟随阅读方向换边
+            left: Directionality.of(context) == ui.TextDirection.rtl ? -5 : null,
+            right: Directionality.of(context) == ui.TextDirection.rtl ? null : -5,
             bottom: -2,
             width: 29,
             height: 29,

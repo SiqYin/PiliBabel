@@ -806,17 +806,21 @@ Future<String?> promptAppLanguagePicker(
     context: context,
     builder: (dialogContext) => StatefulBuilder(
       builder: (dialogContext, setState) {
-        // 搜索：按自称名过滤，한국어 / français 这种直接能搜到。
-        final q = query.trim().toLowerCase();
-        final rows = q.isEmpty
-            ? _pickerRows
-            : _pickerRows
-                  .where(
-                    (l) =>
-                        l.name.toLowerCase().contains(q) ||
-                        l.code.toLowerCase().contains(q),
-                  )
-                  .toList();
+        // 搜索：自称名 + 代码 + 英文别名（3.8.1）。比对前双方都做
+        // 阿拉伯文字母折叠归一——维吾尔/阿拉伯/波斯键盘的同形异码字母
+        // （ي/ی/ى、ك/ک、ه/ة/ە）曾让「照着自称名打也搜不到」。
+        final q = foldLanguageSearch(query);
+        bool hit(AppLanguage l) {
+          final name = foldLanguageSearch(l.name);
+          if (name.contains(q)) return true;
+          if (foldLanguageSearch(l.code).contains(q)) return true;
+          for (final alias in kLanguageSearchAliases[l.code] ?? const <String>[]) {
+            if (foldLanguageSearch(alias).contains(q)) return true;
+          }
+          return false;
+        }
+
+        final rows = q.isEmpty ? _pickerRows : _pickerRows.where(hit).toList();
         return AlertDialog(
           title: Obx(() {
             UiTranslateService.to.revision.value;
@@ -834,7 +838,7 @@ Future<String?> promptAppLanguagePicker(
                     decoration: InputDecoration(
                       isDense: true,
                       prefixIcon: const Icon(Icons.search, size: 20),
-                      hintText: uiTx('搜索语言的自称名，例如 한국어、français'),
+                      hintText: uiTx('搜索语言：自称名 / 英文名 / 代码均可'),
                       border: const OutlineInputBorder(),
                     ),
                     onChanged: (v) => setState(() => query = v),
@@ -845,7 +849,7 @@ Future<String?> promptAppLanguagePicker(
                   child: Obx(() {
                     UiTranslateService.to.revision.value;
                     return Text(
-                      uiTx('按该语言的自称名检索：想找韩语就输 한국어，想找法语就输 français。'),
+                      uiTx('可用自称名、英文名或代码检索：한국어 / français / Uyghur / Arabic 均可。'),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(context).colorScheme.outline,
                       ),

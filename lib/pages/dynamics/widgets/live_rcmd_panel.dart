@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'package:PiliPlus/common/assets.dart';
 import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -49,13 +50,15 @@ CoverTranslateButton(cover: liveRcmd.cover),
             PBadge(
               text: liveRcmd.watchedShow?.textLarge,
               top: 6,
-              right: 65,
+              left: Directionality.of(context) == ui.TextDirection.rtl ? 65 : null,
+              right: Directionality.of(context) == ui.TextDirection.rtl ? null : 65,
               fontSize: 10.5,
               type: PBadgeType.gray,
             ),
             if (liveRcmd.liveStatus == 1)
               Positioned(
-                right: 6,
+                left: Directionality.of(context) == ui.TextDirection.rtl ? 6 : null,
+                right: Directionality.of(context) == ui.TextDirection.rtl ? null : 6,
                 top: 6,
                 child: Image.asset(
                   height: 16,

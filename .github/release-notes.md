@@ -1,15 +1,19 @@
-### PiliBabel v3.8.0
+### PiliBabel v3.8.1
 
-**Danmaku now switch from Chinese to their translation in place: a bullet comment that went out before its translation was ready flips to the translated text automatically the moment the translation lands — no replay, no restart. Plus: the three cover buttons become a horizontal row, and the first-launch intro describes them left/middle/right.**
+**Wrap-up of the 3.7-era translation work, plus a flip transition for interface mirroring and a language-search fix.**
 
-**In-place danmaku swap.** The canvas_danmaku renderer is now vendored into the repo, letting a flying danmaku item replace its content mid-flight (paragraph rebuilt, flight path and timing untouched). The player scans live items whenever the translation cache updates and swaps any item still showing its Chinese source.
+This release note covers everything from the 3.7 series through 3.8.1.
 
-**Horizontal cover buttons.** The three buttons (cover, subtitles, danmaku) are now laid out left-to-right at the cover's bottom-left corner, with the grow/settle and push-aside animation adapted to the row; RTL languages mirror the row.
+**Subtitles** — hardened end to end: identity keys unified between background jobs and the player, batch jobs always finish, double-taps can no longer turn success into failure, script-exact translated tracks, out-of-order cues sorted, and every feedback string translated.
 
-**Intro updated.** The first-launch popup now describes the buttons as left (cover translation), middle (subtitles) and right (danmaku).
+**Danmaku** — whole segments batch pre-translated so bullet comments arrive already translated; pre-translation runs on the same concurrent worker pool as subtitles; danmaku that went out untranslated now flip to their translation in place when the translation lands; all three cover buttons gained cancel (while loading) and undo (when finished), wiping their caches.
 
-**Icon refresh.** The green legacy castle badge shown on "submitted a video/article" entries in the feed (and the save panel) now uses the current black-blue gradient PiliBabel icon; the unused legacy asset was removed.
+**Cover vision** — real download progress on the ring, requests serialized in click order with automatic retries on gateway timeouts, and friendly error messages instead of raw exception dumps.
 
-**Tablet landscape fix.** The left navigation drawer's width is now recomputed reactively as translations land — long translated labels (e.g. タイムライン) no longer overflow the selection pill.
+**RTL interface mirroring** — Arabic, Hebrew, Uyghur and other RTL-script languages mirror navigation, lists, alignment and paddings; images and video never flip and the player timeline stays left-to-right; switching to or from mirrored languages now plays a smooth flip transition.
+
+**Language search fixed.** The language picker searched only the autonym as typed — keyboard variants of Arabic-script letters (ي/ی/ى, ك/ک, ه/ة/ە) made exact matches fail. Search now folds those letter variants and every language also has an English search alias: typing "Uyghur", "Arabic" or "Hebrew" finds them.
+
+**Layout & icons** — cover buttons became a horizontal row, the first-launch intro describes them left/middle/right, the tablet landscape drawer resizes reactively with translations, and the feed's submission badges now use the current black-blue gradient icon.
 
 Downloads are below.
