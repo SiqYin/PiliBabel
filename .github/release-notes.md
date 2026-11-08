@@ -1,3 +1,9 @@
+### PiliBabel v3.8.3
+
+**Icon fix: the dynamics "all uploaders" avatar and the save panel's brand mark render the real logo again.**
+
+The 3.8.0 icon refresh swapped the old mostly-transparent outline castle for the current full-bleed gradient logo but kept the monochrome tint the outline artwork required — tinting a full-bleed image paints every non-transparent pixel one color, so the dynamics "all uploaders" avatar turned into a blank white disc and the save panel's logo into a solid grey blob. The tint is removed in both places; they now show the actual full-color logo, exactly like the about page always did.
+
 ### PiliBabel v3.8.2
 
 **Hotfix on top of 3.8.1: switching mirrored layouts no longer blanks the screen, and the language search gets a second round of polish.**
