@@ -3,7 +3,9 @@
 /// [name] 用该语言的“自称/原语写法”显示在界面上（如 English、日本語、繁體粵語）；
 /// [toModel] 是发给翻译模型的提示词（含书写系统、地区用字规范等“只让 AI 知道、
 /// 不显示给用户”的说明）；[chineseFamily] 标记该语言属于中文家族（简繁、粤、吴、
-/// 闽南等），仅用于分组/展示。
+/// 闽南等）。它**不只是展示标记**：字幕校验据它决定「译文里出现汉字算不算正常」
+/// （`SubtitleTranslationOutput.targetUsesHan`），所以「用罗马字书写、一个汉字都
+/// 不许有」的白话字台湾闽南语刻意不标。
 ///
 /// **注意**：是否跳过翻译只看 `UiTranslateService.isSourceLanguage`，也就是
 /// **只有简体中文**（B 站原文语言）跳过；繁体中文、粤语、吴语、闽南语虽然
@@ -421,6 +423,30 @@ const List<AppLanguage> appLanguages = <AppLanguage>[
     official: false,
     variantOf: '大陆闽南语',
   ),
+  // 台湾闽南语（白话字）：系统内置名「台湾闽南语（白话字）」，界面显示自称 Tâi-gí，
+  // 英文名 Taiwanese。与上面的 `nan-TW` 是同一语种的不同书写系统 —— 那条用汉字，
+  // 这条**只用白话字（POJ）罗马字**，一个汉字都不许出现。
+  //
+  // **刻意不标 `chineseFamily`**：那个标记的真实作用是「译文里出现汉字算正常」
+  // （见 `SubtitleTranslationOutput.targetUsesHan` 与照抄判定豁免）。POJ 目标一旦
+  // 被当成中文家族，模型偷懒照抄中文也会被放行，正好违背这条语言的唯一硬要求。
+  // 不标之后：`targetUsesHan` 返回 false，译文里出现任何汉字都会被判成「没翻」
+  // 并重试，字幕轨也会被拒挂 —— 这才是我们要的。
+  AppLanguage(
+    'nan-TW-latn',
+    'Tâi-gí',
+    '中國台灣地區閩南語，以白話字（Pe̍h-ōe-jī，POJ）書寫，英文名 Taiwanese。'
+    '請把原文完整翻譯成以 POJ 書寫的中國台灣地區閩南語：'
+    '**全文只能使用拉丁字母、聲調附加符號、連字號與標點，一個漢字都不能出現**'
+    '——不得漢羅夾用，不得在括號或註釋裡附上漢字，也不得保留原文的任何漢字；'
+    '原文的漢字（含人名、地名、作品名等專有名詞）一律按閩南語讀音轉寫成 POJ。'
+    '聲調符號依 POJ 規範標在主要元音上（例：Tâi-gí、lí hó、chia̍h-pá--bē），'
+    '同一個詞的音節之間用連字號連接。用詞與語法採中國台灣地區閩南語通行說法，'
+    '不得混入華語、粵語或吳語詞彙。'
+    '輸出前逐字自查：只要出現任何一個漢字，就改寫成對應的 POJ 拼寫。',
+    official: false,
+    variantOf: '臺灣閩南語',
+  ),
 
   // ===== 其余语言（按英文名 A–Z）=====
   AppLanguage('ar', 'العربية', 'العربية (Arabic)'),
@@ -607,6 +633,27 @@ const Map<String, List<String>> kLanguageSearchAliases = {
   'div-thaa': ['divehi', 'dhivehi', '迪维希语'],
   'bo': ['tibetan', '藏语', '藏文'],
   'th': ['thai', '泰语'],
+  // 台湾闽南语（白话字）：自称 Tâi-gí 带 POJ 声调符号，普通键盘打不出来，
+  // 所以「照着念的名字」（tâi-gí）、去调号的拼法（tai-gi / taigi）、英文名
+  // （Taiwanese）、书写系统名（POJ / 白话字）与「闽南语」都要能搜到。
+  'nan-TW-latn': [
+    'tâi-gí',
+    'tai-gi',
+    'taigi',
+    'tâi-uân-gí',
+    'tai-uân-gi',
+    'tai-oan-gi',
+    'taiwanese',
+    'poj',
+    'pe̍h-ōe-jī',
+    'peh-oe-ji',
+    'hokkien',
+    'holo',
+    '台灣閩南語',
+    '台湾闽南语',
+    '台語',
+    '閩南語',
+  ],
   'mya-mymr': ['burmese', 'myanmar', '缅甸语'],
   'khm-khmr': ['khmer', 'cambodian', '高棉语'],
   'kat-geor': ['georgian', '格鲁吉亚语'],
