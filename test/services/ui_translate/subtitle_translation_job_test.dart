@@ -329,6 +329,80 @@ void main() {
   });
 
   test(
+    'priming a mid-video start translates forward first and history last',
+    () async {
+      // 用户从 25:00 续播：先用上下文块与正在播放的块，再按时间向后推进，
+      // 前面的历史分块排到最后。这样「从中间进入」与「从头进入」等待时长一致。
+      final order = <int>[];
+      final job = SubtitleTranslationJob(
+        cues: _cues(2000),
+        chunkSize: 20,
+        concurrency: 1,
+        cacheKey: 'forward-first',
+        cacheDirectory: directory.path,
+        translate: (lines) async {
+          order.add(int.parse(lines.first.substring(1)) ~/ 20);
+          return lines.map((line) => 'translated $line').toList();
+        },
+        onUpdate: (_, _) {},
+      );
+
+      job.primePosition(1500);
+      await job.run();
+
+      // 位置 1500s 落在第 1500 句 → 分块 75；上下文依赖块是 74。
+      expect(order.take(2), [74, 75]);
+      // 紧接着是正在看的前方（76、77…），历史分块（0、1…）排在最后。
+      expect(order[2], 76);
+      expect(order[3], 77);
+      expect(order.skip(4).take(2), [78, 79]);
+      expect(order.last, lessThan(74));
+      expect(order.indexOf(0), greaterThan(order.indexOf(80)));
+    },
+  );
+
+  test(
+    'priming the start position reorders the queue before the first request',
+    () async {
+      // 后台预翻译先于播放页建会话，位置恒为 0。续播到 25:00 时若沿用 0，
+      // 就要先把前面 75 个分块全部翻完才轮到用户正在看的那一段。
+      final started = <int>[];
+      final waiting = <Completer<void>>[];
+      final initialWorkers = Completer<void>();
+      final job = SubtitleTranslationJob(
+        cues: _cues(2000),
+        chunkSize: 20,
+        concurrency: 2,
+        cacheKey: 'primed-position',
+        cacheDirectory: directory.path,
+        translate: (lines) async {
+          started.add(int.parse(lines.first.substring(1)) ~/ 20);
+          final gate = Completer<void>();
+          waiting.add(gate);
+          if (started.length == 2) initialWorkers.complete();
+          await gate.future;
+          return lines.map((line) => 'translated $line').toList();
+        },
+        onUpdate: (_, _) {},
+      );
+
+      job.primePosition(1500);
+      expect(job.positionSeconds, 1500);
+      final running = job.run();
+      await initialWorkers.future;
+
+      // 上下文依赖块（74）→ 正在播放的块（75），而不是从头开始的块 0/1。
+      expect(started, [74, 75]);
+
+      job.cancel();
+      for (final gate in waiting) {
+        gate.complete();
+      }
+      await running;
+    },
+  );
+
+  test(
     'limits workers, reprioritizes after seeking and keeps cue order',
     () async {
       final started = <int>[];

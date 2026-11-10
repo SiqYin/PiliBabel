@@ -73,6 +73,16 @@ class SubtitleTranslationSubscription {
     if (!_detached) _session.job.setPosition(seconds);
   }
 
+  /// 起播定位：把播放页真实起播位置写进（可能被复用的）共享会话。
+  ///
+  /// 后台预翻译先于播放页在 onInit 建会话，那时位置恒为 0；播放页 attach
+  /// 时同一个缓存身份键会复用该会话，`createJob` 不再执行，构造参数里的
+  /// `positionSeconds` 就丢了。必须在 attach 后显式补写，否则队列仍按
+  /// 位置 0 排序，从中间续播要先把前面的分块全部翻完。
+  void primePosition(int seconds) {
+    if (!_detached) _session.job.primePosition(seconds);
+  }
+
   /// Retry the existing failed chunks immediately without creating a second
   /// job or discarding chunks that have already passed validation.
   void retryNow() {

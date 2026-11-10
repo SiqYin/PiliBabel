@@ -1,3 +1,17 @@
+### PiliBabel v3.8.5
+
+**Subtitle translation now starts loading from the timestamp you actually begin playing at.**
+
+When you open a video at 30:00, the translation queue used to start from 00:00 and grind through half an hour of dialogue before it reached the part you were watching — so resuming a long video meant a long wait with playback held back the whole time. Starting from the beginning was fast; starting from anywhere else was not.
+
+**Why it happened.** Opening a video kicks off a background subtitle pre-translation from the video page's `onInit`, before the player has resolved a stream — so that job is created with position 0. When the player later attaches to the translator it uses the *same* cache identity key, and the coordinator simply reuses the existing session instead of building a new job, so the real start position the player passed in was silently dropped. The position listener was also registered without `fireImmediately`, and while playback is paused waiting for subtitles the position never changes — so there was no second chance to correct it. Both together pinned the queue to position 0.
+
+**The fix.** A session can now be told where playback actually starts (`primePosition`), pushed in by the player right after it attaches, and the background job accepts the resume point up front (read from the launch timestamp or the saved position). Either path is enough, so both entrances are covered.
+
+**What it looks like now.** With 20-sentence chunks and playback at 1500s, the queue runs: the overlap-context chunk (74) → the chunk you are watching (75) → 76 → 77 → 78 … → and only then the history at 0, 1, … Opening from 0:00 is unchanged — same order, same speed as before.
+
+**Unchanged:** the pause on open while the first subtitles arrive, and the auto-pause when the realtime buffer falls behind. Only the loading order changed.
+
 ### PiliBabel v3.8.4
 
 **Merge of hardening contributed by saukhoai (PRs #3 and #4), adapted to the current codebase.**

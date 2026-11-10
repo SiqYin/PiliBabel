@@ -878,6 +878,22 @@ class SubtitleTranslationJob {
     _scheduleEmit();
   }
 
+  /// 会话被播放页接管时的**起播定位**。
+  ///
+  /// 后台预翻译在 `onInit` 就建好了会话，那时还不知道用户从第几秒开始看，
+  /// 位置恒为 0。播放页后来 attach 进来时用的是**同一个缓存身份键**，于是
+  /// 协调器复用这个已有会话、根本不会再调用 `createJob`——播放页那行
+  /// `positionSeconds: plPlayerController.position.value` 直接被丢掉。
+  ///
+  /// 结果是 `_nearestPending` 一直按位置 0 排序：从 30:00 续播也要先把前
+  /// 30 分钟逐块翻完，才轮到用户正在看的那一段，这就是「从中间点进去要等
+  /// 很久」的根因。这里把真实起播位置写进会话，队列立即改按它排序，
+  /// 从 0 秒开始看的行为完全不变（[seconds] <= 0 直接返回）。
+  void primePosition(int seconds) {
+    if (seconds <= 0) return;
+    setPosition(seconds);
+  }
+
   /// Publish an empty Vietnamese track before the first valid chunk arrives.
   /// Source Chinese is never copied into realtime translated output.
   void emitCurrent() {

@@ -115,6 +115,63 @@ void main() {
     },
   );
 
+  test(
+    'a reused session accepts the joining viewer start position',
+    () async {
+      final directory = await Directory.systemTemp.createTemp('pili_coordinator_prime_');
+      addTearDown(() => directory.delete(recursive: true));
+      final gate = Completer<void>();
+      SubtitleTranslationJob? created;
+
+      SubtitleTranslationJob factory(
+        SubtitleTranslationUpdate onUpdate,
+        SubtitleTranslationPriorityHandle _,
+      ) => created = SubtitleTranslationJob(
+        cues: _cues(40),
+        chunkSize: 10,
+        concurrency: 1,
+        cacheKey: 'reused-session',
+        cacheDirectory: directory.path,
+        translate: (lines) async {
+          await gate.future;
+          return lines.map((line) => 'vi $line').toList();
+        },
+        onUpdate: onUpdate,
+      );
+
+      // 第一个 attach 模拟后台预翻译：建会话时还不知道起播位置。
+      final background = SubtitleTranslationCoordinator.attach(
+        key: 'reused-session',
+        createJob: factory,
+        allowNewTranslation: true,
+        onUpdate: (_, _) {},
+      );
+      final startedJob = created!;
+      expect(startedJob.positionSeconds, 0);
+
+      // 播放页稍后 attach 同一个键：会话被复用，createJob 不会再执行，
+      // 构造参数里的 positionSeconds 被丢弃，只能靠 primePosition 补写。
+      final playback = SubtitleTranslationCoordinator.attach(
+        key: 'reused-session',
+        createJob: factory,
+        allowNewTranslation: true,
+        onUpdate: (_, _) {},
+      );
+      expect(identical(created, startedJob), isTrue);
+      playback.primePosition(300);
+      expect(startedJob.positionSeconds, 300);
+
+      // 从头开始看时必须保持原行为：0 不改变任何状态。
+      playback.primePosition(0);
+      expect(startedJob.positionSeconds, 300);
+
+      background.detach();
+      playback.cancel();
+      gate.complete();
+      await playback.whenComplete;
+    },
+  );
+
   test('manual retry wakes backoff without starting a duplicate job', () async {
     final directory = await Directory.systemTemp.createTemp(
       'pili_coordinator_retry_',

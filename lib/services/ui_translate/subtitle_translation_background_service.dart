@@ -325,6 +325,7 @@ abstract final class SubtitleTranslationBackgroundService {
     int? seasonId,
     bool force = false,
     bool includeCollection = true,
+    int? startPositionSeconds,
   }) async {
     await ensureInitialized();
     final target = Pref.uiTranslateLang;
@@ -346,6 +347,7 @@ abstract final class SubtitleTranslationBackgroundService {
         taskKey: taskKey,
         force: force,
         includeCollection: includeCollection,
+        startPositionSeconds: startPositionSeconds,
       );
     } finally {
       _startingKeys.remove(taskKey);
@@ -364,6 +366,7 @@ abstract final class SubtitleTranslationBackgroundService {
     required String taskKey,
     required bool force,
     required bool includeCollection,
+    int? startPositionSeconds,
   }) async {
     final current = _states[taskKey];
     if (current?.isRunning == true ||
@@ -445,6 +448,7 @@ abstract final class SubtitleTranslationBackgroundService {
       force: force,
       // 单集必须给结果反馈；只有合集批量（_startBatch）才关掉逐集 toast。
       notify: true,
+      startPositionSeconds: startPositionSeconds,
     );
   }
 
@@ -457,6 +461,7 @@ abstract final class SubtitleTranslationBackgroundService {
     int? seasonId,
     bool force = false,
     bool notify = true,
+    int? startPositionSeconds,
   }) async {
     await ensureInitialized();
     final target = Pref.uiTranslateLang;
@@ -679,6 +684,8 @@ abstract final class SubtitleTranslationBackgroundService {
           contextOverlap: Pref.subtitleContextOverlap,
           targetLanguage: target,
           cacheKey: activeCacheKey,
+          // 续播时按入口时间戳排队，别从 0 秒开始逐块翻。
+          positionSeconds: startPositionSeconds ?? 0,
           onUpdate: onUpdate,
           translate: SubtitleTranslateService.translateChunk,
           translateWithContext: (lines, context) => pool.run(

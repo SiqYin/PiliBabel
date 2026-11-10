@@ -586,6 +586,21 @@ class VideoDetailController extends GetxController
     seasonId: seasonId,
   );
 
+  /// 点进视频时预计的起播秒数（续播 / 从指定时间戳进入）。
+  ///
+  /// `args['progress']` 是路由传入的毫秒时间戳，`playedTime` 是上次播放位置。
+  /// 播放器真正 seek 发生在取流之后，这里只能读入口参数；拿不到就返回 0，
+  /// 与「从头发」完全同义。
+  int get _entryStartPositionSeconds {
+    final progress = args['progress'];
+    final fromArgs = progress is num
+        ? progress.toInt()
+        : int.tryParse('${progress ?? ''}') ?? 0;
+    if (fromArgs > 0) return fromArgs ~/ 1000;
+    final fromPlayedTime = playedTime?.inMilliseconds ?? 0;
+    return fromPlayedTime > 0 ? fromPlayedTime ~/ 1000 : 0;
+  }
+
   void _autoStartSubtitleTranslation() {
     if (isFileSource || !SubtitleTranslateService.needed) return;
     final resolvedBvid = bvid.isEmpty ? null : bvid;
@@ -602,6 +617,8 @@ class VideoDetailController extends GetxController
         cid: cid.value > 0 ? cid.value : null,
         epId: epId,
         seasonId: seasonId,
+        // 续播 / 指定时间戳进入时按该位置排队；从头发则仍是 0，行为不变。
+        startPositionSeconds: _entryStartPositionSeconds,
         // 合集批量留给封面按钮，这里只处理点开的这一集。
         includeCollection: false,
       ),
@@ -2997,6 +3014,17 @@ class VideoDetailController extends GetxController
         return;
       }
       _subtitlePositionWorker?.dispose();
+      // 起播定位必须在挂监听之前先写进去。
+      //
+      // `_autoStartSubtitleTranslation`（onInit）已经用「位置 0」建好了同一个
+      // 缓存身份键的会话；这里的 attach 命中同一个键，协调器只会复用会话、
+      // **不会**再调 createJob，上面那个 `positionSeconds:` 参数因此被丢弃。
+      // 后果：`_nearestPending` 永远按位置 0 排序，从 30:00 续播也要先把前
+      // 30 分钟逐块翻完才轮到正在看的那一段——这就是「从中间点进去要等很久」。
+      //
+      // 先写真实位置，再挂 ever 监听；位置本来就是 0（从头看）时是空操作，
+      // 原有行为完全不变。
+      subscription.primePosition(plPlayerController.position.value);
       _subtitlePositionWorker = ever<int>(
         plPlayerController.position,
         subscription.setPosition,
