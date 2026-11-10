@@ -179,7 +179,70 @@ class VideoDetailController extends GetxController
 
   /// 播放器配置 画质 音质 解码格式
   final Rxn<VideoQuality> currentVideoQa = Rxn<VideoQuality>();
-  AudioQuality? currentAudioQa;
+
+  /// 当前音频轨音质。
+  ///
+  /// 3.7.0 的 HiRes 播放栏标识把它写成了**普通字段**却放进 `Obx` 读取：
+  /// GetX 的 `Obx` 只要读不到任何 observable 就直接抛
+  /// 「improper use of a GetX has been detected」，那个 `Obx` 一构建就抛异常，
+  /// 于是 HiRes 标识从头到尾没显示过。改成 `Rxn` 后既能被 `Obx` 正确依赖，
+  /// 也能在切轨后自动刷新。
+  final Rxn<AudioQuality> currentAudioQa = Rxn<AudioQuality>();
+
+  /// 当前条目可选的全部音频轨（用于判断「本视频是否真的有 HiRes 音轨」）。
+  List<AudioItem> get audioTracks => data.dash?.audio ?? const <AudioItem>[];
+
+  /// 本条视频是否有 HiRes 无损音轨。没有的话播放栏不该出现 HiRes 标识。
+  ///
+  /// 用 `maybeFromCode` 而不是 `fromCode`：B 站随时可能下发新的音质 code，
+  /// 播放栏构建路径上遇到未知码必须安静跳过，不能整个崩掉。
+  bool get hasHiResAudioTrack => audioTracks.any(
+    (item) => AudioQuality.maybeFromCode(item.id)?.isHiRes == true,
+  );
+
+  /// 切到指定音质：换 audioUrl 并重开播放器，位置保持不变。
+  ///
+  /// 复用 `updatePlayer()`（它按 `currentAudioQa` 选轨并 `playerInit`），
+  /// 所以只需先写好新音质。**不写回设置**：HiRes 开关是「本条视频当场切换」，
+  /// 不该把 `defaultAudioQa` 永久改成 HiRes 或永久降档。
+  void _applyAudioQuality(AudioQuality qa) {
+    if (currentAudioQa.value == qa) return;
+    currentAudioQa.value = qa;
+    plPlayerController.cacheAudioQa = qa.code;
+    updatePlayer();
+  }
+
+  /// 播放栏 HiRes 标识的点按行为：亮 ↔ 灭。
+  ///
+  /// * 当前是 HiRes → 熄灭，落到「HiRes 以下的下一档最高」，弹「HiRes 音质已关闭」；
+  /// * 当前不是 HiRes → 点亮，切回 HiRes，弹「HiRes 音质已开启」。
+  ///
+  /// 两条弹窗文案走 `uiTx`，因此自动进 AI 翻译队列并被预翻译覆盖。
+  void toggleHiResAudio() {
+    final hasHiRes = audioTracks.any(
+      (item) => AudioQuality.maybeFromCode(item.id)?.isHiRes == true,
+    );
+    if (!hasHiRes) return;
+    final current = currentAudioQa.value;
+    if (current?.isHiRes == true) {
+      // 降档：优先选“真实存在于本条视频里”的最高非 HiRes 轨。
+      final fallback = audioTracks
+          .map((item) => AudioQuality.maybeFromCode(item.id))
+          .whereType<AudioQuality>()
+          .where((qa) => !qa.isHiRes)
+          .fold<AudioQuality?>(null, (best, qa) {
+            if (best == null || qa.rank > best.rank) return qa;
+            return best;
+          });
+      // 没有别的轨可降时，退回按 rank 推导的下一档（至少不会又是一条 HiRes）。
+      _applyAudioQuality(fallback ?? current!.nextLower);
+      SmartDialog.showToast(uiTx('HiRes 音质已关闭'));
+    } else {
+      _applyAudioQuality(AudioQuality.hiRes);
+      SmartDialog.showToast(uiTx('HiRes 音质已开启'));
+    }
+  }
+
   late VideoDecodeFormatType currentDecodeFormats;
 
   // 是否开始自动播放 存在多p的情况下，第二p需要为true
@@ -1050,9 +1113,10 @@ class VideoDetailController extends GetxController
     videoUrlCandidates = firstVideo.playUrls.toList();
 
     /// 根据currentAudioQa 重新设置audioUrl
-    if (currentAudioQa != null) {
+    final audioQa = currentAudioQa.value;
+    if (audioQa != null) {
       final firstAudio = data.dash!.audio!.firstWhere(
-        (i) => i.id == currentAudioQa!.code,
+        (i) => i.id == audioQa.code,
         orElse: () => data.dash!.audio!.first,
       );
       audioUrl = _pickUrl(firstAudio.playUrls, isAudio: true);
@@ -1739,7 +1803,7 @@ class VideoDetailController extends GetxController
         );
         audioUrl = _pickUrl(firstAudio.playUrls, isAudio: true);
         audioUrlCandidates = firstAudio.playUrls.toList();
-        currentAudioQa = AudioQuality.fromCode(firstAudio.id);
+        currentAudioQa.value = AudioQuality.fromCode(firstAudio.id);
       } else {
         audioUrl = '';
         audioUrlCandidates = const [];
@@ -4080,7 +4144,7 @@ class VideoDetailController extends GetxController
       extraId: extraId,
       // audioUrl 已按 currentAudioQa 选好轨道，音质一并传给听视频页，
       // 否则那边显示的音质会和实际播放的不一致。
-      audioQa: currentAudioQa,
+      audioQa: currentAudioQa.value,
     );
   }
 

@@ -1,3 +1,27 @@
+### PiliBabel v3.8.6
+
+**The HiRes badge in the player bar finally shows up — and now works like the official app.**
+
+**It was never actually visible.** The badge was added back in 3.7.0 complete with its own control type, but it read the current audio quality from a *plain field* inside an `Obx`. GetX throws outright — "improper use of a GetX has been detected" — when an `Obx` body registers no observable at all, so that widget blew up the moment it was built. The badge has therefore never rendered once since 3.7.0; it was not removed later.
+
+**Now reactive.** The current audio quality is a proper `Rxn<AudioQuality>`, so the badge tracks track changes.
+
+**Rebuilt to spec:**
+
+- Sits to the **left of the segment info** in the player bar.
+- Shows just **HiRes** — the official app's "无损" (lossless) suffix is dropped, and as a proper noun the label itself is not translated.
+- **Hidden entirely** when the video has no HiRes audio track.
+- **Lit** (theme-coloured outline and tint) while the playing track is HiRes; **dim** otherwise.
+- **Tap to toggle.** Lit → dim shows "HiRes 音质已关闭" and drops to the highest non-HiRes quality available; dim → lit shows "HiRes 音质已开启" and switches back to HiRes.
+
+**Dropping a step picks the best non-HiRes track the video actually has**, rather than stepping down by quality rank — a video may have no Dolby track at all, and stepping to a non-existent tier would silently fall back to an unrelated one. Only when HiRes is the sole track does it fall back to the rank ordering.
+
+**Neither toast changes your default quality setting** — this is a one-off switch for the current video, so turning HiRes off once does not permanently downgrade you (and turning it on does not make HiRes your default).
+
+Both toast strings are routed through AI translation and pre-warmed as soon as a video page opens, so they arrive already translated.
+
+**Robustness:** the quality enum's strict `fromCode` uses a non-null assertion, so a new quality code from Bilibili would crash the player bar. A lenient `maybeFromCode` now guards every path that walks the track list.
+
 ### PiliBabel v3.8.5
 
 **Subtitle translation now starts loading from the timestamp you actually begin playing at.**

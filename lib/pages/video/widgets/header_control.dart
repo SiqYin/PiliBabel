@@ -739,7 +739,7 @@ class HeaderControlState extends State<HeaderControl>
                       style: subTitleStyle,
                     ),
                   ),
-                  if (videoDetailCtr.currentAudioQa != null)
+                  if (videoDetailCtr.currentAudioQa.value != null)
                     ListTile(
                       dense: true,
                       onTap: () {
@@ -749,7 +749,7 @@ class HeaderControlState extends State<HeaderControl>
                       leading: const Icon(Icons.album_outlined, size: 20),
                       title: Text(uiTx('选择音质'), style: titleStyle),
                       subtitle: Text(
-                        uiTx('当前音质 ${videoDetailCtr.currentAudioQa!.desc}'),
+                        uiTx('当前音质 ${videoDetailCtr.currentAudioQa.value!.desc}'),
                         style: subTitleStyle,
                       ),
                     ),
@@ -1046,7 +1046,7 @@ class HeaderControlState extends State<HeaderControl>
 
   /// 选择音质
   void showSetAudioQa() {
-    final AudioQuality currentAudioQa = videoDetailCtr.currentAudioQa!;
+    final AudioQuality currentAudioQa = videoDetailCtr.currentAudioQa.value!;
     final List<AudioItem> audio = videoInfo.dash!.audio!;
     showBottomSheet(
       (context, setState) {
@@ -1083,7 +1083,7 @@ class HeaderControlState extends State<HeaderControl>
                         final newQa = AudioQuality.fromCode(quality);
                         videoDetailCtr
                           ..plPlayerController.cacheAudioQa = newQa.code
-                          ..currentAudioQa = newQa
+                          ..currentAudioQa.value = newQa
                           ..updatePlayer();
 
                         SmartDialog.showToast(uiTx("音质已变为：${newQa.desc}"));

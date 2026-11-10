@@ -25,7 +25,6 @@ import 'package:PiliPlus/models/common/sponsor_block/action_type.dart';
 import 'package:PiliPlus/models/common/sponsor_block/post_segment_model.dart';
 import 'package:PiliPlus/models/common/sponsor_block/segment_type.dart';
 import 'package:PiliPlus/models/common/super_resolution_type.dart';
-import 'package:PiliPlus/models/common/video/audio_quality.dart';
 import 'package:PiliPlus/models/common/video/video_quality.dart';
 import 'package:PiliPlus/models/video/play/url.dart';
 import 'package:PiliPlus/models_new/video/video_detail/episode.dart' as ugc;
@@ -724,24 +723,26 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
         },
       ),
 
-      /// HiRes 无损标识：音频满足 HiRes 时显示主题色，否则白色
+      /// HiRes 无损标识。
+      ///
+      /// 只在「本条视频真的有 HiRes 音轨」时出现；当前音轨是 HiRes 时点亮
+      /// （主题色 + 半透明底），不是则熄灭（灰）。点按在两者之间切换。
+      ///
+      /// 3.7.0 的旧实现有三处问题，本版一并修掉：
+      /// 1. 它读的 `currentAudioQa` 当时是**普通字段**，`Obx` 读不到 observable
+      ///    会直接抛「improper use of a GetX」，标识一次都没显示出来；
+      /// 2. 没有「本视频是否支持 HiRes」的判断，不支持的视频也会渲染；
+      /// 3. 不可点按，且位置在「选集」与「画面比例」之间，不在分段信息左侧。
       BottomControlType.hires => Obx(
         () {
-          final audioQa = videoDetailController.currentAudioQa;
-          final isHiRes = audioQa == AudioQuality.hiRes;
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 4),
-            child: Text(
-              'HiRes',
-              style: TextStyle(
-                color: isHiRes
-                    ? Theme.of(context).colorScheme.primary
-                    : Colors.white54,
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.5,
-              ),
-            ),
+          if (!videoDetailController.hasHiResAudioTrack) {
+            return const SizedBox.shrink();
+          }
+          final isHiRes =
+              videoDetailController.currentAudioQa.value?.isHiRes == true;
+          return _HiResBadge(
+            active: isHiRes,
+            onTap: videoDetailController.toggleHiResAudio,
           );
         },
       ),
@@ -1171,11 +1172,13 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     final flag =
         isFullScreen || plPlayerController.isDesktopPip || maxWidth >= 500;
     final List<BottomControlType> userSpecifyItemRight = [
+      // HiRes 标识紧挨在「分段信息」左侧（B 站官方 App 的位置）。
+      // 控件自身在「本视频没有 HiRes 音轨」时返回空盒子，所以这里可以无条件列出。
+      .hires,
       if (plPlayerController.showViewPoints) .viewPoints,
       if (isNotFileSource && plPlayerController.showDmChart) .dmChart,
       if (plPlayerController.isAnim) .superResolution,
       if (isNotFileSource && anySeason) .episode,
-      .hires,
       if (flag) .fit,
       if (isNotFileSource) .aiTranslate,
       .subtitle,
@@ -3090,6 +3093,51 @@ class _SubtitleSelectPanel extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+/// 播放栏的 HiRes 标识。
+///
+/// 纯图形、不带「无损」二字（B 站官方是「HiRes无损」，这里按要求只留 HiRes）。
+/// 点亮 = 当前正在播 HiRes 音轨：主题色描边 + 半透明主题色底；
+/// 熄灭 = 当前不是 HiRes：灰字灰描边。点按在两者间切换。
+class _HiResBadge extends StatelessWidget {
+  const _HiResBadge({required this.active, required this.onTap});
+
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).colorScheme.primary;
+    final color = active ? primary : Colors.white54;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Tooltip(
+        // 文案走 uiTx，术语 “HiRes” 是专有名词、本身不进翻译队列。
+        message: uiTx(active ? 'HiRes 音质已开启' : 'HiRes 音质已关闭'),
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+          decoration: BoxDecoration(
+            color: active ? primary.withValues(alpha: 0.18) : Colors.transparent,
+            borderRadius: BorderRadius.circular(3),
+            border: Border.all(color: color, width: 1),
+          ),
+          child: Text(
+            'HiRes',
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
+              height: 1.2,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -18,10 +18,34 @@ enum AudioQuality {
 
   const AudioQuality(this.code, this.desc, {this.rank = 0});
 
+  /// 是否为 HiRes 无损音质（B 站 code 30251）。
+  bool get isHiRes => this == AudioQuality.hiRes;
+
+  /// 比 [this] 低一档里最高的那档；已经是最低档时返回自身。
+  ///
+  /// HiRes 熄灭时用它落到「HiRes 以下的下一档最高」。只比较 `rank`，
+  /// 所以杜比（rank 50）会排在 192K（rank 40）之前，与 B 站音质排序一致。
+  AudioQuality get nextLower {
+    AudioQuality? best;
+    for (final candidate in values) {
+      if (candidate.rank >= rank) continue;
+      if (best == null || candidate.rank > best.rank) best = candidate;
+    }
+    return best ?? this;
+  }
+
   @override
   String toString() => 'code: $code, desc: $desc';
 
   static final _codeMap = {for (final i in values) i.code: i};
 
   static AudioQuality fromCode(int code) => _codeMap[code]!;
+
+  /// 宽松版 [fromCode]：未知 code 返回 null 而不是抛异常。
+  ///
+  /// B 站随时可能下发新的音质 code（例如 30255 就是这么来的）。播放栏要按
+  /// 「本条视频有没有 HiRes 轨」遍历全部音轨，那里一旦遇到未知 code 不能崩——
+  /// 一个新增音质码不该让整个播放栏构建失败。
+  static AudioQuality? maybeFromCode(int? code) =>
+      code == null ? null : _codeMap[code];
 }
