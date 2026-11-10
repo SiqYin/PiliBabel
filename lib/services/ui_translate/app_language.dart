@@ -414,15 +414,6 @@ const List<AppLanguage> appLanguages = <AppLanguage>[
     script: 'Hans',
     official: false,
   ),
-  AppLanguage(
-    'nan-TW',
-    '臺灣閩南語',
-    '目標語言是中國台灣地區閩南語，**必須用繁體字書寫，不得出現簡體字**。請把中國大陸簡體中文原文翻譯／改寫成自然的中國台灣地區閩南語表達；嚴格採用中國台灣地區教育部門《臺灣閩南語常用詞辭典》及《國字標準字體表》的用字、正體字形與詞彙標準。保持一致的台灣閩南語，不得混入上海話/吳語或粵語詞彙；不確定的詞優先採用辭典規範，不要自行拼接其他方言。輸出前自查字形：出現簡體字形一律改成繁體。',
-    chineseFamily: true,
-    script: 'Hant',
-    official: false,
-    variantOf: '大陆闽南语',
-  ),
   // 台湾闽南语（白话字）：系统内置名「台湾闽南语（白话字）」，界面显示自称 Tâi-gí，
   // 英文名 Taiwanese。与上面的 `nan-TW` 是同一语种的不同书写系统 —— 那条用汉字，
   // 这条**只用白话字（POJ）罗马字**，一个汉字都不许出现。
@@ -448,6 +439,15 @@ const List<AppLanguage> appLanguages = <AppLanguage>[
     variantOf: '臺灣閩南語',
   ),
 
+  AppLanguage(
+    'nan-TW',
+    '臺灣閩南語',
+    '目標語言是中國台灣地區閩南語，**必須用繁體字書寫，不得出現簡體字**。請把中國大陸簡體中文原文翻譯／改寫成自然的中國台灣地區閩南語表達；嚴格採用中國台灣地區教育部門《臺灣閩南語常用詞辭典》及《國字標準字體表》的用字、正體字形與詞彙標準。保持一致的台灣閩南語，不得混入上海話/吳語或粵語詞彙；不確定的詞優先採用辭典規範，不要自行拼接其他方言。輸出前自查字形：出現簡體字形一律改成繁體。',
+    chineseFamily: true,
+    script: 'Hant',
+    official: false,
+    variantOf: '大陆闽南语',
+  ),
   // ===== 其余语言（按英文名 A–Z）=====
   AppLanguage('ar', 'العربية', 'العربية (Arabic)'),
   AppLanguage('fil', 'Filipino', 'Filipino (Tagalog)'),

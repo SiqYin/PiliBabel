@@ -233,6 +233,8 @@ abstract final class SettingBoxKey {
       subtitleTranslationProxyType = 'subtitleTranslationProxyType',
       uiTranslateProvider = 'uiTranslateProvider',
       uiTranslateLang = 'uiTranslateLang',
+      uiTranslateAutoSubtitle = 'uiTranslateAutoSubtitle',
+      uiTranslateAutoDanmaku = 'uiTranslateAutoDanmaku',
       uiTranslateModel = 'uiTranslateModel',
       uiTranslateApiUrl = 'uiTranslateApiUrl',
       uiTranslateApiKey = 'uiTranslateApiKey',

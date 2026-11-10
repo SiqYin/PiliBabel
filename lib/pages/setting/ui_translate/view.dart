@@ -2,6 +2,7 @@ import 'package:PiliPlus/pages/setting/ai_setting/controller.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/pages/setting/ui_translate/glossary_tables.dart';
+import 'package:PiliPlus/pages/setting/ui_translate/language_search.dart';
 import 'dart:ui' as ui;
 import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/services/ui_translate/onboarding.dart';
@@ -334,6 +335,41 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                 value: Pref.audioTrackFollowUiLang,
                 onChanged: (value) {
                   Pref.audioTrackFollowUiLang = value;
+                  setState(() {});
+                },
+              ),
+            ),
+            // 3.8.8：点开视频自动预翻译字幕 / 弹幕，两个开关（默认都开）。
+            // 用户用其它语言时，自动那部分该不该替用户跑，现在交给用户决定；
+            // 关掉只影响「自动」，手动点封面上的翻译按钮照常可用。
+            Obx(
+              () => SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(uiTx('自动翻译字幕')),
+                subtitle: Text(
+                  uiTx(
+                    '点开视频时自动在后台预翻译字幕；关闭后需要手动点封面上的「翻译字幕」',
+                  ),
+                ),
+                value: Pref.uiTranslateAutoSubtitle,
+                onChanged: (value) {
+                  Pref.uiTranslateAutoSubtitle = value;
+                  setState(() {});
+                },
+              ),
+            ),
+            Obx(
+              () => SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(uiTx('自动翻译弹幕')),
+                subtitle: Text(
+                  uiTx(
+                    '点开视频时自动在后台预翻译弹幕；关闭后需要手动点封面上的「翻译弹幕」',
+                  ),
+                ),
+                value: Pref.uiTranslateAutoDanmaku,
+                onChanged: (value) {
+                  Pref.uiTranslateAutoDanmaku = value;
                   setState(() {});
                 },
               ),
@@ -715,60 +751,6 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
   }
 }
 
-/// 官方清单覆盖的语言数 / 清单外的数量，用于选择器顶部的说明。
-final int kOfficialLanguageCount = appLanguages.where((e) => e.official).length;
-final int kUnofficialLanguageCount = appLanguages
-    .where((e) => !e.official)
-    .length;
-
-// 列表顺序：1.0.0 之前内置的那 29 种（还没接 B 站官方翻译时的清单）按当年的
-// 先后排在最前，其余按原有顺序（英文名 A–Z）跟在后面。常用语言始终在列表上方，
-// 不用滚就能点到。
-const List<String> _legacyLanguageOrder = <String>[
-  'zh-CN',
-  'zh-TW',
-  'en',
-  'ja',
-  'ko',
-  'yue-Hans',
-  'yue-Hant',
-  'wuu-Hans',
-  'wuu-Hant',
-  'nan-CN',
-  'nan-TW',
-  'ar',
-  'fil',
-  'fr',
-  'de',
-  'he',
-  'hmn',
-  'id',
-  'it',
-  'ms',
-  'mn',
-  'ru',
-  'es',
-  'th',
-  'bo',
-  'tr',
-  'ug',
-  'vi',
-  'za',
-];
-
-final List<AppLanguage> _pickerRows = () {
-  final legacy = <AppLanguage>[];
-  final rest = <AppLanguage>[];
-  for (final l in appLanguages) {
-    (_legacyLanguageOrder.contains(l.code) ? legacy : rest).add(l);
-  }
-  legacy.sort(
-    (a, b) => _legacyLanguageOrder
-        .indexOf(a.code)
-        .compareTo(_legacyLanguageOrder.indexOf(b.code)),
-  );
-  return <AppLanguage>[...legacy, ...rest];
-}();
 
 /// 翻译引擎选择器（内置官方模型 / 自备 API）。
 /// [autoPick] 非空时（官方接口故障 / 恢复引导）会替用户做决定：弹窗照常打开，
@@ -812,180 +794,38 @@ Future<void> _showTranslateProviderPicker(
 /// 除了设置页，**首次引导（`services/ui_translate/onboarding.dart`）也会调它**：
 /// 用户点 Agree 后设置页刚推上来，立刻弹这个列表让他直接选语言。
 /// 返回 null 表示用户取消。
+///
+/// **3.8.8 修复**：搜索框此前完全失效（3.8.2 起监听器只更新了 query 变量、
+/// 从不触发重建，输入什么都不出结果）。搜索与过滤已抽到独立的
+/// [LanguageSearchList] 组件里，由它自己持有状态并 `setState`。
 Future<String?> promptAppLanguagePicker(
   BuildContext context,
   String selectedCode,
 ) {
-  // 控制器化（3.8.2）：用 TextEditingController 的 listener 驱动过滤，
-  // 而不是依赖 onChanged——部分输入法在组合（composing）阶段不触发
-  // onChanged，表现为「英文要按回车才出结果」。
-  final searchController = TextEditingController();
-  var query = '';
-  searchController.addListener(() {
-    final v = searchController.text;
-    if (v != query) {
-      query = v;
-      // StatefulBuilder 的 setState 可能在 dialog 关闭后回调——加 mounted 保护。
-      // 这里没有 BuildContext.mounted 可用，用 dialogContext 挂载检查的替代：
-      // StatefulBuilder 的 setState 在 dispose 后会抛，try/catch 兜底。
-      try {
-        // ignore: use_build_context_synchronously
-      } catch (_) {}
-    }
-  });
   return showDialog<String>(
     context: context,
-    builder: (dialogContext) => StatefulBuilder(
-      builder: (dialogContext, setState) {
-        // 搜索：自称名 + 代码 + 英文别名（3.8.1）。比对前双方都做
-        // 阿拉伯文字母折叠归一——维吾尔/阿拉伯/波斯键盘的同形异码字母
-        // （ي/ی/ى、ك/ک、ه/ة/ە）曾让「照着自称名打也搜不到」。
-        final q = foldLanguageSearch(query);
-        bool hit(AppLanguage l) {
-          final name = foldLanguageSearch(l.name);
-          if (name.contains(q)) return true;
-          if (foldLanguageSearch(l.code).contains(q)) return true;
-          for (final alias in kLanguageSearchAliases[l.code] ?? const <String>[]) {
-            if (foldLanguageSearch(alias).contains(q)) return true;
-          }
-          return false;
-        }
-
-        final rows = q.isEmpty ? _pickerRows : _pickerRows.where(hit).toList();
-        return AlertDialog(
-          title: Obx(() {
-            UiTranslateService.to.revision.value;
-            return Text(uiTx('选择应用语言'));
+    builder: (dialogContext) => AlertDialog(
+      title: Obx(() {
+        touchUiTranslateRevision();
+        return Text(uiTx('选择应用语言'));
+      }),
+      content: SizedBox(
+        width: double.maxFinite,
+        height: MediaQuery.sizeOf(dialogContext).height * 0.62,
+        child: LanguageSearchList(
+          selectedCode: selectedCode,
+          onSelected: (code) => Navigator.pop(dialogContext, code),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: Obx(() {
+            touchUiTranslateRevision();
+            return Text(uiTx('取消'));
           }),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: MediaQuery.sizeOf(dialogContext).height * 0.62,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Obx(() {
-                  UiTranslateService.to.revision.value;
-                  return TextField(
-                    controller: searchController,
-                    // 双向自适应：输入 RTL 自称名时按首强方向字符切方向，
-                    // 所见即所输（逻辑串一直正确，这里只修观感）。
-                    textDirection: firstStrongIsRtl(query)
-                        ? ui.TextDirection.rtl
-                        : ui.TextDirection.ltr,
-                    textInputAction: TextInputAction.search,
-                    decoration: InputDecoration(
-                      isDense: true,
-                      prefixIcon: const Icon(Icons.search, size: 20),
-                      hintText: uiTx('搜索语言：自称名 / 英文名均可'),
-                      border: const OutlineInputBorder(),
-                    ),
-                  );
-                }),
-                Padding(
-                  padding: const EdgeInsets.only(top: 6, bottom: 8),
-                  child: Obx(() {
-                    UiTranslateService.to.revision.value;
-                    return Text(
-                      uiTx('按自称名或英文名检索均可，实时出结果。'),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.outline,
-                      ),
-                    );
-                  }),
-                ),
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: rows.length + 1,
-                    itemBuilder: (context, index) {
-                      // 第 0 项是覆盖范围说明，跟着列表一起滚。
-                      if (index == 0) {
-                        // 必须包 Obx：译文是异步到的，没有 Obx 就只在构建那一刻取一次值。
-                        return Obx(
-                          () => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Text(
-                              // 带插值的整句必须走 uiTxP：Dart 的字符串插值会把「已填好数字的
-                              // 整句」当成翻译 key，每条插值结果都是新 key，缓存永远命不中，
-                              // 而且模型也不能保证回填后语序还对。uiTxP 把带 {0}/{1} 的模板
-                              // 作为稳定 key 送翻，再回填参数。
-                              //
-                              // 另外**不要写 markdown 强调**：Flutter 的 Text 不解析 markdown，
-                              // `**xxx**` 会原样显示成星号。
-                              uiTxP(
-                                '内置的 B 站官方模型覆盖 {0} 种语言。清单外的 {1} 种'
-                                '（繁體中文、吴语、闽南语、壮语等）一样可以选，'
-                                '但官方模型不保证效果 —— 想要这几种，建议在'
-                                '「翻译引擎」里切换到自备 API。\n\n'
-                                '若自行接入 API，还能翻译你自己的模型支持的任何其它语言，'
-                                '不限于这份清单。',
-                                [
-                                  kOfficialLanguageCount,
-                                  kUnofficialLanguageCount,
-                                ],
-                              ),
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(context)
-                                        .colorScheme
-                                        .outline,
-                                  ),
-                            ),
-                          ),
-                        );
-                      }
-                      final language = rows[index - 1];
-                      final selected = language.code == selectedCode;
-                      // 整行包 Obx。**这一步不能省**：下面的 uiTx 是异步拿译文的，没有 Obx 的话
-                      // 这一行只在构建那一刻取一次值，译文晚到就永远停在原文上 —— 而「哪一行
-                      // 恰好被重建过」取决于滚动时机，于是会出现「同为官方清单外，這行翻了、
-                      // 那行没翻」的随机现象。
-                      return Obx(() {
-                        // 官方条目的 subtitle 是 null，行内一次 uiTx 都不调，也就是这个 Obx
-                        // 里没有任何 observable。GetX 4.7.2 下这种行会在构建时抛错，而 release
-                        // 不弹红屏、只静默丢行 —— 官方那 151 种语言于是整批从列表里消失，
-                        // 只剩清单外那 6 种。所以这里也要显式读一次 revision。
-                        UiTranslateService.to.revision.value;
-                        // Language names are autonyms; keep them literal instead of asking
-                        // the selected target language to translate the language selector.
-                        return ListTile(
-                          dense: true,
-                          selected: selected,
-                          // 官方清单外的几种提醒一句：它们能选，但想要好效果得自备模型。
-                          subtitle: language.official
-                              ? null
-                              : Text(
-                                  uiTx('官方清单外 · 建议自备 API'),
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Theme.of(context).colorScheme.error,
-                                  ),
-                                ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                          ),
-                          title: Text(language.name),
-                          trailing: selected ? const Icon(Icons.check) : null,
-                          onTap: () =>
-                              Navigator.pop(dialogContext, language.code),
-                        );
-                      });
-                    },
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Obx(() {
-                UiTranslateService.to.revision.value;
-                return Text(uiTx('取消'));
-              }),
-            ),
-          ],
-        );
-      },
+        ),
+      ],
     ),
   );
 }

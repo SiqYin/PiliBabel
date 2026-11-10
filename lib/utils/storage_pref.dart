@@ -2047,6 +2047,28 @@ abstract final class Pref {
   static set audioTrackFollowUiLang(bool value) =>
       _setting.put(SettingBoxKey.audioTrackFollowUiLang, value);
 
+  /// 点开视频时是否**自动**在后台预翻译字幕（3.8.8）。
+  ///
+  /// 默认开：视频在加载时字幕就在后台翻，用户看到画面时译文往往已就绪。
+  /// 关掉后自动预翻译不再启动，需要用户自己在封面/播放页手动点「翻译字幕」。
+  ///
+  /// 只影响「自动」这一层，翻译功能本身（手动点按钮）不受影响。
+  static bool get uiTranslateAutoSubtitle =>
+      _setting.get(SettingBoxKey.uiTranslateAutoSubtitle, defaultValue: true);
+
+  static set uiTranslateAutoSubtitle(bool value) =>
+      _setting.put(SettingBoxKey.uiTranslateAutoSubtitle, value);
+
+  /// 点开视频时是否**自动**在后台预翻译弹幕（3.8.8）。
+  ///
+  /// 默认开。关掉后自动预翻译不再启动，弹幕仍会在你打开弹幕面板时照常翻译
+  /// （那是弹幕翻译功能本身，由弹幕开关控制）。
+  static bool get uiTranslateAutoDanmaku =>
+      _setting.get(SettingBoxKey.uiTranslateAutoDanmaku, defaultValue: true);
+
+  static set uiTranslateAutoDanmaku(bool value) =>
+      _setting.put(SettingBoxKey.uiTranslateAutoDanmaku, value);
+
   static String get uiTranslateModel =>
       _setting.get(SettingBoxKey.uiTranslateModel, defaultValue: '');
 

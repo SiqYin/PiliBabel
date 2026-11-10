@@ -666,6 +666,9 @@ class VideoDetailController extends GetxController
 
   void _autoStartSubtitleTranslation() {
     if (isFileSource || !SubtitleTranslateService.needed) return;
+    // 3.8.8：用户可以把「点开视频自动预翻译字幕」关掉（默认开）。
+    // 关掉后自动这一层不再启动，手动点封面/播放页的「翻译字幕」照常可用。
+    if (!Pref.uiTranslateAutoSubtitle) return;
     final resolvedBvid = bvid.isEmpty ? null : bvid;
     final resolvedAid = aid > 0 ? aid : null;
     final key = _subtitleVideoKey;
@@ -692,6 +695,9 @@ class VideoDetailController extends GetxController
   /// 弹幕分段/时长由服务内部自行解析，拿不到就静默放弃，绝不打扰播放。
   void _autoStartDanmakuTranslation() {
     if (isFileSource || !DanmakuPretranslateService.needed) return;
+    // 3.8.8：用户可以把「点开视频自动预翻译弹幕」关掉（默认开）。
+    // 关掉后自动这一层不再启动；弹幕面板打开时仍会照常翻译（那是弹幕翻译本身）。
+    if (!Pref.uiTranslateAutoDanmaku) return;
     final key = _subtitleVideoKey;
     if (key.isEmpty) return;
     DanmakuPretranslateService.start(
