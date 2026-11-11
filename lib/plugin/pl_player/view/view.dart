@@ -1644,7 +1644,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   }
 
   void _onPointerSignal(PointerSignalEvent event) {
-    if (event is PointerScrollEvent) {
+    if (event is PointerScrollEvent && Pref.enableScrollVolume) {
       final offset = -event.scrollDelta.dy / 4000;
       final volume = clampDouble(
         plPlayerController.volume.value + offset,
