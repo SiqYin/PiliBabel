@@ -668,7 +668,7 @@ class HeaderControlState extends State<HeaderControl>
                             iconData: Icons.flip,
                             onTap: () =>
                                 plPlayerController.flipX.value = !flipX,
-                            text: " 左右翻转 ",
+                            text: uiTx('左右翻转'),
                             selectStatus: flipX,
                           );
                         },
@@ -687,7 +687,7 @@ class HeaderControlState extends State<HeaderControl>
                             onTap: () {
                               plPlayerController.flipY.value = !flipY;
                             },
-                            text: " 上下翻转 ",
+                            text: uiTx('上下翻转'),
                             selectStatus: flipY,
                           );
                         },
@@ -721,7 +721,7 @@ class HeaderControlState extends State<HeaderControl>
                                   );
                                 }
                               },
-                              text: " 听视频 ",
+                              text: uiTx('听视频'),
                               selectStatus: onlyPlayAudio,
                             );
                           },
@@ -732,7 +732,7 @@ class HeaderControlState extends State<HeaderControl>
                             iconData: Icons.play_circle_outline,
                             onTap:
                                 plPlayerController.setContinuePlayInBackground,
-                            text: " 后台播放 ",
+                            text: uiTx('后台播放'),
                             selectStatus: plPlayerController
                                 .continuePlayInBackground
                                 .value,

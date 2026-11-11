@@ -1,5 +1,6 @@
 import 'dart:async' show StreamSubscription;
 
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
@@ -237,7 +238,7 @@ class _SectionPanelState extends State<SectionPanel> {
           return;
         }
         if (item.badge == '会员' && !_isVip) {
-          SmartDialog.showToast('需要大会员');
+          SmartDialog.showToast(uiTx('需要大会员'));
         }
         widget.onChangeEpisode(item, episodeType: .section, manual: true);
       },

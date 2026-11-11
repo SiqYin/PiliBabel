@@ -287,6 +287,25 @@ class PgcIntroController extends CommonIntroController {
   }) async {
     // 记住这一集来自正片还是分节，分节面板据此高亮。
     if (episodeType != null) this.episodeType = episodeType;
+    if (this.episodeType == PgcEpisodeType.section) {
+      // 分节里切集要同步更新「第几节 / 第几集」，否则上一集、下一集
+      // 和面板高亮都会停在旧位置。
+      final sections = pgcItem.sections ?? const [];
+      for (var i = 0; i < sections.length; i++) {
+        final list = sections[i].episodes;
+        if (list == null) continue;
+        final at = list.indexWhere(
+          (e) => e.id == episode.id || (e.cid != null && e.cid == episode.cid),
+        );
+        if (at >= 0) {
+          sectionIndex = i;
+          pvIndex = at;
+          break;
+        }
+      }
+    } else {
+      pvIndex = 0;
+    }
     try {
       final int epId = episode.epId ?? episode.id!;
       final String bvid = episode.bvid ?? this.bvid;
