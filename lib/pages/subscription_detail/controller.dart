@@ -1,3 +1,4 @@
+import 'package:PiliPlus/pages/common/page_order_mixin.dart';
 import 'package:PiliPlus/http/fav.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models_new/sub/sub/list.dart';
@@ -7,7 +8,14 @@ import 'package:PiliPlus/pages/common/common_list_controller.dart';
 import 'package:get/get.dart';
 
 class SubDetailController
-    extends CommonListController<SubDetailData, SubDetailItemModel> {
+    extends CommonListController<SubDetailData, SubDetailItemModel>
+    with PageOrderMixin<SubDetailData, SubDetailItemModel> {
+
+  @override
+  int get ps => 20;
+
+  @override
+  int get count => subInfo?.mediaCount ?? 0;
   late int id;
   String? heroTag;
   SubItemModel? subInfo;
@@ -42,5 +50,7 @@ class SubDetailController
     id: id,
     ps: 20,
     pn: page,
+    // 倒序时页码由 PageOrderMixin 从末页往前数。
+    pageDesc: pageDesc,
   );
 }

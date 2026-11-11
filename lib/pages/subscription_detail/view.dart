@@ -141,6 +141,26 @@ CoverTranslateButton(cover: info.cover),
     return SliverAppBar.medium(
       expandedHeight: kToolbarHeight + 132,
       pinned: true,
+      actions: [
+        // 页码顺序：正序 / 倒序（3.8.14，上游 c74127908）。
+        PopupMenuButton<bool>(
+          icon: Icon(
+            _subDetailController.pageDesc
+                ? Icons.sort
+                : Icons.sort_outlined,
+          ),
+          initialValue: _subDetailController.pageDesc,
+          tooltip: uiTx('页码顺序'),
+          onSelected: (value) {
+            _subDetailController.updatePageOrder(value);
+            setState(() {});
+          },
+          itemBuilder: (context) => [
+            PopupMenuItem(value: false, child: Text(uiTx('正序'))),
+            PopupMenuItem(value: true, child: Text(uiTx('倒序'))),
+          ],
+        ),
+      ],
       title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

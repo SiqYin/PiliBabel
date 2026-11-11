@@ -7,7 +7,10 @@ class SubDetailData {
 
   SubDetailData({this.info, this.medias});
 
-  factory SubDetailData.fromJson(Map<String, dynamic> json) => SubDetailData(
+  factory SubDetailData.fromJson(
+    Map<String, dynamic> json, {
+    bool pageDesc = false,
+  }) => SubDetailData(
     info: json['info'] == null
         ? null
         : SubItemModel.fromJson(json['info'] as Map<String, dynamic>),

@@ -21,10 +21,24 @@ import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/path_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:audio_service/audio_service.dart';
+import 'package:audio_service_mpris/audio_service_mpris.dart';
 import 'package:collection/collection.dart';
 import 'package:path/path.dart' as path;
 
 Future<VideoPlayerServiceHandler> initAudioService() {
+  // Linux 桌面没有系统级媒体控制中心，走 MPRIS 把播放状态暴露给
+  // GNOME/KDE 的媒体控件（3.8.14，上游 1edcc4677）。
+  if (Platform.isLinux) {
+    AudioServiceMpris.init(
+      dBusName: 'com.example.piliplus.audio',
+      identity: 'Audio Service ${Constants.appName}',
+      canGoNext: true,
+      canGoPrevious: true,
+      canPlay: true,
+      canPause: true,
+      canControl: true,
+    );
+  }
   return AudioService.init(
     builder: VideoPlayerServiceHandler.new,
     config: const AudioServiceConfig(
