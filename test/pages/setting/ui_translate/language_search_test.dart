@@ -53,6 +53,24 @@ void main() {
       }
     });
 
+    test('新增语言固定清单：带调号自称名必须有 ASCII 别名（普通键盘能搜到）', () {
+      for (final code in kAliasRequiredCodes) {
+        final l = appLanguageByCode(code);
+        final aliases = kLanguageSearchAliases[code] ?? const <String>[];
+        expect(
+          aliases.any((a) => a.codeUnits.every((c) => c < 128)),
+          isTrue,
+          reason: '$code（${l.name}）没有纯 ASCII 别名，普通键盘搜不到',
+        );
+        // 自称名本身也要能命中（大小写折叠后 contains）
+        expect(
+          filterAppLanguagesByQuery(appLanguages, l.name.toLowerCase())
+              .map((e) => e.code),
+          contains(code),
+        );
+      }
+    });
+
     test('搜不到就是搜不到', () {
       expect(filterAppLanguagesByQuery(appLanguages, 'zzzz-not-a-lang'), isEmpty);
     });

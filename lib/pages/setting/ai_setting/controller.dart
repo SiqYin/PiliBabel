@@ -180,6 +180,11 @@ class AiSettingController extends GetxController {
       // 换引擎必须整表清空：译文缓存按语言分桶后 resetForNewLanguage 不再清译文，
       // 而换引擎后继续命中旧译文正是「用户以为没生效」的原因（见上）。
       UiTranslateService.to.clearCache();
+      // 3.8.9：弹幕翻译开关按**新引擎**重算默认值。以前它只在服务构造时算一次，
+      // 于是「自备 API（默认关）→ 内置官方模型（应该默认开）」之后它仍然是关的，
+      // 用户得自己再开一次。
+      UiTranslateService.to.danmakuTranslate.value =
+          UiTranslateService.usingBuiltinTranslate;
       UiTranslateService.to.prewarm();
     }
   }

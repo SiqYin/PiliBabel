@@ -2053,6 +2053,10 @@ abstract final class Pref {
   /// 关掉后自动预翻译不再启动，需要用户自己在封面/播放页手动点「翻译字幕」。
   ///
   /// 只影响「自动」这一层，翻译功能本身（手动点按钮）不受影响。
+  ///
+  /// **老用户升级后这个键不存在 → 取默认 true**，也就是保持 3.8.7 的行为
+  /// （那时候根本没有这个开关、自动预翻译一直开着）。改动这个默认值前先想清楚：
+  /// 它会静默改变所有老用户的行为。
   static bool get uiTranslateAutoSubtitle =>
       _setting.get(SettingBoxKey.uiTranslateAutoSubtitle, defaultValue: true);
 
@@ -2061,8 +2065,11 @@ abstract final class Pref {
 
   /// 点开视频时是否**自动**在后台预翻译弹幕（3.8.8）。
   ///
-  /// 默认开。关掉后自动预翻译不再启动，弹幕仍会在你打开弹幕面板时照常翻译
-  /// （那是弹幕翻译功能本身，由弹幕开关控制）。
+  /// 默认开。关掉后**所有自动预翻译都不再启动**（3.8.9 起，弹幕分段载入时的
+  /// 整段批量预翻译也一并关掉）；弹幕翻译功能本身仍由播放页那个弹幕开关控制，
+  /// 只是不再自动替你发起。
+  ///
+  /// **老用户升级后这个键不存在 → 取默认 true**，保持 3.8.7 的行为。
   static bool get uiTranslateAutoDanmaku =>
       _setting.get(SettingBoxKey.uiTranslateAutoDanmaku, defaultValue: true);
 

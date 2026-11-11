@@ -612,6 +612,22 @@ const AppLanguage defaultAppLanguage = AppLanguage(
 /// 语言搜索别名（3.8.1）：自称名是非拉丁文字（阿拉伯/希伯来/天城体等）时，
 /// 用英文/中文别名也能搜到——维吾尔语的自称 'ئۇيغۇرچە' 没法用普通键盘直接打出。
 /// 键一律小写；匹配走 contains。
+///
+/// **新增语言的固定清单（3.8.9）**：往 [appLanguages] 里加一条时，必须同时
+/// 给它补别名，否则用户根本搜不到。特别是：
+/// 1. 自称名带附加符号（如 `Tâi-gí`）时，普通键盘打不出来 → 要补**去调号**
+///    的 ASCII 拼法（`tai-gi` / `taigi`）与英文名（`Taiwanese`）、书写系统名；
+/// 2. 自称名是非拉丁文字时，至少补一个 ASCII 别名；
+/// 3. 别名里放常见中文称呼，方便中文用户按中文搜。
+/// `language_search_test.dart` 里有一条测试会对 [kAliasRequiredCodes] 里
+/// 的每一条强制检查「至少有一个纯 ASCII 别名」，漏了会直接测试失败。
+///
+/// 为什么用白名单而不是「所有非 ASCII 自称名」：历史清单里日本語 / 한국어 /
+/// Русский 等一大批自称名都没有别名（当年是逐个补的），一刀切会把上百条
+/// 历史条目判死。新增语言时**把它的代码加进下面这个集合**即可。
+const Set<String> kAliasRequiredCodes = <String>{
+  'nan-TW-latn', // Tâi-gí：â / í 带调号，普通键盘打不出来
+};
 const Map<String, List<String>> kLanguageSearchAliases = {
   'ar': ['arabic', 'arabiya', '阿拉伯语', '阿拉伯'],
   'he': ['hebrew', '希伯来语', '希伯来'],

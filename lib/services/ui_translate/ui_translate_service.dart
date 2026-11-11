@@ -129,11 +129,51 @@ class UiTranslateService extends GetxService {
         () => <String, String>{},
       );
 
-  /// 反向缓存：「界面语言文本 -> 简体中文」。
+  /// 写入一条译文缓存，并同步维护反向索引（3.8.9）。
+  ///
+  /// 所有缓存写入都必须走这里，否则反向索引会与译文缓存不同步，
+  /// 「用译文反查原文」就会失准。超上限时按插入顺序淘汰最老的条目。
+  void _putCache(String lang, String src, String value) {
+    final bucket = _cacheByLang.putIfAbsent(lang, () => <String, String>{});
+    if (!bucket.containsKey(src) && bucket.length >= _maxCachePerLang) {
+      // Map 保持插入顺序 → 第一个就是最老的。
+      final oldest = bucket.keys.first;
+      final oldValue = bucket.remove(oldest);
+      if (oldValue != null) {
+        _reverseIndex[lang]?.remove(oldValue);
+      }
+    }
+    bucket[src] = value;
+    _reverseIndex
+        .putIfAbsent(lang, () => <String, String>{})
+        .putIfAbsent(value, () => src);
+  }
+
+  /// 反向缓存：「**界面语言文本** -> 简体中文」，**按语言分桶**。
   ///
   /// 搜索时要把用户用界面语言输入的关键词翻回简体中文再检索（见
   /// [translateQuery]）。方向与 [_cache] 相反，所以单独一份，键值不能混。
-  final Map<String, String> _reverseCache = {};
+  ///
+  /// 3.8.9 起按语言分桶：以前这是一张平表，**持久化时也不带语言标签**，
+  /// 于是「换语言 → 重启 App」之后，上一个语言的映射还会被读回来，
+  /// 用新语言的词去搜会被还原成旧语言语境下的中文词。现在键里带语言码，
+  /// 旧格式（无语言前缀）的残留条目直接丢弃（它只是搜索归一化的加速缓存，
+  /// 丢掉后重新搜一次就会重建）。
+  final Map<String, Map<String, String>> _reverseCacheByLang = {};
+
+  /// 反向索引：「译文 -> 原文」，按语言分桶（3.8.9）。
+  ///
+  /// 用途：「用界面语言里看到的译文去搜」应当零成本还原出中文原文
+  /// （见 [_reverseLookup]）。以前是每次搜索都线性遍历整张译文缓存找那条
+  /// 恰好等于输入的译文 —— 缓存上千条时每次击键都是 O(n)，搜索框会越用越慢。
+  /// 现在写入缓存时同步维护这张反向索引，查询变成 O(1)。
+  final Map<String, Map<String, String>> _reverseIndex = {};
+
+  /// 单个语言的译文缓存条数上限（3.8.9）。
+  ///
+  /// 缓存原来无上限：长时间使用 + 多语言切换会把 Hive 里的表撑到很大，
+  /// 而且每次落盘都要整表重写。超过上限时按插入顺序淘汰最老的条目。
+  static const int _maxCachePerLang = 5000;
 
   /// 同一个搜索词被多个分栏同时请求时，只发一次翻译请求。
   final Map<String, Future<String?>> _queryInFlight = {};
@@ -164,6 +204,12 @@ class UiTranslateService extends GetxService {
   /// 翻译缓存的写入进度（用于 UI 读取以触发 Obx 重建）。
   final RxInt revision = 0.obs;
 
+  /// 已经失败过一次、**不再重试**的字符串（3.8.9）。
+  ///
+  /// 翻译失败时整批会被回填进 [_pending] 重试一次；进这里表示「已经重试过」，
+  /// 再失败就不再排队，避免坏请求把队列反复顶满。
+  final Set<String> _failedOnce = <String>{};
+
   /// 正在翻译中标记，避免并发重复请求。
   bool _busy = false;
   bool _lastFlushTookUrgent = false;
@@ -185,6 +231,14 @@ class UiTranslateService extends GetxService {
   /// 最近一次翻译失败的原因，供设置页诊断展示。
   final RxnString lastError = RxnString();
 
+  /// 「模型返回条数 ≠ 请求条数」的累计次数（3.8.9）。
+  ///
+  /// 这种情况会让那几条永远停在原文且没有任何提示，只有这里能看出来。
+  int _mismatchCount = 0;
+
+  /// 诊断用：模型输出条数异常的累计次数。
+  int get translationMismatchCount => _mismatchCount;
+
   /// 处于“显示原文”态的评论/动态条目 id 集合（按条切换）。
   final Set<String> _originalIds = <String>{};
 
@@ -194,7 +248,10 @@ class UiTranslateService extends GetxService {
   /// 弹幕翻译运行时开关。默认值随引擎走：
   /// * 内置官方模型——免费、不消耗用户配额，**默认开**，点了直接生效；
   /// * 自备 API——消耗用户自己的 token，**默认关**，首次开启仍弹确认框。
-  /// 不持久化：每次进入播放器重新按默认值来。
+  ///
+  /// 不持久化：**整个 App 会话内有效**（3.8.9 更正注释——以前写的是「每次进入
+  /// 播放器重新按默认值来」，与实现不符）。换翻译引擎时会按新引擎重算默认值
+  /// （见 `AiSettingController.saveUiTranslateProvider`）。
   final RxBool danmakuTranslate = RxBool(usingBuiltinTranslate);
 
   /// 是否具备使用弹幕翻译的条件：界面翻译已启用，且翻译通道的地址与模型可用。
@@ -251,12 +308,14 @@ class UiTranslateService extends GetxService {
     // 输入的就是简体中文：它本身就是接口要的原文，不用过翻译。
     if (isSourceLanguageChinese(query)) return null;
 
-    final cached = _reverseCache[query];
+    final cached = _reverseCacheByLang[currentLanguage.code]?[query];
     if (cached != null) return cached;
 
     final reversed = _reverseLookup(query);
     if (reversed != null) {
-      _reverseCache[query] = reversed;
+      _reverseCacheByLang
+          .putIfAbsent(currentLanguage.code, () => <String, String>{})[query] =
+          reversed;
       _schedulePersistQuery();
       return reversed;
     }
@@ -275,10 +334,8 @@ class UiTranslateService extends GetxService {
 
   /// 在「中文原文 -> 界面语言译文」缓存里反查：找出译文恰好等于 [text] 的原文。
   String? _reverseLookup(String text) {
-    for (final entry in _cache.entries) {
-      if (entry.value == text) return entry.key;
-    }
-    return null;
+    // 3.8.9：改走反向索引，不再线性扫整张译文缓存。
+    return _reverseIndex[currentLanguage.code]?[text];
   }
 
   Future<String?> _translateToSource(String query) async {
@@ -291,7 +348,8 @@ class UiTranslateService extends GetxService {
       final result = out.isEmpty ? '' : out.first.trim();
       if (result.isEmpty) return null;
       if (reqLang == currentLanguage.code) {
-        _reverseCache[query] = result;
+        _reverseCacheByLang
+            .putIfAbsent(reqLang, () => <String, String>{})[query] = result;
         _schedulePersistQuery();
       }
       return result;
@@ -336,7 +394,8 @@ class UiTranslateService extends GetxService {
   /// 三处引用（[prewarm] 列表、播放器按钮预热、弹窗正文）共用这一个常量，
   /// 避免抄成不同字符串导致"预热了 A、渲染的是 B"，预热永远不生效。
   static const String danmakuTranslateWarning =
-      'Danmaku AI translation consumes a lot of tokens. Continue?';
+      'Danmaku AI translation consumes a lot of tokens, and enabling it '
+      'reloads the danmaku currently on screen. Continue?';
 
   /// 需要“提前翻好”的高频交互文案（弹窗/按钮），避免首次出现时来不及译。
   static const List<String> _commonPrewarm = [
@@ -411,7 +470,7 @@ class UiTranslateService extends GetxService {
       Pref.uiTranslatePromptRevision = promptRevision;
     }
     _loadCache(Pref.uiTranslateCache);
-    _reverseCache.addAll(Pref.uiTranslateQueryCache);
+    _loadReverseCache(Pref.uiTranslateQueryCache);
     // 预热术语表索引：5 万多条形态的构建挪到启动后台，避免首帧卡死。
     // 只在已启用翻译时才需要；默认所有词表关闭，构建出来也是空表。
     warmGlossary();
@@ -1098,10 +1157,7 @@ class UiTranslateService extends GetxService {
       final res = await _translateChunk([src]);
       final value = res.isNotEmpty ? res.first.trim() : '';
       if (value.isNotEmpty && value != src) {
-        _cacheByLang.putIfAbsent(
-          reqLang,
-          () => <String, String>{},
-        )[src] = value;
+        _putCache(reqLang, src, value);
         if (reqLang == currentLanguage.code) _bumpRevisionSoon();
         _schedulePersist();
         return value;
@@ -1204,25 +1260,39 @@ class UiTranslateService extends GetxService {
           if (my >= chunks.length) return;
           next++;
           final chunk = chunks[my];
-          final translated = await _translateChunk(
-            chunk,
-            widths: {
-              for (final s in chunk) s: batchWidths[s] ?? UiTextWidth.normal,
-            },
-          ).catchError((_) {
-            return <String>[];
-          });
+          List<String> translated;
+          try {
+            translated = await _translateChunk(
+              chunk,
+              widths: {
+                for (final s in chunk) s: batchWidths[s] ?? UiTextWidth.normal,
+              },
+            );
+          } catch (e, st) {
+            translated = const <String>[];
+            logger.w('翻译批次失败', error: e, stackTrace: st);
+            // 3.8.9：失败的这批**回填队列重试一次**。原来失败即丢弃，
+            // 这些文案会一直停在原文，直到界面重建才重新入队。
+            for (final s in chunk) {
+              if (_failedOnce.add(s)) _pending.add(s);
+            }
+          }
           var changed = false;
-          final bucket = _cacheByLang.putIfAbsent(
-            reqLang,
-            () => <String, String>{},
-          );
           for (var j = 0; j < chunk.length && j < translated.length; j++) {
             final value = translated[j].trim();
             if (value.isNotEmpty && value != chunk[j]) {
-              bucket[chunk[j]] = value;
+              _putCache(reqLang, chunk[j], value);
               changed = true;
             }
+          }
+          // 3.8.9：模型少返回几条时，那几条会永远停在原文且没有任何提示。
+          // 这里记一笔并打日志，便于发现「模型输出被截断」这类异常。
+          if (translated.length != chunk.length) {
+            _mismatchCount++;
+            logger.w(
+              '译文条数与请求条数不一致',
+              error: 'asked=${chunk.length} got=${translated.length}',
+            );
           }
           if (changed) {
             // 语言已经换掉时不再刷新界面：这批译文属于老语言，落进它自己的桶
@@ -1983,14 +2053,10 @@ class UiTranslateService extends GetxService {
             hintWidth: UiTextWidth.tight,
           );
           var changed = false;
-          final bucket = _cacheByLang.putIfAbsent(
-            langCode,
-            () => <String, String>{},
-          );
           for (var j = 0; j < chunk.length && j < translated.length; j++) {
             final value = translated[j].trim();
             if (value.isNotEmpty && value != chunk[j]) {
-              bucket[chunk[j]] = value;
+              _putCache(langCode, chunk[j], value);
               changed = true;
             }
           }
@@ -2333,10 +2399,14 @@ class UiTranslateService extends GetxService {
     for (final entry in raw.entries) {
       final i = entry.key.indexOf(_langSep);
       if (i <= 0) continue;
-      _cacheByLang.putIfAbsent(
-        entry.key.substring(0, i),
-        () => <String, String>{},
-      )[entry.key.substring(i + 1)] = entry.value;
+      final lang = entry.key.substring(0, i);
+      final src = entry.key.substring(i + 1);
+      _cacheByLang.putIfAbsent(lang, () => <String, String>{})[src] =
+          entry.value;
+      // 反向索引要跟着一起重建，否则「用译文反查原文」在重启后就不准。
+      _reverseIndex
+          .putIfAbsent(lang, () => <String, String>{})
+          .putIfAbsent(entry.value, () => src);
     }
   }
 
@@ -2350,13 +2420,39 @@ class UiTranslateService extends GetxService {
     Pref.uiTranslateCache = out;
   }
 
-  void _persistQuery() => Pref.uiTranslateQueryCache = _reverseCache;
+  /// 反向缓存落盘：键里带语言码（3.8.9）。
+  void _persistQuery() {
+    final out = <String, String>{};
+    for (final bucket in _reverseCacheByLang.entries) {
+      for (final item in bucket.value.entries) {
+        out[_bucketKey(bucket.key, item.key)] = item.value;
+      }
+    }
+    Pref.uiTranslateQueryCache = out;
+  }
+
+  /// 反向缓存加载：只认带语言码的新格式（3.8.9）。
+  ///
+  /// 旧格式（键里没有语言码）直接丢弃 —— 那是上一个语言语境下的映射，
+  /// 拿来在新语言里查会把搜索词还原成错的原文。它只是搜索归一化的加速缓存，
+  /// 丢掉后重新搜一次就会重建。
+  void _loadReverseCache(Map<String, String> raw) {
+    for (final entry in raw.entries) {
+      final i = entry.key.indexOf(_langSep);
+      if (i <= 0) continue;
+      _reverseCacheByLang
+          .putIfAbsent(entry.key.substring(0, i), () => <String, String>{})[
+          entry.key.substring(i + 1)] = entry.value;
+    }
+  }
 
   /// 清空翻译缓存（下次遇到同一字符串会重新翻译）。
   void clearCache() {
     _cacheByLang.clear();
-    _reverseCache.clear();
+    _reverseIndex.clear();
+    _reverseCacheByLang.clear();
     _queryInFlight.clear();
+    _failedOnce.clear();
     _pending.clear();
     lastError.value = null;
     Pref.uiTranslateCache = {};
@@ -2373,8 +2469,10 @@ class UiTranslateService extends GetxService {
   /// 2. 清空待翻队列（这些字符串会在重建时按新语言重新入队）；
   /// 3. 自增 revision 触发全量重建，让新语言立刻生效。
   void resetForNewLanguage() {
-    _reverseCache.clear();
+    // 3.8.9：反向缓存改成**按语言分桶**后，切语言不必再整表清掉它了——
+    // 每个语言的映射各自有效，切回来还能直接复用。只清在飞的那部分。
     _queryInFlight.clear();
+    _failedOnce.clear();
     _pending.clear();
     lastError.value = null;
     Pref.uiTranslateQueryCache = {};

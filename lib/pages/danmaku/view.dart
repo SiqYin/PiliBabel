@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:PiliPlus/grpc/bilibili/community/service/dm/v1.pb.dart';
@@ -48,6 +49,9 @@ class _PlDanmakuState extends State<PlDanmaku> {
   int latestAddedPosition = -1;
   int _preTranslateCursor = 0;
   bool _loggedEarlySpecialDanmaku = false;
+  /// 3.8.9：原位换文去抖标记。译文一批批回来会连着触发多次 revision 递增，
+  /// 每次都全量扫描在飞弹幕会把主线程压住；这里合并到**帧末**只扫一次。
+  bool _swapScheduled = false;
 
   @override
   void initState() {
@@ -149,14 +153,20 @@ class _PlDanmakuState extends State<PlDanmaku> {
         _preTranslateCursor = currentPosition;
       }
       if (to > _preTranslateCursor) {
+        // 3.8.9：整段批量送翻，而不是逐条 uiTx。
+        // 逐条入队赶不上内置引擎的单条请求速度（弹幕会先于译文出生，
+        // 只能等「原位换文」再改写），这里改成一段一次批量，译文成片到达。
+        final contents = <String>[];
         for (int t = _preTranslateCursor; t <= to; t += 1000) {
           final list = _plDanmakuController.getCurrentDanmaku(t);
-          if (list != null) {
-            for (final e in list) {
-              if (e.mode == 7) continue;
-              uiTx(e.content);
-            }
+          if (list == null) continue;
+          for (final e in list) {
+            if (e.mode == 7) continue;
+            contents.add(e.content);
           }
+        }
+        if (contents.isNotEmpty) {
+          unawaited(UiTranslateService.to.pretranslateDanmaku(contents));
         }
         _preTranslateCursor = to;
       }
@@ -168,7 +178,9 @@ class _PlDanmakuState extends State<PlDanmaku> {
       final revision = UiTranslateService.to.revision.value;
       if (revision != _lastSwapRevision) {
         _lastSwapRevision = revision;
-        _swapTranslatedInFlight();
+        // 帧末合并扫描：一批译文可能连着触发多次 revision 递增，
+        // 每次都全量遍历在飞弹幕会明显卡顿。
+        _scheduleSwapTranslatedInFlight();
       }
     }
 
@@ -270,6 +282,17 @@ class _PlDanmakuState extends State<PlDanmaku> {
   /// 原位换文（3.8.0）：遍历画布活体条目，凡是「显示的还是原文、而缓存里
   /// 已经有了译文」的，直接替换内容并作废其图像缓存——下一帧即按译文绘制，
   /// 飞行轨迹不变。mode 7 高级弹幕不做（同 add 时口径）。
+  /// 把「原位换文」合并到帧末执行（3.8.9 去抖）。
+  void _scheduleSwapTranslatedInFlight() {
+    if (_swapScheduled) return;
+    _swapScheduled = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _swapScheduled = false;
+      if (!mounted) return;
+      _swapTranslatedInFlight();
+    });
+  }
+
   void _swapTranslatedInFlight() {
     if (_controller == null || _awaitingSwapSources.isEmpty) return;
     final service = UiTranslateService.to;

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/services/ui_translate/game_glossary.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -20,6 +21,16 @@ import 'package:get/get.dart';
 /// 词条本体的重建放在构建侧（`glossary/` 里的脚本）完成后随版本发布。
 ///
 /// 远端清单地址可用 `Pref.glossaryManifestUrl` 覆盖（便于自建镜像）。
+///
+/// **信任边界（3.8.9 补记）**：清单本身**没有签名**，App 只比对清单里的
+/// `version` / `hash` 与内置表是否一致；目前**只做「有没有新版」的提示**，
+/// 不会按清单去下载并落盘词条，所以任意来源最多只能「撒谎说有新版」。
+/// 将来若支持一键下载词条，落盘前必须先校验 hash/签名。
+///
+/// **迁移路径（3.8.9 补记）**：词条本体现在是**编译期内嵌**在
+/// `game_glossary.dart`（约 1.78 MB Dart 源码）里，每加一次词条都要随版本
+/// 发一次包。长期方向是「首启按需下载 + 本地缓存」，与本服务已有的远端清单
+/// 机制对齐；那一步做完之前，词条更新仍然只能靠发版。
 class GlossaryUpdateService extends GetxService {
   /// 默认远端清单地址（与术语表数据同源发布）。
   static const String defaultManifestUrl =
@@ -52,13 +63,37 @@ class GlossaryUpdateService extends GetxService {
     await check();
   }
 
+  /// 正在进行的检查（3.8.9）：手动检查与自动检查可能同时触发，
+  /// 后到的会覆盖先到的状态。清掉它可以取消在飞的那次请求。
+  CancelToken? _inFlight;
+
+  /// 当前清单来源的主机名（3.8.9）。
+  ///
+  /// 清单地址可以被用户改成自建镜像，所以界面应该把**来源**显示出来，
+  /// 别让人以为自己在跟官方清单对话。
+  String get manifestHost {
+    final url = Pref.glossaryManifestUrl.isNotEmpty
+        ? Pref.glossaryManifestUrl
+        : defaultManifestUrl;
+    return Uri.tryParse(url)?.host ?? url;
+  }
+
   /// 立即检查（用户手动点「检查更新」时调用）。
   Future<void> check() async {
+    // 3.8.9：同一次检查只允许一个在飞；新的检查先把旧的取消掉，
+    // 否则「手动检查」与「自动检查」并发时，后到的结果会覆盖先到的。
+    _inFlight?.cancel('superseded');
+    final token = CancelToken();
+    _inFlight = token;
     _state.value = GlossaryUpdateState.checking;
     try {
       final url = Pref.glossaryManifestUrl;
-      final res = await Dio().get<dynamic>(
+      // 3.8.9：改走 App 的网络层（Request.dio），不再用裸 Dio。
+      // 裸 Dio 拿不到统一超时、UA、代理与 HTTP/2 配置，某些网络环境下
+      // 这个「检查更新」会莫名其妙失败。
+      final res = await Request.dio.get<dynamic>(
         url,
+        cancelToken: token,
         options: Options(
           responseType: ResponseType.plain,
           receiveTimeout: const Duration(seconds: 20),
@@ -85,7 +120,10 @@ class GlossaryUpdateService extends GetxService {
           ? GlossaryUpdateState.outdated
           : GlossaryUpdateState.upToDate;
     } catch (_) {
-      _state.value = GlossaryUpdateState.failed;
+      // 取消不算失败（是被更新的检查顶掉了）。
+      if (!token.isCancelled) _state.value = GlossaryUpdateState.failed;
+    } finally {
+      if (identical(_inFlight, token)) _inFlight = null;
     }
   }
 

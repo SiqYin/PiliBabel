@@ -1905,7 +1905,12 @@ class VideoDetailController extends GetxController
   int _subtitleChunkSizeForVideo = Pref.subtitleChunkSize;
   int _subtitleConcurrencyForVideo = Pref.subtitleConcurrency;
   int _subtitleContextOverlapForVideo = Pref.subtitleContextOverlap;
-  int _subtitlePrefetchCountForVideo = Pref.subtitleTranslationPrefetchCount;
+  /// 后台预翻译后续视频的份数。
+  ///
+  /// 3.8.9：「自动翻译字幕」关掉时，这里必须跟着归零——否则用户关了自动，
+  /// 后台照样在悄悄预翻后续 0–5 个视频/分P。
+  int _subtitlePrefetchCountForVideo =
+      Pref.uiTranslateAutoSubtitle ? Pref.subtitleTranslationPrefetchCount : 0;
   List<SubtitleTranslationProxy> _subtitleProxiesForVideo = const [];
   static final Set<String> _subtitlePrefetchInFlight = <String>{};
   late final RxBool showVP = Pref.showViewPointsOverlay.obs;
@@ -2278,6 +2283,8 @@ class VideoDetailController extends GetxController
           generation,
           allowNewTranslation: SubtitleTranslateService.needed,
           allowManualCacheRestore: true,
+          // 用户自己点的轨 → 手动，无视「自动翻译字幕」开关（3.8.9）
+          manual: true,
         ),
       );
     }
@@ -2389,6 +2396,8 @@ class VideoDetailController extends GetxController
       _subtitleGeneration,
       allowNewTranslation: true,
       allowManualCacheRestore: true,
+      // 用户点了「重试」→ 手动，无视「自动翻译字幕」开关（3.8.9）
+      manual: true,
     );
   }
 
@@ -2399,7 +2408,9 @@ class VideoDetailController extends GetxController
     subtitleTranslationRunning.value = true;
     subtitleTranslationRetryAvailable.value = false;
     subtitleTranslationProgress.value = 0;
-    subtitleTranslationStatus.value = uiTx('正在准备重新翻译字幕');
+    // 3.8.9：明确告诉用户「会从头开始」——重译会丢掉已有进度，
+    // 长视频尤其明显，之前界面上没有任何提示。
+    subtitleTranslationStatus.value = uiTx('正在准备重新翻译字幕（将从头开始）');
     await SubtitleTranslationBackgroundService.start(
       videoKey: _subtitleVideoKey,
       bvid: bvid.isEmpty ? null : bvid,
@@ -2493,7 +2504,10 @@ class VideoDetailController extends GetxController
     _subtitleChunkSizeForVideo = Pref.subtitleChunkSize;
     _subtitleConcurrencyForVideo = Pref.subtitleConcurrency;
     _subtitleContextOverlapForVideo = Pref.subtitleContextOverlap;
-    _subtitlePrefetchCountForVideo = Pref.subtitleTranslationPrefetchCount;
+    _subtitlePrefetchCountForVideo =
+        Pref.uiTranslateAutoSubtitle
+            ? Pref.subtitleTranslationPrefetchCount
+            : 0;
     try {
       _subtitleProxiesForVideo = SubtitleTranslationProxy.parseMany(
         Pref.subtitleTranslationProxies,
@@ -2551,7 +2565,25 @@ class VideoDetailController extends GetxController
       final preferAi = pref == SubtitlePrefType.on || !muted;
       int idx = -1;
       if (preferAi) {
-        idx = 1;
+        // 3.8.9：**不要写死 idx = 1**。AI 轨未必排在第 2 条，写死会在
+        // 「AI 轨不在这个位置」或「压根没有 AI 轨」时切到一条完全不相干的轨
+        // （甚至切到别的语种轨）。这里按实际内容找：先找 AI 轨，没有就退回
+        // 第一条中文字幕源轨（交给实时翻译）。
+        for (var i = 0; i < subtitles.length; i++) {
+          final s = subtitles[i];
+          if (s.isAi || s.lan.startsWith('ai')) {
+            idx = i + 1;
+            break;
+          }
+        }
+        if (idx < 0) {
+          for (var i = 0; i < subtitles.length; i++) {
+            if (subtitles[i].isChineseSourceTrack) {
+              idx = i + 1;
+              break;
+            }
+          }
+        }
       } else {
         for (var i = 0; i < subtitles.length; i++) {
           if (!subtitles[i].lan.startsWith('ai')) {
@@ -2811,9 +2843,16 @@ class VideoDetailController extends GetxController
     int generation, {
     required bool allowNewTranslation,
     bool allowManualCacheRestore = false,
+    bool manual = false,
   }) async {
+    // 3.8.9：自动与手动分层。
+    //
+    // 「自动翻译字幕」开关（默认开）只该管**自动**发起的那几条路径
+    // （播放页选轨、后台预翻译）；用户自己点「翻译字幕 / 重试 / 选中文(AI)轨」
+    // 属于手动，必须无视这个开关，否则开关会把用户自己的操作也一起禁掉。
+    final autoAllowed = manual || Pref.uiTranslateAutoSubtitle;
     final canStartTranslation =
-        allowNewTranslation && SubtitleTranslateService.needed;
+        allowNewTranslation && SubtitleTranslateService.needed && autoAllowed;
     if (canStartTranslation) {
       subtitleTranslationStatus.value = uiTx('正在准备实时翻译字幕');
       subtitleTranslationProgress.value = 0;
@@ -2821,7 +2860,11 @@ class VideoDetailController extends GetxController
     } else {
       // Keep the Chinese track visible and explain why no request is sent.
       // A completed local cache can still replace it below.
-      subtitleTranslationStatus.value = uiTx('正在显示中文字幕；请开启AI翻译以翻译字幕');
+      subtitleTranslationStatus.value = uiTx(
+        !manual && !Pref.uiTranslateAutoSubtitle
+            ? '自动翻译字幕已关闭；可手动点击字幕翻译按钮'
+            : '正在显示中文字幕；请开启AI翻译以翻译字幕',
+      );
       subtitleTranslationProgress.value = 0;
       subtitleTranslationRunning.value = false;
     }
@@ -2864,6 +2907,7 @@ class VideoDetailController extends GetxController
               generation,
               allowNewTranslation: allowNewTranslation,
               allowManualCacheRestore: allowManualCacheRestore,
+              manual: manual,
             );
           }
           return;

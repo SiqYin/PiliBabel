@@ -348,7 +348,8 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                 title: Text(uiTx('自动翻译字幕')),
                 subtitle: Text(
                   uiTx(
-                    '点开视频时自动在后台预翻译字幕；关闭后需要手动点封面上的「翻译字幕」',
+                    '点开视频时自动在后台预翻译字幕（含后台预翻译后续视频）；'
+                    '关闭后需要手动点封面上的「翻译字幕」',
                   ),
                 ),
                 value: Pref.uiTranslateAutoSubtitle,
@@ -364,7 +365,8 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                 title: Text(uiTx('自动翻译弹幕')),
                 subtitle: Text(
                   uiTx(
-                    '点开视频时自动在后台预翻译弹幕；关闭后需要手动点封面上的「翻译弹幕」',
+                    '点开视频时自动在后台预翻译弹幕（含弹幕载入时的批量预翻译）；'
+                    '关闭后需要手动点封面上的「翻译弹幕」',
                   ),
                 ),
                 value: Pref.uiTranslateAutoDanmaku,

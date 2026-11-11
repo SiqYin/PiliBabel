@@ -1,3 +1,17 @@
+### PiliBabel v3.8.9
+
+**A full audit sweep: the two auto-translate switches now really work, translation caches are language-aware, and danmaku translation is faster.**
+
+**The auto-translate switches are now complete.** In 3.8.8 they only stopped the background pre-translation on video open — the player could still start a live subtitle translation, loaded danmaku segments were still batch-translated, and the background kept pre-translating the next few videos. Switching either one off now stops **every** automatic translation of that kind. Manual actions (the subtitle/danmaku buttons, retry, picking a track) always work regardless of the switch.
+
+**Caches are language-aware.** The reverse search cache is now split per language and persisted with a language tag, so changing language and restarting the app can no longer reuse a stale "translated word → Chinese original" mapping. A reverse index replaces the full-cache linear scan (O(n) → O(1)), all cache writes go through one helper that maintains that index, and each language bucket is capped at 5,000 entries so the persisted table cannot grow forever.
+
+**Danmaku and subtitles.** Switching translation engines now recomputes the danmaku default; the AI subtitle track is found by content instead of a hard-coded index; in-flight danmaku text swapping is coalesced to one scan per frame; and the 15-second prediction window is pre-translated in one batch instead of one line at a time. Failed translation batches are retried once, and truncated model output is counted and logged.
+
+**Tooling and docs.** The README consistency check now validates the "languages outside the official list" count in all 44 languages (five different numeral systems) — and the English master README, which had never actually been checked, is now part of the check. Old release notes are archived automatically. The glossary manifest check uses the app's own HTTP stack with cancellation, and its trust boundary is documented. 30 suspected empty `Obx` blocks were reviewed one by one and all turned out to be false positives (GetX Rx accessors register the subscription indirectly).
+
+Full item-by-item list: `glossary/AUDIT-DEEP-3.8.8-2026-11-11.md`, Appendix D.
+
 ### PiliBabel v3.8.8
 
 **The language search box works again, and auto-translating subtitles and danmaku is now your call.**

@@ -362,6 +362,9 @@ class PlDanmakuController {
     if (!Get.isRegistered<UiTranslateService>()) return;
     final service = UiTranslateService.to;
     if (!service.danmakuTranslate.value) return;
+    // 3.8.9：「自动翻译弹幕」关掉后，弹幕分段载入时的整段批量预翻译
+    // 也不该再自动发起——否则用户关了开关，弹幕照样会被翻。
+    if (!Pref.uiTranslateAutoDanmaku) return;
     final contents = <String>[
       for (final list in _dmSegMap.values)
         for (final element in list)
