@@ -2211,7 +2211,12 @@ class VideoDetailController extends GetxController
     subtitles.value = validSubs;
     _rebuildSubtitlePlaybackTracks();
 
-    if (translatedVtt != null) {
+    // 离线译文轨要跟着 AI 翻译走（3.8.14）：关掉 AI 翻译、或关掉
+    // 「自动翻译字幕」时，缓存里那条 `...-app-ai` 不该被自动挂上去，
+    // 否则用户会莫名其妙看到译文而不是原字幕。手动选轨仍可挑到它。
+    if (translatedVtt != null &&
+        Pref.uiTranslateEnabled &&
+        Pref.uiTranslateAutoSubtitle) {
       final identity = sha256
           .convert(utf8.encode('${entry.bvid}/${cid.value}\n$translatedVtt'))
           .toString();

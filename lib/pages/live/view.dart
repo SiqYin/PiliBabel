@@ -1,3 +1,4 @@
+import 'package:PiliPlus/pages/live/widgets/sliver_pinned_header.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/skeleton/video_card_v.dart';
@@ -88,7 +89,12 @@ class _LivePageState extends State<LivePage>
         if (data.first != null) ..._buildFollowList(theme, data.first!),
         if (data.second?.cardData?.areaEntranceV3?.list case final list?)
           if (list.isNotEmpty)
-            SliverToBoxAdapter(
+            // 分区入口吸顶（3.8.14，上游 d4156aaa9）：滚动时这一行留在顶部，
+            // 随时能切分区，不用先滚回去。
+            LiveSliverPinnedHeader(
+              areaHeight: 10.0 + textScaler.scale(14) + 8,
+              backgroundColor: theme.colorScheme.surface,
+              callback: (_) {},
               child: Padding(
                 padding: const .only(bottom: 8.0),
                 child: Row(
