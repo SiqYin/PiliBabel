@@ -221,6 +221,11 @@ class VideoDetailController extends GetxController
     }
   }
 
+  /// 旋转角度按 90° 累加（桌面端菜单用，上游 9378093b0）。
+  int calcRotate(int value) =>
+      (plPlayerController.videoRotate.value + value) % 360;
+  set rotate(int value) => plPlayerController.setRotate(value);
+
   /// 切到指定音质：换 audioUrl 并重开播放器，位置保持不变。
   ///
   /// 复用 `updatePlayer()`（它按 `currentAudioQa` 选轨并 `playerInit`），

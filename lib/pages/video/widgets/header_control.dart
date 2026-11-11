@@ -645,6 +645,22 @@ class HeaderControlState extends State<HeaderControl>
                   child: Row(
                     spacing: 10,
                     children: [
+                      if (PlatformUtils.isDesktop) ...[
+                        ActionRowLineItem(
+                          iconData: Icons.rotate_left,
+                          onTap: () => videoDetailCtr.rotate =
+                              videoDetailCtr.calcRotate(-90),
+                          text: " 向左旋转 ",
+                          selectStatus: false,
+                        ),
+                        ActionRowLineItem(
+                          iconData: Icons.rotate_right,
+                          onTap: () => videoDetailCtr.rotate =
+                              videoDetailCtr.calcRotate(90),
+                          text: " 向右旋转 ",
+                          selectStatus: false,
+                        ),
+                      ],
                       Obx(
                         () {
                           final flipX = plPlayerController.flipX.value;

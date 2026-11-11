@@ -1013,6 +1013,17 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     }
   }
 
+  /// 画面旋转角度（0/90/180/270）。桌面端菜单里的旋转按钮改它。
+  final RxInt videoRotate = 0.obs;
+
+  /// 设置旋转角度并立刻下发到播放器；重开播放器时由
+  /// [applyVideoPictureParameters] 重新套用，不会丢。
+  void setRotate(int value) {
+    final v = value % 360;
+    videoRotate.value = v;
+    _applyVideoPictureProperty('video-rotate', v);
+  }
+
   void _applyVideoPictureProperty(String property, int value) {
     final player = _videoPlayerController;
     if (player == null || onlyPlayAudio.value) return;
@@ -1031,6 +1042,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
         ..setProperty('saturation', videoSaturation.value.toString())
         ..setProperty('gamma', videoGamma.value.toString())
         ..setProperty('hue', videoHue.value.toString())
+        ..setProperty('video-rotate', videoRotate.value.toString())
         ..setProperty('audio-delay', (audioDelayMs.value / 1000).toString());
     } catch (_) {}
   }
