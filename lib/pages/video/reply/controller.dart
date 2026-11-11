@@ -1,6 +1,5 @@
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show MainListReply, ReplyInfo;
-import 'package:PiliPlus/pages/common/reply/fold/reply_fold_mixin.dart';
 import 'package:PiliPlus/grpc/reply.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/video/video_type.dart';
@@ -13,17 +12,13 @@ import 'package:get/get.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 
 class VideoReplyController extends ReplyController<MainListReply>
-    with BaseReplyFoldMixin<MainListReply>, ReplyVoteMixin {
+    with ReplyVoteMixin {
   VideoReplyController({
     required this.aid,
     required this.videoType,
     required this.heroTag,
   });
   int aid;
-
-  /// 折叠回复按 aid 定位。
-  @override
-  int get replyOid => aid;
   final VideoType videoType;
   late final isPugv = videoType == VideoType.pugv;
 
@@ -38,8 +33,6 @@ class VideoReplyController extends ReplyController<MainListReply>
 
   @override
   List<ReplyInfo>? getDataList(MainListReply response) {
-    // 每页都记下折叠卡片，页脚据此决定显示「展开」还是「加载中」。
-    getFoldCard(response.mixedCards);
     return response.replies;
   }
 

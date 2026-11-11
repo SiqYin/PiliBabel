@@ -47,16 +47,6 @@ abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
       _enableCommAntifraud || _biliSendCommAntifraud;
   dynamic get sourceId;
 
-  /// 折叠回复（[ReplyGrpc.foldList]）用的定位参数。
-  /// 子类按自己的业务覆盖；默认取 [sourceId]，取不到就当 0。
-  int get replyOid {
-    final id = sourceId;
-    return id is int ? id : 0;
-  }
-
-  /// 评论对象类型（视频 1、动态 17 等），默认按视频处理。
-  int get replyType => 1;
-
   /// D2.1 分页预取深度：WiFi 更深（6 项）、蜂窝更浅（2 项），
   /// 与蜂窝降采样一致，避免在流量网络上多拉一页评论。
   int prefetchDepth = 2;
