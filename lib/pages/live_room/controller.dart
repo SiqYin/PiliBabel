@@ -1,3 +1,5 @@
+import 'package:PiliPlus/utils/storage_key.dart';
+import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async' show Timer, StreamSubscription;
 import 'dart:convert' show jsonDecode;
@@ -121,6 +123,15 @@ class LiveRoomController extends GetxController {
   bool get shouldRefresh => builtLength != messages.length;
   late final fsSC = Rxn<SuperChatItem>();
   late final RxList<SuperChatItem> superChatMsg = <SuperChatItem>[].obs;
+
+  /// 开关直播弹幕：临时配置下不落盘（3.8.13，上游 9f1bb96af）。
+  void toggleDanmaku() {
+    final newVal = !plPlayerController.enableShowLiveDanmaku.rawValue;
+    plPlayerController.enableShowLiveDanmaku.value = newVal;
+    if (!plPlayerController.tempPlayerConf) {
+      GStorage.setting.put(SettingBoxKey.enableShowLiveDanmaku, newVal);
+    }
+  }
   final disableAutoScroll = false.obs;
   bool autoScroll = true;
   LiveMessageStream? _msgStream;

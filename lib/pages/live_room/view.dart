@@ -1142,17 +1142,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                       height: 34,
                       child: IconButton(
                         style: IconButton.styleFrom(padding: .zero),
-                        onPressed: () {
-                          final newVal = !enableShowLiveDanmaku;
-                          plPlayerController.enableShowLiveDanmaku.value =
-                              newVal;
-                          if (!plPlayerController.tempPlayerConf) {
-                            GStorage.setting.put(
-                              SettingBoxKey.enableShowLiveDanmaku,
-                              newVal,
-                            );
-                          }
-                        },
+                        onPressed: _liveRoomController.toggleDanmaku,
                         icon: enableShowLiveDanmaku
                             ? const Icon(
                                 size: 22,
