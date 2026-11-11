@@ -50,7 +50,17 @@ class SearchPanelController<R extends SearchNumData<T>, T>
   final RxList<String> includeKeywords = <String>[].obs;
   final RxList<String> excludeKeywords = <String>[].obs;
 
-  RegExp? _buildRegex(List<String> keywords) {
+  bool get supportsVideoTagFilter =>
+      searchType == SearchType.video;
+
+  /// `#` 开头的关键词按「视频 tag 子串」匹配，其余仍按标题正则。
+  List<String> _tagKeywords(List<String> keywords) => keywords
+      .where((keyword) => keyword.startsWith('#'))
+      .map((keyword) => keyword.substring(1).trim().toLowerCase())
+      .where((keyword) => keyword.isNotEmpty)
+      .toList();
+
+  RegExp? _buildRegex(Iterable<String> keywords) {
     if (keywords.isEmpty) return null;
     try {
       final pattern = keywords
@@ -62,17 +72,39 @@ class SearchPanelController<R extends SearchNumData<T>, T>
     }
   }
 
-  List<E> filterKeywords<E>(List<E> list, String? Function(E) getTitle) {
+  List<E> filterKeywords<E>(
+    List<E> list,
+    String? Function(E) getTitle, {
+    Iterable<String>? Function(E)? getTags,
+  }) {
     final hasInc = includeKeywords.isNotEmpty;
     final hasExc = excludeKeywords.isNotEmpty;
     if (!hasInc && !hasExc) return list;
-    final inc = hasInc ? _buildRegex(includeKeywords) : null;
-    final exc = hasExc ? _buildRegex(excludeKeywords) : null;
+    final inc = _buildRegex(
+      includeKeywords.where((keyword) => !keyword.startsWith('#')),
+    );
+    final exc = _buildRegex(
+      excludeKeywords.where((keyword) => !keyword.startsWith('#')),
+    );
+    final incTags = _tagKeywords(includeKeywords);
+    final excTags = _tagKeywords(excludeKeywords);
+    bool tagHit(List<String> keys, Iterable<String>? tags) {
+      if (keys.isEmpty || tags == null) return false;
+      final lower = tags.map((t) => t.toLowerCase());
+      return keys.any((k) => lower.any((t) => t.contains(k)));
+    }
     return list.where((item) {
       final title = getTitle(item);
-      if (title == null) return true;
-      if (inc != null && !inc.hasMatch(title)) return false;
-      if (exc != null && exc.hasMatch(title)) return false;
+      final tags = getTags?.call(item);
+      final incHit =
+          (inc != null && title != null && inc.hasMatch(title)) ||
+          tagHit(incTags, tags);
+      final hasIncFilter = inc != null || incTags.isNotEmpty;
+      if (hasIncFilter && !incHit) return false;
+      final excHit =
+          (exc != null && title != null && exc.hasMatch(title)) ||
+          tagHit(excTags, tags);
+      if (excHit) return false;
       return true;
     }).toList();
   }

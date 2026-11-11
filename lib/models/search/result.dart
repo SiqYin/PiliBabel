@@ -66,9 +66,10 @@ class SearchVideoData extends SearchNumData<SearchVideoItemModel> {
 }
 
 class SearchVideoItemModel extends HorizontalVideoModel {
+  /// 视频标签（B 站以逗号分隔的一串），供 `#tag` 过滤用。
+  String? tag;
   int? id;
   String? arcurl;
-  String? tag;
   int? ctime;
 
   @override
@@ -77,6 +78,7 @@ class SearchVideoItemModel extends HorizontalVideoModel {
   SearchVideoItemModel.fromJson(Map<String, dynamic> json) {
     id = json['id'];
     arcurl = json['arcurl'];
+    tag = json['tag'] as String?;
     aid = json['aid'];
     bvid = json['bvid'];
     titleList = Em.regTitle(json['title']);

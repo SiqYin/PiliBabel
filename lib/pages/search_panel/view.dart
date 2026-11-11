@@ -70,7 +70,14 @@ abstract class CommonSearchPanelState<
       Loading() => buildLoading,
       Success(:final response) when response != null && response.isNotEmpty =>
         () {
-          final filtered = controller.filterKeywords(response, getTitle);
+          final filtered = controller.filterKeywords(
+            response,
+            getTitle,
+            // `#xxx` 关键词按视频 tag 过滤（3.8.12，上游 efe023149）。
+            getTags: (item) => item is SearchVideoItemModel
+                ? item.tag?.split(',')
+                : null,
+          );
           if (filtered.isEmpty) {
             return _buildFilteredOut(theme);
           }
