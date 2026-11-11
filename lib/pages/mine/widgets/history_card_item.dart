@@ -1,9 +1,10 @@
-import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
+import 'package:PiliPlus/common/widgets/card_translate_buttons.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/models_new/history/list.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_video_key.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
@@ -90,6 +91,16 @@ class HistoryCardItem extends StatelessWidget {
     final coverSrc = item.cover?.isNotEmpty == true
         ? item.cover
         : item.covers?.firstOrNull ?? '';
+    // 与首页卡片同一套规则：能翻的只有视频与番剧单集，
+    // 专栏/直播/课堂没有可翻的字幕轨，只留识图按钮。
+    final subtitleKey = _isVideo
+        ? subtitleVideoKeyFor(
+            bvid: item.history.bvid,
+            aid: item.history.oid,
+          )
+        : _isPgc
+        ? subtitleVideoKeyFor(epId: item.history.epid)
+        : '';
 
     return GestureDetector(
       onTap: _onTap,
@@ -160,7 +171,16 @@ class HistoryCardItem extends StatelessWidget {
                         type: PBadgeType.gray,
                       ),
                   
-                    CoverTranslateButton(cover: coverSrc),],
+                    CardTranslateButtons(
+                      cover: coverSrc,
+                      videoKey: subtitleKey,
+                      bvid: item.history.bvid,
+                      aid: item.history.oid,
+                      cid: item.history.cid,
+                      epId: item.history.epid,
+                      showSubtitle: subtitleKey.isNotEmpty,
+                      showDanmaku: subtitleKey.isNotEmpty,
+                    ),],
                 ),
               ),
             ),

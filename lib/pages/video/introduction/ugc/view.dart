@@ -225,25 +225,33 @@ class _UgcIntroPanelState extends State<UgcIntroPanel> {
     );
   }
 
+  /// 服务端下发的提示条（`argue_info.argue_msg`）。
+  ///
+  /// B 站把「含AI生成内容」这类合规提示放在这个字段里下发，是**简体中文**原文。
+  /// 以前这里直接把 `argueMsg` 塞进 TextSpan，于是整页文案都跟着界面语言翻了、
+  /// 只有这一条永远停在中文（用户 3.8.10 报的就是它）。现在走 `uiTx`，
+  /// 并包一层 Obx：译文是异步回来的，不包就只在构建那一刻取一次值。
   Widget _buildArgueInfo(String argueMsg) {
-    return Text.rich(
-      TextSpan(
-        children: [
-          WidgetSpan(
-            alignment: .middle,
-            child: Padding(
-              padding: const .only(right: 2),
-              child: Icon(
-                size: 13,
-                Icons.error_outline,
-                color: colorScheme.outline,
+    return Obx(
+      () => Text.rich(
+        TextSpan(
+          children: [
+            WidgetSpan(
+              alignment: .middle,
+              child: Padding(
+                padding: const .only(right: 2),
+                child: Icon(
+                  size: 13,
+                  Icons.error_outline,
+                  color: colorScheme.outline,
+                ),
               ),
             ),
-          ),
-          TextSpan(text: argueMsg),
-        ],
+            TextSpan(text: uiTx(argueMsg)),
+          ],
+        ),
+        style: TextStyle(fontSize: 12, color: colorScheme.outline),
       ),
-      style: TextStyle(fontSize: 12, color: colorScheme.outline),
     );
   }
 

@@ -19,12 +19,10 @@ const List<String> _legacyLanguageOrder = <String>[
   'en',
   'ja',
   'ko',
-  'yue-Hans',
   'yue-Hant',
   'wuu-Hans',
   'wuu-Hant',
-  'nan-CN',
-  // 白话字（POJ）版台湾闽南语：**紧挨着汉字版的两个闽南语**，
+  // 白话字（POJ）版台湾闽南语：**紧挨着汉字版的臺灣閩南語**，
   // 让人一眼看出它是同一语族的另一种书写（3.8.8 用户要求）。
   'nan-TW-latn',
   'nan-TW',

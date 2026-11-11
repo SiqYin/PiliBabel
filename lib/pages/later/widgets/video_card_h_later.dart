@@ -1,4 +1,5 @@
-import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
+import 'package:PiliPlus/common/widgets/card_translate_buttons.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_video_key.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
@@ -37,6 +38,13 @@ class VideoCardHLater extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final enableMultiSelect = ctr.enableMultiSelect.value;
+    // 番剧单集没有 bvid/aid，靠 epId 定位字幕；普通视频用 bvid → aid。
+    final subtitleKey = (videoItem.isPgc ?? false)
+        ? subtitleVideoKeyFor(epId: videoItem.bangumi?.epId)
+        : subtitleVideoKeyFor(
+            bvid: videoItem.bvid,
+            aid: videoItem.aid,
+          );
 
     final onLongPress = enableMultiSelect
         ? null
@@ -165,7 +173,16 @@ class VideoCardHLater extends StatelessWidget {
                           ),
                         ),
                       
-                        CoverTranslateButton(cover: videoItem.pic),],
+                        CardTranslateButtons(
+                          cover: videoItem.pic,
+                          videoKey: subtitleKey,
+                          bvid: videoItem.bvid,
+                          aid: videoItem.aid,
+                          cid: videoItem.cid,
+                          epId: videoItem.bangumi?.epId,
+                          showSubtitle: subtitleKey.isNotEmpty,
+                          showDanmaku: subtitleKey.isNotEmpty,
+                        ),],
                     );
                   },
                 ),

@@ -1,4 +1,4 @@
-import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
+import 'package:PiliPlus/common/widgets/card_translate_buttons.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
@@ -11,6 +11,7 @@ import 'package:PiliPlus/models/common/badge_type.dart';
 import 'package:PiliPlus/models_new/history/list.dart';
 import 'package:PiliPlus/models_new/video/video_detail/dimension.dart';
 import 'package:PiliPlus/pages/common/multi_select/base.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_video_key.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
@@ -42,6 +43,15 @@ class HistoryItem extends StatelessWidget {
     int aid = item.history.oid!;
     String bvid = item.history.bvid ?? IdUtils.av2bv(aid);
     final business = item.history.business;
+    // 字幕/弹幕按钮需要视频身份：直播与专栏没有可翻的字幕轨，只留识图按钮。
+    final subtitleKey =
+        business == 'live' || (business?.contains('article') ?? false)
+        ? ''
+        : subtitleVideoKeyFor(
+            bvid: bvid,
+            aid: aid,
+            epId: item.history.epid,
+          );
     final enableMultiSelect = ctr.enableMultiSelect.value;
 
     final onLongPress = enableMultiSelect
@@ -191,10 +201,17 @@ class HistoryItem extends StatelessWidget {
                               ),
                             ),
                           
-                            CoverTranslateButton(
+                            CardTranslateButtons(
                               cover: item.cover?.isNotEmpty == true
                                   ? item.cover
                                   : item.covers?.firstOrNull,
+                              videoKey: subtitleKey,
+                              bvid: bvid,
+                              aid: aid,
+                              cid: item.history.cid,
+                              epId: item.history.epid,
+                              showSubtitle: subtitleKey.isNotEmpty,
+                              showDanmaku: subtitleKey.isNotEmpty,
                             ),],
                         );
                       },

@@ -1,4 +1,4 @@
-import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
+import 'package:PiliPlus/common/widgets/card_translate_buttons.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
@@ -13,6 +13,7 @@ import 'package:PiliPlus/models/common/stat_type.dart';
 import 'package:PiliPlus/models_new/fav/fav_detail/media.dart';
 import 'package:PiliPlus/pages/audio/view.dart';
 import 'package:PiliPlus/pages/fav_detail/controller.dart';
+import 'package:PiliPlus/services/ui_translate/subtitle_video_key.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/date_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
@@ -42,6 +43,13 @@ class FavVideoCardH extends StatelessWidget {
     final isOwner = !isSort && ctr!.isOwner;
     late final enableMultiSelect = ctr?.enableMultiSelect.value ?? false;
     final colorScheme = ColorScheme.of(context);
+    // 音频条目没有字幕轨；番剧条目没有 bvid，靠 seasonId 兜底。
+    final subtitleKey = item.type == 12
+        ? ''
+        : subtitleVideoKeyFor(
+            bvid: item.bvid,
+            seasonId: item.ogv?.seasonId,
+          );
 
     final onLongPress = isSort || enableMultiSelect
         ? null
@@ -142,7 +150,15 @@ class FavVideoCardH extends StatelessWidget {
                             ),
                           ),
                       
-                        CoverTranslateButton(cover: item.cover),],
+                        CardTranslateButtons(
+                          cover: item.cover,
+                          videoKey: subtitleKey,
+                          bvid: item.bvid,
+                          cid: item.ugc?.firstCid,
+                          seasonId: item.ogv?.seasonId,
+                          showSubtitle: subtitleKey.isNotEmpty,
+                          showDanmaku: subtitleKey.isNotEmpty,
+                        ),],
                     );
                   },
                 ),

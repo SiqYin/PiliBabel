@@ -94,14 +94,35 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    test('Tâi-gí 排在大陆闽南语与台湾闽南语之间', () {
+    test('Tâi-gí 紧挨在臺灣閩南語之前', () {
       final codes = pickerLanguageRows.map((e) => e.code).toList();
-      final cn = codes.indexOf('nan-CN');
       final poj = codes.indexOf('nan-TW-latn');
       final tw = codes.indexOf('nan-TW');
-      expect(cn, greaterThanOrEqualTo(0));
-      expect(poj, greaterThan(cn), reason: '白话字版紧跟大陆闽南语');
-      expect(tw, greaterThan(poj), reason: '汉字版台湾闽南语排在白话字版之后');
+      expect(poj, greaterThanOrEqualTo(0));
+      expect(tw, greaterThan(poj), reason: '汉字版臺灣閩南語排在白话字版之后');
+    });
+
+    test('中文方言只剩 粵語 / Tâi-gí / 臺灣閩南語 三条', () {
+      final names = appLanguages.map((e) => e.name).toList();
+      expect(names, contains('粵語'));
+      expect(names, isNot(contains('繁體粵語')));
+      expect(names, isNot(contains('简体粤语')));
+      expect(names, isNot(contains('大陆闽南语')));
+      // 粤语只有一档，且默认仍是繁體字形。
+      expect(
+        appLanguages.where((e) => e.code.startsWith('yue')).length,
+        1,
+      );
+      expect(
+        appLanguages.firstWhere((e) => e.code == 'yue-Hant').script,
+        'Hant',
+      );
+    });
+
+    test('已下线的语言代码迁到现行条目', () {
+      // 旧版本存过这两条的用户，不该被悄悄切回简体中文（等于关掉翻译）。
+      expect(appLanguageByCode('yue-Hans').code, 'yue-Hant');
+      expect(appLanguageByCode('nan-CN').code, 'nan-TW');
     });
 
     testWidgets('Tâi-gí 那行带「官方清单外 · 建议自备 API」的小红字', (tester) async {
@@ -137,10 +158,18 @@ void main() {
         ),
         findsOneWidget,
       );
+      // 3.8.10 下线：清单里不再有「大陆闽南语」「简体粤语」。
       expect(
         find.descendant(
           of: find.byType(ListView),
           matching: find.text('大陆闽南语'),
+        ),
+        findsNothing,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(ListView),
+          matching: find.text('简体粤语'),
         ),
         findsNothing,
       );

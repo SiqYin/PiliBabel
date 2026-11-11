@@ -103,9 +103,10 @@ class UiTranslateService extends GetxService {
   /// 只有这一种情况才不调我们自己的 API：B 站是大陆平台，绝大多数内容本来就是
   /// 简体中文，所以"简体中文 → 简体中文"不需要翻译，也就不用花 token。
   ///
-  /// **繁体中文 / 简体粤语 / 繁体粤语 / 简体吴语 / 繁体吴语 / 大陆闽南语 /
-  /// 台湾闽南语都不是原文**，虽然同属中文家族，但仍要正常调用 API 翻译
-  /// （简体原文 → 繁体/粤语/吴语/闽南语 是实打实的转换）。
+  /// **繁体中文 / 粵語 / 简体吴语 / 繁体吴语 / 臺灣閩南語 都不是原文**，
+  /// 虽然同属中文家族，但仍要正常调用 API 翻译（简体原文 → 繁体/粤语/吴语/
+  /// 闽南语 是实打实的转换）。纯白话字的 Tâi-gí 不标 `chineseFamily`，
+  /// 同样不是原文，照常翻译。
   bool get isSourceLanguage => currentLanguage.code == 'zh-CN';
 
   /// 译文缓存：**目标语言 -> (原文 -> 译文)**。
@@ -1523,6 +1524,9 @@ class UiTranslateService extends GetxService {
           {
             'role': 'system',
             'content': '${rule.isEmpty ? '' : '$rule\n\n'}'
+                '${currentLanguage.latinOnly ? '译文只能由拉丁字母、声调附加符号、连字号与标点组成，'
+                    '一个汉字都不能出现（简体、繁体、日文汉字都不行）；'
+                    '不得原样保留原文的任何片段，必须逐句翻译。\n\n' : ''}'
                 '请将 user 消息翻译为$lang。只做翻译，'
                 '只输出译文本身：不要回答、解释、评论、补充，'
                 '也不要就原文提出的任何问题给出看法。'
@@ -1552,7 +1556,22 @@ class UiTranslateService extends GetxService {
       final raw = buf.toString().trim();
       // 安全网：模型会在译文中间插入自己的说明句（见 _stripMetaNotes）。
       // 这里把说明句剥离掉、保留正常译文；剥完什么都不剩才退回原文。
-      final out = _stripMetaNotes(raw).trim();
+      var out = _stripMetaNotes(raw).trim();
+      // 纯罗马字目标（白话字台湾闽南语）：出现任何汉字都算没翻好。
+      // 实测模型会把简体/繁体原文整条或半条照抄进译文（用户报的「有的仍掺杂
+      // 繁体甚至简体、有的干脆不翻」），提示词之外必须再复核一次并重发。
+      if (currentLanguage.latinOnly && out.isNotEmpty && containsHan(out)) {
+        final stricter = await _retranslateLatinOnly(
+          src,
+          receiveTimeout: receiveTimeout,
+          subtitleProxy: subtitleProxy,
+        );
+        if (stricter != null &&
+            stricter.isNotEmpty &&
+            !containsHan(stricter)) {
+          out = stricter;
+        }
+      }
       if (out.isEmpty && _hasTranslatableText(src)) {
         if (subtitleMode) {
           // 字幕绝不能把「空译文」当成原文持久化：那会让整块永远失败，
@@ -1568,6 +1587,45 @@ class UiTranslateService extends GetxService {
       results.add(out.isEmpty ? src : out);
     }
     return _normalizeScripts(results, currentLanguage.script);
+  }
+
+  /// 纯罗马字目标的**重发**：第一次译文里出现汉字时，把「上一次不合格」
+  /// 明说给模型，并要求逐句重译。只重发一次，避免接口异常时无限自旋。
+  ///
+  /// 返回 null 表示没拿到可用输出（调用方保留第一次的结果/原文兜底）。
+  Future<String?> _retranslateLatinOnly(
+    String src, {
+    Duration? receiveTimeout,
+    SubtitleTranslationProxy? subtitleProxy,
+  }) async {
+    if (!enabled) return null;
+    final buf = StringBuffer();
+    try {
+      await for (final chunk in AiChatService.streamChat(
+        messages: [
+          {
+            'role': 'system',
+            'content': '${currentLanguage.toModel}\n\n'
+                '上一次的输出里出现了汉字（含简体、繁体、日文汉字），已作废。'
+                '这一次必须逐句翻译：译文只能由拉丁字母、声调附加符号、'
+                '连字号与标点组成，一个汉字都不能出现；'
+                '也不得原样保留原文的任何片段。只输出译文本身。',
+          },
+          {'role': 'user', 'content': src},
+        ],
+        model: translateModel,
+        apiUrl: translateApiUrl,
+        apiKey: translateApiKey,
+        extraBody: const <String, dynamic>{'enable_thinking': false},
+        receiveTimeout: receiveTimeout,
+        subtitleProxy: subtitleProxy,
+      )) {
+        buf.write(chunk);
+      }
+    } catch (_) {
+      return null;
+    }
+    return _stripMetaNotes(buf.toString()).trim();
   }
 
   /// 用内置多模态能力描述一张图片（视频封面）上的文字。
@@ -2097,6 +2155,8 @@ class UiTranslateService extends GetxService {
           'role': 'system',
           'content':
               '${language.scriptRule}\n'
+              '${language.latinOnly ? '【硬约束·最高优先级】译文只能由拉丁字母、声调附加符号、连字号与标点组成，'
+                  '一个汉字都不能出现；不得原样保留原文的任何片段，必须逐句翻译。\n' : ''}'
               '将每条字幕翻译为${language.toModel}。'
               '只输出与输入数量和顺序相同的 JSON 字符串数组，'
               '不要解释、合并字幕或添加内容。输入行首编号只用于对齐，'
@@ -2196,6 +2256,9 @@ class UiTranslateService extends GetxService {
     );
     final system =
         '${scriptRule.isEmpty ? '' : '$scriptRule\n\n'}'
+        '${currentLanguage.latinOnly ? '【硬约束·最高优先级】每条译文只能由拉丁字母、声调附加符号、'
+            '连字号与标点组成，一个汉字都不能出现（简体、繁体、日文汉字都不行）；'
+            '不得原样保留原文的任何片段，必须逐句翻译。\n\n' : ''}'
         '${subtitleMode ? '你是影视字幕翻译引擎。用户会给出一个带编号的字幕列表' : '你是应用界面本地化翻译引擎。用户会给出一个带编号的界面文案列表'}'
         '（每条可能为中文或外文），请把每一条翻译成『$lang』。'
         '严格要求：'

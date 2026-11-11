@@ -1,40 +1,13 @@
-### PiliBabel v3.8.9
+### PiliBabel v3.8.10
 
-**A full audit sweep: the two auto-translate switches now really work, translation caches are language-aware, and danmaku translation is faster.**
+**Tâi-gí output is now pure POJ, the Chinese-dialect list is down to the three you asked for, and the AI-content notice finally gets translated.**
 
-**The auto-translate switches are now complete.** In 3.8.8 they only stopped the background pre-translation on video open — the player could still start a live subtitle translation, loaded danmaku segments were still batch-translated, and the background kept pre-translating the next few videos. Switching either one off now stops **every** automatic translation of that kind. Manual actions (the subtitle/danmaku buttons, retry, picking a track) always work regardless of the switch.
+**Tâi-gí no longer leaks Chinese.** 3.8.7 shipped Tâi-gí with "not one Han character" as a prompt rule, but the model still mixed Traditional — sometimes Simplified — Chinese into the output, and occasionally left a whole line untranslated. The target-language instruction now says it three times over: the output may contain only Latin letters, tone marks, hyphens and punctuation; no Simplified, Traditional or Japanese kanji; no Han–Latin mixing; no Han inside brackets or quotes; and every sentence of the source must be translated rather than copied. It also names the Ministry of Education's 《臺灣閩南語常用詞辭典》 as the lexical baseline. On top of the prompt, every UI string is now checked when it comes back: if a Han character shows up, the line is re-requested once with "your previous output contained Han characters and was discarded", and only a Han-free result is accepted. Subtitles and danmaku already rejected Han output; they get the same stronger instruction.
 
-**Caches are language-aware.** The reverse search cache is now split per language and persisted with a language tag, so changing language and restarting the app can no longer reuse a stale "translated word → Chinese original" mapping. A reverse index replaces the full-cache linear scan (O(n) → O(1)), all cache writes go through one helper that maintains that index, and each language bucket is capped at 5,000 entries so the persisted table cannot grow forever.
+**"我的" no longer turns into "Tâi-gí ê".** The target-language description contains the language name, and for very short strings the model was substituting that name for the pronoun. The prompt now spells out the paradigm — 我 guá, 你/妳 lí, 他/她/它 i, 我們 lán (inclusive) or gún (exclusive), 你們 lín, 他們 in — and states that the possessive is pronoun + ê, so 我的 is guá ê, 你的 is lí ê. It also states that Tâi-gí is the name of the language, not a translation of any word, so it must not appear in the output unless the source is literally talking about the language itself.
 
-**Danmaku and subtitles.** Switching translation engines now recomputes the danmaku default; the AI subtitle track is found by content instead of a hard-coded index; in-flight danmaku text swapping is coalesced to one scan per frame; and the 15-second prediction window is pre-translated in one batch instead of one line at a time. Failed translation batches are retried once, and truncated model output is counted and logged.
+**Three Chinese dialects, one entry each.** The picker now offers 粵語, Tâi-gí and 臺灣閩南語 in that family and nothing else: 简体粤语 and 大陆闽南语 are gone, and 繁體粵語 is simply 粵語 — still written in Traditional characters by default. Anyone who had selected one of the removed entries is migrated to its surviving sibling (简体粤语 → 粵語, 大陆闽南语 → 臺灣閩南語) rather than silently falling back to Simplified Chinese, which would have looked like translation switching itself off. Simplified and Traditional Wu are untouched. All 44 READMEs are updated: the "outside the official list" count is 6 now, the mainland-Hokkien item is out of the enumeration, and the seventh-language sentence became the sixth.
 
-**Tooling and docs.** The README consistency check now validates the "languages outside the official list" count in all 44 languages (five different numeral systems) — and the English master README, which had never actually been checked, is now part of the check. Old release notes are archived automatically. The glossary manifest check uses the app's own HTTP stack with cancellation, and its trust boundary is documented. 30 suspected empty `Obx` blocks were reviewed one by one and all turned out to be false positives (GetX Rx accessors register the subscription indirectly).
+**The AI-content notice is translated.** Bilibili ships "含AI生成内容" inside `argue_info.argue_msg`. The video page rendered that field raw, so the notice stayed Chinese while everything around it followed the interface language. It now goes through the normal translation path and refreshes as soon as the translation arrives.
 
-Full item-by-item list: `glossary/AUDIT-DEEP-3.8.8-2026-11-11.md`, Appendix D.
-
-### PiliBabel v3.8.8
-
-**The language search box works again, and auto-translating subtitles and danmaku is now your call.**
-
-**The search box was dead.** It had been broken since 3.8.2: the listener updated the query but never triggered a rebuild, so the list was never filtered — typing did nothing, and pressing Enter did nothing either. That release's notes even claimed "results appear as you type, no Enter needed". The search field now lives in its own component that owns its state, so **the list filters as you type**, including while an IME is still composing.
-
-**Two new switches, both on by default.** Opening a video no longer has to mean the app starts translating in the background on its own:
-
-- **Auto-translate subtitles** — pre-translate subtitles in the background when a video opens. Turn it off and the automatic pass stops; the translate button on the cover still works exactly as before.
-- **Auto-translate danmaku** — same for danmaku. Danmaku you open yourself are still translated as usual.
-
-Both labels are translated like every other string in the app, and are pre-warmed with the rest of the settings copy.
-
-**Tâi-gí moved.** The POJ-only Taiwanese Hokkien entry now sits right between "mainland Hokkien" and the Han-script Taiwanese entry, so it reads as the same language family in a different script — and it carries the same "outside the official list · consider your own API" note as the other extra languages.
-
-**A test now guards the list.** The picker renders exactly the full language inventory (158 entries: bilibili's 151 plus our 7), and a regression test keeps it that way.
-
-### PiliBabel v3.8.7
-
-**The AI translation language list gains Tâi-gí — Taiwanese Hokkien written purely in POJ.**
-
-Tâi-gí is the same language as the existing Taiwanese Hokkien entry, but in a different writing system: it uses only Pe̍h-ōe-jī (POJ) romanisation — Latin letters, tone marks, hyphens and punctuation — and **not a single Han character**. The prompt says that outright: no Han-and-roman mixing, no Han supplied in brackets, and proper nouns are respelled from their Hokkien reading rather than left in Chinese.
-
-Because a stray Han character means the text was simply not translated, this target is deliberately **not** treated as a Chinese-family language: Han characters in a subtitle translation are rejected and the chunk retried — the exact opposite of the Han-script Taiwanese entry, whose output is allowed to contain them.
-
-It sits with the other languages outside bilibili's official inventory, is marked as such, and can be found by searching `tâi-gí`, `tai-gi`, `taigi`, `Taiwanese`, `POJ`, `白话字` or `閩南語`.
+**Subtitle and danmaku buttons on more cards.** History, favourites, watch-later and the watch-history strip on the Me tab only offered the cover-translate button. They now use the same three-button group as the home feed — cover, subtitles, danmaku — with the same video-identity key, so a job started from a card is the same job the player later finds. Entries that cannot have subtitles (live rooms, articles, audio) still show only the cover button.
