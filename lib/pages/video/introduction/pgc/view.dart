@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/badge.dart';
 import 'package:PiliPlus/common/widgets/button/icon_button.dart';
@@ -431,6 +432,18 @@ CoverTranslateButton(cover: item.cover!),
               semanticsLabel: uiTx('收藏'),
               text: NumUtils.numFormat(stat.favorite),
             ),
+          ),
+          ActionItem(
+            icon: const Icon(CustomIcons.download),
+            onTap: () => videoDetailCtr.onDownload(context),
+            text: uiTx('缓存'),
+            semanticsLabel: uiTx('缓存'),
+          ),
+          ActionItem(
+            icon: const Icon(CustomIcons.download),
+            onTap: () => videoDetailCtr.onDownload(context),
+            text: uiTx('缓存'),
+            semanticsLabel: uiTx('缓存'),
           ),
           Obx(
             () => ActionItem(
