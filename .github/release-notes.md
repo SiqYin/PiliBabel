@@ -1,53 +1,9 @@
-### PiliBabel v3.9.0
+### PiliBabel v3.9.1
 
-**从 3.8.0 到 3.9.0 的完整改动。**
+**The default font is 霞鹜文楷 again.**
 
-#### 翻译（最大的一块）
+3.8.12 handed the default over to the platform font to match the official app; that turned out to be the wrong call for this fork — the bundled LXGW WenKai is what people install PiliBabel for. 3.9.1 restores it as the default: a fresh install, and anyone who never touched 字体设置, gets 霞鹜文楷.
 
-- **新增 Tâi-gí（台湾闽南语·纯白话字 POJ）界面语言**：语言清单里可搜 `tâi-gí`、`台語`、`taiwanese` 等自称；译文一律用白话字，不混汉字。
-- **语言清单收敛**：官方清单外的语种由 7 种减到 6 种，只保留「粵語 / Tâi-gí / 臺灣閩南語」这一组。
-- **语言搜索框修复**：3.8.2 起搜索框完全失效，现已恢复，并支持阿拉伯文字折叠归一、英文别名、不可见字符剥离与实时搜索。
-- **两个自动翻译开关**：自动翻译字幕、自动翻译弹幕可分别控制。
-- **旧译文判废**：早期 tâi-gí 译文夹着繁简中文、甚至整段照抄原文的条目，现在加载时一律丢弃并重新翻译，界面先回落原文，不再永久显示旧结果。
-- **自我循环拦截**：拉丁字母目标语言遇到不含汉字的原文直接原样返回，并按分句去重判废「A ê A」式复读输出。
-- **术语表**：扩到 5 语言 15 张表（12 款游戏 + hololive / NIJISANJI / 偶像大师），11,600 条以上，短名与多段名都能解析。
+Nothing else changed in font handling. 系统默认 is still there as an explicit choice, and an explicitly chosen font is still respected — only the *unset* case flips back.
 
-#### 播放器
-
-- **HiRes 标识修复**：只在确有 Hi-Res 音轨时出现，点按可切换。
-- **滚轮调节音量**：桌面端可用滚轮改音量，并新增开关可关。
-- **长按 ← 连续后退**：按住每 200ms 退一档，松开一次性 seek。
-- **视频旋转**：桌面端菜单可左右旋转 90°，重开播放器不丢。
-- **全屏 SuperChat 透明度/缩放**：两个滑块，预览实时生效。
-- **字幕翻译按实际起播时间戳开始加载**：不再从 0 秒就开始等译文。
-- **jumpscare 分段**：SponsorBlock 的 jumpscare 类型成为一等分段，自动静音。
-
-#### 界面与交互
-
-- **搜索支持 `#tag`**：`#` 开头的关键词按视频 tag 匹配，可与标题关键词混用。
-- **侧边栏标签可隐藏**：只留图标，桌面轨道 56dp、平板抽屉 80dp。
-- **简介显示 av 号**：与 bvid 并列，点按复制。
-- **推荐源新增「桌面端」**：用官方 Windows 客户端的参数组合，每页 30 条。
-- **桌面推荐页刷新悬浮按钮**：一按回顶并重新拉取。
-- **番剧分节面板**：PV、花絮等分节单独成栏，上一集/下一集在分节内正确跳转。
-- **订阅合集页码倒序**：从最后一页往前翻。
-- **直播分区入口吸顶**：滚动时留在顶部。
-- **AI 聊天可中断**：流式回答中输入栏变停止键，已收到内容保留。
-- **番剧简介页缓存按钮**：直接打开下载面板。
-
-#### 桌面与系统
-
-- **Linux MPRIS**：播放状态暴露给 GNOME / KDE 媒体控件。
-- **字体默认改回系统字体**：霞鹜文楷仍可选、仍内置。
-- **桌面窗口最小尺寸与缩放修正**。
-
-#### 修复
-
-- **RTL 镜像切换黑屏**：改为单树两阶段翻转，并补翻转动画。
-- **动态「全部投稿」头像 / 保存面板 logo 显示**：满幅 logo 不再整图着色。
-- **离线字幕跟随 AI 翻译**：只有开启 AI 翻译且开启自动翻译字幕时才自动挂译文轨。
-- **CI**：`environment.flutter` 恢复精确版本，避免构建在 Setup Flutter 阶段失败。
-
-#### 说明
-
-折叠回复（`72ec31edd`）本次未包含：上游新版 pb 与 `protobuf 6.0.0` 运行时不兼容，构建阶段报类型冲突，已回退，需重新生成全部 pb 后单独处理。
+This release also carries the 3.9.0 changelog in English (see v3.9.0) and the same build fixes.

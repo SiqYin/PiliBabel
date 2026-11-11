@@ -28,19 +28,19 @@ abstract final class AppFont {
   /// 「显式选择系统默认」的哨兵值。正常字体族名不会长成这个样子。
   static const String systemSentinel = '__system_default__';
 
-  /// 该存储值是否指向内置字体。3.8.12 起 `null` 表示系统默认，不再算内置。
-  static bool isBundled(String? stored) => stored == bundledFamily;
+  /// 该存储值是否指向内置字体（含未设置的情形）。
+  static bool isBundled(String? stored) =>
+      stored == null || stored == bundledFamily;
 
-  /// 该存储值是否表示「系统默认」（未设置也算：3.8.12 起默认就是系统字体）
-  static bool isSystem(String? stored) =>
-      stored == null || stored == systemSentinel;
+  /// 该存储值是否表示「系统默认」。未设置不算：3.9.1 起默认仍是霞鹜文楷。
+  static bool isSystem(String? stored) => stored == systemSentinel;
 
   /// 把存储值解析成实际交给 Flutter 的 `fontFamily`：
   /// 系统默认返回 `null`（用平台默认），其余返回具体字体族名。
   ///
-  /// 未设置时返回 `null`，即平台默认字体（3.8.12 起与 B 站官方一致）。
+  /// 未设置时返回内置字体：默认就是霞鹜文楷（3.9.1 起恢复）。
   static String? resolve(String? stored) {
     if (isSystem(stored)) return null;
-    return stored;
+    return stored ?? bundledFamily;
   }
 }

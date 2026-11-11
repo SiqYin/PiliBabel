@@ -285,7 +285,7 @@ class _FontSettingPageState extends State<FontSettingPage> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: StaticPopupMenuButton<String>(
-                      initialValue: _selectedFont ?? AppFont.systemSentinel,
+                      initialValue: _selectedFont ?? AppFont.bundledFamily,
                       borderRadius: BorderRadius.circular(8),
                       itemBuilder: (context) => [
                         // 内置字体：随安装包分发，1.1.0 起的默认项
