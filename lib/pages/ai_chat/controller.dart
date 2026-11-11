@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:async';
 
@@ -12,6 +13,16 @@ import 'package:get/get.dart';
 class AiChatController extends GetxController {
   final messages = <ChatMessage>[].obs;
   final isAnalyzing = false.obs;
+
+  /// 当前请求的取消令牌（3.8.13，上游 b2a74b385）：发送按钮可中断。
+  CancelToken? _requestToken;
+
+  /// 中断当前请求：保留已收到的内容，允许立刻重发。
+  void cancelRequest() {
+    _requestToken?.cancel('user cancelled');
+    _requestToken = null;
+    if (isAnalyzing.value) isAnalyzing.value = false;
+  }
   final subtitleWarning = false.obs;
   final hasVideoContext = false.obs;
 
@@ -147,6 +158,7 @@ class AiChatController extends GetxController {
       }
 
       isAnalyzing.value = true;
+      _requestToken = CancelToken();
 
       messages.addAll([
         ChatMessage(
@@ -162,6 +174,7 @@ class AiChatController extends GetxController {
       SmartDialog.showToast(uiTx('分析失败: $e'));
       _removeLastIfStreaming();
     } finally {
+      _requestToken = null;
       isAnalyzing.value = false;
     }
   }
@@ -174,6 +187,7 @@ class AiChatController extends GetxController {
       ..add(ChatMessage(role: 'user', content: text.trim()))
       ..add(ChatMessage(role: 'assistant', content: '', isStreaming: true));
     isAnalyzing.value = true;
+    _requestToken = CancelToken();
 
     try {
       await _streamResponse();
@@ -218,6 +232,7 @@ class AiChatController extends GetxController {
     try {
       await for (final token in AiChatService.streamChat(
         messages: chatMessages,
+        cancelToken: _requestToken,
       )) {
         lastMsg.appendContent(token);
         messages.refresh();

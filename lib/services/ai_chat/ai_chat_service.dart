@@ -271,6 +271,7 @@ class AiChatService {
     String? apiKey,
     Duration? receiveTimeout,
     SubtitleTranslationProxy? subtitleProxy,
+    CancelToken? cancelToken,
   }) async* {
     final baseUrl = _baseUrl(apiUrl);
     if (baseUrl.isEmpty) throw Exception(uiTx('请先配置 API 地址'));
@@ -301,6 +302,7 @@ class AiChatService {
           ...?extraBody,
         }),
         options: opts,
+        cancelToken: cancelToken,
       );
     } on DioException catch (e) {
       client.close(force: true);

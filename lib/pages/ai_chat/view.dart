@@ -693,8 +693,13 @@ class _AiChatPageState extends State<AiChatPage>
           ),
           const SizedBox(width: 8),
           Obx(() => IconButton.filled(
-                onPressed: chatCtl.isAnalyzing.value ? null : _sendCustomPrompt,
-                icon: const Icon(Icons.send),
+                // 3.8.13：请求中变成「停止」，可中断流式输出（上游 b2a74b385）。
+                onPressed: chatCtl.isAnalyzing.value
+                    ? chatCtl.cancelRequest
+                    : _sendCustomPrompt,
+                icon: Icon(
+                  chatCtl.isAnalyzing.value ? Icons.stop : Icons.send,
+                ),
               )),
         ],
       ),
