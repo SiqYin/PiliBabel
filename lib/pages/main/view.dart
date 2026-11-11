@@ -443,6 +443,9 @@ class _MainAppState extends PopScopeState<MainApp>
   /// 抽屉总宽：图标 24 + 两侧内边距 + 标签，再留一点余量；上限取屏宽的 45%，
   /// 免得超长语种把内容区挤没。
   double _drawerWidth(BuildContext context) {
+    if (_mainController.hideSideBarLabel) {
+      return (80 + _padding.left).clamp(80.0, 120.0);
+    }
     final label = _sideBarLabelWidth(context);
     final screen = MediaQuery.sizeOf(context).width;
     return (label + 72 + _padding.left).clamp(130.0, screen * 0.45);
@@ -450,6 +453,7 @@ class _MainAppState extends PopScopeState<MainApp>
 
   /// 导航栏（图标在上、标签在下）总宽：标签宽度 + 内边距，下限保持 Flutter 默认 72。
   double _railWidth(BuildContext context) {
+    if (_mainController.hideSideBarLabel) return 56;
     final label = _sideBarLabelWidth(context);
     return (label + 40).clamp(72.0, 220.0);
   }
@@ -477,8 +481,10 @@ class _MainAppState extends PopScopeState<MainApp>
                   selectedIndex: _mainController.selectedIndex.value,
                   header: Expanded(flex: 4, child: userAndSearchVertical()),
                   tilePadding: const .symmetric(vertical: 5, horizontal: 12),
-                  indicatorShape: const RoundedRectangleBorder(
-                    borderRadius: .all(.circular(16)),
+                  indicatorShape: RoundedRectangleBorder(
+                    borderRadius: .all(
+                      .circular(_mainController.hideSideBarLabel ? 12 : 16),
+                    ),
                   ),
                   children: _mainController.navigationBars
                       .map(

@@ -1015,6 +1015,10 @@ abstract final class Pref {
     defaultValue: true,
   );
 
+  /// 侧边栏/平板抽屉是否隐藏文字标签（只留图标）。
+  static bool get hideSideBarLabel =>
+      _setting.get(SettingBoxKey.hideSideBarLabel, defaultValue: false);
+
   /// 滚轮调节音量（桌面端）。3.8.12 起可关。
   static bool get enableScrollVolume =>
       _setting.get(SettingBoxKey.enableScrollVolume, defaultValue: true);

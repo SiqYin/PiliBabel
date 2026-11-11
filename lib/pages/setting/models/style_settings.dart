@@ -82,6 +82,13 @@ List<SettingsModel> get styleSettings => [
     needReboot: true,
   ),
   SwitchModel(
+    title: uiTx('隐藏侧边栏标签'),
+    subtitle: uiTx('只留图标，侧边栏收窄；关闭则显示文字'),
+    leading: const Icon(Icons.label_off_outlined),
+    setKey: SettingBoxKey.hideSideBarLabel,
+    defaultVal: false,
+  ),
+  SwitchModel(
     title: uiTx('自动侧边栏切换'),
     subtitle: uiTx('屏幕较宽时（如折叠屏展开）自动改用侧边栏。点击自定义触发宽度。'),
     leading: const Icon(Icons.vertical_split_outlined),
