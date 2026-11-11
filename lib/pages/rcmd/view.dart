@@ -60,7 +60,7 @@ class _RcmdPageState extends State<RcmdPage>
         fab: Padding(
           padding: const .only(right: 16, bottom: 96),
           child: FloatingActionButton(
-            tooltip: '刷新',
+            tooltip: uiTx('刷新'),
             onPressed: controller.toTopAndRefresh,
             backgroundColor: colorScheme.secondaryContainer,
             foregroundColor: colorScheme.onSecondaryContainer,

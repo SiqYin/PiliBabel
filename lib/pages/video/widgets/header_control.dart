@@ -650,14 +650,14 @@ class HeaderControlState extends State<HeaderControl>
                           iconData: Icons.rotate_left,
                           onTap: () => videoDetailCtr.rotate =
                               videoDetailCtr.calcRotate(-90),
-                          text: " 向左旋转 ",
+                          text: uiTx('向左旋转'),
                           selectStatus: false,
                         ),
                         ActionRowLineItem(
                           iconData: Icons.rotate_right,
                           onTap: () => videoDetailCtr.rotate =
                               videoDetailCtr.calcRotate(90),
-                          text: " 向右旋转 ",
+                          text: uiTx('向右旋转'),
                           selectStatus: false,
                         ),
                       ],
