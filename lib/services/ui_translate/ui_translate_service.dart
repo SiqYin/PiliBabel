@@ -135,6 +135,9 @@ class UiTranslateService extends GetxService {
   /// 所有缓存写入都必须走这里，否则反向索引会与译文缓存不同步，
   /// 「用译文反查原文」就会失准。超上限时按插入顺序淘汰最老的条目。
   void _putCache(String lang, String src, String value) {
+    // 不达标的译文不入缓存（3.8.13）：宁可在界面上回落原文，
+    // 也不要把夹中文/照抄原文的结果固化下来。
+    if (isStaleTranslation(src, value, lang)) return;
     final bucket = _cacheByLang.putIfAbsent(lang, () => <String, String>{});
     if (!bucket.containsKey(src) && bucket.length >= _maxCachePerLang) {
       // Map 保持插入顺序 → 第一个就是最老的。
@@ -631,6 +634,10 @@ class UiTranslateService extends GetxService {
     // → 不需要翻译，原样返回：既省 token，也不会把专有名词译歪。
     // 只在「文字与语言一一对应」时才这么判（见 looksLikeNativeScript）。
     if (looksLikeNativeScript(src, currentLanguage.nativeScript)) return src;
+    // 目标语言用拉丁字母书写（tâi-gí 白话字）时，原文里连一个汉字都没有，
+    // 说明它本来就是译文或纯拉丁内容：再送一遍模型只会得到「A ê A」
+    // 这种自我循环（3.8.13）。
+    if (currentLanguage.latinOnly && !_hanRe.hasMatch(src)) return src;
     // 人工固定译名优先于缓存与模型：钉住的译法必须始终生效。
     final pinned = _pinnedTranslations[src]?[currentLanguage.code];
     if (pinned != null) return pinned;
@@ -675,6 +682,10 @@ class UiTranslateService extends GetxService {
     if (src == currentLanguage.code) return src;
     if (isSourceLanguage) return src;
     if (looksLikeNativeScript(src, currentLanguage.nativeScript)) return src;
+    // 目标语言用拉丁字母书写（tâi-gí 白话字）时，原文里连一个汉字都没有，
+    // 说明它本来就是译文或纯拉丁内容：再送一遍模型只会得到「A ê A」
+    // 这种自我循环（3.8.13）。
+    if (currentLanguage.latinOnly && !_hanRe.hasMatch(src)) return src;
     final pinned = _pinnedTranslations[src]?[currentLanguage.code];
     if (pinned != null) return pinned;
     // 与 [_tx] 同一顺序：术语表在缓存之前（理由见 _tx 里的注释）。
@@ -2458,12 +2469,61 @@ class UiTranslateService extends GetxService {
   }
 
   /// 从持久化表还原分语言缓存；没有语言前缀的旧条目一律丢弃（见 promptRevision 7）。
+  ///
+  /// 3.8.13：不达标的旧译文在这里直接丢弃（见 [isStaleTranslation]），
+  /// 让它们重新走翻译队列；界面上先回落到原文，不会一直卡着旧译文。
+  /// 译文是否已不达标（3.8.13）。
+  ///
+  /// 早期版本对 tâi-gí 的要求是「用繁体字写闽南语」，于是缓存里留下一大批
+  /// 夹着繁体/简体中文、甚至整段照抄原文的条目。它们命中缓存就不会再重译，
+  /// 界面上一直显示旧结果。判废规则：
+  /// - 空译文；
+  /// - 译文与原文相同（等于没翻译）；
+  /// - 目标是 tâi-gí（`nan-TW-latn`，白话字书写）却仍含汉字。
+  static final RegExp _hanRe = RegExp(r'[\u3400-\u9FFF\uF900-\uFAFF]');
+
+  static bool isStaleTranslation(String src, String dst, String lang) {
+    final d = dst.trim();
+    if (d.isEmpty) return true;
+    if (d == src.trim()) return true;
+    if (lang == 'nan-TW-latn' && _hanRe.hasMatch(d)) return true;
+    if (looksSelfLooped(d)) return true;
+    return false;
+  }
+
+  /// 译文是不是「自我循环」的产物（3.8.13）。
+  ///
+  /// 实测 tâi-gí 界面里「翻译引擎、应用语言与界面翻译」被译成
+  /// `Ìn-sīn ê ìn-sīn, ìn-sīn ê ìn-sīn, ìn-sīn ê ìn-sīn.` ——
+  /// 三个分句是同一段的复读，原文并不是三个重复项。这种输出既不是翻译、
+  /// 也没有信息量，还会被写进缓存长期显示，所以按废译处理：
+  /// 分句去重后只剩一种，或某个分句重复出现 3 次以上。
+  static bool looksSelfLooped(String text) {
+    final parts = text
+        .split(RegExp(r'[，,、;；]'))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList(growable: false);
+    if (parts.length < 2) return false;
+    if (parts.toSet().length == 1) return true;
+    final counts = <String, int>{};
+    for (final p in parts) {
+      counts[p] = (counts[p] ?? 0) + 1;
+    }
+    return counts.values.any((c) => c >= 3);
+  }
+
   void _loadCache(Map<String, String> raw) {
+    var dropped = false;
     for (final entry in raw.entries) {
       final i = entry.key.indexOf(_langSep);
       if (i <= 0) continue;
       final lang = entry.key.substring(0, i);
       final src = entry.key.substring(i + 1);
+      if (isStaleTranslation(src, entry.value, lang)) {
+        dropped = true;
+        continue;
+      }
       _cacheByLang.putIfAbsent(lang, () => <String, String>{})[src] =
           entry.value;
       // 反向索引要跟着一起重建，否则「用译文反查原文」在重启后就不准。
@@ -2471,6 +2531,8 @@ class UiTranslateService extends GetxService {
           .putIfAbsent(lang, () => <String, String>{})
           .putIfAbsent(entry.value, () => src);
     }
+    // 丢掉过条目就立刻回写，避免下次启动又被读回来。
+    if (dropped) _persist();
   }
 
   void _persist() {
