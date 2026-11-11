@@ -1,3 +1,5 @@
+import 'package:PiliPlus/utils/platform_utils.dart';
+import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/skeleton/video_card_v.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
@@ -31,7 +33,7 @@ class _RcmdPageState extends State<RcmdPage>
   Widget build(BuildContext context) {
     super.build(context);
     final colorScheme = ColorScheme.of(context);
-    return Container(
+    final child = Container(
       clipBehavior: .hardEdge,
       margin: const .symmetric(horizontal: Style.safeSpace),
       decoration: const BoxDecoration(borderRadius: Style.mdRadius),
@@ -52,6 +54,22 @@ class _RcmdPageState extends State<RcmdPage>
         ),
       ),
     );
+    if (PlatformUtils.isDesktop && Pref.showRefreshFAB) {
+      return ScaffoldLayout(
+        body: child,
+        fab: Padding(
+          padding: const .only(right: 16, bottom: 96),
+          child: FloatingActionButton(
+            tooltip: '刷新',
+            onPressed: controller.toTopAndRefresh,
+            backgroundColor: colorScheme.secondaryContainer,
+            foregroundColor: colorScheme.onSecondaryContainer,
+            child: const Icon(Icons.refresh),
+          ),
+        ),
+      );
+    }
+    return child;
   }
 
   SliverGridDelegateWithExtentAndRatio get gridDelegate => SliverGridDelegateWithExtentAndRatio(

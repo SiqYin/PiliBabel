@@ -171,6 +171,7 @@ abstract final class SettingBoxKey {
       enableSlideVolumeBrightness = 'enableSlideVolumeBrightness',
       enableScrollVolume = 'enableScrollVolume',
       hideSideBarLabel = 'hideSideBarLabel',
+      showRefreshFAB = 'showRefreshFAB',
       enableSlideFS = 'enableSlideFS',
       retryCount = 'retryCount',
       retryDelay = 'retryDelay',

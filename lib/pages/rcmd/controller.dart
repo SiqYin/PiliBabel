@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 
+import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/video.dart';
 import 'package:PiliPlus/models/common/rcmd_mode.dart';
@@ -16,6 +17,11 @@ import 'package:PiliPlus/utils/feed_next_page.dart';
 import 'package:PiliPlus/utils/feed_idx.dart';
 
 class RcmdController extends CommonListController {
+  /// 回到顶部并刷新（桌面端悬浮按钮用，3.8.13 上游 3997f132f）。
+  void toTopAndRefresh() {
+    scrollController.jumpToTop();
+    onRefresh();
+  }
   /// 每页预取的封面数：首屏之后的条目提前拉进图片缓存，滚动时直接命中
   /// （海外图片请求 RTT 高，预取对流畅度收益明显）。
   static const _prefetchCovers = 10;

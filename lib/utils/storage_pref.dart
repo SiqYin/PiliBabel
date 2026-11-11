@@ -1015,6 +1015,10 @@ abstract final class Pref {
     defaultValue: true,
   );
 
+  /// 桌面端是否显示「刷新」悬浮按钮（推荐页等）。
+  static bool get showRefreshFAB =>
+      _setting.get(SettingBoxKey.showRefreshFAB, defaultValue: true);
+
   /// 侧边栏/平板抽屉是否隐藏文字标签（只留图标）。
   static bool get hideSideBarLabel =>
       _setting.get(SettingBoxKey.hideSideBarLabel, defaultValue: false);

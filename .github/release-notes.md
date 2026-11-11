@@ -1,17 +1,11 @@
-### PiliBabel v3.8.12
+### PiliBabel v3.8.13
 
-**The first batch of upstream features lands, and the app goes back to the system font by default.**
+**Three more upstream features land: a cache button on PGC pages, hold-to-rewind on desktop, and a refresh button for the recommendation feed.**
 
-**Search understands `#tag`.** A keyword that starts with `#` now matches against a video's tags instead of its title, case-insensitively and as a literal substring, so `#原神` finds videos tagged 原神 while a plain keyword keeps matching titles as before. Inclusion is still OR (title hit or tag hit), exclusion still wins over inclusion, and the two can be mixed in one query. The tag field is read straight from the search response, so nothing extra is requested.
+**PGC pages can cache directly.** The 番剧/影视 intro page now carries a 缓存 action next to 收藏 / 再看 / 转发, opening the same download panel the video page uses, so a season you are about to watch can be saved without starting playback first.
 
-**The sidebar can hide its labels.** A new switch under 外观 keeps only the icons: the desktop rail narrows to 56dp and the tablet drawer to 80dp, with the selection pill shrinking to match. It takes effect without a restart.
+**Holding ← rewinds continuously.** On desktop, pressing and holding the left arrow now steps back every 200 ms while the key is down, and seeks once when you release — a long rewind no longer needs a dozen taps. A short press still jumps back a single step, exactly as before.
 
-**Scroll wheel adjusts volume — and can be turned off.** The player already mapped wheel scrolling to volume; that behaviour now has its own switch (滚轮调节音量, on by default) next to the slide-brightness one, for people who scroll the page behind the player.
+**The recommendation feed has a refresh button.** On desktop, with the new 桌面端刷新悬浮按钮 switch on, a floating button sits at the bottom right of 推荐: one press scrolls back to the top and reloads the feed, which is what you want after the tab has been left open for a while.
 
-**The intro panel shows the av number.** Alongside the bvid it now prints `av…`, and tapping it copies that form — handy when a tool or a person asks for the aid rather than the bvid.
-
-**Jumpscare segments are recognised.** SponsorBlock's `jumpscare` category is now a first-class segment type: red marker, auto-mute while it plays, listed with the other categories in the segment settings.
-
-**System font is the default again.** 1.1.0 switched the default to the bundled LXGW WenKai; 3.8.12 puts the platform default back, matching the official app. 霞鹜文楷 is still there as an option and is still bundled — anyone who picked it explicitly keeps it, and it can be chosen at any time in 字体设置.
-
-This release also carries the upstream fixes that came with the same batch: player seek handling, local subtitle read/update, audio session configuration, and several desktop window-sizing corrections.
+Everything else in this release comes from the same upstream batch as 3.8.12 and is already listed there.
