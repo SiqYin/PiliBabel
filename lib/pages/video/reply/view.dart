@@ -177,6 +177,28 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
                 }
               }
               if (index == response.length) {
+                // 折叠回复（3.8.13，上游 72ec31edd）：B 站把重复/低质回复折进
+                // 一张 FoldCard，页脚改成「展开」，点了才真正拉取。
+                final fold = _videoReplyController.foldCard;
+                if (fold != null) {
+                  return InkWell(
+                    onTap: _videoReplyController.loadFoldList,
+                    child: Container(
+                      height: 125,
+                      alignment: .topCenter,
+                      margin: .only(bottom: bottom),
+                      padding: const .symmetric(vertical: 12),
+                      child: Text(
+                        fold.bottomText,
+                        textAlign: .center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: colorScheme.primary,
+                        ),
+                      ),
+                    ),
+                  );
+                }
                 _videoReplyController.onLoadMore();
                 return Container(
                   height: 125,
