@@ -735,7 +735,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       /// 3. 不可点按，且位置在「选集」与「画面比例」之间，不在分段信息左侧。
       BottomControlType.hires => Obx(
         () {
-          if (!videoDetailController.hasHiResAudioTrack) {
+          if (!videoDetailController.hasHiResAudioTrack.value) {
             return const SizedBox.shrink();
           }
           final isHiRes =

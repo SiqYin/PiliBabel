@@ -192,13 +192,34 @@ class VideoDetailController extends GetxController
   /// 当前条目可选的全部音频轨（用于判断「本视频是否真的有 HiRes 音轨」）。
   List<AudioItem> get audioTracks => data.dash?.audio ?? const <AudioItem>[];
 
-  /// 本条视频是否有 HiRes 无损音轨。没有的话播放栏不该出现 HiRes 标识。
+  /// 本条视频是否有 HiRes 无损音轨。**没有就绝不渲染播放栏那个标识。**
+  ///
+  /// 必须是 observable。`data` 在换集 / 切相关视频时会被整体替换，而 `data`
+  /// 本身不是 Rx：写成读 `data` 的普通 getter 时，`Obx` 只订阅到
+  /// `currentAudioQa`，而两条视频的当前音质常常是同一档（值没变 → 不重建），
+  /// 标识就一直沿用**上一条视频**的结论：上一条有 HiRes、这一条没有，
+  /// 标识赖着不走（3.8.11 用户报的就是这个）。改成 RxBool 并在 `data`
+  /// 赋值后立刻刷新，标识与「本条视频的音质列表里有没有 Hi-Res」严格同步。
+  final RxBool hasHiResAudioTrack = false.obs;
+
+  /// 按当前 `data` 重新判定一次 HiRes 可用性。**`data` 每次被替换都要调。**
   ///
   /// 用 `maybeFromCode` 而不是 `fromCode`：B 站随时可能下发新的音质 code，
   /// 播放栏构建路径上遇到未知码必须安静跳过，不能整个崩掉。
-  bool get hasHiResAudioTrack => audioTracks.any(
-    (item) => AudioQuality.maybeFromCode(item.id)?.isHiRes == true,
-  );
+  void _refreshHiResAvailability() {
+    var has = false;
+    try {
+      has = audioTracks.any(
+        (item) => AudioQuality.maybeFromCode(item.id)?.isHiRes == true,
+      );
+    } catch (_) {
+      // `data` 还没准备好（late 未初始化）时按「没有」处理，等下次刷新。
+      has = false;
+    }
+    if (hasHiResAudioTrack.value != has) {
+      hasHiResAudioTrack.value = has;
+    }
+  }
 
   /// 切到指定音质：换 audioUrl 并重开播放器，位置保持不变。
   ///
@@ -219,10 +240,9 @@ class VideoDetailController extends GetxController
   ///
   /// 两条弹窗文案走 `uiTx`，因此自动进 AI 翻译队列并被预翻译覆盖。
   void toggleHiResAudio() {
-    final hasHiRes = audioTracks.any(
-      (item) => AudioQuality.maybeFromCode(item.id)?.isHiRes == true,
-    );
-    if (!hasHiRes) return;
+    // 点按前再判一次：切集后 `data` 已经换了，别拿上一条视频的结论去切。
+    _refreshHiResAvailability();
+    if (!hasHiResAudioTrack.value) return;
     final current = currentAudioQa.value;
     if (current?.isHiRes == true) {
       // 降档：优先选“真实存在于本条视频里”的最高非 HiRes 轨。
@@ -490,6 +510,7 @@ class VideoDetailController extends GetxController
       defaultST = Duration.zero;
     }
     data = PlayUrlModel(timeLength: entry.totalTimeMilli);
+    _refreshHiResAvailability();
     _setVideoHeight();
   }
 
@@ -1690,6 +1711,9 @@ class VideoDetailController extends GetxController
 
     if (result case Success(:final response)) {
       data = response;
+      // 新的一条 playurl 到手：立刻重算「这条视频有没有 HiRes 音轨」。
+      // 漏了这一步，播放栏标识就会一直停在上一条视频的状态上。
+      _refreshHiResAvailability();
       if (data.dash != null) await _supplementVideoQualities();
 
       languages.value = data.language?.items;
