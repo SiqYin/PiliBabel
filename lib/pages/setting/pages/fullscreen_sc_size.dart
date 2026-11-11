@@ -25,6 +25,8 @@ class FullScreenScSize extends StatefulWidget {
 
 class _FullScreenScSizeState extends State<FullScreenScSize> {
   double _width = Pref.fullScreenSCWidth;
+  double _opacity = Pref.fullScreenSCOpacity;
+  double _scale = Pref.fullScreenSCScale;
   final _randomSC = SuperChatItem.random;
   late EdgeInsets _padding;
   late ColorScheme _colorScheme;
@@ -83,17 +85,45 @@ class _FullScreenScSizeState extends State<FullScreenScSize> {
   }
 
   Widget get _buildBody {
-    return Align(
-      alignment: .bottomLeft,
+    return Column(
+      children: [
+        _slider(
+          label: '透明度',
+          value: _opacity,
+          min: .2,
+          max: 1.0,
+          onChanged: (v) => setState(() => _opacity = v),
+          onEnd: (v) =>
+              GStorage.setting.put(SettingBoxKey.fullScreenSCOpacity, v),
+        ),
+        _slider(
+          label: '缩放',
+          value: _scale,
+          min: .5,
+          max: 1.5,
+          onChanged: (v) => setState(() => _scale = v),
+          onEnd: (v) =>
+              GStorage.setting.put(SettingBoxKey.fullScreenSCScale, v),
+        ),
+        Expanded(
+          child: Align(
+            alignment: .bottomLeft,
       child: ExtraHitTestStack(
         clipBehavior: .none,
         children: [
           SizedBox(
             width: _width,
             child: IgnorePointer(
-              child: SuperChatCard(
-                item: _randomSC,
-                persistentSC: true,
+              child: Transform.scale(
+                scale: _scale,
+                alignment: Alignment.bottomLeft,
+                child: Opacity(
+                  opacity: _opacity,
+                  child: SuperChatCard(
+                    item: _randomSC,
+                    persistentSC: true,
+                  ),
+                ),
               ),
             ),
           ),
@@ -124,10 +154,35 @@ class _FullScreenScSizeState extends State<FullScreenScSize> {
               ),
             ),
           ),
-        ],
+            ],
+          ),
+        ),
       ),
+      ],
     );
   }
+
+  Widget _slider({
+    required String label,
+    required double value,
+    required double min,
+    required double max,
+    required ValueChanged<double> onChanged,
+    required ValueChanged<double> onEnd,
+  }) => Row(
+    children: [
+      SizedBox(width: 56, child: Text(uiTx(label))),
+      Expanded(
+        child: Slider(
+          value: value,
+          min: min,
+          max: max,
+          onChanged: onChanged,
+          onChangeEnd: onEnd,
+        ),
+      ),
+    ],
+  );
 
   void _onHorizontalDragUpdate(DragUpdateDetails details) {
     _width = math.max(25.0, _width + details.delta.dx);

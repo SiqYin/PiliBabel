@@ -1756,6 +1756,18 @@ abstract final class Pref {
         defaultValue: SuperChatTimeType.whenPersist.index,
       )];
 
+  /// 全屏 SuperChat 不透明度（0.2–1.0）。
+  static double get fullScreenSCOpacity => _setting.get(
+    SettingBoxKey.fullScreenSCOpacity,
+    defaultValue: 1.0,
+  );
+
+  /// 全屏 SuperChat 缩放（0.5–1.5）。
+  static double get fullScreenSCScale => _setting.get(
+    SettingBoxKey.fullScreenSCScale,
+    defaultValue: 1.0,
+  );
+
   static double get fullScreenSCWidth => _setting.get(
     SettingBoxKey.fullScreenSCWidth,
     defaultValue: kFullScreenSCWidth,

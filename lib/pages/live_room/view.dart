@@ -74,6 +74,8 @@ class LiveRoomPage extends StatefulWidget {
 class _LiveRoomPageState extends State<LiveRoomPage>
     with WidgetsBindingObserver, RouteAware, RouteAwareMixin {
   late final fullScreenSCWidth = Pref.fullScreenSCWidth;
+  late final fullScreenSCOpacity = Pref.fullScreenSCOpacity;
+  late final fullScreenSCScale = Pref.fullScreenSCScale;
   final String heroTag = Utils.generateRandomString(6);
   late final LiveRoomController _liveRoomController;
   late final PlPlayerController plPlayerController;
@@ -556,10 +558,19 @@ class _LiveRoomPageState extends State<LiveRoomPage>
                   key: ValueKey(item.id),
                   clipBehavior: Clip.none,
                   children: [
-                    SuperChatCard(
-                      item: item,
-                      onRemove: () => _liveRoomController.fsSC.value = null,
-                      onReport: () => _liveRoomController.reportSC(item),
+                    // 3.8.13：全屏 SC 支持透明度与缩放（上游 dbf468b89）。
+                    Transform.scale(
+                      scale: fullScreenSCScale,
+                      alignment: Alignment.bottomLeft,
+                      child: Opacity(
+                        opacity: fullScreenSCOpacity,
+                        child: SuperChatCard(
+                          item: item,
+                          onRemove: () =>
+                              _liveRoomController.fsSC.value = null,
+                          onReport: () => _liveRoomController.reportSC(item),
+                        ),
+                      ),
                     ),
                     Positioned(
                       right: -6,
