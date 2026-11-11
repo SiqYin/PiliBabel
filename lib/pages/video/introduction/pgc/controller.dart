@@ -32,9 +32,34 @@ import 'package:flutter/foundation.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
+import 'package:PiliPlus/models/common/pgc_episode_type.dart';
 import 'package:material_ui/material_ui.dart';
 
+typedef OnChangePgcEpisode = Function(
+  BaseEpisodeItem episode, {
+  PgcEpisodeType? episodeType,
+  bool manual,
+});
+
 class PgcIntroController extends CommonIntroController {
+
+  /// 当前剧集来自正片还是分节（PV / 花絮）。
+  /// 默认按正片，分节面板在 initState 就会读它，不能是 late。
+  PgcEpisodeType episodeType = PgcEpisodeType.episode;
+  int sectionIndex = 0;
+  /// 当前分节里的第几集；-1 表示不是分节。
+  int pvIndex = 0;
+
+  /// 当前正在浏览的剧集列表：分节模式下是那一节的剧集，否则是正片。
+  List<EpisodeItem> get currentEpisodes {
+    if (episodeType == PgcEpisodeType.section) {
+      final sections = pgcItem.sections;
+      if (sections != null && sectionIndex < sections.length) {
+        return sections[sectionIndex].episodes ?? const <EpisodeItem>[];
+      }
+    }
+    return pgcItem.episodes ?? const <EpisodeItem>[];
+  }
   int? seasonId;
   int? epId;
 
@@ -258,7 +283,10 @@ class PgcIntroController extends CommonIntroController {
   Future<bool> onChangeEpisode(
     BaseEpisodeItem episode, {
     bool manual = false,
+    PgcEpisodeType? episodeType,
   }) async {
+    // 记住这一集来自正片还是分节，分节面板据此高亮。
+    if (episodeType != null) this.episodeType = episodeType;
     try {
       final int epId = episode.epId ?? episode.id!;
       final String bvid = episode.bvid ?? this.bvid;
@@ -355,7 +383,7 @@ class PgcIntroController extends CommonIntroController {
 
   @override
   bool prevPlay({bool manual = false}) {
-    final episodes = pgcItem.episodes!;
+    final episodes = currentEpisodes;
     int currentIndex = episodes.indexWhere(
       (e) => e.cid == videoDetailCtr.cid.value,
     );
@@ -376,7 +404,7 @@ class PgcIntroController extends CommonIntroController {
   @override
   bool nextPlay({bool manual = false}) {
     try {
-      final episodes = pgcItem.episodes!;
+      final episodes = currentEpisodes;
 
       PlayRepeat playRepeat = videoDetailCtr.plPlayerController.playRepeat;
 

@@ -23,6 +23,11 @@ class PgcInfoModel {
   int? seasonId;
   String? seasonTitle;
   List<Section>? section;
+
+  /// 分节列表（B 站把 PV、花絮单独放在 `section` 里）。
+  List<Section>? get sections => section;
+
+  bool get hasSections => sections?.isNotEmpty ?? false;
   PgcStat? stat;
   String? subtitle;
   String? title;

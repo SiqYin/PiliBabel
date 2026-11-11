@@ -1,5 +1,8 @@
 import 'dart:math';
 
+import 'package:PiliPlus/models/common/pgc_episode_type.dart';
+import 'package:PiliPlus/models/common/episode_panel_type.dart';
+import 'package:PiliPlus/pages/video/introduction/pgc/widgets/section.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
@@ -82,7 +85,19 @@ class _PgcIntroPageState extends State<PgcIntroPage> {
           // 点赞收藏转发 布局样式2
           if (introController.isPgc) actionGrid(item.stat!, introController),
           // 番剧分集
-          if (item.episodes?.isNotEmpty == true)
+          // 有分节（PV / 花絮）时用分节面板，否则还是原来的剧集面板（3.8.15）。
+          if (item.hasSections)
+            SectionPanel(
+              pgcController: introController,
+              showEpisodes:
+                  ({required EpisodeType? type, PgcEpisodeType? episodeType}) =>
+                      (widget.showEpisodes as dynamic)(
+                        type: type,
+                        episodeType: episodeType,
+                      ),
+              onChangeEpisode: introController.onChangeEpisode,
+            )
+          else if (item.episodes?.isNotEmpty == true)
             PgcPanel(
               heroTag: widget.heroTag,
               pages: item.episodes!,

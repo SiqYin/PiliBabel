@@ -1,5 +1,14 @@
+import 'package:PiliPlus/models/common/badge_type.dart';
+import 'package:PiliPlus/models/common/episode_panel_type.dart';
+import 'package:PiliPlus/models/common/pgc_episode_type.dart';
 import 'package:PiliPlus/models_new/video/video_detail/arc.dart';
 import 'package:PiliPlus/models_new/video/video_detail/page.dart';
+
+/// 剧集面板回调：切换剧集，带类型（正片 / 分节）。
+typedef ShowEpisodes = void Function({
+  required EpisodeType? type,
+  PgcEpisodeType? episodeType,
+});
 
 class BaseEpisodeItem {
   int? id;
@@ -8,6 +17,13 @@ class BaseEpisodeItem {
   int? epId;
   String? bvid;
   String? badge;
+
+  /// 角标配色：预告灰、限免蓝、其余主题色。
+  PBadgeType get badgeType => switch (badge) {
+    '预告' => .gray,
+    '限免' => .free,
+    _ => .primary,
+  };
   String? title;
   String? cover;
 

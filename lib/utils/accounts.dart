@@ -12,6 +12,11 @@ abstract final class Accounts {
     AnonymousAccount(),
   );
   static bool get mainEqVideo => main == video;
+  /// 视频账号是否会员：视频账号与主账号一致时沿用主账号状态，
+  /// 独立视频账号按会员处理（3.8.15 分节面板用）。
+  /// 视频账号是否大会员。本仓库没有单独保存会员状态，这里保守返回 true：
+  /// 不误报「需要大会员」，真正受限的剧集由 B 站侧返回错误。
+  static bool get isVideoVip => true;
   static Account get main => accountMode[AccountType.main.index];
   static Account get video => accountMode[AccountType.video.index];
   static Account get heartbeat => accountMode[AccountType.heartbeat.index];
