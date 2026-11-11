@@ -67,7 +67,13 @@ class RcmdController extends CommonListController {
       } else if (prefetched != null) {
         res = Success(prefetched as List<BaseRcmdVideoItemModel>);
       } else {
-        res = await (appRcmd
+        res = await (rcmdMode == RcmdMode.desktop
+            ? VideoHttp.rcmdVideoList(
+                freshIdx: page,
+                ps: 30,
+                desktop: true,
+              )
+            : appRcmd
             ? VideoHttp.rcmdVideoListApp(freshIdx: page)
             : VideoHttp.rcmdVideoList(freshIdx: page, ps: 20));
       }
