@@ -124,6 +124,29 @@ class PlayerFocus extends StatelessWidget {
       return true;
     }
 
+    // 长按 ← 连续后退（3.8.13，上游 d680e3f95）：按住每 200ms 退一次，
+    // 松开时一次性 seek 到目标位置；短按仍退一档。
+    if (key == LogicalKeyboardKey.arrowLeft) {
+      if (!plPlayerController.isLive) {
+        if (event is KeyDownEvent) {
+          if (hasPlayer) {
+            plPlayerController
+              ..longPressTimer?.cancel()
+              ..longPressTimer = Timer.periodic(
+                const Duration(milliseconds: 200),
+                plPlayerController.multiBackwardStart,
+              );
+          }
+        } else if (event is KeyUpEvent) {
+          plPlayerController.cancelLongPressTimer();
+          if (hasPlayer) {
+            plPlayerController.multiBackwardEnd();
+          }
+        }
+      }
+      return true;
+    }
+
     if (key == LogicalKeyboardKey.arrowRight) {
       if (!plPlayerController.isLive) {
         if (event is KeyDownEvent) {
@@ -244,14 +267,6 @@ class PlayerFocus extends StatelessWidget {
 
       if (!plPlayerController.isLive) {
         switch (key) {
-          case LogicalKeyboardKey.arrowLeft:
-            if (hasPlayer) {
-              plPlayerController.onBackward(
-                plPlayerController.fastForBackwardDuration,
-              );
-            }
-            return true;
-
           case LogicalKeyboardKey.keyW:
             if (HardwareKeyboard.instance.isMetaPressed) {
               return true;

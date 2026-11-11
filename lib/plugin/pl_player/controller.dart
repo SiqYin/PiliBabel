@@ -3119,6 +3119,24 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     onForwardBackward(videoPlayerController!.state.position + duration);
   }
 
+  /// 长按 ← 连续后退：按下开始累加，松开时一次性 seek（上游 d680e3f95）。
+  void multiBackwardStart([_]) {
+    isSeeking.value = true;
+    seekPosition.value = max(
+      0,
+      seekPosition.value - fastForBackwardDuration.inSeconds,
+    );
+  }
+
+  void multiBackwardEnd() {
+    if (isSeeking.value) {
+      isSeeking.value = false;
+      onForwardBackward(Duration(seconds: seekPosition.value));
+    } else {
+      onBackward(fastForBackwardDuration);
+    }
+  }
+
   void onBackward(Duration duration) {
     onForwardBackward(videoPlayerController!.state.position - duration);
   }
