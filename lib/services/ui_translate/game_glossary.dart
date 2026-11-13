@@ -19505,6 +19505,7 @@ const Map<String, Map<String, String>> kGlossaryShorts = {
   'game|uma': {'en': 'Umamusume', 'ja': 'ウマ娘', 'ko': '우마무스메'},
   'game|bd': {'en': 'Bandori', 'ja': 'バンドリ', 'ko': '뱅드림'},
   'game|r1999': {'en': 'R1999', 'ja': 'リバース', 'ko': '리버스'},
+  'game|holo': {'ja': 'ホロ', 'ko': '홀로'},
   'game|imas': {'en': 'iM@S', 'ja': 'アイマス', 'ko': '아이마스'},
 };
 
@@ -19522,6 +19523,7 @@ const Set<String> kGlossaryShortOnly = {
   'game|uma',
   'game|bd',
   'game|r1999',
+  'game|holo',
   'game|imas',
 };
 
