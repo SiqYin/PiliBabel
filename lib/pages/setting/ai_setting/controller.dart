@@ -1,3 +1,4 @@
+import 'package:flutter/widgets.dart';
 import 'package:PiliPlus/services/ai_chat/ai_chat_service.dart';
 import 'package:PiliPlus/services/ui_translate/translate_provider.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
@@ -197,7 +198,13 @@ class AiSettingController extends GetxController {
       UiTranslateService.to.resetForNewLanguage();
       UiTranslateService.to.prewarm();
     }
-    Get.forceAppUpdate();
+    // 3.9.2：顺序很重要。`revision++` 只是把监听者标脏，真正的重建发生在
+    // 下一帧；以前紧接着同步调 forceAppUpdate，有些页面会在标脏之前就重建完，
+    // 于是仍旧渲染上一门语言的译文，而且之后不会再被顶掉。
+    // 放到下一帧，保证「先标脏、再重建」。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Get.forceAppUpdate();
+    });
   }
 
   void clearTranslateCache() {

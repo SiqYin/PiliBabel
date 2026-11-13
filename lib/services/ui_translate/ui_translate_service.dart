@@ -207,6 +207,8 @@ class UiTranslateService extends GetxService {
 
   /// 翻译缓存的写入进度（用于 UI 读取以触发 Obx 重建）。
   final RxInt revision = 0.obs;
+  /// 目标语言代数：每次切语言 +1。整块 UI 想彻底换语言时用它当 key。
+  final RxInt languageEpoch = 0.obs;
 
   /// 已经失败过一次、**不再重试**的字符串（3.8.9）。
   ///
@@ -2599,8 +2601,14 @@ class UiTranslateService extends GetxService {
     _queryInFlight.clear();
     _failedOnce.clear();
     _pending.clear();
+    // 3.9.2：宽度声明也要清。它是「原文 -> 宽度」的旁路表，切语言后
+    // 残留的旧条目会让同一串文字按旧宽度选型，出现「新语言界面里还挂着
+    // 上一门语言的写法」。
+    _pendingWidth.clear();
     lastError.value = null;
     Pref.uiTranslateQueryCache = {};
+    // 3.9.2：epoch 与 revision 一起变，供需要「整块重建」的页面当 key 用。
+    languageEpoch.value++;
     revision.value++;
   }
 
