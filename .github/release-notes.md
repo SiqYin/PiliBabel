@@ -1,9 +1,12 @@
-### PiliBabel v3.9.1
+### PiliBabel v3.9.2
 
-**The default font is 霞鹜文楷 again.**
+**Switching the AI-translation target language no longer leaves the old language behind.**
 
-3.8.12 handed the default over to the platform font to match the official app; that turned out to be the wrong call for this fork — the bundled LXGW WenKai is what people install PiliBabel for. 3.9.1 restores it as the default: a fresh install, and anyone who never touched 字体设置, gets 霞鹜文楷.
+The bug was in the order of operations, not in the cache. Switching languages bumped `revision` — which only *marks* listeners dirty — and then immediately called `Get.forceAppUpdate()`. Some pages rebuilt inside that same frame, before the dirty flags landed, and rendered the previous language; nothing afterwards touched them again, so the old text simply stayed. The rebuild now happens in a post-frame callback, so the dirty pass always completes first.
 
-Nothing else changed in font handling. 系统默认 is still there as an explicit choice, and an explicitly chosen font is still respected — only the *unset* case flips back.
+Two smaller leaks fixed alongside it:
 
-This release also carries the 3.9.0 changelog in English (see v3.9.0) and the same build fixes.
+- the pending-width table (source text → width tier) was never cleared on switch, so a string could still be laid out with the previous language's short/full form;
+- a `languageEpoch` counter was added, incremented on every switch, for any screen that needs to key its subtree off the language.
+
+Nothing else changed.
