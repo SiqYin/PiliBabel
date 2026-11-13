@@ -259,3 +259,4 @@ Leturgerðin **LXGW WenKai**, sem fylgir með, er leyfð sérstaklega undir **SI
 ---
 
 > **Athugasemd um tungumál skjalsins.** Þetta README og þýðingar þess eru skrifuð og viðhaldið með aðstoð AI-þýðingartóla; ef orðalag virðist ósamkvæmt er enska útgáfan viðmiðið.
+> **Yfirlýsing:** Að dreifa PiliBabel-uppsetningarpökkum án heimildar er brot á réttindum. Sækið efnið aðeins frá opinberu kanalnum [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Heildartexti: [STATEMENT.md](STATEMENT.md).

@@ -259,3 +259,4 @@ PiliBabel **GNU General Public License v3.0 (GPL-3.0)** ਹੇਠ ਲਾਇਸ�
 ---
 
 > **ਦਸਤਾਵੇਜ਼ ਦੀ ਭਾਸ਼ਾ ਬਾਰੇ ਨੋਟ।** ਇਹ README ਅਤੇ ਇਸ ਦੇ ਅਨੁਵਾਦ AI ਅਨੁਵਾਦ ਸਾਧਨਾਂ ਦੀ ਮਦਦ ਨਾਲ ਲਿਖੇ ਤੇ ਸੰਭਾਲੇ ਜਾਂਦੇ ਹਨ; ਜੇ ਕੋਈ ਵਾਕ ਅਸੰਗਤ ਲੱਗੇ ਤਾਂ ਅੰਗਰੇਜ਼ੀ ਸੰਸਕਰਣ ਮਾਪਦੰਡ ਹੈ।
+> **ਬਿਆਨ:** ਬਿਨਾਂ ਇਜਾਜ਼ਤ PiliBabel ਇੰਸਟਾਲਰ ਪੈਕੇਜ ਵੰਡਣਾ ਹੱਕਾਂ ਦੀ ਉਲੰਘਣ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਸਿਰਫ਼ ਅਧਿਕਾਰਤ [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) ਤੋਂ ਡਾਊਨਲੋਡ ਕਰੋ। ਪੂਰਾ ਬਿਆਨ: [STATEMENT.md](STATEMENT.md)

@@ -261,3 +261,4 @@ PiliBabel 採用 **GNU General Public License v3.0（GPL-3.0）** —— 與 Pil
 
 > **文件語言說明。** 本 README 及其譯文皆在 AI 翻譯工具協助下撰寫與維護；若各語言版本表述不一致，以英文版為準。
 > **官方渠道**：只有 GitHub Releases。安装包哈希与校验方法见 [DISTRIBUTION.md](DISTRIBUTION.md)。
+> **声明**：未经许可分发 PiliBabel 安装包属侵权行为。请只从官方 [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) 下载。完整声明见 [STATEMENT.md](STATEMENT.md)。

@@ -259,3 +259,4 @@ Ang kasamang **LXGW WenKai** na typeface ay hiwalay na lisensyado sa ilalim ng *
 ---
 
 > **Paalala tungkol sa wika ng dokumentasyon.** Ang README na ito at ang mga salin nito ay isinusulat at pinapanatili sa tulong ng mga AI translation tool; kung may pariralang tila hindi pare-pareho, ang bersyong Ingles ang hihiranging batayan.
+> **Pahayag:** ang pagpapakalat ng mga installation package ng PiliBabel nang walang pahintulot ay paglabag sa karapatan. Mag-download lamang sa opisyal na channel na [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Buong teksto: [STATEMENT.md](STATEMENT.md).

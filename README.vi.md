@@ -259,3 +259,4 @@ Phông chữ **霞鹜文楷** được đóng gói được cấp phép riêng t
 ---
 
 > **Ghi chú về ngôn ngữ tài liệu.** README này và các bản dịch được viết và duy trì với sự hỗ trợ của công cụ dịch bằng AI; nếu có câu chữ trông không nhất quán, bản tiếng Anh là chuẩn tham chiếu.
+> **Tuyên bố:** việc phân phối các gói cài đặt PiliBabel mà không có sự cho phép là hành vi xâm phạm quyền. Vui lòng chỉ tải xuống từ kênh chính thức [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Toàn văn: [STATEMENT.md](STATEMENT.md).

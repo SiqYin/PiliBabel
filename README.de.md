@@ -263,3 +263,4 @@ Die mitgelieferte Schrift **霞鹜文楷** steht separat unter der **SIL Open Fo
 ---
 
 > **Hinweis zur Dokumentsprache.** Diese README und ihre Übersetzungen werden mit Hilfe von KI-Übersetzungswerkzeugen erstellt und gepflegt; bei abweichenden Formulierungen ist die englische Fassung maßgeblich.
+> **Erklärung:** Das Verbreiten von PiliBabel-Installationspaketen ohne Erlaubnis ist eine Rechtsverletzung. Bitte nur aus der offiziellen Quelle [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) herunterladen. Vollständige Erklärung: [STATEMENT.md](STATEMENT.md).

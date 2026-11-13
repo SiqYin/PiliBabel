@@ -263,3 +263,4 @@ Il carattere **LXGW WenKai** incluso è concesso separatamente sotto la **SIL Op
 ---
 
 > **Nota sulla lingua della documentazione.** Questo README e le sue traduzioni sono scritti e mantenuti con l’aiuto di strumenti di traduzione AI; se una formulazione appare incoerente, fa fede la versione inglese.
+> **Dichiarazione:** distribuire i pacchetti di installazione di PiliBabel senza autorizzazione costituisce una violazione. Scaricate solo dal canale ufficiale [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Testo completo: [STATEMENT.md](STATEMENT.md).

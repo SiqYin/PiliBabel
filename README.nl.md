@@ -259,3 +259,4 @@ Het meegeleverde lettertype **LXGW WenKai** is apart gelicentieerd onder de **SI
 ---
 
 > **Opmerking over de documentatietaal.** Deze README en de vertalingen ervan worden geschreven en onderhouden met hulp van AI-vertaalhulpmiddelen; als een formulering onsamenhangend lijkt, is de Engelse versie de referentie.
+> **Verklaring:** het verspreiden van PiliBabel-installatiepakketten zonder toestemming is een inbreuk. Download alleen via het officiële kanaal [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Volledige verklaring: [STATEMENT.md](STATEMENT.md).

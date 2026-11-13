@@ -259,3 +259,4 @@ Mukana tuleva **LXGW WenKai** -fontti on lisensoitu erikseen **SIL Open Font Lic
 ---
 
 > **Huomautus dokumentaation kielestä.** Tämä README ja sen käännökset kirjoitetaan ja ylläpidetään tekoälykäännöstyökalujen avulla; jos jokin muotoilu vaikuttaa epäjohdonmukaiselta, englanninkielinen versio on ratkaiseva.
+> **Lausunto:** PiliBabel-asennuspakettien levittäminen ilman lupaa on oikeudenloukkaus. Lataa ainoastaan virallisesta lähteestä [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Koko lausunto: [STATEMENT.md](STATEMENT.md).

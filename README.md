@@ -258,3 +258,4 @@ The bundled **LXGW WenKai** typeface is licensed separately under the **SIL Open
 - and more
 - Inspired by bilibili's official "AI interface translation".
 > **Official channel:** GitHub Releases only. Installer hashes and how to verify them: [DISTRIBUTION.md](DISTRIBUTION.md).
+> **Statement:** Distributing PiliBabel installers without permission is an infringement. Please download only from the official [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Full statement: [STATEMENT.md](STATEMENT.md).

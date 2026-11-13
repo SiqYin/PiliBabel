@@ -259,3 +259,4 @@ Uygulamayla birlikte gelen **LXGW WenKai** yazı tipi, ayrı olarak **SIL Open F
 ---
 
 > **Belge dili hakkında not.** Bu README ve çevirileri AI çeviri araçlarının yardımıyla yazılır ve sürdürülür; bir ifade tutarsız görünüyorsa İngilizce sürüm esas alınır.
+> **Bildiri:** PiliBabel kurulum paketlerini izinsiz dağıtmak bir hak ihlalidir. Lütfen yalnızca resmi kanal [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) üzerinden indirin. Tam metin: [STATEMENT.md](STATEMENT.md).

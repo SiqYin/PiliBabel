@@ -259,3 +259,4 @@ Det medföljande typsnittet **LXGW WenKai** är separat licensierat under **SIL 
 ---
 
 > **Not om dokumentspråket.** Den här README-filen och dess översättningar skrivs och underhålls med hjälp av AI-översättningsverktyg; om en formulering verkar inkonsekvent är den engelska versionen referensen.
+> **Förklaring:** Att sprida PiliBabel-installationspaket utan tillåtelse är ett intrång. Ladda endast ner från den officiella kanalen [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Hela förklaringen: [STATEMENT.md](STATEMENT.md).
