@@ -1,3 +1,5 @@
+> **Pernyataan:** mendistribusikan paket instalasi PiliBabel tanpa izin merupakan pelanggaran hak. Unduh hanya dari kanal resmi [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Naskah lengkap: [STATEMENT.md](STATEMENT.md).
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -259,4 +261,3 @@ Fon **霞鹜文楷** yang disertakan berlisensi secara terpisah di bawah **SIL O
 ---
 
 > **Catatan tentang bahasa dokumentasi.** README ini dan terjemahannya ditulis serta dirawat dengan bantuan perkakas terjemahan AI; bila ada susunan kata yang terasa tidak konsisten, versi Inggris adalah acuannya.
-> **Pernyataan:** mendistribusikan paket instalasi PiliBabel tanpa izin merupakan pelanggaran hak. Unduh hanya dari kanal resmi [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Naskah lengkap: [STATEMENT.md](STATEMENT.md).

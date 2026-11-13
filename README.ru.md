@@ -1,3 +1,5 @@
+> **Заявление:** распространение установочных пакетов PiliBabel без разрешения является нарушением прав. Загружайте программу только из официального источника — [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Полный текст: [STATEMENT.md](STATEMENT.md).
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -263,4 +265,3 @@ PiliBabel распространяется под **GNU General Public License v
 ---
 
 > **О языке документации.** Этот README и его переводы создаются и поддерживаются с помощью инструментов ИИ-перевода; если формулировка кажется несогласованной, эталоном считается английская версия.
-> **Заявление:** распространение установочных пакетов PiliBabel без разрешения является нарушением прав. Загружайте программу только из официального источника — [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Полный текст: [STATEMENT.md](STATEMENT.md).

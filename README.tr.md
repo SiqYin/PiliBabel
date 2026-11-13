@@ -1,3 +1,5 @@
+> **Bildiri:** PiliBabel kurulum paketlerini izinsiz dağıtmak bir hak ihlalidir. Lütfen yalnızca resmi kanal [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) üzerinden indirin. Tam metin: [STATEMENT.md](STATEMENT.md).
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -259,4 +261,3 @@ Uygulamayla birlikte gelen **LXGW WenKai** yazı tipi, ayrı olarak **SIL Open F
 ---
 
 > **Belge dili hakkında not.** Bu README ve çevirileri AI çeviri araçlarının yardımıyla yazılır ve sürdürülür; bir ifade tutarsız görünüyorsa İngilizce sürüm esas alınır.
-> **Bildiri:** PiliBabel kurulum paketlerini izinsiz dağıtmak bir hak ihlalidir. Lütfen yalnızca resmi kanal [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) üzerinden indirin. Tam metin: [STATEMENT.md](STATEMENT.md).

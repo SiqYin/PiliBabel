@@ -1,3 +1,5 @@
+> **Erklæring:** Å distribuere PiliBabel-installasjonspakker uten tillatelse er en krenkelse. Last ned kun fra den offisielle kanalen [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Full erklæring: [STATEMENT.md](STATEMENT.md).
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -259,4 +261,3 @@ Den medfølgende skrifttypen **LXGW WenKai** er lisensiert separat under **SIL O
 ---
 
 > **Merknad om dokumentspråk.** Denne README-en og oversettelsene av den skrives og vedlikeholdes med hjelp fra AI-oversettelsesverktøy; den engelske versjonen er referansen hvis en formulering virker inkonsekvent.
-> **Erklæring:** Å distribuere PiliBabel-installasjonspakker uten tillatelse er en krenkelse. Last ned kun fra den offisielle kanalen [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Full erklæring: [STATEMENT.md](STATEMENT.md).

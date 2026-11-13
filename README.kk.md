@@ -1,3 +1,5 @@
+> **Мәлімдеме:** рұқсатсыз PiliBabel орнату дестелерін тарату — құқықтық бұзушылық. Тек ресми [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) арнасынан жүктеп алыңыз. Толық мәтіні: [STATEMENT.md](STATEMENT.md)
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -259,4 +261,3 @@ PiliBabel **GNU General Public License v3.0 (GPL-3.0)** лицензиясы б�
 ---
 
 > **Құжат тілі туралы ескертпе.** Бұл README және оның аудармалары AI аударма құралдарының көмегімен жазылып, қолдау көрсетіледі; қандай да бір тұжырым үйлесімсіз көрінсе, ағылшын нұсқасы бағдар болып саналады.
-> **Мәлімдеме:** рұқсатсыз PiliBabel орнату дестелерін тарату — құқықтық бұзушылық. Тек ресми [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) арнасынан жүктеп алыңыз. Толық мәтіні: [STATEMENT.md](STATEMENT.md)

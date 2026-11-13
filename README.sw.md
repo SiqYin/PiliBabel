@@ -1,3 +1,5 @@
+> **Taarifa:** kusambaza vifurushi vya usakinishaji wa PiliBabel bila ruhusa ni ukiukaji wa haki. Tafadhali pakua tu kutoka kwa chaneli rasmi ya [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Taarifa kamili: [STATEMENT.md](STATEMENT.md).
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -259,4 +261,3 @@ Herufi ya **LXGW WenKai** iliyojumuishwa ina leseni tofauti chini ya **SIL Open 
 ---
 
 > **Dokezo kuhusu lugha ya hati.** README hii na tafsiri zake huandikwa na kutunzwa kwa msaada wa zana za tafsiri za AI; iwapo maneno fulani yanaonekana hayaoani, toleo la Kiingereza ndilo la kumbukumbu.
-> **Taarifa:** kusambaza vifurushi vya usakinishaji wa PiliBabel bila ruhusa ni ukiukaji wa haki. Tafadhali pakua tu kutoka kwa chaneli rasmi ya [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Taarifa kamili: [STATEMENT.md](STATEMENT.md).

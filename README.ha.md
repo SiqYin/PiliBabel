@@ -1,3 +1,5 @@
+> **Sanarwa:** Rarraba fakitocin shigarwa na PiliBabel ba tare da izini ba keta hakki ne. Da fatan za a sauke shi kawai daga tashar hukuma ta [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Cikakken bayani: [STATEMENT.md](STATEMENT.md).
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -259,4 +261,3 @@ Font ɗin **LXGW WenKai** da aka haɗa yana da lasisi na daban ƙarƙashin **SIL
 ---
 
 > **Bayanin harshen takardu.** An rubuta wannan README da fassarorinsa kuma ana kula da su da taimakon kayan aikin fassara na AI; idan wata jimla ta yi kamar ba daidai ba, sigar Turanci ce mizanin.
-> **Sanarwa:** Rarraba fakitocin shigarwa na PiliBabel ba tare da izini ba keta hakki ne. Da fatan za a sauke shi kawai daga tashar hukuma ta [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Cikakken bayani: [STATEMENT.md](STATEMENT.md).

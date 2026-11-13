@@ -1,3 +1,5 @@
+> **அறிவிப்பு:** அனுமதியின்றி PiliBabel நிறுவி தொகுப்புகளை விநியோகிப்பது உரிமை மீறலாகும். அதிகாரப்பூர்வ [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) இலிருந்து மட்டும் பதிவிறக்கவும். முழு அறிவிப்பு: [STATEMENT.md](STATEMENT.md)
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -259,4 +261,3 @@ PiliBabel **GNU General Public License v3.0 (GPL-3.0)** கீழ் உரி�
 ---
 
 > **ஆவண மொழி குறித்த குறிப்பு.** இந்த README உம் அதன் மொழிபெயர்ப்புகளும் AI மொழிபெயர்ப்புக் கருவிகளின் உதவியுடன் எழுதப்பட்டு பராமரிக்கப்படுகின்றன; ஏதேனும் சொற்றொடர் முரண்பாடாகத் தோன்றினால் ஆங்கிலப் பதிப்பே அளவுகோல்.
-> **அறிவிப்பு:** அனுமதியின்றி PiliBabel நிறுவி தொகுப்புகளை விநியோகிப்பது உரிமை மீறலாகும். அதிகாரப்பூர்வ [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) இலிருந்து மட்டும் பதிவிறக்கவும். முழு அறிவிப்பு: [STATEMENT.md](STATEMENT.md)

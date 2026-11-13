@@ -1,3 +1,5 @@
+> **Oświadczenie:** rozpowszechnianie pakietów instalacyjnych PiliBabel bez zgody stanowi naruszenie praw. Pobieraj wyłącznie z oficjalnego kanału [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Pełne oświadczenie: [STATEMENT.md](STATEMENT.md).
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -259,4 +261,3 @@ Dołączony krój **LXGW WenKai** jest licencjonowany osobno na **SIL Open Font 
 ---
 
 > **Uwaga o języku dokumentacji.** Ten README i jego tłumaczenia są pisane i utrzymywane z pomocą narzędzi do tłumaczenia AI; jeśli jakieś sformułowanie wydaje się niespójne, wersją odniesienia jest angielska.
-> **Oświadczenie:** rozpowszechnianie pakietów instalacyjnych PiliBabel bez zgody stanowi naruszenie praw. Pobieraj wyłącznie z oficjalnego kanału [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Pełne oświadczenie: [STATEMENT.md](STATEMENT.md).

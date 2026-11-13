@@ -1,3 +1,5 @@
+> **Déclaration :** distribuer les paquets d'installation de PiliBabel sans autorisation constitue une violation de droits. Veuillez télécharger uniquement depuis la source officielle [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Texte intégral : [STATEMENT.md](STATEMENT.md).
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -263,4 +265,3 @@ La police **霞鹜文楷** incluse est soumise séparément à la **SIL Open Fon
 ---
 
 > **Note sur la langue de la documentation.** Ce README et ses traductions sont rédigés et maintenus avec l’aide d’outils de traduction par IA ; en cas de formulation incohérente, la version anglaise fait référence.
-> **Déclaration :** distribuer les paquets d'installation de PiliBabel sans autorisation constitue une violation de droits. Veuillez télécharger uniquement depuis la source officielle [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Texte intégral : [STATEMENT.md](STATEMENT.md).

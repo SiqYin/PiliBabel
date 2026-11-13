@@ -1,3 +1,5 @@
+> **بيان:** توزيع حزم تثبيت PiliBabel دون إذن يُعدّ انتهاكًا للحقوق. يُرجى التنزيل فقط من القناة الرسمية [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). النص الكامل: [STATEMENT.md](STATEMENT.md)
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -259,4 +261,3 @@ PiliBabel مشروع شخصي مدفوع بالاهتمام، ويُقدَّم *
 ---
 
 > **ملاحظة حول لغة التوثيق.** كُتب هذا الملف وترجماته وصِيَانا بمساعدة أدوات ترجمة بالذكاء الاصطناعي؛ والإصدار الإنجليزي هو المرجع إذا بدا أي تعبير غير متّسق.
-> **بيان:** توزيع حزم تثبيت PiliBabel دون إذن يُعدّ انتهاكًا للحقوق. يُرجى التنزيل فقط من القناة الرسمية [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). النص الكامل: [STATEMENT.md](STATEMENT.md)

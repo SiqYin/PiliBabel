@@ -1,3 +1,5 @@
+> **聲明**：未經允許分發 PiliBabel 安裝包是侵權行為。請干焦對官方 [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) 下載。完整聲明看 [STATEMENT.md](STATEMENT.md)。
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -282,4 +284,3 @@ PiliBabel 以 **GNU General Public License v3.0（GPL-3.0）** 授權，佮 Pili
 ---
 
 > **文件語言說明。** 這份 README 佮伊的譯本攏是佇 AI 翻譯工具的協助下撰寫佮維護；若各語言的講法有出入，以英文版為準。
-> **聲明**：未經允許分發 PiliBabel 安裝包是侵權行為。請干焦對官方 [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) 下載。完整聲明看 [STATEMENT.md](STATEMENT.md)。

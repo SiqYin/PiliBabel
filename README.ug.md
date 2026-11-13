@@ -1,3 +1,5 @@
+> **بايانات:** رۇخسەتسىز PiliBabel قاچىلاش بوغچىلىرىنى تارقىتىش ھوقۇققا دەخلى قىلىشتۇر. پەقەت رەسمىي [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) دىن چۈشۈرۈڭ. تولۇق تېكىستى: [STATEMENT.md](STATEMENT.md)
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -259,4 +261,3 @@ PiliBabel **GNU General Public License v3.0 (GPL-3.0)** ئىجازەتنامىس
 ---
 
 > **ھۆججەت تىلى توغرىسىدا ئەسكەرتىش.** بۇ README ۋە ئۇنىڭ تەرجىمىلىرى AI تەرجىمە قوراللىرىنىڭ ياردىمىدە يېزىلىپ ۋە بىقىلىپ تۇرۇلىدۇ؛ ئەگەر بىرەر ئىبارە ماسلاشمىغاندەك تۇيۇلسا، ئىنگلىزچە نەشرى ئۆلچەم قىلىنىدۇ.
-> **بايانات:** رۇخسەتسىز PiliBabel قاچىلاش بوغچىلىرىنى تارقىتىش ھوقۇققا دەخلى قىلىشتۇر. پەقەت رەسمىي [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) دىن چۈشۈرۈڭ. تولۇق تېكىستى: [STATEMENT.md](STATEMENT.md)

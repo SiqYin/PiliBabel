@@ -1,3 +1,5 @@
+> **بیانیه:** توزیع بسته‌های نصب PiliBabel بدون اجازه نقض حقوق است. لطفاً تنها از کانال رسمی [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) دانلود کنید. متن کامل: [STATEMENT.md](STATEMENT.md)
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -259,4 +261,3 @@ PiliBabel تحت **پروانهٔ عمومی همگانی GNU نسخهٔ 3.0 (GP
 ---
 
 > **یادداشت دربارهٔ زبان مستندات.** این README و ترجمه‌هایش با کمک ابزارهای ترجمهٔ هوش مصنوعی نوشته و نگهداری می‌شوند؛ اگر عبارتی ناسازگار به نظر برسد، نسخهٔ انگلیسی مرجع است.
-> **بیانیه:** توزیع بسته‌های نصب PiliBabel بدون اجازه نقض حقوق است. لطفاً تنها از کانال رسمی [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) دانلود کنید. متن کامل: [STATEMENT.md](STATEMENT.md)

@@ -1,42 +1,42 @@
-# 官方分发与安装包校验 / Official distribution and verification
+# 官方分發與安裝包校驗 / Official distribution and verification
 
 ## 中文
 
 ### 唯一官方渠道
 
-PiliBabel 只通过 **GitHub Releases** 发布：
+PiliBabel 只通過 **GitHub Releases** 發佈：
 
 ```
 https://github.com/SiqYin/PiliBabel/releases
 ```
 
-我们没有授权任何网站、应用商店、公众号、网盘或社群分发本软件。除上述地址外，任何来源的安装包都不代表本项目，我们无法为其完整性、更新与安全性背书。
+我們沒有授權任何網站、應用商店、公眾號、網盤或社群分發本軟件。除上述地址外，任何來源的安裝包都不代表本項目，我們無法為其完整性、更新與安全性背書。
 
-### 为什么需要校验
+### 為什麼需要校驗
 
-国内多个下载站（西西软件园、嗨客手机站、游吧乐下载、289手游网、乐乐游戏等）在未告知、未授权的情况下收录并分发本软件的安装包，部分页面使用「官方正版」「原始安装包」等表述。详见 `glossary/evidence-2026-11-13/EVIDENCE.md`（维护者本地证据目录）。
+國內多個下載站（西西软件园、嗨客手机站、游吧乐下载、289手游网、乐乐游戏等）在未告知、未授權的情況下收錄並分發本軟件的安裝包，部分頁面使用「官方正版」「原始安裝包」等表述。詳見 `glossary/evidence-2026-11-13/EVIDENCE.md`（維護者本地證據目錄）。
 
-已核实的样本：这些站点提供的 v3.8.6 安装包 SHA-256 为
+已核實的樣本：這些站點提供的 v3.8.6 安裝包 SHA-256 為
 `289027d937bc5952045dd02b296c8435f1d1fb26a8afe1da49209b09425d7b9a`，
-与官方 Release 的 `PiliBabel.apk` 完全一致——即文件未被篡改，但分发行为未经授权，且未随附 GPLv3 许可证与源码入口。
+與官方 Release 的 `PiliBabel.apk` 完全一致——即檔案未被篡改，但分發行為未經授權，且未隨附 GPLv3 許可證與源碼入口。
 
-### 如何校验
+### 如何校驗
 
-1. 在 Release 页面找到安装包，同时记下页面给出的 SHA-256。
-2. 下载后计算哈希：
+1. 在 Release 頁面找到安裝包，同時記下頁面給出的 SHA-256。
+2. 下載後計算哈希：
    - Windows：`certutil -hashfile PiliBabel.apk SHA256`
    - Linux / macOS：`sha256sum PiliBabel.apk`（macOS 用 `shasum -a 256`）
-3. 与 Release 页面公布的哈希逐位比对，一致即为官方原件。
+3. 與 Release 頁面公佈的哈希逐位比對，一致即為官方原件。
 
-每个 Release 的资产元数据同时可通过 GitHub API 获取，`digest` 字段即为 SHA-256：
+每個 Release 的資產元數據同時可通過 GitHub API 獲取，`digest` 欄位即為 SHA-256：
 
 ```
 https://api.github.com/repos/SiqYin/PiliBabel/releases/tags/v3.9.3
 ```
 
-### 关于「破解版」「付费版」
+### 關於「破解版」「付費版」
 
-本软件免费、无广告、无付费版本，也不存在「破解版」。任何要求付费、关注公众号、加群、先安装下载器的「PiliBabel」，都不是我们发布的。
+本軟件免費、無廣告、無付費版本，也不存在「破解版」。任何要求付費、關注公眾號、加群、先安裝下載器的「PiliBabel」，都不是我們發佈的。
 
 ## English
 

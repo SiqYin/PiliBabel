@@ -1,3 +1,5 @@
+> **Мэдэгдэл:** зөвшөөрөлгүйгээр PiliBabel суулгах багцуудыг түгээх нь эрхийн зөрчил юм. Зөвхөн албан ёсны [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) сувгаас татаж авна уу. Бүрэн эх: [STATEMENT.md](STATEMENT.md)
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -258,4 +260,3 @@ PiliBabel нь **GNU General Public License v3.0 (GPL-3.0)** лицензтэй 
 ---
 
 > **Баримт бичгийн хэлний тухай тэмдэглэл.** Энэ README болон түүний орчуулгууд нь AI орчуулгын хэрэгслүүдийн тусламжтайгаар бичигдэж, арчилж тордогддог; хэрэв ямар нэг найруулга зөрүүтэй мэт санагдвал англи хувилбар нь жишиг болно.
-> **Мэдэгдэл:** зөвшөөрөлгүйгээр PiliBabel суулгах багцуудыг түгээх нь эрхийн зөрчил юм. Зөвхөн албан ёсны [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases) сувгаас татаж авна уу. Бүрэн эх: [STATEMENT.md](STATEMENT.md)

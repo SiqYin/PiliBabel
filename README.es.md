@@ -1,3 +1,5 @@
+> **Declaración:** distribuir los paquetes de instalación de PiliBabel sin permiso constituye una infracción. Descargue únicamente del canal oficial [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Declaración completa: [STATEMENT.md](STATEMENT.md).
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -263,4 +265,3 @@ La tipografía **霞鹜文楷** incluida se licencia por separado bajo la **SIL 
 ---
 
 > **Nota sobre el idioma de la documentación.** Este README y sus traducciones se escriben y mantienen con ayuda de herramientas de traducción por IA; si alguna redacción resulta incoherente, la versión inglesa es la referencia.
-> **Declaración:** distribuir los paquetes de instalación de PiliBabel sin permiso constituye una infracción. Descargue únicamente del canal oficial [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Declaración completa: [STATEMENT.md](STATEMENT.md).

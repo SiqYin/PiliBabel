@@ -1,3 +1,5 @@
+> **Declaração:** distribuir os pacotes de instalação do PiliBabel sem autorização constitui uma infração. Baixe apenas pelo canal oficial [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Declaração completa: [STATEMENT.md](STATEMENT.md).
+
 <div align="center">
     <img width="200" height="200" src="assets/images/logo/logo.png">
     <h1>PiliBabel</h1>
@@ -263,4 +265,3 @@ A fonte **LXGW WenKai** embutida é licenciada separadamente sob a **SIL Open Fo
 ---
 
 > **Nota sobre o idioma da documentação.** Este README e suas traduções são escritos e mantidos com o auxílio de ferramentas de tradução por IA; se alguma redação parecer inconsistente, a versão em inglês é a referência.
-> **Declaração:** distribuir os pacotes de instalação do PiliBabel sem autorização constitui uma infração. Baixe apenas pelo canal oficial [GitHub Releases](https://github.com/SiqYin/PiliBabel/releases). Declaração completa: [STATEMENT.md](STATEMENT.md).
