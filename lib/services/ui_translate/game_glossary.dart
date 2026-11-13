@@ -1362,6 +1362,7 @@ const Map<String, Map<String, String>> kGlossaryNames = {
   'genshin|Milu Nui': {'en': 'Milu Nui', 'ja': 'ミル・ヌイ', 'zh-CN': '米卢·努伊', 'zh-TW': '米盧·努伊'},
   'genshin|Mikhail': {'en': 'Mikhail', 'ja': 'ミハイル', 'ko': '미하일', 'zh-CN': '米哈伊尔', 'zh-TW': '米哈伊爾'},
   'genshin|Mihir': {'en': 'Mihir', 'ja': 'ミヒル', 'zh-CN': '米希尔', 'zh-TW': '米希爾'},
+  'genshin|Danika': {'en': 'Danika', 'zh-CN': '丹妮卡', 'zh-TW': '丹妮卡'},
   'genshin|Mitya': {'en': 'Mitya', 'ja': 'ミティヤ', 'zh-CN': '米提亚', 'zh-TW': '米提亞'},
   'genshin|Mishal': {'en': 'Mishal', 'ja': 'ミジャール', 'zh-CN': '米沙勒', 'zh-TW': '米沙勒'},
   'genshin|Mironova': {'en': 'Mironova', 'ja': 'ミロノワ', 'zh-CN': '米洛诺娃', 'zh-TW': '米洛諾娃'},
@@ -11749,6 +11750,16 @@ const Map<String, Map<String, String>> kGlossaryNames = {
   'imas|Hazuki Nanakusa': {'en': 'Hazuki Nanakusa', 'ja': 'ななくさ はづき', 'ko': '나나쿠사 하즈키', 'zh-CN': '七草はづき'},
   'imas|Ryouko Yoshimura': {'en': 'Ryouko Yoshimura', 'ja': 'よしむら りょうこ', 'ko': '요시무라 료우코', 'zh-CN': '善村良子'},
   'imas|Tokujirou Akui': {'en': 'Tokujirou Akui', 'ja': 'あくい とくじろう', 'ko': '아쿠이 토쿠지로우', 'zh-CN': '阿久井徳次郎'},
+  // ── 3.9.3：补《异环》游戏名条目 ──
+  // 表 id 沿用界面里的 `yh`；官方英文/日文名都是 NTE (Neverness to Everness)。
+  'game|yh': {
+    'en': 'NTE: Neverness to Everness',
+    'ja': 'NTE',
+    'ko': 'NTE',
+    'zh-CN': '异环',
+    'zh-TW': '異環',
+  },
+  'hsr|Aha': {'en': 'Aha', 'ja': 'アハ', 'ko': '아하', 'zh-CN': '阿哈', 'zh-TW': '阿哈'},
 };
 
 const Map<String, Map<String, String>> kGlossaryShorts = {
@@ -11761,6 +11772,7 @@ const Map<String, Map<String, String>> kGlossaryShorts = {
   'game|ba': {'en': 'BA', 'ja': 'ブルアカ', 'ko': '블아'},
   'game|nikke': {'en': 'NIKKE', 'ja': 'NIKKE', 'ko': '니케'},
   'game|ak': {'en': 'AK', 'ja': 'アクナイ', 'ko': '명방'},
+  'game|yh': {'en': 'NTE', 'ja': 'NTE', 'ko': 'NTE'},
 };
 
 const Set<String> kGlossaryShortOnly = {
@@ -11781,6 +11793,11 @@ const Set<String> kGlossaryShortOnly = {
 /// `zzz|Phoenix Reffaella` 的短名，别名表让它也能命中并取出标准译名。
 /// 姓氏/名字**片段**不在此表，见 kGlossaryFragmentIndex。
 const Map<String, String> kGlossaryAliasToId = {
+  // 3.9.3：异环 / NTE 互指
+  '异环': 'game|yh',
+  '異環': 'game|yh',
+  'NTE': 'game|yh',
+  'Neverness to Everness': 'game|yh',
   '"Lunar" Semiluna': 'zzz|[Lunar] Semiluna',
   '"Seed"': 'zzz|Seed',
   '"Soldier 11"': 'zzz|Soldier 11',
@@ -16476,9 +16493,9 @@ const Map<String, Map<String, String>> kGlossaryManifest = {
     'hash': 'c93ff8e0f84cda33',
   },
   'yh': {
-    'version': 'unknown',
-    'rows': '25',
-    'updatedAt': '2026-11-04',
+    'version': '1.5',
+    'rows': '26',
+    'updatedAt': '2026-11-13',
     'hash': 'ed4032645e7afdc2',
   },
   'zzz': {
