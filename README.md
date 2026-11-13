@@ -257,3 +257,4 @@ The bundled **LXGW WenKai** typeface is licensed separately under the **SIL Open
 - [saukhoai](https://github.com/saukhoai) — for contributing the AI subtitle translation system (chunked translation with context, realtime buffering, offline dictionary for Vietnamese, and proxy routing), via [PR #2](https://github.com/SiqYin/PiliBabel/pull/2)
 - and more
 - Inspired by bilibili's official "AI interface translation".
+> **Official channel:** GitHub Releases only. Installer hashes and how to verify them: [DISTRIBUTION.md](DISTRIBUTION.md).
