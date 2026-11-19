@@ -59,8 +59,10 @@ import 'package:material_ui/material_ui.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:PiliPlus/models_new/video/video_detail/data.dart';
 import 'package:PiliPlus/pages/download/utils/audio_cache_quality.dart';
+import 'package:PiliPlus/pages/download/utils/cache_target.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/controller.dart';
 import 'package:PiliPlus/services/download/audio_cache_service.dart';
+import 'package:PiliPlus/services/download/local_download_service.dart';
 
 class AudioController extends GetxController
     with
@@ -1106,6 +1108,48 @@ class AudioController extends GetxController
       cover: _videoDetailController?.cover.value ?? '',
       durationMs: (detail.duration ?? 0) * 1000,
       quality: quality,
+    );
+  }
+
+  /// 下载音频到本地：按所选音质，把当前音轨存成用户自己下载文件夹里的原格式
+  /// 音频文件（与「缓存音频」的区别只在落点：那个写进 App 的缓存区、进缓存
+  /// 列表；这个写进用户选的文件夹、在「离线缓存 → 下载音频」里可查）。
+  Future<void> onDownloadAudioLocal(BuildContext context) async {
+    VideoDetailData? detail;
+    try {
+      detail = Get.find<UgcIntroController>(tag: heroTag).videoDetail.value;
+    } catch (e, s) {
+      if (kDebugMode) {
+        debugPrint('audio download to local: $e\n\n$s');
+      }
+    }
+    final title = detail?.title;
+    if (detail == null || title == null || title.isEmpty) {
+      SmartDialog.showToast(uiTx('音频信息还没加载好，稍后再试'));
+      return;
+    }
+    // 没配过下载位置就直接弹系统文件管理器选一个，不把用户甩去设置页。
+    if (!await ensureLocalDownloadPath()) {
+      return;
+    }
+    if (!context.mounted) {
+      return;
+    }
+    final quality = await showAudioCacheQualityPicker(
+      context,
+      title: '下载音频到本地',
+    );
+    if (quality == null) {
+      return;
+    }
+    await Get.find<LocalDownloadService>().downloadAudio(
+      avid: detail.aid ?? oid.toInt(),
+      bvid: detail.bvid ?? IdUtils.av2bv(oid.toInt()),
+      cid: detail.cid ?? subId.first.toInt(),
+      title: title,
+      quality: quality,
+      ownerName: detail.owner?.name,
+      cover: detail.pic ?? _videoDetailController?.cover.value,
     );
   }
 

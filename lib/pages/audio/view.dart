@@ -153,13 +153,13 @@ class _AudioPageState extends State<AudioPage> {
             }),
           if (_controller.isUgc)
             Obx(() {
-              // 播放的已是缓存音频的本地文件：不再提供缓存入口，避免重复缓存
+              // 播放的已是缓存音频的本地文件：不再提供下载入口，避免重复落盘
               if (_controller.isFileSource.value) {
                 return const SizedBox.shrink();
               }
               return IconButton(
-                tooltip: uiTx('缓存音频'),
-                onPressed: () => _controller.onDownloadAudio(context),
+                tooltip: uiTx('下载音频到本地'),
+                onPressed: () => _controller.onDownloadAudioLocal(context),
                 icon: const Icon(Icons.download_outlined, size: 22),
               );
             }),
@@ -721,16 +721,37 @@ class _AudioPageState extends State<AudioPage> {
                   ),
                 ),
               ),
-              if (_controller.isUgc && !_controller.isFileSource.value)
+              if (_controller.isUgc && !_controller.isFileSource.value) ...[
                 ListTile(
                   dense: true,
                   leading: const Icon(Icons.audiotrack, size: 20),
                   title: Text(uiTx('缓存音频'), style: const TextStyle(fontSize: 14)),
+                  subtitle: Text(
+                    uiTx('存进 App 的缓存区，可在「离线缓存」里查看'),
+                    style: const TextStyle(fontSize: 12),
+                  ),
                   onTap: () {
                     Get.back();
                     _controller.onDownloadAudio(context);
                   },
                 ),
+                ListTile(
+                  dense: true,
+                  leading: const Icon(Icons.save_alt, size: 20),
+                  title: Text(
+                    uiTx('下载音频到本地'),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                  subtitle: Text(
+                    uiTx('存成文件放进你选的文件夹，可在「下载音频」里查看'),
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                  onTap: () {
+                    Get.back();
+                    _controller.onDownloadAudioLocal(context);
+                  },
+                ),
+              ],
               ListTile(
                 dense: true,
                 leading: const Icon(Icons.warning_amber_rounded, size: 20),

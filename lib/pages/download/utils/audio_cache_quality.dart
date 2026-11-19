@@ -16,12 +16,19 @@ AudioQuality _recommendedCacheQuality(int code) => switch (code) {
   _ => AudioQuality.k192,
 };
 
-/// 选音频缓存的音质档位：从 Hi-Res 无损到 64K，由高到低。
+/// 选音频的音质档位：从 Hi-Res 无损到 64K，由高到低。
 /// 返回 null 表示用户取消。
 ///
 /// 档位含义对新用户并不直观：把「按用户在 音视频设置 里的默认音质 + 当前是
 /// WiFi 还是蜂窝」推断出的档位**标蓝提示**（不代选，仍由用户自己点）。
-Future<AudioQuality?> showAudioCacheQualityPicker(BuildContext context) async {
+///
+/// [title] 是面板标题。缓存音频（软件内）与下载音频到本地（写进用户自己的
+/// 文件夹）共用同一套档位，但标题必须说清产出到哪儿去，否则用户分不清这次
+/// 点的是缓存还是下载。
+Future<AudioQuality?> showAudioCacheQualityPicker(
+  BuildContext context, {
+  String title = '缓存音频',
+}) async {
   final isWiFi = await ConnectivityUtils.isWiFi;
   final recommended = _recommendedCacheQuality(
     isWiFi ? Pref.defaultAudioQa : Pref.defaultAudioQaCellular,
@@ -41,7 +48,7 @@ Future<AudioQuality?> showAudioCacheQualityPicker(BuildContext context) async {
             child: Row(
               children: [
                 Text(
-                  uiTx('缓存音频'),
+                  uiTx(title),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -53,7 +60,9 @@ Future<AudioQuality?> showAudioCacheQualityPicker(BuildContext context) async {
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
             child: Text(
-              uiTx('蓝色项是按你的播放设置与当前网络推荐的音质，仅供参考'),
+              uiTx(title == '缓存音频'
+                  ? '蓝色项是按你的播放设置与当前网络推荐的音质，仅供参考'
+                  : '蓝色项是按你的播放设置与当前网络推荐的音质，仅供参考；文件会存进你选的下载文件夹，保持原格式不转码'),
               style: const TextStyle(fontSize: 12),
             ),
           ),
