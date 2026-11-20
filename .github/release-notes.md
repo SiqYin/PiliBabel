@@ -1,11 +1,11 @@
-### PiliBabel v3.9.4
+### PiliBabel v3.9.5
 
-**The download icon in the audio player now downloads the audio.**
+**Every search box now works with Simplified and Traditional Chinese alike.**
 
-On the listen-as-audio screen, the download icon in the top-right corner opened the in-app audio cache. That cache writes into the app's own storage and lists the result under 离线缓存 → 缓存音频 — so nothing ever appeared in a folder you could open, even though the icon promises a download. The icon was wired to the wrong action.
+Type either script, and the keyword is automatically searched in both script forms and the results are merged — 歷史 finds 历史 content and the other way around. Characters with several legitimate traditional forms (發/髮, 幹/乾, 臺/檯/颱) additionally get single-character substitute searches, so titles like 頭髮 or 乾隆 are not missed. The conversion table is generated from OpenCC's per-character dictionaries (Apache-2.0) and stays at the glyph level — vocabulary differences like 软件/軟體 are out of scope.
 
-It now saves the audio to the download folder you picked, into the same place as 下载到本地 → 下载音频, and the entry shows up under 离线缓存 → 下载音频 with its progress. If you have never set a download folder, the system folder picker opens right away instead of sending you to the settings page.
+**Search boxes that still bypassed the AI keyword translation are now wired in.** Live search, UP-space search (videos and posts), in-video comment search, dynamic topic search and @mention search used to query the raw input directly; they now run through the same UI-language → Simplified-Chinese keyword resolution as the main search, plus the script variants. The three local filter boxes — download list, music video list, and settings search — match against the original titles with glyph folding, so typing the translated title you see on screen still finds the entry.
 
-**The cache entry is still there — it moved into the ⋮ menu.** Both entries now carry a subtitle that says where the file ends up ("stored in the app's cache, listed under 离线缓存" versus "saved as a file in the folder you picked, listed under 下载音频"), because two entries with almost the same name were exactly what made this confusing in the first place. The quality picker is shared, and its title and hint follow whichever entry you used.
+**Traditional input is no longer sent through the AI as if it were a foreign language.** It is recognized as Chinese-source text and searched directly; the simplified↔traditional bridge is deterministic glyph conversion, not a model call. The language picker's search folds script forms the same way.
 
-Nothing else changed: both paths still keep the original container without transcoding, still fall back to the closest available quality when the one you picked is not offered, and still keep the failed-download record so you can retry it later.
+Everything else is unchanged: suggestions, hot keywords, search history, and pagination follow the same behavior as before; the extra variant searches only apply to the first page and are merged with per-item de-duplication.

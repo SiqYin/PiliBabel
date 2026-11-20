@@ -3,10 +3,12 @@ import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/live/live_search_type.dart';
 import 'package:PiliPlus/models_new/live/live_search/data.dart';
 import 'package:PiliPlus/pages/common/common_list_controller.dart';
+import 'package:PiliPlus/pages/common/search/keyword_variant_fetch.dart';
 import 'package:PiliPlus/pages/live_search/controller.dart';
 
 class LiveSearchChildController
-    extends CommonListController<LiveSearchData, dynamic> {
+    extends CommonListController<LiveSearchData, dynamic>
+    with SearchKeywordResolver, KeywordVariantSearchMixin<LiveSearchData, dynamic> {
   LiveSearchChildController(this.controller, this.searchType);
 
   final LiveSearchController controller;
@@ -42,11 +44,32 @@ class LiveSearchChildController
   }
 
   @override
-  Future<LoadingState<LiveSearchData>> customGetData() {
-    return LiveHttp.liveSearch(
-      page: page,
-      keyword: controller.editingController.text,
-      type: searchType,
-    );
+  String get searchText => controller.editingController.text;
+
+  @override
+  Future<String> primaryKeyword() => resolveSearchKeyword();
+
+  @override
+  Future<LoadingState<LiveSearchData>> fetchData(String keyword, int page) =>
+      LiveHttp.liveSearch(
+        page: page,
+        keyword: keyword,
+        type: searchType,
+      );
+
+  @override
+  Future<LoadingState<LiveSearchData>> customGetData() =>
+      fetchWithKeywordVariants(fetchData);
+
+  @override
+  List? variantList(LiveSearchData response) => switch (searchType) {
+        LiveSearchType.room => response.room?.list,
+        LiveSearchType.user => response.user?.list,
+      };
+
+  @override
+  String? variantItemKey(dynamic item) {
+    final roomid = item.roomid ?? item.uid;
+    return roomid == null ? null : 'r$roomid';
   }
 }

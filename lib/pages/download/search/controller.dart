@@ -7,6 +7,7 @@ import 'package:PiliPlus/models_new/download/bili_download_entry_info.dart';
 import 'package:PiliPlus/pages/common/multi_select/base.dart'
     show BaseMultiSelectMixin;
 import 'package:PiliPlus/pages/common/search/common_search_controller.dart';
+import 'package:PiliPlus/utils/zh_search_compat.dart';
 import 'package:PiliPlus/services/download/download_collection_service.dart';
 import 'package:PiliPlus/services/download/download_service.dart';
 import 'package:PiliPlus/utils/storage.dart';
@@ -30,19 +31,26 @@ class DownloadSearchController
   Rx<LoadingState<List<BiliDownloadEntryInfo>?>> get state => loadingState;
 
   @override
-  Future<LoadingState<List<BiliDownloadEntryInfo>>> customGetData() async {
-    final text = editController.text.toLowerCase();
+  Future<LoadingState<List<BiliDownloadEntryInfo>>> fetchData(
+    String keyword,
+    int page,
+  ) async {
+    // 本地过滤：列表显示的是译文标题（uiTx），存的原始标题是中文。
+    // 命中判断带简繁归一（zhCompatContains），输入哪套字形都能对上。
     return Success(
       _downloadService.downloadList
           .where(
             (e) =>
-                e.title.toLowerCase().contains(text) ||
-                e.showTitle.toLowerCase().contains(text) ||
-                (e.ownerName?.toLowerCase().contains(text) ?? false),
+                zhCompatContains(e.title, keyword) ||
+                zhCompatContains(e.showTitle, keyword) ||
+                zhCompatContains(e.ownerName ?? '', keyword),
           )
           .toList(),
     );
   }
+
+  @override
+  String? variantItemKey(BiliDownloadEntryInfo item) => 'c${item.cid}';
 
   void onRemoveSingle(int index, BiliDownloadEntryInfo entry) {
     loadingState

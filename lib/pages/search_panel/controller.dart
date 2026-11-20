@@ -11,6 +11,7 @@ import 'package:PiliPlus/models/search/result.dart';
 import 'package:PiliPlus/pages/common/common_list_controller.dart';
 import 'package:PiliPlus/pages/search_result/controller.dart';
 import 'package:PiliPlus/pages/setting/widgets/list_editor_dialog.dart';
+import 'package:PiliPlus/utils/zh_search_compat.dart';
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
@@ -336,13 +337,15 @@ class SearchPanelController<R extends SearchNumData<T>, T>
     return resolved;
   }
 
-  /// 搜索词本身就是简体中文时，结果按 B 站原文显示，不做内容翻译。
+  /// 搜索词本身就是中文（简体或繁體字形）时，结果按 B 站原文显示，
+  /// 不做内容翻译——用户会用中文字打字，就说明他读得懂中文标题。
   bool get searchInSourceLanguage =>
       Get.isRegistered<UiTranslateService>() &&
       UiTranslateService.isSourceLanguageChinese(keyword);
 
-  /// 需要额外用原文搜一次的词（非中文搜索词译成中文时才有值）。
-  String? _originalKeyword;
+  /// 需要额外补搜的词：翻译发生过时的用户原文 + 简繁另一字形
+  /// （与主词不同才保留；按序去重，上限 3 条控制请求量）。
+  List<String> _extraKeywords = const <String>[];
 
   /// 两路结果按各自名次交替合并，同一个对象只留一条。
   List<T>? _mergeSearchList(List<T>? primary, List<T>? secondary) {
@@ -376,52 +379,49 @@ class SearchPanelController<R extends SearchNumData<T>, T>
   @override
   Future<LoadingState<R>> customGetData() async {
     final resolvedKeyword = await _resolveKeyword();
-    // 译名和原文不一样说明确实翻译过：第一页额外用原文再搜一次，
-    // 有些内容正文里直接引用了这段外文，只搜译名会漏掉。
-    _originalKeyword = resolvedKeyword == keyword ? null : keyword;
-    final response = await SearchHttp.searchByType<R>(
-      searchType: searchType,
-      keyword: resolvedKeyword,
-      page: page,
-      order: order,
-      duration: videoDurationType?.index,
-      tids: videoZoneType?.tids,
-      orderSort: userOrderType?.value.orderSort,
-      userType: userType?.value.index,
-      categoryId: articleZoneType?.value.categoryId,
-      pubBegin: pubBegin,
-      pubEnd: pubEnd,
-      gaiaVtoken: gaiaVtoken,
-      onSuccess: (String gaiaVtoken) {
-        this.gaiaVtoken = gaiaVtoken;
-        queryData(page == 1);
-      },
-    );
-    final origin = _originalKeyword;
-    if (page != 1 || origin == null) return response;
-    final extra = await SearchHttp.searchByType<R>(
-      searchType: searchType,
-      keyword: origin,
-      page: page,
-      order: order,
-      duration: videoDurationType?.index,
-      tids: videoZoneType?.tids,
-      orderSort: userOrderType?.value.orderSort,
-      userType: userType?.value.index,
-      categoryId: articleZoneType?.value.categoryId,
-      pubBegin: pubBegin,
-      pubEnd: pubEnd,
-      gaiaVtoken: gaiaVtoken,
-      onSuccess: (_) {},
-    );
-    if (response is Success<R> && extra is Success<R>) {
-      response.response.list = _mergeSearchList(
-        response.response.list,
-        extra.response.list,
-      );
+    // 补搜词，两路：
+    // 1. 译名和原文不一样说明确实翻译过：用原文再搜一次，有些内容正文里
+    //    直接引用了这段外文，只搜译名会漏掉；
+    // 2. 简繁另一字形：B 站接口按字面匹配，输入简体搜不到繁體标题、反之
+    //    亦然，两个字形各搜一次再合并，输入哪套字形都能命中。
+    _extraKeywords = <String>{
+      if (resolvedKeyword != keyword) keyword,
+      ...zhSearchVariants(resolvedKeyword),
+    }.toList();
+    final response = await _searchByType(resolvedKeyword);
+    if (page != 1 || _extraKeywords.isEmpty) return response;
+    var merged = response;
+    for (final extraKeyword in _extraKeywords) {
+      final extra = await _searchByType(extraKeyword);
+      if (merged is Success<R> && extra is Success<R>) {
+        merged.response.list = _mergeSearchList(
+          merged.response.list,
+          extra.response.list,
+        );
+      }
     }
-    return response;
+    return merged;
   }
+
+  Future<LoadingState<R>> _searchByType(String keyword) =>
+      SearchHttp.searchByType<R>(
+        searchType: searchType,
+        keyword: keyword,
+        page: page,
+        order: order,
+        duration: videoDurationType?.index,
+        tids: videoZoneType?.tids,
+        orderSort: userOrderType?.value.orderSort,
+        userType: userType?.value.index,
+        categoryId: articleZoneType?.value.categoryId,
+        pubBegin: pubBegin,
+        pubEnd: pubEnd,
+        gaiaVtoken: gaiaVtoken,
+        onSuccess: (String gaiaVtoken) {
+          this.gaiaVtoken = gaiaVtoken;
+          queryData(page == 1);
+        },
+      );
 
   @override
   Future<void> onReload() {

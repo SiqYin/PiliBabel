@@ -3,11 +3,13 @@ import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models_new/dynamic/dyn_mention/group.dart';
 import 'package:PiliPlus/models_new/dynamic/dyn_mention/item.dart';
 import 'package:PiliPlus/pages/common/common_list_controller.dart';
+import 'package:PiliPlus/pages/common/search/keyword_variant_fetch.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 class DynMentionController
-    extends CommonListController<List<MentionGroup>?, MentionGroup> {
+    extends CommonListController<List<MentionGroup>?, MentionGroup>
+    with SearchKeywordResolver, KeywordVariantSearchMixin<List<MentionGroup>?, MentionGroup> {
   final focusNode = FocusNode();
   final controller = TextEditingController();
 
@@ -34,8 +36,19 @@ class DynMentionController
   }
 
   @override
+  String get searchText => controller.text;
+
+  @override
+  Future<String> primaryKeyword() => resolveSearchKeyword();
+
+  @override
+  Future<LoadingState<List<MentionGroup>?>> fetchData(
+          String keyword, int page) =>
+      DynamicsHttp.dynMention(keyword: keyword);
+
+  @override
   Future<LoadingState<List<MentionGroup>?>> customGetData() =>
-      DynamicsHttp.dynMention(keyword: controller.text);
+      fetchWithKeywordVariants(fetchData);
 
   @override
   void onClose() {

@@ -279,13 +279,14 @@ class UiTranslateService extends GetxService {
   /// 搜索结果里的标题默认走「按 `<em>` 高亮分段渲染」那条路，逐段文本翻不了；
   /// 只有本方法返回 true 时才改成整句走 [tx]。所以调用点必须在 Obx 里读它，
   /// 才能跟着语言切换即时刷新。
-  /// 判断搜索词是不是（简体）中文原文。
+  /// 判断搜索词是不是中文原文（简体、繁體字形都算）。
   ///
-  /// 含汉字、且不含日文假名/韩文谚文时算中文。B 站搜索接口只认中文原文：
-  /// 用户直接输入中文时它本身就是接口要的词，再过一遍翻译纯属浪费，
-  /// 界面翻译开着时还会把中文当外文翻一遍，反而搜不到。
+  /// 含汉字、且不含日文假名/韩文谚文/日文独有字时算中文。B 站搜索接口只认
+  /// 中文原文：用户直接输入中文（无论简繁）时它本身就是接口要的词，再过一遍
+  /// AI 回译纯属浪费，还会把繁體词翻得面目全非。简体/繁體互搜由检索侧的
+  /// 确定性变体（zhSearchVariants）覆盖，不依赖模型。
   static bool isSourceLanguageChinese(String text) =>
-      looksLikeSimplifiedChinese(text);
+      looksLikeChineseScript(text);
 
   static bool contentTranslationActive() {
     if (!Get.isRegistered<UiTranslateService>()) return false;

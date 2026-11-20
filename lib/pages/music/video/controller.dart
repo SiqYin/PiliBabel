@@ -3,6 +3,8 @@ import 'package:PiliPlus/http/music.dart';
 import 'package:PiliPlus/models_new/music/bgm_detail.dart';
 import 'package:PiliPlus/models_new/music/bgm_recommend_list.dart';
 import 'package:PiliPlus/pages/common/common_list_controller.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/utils/zh_search_compat.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 
@@ -31,7 +33,27 @@ class MusicRecommendController
     queryData();
   }
 
+  /// 回译候选词（列表显示的是译文标题，用户照着看到的字打）。
+  /// translateQuery 内部有缓存与并发去重，算完重算一次过滤即可。
+  String? _translatedCandidate;
+  String? _translatedFor;
+
   void _onSearchChanged() {
+    applySortAndFilter();
+    _resolveTranslatedCandidate();
+  }
+
+  Future<void> _resolveTranslatedCandidate() async {
+    final raw = searchController.text.trim();
+    if (raw.isEmpty || !Get.isRegistered<UiTranslateService>()) return;
+    final translated = await UiTranslateService.to.translateQuery(raw);
+    if (translated == null ||
+        translated.isEmpty ||
+        searchController.text.trim() != raw) {
+      return;
+    }
+    _translatedCandidate = translated;
+    _translatedFor = raw;
     applySortAndFilter();
   }
 
@@ -68,13 +90,22 @@ class MusicRecommendController
     if (originalList == null) return;
     
     List<BgmRecommend> filtered = originalList!;
-    final keyword = searchController.text.trim().toLowerCase();
-    
+    final keyword = searchController.text.trim();
     if (keyword.isNotEmpty) {
-      filtered = filtered.where((item) {
-        return (item.title?.toLowerCase().contains(keyword) ?? false) ||
-            (item.upNickName?.toLowerCase().contains(keyword) ?? false);
-      }).toList();
+      // 候选词：原词 + 界面语言→中文的回译；命中带简繁归一。
+      final candidates = <String>{keyword};
+      if (_translatedFor == keyword && _translatedCandidate != null) {
+        candidates.add(_translatedCandidate!);
+      }
+      filtered = filtered
+          .where(
+            (item) => candidates.any(
+              (text) =>
+                  zhCompatContains(item.title ?? '', text) ||
+                  zhCompatContains(item.upNickName ?? '', text),
+            ),
+          )
+          .toList();
     }
     
     if (order.value != MusicRecommendOrderType.defaultOrder) {

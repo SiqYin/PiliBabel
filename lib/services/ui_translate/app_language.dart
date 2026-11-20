@@ -1,3 +1,5 @@
+import 'package:PiliPlus/utils/zh_search_compat.dart';
+
 /// 应用/翻译目标语言模型。
 ///
 /// [name] 用该语言的“自称/原语写法”显示在界面上（如 English、日本語、粵語）；
@@ -299,6 +301,33 @@ bool containsHan(String text) {
 /// 只按字形判、不看词义，所以极个别纯汉字的日文（恰好每个字都是传承字）
 /// 会漏判成中文；但那种情况在中文里的写法基本一致，搜出来的结果差不多，
 /// 不用特意去处理。
+/// 判断文本是否用**中文脚本**书写（简体或繁體字形都算）。
+///
+/// 与 [looksLikeSimplifiedChinese] 的区别：这里接受繁體专属字形——
+/// 搜索词是繁體时它同样就是接口要的"中文原文"（B 站内容简繁并存），
+/// 不能当成外语送去 AI 回译；简繁兼容由检索侧的确定性变体（zhSearchVariants）
+/// 处理。日文独有字/假名/谚文仍然排除：日文汉字搜索词依旧要走翻译。
+bool looksLikeChineseScript(String text) {
+  var hasHan = false;
+  for (final rune in text.runes) {
+    // 日文假名（含半角片假名）、韩文谚文：直接排除
+    if ((rune >= 0x3040 && rune <= 0x30FF) ||
+        (rune >= 0xFF66 && rune <= 0xFF9D) ||
+        (rune >= 0xAC00 && rune <= 0xD7AF) ||
+        (rune >= 0x1100 && rune <= 0x11FF) ||
+        (rune >= 0x3130 && rune <= 0x318F)) {
+      return false;
+    }
+    if (!_isHanRune(rune)) continue;
+    hasHan = true;
+    final ch = String.fromCharCode(rune);
+    if (_jaOnlyKanji.contains(ch)) {
+      return false;
+    }
+  }
+  return hasHan;
+}
+
 bool looksLikeSimplifiedChinese(String text) {
   var hasHan = false;
   for (final rune in text.runes) {
@@ -738,7 +767,9 @@ String foldLanguageSearch(String value) {
     RegExp('[يىیكةهەؤئء]'),
     (m) => folded[m.group(0)] ?? m.group(0)!,
   );
-  return s;
+  // 简繁字形归一（3.9.5）：语言名里简繁并存（简体中文/繁體中文、吴语/吳語），
+  // 用户用哪种字形打字都得能搜到——两侧同归到简体形再比对。
+  return zhToHans(s);
 }
 
 /// 首强方向字符检测（3.8.2）：字符串首个强方向字符是否为 RTL。

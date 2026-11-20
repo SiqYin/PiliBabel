@@ -11,6 +11,7 @@ import 'package:PiliPlus/utils/extension/get_ext.dart';
 import 'package:PiliPlus/utils/extension/string_ext.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
+import 'package:PiliPlus/utils/zh_search_compat.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
@@ -206,7 +207,8 @@ class SSearchController extends GetxController
 
   @override
   Future<void> onValueChanged(String value) async {
-    final res = await SearchHttp.searchSuggest(term: value);
+    // 联想词按简体形请求：B 站内容以简体为主，繁體输入也能联想到位。
+    final res = await SearchHttp.searchSuggest(term: zhToHans(value));
     if (res case Success(:final response)) {
       if (response.tag?.isNotEmpty == true) {
         searchSuggestList.value = response.tag!;

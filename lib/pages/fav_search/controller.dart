@@ -38,12 +38,12 @@ class FavSearchController
   final Rx<FavOrderType> order = FavOrderType.mtime.obs;
 
   @override
-  Future<LoadingState<FavDetailData>> customGetData() async =>
+  Future<LoadingState<FavDetailData>> fetchData(String keyword, int page) =>
       FavHttp.userFavFolderDetail(
         pn: page,
         ps: 20,
         mediaId: mediaId,
-        keyword: await resolveKeyword(),
+        keyword: keyword,
         type: type,
         order: order.value,
       );
@@ -55,6 +55,15 @@ class FavSearchController
     }
     return response.medias;
   }
+
+  @override
+  List<FavDetailItemModel>? variantList(FavDetailData response) =>
+      // 纯取值：变体响应不能触发 getDataList 里的 isEnd 副作用。
+      response.medias;
+
+  @override
+  String? variantItemKey(FavDetailItemModel item) =>
+      item.bvid ?? item.id?.toString();
 
   @override
   // TODO: dimension

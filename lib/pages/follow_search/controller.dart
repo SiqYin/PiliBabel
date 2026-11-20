@@ -10,16 +10,20 @@ class FollowSearchController
   final int mid;
 
   @override
-  Future<LoadingState<FollowData>> customGetData() async =>
+  Future<LoadingState<FollowData>> fetchData(String keyword, int page) =>
       MemberHttp.getfollowSearch(
         mid: mid,
         ps: 20,
         pn: page,
-        name: await resolveKeyword(),
+        name: keyword,
       );
 
   @override
   List<FollowItemModel>? getDataList(FollowData response) {
     return response.list;
   }
+
+  @override
+  String? variantItemKey(FollowItemModel item) =>
+      item.mid == null ? null : 'm${item.mid}';
 }

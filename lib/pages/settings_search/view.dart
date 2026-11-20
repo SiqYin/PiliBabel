@@ -7,6 +7,7 @@ import 'package:PiliPlus/pages/search/controller.dart' show DebounceStreamState;
 import 'package:PiliPlus/pages/setting/models/dynamics_settings.dart';
 import 'package:PiliPlus/pages/setting/models/extra_settings.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
+import 'package:PiliPlus/utils/zh_search_compat.dart';
 import 'package:PiliPlus/pages/setting/models/play_settings.dart';
 import 'package:PiliPlus/pages/setting/models/privacy_settings.dart';
 import 'package:PiliPlus/pages/setting/models/recommend_settings.dart';
@@ -47,12 +48,20 @@ class _SettingsSearchPageState
     if (value.isEmpty) {
       _list.clear();
     } else {
-      value = value.toLowerCase();
+      // zhCompatContains 自带小写折叠 + 简繁字形归一：设置项标题存的是
+      // 简体原文，繁體界面下照着界面上的字打也能搜到。
+      bool hit(String? text) =>
+          text != null &&
+          text.isNotEmpty &&
+          zhCompatContains(text, value);
       _list.value = _settings
           .where(
             (item) =>
-                item.effectiveTitle.toLowerCase().contains(value) ||
-                item.effectiveSubtitle?.toLowerCase().contains(value) == true,
+                hit(item.effectiveTitle) ||
+                hit(item.effectiveSubtitle) ||
+                // 原文标题/副标题：界面翻译开着时显示的是译文，原文也要可搜。
+                hit(item.title) ||
+                hit(item.subtitle),
           )
           .toList();
     }

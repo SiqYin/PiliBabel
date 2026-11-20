@@ -25,14 +25,18 @@ class LaterSearchController
   }
 
   @override
-  Future<LoadingState<LaterData>> customGetData() async =>
+  Future<LoadingState<LaterData>> fetchData(String keyword, int page) =>
       UserHttp.seeYouLater(
     page: page,
-    keyword: await resolveKeyword(),
+    keyword: keyword,
   );
 
   @override
   List<LaterItemModel>? getDataList(LaterData response) {
     return response.list;
   }
+
+  @override
+  String? variantItemKey(LaterItemModel item) =>
+      item.aid?.toString() ?? item.bvid;
 }

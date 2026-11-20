@@ -1,10 +1,10 @@
-import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/user.dart';
 import 'package:PiliPlus/models_new/history/data.dart';
 import 'package:PiliPlus/models_new/history/list.dart';
 import 'package:PiliPlus/pages/common/multi_select/base.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/pages/common/search/common_search_controller.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:flutter/widgets.dart' show Text;
@@ -15,10 +15,10 @@ class HistorySearchController
     extends CommonSearchController<HistoryData, HistoryItemModel>
     with CommonMultiSelectMixin<HistoryItemModel>, DeleteItemMixin {
   @override
-  Future<LoadingState<HistoryData>> customGetData() async =>
+  Future<LoadingState<HistoryData>> fetchData(String keyword, int page) =>
       UserHttp.searchHistory(
     pn: page,
-    keyword: await resolveKeyword(),
+    keyword: keyword,
     account: account,
   );
 
