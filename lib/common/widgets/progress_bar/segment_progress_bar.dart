@@ -201,9 +201,9 @@ class _ViewPointSegmentProgressBar
       ..height = height
       ..segments = segments
       ..onSeek = onSeek
-      // segments 没变时上面的 setter 不会触发重绘，这里显式标脏，
-      // 保证译文到位后进度条上的分段名跟着重画。
-      ..markNeedsPaint();
+      // 标脏走 markNeedsLayout：分段名要在「排版期」按最新译文重新断行、
+      // 并按最高分段重算条高——只 markNeedsPaint 的话条高和段落缓存都是旧的。
+      ..markNeedsLayout();
   }
 }
 
@@ -220,30 +220,71 @@ class RenderViewPointProgressBar
     }
   }
 
+  /// 排版产物：与 segments 对齐，空标题占 null；另存全条需要的总高。
+  List<ui.Paragraph?> _layoutCache = const <ui.Paragraph?>[];
+  double _layoutBarHeight = _barHeight;
+
   @override
   void performLayout() {
-    size = constraints.constrainDimensions(constraints.maxWidth, _barHeight);
+    final width = constraints.maxWidth;
+    // 在排版期按**当前译文**重新断行：长标题在各自分段宽度内自动换行，
+    // 最多 3 行（放不下出省略号），字号恒定不再整段缩小；条高取最高分段，
+    // 单行时保持 15px 与旧版完全一致。
+    double maxTextHeight = 0;
+    final cache = <ui.Paragraph?>[];
+    double prevEnd = 0;
+    for (final segment in segments) {
+      final segmentEnd = segment.end * width;
+      final segmentWidth = segmentEnd - prevEnd;
+      ui.Paragraph? paragraph;
+      final title = segment.title;
+      if (title != null && title.isNotEmpty && segmentWidth > 0) {
+        paragraph = _getParagraph(uiTx(title), segmentWidth);
+        if (paragraph.height > maxTextHeight) {
+          maxTextHeight = paragraph.height;
+        }
+      }
+      cache.add(paragraph);
+      prevEnd = segmentEnd + _dividerWidth;
+    }
+    _disposeCache();
+    _layoutCache = cache;
+    final barHeight = maxTextHeight + _verticalPadding * 2;
+    _layoutBarHeight = barHeight > _barHeight ? barHeight : _barHeight;
+    size = constraints.constrainDimensions(width, _layoutBarHeight);
+  }
+
+  void _disposeCache() {
+    for (final paragraph in _layoutCache) {
+      paragraph?.dispose();
+    }
+    _layoutCache = const <ui.Paragraph?>[];
   }
 
   static const double _barHeight = 15.0;
   static const double _dividerWidth = 2.0;
+  static const double _fontSize = 10.0;
+  static const double _verticalPadding = 2.5;
+  /// 单个分段内最多显示的行数（3.9.6：换行代替整段缩小）。
+  static const int _maxLines = 3;
 
-  static ui.Paragraph _getParagraph(String title, double size) {
+  static ui.Paragraph _getParagraph(String title, double maxWidth) {
     final builder =
         ui.ParagraphBuilder(
             ui.ParagraphStyle(
               textDirection: .ltr,
+              maxLines: _maxLines,
+              ellipsis: '…',
               strutStyle: ui.StrutStyle(
                 leading: 0,
                 height: 1,
-                fontSize: size,
+                fontSize: _fontSize,
               ),
             ),
           )
-          ..pushStyle(.new(color: Colors.white, fontSize: size, height: 1))
+          ..pushStyle(.new(color: Colors.white, fontSize: _fontSize, height: 1))
           ..addText(title);
-    return builder.build()
-      ..layout(const ui.ParagraphConstraints(width: double.infinity));
+    return builder.build()..layout(ui.ParagraphConstraints(width: maxWidth));
   }
 
   @override
@@ -260,52 +301,40 @@ class RenderViewPointProgressBar
 
     assert(segments.isSortedBy((i) => i.end));
 
+    final barHeight = _layoutBarHeight;
     canvas.drawRect(
-      Rect.fromLTRB(0, 0, size.width, _barHeight),
+      Rect.fromLTRB(0, 0, size.width, barHeight),
       paint..color = Colors.grey[600]!.withValues(alpha: 0.45),
     );
 
     paint.color = Colors.black.withValues(alpha: 0.5);
 
     double prevEnd = 0.0;
-    for (final segment in segments) {
+    for (var i = 0; i < segments.length; i++) {
+      final segment = segments[i];
       final segmentEnd = segment.end * size.width;
       canvas.drawRect(
         Rect.fromLTRB(
           segmentEnd,
           0,
           segmentEnd + _dividerWidth,
-          _barHeight + height,
+          barHeight + height,
         ),
         paint,
       );
-      final title = segment.title;
-      if (title != null && title.isNotEmpty) {
+      // 段落已在排版期按分段宽度断好行（≤3 行），这里只做居中摆放；
+      // 单个字都放不下时靠左画（dx 钳到 0），省略号由段落自身处理。
+      final paragraph = i < _layoutCache.length ? _layoutCache[i] : null;
+      if (paragraph != null) {
         final segmentWidth = segmentEnd - prevEnd;
-        final paragraph = _getParagraph(uiTx(title), 10);
         final textWidth = paragraph.maxIntrinsicWidth;
-        final textHeight = paragraph.height;
-
-        final isOverflow = textWidth > segmentWidth;
-        final Offset offset;
-        if (isOverflow) {
-          final scale = segmentWidth / textWidth;
-          canvas
-            ..save()
-            ..translate(prevEnd, (_barHeight - textHeight * scale) / 2)
-            ..scale(scale);
-          offset = Offset.zero;
-        } else {
-          offset = Offset(
-            (segmentWidth - textWidth) / 2 + prevEnd,
-            (_barHeight - textHeight) / 2,
-          );
-        }
-        canvas.drawParagraph(paragraph, offset);
-        paragraph.dispose();
-        if (isOverflow) {
-          canvas.restore();
-        }
+        final dx = segmentWidth > textWidth
+            ? (segmentWidth - textWidth) / 2
+            : 0.0;
+        canvas.drawParagraph(
+          paragraph,
+          Offset(prevEnd + dx, (barHeight - paragraph.height) / 2),
+        );
       }
       prevEnd = segmentEnd + _dividerWidth;
     }
@@ -324,6 +353,7 @@ class RenderViewPointProgressBar
 
   @override
   void dispose() {
+    _disposeCache();
     _onSeek = null;
     _tapGestureRecognizer
       ?..onTapUp = null

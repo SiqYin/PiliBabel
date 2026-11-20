@@ -1,12 +1,13 @@
 import 'package:PiliPlus/models/common/member/search_type.dart';
 import 'package:PiliPlus/pages/member_search/child/controller.dart';
+import 'package:PiliPlus/pages/search/controller.dart' show DebounceStreamMixin;
 import 'package:PiliPlus/utils/extension/scroll_controller_ext.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 class MemberSearchController extends GetxController
-    with GetSingleTickerProviderStateMixin {
+    with GetSingleTickerProviderStateMixin, DebounceStreamMixin<String> {
   late final FocusNode focusNode;
   late final TabController tabController;
   late final TextEditingController editingController;
@@ -34,6 +35,27 @@ class MemberSearchController extends GetxController
       MemberSearchChildController(this, MemberSearchType.dynamic),
       tag: Utils.generateRandomString(8),
     );
+    // 实时搜索（3.9.6）：输入停顿后直接检索，不必回车。
+    subInit();
+    editingController.addListener(_onEditChanged);
+  }
+
+  void _onEditChanged() {
+    ctr?.add(editingController.text);
+  }
+
+  @override
+  void onValueChanged(String value) {
+    if (value.isEmpty) {
+      return;
+    }
+    hasData.value = true;
+    arcCtr
+      ..scrollController.jumpToTop()
+      ..onReload();
+    dynCtr
+      ..scrollController.jumpToTop()
+      ..onReload();
   }
 
   void onClear() {
@@ -61,6 +83,8 @@ class MemberSearchController extends GetxController
 
   @override
   void onClose() {
+    editingController.removeListener(_onEditChanged);
+    subDispose();
     focusNode.dispose();
     tabController.dispose();
     editingController.dispose();

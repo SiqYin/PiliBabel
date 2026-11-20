@@ -1,11 +1,9 @@
-### PiliBabel v3.9.5
+### PiliBabel v3.9.6
 
-**Every search box now works with Simplified and Traditional Chinese alike.**
+**Every search box outside the home screen now shows results as you type — no Enter needed.**
 
-Type either script, and the keyword is automatically searched in both script forms and the results are merged — 歷史 finds 历史 content and the other way around. Characters with several legitimate traditional forms (發/髮, 幹/乾, 臺/檯/颱) additionally get single-character substitute searches, so titles like 頭髮 or 乾隆 are not missed. The conversion table is generated from OpenCC's per-character dictionaries (Apache-2.0) and stays at the glyph level — vocabulary differences like 软件/軟體 are out of scope.
+History, favorites, watch-later, followed users, and the download list used to wait for you to press Enter; they now fire a debounced search (200 ms) right after you stop typing, and clear back to the initial state when you empty the box. The two-tab search screens — live, UP space (videos and posts), and in-video comments — behave the same way. Enter still works as an instant search; on live search, a digits-only query is deliberately left to Enter so typing a room number doesn't jump rooms mid-typing. Keyword resolution and the simplified/traditional variant search from 3.9.5 run unchanged under the hood, with per-word caching so continuous typing doesn't multiply requests.
 
-**Search boxes that still bypassed the AI keyword translation are now wired in.** Live search, UP-space search (videos and posts), in-video comment search, dynamic topic search and @mention search used to query the raw input directly; they now run through the same UI-language → Simplified-Chinese keyword resolution as the main search, plus the script variants. The three local filter boxes — download list, music video list, and settings search — match against the original titles with glyph folding, so typing the translated title you see on screen still finds the entry.
+**The chapter (segment) bar under the video no longer shrinks its text into unreadability.** When a segment title is wider than its segment, the bar used to scale the whole label down proportionally — with long original titles and even longer translations, the glyphs ended up a few pixels tall. It now wraps the title automatically inside its own segment, up to 3 lines (ellipsis beyond that), at a fixed, readable font size; the bar simply grows taller to fit the tallest segment, and looks exactly like before when everything fits on one line. Translated titles re-layout as soon as they arrive.
 
-**Traditional input is no longer sent through the AI as if it were a foreign language.** It is recognized as Chinese-source text and searched directly; the simplified↔traditional bridge is deterministic glyph conversion, not a model call. The language picker's search folds script forms the same way.
-
-Everything else is unchanged: suggestions, hot keywords, search history, and pagination follow the same behavior as before; the extra variant searches only apply to the first page and are merged with per-item de-duplication.
+Nothing else changed: the home screen search keeps its suggestion-as-you-type flow, and all variant searches stay first-page-only with per-item de-duplication.
