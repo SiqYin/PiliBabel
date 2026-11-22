@@ -1962,6 +1962,14 @@ abstract final class Pref {
   static set uiTranslateLang(String value) =>
       _setting.put(SettingBoxKey.uiTranslateLang, value);
 
+  /// 「选择应用语言」下方那枚开关：true = 跟随系统语言（默认，每次启动把应用
+  /// 语言对齐到系统语言）；false = 锁定自选语言（不再自动切换，以用户选的为准）。
+  static bool get uiTranslateLangFollowSystem =>
+      _setting.get(SettingBoxKey.uiTranslateLangFollowSystem, defaultValue: true);
+
+  static set uiTranslateLangFollowSystem(bool value) =>
+      _setting.put(SettingBoxKey.uiTranslateLangFollowSystem, value);
+
   /// 每个字幕分块的句子数（10-40，默认 20）。
   static int get subtitleChunkSize =>
       (_setting.get(SettingBoxKey.subtitleChunkSize, defaultValue: 20) as int)

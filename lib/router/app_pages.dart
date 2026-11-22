@@ -159,7 +159,7 @@ class Routes {
     GetPage(
       name: '/aiTranslate',
       // 带引导参数进来时，设置页会当着用户的面演一遍 —— 具体演哪一套由参数决定，
-      // 见 kGuidedSetupFirstRun / kGuidedSetupUpgrade。
+      // 见 kGuidedSetupUpgrade / kGuidedSetupLanguageSync。
       page: () => UiTranslateSettingPage(
         guidedSetup: Get.arguments is String ? Get.arguments as String : null,
       ),

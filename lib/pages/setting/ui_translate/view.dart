@@ -3,7 +3,6 @@ import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/pages/setting/widgets/select_dialog.dart';
 import 'package:PiliPlus/pages/setting/ui_translate/glossary_tables.dart';
 import 'package:PiliPlus/pages/setting/ui_translate/language_search.dart';
-import 'dart:ui' as ui;
 import 'package:PiliPlus/services/ui_translate/app_language.dart';
 import 'package:PiliPlus/services/ui_translate/onboarding.dart';
 import 'package:PiliPlus/services/ui_translate/subtitle_translation_proxy.dart';
@@ -20,16 +19,17 @@ import 'package:get/get.dart';
 /// 引导式配置的路由参数（见 `services/ui_translate/onboarding.dart`）。
 ///
 /// 引导流程会**当着用户的面**先把这一页滚到可见处，之后分岔：
-/// * [kGuidedSetupFirstRun]：新装用户 —— 打开开关（开关自己播放动画）→ 弹语言列表
 /// * [kGuidedSetupUpgrade]：从旧版升级的用户 —— 直接弹「翻译引擎」，让他一眼看到
 ///   已切到内置模型，想切回自备 API 也伸手就能点
-/// * [kGuidedSetupAutoEnable]：新装自动开启 —— 滚到 AI 翻译区 + 开关动画 →
-///   弹「已开启」单按钮弹窗（系统语言已自动配置，无需选择）
+/// * [kGuidedSetupLanguageSync]：系统语言同步 —— 再滚到「选择应用语言」那一项，
+///   弹出语言选择器，停一拍后自动选中系统语言（用户自己先点了就以他点的为准）
 ///
 /// 目的是让用户完整看一遍「这些设置在哪、长什么样」，而不是被丢一个弹窗就完事。
-const String kGuidedSetupFirstRun = 'guidedTranslateFirstRun';
 const String kGuidedSetupUpgrade = 'guidedTranslateUpgrade';
-const String kGuidedSetupAutoEnable = 'guidedTranslateAutoEnable';
+
+/// 应用启动时检测到「选择应用语言」与系统语言不一致（见
+/// `services/ui_translate/onboarding.dart` 的启动同步），跳进来做语言切换引导。
+const String kGuidedSetupLanguageSync = 'guidedTranslateLanguageSync';
 
 /// 官方接口故障时：替用户切到「自备 API」。
 const String kGuidedSetupOutageCustom = 'guidedTranslateOutageCustom';
@@ -46,7 +46,7 @@ class UiTranslateSettingPage extends StatefulWidget {
 
   final bool showAppBar;
 
-  /// 见 [kGuidedSetupFirstRun] / [kGuidedSetupUpgrade]。非空时页面自己跑一遍引导。
+  /// 见 [kGuidedSetupUpgrade] / [kGuidedSetupLanguageSync]。非空时页面自己跑一遍引导。
   final String? guidedSetup;
 
   @override
@@ -56,6 +56,13 @@ class UiTranslateSettingPage extends StatefulWidget {
 class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
   /// 引导流程的滚动锚点：挂在页面第一项上（这一页只剩翻译设置）。
   final _aiSectionKey = GlobalKey();
+
+  /// 语言同步引导的落点：挂在「选择应用语言」那一项上。
+  final _languageFieldKey = GlobalKey();
+
+  /// 「跟随系统语言 / 锁定自选语言」开关（默认跟随）。锁定后启动不再做
+  /// 语言同步，用户自己选的语言也不会被系统语言顶掉。
+  late bool _langFollowSystem;
   late int _subtitleChunkSize;
   late int _subtitleConcurrency;
   late int _subtitleContextOverlap;
@@ -64,6 +71,7 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
   @override
   void initState() {
     super.initState();
+    _langFollowSystem = Pref.uiTranslateLangFollowSystem;
     _subtitleChunkSize = Pref.subtitleChunkSize;
     _subtitleConcurrency = Pref.subtitleConcurrency;
     _subtitleContextOverlap = Pref.subtitleContextOverlap;
@@ -76,10 +84,10 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
     }
   }
 
-  /// 当着用户的面走一遍：滚过去 → 开开关 → 弹语言列表。
+  /// 当着用户的面走一遍：先滚到 AI 翻译区看清楚这一页，再按模式分岔。
   ///
-  /// 每一步之间的停顿**是刻意的**：动作本身要被看见，否则新用户根本不知道这些设置
-  /// 藏在哪儿、开关长什么样。所有 await 之后都检查 `mounted`，用户中途返回时不会
+  /// 每一步之间的停顿**是刻意的**：动作本身要被看见，否则用户根本不知道这些设置
+  /// 藏在哪儿、长什么样。所有 await 之后都检查 `mounted`，用户中途返回时不会
   /// 因为拿不到 context 而崩 —— 早先那版靠固定延迟「等页面推上来」的做法，就卡在
   /// 这个风险上。
   Future<void> _runGuidedSetup(String mode) async {
@@ -123,41 +131,58 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
       return;
     }
 
-    // 新装自动开启：滚到 AI 翻译区 + 开关动画（语言已自动配置），弹单按钮弹窗。
-    if (mode == kGuidedSetupAutoEnable) {
-      controller.saveUiTranslateEnabled(true);
-      // 这两句先插到最高优先级队列：850ms 的开关动画放完，译文基本已经到了，
-      // 用户第一眼看到的就是自己的语言，而不是先英文再跳成译文。
-      UiTranslateService.precache(kOnboardingDialogStrings);
-      await Future.delayed(const Duration(milliseconds: 850));
+    // 系统语言同步：从 AI 翻译区顶部再一步一步走到「选择应用语言」那一项，
+    // 弹出选择器让用户看清清单，停一拍后自动选中系统语言。
+    if (mode == kGuidedSetupLanguageSync) {
+      final fieldContext = _languageFieldKey.currentContext;
+      if (fieldContext != null && fieldContext.mounted) {
+        await Scrollable.ensureVisible(
+          fieldContext,
+          duration: const Duration(milliseconds: 550),
+          curve: Curves.easeInOut,
+        );
+      }
       if (!mounted) return;
-      await showDialog<void>(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => Obx(
-          () => AlertDialog(
-            // 原文是英文（非中文用户也读得懂），译文走 uiTxUrgent。
-            title: Text(uiTxUrgent(kAutoEnabledTitle)),
-            content: Text(uiTxUrgent(kAutoEnabledBody)),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(uiTxUrgent(kAutoEnabledAction)),
-              ),
-            ],
-          ),
-        ),
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (!mounted) return;
+      final target = detectSystemLanguageCode();
+      // 从启动检测到弹窗之间隔着几秒动画，期间语言可能已被别处改动；
+      // 已一致就不要再「替」用户选一遍。
+      if (target == controller.uiTranslateLang.value) return;
+      final picked = await promptAppLanguagePicker(
+        context,
+        controller.uiTranslateLang.value,
+        autoPick: target,
       );
-      return;
+      if (picked != null) {
+        controller.saveUiTranslateLang(picked);
+      }
     }
+  }
 
-    // 新装用户（旧路径）：当着面把开关打开（开关会自己播放一次动画），再弹语言列表。
-    controller.saveUiTranslateEnabled(true);
-    await Future.delayed(const Duration(milliseconds: 850));
+  /// 保存「跟随系统语言 / 锁定自选语言」开关。
+  ///
+  /// 切回「跟随」时**立刻对齐一次**：当前语言与系统语言不一致的话，当场弹出
+  /// 选择器并代选系统语言（与启动同步同一套代选节奏），不用等下次启动；
+  /// 切到「锁定」什么都不做 —— 锁定的意思就是从现在起别动我的语言。
+  Future<void> _saveLangFollowSystem(bool value) async {
+    if (_langFollowSystem == value) return;
+    setState(() => _langFollowSystem = value);
+    Pref.uiTranslateLangFollowSystem = value;
+    if (!value) return;
+
+    final controller = Get.isRegistered<AiSettingController>()
+        ? Get.find<AiSettingController>()
+        : Get.put(AiSettingController());
+    final target = detectSystemLanguageCode();
+    if (target == controller.uiTranslateLang.value) return;
+    // 选择器标题/取消按钮先排队翻，弹出来尽量已是当前界面语言。
+    UiTranslateService.precache(const ['选择应用语言', '取消']);
     if (!mounted) return;
     final picked = await promptAppLanguagePicker(
       context,
       controller.uiTranslateLang.value,
+      autoPick: target,
     );
     if (picked != null) {
       controller.saveUiTranslateLang(picked);
@@ -425,10 +450,12 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // 语言同步引导会滚到这里（_languageFieldKey）。
                   // 用独立的滚动对话框而不是 DropdownButtonFormField：语言选项很多，
                   // 原生 dropdown 在屏幕底部会透出/压住下方 API Key 输入框（用户截图
                   // 中看到的重叠问题）。AlertDialog 自带不透明 Material 面板和独立滚动区。
                   InputDecorator(
+                    key: _languageFieldKey,
                     decoration: InputDecoration(
                       labelText: uiTx('选择应用语言'),
                       border: const OutlineInputBorder(),
@@ -471,6 +498,39 @@ class _UiTranslateSettingPageState extends State<UiTranslateSettingPage> {
                       style: theme.textTheme.bodySmall?.copyWith(
                         color: colorScheme.outline,
                       ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // 「跟随系统语言 / 锁定自选语言」开关（默认跟随）：跟随 =
+                  // 每次启动把应用语言对齐到系统语言（见 onboarding 的启动同步），
+                  // 不一致时会有引导动画；锁定 = 不再自动切换。文案走 uiTx。
+                  SizedBox(
+                    width: double.infinity,
+                    child: SegmentedButton<String>(
+                      segments: [
+                        ButtonSegment(
+                          value: 'follow',
+                          label: Text(uiTx('跟随系统语言')),
+                        ),
+                        ButtonSegment(
+                          value: 'lock',
+                          label: Text(uiTx('锁定自选语言')),
+                        ),
+                      ],
+                      selected: {_langFollowSystem ? 'follow' : 'lock'},
+                      onSelectionChanged: (value) =>
+                          _saveLangFollowSystem(value.first == 'follow'),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    uiTx(
+                      _langFollowSystem
+                          ? '已跟随系统语言：每次启动自动把应用语言对齐到当前系统语言'
+                          : '已锁定自选语言：不再随系统语言自动切换，以你在上面选的语言为准',
+                    ),
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: colorScheme.outline,
                     ),
                   ),
                 ],
@@ -793,19 +853,36 @@ Future<void> _showTranslateProviderPicker(
 
 /// 目标语言选择器。
 ///
-/// 除了设置页，**首次引导（`services/ui_translate/onboarding.dart`）也会调它**：
-/// 用户点 Agree 后设置页刚推上来，立刻弹这个列表让他直接选语言。
-/// 返回 null 表示用户取消。
+/// 除了设置页，**系统语言同步引导（`services/ui_translate/onboarding.dart` →
+/// [kGuidedSetupLanguageSync]）也会调它**：设置页滚到「选择应用语言」后弹这个列表，
+/// 让用户看清清单后自动选中系统语言。返回 null 表示用户取消。
+///
+/// [autoPick] 非空时（语言同步引导）：弹窗照常打开，让用户看清清单，1.5 秒后
+/// 替他选中 [autoPick] 并关闭；这段时间里用户自己点了（选了别的语言或取消）
+/// 就以他点的为准。与「翻译引擎」故障引导的代选是同一套节奏。
 ///
 /// **3.8.8 修复**：搜索框此前完全失效（3.8.2 起监听器只更新了 query 变量、
 /// 从不触发重建，输入什么都不出结果）。搜索与过滤已抽到独立的
 /// [LanguageSearchList] 组件里，由它自己持有状态并 `setState`。
 Future<String?> promptAppLanguagePicker(
   BuildContext context,
-  String selectedCode,
-) {
+  String selectedCode, {
+  String? autoPick,
+}) {
+  // 代选只认「弹窗还没被用户处理过」：任何一条用户路径（选中/取消）都会置位，
+  // 迟到的定时器就不能再把弹窗（或它下面的页面）顶掉。
+  var resolved = false;
+  if (autoPick != null) {
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (resolved || !context.mounted) return;
+      Navigator.of(context, rootNavigator: true).maybePop(autoPick);
+    });
+  }
   return showDialog<String>(
     context: context,
+    // 引导代选期间不允许点弹窗外关闭：点外头等于「没决定」，代选定时器会落空。
+    // 手动使用（autoPick 为空）保持默认行为 —— 点外面等于取消。
+    barrierDismissible: autoPick == null,
     builder: (dialogContext) => AlertDialog(
       title: Obx(() {
         touchUiTranslateRevision();
@@ -816,12 +893,18 @@ Future<String?> promptAppLanguagePicker(
         height: MediaQuery.sizeOf(dialogContext).height * 0.62,
         child: LanguageSearchList(
           selectedCode: selectedCode,
-          onSelected: (code) => Navigator.pop(dialogContext, code),
+          onSelected: (code) {
+            resolved = true;
+            Navigator.pop(dialogContext, code);
+          },
         ),
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(dialogContext),
+          onPressed: () {
+            resolved = true;
+            Navigator.pop(dialogContext);
+          },
           child: Obx(() {
             touchUiTranslateRevision();
             return Text(uiTx('取消'));

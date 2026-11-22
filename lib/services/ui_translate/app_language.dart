@@ -824,3 +824,56 @@ AppLanguage appLanguageByCode(String code) {
   }
   return defaultAppLanguage;
 }
+
+/// 系统语言匹配不到应用语言清单时的兜底（英语）。
+const String onboardingFallbackLanguageCode = 'en';
+
+/// 从 locale 串推断应用语言代码（纯函数，[detectSystemLanguageCode] 的本体）。
+///
+/// [localeName] 形如 `vi_VN` / `ja_JP` / `zh_CN` / `en_US`（macOS/桌面端可能带
+/// 文字子标签，如 `zh_Hant_TW`）。取主语言子标签后按优先级匹配：
+///   1. 精确匹配（`vi` → `vi`）
+///   2. 中文变体：`zh_TW` / `zh_HK` / `zh_MO` / 带 `Hant` 文字标签的 → `zh-TW`，
+///      其余 `zh_*` → `zh-CN`
+///   3. 粤语变体：`yue` → `yue-Hant`（简体粤语 3.8.10 起已下线，一律归繁）
+///   4. 闽南语变体：`nan_TW` → `nan-TW`，其余 `nan_*` 归臺灣閩南语（`nan-TW`）
+///   5. 吴语变体：`wuu` → `wuu-Hans`，带 `Hant` 文字标签的 → `wuu-Hant`
+///   6. 都匹配不到 → [onboardingFallbackLanguageCode]
+///
+/// 映射结果最后统一过一遍现行清单：3.8.10 下线的代码按 [_retiredLanguageCodes]
+/// 迁移表归位；清单里真没有的退回英语兜底，**绝不把清单外代码写进偏好**——
+/// 否则界面显示会落到默认语言，与这里算出的代码对不上。
+String languageCodeFromLocale(String localeName) {
+  final parts = localeName.split(RegExp(r'[_-]'));
+  final lang = parts.isNotEmpty ? parts.first.toLowerCase() : '';
+  final region = parts.length > 1 ? parts[1].toUpperCase() : '';
+
+  // 精确匹配
+  if (appLanguages.any((l) => l.code == lang)) return lang;
+
+  String? mapped;
+  // 中文变体
+  if (lang == 'zh') {
+    if (region == 'TW' ||
+        region == 'HK' ||
+        region == 'MO' ||
+        region == 'HANT') {
+      mapped = 'zh-TW';
+    } else {
+      mapped = 'zh-CN';
+    }
+  }
+  // 粤语（简体变体已下线，统一归繁體粵語）
+  if (lang == 'yue') mapped = 'yue-Hant';
+  // 闽南语（大陆闽南语已下线，统一归臺灣閩南语）
+  if (lang == 'nan') mapped = 'nan-TW';
+  // 吴语
+  if (lang == 'wuu') {
+    mapped = region == 'HANT' ? 'wuu-Hant' : 'wuu-Hans';
+  }
+
+  if (mapped == null) return onboardingFallbackLanguageCode;
+  final resolved = _retiredLanguageCodes[mapped] ?? mapped;
+  if (appLanguages.any((l) => l.code == resolved)) return resolved;
+  return onboardingFallbackLanguageCode;
+}

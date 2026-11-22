@@ -1,3 +1,11 @@
+### PiliBabel v3.9.7
+
+**The app now follows your system language — with a switch to lock your own choice.**
+
+Every launch compares the chosen app language (Settings → AI Translation → “Choose app language”) against the system language. When they differ, a guided animation walks you there step by step: the AI Translation page scrolls into view, then further to the language field, the picker opens so you can see the full list, and after a short pause the system language is selected for you — whatever you tap yourself in that window wins, and the whole interface rebuilds in the new language the moment the picker closes. This replaces the old first-launch-only onboarding: new installs still auto-enable AI translation silently on the built-in free model, but the language switch is now the same guided flow as everyone else's, and it re-runs on every launch whenever the languages drift apart — including after you change your system language.
+
+A segmented toggle right below the picker controls it: **Follow system language** (default) keeps the behavior above and also aligns immediately when you switch back to it; **Lock my chosen language** opts out entirely — no detection, no switching, your pick stays untouched. All new labels are translated through the same AI translation as the rest of the interface. System-language detection also handles script subtags correctly (zh_Hant → Traditional Chinese) and no longer produces language codes retired in 3.8.10.
+
 ### PiliBabel v3.9.6
 
 **Every search box outside the home screen now shows results as you type — no Enter needed.**
