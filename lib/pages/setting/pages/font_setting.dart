@@ -132,9 +132,12 @@ class _FontSettingPageState extends State<FontSettingPage> {
       SettingBoxKey.customDanmakuFontFamily: danmakuFamily,
     });
 
-    Get
-      ..back()
-      ..updateMyAppTheme();
+    // 只有「作为独立页推入」（AppBar 上那对按钮）时才退栈；双栏内嵌时本页
+    // 没有自己的路由，back() 会把整个设置页弹掉，确定后反而被踢出设置。
+    if (widget.showAppBar) {
+      Get.back();
+    }
+    Get.updateMyAppTheme();
   }
 
   /// 选中后再按需装载。必须先反馈选中态再装载：
@@ -488,6 +491,32 @@ class _FontSettingPageState extends State<FontSettingPage> {
                 ],
               ),
             ),
+            // 双栏内嵌（宽窗口/横屏，showAppBar: false）时本页没有 AppBar，
+            // 上面那对「重置 / 确定」按钮就不存在 —— 字体改动没有任何保存
+            // 入口，重启后回退（issue #5，Windows 便携版两栏布局必现）。
+            // 内嵌时把同一对按钮落在本页页脚，与 AppBar 版行为一致。
+            if (!widget.showAppBar)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+                child: Row(
+                  mainAxisAlignment: .end,
+                  children: [
+                    TextButton(
+                      onPressed: () => setState(() {
+                        _selectedFont = null;
+                        _selectedWeight = _normalFontWeight;
+                        _selectedScale = 1;
+                      }),
+                      child: Text(uiTx('重置')),
+                    ),
+                    const SizedBox(width: 12),
+                    FilledButton(
+                      onPressed: _saveFontSetting,
+                      child: Text(uiTx('确定')),
+                    ),
+                  ],
+                ),
+              ),
           ],
         )),
       ),

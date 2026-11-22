@@ -1,3 +1,11 @@
+### PiliBabel v3.9.8
+
+**Two font-setting bugs are fixed — both found and reported by @masktao (#5, #6). Thank you!**
+
+On wide windows the settings page switches to a two-pane layout, and the font page was embedded without its app bar — which is where the “Reset” and “Apply” buttons lived. Embedded like that, font changes had no way to be saved at all and silently reverted after a restart (#5). The same pair of buttons now sits at the foot of the font page whenever it is embedded; saving also no longer pops the whole settings page, which the old back-then-apply flow would have done from the embedded position.
+
+The settings search indexed only the entries inside the seven category pages, so the page-level entries — fonts, AI translation, theme & colors, WebDAV, About — could never be found, and searching for “font” returned nothing (#6). Those five page entries are now part of the search index and open their page when tapped.
+
 ### PiliBabel v3.9.7
 
 **The app now follows your system language — with a switch to lock your own choice.**

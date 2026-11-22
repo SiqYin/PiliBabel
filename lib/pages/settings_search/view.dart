@@ -3,19 +3,26 @@ import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/view_insets_safe_area.dart';
 import 'package:PiliPlus/common/widgets/view_sliver_safe_area.dart';
+import 'package:PiliPlus/models/common/setting_type.dart';
+import 'package:PiliPlus/pages/about/view.dart';
 import 'package:PiliPlus/pages/search/controller.dart' show DebounceStreamState;
 import 'package:PiliPlus/pages/setting/models/dynamics_settings.dart';
 import 'package:PiliPlus/pages/setting/models/extra_settings.dart';
 import 'package:PiliPlus/pages/setting/models/model.dart';
-import 'package:PiliPlus/utils/zh_search_compat.dart';
+import 'package:PiliPlus/pages/setting/models/style_settings.dart';
 import 'package:PiliPlus/pages/setting/models/play_settings.dart';
 import 'package:PiliPlus/pages/setting/models/privacy_settings.dart';
 import 'package:PiliPlus/pages/setting/models/recommend_settings.dart';
-import 'package:PiliPlus/pages/setting/models/style_settings.dart';
 import 'package:PiliPlus/pages/setting/models/video_settings.dart';
+import 'package:PiliPlus/pages/setting/pages/color_select.dart';
+import 'package:PiliPlus/pages/setting/pages/font_setting.dart';
+import 'package:PiliPlus/pages/setting/ui_translate/view.dart';
+import 'package:PiliPlus/pages/webdav/view.dart';
+import 'package:PiliPlus/utils/zh_search_compat.dart';
 import 'package:PiliPlus/utils/grid.dart';
 import 'package:PiliPlus/utils/waterfall.dart';
 import 'package:get/get.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:waterfall_flow/waterfall_flow.dart'
     hide SliverWaterfallFlowDelegateWithMaxCrossAxisExtent;
@@ -31,9 +38,46 @@ class _SettingsSearchPageState
     extends DebounceStreamState<SettingsSearchPage, String> {
   final _textEditingController = TextEditingController();
   final RxList<SettingsModel> _list = <SettingsModel>[].obs;
+
+  /// 页面级设置入口（AI 翻译/主题/字体/WebDAV/关于）：它们是独立页面、
+  /// 没有细项列表，此前从未进过搜索索引 —— 搜「字体」什么都出不来
+  /// （issue #6）。标题取自 [SettingType] 的 title（与设置首页一致），
+  /// 点按直接跳对应页面；文案交给 NormalItem 内部的 uiTx。
+  List<SettingsModel> get _pageSettings => [
+    NormalModel(
+      leading: const Icon(Icons.auto_awesome),
+      title: SettingType.aiTranslateSetting.title,
+      subtitle: '翻译引擎、应用语言与界面翻译',
+      onTap: (_, _) => Get.to(() => const UiTranslateSettingPage()),
+    ),
+    NormalModel(
+      leading: const Icon(Icons.palette_outlined),
+      title: SettingType.themeSetting.title,
+      subtitle: '主题模式、动态取色、高对比度深色、调色板与配色风格',
+      onTap: (_, _) => Get.to(() => const ColorSelectPage()),
+    ),
+    NormalModel(
+      leading: const Icon(Icons.text_fields),
+      title: SettingType.fontSetting.title,
+      subtitle: '内置霞鹜文楷、系统字体与自定义字体，字重与字号',
+      onTap: (_, _) => Get.to(() => const FontSettingPage()),
+    ),
+    NormalModel(
+      leading: const Icon(MdiIcons.databaseCogOutline),
+      title: SettingType.webdavSetting.title,
+      onTap: (_, _) => Get.to(() => const WebDavSettingPage()),
+    ),
+    NormalModel(
+      leading: const Icon(Icons.info_outline),
+      title: SettingType.about.title,
+      onTap: (_, _) => Get.to(() => const AboutPage()),
+    ),
+  ];
+
   /// 必须是 getter：这些 `xxxSettings` 里的 `uiTx(...)` 是**求值时**取译文的，
   /// 用 `late final` 缓存下来的话，关闭 AI 翻译后搜索索引里仍是旧译文。
   List<SettingsModel> get _settings => [
+    ..._pageSettings,
     ...extraSettings,
     ...privacySettings,
     ...recommendSettings,
