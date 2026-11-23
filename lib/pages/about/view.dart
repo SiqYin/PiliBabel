@@ -158,33 +158,38 @@ class _AboutPageState extends State<AboutPage> {
                 const SizedBox(height: 6),
                 const Text(
                   'PiliBabel is an independent, open-source, third-party '
-                  'Bilibili client — a fork of PiliNara (which is itself a '
-                  'fork of PiliPlus → PiliPala). It keeps everything those '
+                  'Bilibili client — a fork of PiliNara, which is itself a '
+                  'fork of PiliPlus → PiliPala. It keeps everything those '
                   'clients offer and adds one thing on top: AI interface & '
-                  'content translation, so the whole app can speak your '
-                  'language.',
+                  'content translation, so the whole app speaks the language '
+                  'you choose.\n\n'
+                  'Translation works out of the box on bilibili\'s own free '
+                  'model — no API key, no sign-up, nothing to configure.',
                   style: TextStyle(fontSize: 13, height: 1.5),
                 ),
                 const SizedBox(height: 10),
                 const Text(
+                  '• Built-in model first: bilibili\'s own Index-Translate is '
+                  'the default and needs no key; switch to your own '
+                  'OpenAI-compatible endpoint any time, and it stays fully '
+                  'independent of the AI video summary endpoint.\n'
                   '• Translate once: every string is translated exactly once '
                   'and cached locally, so it never re-translates on reopen.\n'
-                  '• Bring your own model: point it at any OpenAI-compatible '
-                  'endpoint; the translation endpoint is fully independent '
-                  'from AI video summary.\n'
-                  '• ~35 languages: a Chinese target only translates '
-                  'foreign → Chinese; any non-Chinese target renders the '
-                  'entire interface.\n'
+                  '• One list, 151 + 6: bilibili\'s official 151-language '
+                  'inventory plus six it does not cover — Traditional '
+                  'Chinese, Wu in both scripts, Taiwan Hokkien, Zhuang and '
+                  'Tâi-gí — each kept as its own entry, marked as such.\n'
                   '• Deep coverage: UI labels, video titles & UP names, '
-                  'comments (hyperlinks preserved), dynamics, and live '
-                  'danmaku.',
+                  'comments (hyperlinks preserved and still clickable), '
+                  'dynamics, feed, and live danmaku (off by default).',
                   style: TextStyle(fontSize: 13, height: 1.6),
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  'Unofficial — not affiliated with or endorsed by bilibili. '
-                  'For learning & testing; delete within 24 hours. Licensed '
-                  'under GPL-3.0.',
+                  'Unofficial — not affiliated with, endorsed by, or '
+                  'sponsored by bilibili. For learning & testing only; '
+                  'please delete it within 24 hours of download. No cracked '
+                  'or paywall-bypassing content. Licensed under GPL-3.0.',
                   style: TextStyle(fontSize: 12, height: 1.5, color: outline),
                 ),
               ],
@@ -218,15 +223,6 @@ Commit Hash: ${BuildConfig.commitHash}''',
             onSecondaryTap: PlatformUtils.isMobile
                 ? null
                 : () => Utils.copyText(BuildConfig.commitHash),
-          ),
-          const ListTile(
-            title: Text(
-              'PiliBabel is an independent third-party fork of PiliNara '
-              '(itself a fork of PiliPlus). It adds AI interface & content '
-              'translation so the whole app speaks your language.',
-              style: TextStyle(fontSize: 13, height: 1.5),
-            ),
-            leading: Icon(Icons.translate),
           ),
           Divider(
             thickness: 1,
