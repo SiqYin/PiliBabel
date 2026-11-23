@@ -1315,6 +1315,12 @@ class VideoDetailController extends GetxController
     if (plPlayerController.videoPlayerController == null) {
       plPlayerController = PlPlayerController.ensureInstance();
     }
+    if (!isFileSource && videoUrl == null) {
+      // 还没取到流，或取流已被作废（例如去过一次听视频页）：先把地址取回来，
+      // 取到后由 _initPlayerIfNeeded 建播放器。绝不拿空地址去开播放器。
+      await queryVideoUrl();
+      return;
+    }
     if (isFileSource) {
       await _loadLocalPlaybackMeta();
     }
@@ -1407,6 +1413,12 @@ class VideoDetailController extends GetxController
 
   /// 取流代次：被放行的旧请求不得清掉新请求的 in-flight 标记。
   int _queryGen = 0;
+
+  /// 是否已把本页的加载整条作废（进「听视频」页时置位，见 [abandonForAudioPage]）。
+  bool _abandonedForAudio = false;
+
+  /// 进听视频页之前的自动播放意图，返回时原样恢复。
+  bool _autoPlayBeforeAudio = true;
 
   String? _lastQueryBvid;
   int? _lastQueryCid;
@@ -1713,6 +1725,13 @@ class VideoDetailController extends GetxController
     }
 
     final result = await _getVideoUrl(VideoQuality.hdrVivid.code);
+
+    // 进听视频页时整条加载已经作废：在飞的取流结果一律丢弃。
+    // 既不能拿它去建播放器、也不能弹失败提示——那会让听视频页背后多一个
+    // 正在拉流的 mpv 和一堆字幕任务，把退路堵死。
+    if (_abandonedForAudio || isClosed) {
+      return;
+    }
 
     if (result case Success(:final response)) {
       data = response;
@@ -4198,6 +4217,67 @@ class VideoDetailController extends GetxController
     return false;
   }
 
+  /// 进入「听视频」页（`/audio`）之前调用：把本页正在进行的加载**整条作废**。
+  ///
+  /// 听视频很多时候本来就是「视频加载不出来、退而求其次」的选项。以前这里的做法是
+  /// 把当前 `audioUrl` 递给听视频页、其余什么都不管：视频那边还在飞的取流、还在
+  /// 重连的 mpv、还要跑的字幕任务全都继续占着线路，退路于是也一起卡死——表现出来
+  /// 就是「视频放不出来，点进听视频也放不出来」。所以进页面前先把视频这一侧停干净：
+  ///
+  /// 1. 在飞的取流结果作废（[_queryGen] 换代 + [_abandonedForAudio] 丢弃），
+  ///    回来时再重新取一次，不拿被作废的中间态去建播放器；
+  /// 2. 字幕任务全部停掉（听视频页没有字幕，没必要替它加载）；
+  /// 3. 还没起来的播放器**卸载掉当前媒体**——卡在「正在加载」的 mpv 会一直重连、
+  ///    一直占着连接，只 pause 是停不下来的。这里用 `stop()`（只清播放列表、不释放
+  ///    内核）而不是 `dispose()`：`dispose()` 会把单例连同 `_playerCount` 一起归零，
+  ///    之后 `setDataSource` 会因为 `_playerCount == 0` 直接中止，返回视频页就再也
+  ///    建不出播放器了。
+  ///
+  /// 视频本来就已经起播（有媒体、有时长）时不走这套：那边没有任何「加载」可作废，
+  /// 只暂停，回来瞬间续上，字幕也不用重挂。
+  void abandonForAudioPage() {
+    final p = plPlayerController;
+    final videoPlayer = p.videoPlayerController;
+    final ready =
+        videoPlayer != null && videoPlayer.state.duration > Duration.zero;
+    if (ready && videoUrl != null) {
+      if (p.playerStatus.isPlaying) {
+        p.pause();
+      }
+      return;
+    }
+    _autoPlayBeforeAudio = _autoPlay.value;
+    _abandonedForAudio = true;
+    _queryGen++;
+    isQuerying = false;
+    _queryStartedAt = null;
+    _dmTrendTaskId++;
+    _resetSubtitleTranslation();
+    // 字幕索引一并复位：返回时要让 playerInit 重新拉一次 playinfo，
+    // 按偏好记忆把字幕/译文轨挂回去，而不是留下一个已清空的空轨列表。
+    vttSubtitlesIndex.value = -1;
+    vttSubtitles.clear();
+    if (!PipOverlayService.isInPipMode && videoPlayer != null) {
+      // 卸载当前媒体（只清播放列表、不释放播放器本体），把线路让给听视频页
+      videoPlayer.stop().catchError((Object e) {
+        if (kDebugMode) {
+          debugPrint('abandonForAudioPage: stop failed: $e');
+        }
+      });
+    }
+    videoState.value = false;
+  }
+
+  /// 从听视频页返回时调用。返回 true 表示「刚才那条加载被作废了，必须重新取流」。
+  bool resumeFromAudioPage() {
+    if (!_abandonedForAudio) {
+      return false;
+    }
+    _abandonedForAudio = false;
+    _autoPlay.value = _autoPlayBeforeAudio;
+    return true;
+  }
+
   void toAudioPage() {
     int? id;
     int? extraId;
@@ -4224,12 +4304,13 @@ class VideoDetailController extends GetxController
       from: from,
       heroTag: _autoPlay.value ? heroTag : null,
       start: playedTime,
-      audioUrl: audioUrl,
       extraId: extraId,
-      // audioUrl 已按 currentAudioQa 选好轨道，音质一并传给听视频页，
-      // 否则那边显示的音质会和实际播放的不一致。
-      audioQa: currentAudioQa.value,
+      // 刻意不传 audioUrl：听视频页自己取流（它可能正是视频加载不出来时的退路，
+      // 继承这边那次取流的结果等于把视频的卡死照搬过去）。
     );
+    // 页面推上去之后再动手：didPushNext 里还要读播放器的播放状态来决定暂停/
+    // 是否进小窗，提前把实例拆掉会让它拿到一个已经销毁的对象。
+    abandonForAudioPage();
   }
 
   /// 当前视频详情（拿不到时返回 null，不抛异常）。

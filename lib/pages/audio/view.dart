@@ -68,8 +68,14 @@ class AudioPage extends StatefulWidget {
     required PlaylistSource from,
     String? heroTag,
     Duration? start,
+    /// 只有**本地缓存音频**（`file://` 直链）才从外面传进来。
+    ///
+    /// 网络源一律由听视频页自己取流：视频页那一次取流的结果可能根本不存在，
+    /// 也可能是一张在当前线路上拉不动的直链，继承它等于把视频的卡死照搬过来。
     String? audioUrl,
     int? extraId,
+    /// 只有本地缓存音频用得上：本地文件没有取流过程，音质只能从参数带过来。
+    /// 网络源一律以听视频页自己取到的轨道为准，这个值不会被采用。
     AudioQuality? audioQa,
   }) {
     heroTag ??= Utils.makeHeroTag(oid);
@@ -85,8 +91,6 @@ class AudioPage extends StatefulWidget {
         'start': ?start,
         'audioUrl': ?audioUrl,
         'extraId': ?extraId,
-        // 视频页已按它选好 audioUrl 的轨道，音质必须一并带过来，
-        // 否则听视频页显示的音质会和实际播放的轨道不一致。
         'audioQa': ?audioQa?.code,
       },
     );
@@ -1002,15 +1006,28 @@ class _AudioPageState extends State<AudioPage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Obx(() {
-              final position = _controller.position.value;
-              if (_controller.player != null) {
-                return Text(
-                  DurationUtils.formatDuration(position),
-                );
-              }
-              return const SizedBox.shrink();
-            }),
+            Flexible(
+              child: Obx(() {
+                UiTranslateService.to.revision.value;
+                final hint = _controller.loadHint.value;
+                if (hint != null) {
+                  // 加载/换线/重新取流时把话说出来：以前这里只有两个 00:00，
+                  // 网络差的时候用户根本分不清是在加载还是已经废了。
+                  return Text(
+                    uiTx(hint),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  );
+                }
+                final position = _controller.position.value;
+                if (_controller.player != null) {
+                  return Text(
+                    DurationUtils.formatDuration(position),
+                  );
+                }
+                return const SizedBox.shrink();
+              }),
+            ),
             Obx(() {
               final duration = _controller.duration.value;
               if (_controller.player != null) {

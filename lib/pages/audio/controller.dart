@@ -89,6 +89,41 @@ class AudioController extends GetxController
   Player? player;
   late int cacheAudioQa;
 
+  /// 起播加载提示（null = 不显示）。
+  ///
+  /// 以前这里什么都不显示：取流慢、线路拉不动的时候，界面上只有两个 00:00，
+  /// 用户根本看不出是在加载还是已经废了。现在加载/换线/重取都会写一句，
+  /// 起播成功即清空。
+  final RxnString loadHint = RxnString();
+
+  /// 本次取流拿到的全部候选地址（主地址 + 备用 CDN），起播失败就顺次换下一条。
+  List<String> _candidates = const [];
+  int _candidateIndex = 0;
+
+  /// 当前打开地址用的音量归一化参数，换线重开时要原样带上。
+  http_model.Volume? _trackVolume;
+
+  /// 全部候选都失败后「重新取流」的次数上限，防止在坏线路上无限重试。
+  int _refetchRetries = 0;
+
+  /// 起播看门狗：超过这个时长还没有任何媒体信息就认为这条线路拉不动。
+  static const Duration _startTimeout = Duration(seconds: 10);
+
+  /// 重新取流的最大次数。
+  static const int _maxRefetch = 2;
+
+  Timer? _startWatchdog;
+
+  /// 媒体是否已经真的起来（拿到时长或进入播放）。为 false 时才算「起播失败」。
+  bool _playerStarted = false;
+
+  bool _failoverInFlight = false;
+  DateTime? _lastFailoverAt;
+
+  /// 最近一次 open 的时间。用来忽略「刚切走的那条流」在拆卸时冒出来的错误，
+  /// 否则换线时会被对方的尾部报错推着连跳好几条候选。
+  DateTime? _openedAt;
+
   /// 当前播放 URL 的令牌来源，决定媒体请求指纹。
   ///
   /// 音频 URL 有两个来源，指纹要求正好相反（实测，弄错必 403）：
@@ -211,32 +246,32 @@ class AudioController extends GetxController
 
     _queryPlayList(isInit: true);
 
-    final String? audioUrl = args['audioUrl'];
-    final hasAudioUrl = audioUrl != null;
-    if (hasAudioUrl) {
-      _querySponsorBlock();
-      // 视频页已按它选好轨道并传了音质码，这里对齐显示，否则面板会显示
-      // 默认音质而实际播的是另一档。
+    // 听视频是本页**自己的**播放链路，不继承视频页的任何加载结果。
+    //
+    // 历史上这里会接手视频页透传的 `audioUrl` 直接 open。问题在于：那条直链是
+    // 视频页那一次取流的产物，视频加载不出来时它要么根本没拿到，要么是一张在当前
+    // 线路上拉不动（甚至已过期）的地址；照着它开，听视频就跟着视频一起死——
+    // 而听视频恰恰是「视频放不出来」时的退路。所以网络源一律自己重新取流（一次
+    // gRPC，几百毫秒），只把本地缓存文件直链当例外放行。
+    final String? localSource = switch (args['audioUrl']) {
+      final String url when url.startsWith('file:') => url,
+      _ => null,
+    };
+    if (localSource != null) {
+      // 缓存音频：本地文件没有取流过程，音质只能沿用缓存时记下的那一档
       if (args['audioQa'] case final int qaCode) {
         currentAudioQa.value = AudioQuality.values.firstWhere(
           (e) => e.code == qaCode,
           orElse: () => Pref.defaultAudioQuality,
         );
       }
-      // 视频页透传过来的 audioUrl 来自 gRPC PlayView 的 APP 同源直链，
-      // 必须按 APP 指纹请求（APP UA + 不发 Referer），不能用 Web 指纹。
+      _querySponsorBlock();
       _onOpenMedia(
-        audioUrl,
+        localSource,
         tokenOrigin: _TokenOrigin.app,
         volume: _videoDetailController?.volume,
       );
     }
-    ConnectivityUtils.isWiFi.then((isWiFi) {
-      cacheAudioQa = isWiFi ? Pref.defaultAudioQa : Pref.defaultAudioQaCellular;
-      if (!hasAudioUrl) {
-        _queryPlayUrl();
-      }
-    });
     videoPlayerServiceHandler
       ?..onPlay = onPlay
       ..onPause = onPause
@@ -256,10 +291,34 @@ class AudioController extends GetxController
         ..onPause = onPause
         ..isPlaying = isPlaying;
     }
+
+    // 网络源自己取流：不等连通性探测（那只是为了挑音质档位），请求立刻发出去。
+    if (localSource == null) {
+      _startPlayback();
+    }
   }
 
   bool isPlaying() {
     return player?.state.playing ?? false;
+  }
+
+  /// 进页面后的第一步：自己取流、自己起播。与视频页完全无关。
+  Future<void> _startPlayback() async {
+    _querySponsorBlock();
+    loadHint.value = '正在加载音频';
+    await _queryPlayUrl();
+  }
+
+  /// 音质偏好要按当前网络类型取（蜂窝与 WiFi 是两档设置）。
+  ///
+  /// 只用于「在候选轨道里挑哪一条」，不参与任何加载判断，所以取流与它并行跑。
+  Future<int> _resolveCacheAudioQa() async {
+    try {
+      final isWiFi = await ConnectivityUtils.isWiFi;
+      return isWiFi ? Pref.defaultAudioQa : Pref.defaultAudioQaCellular;
+    } catch (_) {
+      return Pref.defaultAudioQa;
+    }
   }
 
   Future<void>? onPlay() {
@@ -377,25 +436,33 @@ class AudioController extends GetxController
     }
   }
 
-  Future<bool> _queryPlayUrl() async {
+  Future<bool> _queryPlayUrl({bool reResolve = false}) async {
     _querySponsorBlock();
+    // 音质偏好与取流并行：偏好只决定「选哪条轨道」，不该挡在取流前面。
+    final qaFuture = _resolveCacheAudioQa();
     // C2 切集预取：命中就用预取结果，不再重新取流；没命中照常请求
-    final cached = _prefetchCache.remove(_prefetchKey(itemType, oid, subId));
+    final cached = reResolve
+        ? null
+        : _prefetchCache.remove(_prefetchKey(itemType, oid, subId));
     final LoadingState<PlayURLResp> res;
     if (cached != null) {
+      cacheAudioQa = await qaFuture;
       res = Success(cached);
     } else {
-      res = await AudioGrpc.audioPlayUrl(
+      final fetching = AudioGrpc.audioPlayUrl(
         itemType: itemType,
         oid: oid,
         subId: subId,
       );
+      cacheAudioQa = await qaFuture;
+      res = await fetching;
     }
     if (res case Success(:final response)) {
       // 必须回传解析结果：之前这里无条件 return true，导致取流失败被上层
       // playIndex/playNext 当成成功，继续跑后续状态更新。
       return _onPlay(response);
     } else {
+      loadHint.value = null;
       res.toast();
       return false;
     }
@@ -410,6 +477,7 @@ class AudioController extends GetxController
   bool _onPlay(PlayURLResp data) {
     final PlayInfo? playInfo = data.playerInfo.values.firstOrNull;
     if (playInfo == null) {
+      loadHint.value = null;
       SmartDialog.showToast(uiTx('音频取流失败：未返回可播放信息'));
       return false;
     }
@@ -430,6 +498,7 @@ class AudioController extends GetxController
       final playDash = playInfo.playDash;
       final audios = playDash.audio;
       if (audios.isEmpty) {
+        loadHint.value = null;
         SmartDialog.showToast(uiTx('音频取流失败：未返回音频轨道'));
         return false;
       }
@@ -445,9 +514,9 @@ class AudioController extends GetxController
       final audio = _pickAudioTrack(cacheAudioQa);
       // listener gRPC 与视频 PlayView 同为 APP 同源直链，令牌与主机、指纹绑定，
       // 必须按官方下发顺序直接用第一条，不能挑海外候选或改写主机（v0.1.8 教训）。
-      _onOpenMedia(
-        VideoUtils.getCdnUrl(audio.playUrls, nativeOrder: true),
-        tokenOrigin: _TokenOrigin.app,
+      // 主地址起不来时再顺次换备用地址（见 [_fallbackToNextLine]）。
+      _openWithCandidates(
+        _orderedCandidates(audio.playUrls),
         volume: volume,
       );
       return true;
@@ -455,6 +524,7 @@ class AudioController extends GetxController
       final playUrl = playInfo.playUrl;
       final durls = playUrl.durl;
       if (durls.isEmpty) {
+        loadHint.value = null;
         SmartDialog.showToast(uiTx('音频取流失败：未返回音频地址'));
         return false;
       }
@@ -463,15 +533,124 @@ class AudioController extends GetxController
       // durl 是单文件、不可再切音质，清空轨道列表让面板回到不可选状态。
       _audios = const [];
       availableAudioQualities.clear();
-      _onOpenMedia(
-        VideoUtils.getCdnUrl(durl.playUrls, nativeOrder: true),
-        tokenOrigin: _TokenOrigin.app,
+      _openWithCandidates(
+        _orderedCandidates(durl.playUrls),
         volume: volume,
       );
       return true;
     }
+    loadHint.value = null;
     SmartDialog.showToast(uiTx('音频取流失败：返回格式不受支持'));
     return false;
+  }
+
+  /// 把一次取流拿到的地址排成候选顺序：首选仍是 [VideoUtils.getCdnUrl] 挑出来的
+  /// 那一条（海外用户会挑境外可用候选，大陆用户就是 B 站按 IP 就近的第一条），
+  /// 其余地址原序跟在后面当备用线路。
+  List<String> _orderedCandidates(Iterable<String> urls) {
+    final list = urls.where((e) => e.isNotEmpty).toList();
+    if (list.length < 2) return list;
+    final first = VideoUtils.getCdnUrl(list, nativeOrder: true);
+    return [first, ...list.where((e) => e != first)];
+  }
+
+  /// 打开一组候选地址里的第 [index] 条。
+  ///
+  /// 候选列表来自同一次取流（主地址 + 备用 CDN），都是 B 站为这台主机单独签发的
+  /// 直链，换一条不会让签名失效——所以坏线路可以换，不能改写主机。
+  Future<void> _openWithCandidates(
+    List<String> candidates, {
+    http_model.Volume? volume,
+  }) async {
+    if (candidates.isEmpty) {
+      return;
+    }
+    _candidates = List<String>.of(candidates);
+    _refetchRetries = 0;
+    await _openCandidate(0, volume: volume);
+  }
+
+  /// 打开候选列表里的第 [index] 条并挂起起播看门狗。
+  Future<void> _openCandidate(int index, {http_model.Volume? volume}) async {
+    if (index < 0 || index >= _candidates.length) return;
+    _candidateIndex = index;
+    _trackVolume = volume ?? _trackVolume;
+    _playerStarted = false;
+    loadHint.value = '正在加载音频';
+    _openedAt = DateTime.now();
+    _armStartWatchdog();
+    try {
+      await _onOpenMedia(
+        _candidates[index],
+        tokenOrigin: _tokenOrigin,
+        volume: volume,
+      );
+    } catch (e) {
+      // open 本身失败（播放器被占/内核异常）：不在这里重入换线逻辑，
+      // 让已经挂上的起播看门狗按超时路径统一处理。
+      if (kDebugMode) {
+        debugPrint('AudioController: open media failed: $e');
+      }
+    }
+  }
+
+  /// 起播看门狗：到点还没拿到任何媒体信息就认为这条地址拉不动。
+  ///
+  /// 之前这里没有任何超时判断：地址过期或落到一台连不上的 CDN 上时，mpv 会
+  /// 一直重连，界面上既没有声音也没有报错，就是「听视频加载不出来」。
+  void _armStartWatchdog() {
+    _startWatchdog?.cancel();
+    _startWatchdog = Timer(_startTimeout, () {
+      _startWatchdog = null;
+      if (isClosed || _playerStarted) return;
+      _fallbackToNextLine();
+    });
+  }
+
+  void _markStarted() {
+    _playerStarted = true;
+    _refetchRetries = 0;
+    _startWatchdog?.cancel();
+    _startWatchdog = null;
+    loadHint.value = null;
+  }
+
+  /// 起播失败：先换下一条候选地址，全换完再重新取流（拿新令牌/新主机）。
+  Future<void> _fallbackToNextLine() async {
+    if (isClosed || _failoverInFlight) return;
+    // 本地缓存文件只有一条地址，换线没有意义
+    if (isFileSource.value) {
+      loadHint.value = null;
+      return;
+    }
+    final now = DateTime.now();
+    final last = _lastFailoverAt;
+    if (last != null && now.difference(last) < const Duration(seconds: 2)) {
+      return;
+    }
+    _lastFailoverAt = now;
+    _failoverInFlight = true;
+    try {
+      if (_candidateIndex + 1 < _candidates.length) {
+        SmartDialog.showToast(uiTx('音频加载失败，正在切换备用线路'));
+        await _openCandidate(_candidateIndex + 1, volume: _trackVolume);
+        return;
+      }
+      if (_refetchRetries < _maxRefetch) {
+        _refetchRetries++;
+        SmartDialog.showToast(uiTx('音频加载失败，正在重新获取播放地址'));
+        loadHint.value = '正在重新获取播放地址';
+        final ok = await _queryPlayUrl(reResolve: true);
+        if (!ok) loadHint.value = null;
+        return;
+      }
+      _startWatchdog?.cancel();
+      _startWatchdog = null;
+      loadHint.value = null;
+      SmartDialog.showToast(uiTx('音频加载失败，请检查网络后重试'));
+    } finally {
+      _failoverInFlight = false;
+    }
   }
 
   /// 在可用轨道里挑不高于 [target] 的最高音质；全都高于 [target] 时退到全局兜底
@@ -519,9 +698,9 @@ class AudioController extends GetxController
     final resumeAt = position.value;
     currentAudioQa.value = qa;
     Pref.setDefaultAudioQuality(qa);
-    await _onOpenMedia(
-      VideoUtils.getCdnUrl(track.playUrls, nativeOrder: true),
-      tokenOrigin: _tokenOrigin,
+    await _openWithCandidates(
+      _orderedCandidates(track.playUrls),
+      volume: _trackVolume,
     );
     if (resumeAt > 0) {
       // 不同音质轨的时长可能有微小差异，seek 前确认媒体已就绪
@@ -581,19 +760,30 @@ class AudioController extends GetxController
     if (_hasInit) return;
     _hasInit = true;
     assert(player == null, _subscriptions = null);
-    player = await Player.create(
-      configuration: PlayerConfiguration(
-        options: {
-          if (Platform.isAndroid) 'ao': Pref.audioOutput,
-          'volume': PlatformUtils.isDesktop
-              ? (desktopVolume.value * 100).toString()
-              : (Pref.enableAppVolume ? 100.0 : Pref.playerVolume).toString(),
-          'volume-max': kMaxVolume.toString(),
-          // C1.1 音频走专用缓存档（按时长给足，不按视频码率那套放大）
-          ...Pref.initAudioBuffer(),
-        },
-      ),
-    );
+    try {
+      player = await Player.create(
+        configuration: PlayerConfiguration(
+          options: {
+            if (Platform.isAndroid) 'ao': Pref.audioOutput,
+            'volume': PlatformUtils.isDesktop
+                ? (desktopVolume.value * 100).toString()
+                : (Pref.enableAppVolume ? 100.0 : Pref.playerVolume).toString(),
+            'volume-max': kMaxVolume.toString(),
+            // C1.1 音频走专用缓存档（按时长给足，不按视频码率那套放大）
+            ...Pref.initAudioBuffer(),
+          },
+        ),
+      );
+    } catch (e, s) {
+      // 建播放器失败（内核初始化不了、音频输出被占）必须允许下次重试：
+      // _hasInit 若继续保持 true，本页之后每一次 open 都会静默空转，
+      // 表现就是「听视频永远加载不出来」且没有任何报错。
+      _hasInit = false;
+      if (kDebugMode) {
+        debugPrint('AudioController: create player failed: $e\n$s');
+      }
+      return;
+    }
     if (isClosed) {
       player!.dispose();
       player = null;
@@ -612,6 +802,8 @@ class AudioController extends GetxController
       }),
       stream.duration.listen((duration) {
         final secs = duration.inSeconds;
+        // 拿到时长说明这条线路真的拉通了，起播看门狗可以收工。
+        if (secs > 0) _markStarted();
         // 服务端给的时长是权威值：流被截断时 mpv 报的是断点处的「时长」，
         // 无条件覆盖会让进度条凭空缩短，播到断点即 EOF。
         this.duration.value =
@@ -622,6 +814,7 @@ class AudioController extends GetxController
       stream.playing.listen((playing) {
         final PlayerStatus playerStatus;
         if (playing) {
+          _markStarted();
           animController.forward();
           playerStatus = PlayerStatus.playing;
         } else {
@@ -629,6 +822,24 @@ class AudioController extends GetxController
           playerStatus = PlayerStatus.paused;
         }
         videoPlayerServiceHandler?.onStatusChange(playerStatus, false, false);
+      }),
+      // 起播阶段 mpv 报错（地址 403、主机连不上、DNS 失败等）：换下一条候选。
+      // 已经在播之后的零星错误不在这里处理，交给下面的 completed/提前 EOF 逻辑；
+      // 刚 open 完的几百毫秒内也不受理——那是上一条流被拆掉时的尾部报错。
+      stream.error.listen((error) {
+        if (kDebugMode) {
+          debugPrint('AudioController: stream error: $error');
+        }
+        if (_playerStarted || isClosed) {
+          return;
+        }
+        final openedAt = _openedAt;
+        if (openedAt != null &&
+            DateTime.now().difference(openedAt) <
+                const Duration(milliseconds: 800)) {
+          return;
+        }
+        _fallbackToNextLine();
       }),
       stream.completed.listen((completed) async {
         // completed:false 是 seek 之后库主动发出的"离开完成态"事件，不能当作
@@ -1081,8 +1292,12 @@ class AudioController extends GetxController
   @override
   bool get preInitPlayer => true;
 
-  /// 缓存音频：把当前音轨按所选音质单独存成原格式音频文件。
-  Future<void> onDownloadAudio(BuildContext context) async {
+  /// 下载用的稿源信息。
+  ///
+  /// 优先用视频页那份详情（aid/bvid/cid/封面最全）；拿不到时退到本页自己的播放
+  /// 列表条目——听视频页不该因为视频那边没准备好，就连音频都下载不了。
+  ({String title, int avid, String bvid, int cid, int duration, String? ownerName, String? cover})?
+  _downloadTarget() {
     VideoDetailData? detail;
     try {
       detail = Get.find<UgcIntroController>(tag: heroTag).videoDetail.value;
@@ -1091,8 +1306,36 @@ class AudioController extends GetxController
         debugPrint('audio download: $e\n\n$s');
       }
     }
-    final title = detail?.title;
-    if (detail == null || title == null || title.isEmpty) {
+    final item = audioItem.value;
+    final title = detail?.title ?? item?.arc.title;
+    if (title == null || title.isEmpty) {
+      return null;
+    }
+    final avid = detail?.aid ?? oid.toInt();
+    return (
+      title: title,
+      avid: avid,
+      bvid: detail?.bvid ?? IdUtils.av2bv(avid),
+      cid: detail?.cid ?? subId.firstOrNull?.toInt() ?? avid,
+      duration: detail?.duration ?? item?.arc.duration.toInt() ?? 0,
+      ownerName: detail?.owner?.name ?? item?.owner.name,
+      cover: detail?.pic ?? _audioItemCover(),
+    );
+  }
+
+  String? _audioItemCover() {
+    final item = audioItem.value;
+    if (item == null) {
+      return _videoDetailController?.cover.value;
+    }
+    final cover = item.arc.cover;
+    return cover.isNotEmpty ? cover : _videoDetailController?.cover.value;
+  }
+
+  /// 缓存音频：把当前音轨按所选音质单独存成原格式音频文件。
+  Future<void> onDownloadAudio(BuildContext context) async {
+    final target = _downloadTarget();
+    if (target == null) {
       SmartDialog.showToast(uiTx('音频信息还没加载好，稍后再试'));
       return;
     }
@@ -1101,12 +1344,12 @@ class AudioController extends GetxController
       return;
     }
     await Get.find<AudioCacheService>().download(
-      avid: detail.aid ?? oid.toInt(),
-      bvid: detail.bvid ?? IdUtils.av2bv(oid.toInt()),
-      cid: detail.cid ?? subId.first.toInt(),
-      title: title,
-      cover: _videoDetailController?.cover.value ?? '',
-      durationMs: (detail.duration ?? 0) * 1000,
+      avid: target.avid,
+      bvid: target.bvid,
+      cid: target.cid,
+      title: target.title,
+      cover: target.cover ?? '',
+      durationMs: target.duration * 1000,
       quality: quality,
     );
   }
@@ -1115,16 +1358,8 @@ class AudioController extends GetxController
   /// 音频文件（与「缓存音频」的区别只在落点：那个写进 App 的缓存区、进缓存
   /// 列表；这个写进用户选的文件夹、在「离线缓存 → 下载音频」里可查）。
   Future<void> onDownloadAudioLocal(BuildContext context) async {
-    VideoDetailData? detail;
-    try {
-      detail = Get.find<UgcIntroController>(tag: heroTag).videoDetail.value;
-    } catch (e, s) {
-      if (kDebugMode) {
-        debugPrint('audio download to local: $e\n\n$s');
-      }
-    }
-    final title = detail?.title;
-    if (detail == null || title == null || title.isEmpty) {
+    final target = _downloadTarget();
+    if (target == null) {
       SmartDialog.showToast(uiTx('音频信息还没加载好，稍后再试'));
       return;
     }
@@ -1143,18 +1378,20 @@ class AudioController extends GetxController
       return;
     }
     await Get.find<LocalDownloadService>().downloadAudio(
-      avid: detail.aid ?? oid.toInt(),
-      bvid: detail.bvid ?? IdUtils.av2bv(oid.toInt()),
-      cid: detail.cid ?? subId.first.toInt(),
-      title: title,
+      avid: target.avid,
+      bvid: target.bvid,
+      cid: target.cid,
+      title: target.title,
       quality: quality,
-      ownerName: detail.owner?.name,
-      cover: detail.pic ?? _videoDetailController?.cover.value,
+      ownerName: target.ownerName,
+      cover: target.cover,
     );
   }
 
   @override
   void onClose() {
+    _startWatchdog?.cancel();
+    _startWatchdog = null;
     shutdownTimerService
       ..onPause = null
       ..isPlaying = null

@@ -1,3 +1,15 @@
+### PiliBabel v3.9.9
+
+**Listening mode no longer waits on the video — it is a fallback for exactly the case where the video will not load.**
+
+The “listen only” page used to open whatever audio URL the video page happened to have. When the video could not load, that URL was either missing or a link that the current network could not pull — so the fallback died the same way the video did. The page now always fetches its own stream and starts playing the moment the audio is ready; nothing about the video's loading state is inherited.
+
+Entering the page also **voids the video side outright**: the stream request still in flight is discarded (it is re-fetched when you come back), subtitle jobs are stopped (this page has no subtitles to load), and a player stuck in “loading” has its media unloaded so the whole connection is handed to the audio. Videos that were already playing are left paused instead, and resume instantly on return.
+
+If a line refuses to start, the next candidate address from the same response is tried, and after all of them are exhausted the stream is re-requested (up to twice). A ten-second watchdog decides a line is dead rather than leaving you staring at two frozen 00:00s, and the progress row now says “loading audio” / “switching to a backup line” / “re-fetching the stream” while it happens.
+
+Two smaller things: a failed player creation no longer leaves the page permanently dead (it can retry), and both audio download entries can now build their request from this page's own playlist item, so they work even when the video page's details never arrived.
+
 ### PiliBabel v3.9.8
 
 **Two font-setting bugs are fixed — both found and reported by @masktao (#5, #6). Thank you!**
@@ -13,13 +25,3 @@ The settings search indexed only the entries inside the seven category pages, so
 Every launch compares the chosen app language (Settings → AI Translation → “Choose app language”) against the system language. When they differ, a guided animation walks you there step by step: the AI Translation page scrolls into view, then further to the language field, the picker opens so you can see the full list, and after a short pause the system language is selected for you — whatever you tap yourself in that window wins, and the whole interface rebuilds in the new language the moment the picker closes. This replaces the old first-launch-only onboarding: new installs still auto-enable AI translation silently on the built-in free model, but the language switch is now the same guided flow as everyone else's, and it re-runs on every launch whenever the languages drift apart — including after you change your system language.
 
 A segmented toggle right below the picker controls it: **Follow system language** (default) keeps the behavior above and also aligns immediately when you switch back to it; **Lock my chosen language** opts out entirely — no detection, no switching, your pick stays untouched. All new labels are translated through the same AI translation as the rest of the interface. System-language detection also handles script subtags correctly (zh_Hant → Traditional Chinese) and no longer produces language codes retired in 3.8.10.
-
-### PiliBabel v3.9.6
-
-**Every search box outside the home screen now shows results as you type — no Enter needed.**
-
-History, favorites, watch-later, followed users, and the download list used to wait for you to press Enter; they now fire a debounced search (200 ms) right after you stop typing, and clear back to the initial state when you empty the box. The two-tab search screens — live, UP space (videos and posts), and in-video comments — behave the same way. Enter still works as an instant search; on live search, a digits-only query is deliberately left to Enter so typing a room number doesn't jump rooms mid-typing. Keyword resolution and the simplified/traditional variant search from 3.9.5 run unchanged under the hood, with per-word caching so continuous typing doesn't multiply requests.
-
-**The chapter (segment) bar under the video no longer shrinks its text into unreadability.** When a segment title is wider than its segment, the bar used to scale the whole label down proportionally — with long original titles and even longer translations, the glyphs ended up a few pixels tall. It now wraps the title automatically inside its own segment, up to 3 lines (ellipsis beyond that), at a fixed, readable font size; the bar simply grows taller to fit the tallest segment, and looks exactly like before when everything fits on one line. Translated titles re-layout as soon as they arrive.
-
-Nothing else changed: the home screen search keeps its suggestion-as-you-type flow, and all variant searches stay first-page-only with per-item de-duplication.

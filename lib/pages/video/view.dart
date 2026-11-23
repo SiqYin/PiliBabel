@@ -898,6 +898,10 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       return;
     }
 
+    // 进听视频页时把视频这一侧的加载整条作废了（见 abandonForAudioPage）：
+    // 返回时必须重新取流，不能拿被作废的中间态去恢复播放器。
+    final reloadAfterAudio = videoDetailController.resumeFromAudioPage();
+
     // 如果 local 的 plPlayerController 实例指向了已被销毁的单例，刷新它
     if (plPlayerController != videoDetailController.plPlayerController) {
       plPlayerController = videoDetailController.plPlayerController;
@@ -1026,7 +1030,19 @@ class _VideoDetailPageVState extends State<VideoDetailPageV>
       needsRecovery = true;
     }
 
-    if (needsRecovery) {
+    if (reloadAfterAudio) {
+      // 从听视频页回来：刚才那次取流已被作废（播放器也可能是拆掉重建的），
+      // 这里补一次完整取流。先让播放器区域重新参与布局，取到流才能建播放器。
+      _logSponsorBlock('Reload after audio page: re-query stream');
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        videoDetailController.videoState.value = true;
+        videoDetailController.videoState.refresh();
+        setState(() {});
+      });
+      await videoDetailController.queryVideoUrl();
+      plPlayerController = videoDetailController.plPlayerController;
+    } else if (needsRecovery) {
       _logSponsorBlock('Player needs recovery (disposed or content mismatch)');
       await videoDetailController.playerInit(
         autoplay: videoDetailController.playerStatus?.isPlaying ?? false,
