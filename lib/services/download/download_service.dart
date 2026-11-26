@@ -8,6 +8,7 @@ import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/sponsor_block.dart';
 import 'package:PiliPlus/http/video.dart';
+import 'package:PiliPlus/models/common/video/video_type.dart';
 import 'package:PiliPlus/models/common/video/audio_quality.dart';
 import 'package:PiliPlus/models/common/video/video_quality.dart';
 import 'package:PiliPlus/models_new/download/bili_download_entry_info.dart';
@@ -813,6 +814,7 @@ class DownloadService extends GetxService {
       // 失败自动重试（“不存在”类永久错误除外），耗尽才标 failPlayUrl。
       const maxPlayUrlAttempts = 3;
       var playUrlAttempt = 0;
+      final qaBefore = entry.preferedVideoQuality;
       late final DownloadVideoUrlResult downloadResult;
       while (true) {
         playUrlAttempt++;
@@ -845,6 +847,12 @@ class DownloadService extends GetxService {
       }
       if (!_isCurrentSetup(entry, gen)) {
         return;
+      }
+      if (qaBefore != entry.preferedVideoQuality) {
+        waitDownloadQueue.refresh();
+      }
+      if (downloadResult.volume != null) {
+        await _updateBiliDownloadEntryJson(entry);
       }
       final mediaFileInfo = downloadResult.mediaFileInfo;
 
@@ -966,6 +974,58 @@ class DownloadService extends GetxService {
         debugPrint('get download url error: $e');
       }
     }
+  }
+
+  Future<bool> updateVolume(BiliDownloadEntryInfo entry) =>
+      entry.pageData != null ? updateUgcVolume(entry) : updatePgcVolume(entry);
+
+  Future<bool> updateUgcVolume(BiliDownloadEntryInfo entry) async {
+    final res = await VideoHttp.videoUrl(
+      avid: entry.avid,
+      bvid: entry.bvid,
+      cid: entry.cid,
+      qn: entry.preferedVideoQuality,
+      tryLook: false,
+      videoType: VideoType.ugc,
+      voiceBalance: true,
+    );
+    if (res case Success(:final response)) {
+      final volume = response.volume;
+      if (volume != null) {
+        entry.volume = volume;
+        await _updateBiliDownloadEntryJson(entry);
+      }
+      return true;
+    }
+    return false;
+  }
+
+  Future<bool> updatePgcVolume(BiliDownloadEntryInfo entry) async {
+    final ep = entry.ep;
+    if (ep == null) return false;
+    final res = await VideoHttp.videoUrl(
+      avid: entry.avid,
+      bvid: entry.bvid,
+      cid: entry.cid,
+      seasonId: entry.seasonId,
+      epid: ep.episodeId,
+      qn: entry.preferedVideoQuality,
+      tryLook: false,
+      videoType: switch (ep.from) {
+        'pugv' => VideoType.pugv,
+        _ => VideoType.pgc,
+      },
+      voiceBalance: true,
+    );
+    if (res case Success(:final response)) {
+      final volume = response.volume;
+      if (volume != null) {
+        entry.volume = volume;
+        await _updateBiliDownloadEntryJson(entry);
+      }
+      return true;
+    }
+    return false;
   }
 
   Future<void> _updateBiliDownloadEntryJson(BiliDownloadEntryInfo entry) {

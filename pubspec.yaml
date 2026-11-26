@@ -17,7 +17,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
 # update when release
-version: 3.9.10+1
+version: 3.10.0+1
 environment:
   sdk: ">=3.13.0"
   flutter: 3.47.2
@@ -52,7 +52,10 @@ dependencies:
     git:
       url: https://github.com/Starfallan/audio_service_win.git
       ref: main
-  audio_service_mpris: 1.0.0-beta.2
+  audio_service_mpris:
+    git:
+      url: https://github.com/Tobiichi-Origuchi/audio-service-mpris.git
+      ref: piliplus
   audio_session: ^0.2.2
   battery_plus: ^7.0.0
   brotli: ^0.6.0

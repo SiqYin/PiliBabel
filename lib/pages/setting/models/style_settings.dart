@@ -138,7 +138,7 @@ List<SettingsModel> get styleSettings => [
     leading: const Icon(Icons.gradient_outlined),
     setKey: SettingBoxKey.enableGradientBg,
     defaultVal: false,
-    needReboot: true,
+
   ),
   SwitchModel(
     title: uiTx('悬浮底栏'),

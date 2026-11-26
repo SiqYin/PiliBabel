@@ -604,6 +604,9 @@ abstract final class Pref {
   static String get banWordForReply =>
       _setting.get(SettingBoxKey.banWordForReply, defaultValue: '');
 
+  static String get banWordForReplyUpName =>
+      _setting.get(SettingBoxKey.banWordForReplyUpName, defaultValue: '');
+
   static String get banWordForZone =>
       _setting.get(SettingBoxKey.banWordForZone, defaultValue: '');
 
@@ -910,6 +913,9 @@ abstract final class Pref {
   static bool get showMedal =>
       _setting.get(SettingBoxKey.showMedal, defaultValue: true);
 
+  static bool get showCacheBtn =>
+      _setting.get(SettingBoxKey.showCacheBtn, defaultValue: true);
+
   static bool get showRcmdReason =>
       _setting.get(SettingBoxKey.showRcmdReason, defaultValue: true);
 
@@ -1018,6 +1024,9 @@ abstract final class Pref {
   /// 桌面端是否显示「刷新」悬浮按钮（推荐页等）。
   static bool get showRefreshFAB =>
       _setting.get(SettingBoxKey.showRefreshFAB, defaultValue: true);
+
+  static bool get autoWearMedal =>
+      _setting.get(SettingBoxKey.autoWearMedal, defaultValue: false);
 
   /// 侧边栏/平板抽屉是否隐藏文字标签（只留图标）。
   static bool get hideSideBarLabel =>
@@ -1157,7 +1166,7 @@ abstract final class Pref {
   /// 解析关键词存储串，返回列表项。
   /// 支持旧格式（`|` 分隔）与新格式（`\n` 分隔）。
   static List<String> parseBanWordItems(String stored) {
-    if (stored.isEmpty) return const [];
+    if (stored.isEmpty) return [];
     // 不含换行但含 `|`：可能是旧格式的多关键词，也可能是用户手写的一条正则
     if (!stored.contains('\n') && stored.contains('|')) {
       final parts = stored
@@ -1407,6 +1416,12 @@ abstract final class Pref {
 
   static int get danmakuWeight =>
       _setting.get(SettingBoxKey.danmakuWeight, defaultValue: 0);
+
+  static bool get danmakuFilterEnabled =>
+      _setting.get(SettingBoxKey.danmakuFilterEnabled, defaultValue: true);
+
+  static Future<void> saveDanmakuFilterEnabled(bool value) =>
+      _setting.put(SettingBoxKey.danmakuFilterEnabled, value);
 
   static double get danmakuShowArea =>
       _setting.get(SettingBoxKey.danmakuShowArea, defaultValue: 0.5);

@@ -4,6 +4,7 @@ import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/dialog/export_import.dart';
 import 'package:PiliPlus/common/widgets/keep_alive_wrapper.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
+import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart' show tabBarView;
 import 'package:PiliPlus/models/common/dm_block_type.dart';
@@ -11,6 +12,7 @@ import 'package:PiliPlus/models/user/danmaku_block.dart';
 import 'package:PiliPlus/models/user/danmaku_rule.dart';
 import 'package:PiliPlus/pages/danmaku_block/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
+import 'package:PiliPlus/plugin/pl_player/utils/danmaku_options.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/storage_key.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -45,14 +47,21 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
 
   @override
   void dispose() {
-    final ruleFilter = RuleFilter.fromRuleTypeEntries(_controller.rules);
-    plPlayerController.filters = ruleFilter;
-    GStorage.localCache.put(LocalCacheKey.danmakuFilterRules, ruleFilter);
+    DanmakuOptions.saveFilterEnabled();
+    if (_controller.hasLoadedRules) {
+      final ruleFilter = RuleFilter.fromRuleTypeEntries(_controller.rules);
+      if (!plPlayerController.filters.hasSameRules(ruleFilter)) {
+        plPlayerController.filters = ruleFilter;
+        GStorage.localCache.put(LocalCacheKey.danmakuFilterRules, ruleFilter);
+      }
+    }
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final filterEnabled = DanmakuOptions.danmakuFilterEnabled;
     return SimpleScaffold(
       appBar: AppBar(
         title: Text(uiTx('弹幕屏蔽')),
@@ -60,12 +69,33 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
           IconButton(
             tooltip: uiTx('导入/导出'),
             icon: const Icon(Icons.import_export),
-            onPressed: () => showImportExportDialog<List<dynamic>>(
-              context,
-              title: uiTx('弹幕屏蔽规则'),
-              onExport: () => Utils.jsonEncoder.convert(_controller.exportRules()),
-              onImport: _controller.importDanmakuFilter,
-              localFileName: () => 'danmaku_block',
+            onPressed: () {
+              if (!_controller.ensureRulesLoaded()) return;
+              showImportExportDialog<List<dynamic>>(
+                context,
+                title: uiTx('弹幕屏蔽规则'),
+                onExport: () => Utils.jsonEncoder.convert(_controller.exportRules()),
+                onImport: _controller.importDanmakuFilter,
+                localFileName: () => 'danmaku_block',
+              );
+            },
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 8, right: 12),
+            child: Tooltip(
+              message: uiTx('启用个人屏蔽规则'),
+              excludeFromSemantics: true,
+              child: Semantics(
+                label: uiTx('个人屏蔽规则'),
+                child: Switch(
+                  value: filterEnabled,
+                  materialTapTargetSize: MaterialTapTargetSize.padded,
+                  padding: EdgeInsets.zero,
+                  onChanged: (value) => setState(() {
+                    DanmakuOptions.danmakuFilterEnabled = value;
+                  }),
+                ),
+              ),
             ),
           ),
         ],
@@ -78,11 +108,49 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
                 .map(
                   (e) => Obx(
                     () => Tab(
-                      text: '${e.label}(${_controller.rules[e.index].length})',
+                      text: _controller.hasLoadedRules
+                          ? '${e.label}(${_controller.rules[e.index].length})'
+                          : e.label,
                     ),
                   ),
                 )
                 .toList(),
+          ),
+          AnimatedSize(
+            duration: MediaQuery.disableAnimationsOf(context)
+                ? Duration.zero
+                : const Duration(milliseconds: 200),
+            alignment: Alignment.topCenter,
+            child: filterEnabled
+                ? const SizedBox(width: double.infinity)
+                : Container(
+                    constraints: const BoxConstraints(minHeight: 40),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    color: theme.colorScheme.surfaceContainerHigh,
+                    child: Row(
+                      children: [
+                        ExcludeSemantics(
+                          child: Icon(
+                            Icons.pause_circle_outline,
+                            size: 20,
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            uiTx('个人屏蔽已暂停，当前规则暂不生效'),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
           ),
           Expanded(
             child: tabBarView(
@@ -90,10 +158,17 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
               children: DmBlockType.values
                   .map(
                     (e) => KeepAliveWrapper(
-                      child: Obx(
-                        () =>
-                            tabViewBuilder(e.index, _controller.rules[e.index]),
-                      ),
+                      child: Obx(() => switch (_controller.syncState.value) {
+                        Loading() => m3eLoading,
+                        Error(:final errMsg) => scrollErrorWidget(
+                          errMsg: errMsg,
+                          onReload: _controller.queryDanmakuFilter,
+                        ),
+                        Success() => tabViewBuilder(
+                          e.index,
+                          _controller.rules[e.index],
+                        ),
+                      }),
                     ),
                   )
                   .toList(),
@@ -175,6 +250,7 @@ class _DanmakuBlockPageState extends State<DanmakuBlockPage> {
     int? itemIndex,
     int? itemId,
   }) {
+    if (!_controller.ensureRulesLoaded()) return;
     assert((itemIndex == null) == (itemId == null));
     String filter = initFilter;
     final hintText = switch (type) {

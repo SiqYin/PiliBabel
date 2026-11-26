@@ -77,6 +77,7 @@ abstract final class HttpString {
     required bool isGrpc,
   }) => isGrpc && isGrpcHost(host) ? grpcHosts : null;
   static const String liveBaseUrl = 'https://api.live.bilibili.com';
+  static const String liveTraceBaseUrl = 'https://live-trace.bilibili.com';
   static const String passBaseUrl = 'https://passport.bilibili.com';
   static const String messageBaseUrl = 'https://message.bilibili.com';
   static const String dynamicShareBaseUrl = 'https://t.bilibili.com';

@@ -1,10 +1,12 @@
+import 'dart:io' show File;
 import 'dart:math' as math;
+import 'dart:typed_data' show Uint8List;
 
 import 'package:PiliPlus/grpc/bilibili/community/service/dm/v1.pb.dart';
 import 'package:PiliPlus/grpc/dm.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:characters/characters.dart';
-import 'package:flutter/foundation.dart' show kDebugMode, debugPrint;
+import 'package:flutter/foundation.dart' show kDebugMode, debugPrint, compute;
 
 abstract final class DanmakuDensityTrend {
   static const int segmentLengthMs = 60 * 6 * 1000;
@@ -19,19 +21,47 @@ abstract final class DanmakuDensityTrend {
   static const double _minWindowMs = 2000.0;
   static const double _maxWindowMs = 20000.0;
 
-  static Future<List<double>?> build({
+  /// 只读取原始缓存弹幕，文件不可用时不转为网络请求。
+  static Future<List<double>?> buildFromFile({
+    required String filePath,
+    required int cid,
+    required int durationMs,
+    bool Function()? shouldCancel,
+  }) async {
+    if (durationMs <= 0 || shouldCancel?.call() == true) return null;
+    try {
+      final file = File(filePath);
+      if (!file.existsSync()) return null;
+      final bytes = await file.readAsBytes();
+      if (bytes.isEmpty || shouldCancel?.call() == true) return null;
+      final trend = await compute(
+        _buildFromBytes,
+        (bytes: bytes, cid: cid, durationMs: durationMs),
+      );
+      return shouldCancel?.call() == true ? null : trend;
+    } catch (e) {
+      if (kDebugMode) debugPrint('DanmakuDensityTrend file: $e');
+      return null;
+    }
+  }
+
+  static Future<List<double>?> _buildFromBytes(
+    ({Uint8List bytes, int cid, int durationMs}) data,
+  ) => build(
+    cid: data.cid,
+    durationMs: data.durationMs,
+    elems: DmSegMobileReply.fromBuffer(data.bytes).elems,
+  );
+
+  /// 拉取指定分P(cid)的全部分段弹幕，失败或取消返回 null。
+  ///
+  /// [build] 可复用该结果以避免重复请求。
+  static Future<List<DanmakuElem>?> fetchAll({
     required int cid,
     required int durationMs,
     bool Function()? shouldCancel,
   }) async {
     if (durationMs <= 0 || cid <= 0) return null;
-
-    final int stepMs = math.max(
-      _minStepMs,
-      durationMs ~/ _targetPointCount,
-    ).toInt();
-    final pointCount = (durationMs / stepMs).ceil() + 1;
-    if (pointCount <= 1) return null;
 
     final segmentCount = (durationMs / segmentLengthMs).ceil();
     var successCount = 0;
@@ -71,6 +101,32 @@ abstract final class DanmakuDensityTrend {
 
     if (shouldCancel?.call() == true) return null;
     if (successCount == 0 || allElems.isEmpty) return null;
+    return allElems;
+  }
+
+  static Future<List<double>?> build({
+    required int cid,
+    required int durationMs,
+    bool Function()? shouldCancel,
+    List<DanmakuElem>? elems,
+  }) async {
+    if (durationMs <= 0) return null;
+
+    final allElems =
+        elems ??
+        await fetchAll(
+          cid: cid,
+          durationMs: durationMs,
+          shouldCancel: shouldCancel,
+        );
+    if (allElems == null) return null;
+
+    final int stepMs = math.max(
+      _minStepMs,
+      durationMs ~/ _targetPointCount,
+    ).toInt();
+    final pointCount = (durationMs / stepMs).ceil() + 1;
+    if (pointCount <= 1) return null;
 
     final validElems = allElems.where(_isDensityElem).toList();
     if (validElems.isEmpty) return null;

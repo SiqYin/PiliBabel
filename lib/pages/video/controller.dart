@@ -1381,13 +1381,14 @@ class VideoDetailController extends GetxController
     }
 
     // 需要活跃资源的操作
+    if (plPlayerController.showDmChart &&
+        (dmTrend.value == null || (isFileSource && dmTrend.value is Error))) {
+      unawaited(_getDmTrend());
+    }
+
     if (!isFileSource) {
       if (vttSubtitlesIndex.value == -1) {
         _queryPlayInfo();
-      }
-
-      if (plPlayerController.showDmChart && dmTrend.value == null) {
-        _getDmTrend();
       }
 
       if (plPlayerController.enableBlock) {
@@ -1828,6 +1829,15 @@ class VideoDetailController extends GetxController
         }
       }
 
+      final video = dash.video;
+      if (video == null || video.isEmpty) {
+        Utils.reportError(
+          'null or empty dash video:\n'
+          'bvid: $bvid, cid: $cid, seasonId: $seasonId, epId: $epId, '
+          'videoType: $_actualVideoType',
+        );
+        return;
+      }
       final cacheVideoQa = plPlayerController.cacheVideoQa!;
       final (
         int targetQuality,
@@ -1835,7 +1845,7 @@ class VideoDetailController extends GetxController
         VideoDecodeFormatType targetDecode,
         VideoItem targetVideo,
       ) = VideoUtils.findTargetVideo(
-        dash.video!,
+        video,
         cacheVideoQa,
         response.acceptQuality,
         response.supportFormats!,
@@ -1995,6 +2005,7 @@ class VideoDetailController extends GetxController
   }
 
   Future<void> _loadLocalPlaybackMeta() async {
+    volume = entry.volume;
     viewPointList.clear();
     resetBlock();
     final metaFile = File(
@@ -4079,7 +4090,7 @@ class VideoDetailController extends GetxController
 
   Future<void> _getDmTrend() async {
     final source = plPlayerController.dmChartSource;
-    if (!source.isEnabled) {
+    if (!source.isEnabled || (isFileSource && !source.enableLocalDensity)) {
       dmTrend.value = null;
       return;
     }
@@ -4088,6 +4099,23 @@ class VideoDetailController extends GetxController
     bool shouldCancel() => taskId != _dmTrendTaskId || isClosed;
 
     dmTrend.value = LoadingState<List<double>>.loading();
+
+    if (isFileSource) {
+      final durationMs = entry.totalTimeMilli > 0
+          ? entry.totalTimeMilli
+          : plPlayerController.durationInMilliseconds;
+      final local = await DanmakuDensityTrend.buildFromFile(
+        filePath: path.join(entry.entryDirPath, PathUtils.danmakuName),
+        cid: cid.value,
+        durationMs: durationMs,
+        shouldCancel: shouldCancel,
+      );
+      if (shouldCancel()) return;
+      dmTrend.value = local?.isNotEmpty == true
+          ? Success(local!)
+          : const Error(null);
+      return;
+    }
 
     if (source.enableOfficial) {
       final official = await _tryGetOfficialDmTrend();

@@ -336,8 +336,7 @@ class HeaderControl extends StatefulWidget {
         (reasonType, reasonDesc, banUid) {
           if (banUid) {
             final filter = ctr.filters;
-            if (filter.dmUid.add(extra.mid)) {
-              filter.count++;
+            if (filter.addUid(extra.mid)) {
               GStorage.localCache.put(LocalCacheKey.danmakuFilterRules, filter);
             }
             DanmakuFilterHttp.danmakuFilterAdd(filter: extra.mid, type: 2);

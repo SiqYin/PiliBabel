@@ -9,6 +9,7 @@ import 'package:PiliPlus/http/search.dart';
 import 'package:PiliPlus/models/common/image_preview_type.dart'
     show SourceModel;
 import 'package:PiliPlus/models/dynamics/result.dart';
+import 'package:PiliPlus/pages/article/view.dart';
 import 'package:PiliPlus/pages/dynamics/widgets/vote.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
@@ -350,6 +351,19 @@ TextSpan? richNode(
             );
             break;
         }
+      }
+      if (moduleDynamic?.major?.opus?.redirect ?? false) {
+        spanChildren.add(
+          TextSpan(
+            text: '\n${DynamicOpusModel.redirectText}',
+            style: style,
+            recognizer: (NoDeadlineTapGestureRecognizer()
+              ..onTap = () => ArticlePage.toArticlePage(
+                id: item.idStr.toString(),
+                type: .opus,
+              )),
+          ),
+        );
       }
       return TextSpan(
         children: spanChildren,

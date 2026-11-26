@@ -7,6 +7,7 @@ import 'dart:math' as math;
 
 import 'package:PiliPlus/common/widgets/dialog/report.dart';
 import 'package:PiliPlus/common/widgets/flutter/text_field/controller.dart';
+import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/live.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/http/video.dart';
@@ -19,10 +20,12 @@ import 'package:PiliPlus/models_new/live/live_dm_info/data.dart';
 import 'package:PiliPlus/models_new/live/live_fans_medal/data.dart';
 import 'package:PiliPlus/models_new/live/live_fans_medal/item.dart';
 import 'package:PiliPlus/models_new/live/live_medal_wall/uinfo_medal.dart';
+import 'package:PiliPlus/models_new/live/live_info_by_user/medal.dart' as info;
 import 'package:PiliPlus/models_new/live/live_room_info_h5/data.dart';
 import 'package:PiliPlus/models_new/live/live_room_play_info/codec.dart';
 import 'package:PiliPlus/models_new/live/live_room_play_info/stream.dart';
 import 'package:PiliPlus/models_new/live/live_superchat/item.dart';
+import 'package:PiliPlus/models_new/live/live_trace/data.dart';
 import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/pages/danmaku/danmaku_model.dart';
 import 'package:PiliPlus/pages/live_room/send_danmaku/view.dart';
@@ -30,9 +33,11 @@ import 'package:PiliPlus/pages/video/widgets/header_control.dart';
 import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_source.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/danmaku_options.dart';
+import 'package:PiliPlus/services/logger.dart' show logger;
 import 'package:PiliPlus/services/service_locator.dart';
 import 'package:PiliPlus/tcp/live.dart';
 import 'package:PiliPlus/utils/accounts.dart';
+import 'package:PiliPlus/utils/accounts/account.dart';
 import 'package:PiliPlus/utils/connectivity_utils.dart';
 import 'package:PiliPlus/utils/danmaku_utils.dart';
 import 'package:PiliPlus/utils/duration_utils.dart';
@@ -45,6 +50,7 @@ import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/theme_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:PiliPlus/utils/video_utils.dart';
+import 'package:collection/collection.dart';
 import 'package:canvas_danmaku/canvas_danmaku.dart';
 import 'package:easy_debounce/easy_throttle.dart';
 import 'package:flutter/foundation.dart' show kDebugMode, kReleaseMode;
@@ -79,6 +85,13 @@ class LiveRoomController extends GetxController {
 
   Timer? liveTimeTimer;
 
+  // live trace
+  Timer? _liveTraceTimer;
+  LiveTraceReq? _liveTraceReq;
+  LiveTraceResp? _liveTraceResp;
+  int get _liveTraceInterval =>
+      _liveTraceResp?.interval ?? LiveTraceResp.kInterval;
+
   void startLiveTimer() {
     if (liveTime.value != null) {
       liveTimeTimer ??= Timer.periodic(
@@ -86,11 +99,101 @@ class LiveRoomController extends GetxController {
         (_) => liveTime.refresh(),
       );
     }
+    _startLiveTraceTimer();
   }
 
   void cancelLiveTimer() {
     liveTimeTimer?.cancel();
     liveTimeTimer = null;
+    _stopLiveTraceTimer();
+  }
+
+  Future<void> _initLiveTraceIfNeeded() async {
+    if (isClosed || !isLoaded.value || !heartbeat.isLogin) return;
+    try {
+      final ruid = this.ruid;
+      final roomInfo = roomInfoH5.rawValue?.roomInfo;
+      if (ruid == null || roomInfo == null) {
+        Utils.reportError('liveTrace: null roomInfo/ruid');
+        return;
+      }
+      final parentAreaId = roomInfo.parentAreaId;
+      final areaId = roomInfo.areaId;
+      if (parentAreaId == null || areaId == null) {
+        Utils.reportError('liveTrace: null area');
+        return;
+      }
+
+      final cookies = await heartbeat.cookieJar.loadForRequest(
+        Uri.parse(HttpString.baseUrl),
+      );
+      final liveBuvid = cookies
+          .firstWhereOrNull((cookie) => cookie.name == 'LIVE_BUVID')
+          ?.value;
+      if (isClosed) return;
+      if (liveBuvid == null) {
+        Utils.reportError('liveTrace: null liveBuvid');
+        return;
+      }
+
+      _liveTraceReq = LiveTraceReq(
+        parentAreaId: parentAreaId,
+        areaId: areaId,
+        roomId: roomId,
+        liveBuvid: liveBuvid,
+        ruid: ruid,
+      );
+      _startLiveTraceTimer();
+    } catch (_) {
+      if (kDebugMode) rethrow;
+    }
+  }
+
+  void _startLiveTraceTimer() {
+    if (_liveTraceReq == null || isClosed || _liveTraceTimer != null) {
+      return;
+    }
+    _liveTraceReq!.seqId = 0;
+    _onLiveTrace();
+    _liveTraceTimer = Timer.periodic(
+      Duration(seconds: _liveTraceInterval),
+      _onLiveTrace,
+    );
+  }
+
+  void _stopLiveTraceTimer() {
+    _liveTraceTimer?.cancel();
+    _liveTraceTimer = null;
+  }
+
+  Future<void> _onLiveTrace([_]) async {
+    if (kDebugMode) logger.i('liveTraceReq: $_liveTraceReq');
+    final res = _liveTraceReq!.seqId == 0
+        ? await LiveHttp.liveTraceE(
+            traceReq: _liveTraceReq!,
+            heartbeat: heartbeat,
+          )
+        : await LiveHttp.liveTraceX(
+            traceReq: _liveTraceReq!,
+            traceResp: _liveTraceResp!,
+            heartbeat: heartbeat,
+          );
+    if (isClosed) return;
+    if (res case Success(:final response)) {
+      if (kDebugMode) logger.i('liveTraceResp: $response');
+      final newInterval = response.interval;
+      if (_liveTraceInterval != newInterval) {
+        _liveTraceTimer?.cancel();
+        _liveTraceTimer = Timer.periodic(
+          Duration(seconds: newInterval),
+          _onLiveTrace,
+        );
+      }
+      _liveTraceResp = response;
+    } else {
+      Utils.reportError('live trace error: $res');
+      _stopLiveTraceTimer();
+    }
   }
 
   Widget get timeWidget => Obx(() {
@@ -148,10 +251,13 @@ class LiveRoomController extends GetxController {
 
   late final bool isLogin;
   late final int mid;
+  late final Account heartbeat;
 
   // ---------- 粉丝勋章 ----------
   final Rxn<FansMedalPanelData> fansMedalData = Rxn();
   final Rxn<UinfoMedal> wearingMedal = Rxn();
+  late bool hasMedal = false;
+  final medal = Rxn<UinfoMedal>();
   final RxBool fansMedalLoading = false.obs;
   final Rxn<String> fansMedalError = Rxn();
   bool _fansMedalStale = false;
@@ -243,21 +349,26 @@ class LiveRoomController extends GetxController {
     final account = Accounts.main;
     isLogin = account.isLogin;
     mid = account.mid;
+    heartbeat = Accounts.heartbeat;
 
     // 直接透传构造函数传入的 fromPip 标志，因为它在 view.dart 中已经经过了校验
     isReturningFromPip = fromPip;
 
+    final Future<void> liveUrlFuture;
     if (isReturningFromPip) {
       isPortrait.value = plPlayerController.isVertical;
       isLoaded.value = true;
       // 播放器无需重建，但 stream/ruid/liveTime 等元数据随旧 controller 丢失，
       // 必须重新拉取；playerInit 会因 isReturningFromPip 跳过数据源初始化
-      queryLiveUrl();
+      liveUrlFuture = queryLiveUrl();
     } else {
-      queryLiveUrl(autoFullScreenFlag: true);
+      liveUrlFuture = queryLiveUrl(autoFullScreenFlag: true);
     }
-    queryLiveInfoH5();
-    if (Accounts.heartbeat.isLogin && !Pref.historyPause) {
+    Future.wait([
+      liveUrlFuture,
+      queryLiveInfoH5(),
+    ]).whenComplete(_initLiveTraceIfNeeded);
+    if (heartbeat.isLogin && !Pref.historyPause) {
       VideoHttp.roomEntryAction(roomId: roomId);
     }
     if (showSuperChat) {
@@ -306,6 +417,50 @@ class LiveRoomController extends GetxController {
         });
   }
 
+  Future<bool> getUserMedal() async {
+    if (isClosed) return false;
+    final res = await LiveHttp.userMedalInfo(uid: mid, upId: ruid!);
+    if (res case Success(:final response)) {
+      _handleMedalInfo(response, isInit: true);
+      return true;
+    }
+    return false;
+  }
+
+  void _handleMedalInfo(info.Medal response, {bool isInit = false}) {
+    hasMedal = response.hasMedal;
+    final currShow = response.currShow;
+    if (isInit && Pref.autoWearMedal) {
+      final lookupV2 = response.lookupV2;
+      final currWeared = response.currWearedV2;
+      if (lookupV2 != null && lookupV2.ruid != currWeared?.ruid) {
+        _autoWearMedal(currShow, lookupV2);
+        return;
+      }
+    }
+    medal.value = currShow;
+  }
+
+  Future<void> _autoWearMedal(UinfoMedal? currShow, UinfoMedal lookupV2) async {
+    var id = lookupV2.id;
+    if (id == null || id == 0) {
+      final realLookupV2 = (await LiveHttp.userMedalInfo(
+        uid: mid,
+        upId: ruid!,
+      )).dataOrNull?.lookupV2;
+      if (isClosed) return;
+      id = realLookupV2?.id;
+      if (realLookupV2 == null || id == null || id == 0) {
+        medal.value = currShow;
+        return;
+      }
+      lookupV2 = realLookupV2;
+    }
+    final res = await LiveHttp.wearFansMedal(medalId: id);
+    if (isClosed) return;
+    medal.value = res.isSuccess ? lookupV2 : currShow;
+  }
+
   Future<void> queryLiveUrl({bool autoFullScreenFlag = false}) async {
     currentQn ??= await ConnectivityUtils.isWiFi
         ? Pref.liveQuality
@@ -351,6 +506,9 @@ class LiveRoomController extends GetxController {
       // 数据源重建，完成后清零，切换路线/画质才会真正重建数据源
       isReturningFromPip = false;
       isLoaded.value = true;
+      if (isLogin && ruid != null) {
+        getUserMedal();
+      }
     } else {
       _showDialog(res.toString());
     }

@@ -59,8 +59,10 @@ abstract final class DownloadHttp {
       // 下载器固定用「Safari UA + Referer」发媒体请求（见 download_manager），
       // 而且会改写主机做海外候选 —— 只能吃 Web 令牌，APP 令牌会 403。
       allowAppSource: false,
+      voiceBalance: true,
     );
     if (res case Success(:final response)) {
+      entry.volume = response.volume;
       final dash = response.dash;
       if (dash != null) {
         final (
@@ -141,6 +143,7 @@ abstract final class DownloadHttp {
             userAgent: userAgent,
           ),
           clipInfoList: response.clipInfoList,
+          volume: entry.volume,
           videoUrls: withOverseasCandidate(
             [videoUrl, ...videoDash.playUrls.where((u) => u != videoUrl)],
             videoDash.playUrls,
@@ -210,6 +213,7 @@ abstract final class DownloadHttp {
             userAgent: userAgent,
           ),
           clipInfoList: response.clipInfoList,
+          volume: entry.volume,
         );
       }
     } else {
@@ -221,6 +225,7 @@ abstract final class DownloadHttp {
 class DownloadVideoUrlResult {
   final BiliDownloadMediaInfo mediaFileInfo;
   final List<SegmentItemModel>? clipInfoList;
+  final Volume? volume;
 
   /// 主线路 + 备用线路的候选直链（供下载器慢速/失败时自动换线）
   final List<String>? videoUrls;
@@ -229,6 +234,7 @@ class DownloadVideoUrlResult {
   const DownloadVideoUrlResult({
     required this.mediaFileInfo,
     this.clipInfoList,
+    this.volume,
     this.videoUrls,
     this.audioUrls,
   });

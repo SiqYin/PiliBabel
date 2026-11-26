@@ -1,12 +1,14 @@
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
     show ReplyInfo, DetailListReply, Mode;
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:PiliPlus/grpc/reply.dart';
 import 'package:PiliPlus/utils/connectivity_utils.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/pages/common/reply_controller.dart';
+import 'package:PiliPlus/pages/video/reply_reply/tree.dart';
 import 'package:PiliPlus/pages/video/reply_new/view.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
@@ -41,6 +43,9 @@ class VideoReplyReplyController extends ReplyController
   final index = RxnInt();
 
   final listController = ListController();
+  final replyTree = Rxn<ReplyTree>();
+  bool showReplyTree = false;
+  final removedReply = HashMap<Int64, ReplyInfo>();
 
   AnimationController? _controller;
   AnimationController get animController => _controller ??= AnimationController(
@@ -273,6 +278,45 @@ class VideoReplyReplyController extends ReplyController
             }
           }
         });
+  }
+
+  void buildTree() {
+    final data = loadingState.rawValue.data;
+    if (data == null || data.isEmpty) return;
+    final seen = HashSet<Int64>();
+    data.retainWhere((i) => seen.add(i.id));
+    showReplyTree = true;
+    replyTree.value = ReplyTree.build(
+      data: data,
+      seen: seen,
+      rootId: firstFloor.rawValue?.id ?? data.first.root,
+      removed: removedReply,
+      foldDepth: 0,
+    );
+  }
+
+  void toggleCollapseTree(int index) {
+    replyTree
+      ..rawValue!.toggleCollapse(index)
+      ..refresh();
+  }
+
+  bool setIndexByTreeNode(int end, ReplyTreeNode? node) {
+    if (node != null) {
+      final index = replyTree.rawValue!.reverseIdentityIndexOf(node, end);
+      if (index != -1) {
+        this.index.value = index;
+        jumpToItem(index);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Future<void> onReplyByTreeNode(int index, ReplyInfo replyItem) async {
+    onReply(replyItem, index: index);
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    buildTree();
   }
 
   @override

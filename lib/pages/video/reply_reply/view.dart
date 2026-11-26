@@ -3,6 +3,7 @@ import 'package:PiliPlus/common/skeleton/video_reply.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
 import 'package:PiliPlus/common/widgets/colored_box_transition.dart';
+import 'package:PiliPlus/common/widgets/dialog/dialog.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
 import 'package:PiliPlus/common/widgets/scaffold/mini_scaffold.dart';
@@ -16,6 +17,7 @@ import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/pages/common/slide/common_slide_page.dart';
 import 'package:PiliPlus/pages/video/reply/widgets/reply_item_grpc.dart';
 import 'package:PiliPlus/pages/video/reply_reply/controller.dart';
+import 'package:PiliPlus/pages/video/reply_reply/tree.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/extension/widget_ext.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
@@ -269,15 +271,47 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
                     : const SizedBox.shrink();
               },
             ),
-            TextButton.icon(
-              style: Style.buttonStyle,
-              onPressed: _controller.queryBySort,
-              icon: Icon(Icons.sort, size: 16, color: colorScheme.secondary),
-              label: Obx(
-                () => Text(uiTx(_controller.sortType.value.label),
-                  style: TextStyle(fontSize: 13, color: colorScheme.secondary),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Obx(
+                  () => _controller.replyTree.value == null
+                      ? IconButton(
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () {
+                            if (_controller.isEnd) {
+                              _controller.buildTree();
+                            } else {
+                              showConfirmDialog(
+                                context: context,
+                                title: Text(uiTx('是否加载全部评论以显示线程化评论？')),
+                                content: Text(
+                                  uiTx('这将消耗一定流量\n且可能导致IP或账号风控'),
+                                ),
+                                onConfirm: _loadAllForTree,
+                              );
+                            }
+                          },
+                          icon: const Icon(
+                            Icons.view_comfortable_outlined,
+                            size: 22,
+                          ),
+                          color: colorScheme.outline,
+                          tooltip: uiTx('线程化展示'),
+                        )
+                      : const SizedBox.shrink(),
                 ),
-              ),
+                TextButton.icon(
+                  style: Style.buttonStyle,
+                  onPressed: _controller.queryBySort,
+                  icon: Icon(Icons.sort, size: 16, color: colorScheme.secondary),
+                  label: Obx(
+                    () => Text(uiTx(_controller.sortType.value.label),
+                      style: TextStyle(fontSize: 13, color: colorScheme.secondary),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -289,7 +323,7 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
     ColorScheme colorScheme,
     LoadingState<List<ReplyInfo>?> loadingState,
   ) {
-    final jumpIndex = _controller.index.value;
+
     return switch (loadingState) {
       Loading() => const SliverPrototypeExtentList(
         prototypeItem: VideoReplySkeleton(),
@@ -298,47 +332,106 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
           child: VideoReplySkeleton(),
         ),
       ),
-      Success(:final response!) => SuperSliverList.builder(
-        listController: _controller.listController,
-        itemBuilder: (context, index) {
-          if (index == response.length) {
-            _controller.onLoadMore();
-            return Container(
-              height: 125,
-              alignment: Alignment.center,
-              margin: .only(bottom: MediaQuery.viewPaddingOf(context).bottom),
-              child: Text(
-                uiTx(_controller.isEnd ? '没有更多了' : '加载中...'),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: colorScheme.outline,
-                ),
-              ),
-            );
-          }
-          final child = _replyItem(context, response[index], index);
-          if (jumpIndex == index) {
-            return ColoredBoxTransition(
-              color: _colorAnimation ??= _controller.animController.drive(
-                ColorTween(
-                  begin: colorScheme.onInverseSurface,
-                  end: colorScheme.surface,
-                  // 前0.8s不变, 后0.2s开始动画
-                ).chain(CurveTween(curve: const Interval(0.8, 1.0))),
-              ),
-              child: child,
-            );
-          }
-          return child;
-        },
-        itemCount: response.length + 1,
-      ),
+      Success(:final response!) =>
+        _controller.replyTree.value == null
+            ? _buildFlat(response, colorScheme)
+            : _buildTree(_controller.replyTree.value!, colorScheme),
       Error(:final errMsg) => HttpError(
         errMsg: errMsg,
         onReload: _controller.onReload,
       ),
     };
+  }
+
+  Widget _buildFlat(List<ReplyInfo> response, ColorScheme colorScheme) {
+    final jumpIndex = _controller.index.value;
+    return SuperSliverList.builder(
+      listController: _controller.listController,
+      itemBuilder: (context, index) {
+        if (index == response.length) {
+          _controller.onLoadMore();
+          return _buildFooter(context, colorScheme);
+        }
+        final child = _replyItem(context, response[index], index);
+        return jumpIndex == index ? _jumpWrapper(colorScheme, child) : child;
+      },
+      itemCount: response.length + 1,
+    );
+  }
+
+  Widget _buildTree(ReplyTree tree, ColorScheme colorScheme) {
+    final jumpIndex = _controller.index.value;
+    return SuperSliverList.builder(
+      listController: _controller.listController,
+      itemCount: tree.length + 1,
+      itemBuilder: (context, index) {
+        if (index == tree.length) {
+          return _buildFooter(context, colorScheme);
+        }
+        final node = tree[index];
+        final child = Padding(
+          padding: EdgeInsets.only(left: node.depth * 16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (!node.isLeaf)
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: IconButton(
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => _controller.toggleCollapseTree(index),
+                    icon: Icon(
+                      node.collapsed > 0 ? Icons.add : Icons.remove,
+                      size: 16,
+                    ),
+                  ),
+                ),
+              _replyItem(context, node.reply, index),
+            ],
+          ),
+        );
+        return jumpIndex == index ? _jumpWrapper(colorScheme, child) : child;
+      },
+    );
+  }
+
+  Widget _buildFooter(BuildContext context, ColorScheme colorScheme) {
+    return Container(
+      height: 125,
+      alignment: Alignment.center,
+      margin: .only(bottom: MediaQuery.viewPaddingOf(context).bottom),
+      child: Text(
+        uiTx(_controller.isEnd ? '没有更多了' : '加载中...'),
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 12, color: colorScheme.outline),
+      ),
+    );
+  }
+
+  Widget _jumpWrapper(ColorScheme colorScheme, Widget child) {
+    return ColoredBoxTransition(
+      color: _colorAnimation ??= _controller.animController.drive(
+        ColorTween(
+          begin: colorScheme.onInverseSurface,
+          end: colorScheme.surface,
+        ).chain(CurveTween(curve: const Interval(0.8, 1.0))),
+      ),
+      child: child,
+    );
+  }
+
+  Future<void> _loadAllForTree() async {
+    SmartDialog.showLoading(msg: uiTx('正在加载全部评论…'));
+    try {
+      var guard = 0;
+      while (!_controller.isEnd && guard++ < 50) {
+        _controller.onLoadMore();
+        await Future<void>.delayed(const Duration(milliseconds: 600));
+      }
+      _controller.buildTree();
+    } finally {
+      SmartDialog.dismiss();
+    }
   }
 
   Widget _replyItem(BuildContext context, ReplyInfo replyItem, int index) {

@@ -3,6 +3,7 @@ import 'package:PiliPlus/common/widgets/cover_translate_button.dart';
 import 'package:PiliPlus/common/widgets/flutter/refresh_indicator.dart';
 import 'package:PiliPlus/common/widgets/image/network_img_layer.dart';
 import 'package:PiliPlus/common/widgets/loading_widget/http_error.dart';
+import 'package:PiliPlus/common/widgets/sliver/sliver_reverse.dart';
 import 'package:PiliPlus/http/constants.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/image_type.dart';
@@ -15,6 +16,7 @@ import 'package:PiliPlus/utils/grid.dart';
 import 'package:PiliPlus/utils/num_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:get/get.dart';
+import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:material_ui/material_ui.dart';
 
 class ArticleListPage extends StatefulWidget {
@@ -31,6 +33,7 @@ class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
   );
 
   late EdgeInsets padding;
+  bool _reverse = false;
 
   @override
   Widget build(BuildContext context) {
@@ -76,11 +79,12 @@ class _ArticleListPageState extends State<ArticleListPage> with GridMixin {
       Loading() => gridSkeleton,
       Success(:final response) =>
         response != null && response.isNotEmpty
-            ? SliverGrid.builder(
+            ? SliverGridReverse.builder(
                 gridDelegate: gridDelegate,
                 itemBuilder: (context, index) =>
                     ArticleListItem(item: response[index]),
                 itemCount: response.length,
+                reverse: _reverse,
               )
             : HttpError(onReload: _controller.onReload),
       Error(:final errMsg) => HttpError(
@@ -193,6 +197,18 @@ CoverTranslateButton(cover: item.imageUrl),
         ),
       ),
       actions: [
+        PopupMenuButton<bool>(
+          icon: _reverse
+              ? const Icon(MdiIcons.sortNumericDescending)
+              : const Icon(MdiIcons.sortNumericAscending),
+          initialValue: _reverse,
+          tooltip: uiTx('排序方式'),
+          onSelected: (value) => setState(() => _reverse = value),
+          itemBuilder: (context) => [
+            PopupMenuItem(value: false, child: Text(uiTx('正序'))),
+            PopupMenuItem(value: true, child: Text(uiTx('倒序'))),
+          ],
+        ),
         IconButton(
           tooltip: uiTx('浏览器打开'),
           onPressed: () => PageUtils.inAppWebview(

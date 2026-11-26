@@ -9502,6 +9502,70 @@ class ReplyInAppPushPayload extends $pb.GeneratedMessage {
   ReplyInAppPushPayload_SubjectMaterial ensureSubjectMaterial() => $_ensure(3);
 }
 
+class ParentReplyMember extends $pb.GeneratedMessage {
+  factory ParentReplyMember({$fixnum.Int64? mid, $core.String? name}) {
+    final result = ParentReplyMember._();
+    if (mid != null) result.mid = mid;
+    if (name != null) result.name = name;
+    return result;
+  }
+
+  ParentReplyMember._();
+
+  factory ParentReplyMember.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      ParentReplyMember()..mergeFromBuffer(data, registry);
+  factory ParentReplyMember.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      ParentReplyMember()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'ParentReplyMember',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'bilibili.main.community.reply.v1'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'mid')
+    ..aOS(2, _omitFieldNames ? '' : 'name')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ParentReplyMember clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  ParentReplyMember copyWith(void Function(ParentReplyMember) updates) =>
+      super.copyWith((message) => updates(message as ParentReplyMember))
+          as ParentReplyMember;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  static ParentReplyMember create() => ParentReplyMember._();
+  @$core.override
+  ParentReplyMember createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static ParentReplyMember getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ParentReplyMember>(create);
+  static ParentReplyMember? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get mid => $_getI64(0);
+  @$pb.TagNumber(1)
+  set mid($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasMid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearMid() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get name => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set name($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasName() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearName() => $_clearField(2);
+}
+
 class ReplyInfo extends $pb.GeneratedMessage {
   factory ReplyInfo({
     $core.Iterable<ReplyInfo>? replies,
@@ -9521,6 +9585,7 @@ class ReplyInfo extends $pb.GeneratedMessage {
     MemberV2? memberV2,
     $core.String? trackInfo,
     Content? translatedContent,
+    ParentReplyMember? parentReplyMember,
   }) {
     final result = create();
     if (replies != null) result.replies.addAll(replies);
@@ -9540,6 +9605,7 @@ class ReplyInfo extends $pb.GeneratedMessage {
     if (memberV2 != null) result.memberV2 = memberV2;
     if (trackInfo != null) result.trackInfo = trackInfo;
     if (translatedContent != null) result.translatedContent = translatedContent;
+    if (parentReplyMember != null) result.parentReplyMember = parentReplyMember;
     return result;
   }
 
@@ -9580,6 +9646,8 @@ class ReplyInfo extends $pb.GeneratedMessage {
     ..aOS(16, _omitFieldNames ? '' : 'trackInfo')
     ..aOM<Content>(17, _omitFieldNames ? '' : 'translatedContent',
         subBuilder: Content.create)
+    ..aOM<ParentReplyMember>(18, _omitFieldNames ? '' : 'parentReplyMember',
+        subBuilder: ParentReplyMember.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -9756,6 +9824,17 @@ class ReplyInfo extends $pb.GeneratedMessage {
   void clearTranslatedContent() => $_clearField(17);
   @$pb.TagNumber(17)
   Content ensureTranslatedContent() => $_ensure(16);
+
+  @$pb.TagNumber(18)
+  ParentReplyMember get parentReplyMember => $_getN(17);
+  @$pb.TagNumber(18)
+  set parentReplyMember(ParentReplyMember value) => $_setField(18, value);
+  @$pb.TagNumber(18)
+  $core.bool hasParentReplyMember() => $_has(17);
+  @$pb.TagNumber(18)
+  void clearParentReplyMember() => $_clearField(18);
+  @$pb.TagNumber(18)
+  ParentReplyMember ensureParentReplyMember() => $_ensure(17);
 }
 
 class ReplyInfoReply extends $pb.GeneratedMessage {

@@ -1,9 +1,11 @@
 import 'package:PiliPlus/common/constants.dart';
+import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/models/common/account_type.dart';
 import 'package:PiliPlus/utils/accounts.dart';
 import 'package:PiliPlus/utils/accounts/grpc_headers.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
 import 'package:cookie_jar/cookie_jar.dart';
+import 'package:dio/dio.dart' show Options;
 import 'package:hive_ce/hive.dart';
 
 sealed class Account {
@@ -157,7 +159,39 @@ class AnonymousAccount extends Account {
   @override
   Future<void> delete() {
     grpcHeaders['x-bili-fawkes-req-bin'] = GrpcHeaders.fawkes;
-    return cookieJar.deleteAll().whenComplete(cookieJar.setBuvid3);
+    return cookieJar.deleteAll().whenComplete(_getBuvid);
+  }
+
+  Future<void> _getBuvid() async {
+    try {
+      final res = await Request().get(
+        '/x/frontend/finger/spi',
+        options: Options(extra: {'account': const NoAccount()}),
+      );
+      final resData = res.data;
+      if (resData['code'] == 0) {
+        final data = resData['data'];
+        final String b3 = data['b_3'];
+        final String b4 = data['b_4'];
+        final bnut = (DateTime.now().millisecondsSinceEpoch ~/ 1000).toString();
+        (cookieJar.domainCookies['bilibili.com'] ??= {
+            '/': {},
+          })['/']!
+          ..['buvid3'] = SerializableCookie(
+            Cookie('buvid3', b3)..setBiliDomain(),
+          )
+          ..['b_nut'] = SerializableCookie(
+            Cookie('b_nut', bnut)..setBiliDomain(),
+          )
+          ..['buvid4'] = SerializableCookie(
+            Cookie('buvid4', b4)..setBiliDomain(),
+          );
+      } else {
+        throw resData;
+      }
+    } catch (_) {
+      cookieJar.setBuvid3();
+    }
   }
 
   static final _instance = AnonymousAccount._();

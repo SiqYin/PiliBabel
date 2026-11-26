@@ -540,6 +540,17 @@ class _MemberPageState extends State<MemberPage> {
               ),
             ),
             PopupMenuItem(
+              onTap: () => Get.toNamed('/fansMedal'),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.military_tech_outlined, size: 19),
+                  const SizedBox(width: 10),
+                  Text(uiTx('粉丝勋章')),
+                ],
+              ),
+            ),
+            PopupMenuItem(
               onTap: () => Get.toNamed('/spaceSetting'),
               child: Row(
                 mainAxisSize: MainAxisSize.min,

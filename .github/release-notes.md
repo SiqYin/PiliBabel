@@ -1,3 +1,15 @@
+### PiliBabel v3.10.0
+
+**A large upstream sync from PiliPlus 2.2.1 / PiliNara (stages 1–4), plus a batch of download, playback and account fixes.**
+
+- **Player / danmaku**: on/off switch and pause banner for personal danmaku filters, with loaded-rule restore; danmaku-density progress for cached videos; threaded comments (simplified indentation/collapse); dynamic `fold_action` “read more” links and a unified `ArticleType` article entry.
+- **Content pages**: commenter-name keyword filtering, reverse article lists, simplified `parseRedirectUrl`, and a fix for first-time channel/title blocking on empty lists.
+- **Download / offline**: offline volume normalization (save, update, read on playback), download queue refresh after a quality change, empty-DASH protection, and volume data in download entries.
+- **Live**: viewing trace reports; a fans-medal management page (`/fansMedal`, entry in the profile menu); automatic wearing of the room’s fans medal (off by default, with the `lookupV2` fix); `UinfoMedal` equality.
+- **Account / network**: anonymous buvid fetch fix; mpris switched to the upstream fork; updated Material patches; a hand-added `ParentReplyMember` proto field; the revamped floating bottom bar; a show/hide switch for the intro cache button.
+- **Compatibility notes**: fans-medal management is landed in a compatible way — the controller was not split into mixins and `live_dm_block` was not migrated; threaded comments use a simplified implementation instead of upstream’s indentation/collapse widgets; stage 5 (fullscreen layout editor / pane ratio) is not included in this release.
+- **Verification**: `flutter analyze` reports 0 errors, the full `flutter test` suite passes 192/192, and `verify_readmes.py` reports 44/44 READMEs at 3.10.0.
+
 ### PiliBabel v3.9.10
 
 **Two player and desktop fixes — both found and reported by @masktao (#7, #8). Thank you!**
@@ -19,11 +31,3 @@ Entering the page also **voids the video side outright**: the stream request sti
 If a line refuses to start, the next candidate address from the same response is tried, and after all of them are exhausted the stream is re-requested (up to twice). A ten-second watchdog decides a line is dead rather than leaving you staring at two frozen 00:00s, and the progress row now says “loading audio” / “switching to a backup line” / “re-fetching the stream” while it happens.
 
 Two smaller things: a failed player creation no longer leaves the page permanently dead (it can retry), and both audio download entries can now build their request from this page's own playlist item, so they work even when the video page's details never arrived.
-
-### PiliBabel v3.9.8
-
-**Two font-setting bugs are fixed — both found and reported by @masktao (#5, #6). Thank you!**
-
-On wide windows the settings page switches to a two-pane layout, and the font page was embedded without its app bar — which is where the “Reset” and “Apply” buttons lived. Embedded like that, font changes had no way to be saved at all and silently reverted after a restart (#5). The same pair of buttons now sits at the foot of the font page whenever it is embedded; saving also no longer pops the whole settings page, which the old back-then-apply flow would have done from the embedded position.
-
-The settings search indexed only the entries inside the seven category pages, so the page-level entries — fonts, AI translation, theme & colors, WebDAV, About — could never be found, and searching for “font” returned nothing (#6). Those five page entries are now part of the search index and open their page when tapped.

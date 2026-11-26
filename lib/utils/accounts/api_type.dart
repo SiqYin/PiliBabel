@@ -15,6 +15,11 @@ abstract final class ApiType {
       Api.roomEntryAction,
       Api.liveLikeReport,
       Api.mediaListHistory,
+
+      // live trace
+      Api.liveTraceE,
+      Api.liveTraceX,
+
       // Api.historyList,
       // Api.pauseHistory,
       // Api.clearHistory,

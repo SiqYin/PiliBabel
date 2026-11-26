@@ -419,6 +419,12 @@ List<SettingsModel> get extraSettings => [
     onChanged: (value) => GlobalData().showMedal = value,
   ),
   SwitchModel(
+    title: uiTx('显示缓存按钮'),
+    leading: const Icon(Icons.download_outlined),
+    setKey: SettingBoxKey.showCacheBtn,
+    defaultVal: true,
+  ),
+  SwitchModel(
     title: uiTx('显示视频推荐理由'),
     subtitle: uiTx('显示首页视频卡片下方的已关注，x万点赞的标签'),
     leading: const Icon(Icons.label_outline),

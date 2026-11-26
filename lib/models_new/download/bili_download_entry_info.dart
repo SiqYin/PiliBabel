@@ -3,13 +3,15 @@ import 'dart:io' show Platform, Process;
 
 import 'package:PiliPlus/common/widgets/flutter/popup_menu.dart';
 import 'package:PiliPlus/models/common/video/video_type.dart';
+import 'package:PiliPlus/models/video/play/url.dart' show Volume;
 import 'package:PiliPlus/pages/common/multi_select/base.dart'
     show MultiSelectData;
+import 'package:PiliPlus/services/download/download_service.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/utils/platform_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:get/route_manager.dart';
+import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 class BiliDownloadEntryInfo with MultiSelectData {
@@ -45,6 +47,7 @@ class BiliDownloadEntryInfo with MultiSelectData {
   EpInfo? ep;
   final String? autoFolderTitle;
   final String? autoFolderSourceKey;
+  Volume? volume;
 
   late String pageDirPath;
   late String entryDirPath;
@@ -109,6 +112,16 @@ class BiliDownloadEntryInfo with MultiSelectData {
                     cover: cover,
                     isVertical: pageData?.isVertical ?? false,
                   );
+                },
+              ),
+              CustomPopupMenuItem<void>(
+                height: 38,
+                child: Text(uiTx('更新音量均衡'),
+                  style: const TextStyle(fontSize: 13),
+                ),
+                onTap: () async {
+                  final ok = await Get.find<DownloadService>().updateVolume(this);
+                  SmartDialog.showToast(uiTx(ok ? '更新完成' : '更新失败'));
                 },
               ),
               if (PlatformUtils.isDesktop)
@@ -190,6 +203,7 @@ class BiliDownloadEntryInfo with MultiSelectData {
     this.ep,
     this.autoFolderTitle,
     this.autoFolderSourceKey,
+    this.volume,
   });
 
   factory BiliDownloadEntryInfo.fromJson(Map<String, dynamic> json) =>
@@ -231,6 +245,9 @@ class BiliDownloadEntryInfo with MultiSelectData {
             : null,
         autoFolderTitle: json['auto_folder_title'] as String?,
         autoFolderSourceKey: json['auto_folder_source_key'] as String?,
+        volume: json['volume'] == null
+            ? null
+            : Volume.fromCache(json['volume'] as Map<String, dynamic>),
       );
 
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -264,6 +281,7 @@ class BiliDownloadEntryInfo with MultiSelectData {
     'ep': ?ep?.toJson(),
     'auto_folder_title': ?autoFolderTitle,
     'auto_folder_source_key': ?autoFolderSourceKey,
+    'volume': ?volume?.toJson(),
   };
 
   @override

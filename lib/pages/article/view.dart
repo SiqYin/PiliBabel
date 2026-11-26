@@ -12,6 +12,7 @@ import 'package:PiliPlus/common/widgets/scaffold/simple_scaffold.dart';
 import 'package:PiliPlus/common/widgets/scroll_physics.dart'
     show tabBarScrollPhysics;
 import 'package:PiliPlus/common/widgets/sliver/sliver_to_box_adapter.dart';
+import 'package:PiliPlus/models/common/dynamic/article_type.dart';
 import 'package:PiliPlus/models/common/image_preview_type.dart';
 import 'package:PiliPlus/models/dynamics/article_content_model.dart' show Pic;
 import 'package:PiliPlus/models/dynamics/result.dart' show DynamicStat;
@@ -39,6 +40,29 @@ import 'package:material_ui/material_ui.dart';
 
 class ArticlePage extends StatefulWidget {
   const ArticlePage({super.key});
+
+  static Future<void>? toArticlePage({
+    required String id,
+    required ArticleType type,
+    int? rootRpId,
+    int? secondRpId,
+    bool viewComment = false,
+    bool off = false,
+  }) {
+    return Get.offOrToNamed(
+      '/articlePage',
+      parameters: {'id': id, 'type': type.name},
+      arguments: {
+        'id': id,
+        'type': type,
+        'rootRpId': ?rootRpId,
+        'secondRpId': ?secondRpId,
+        if (viewComment) 'viewComment': true,
+      },
+      off: off,
+      preventDuplicates: false,
+    );
+  }
 
   @override
   State<ArticlePage> createState() => _ArticlePageState();
