@@ -160,6 +160,20 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   GestureType? _gestureType;
   Offset? _initialFocalPoint;
 
+  /// 本次手势是否已经转成「拖动窗口」。
+  bool _isWindowDragging = false;
+
+  /// 标题栏隐藏时，视频画面在「应用内全屏」或「桌面画中画」下也能拖动窗口。
+  ///
+  /// 这两种形态下画面铺满整个（无标题栏的）窗口，用户没有任何可抓的标题栏，
+  /// 按住画面拖动就应该移动窗口，而不是拖进度 / 调音量。
+  bool get _canDragWindowByVideo {
+    if (!PlatformUtils.isDesktop) return false;
+    final player = plPlayerController;
+    return player.isDesktopPip ||
+        (player.isInAppFullScreen && !player.showWindowTitleBar);
+  }
+
   bool _pauseDueToPauseUponEnteringBackgroundMode = false;
 
   StreamSubscription? _brightnessListener;
@@ -501,6 +515,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
           duration: DurationUtils.formatDuration(
             plPlayerController.duration.value,
           ),
+          textScaler: MediaQuery.textScalerOf(context),
         ),
       ),
 
@@ -1226,6 +1241,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
   void _onPanStart(ScaleStartDetails details) {
     _gestureType = null;
+    _isWindowDragging = false;
     _initialFocalPoint = details.localFocalPoint;
   }
 
@@ -1281,6 +1297,15 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
   }
 
   void _onPanUpdate(ScaleUpdateDetails details) {
+    if (_canDragWindowByVideo) {
+      // 无标题栏、画面铺满窗口时，按住画面拖动 = 移动窗口。
+      if (!_isWindowDragging) {
+        _isWindowDragging = true;
+        windowManager.startDragging();
+      }
+      return;
+    }
+
     if (_gestureType == null) {
       final cumulativeDelta = details.localFocalPoint - _initialFocalPoint!;
       if (cumulativeDelta.distanceSquared < 1) return;
@@ -1430,6 +1455,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       _onHorizontalDragEnd();
     }
     _initialFocalPoint = null;
+    _isWindowDragging = false;
     // 松手后：若音量已在 1.0，解锁下次可突破；否则重置
     if (plPlayerController.volume.value >= 1.0) {
       plPlayerController.volumeBoostUnlocked = true;
@@ -1582,6 +1608,13 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
   void _onPointerPanZoomUpdate(PointerPanZoomUpdateEvent event) {
     if (plPlayerController.controlsLock.value) return;
+    if (_canDragWindowByVideo) {
+      if (!_isWindowDragging) {
+        _isWindowDragging = true;
+        windowManager.startDragging();
+      }
+      return;
+    }
     if (_gestureType == null) {
       final pan = event.pan;
       if (pan.distanceSquared < 1) return;
@@ -1634,6 +1667,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     if (_gestureType == .horizontal) {
       _onHorizontalDragEnd();
     }
+    _isWindowDragging = false;
     // 松手后：若音量已在 1.0，解锁下次可突破；否则重置
     if (plPlayerController.volume.value >= 1.0) {
       plPlayerController.volumeBoostUnlocked = true;

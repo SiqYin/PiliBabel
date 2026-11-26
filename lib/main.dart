@@ -10,6 +10,7 @@ import 'package:PiliPlus/common/widgets/scale_app.dart';
 import 'package:PiliPlus/common/widgets/scroll_behavior.dart';
 import 'package:PiliPlus/http/init.dart';
 import 'package:PiliPlus/models/common/theme/theme_color_type.dart';
+import 'package:PiliPlus/plugin/pl_player/controller.dart';
 import 'package:PiliPlus/plugin/pl_player/utils/fullscreen.dart';
 import 'package:PiliPlus/router/app_pages.dart';
 import 'package:PiliPlus/services/account_service.dart';
@@ -440,6 +441,29 @@ class MyApp extends StatelessWidget {
     // 两阶段：先把当前画面压到侧面（0→π/2），在侧面瞬间原地换
     // Directionality，再展开回正面（π/2→0）；全程只有一棵树，Navigator
     // 不重复挂载、页面状态不丢。
+    // 标题栏隐藏（无边框窗口）后没有系统标题栏可抓，在窗口顶部留一条透明拖动区：
+    // 拖动移动窗口、双击最大化/还原。原生全屏时整窗已占满屏幕，不叠加。
+    if (PlatformUtils.isDesktop && !Pref.showWindowTitleBar) {
+      final content = child;
+      child = Obx(() {
+        if (PlPlayerController.anyFullScreen.value) {
+          return content;
+        }
+        return Stack(
+          children: [
+            Positioned.fill(child: content),
+            const Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 30,
+              child: DragToMoveArea(child: SizedBox.expand()),
+            ),
+          ],
+        );
+      });
+    }
+
     return _DirectionFlip(
       rtl: appLanguageByCode(Pref.uiTranslateLang).isRtl,
       onBack: _onBack,

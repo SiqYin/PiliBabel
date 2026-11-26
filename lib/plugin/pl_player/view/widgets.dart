@@ -687,15 +687,20 @@ class _VideoTime extends LeafRenderObjectWidget {
   const _VideoTime({
     required this.position,
     required this.duration,
+    required this.textScaler,
   });
 
   final String position;
   final String duration;
 
+  /// 应用字号（设置 → 字体 → 字号）与系统缩放，跟随界面一起放大缩小。
+  final TextScaler textScaler;
+
   @override
   _RenderVideoTime createRenderObject(BuildContext context) => _RenderVideoTime(
     position: position,
     duration: duration,
+    textScaler: textScaler,
   );
 
   @override
@@ -704,6 +709,7 @@ class _VideoTime extends LeafRenderObjectWidget {
     covariant _RenderVideoTime renderObject,
   ) {
     renderObject
+      ..textScaler = textScaler
       ..position = position
       ..duration = duration;
   }
@@ -713,36 +719,47 @@ class _RenderVideoTime extends RenderBox {
   _RenderVideoTime({
     required this._position,
     required this._duration,
+    required this._textScaler,
   });
+
+  /// 基准字号。旧版写死 10，比网页播放器那次小一圈，而且在设置里调字号无效
+  /// （这个自绘 Paragraph 从不读 MediaQuery 的 textScaler）。
+  static const double _kFontSize = 12;
 
   String _duration;
   set duration(String value) {
     if (_duration == value) return;
     _duration = value;
-    final paragraph = _buildParagraph(const Color(0xFFD0D0D0), _duration);
-    if (paragraph.maxIntrinsicWidth != _cache?.maxIntrinsicWidth) {
-      markNeedsLayout();
-    } else {
-      markNeedsSemanticsUpdate();
-    }
     _cache?.dispose();
-    _cache = paragraph;
+    _cache = _buildParagraph(const Color(0xFFD0D0D0), _duration);
+    markNeedsLayout();
   }
 
   String _position;
   set position(String value) {
+    if (_position == value) return;
     _position = value;
     markNeedsPaint();
     markNeedsSemanticsUpdate();
   }
 
+  TextScaler _textScaler;
+  set textScaler(TextScaler value) {
+    if (_textScaler == value) return;
+    _textScaler = value;
+    _cache?.dispose();
+    _cache = _buildParagraph(const Color(0xFFD0D0D0), _duration);
+    markNeedsLayout();
+  }
+
   ui.Paragraph? _cache;
 
-  static ui.Paragraph _buildParagraph(Color color, String time) {
+  ui.Paragraph _buildParagraph(Color color, String time) {
+    final fontSize = _textScaler.scale(_kFontSize);
     final builder =
         ui.ParagraphBuilder(
             ui.ParagraphStyle(
-              fontSize: 10,
+              fontSize: fontSize,
               height: 1.4,
               fontFamily: 'Monospace',
             ),
@@ -750,7 +767,7 @@ class _RenderVideoTime extends RenderBox {
           ..pushStyle(
             ui.TextStyle(
               color: color,
-              fontSize: 10,
+              fontSize: fontSize,
               height: 1.4,
               fontFamily: 'Monospace',
               fontFeatures: const [FontFeature.tabularFigures()],

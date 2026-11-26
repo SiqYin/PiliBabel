@@ -152,6 +152,12 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
   final RxBool controlsLock = false.obs;
 
   final RxBool isFullScreen = false.obs;
+
+  /// 任一播放器是否处于全屏（含桌面原生全屏与应用内全屏）。
+  ///
+  /// 用静态 Rx 而不是 `PlPlayerController.instance`：顶层窗口拖动区在播放器
+  /// 尚未创建时也要能安全订阅，否则 Obx 读不到任何 observable 会直接抛错。
+  static final RxBool anyFullScreen = false.obs;
   void Function(bool isFullScreen)? onFullScreenChanged;
   // 系统原生 PiP 状态
   final RxBool isNativePip = false.obs;
@@ -447,6 +453,12 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
       (Platform.isAndroid && AndroidHelper.isPipMode) ||
       (PlatformUtils.isDesktop && isDesktopPip);
   late bool isDesktopPip = false;
+
+  /// 桌面端「应用内全屏」（右键视频区域进入）。此时窗口本身没有切成原生全屏，
+  /// 播放器只是铺满窗口；标题栏被隐藏后窗口无处可拖，需要视频画面本身能拖动窗口。
+  bool _inAppFullScreen = false;
+  bool get isInAppFullScreen => _inAppFullScreen;
+
   late Rect _lastWindowBounds;
 
   late final showWindowTitleBar = Pref.showWindowTitleBar;
@@ -3195,6 +3207,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
 
   void _setFullScreen(bool val) {
     isFullScreen.value = val;
+    anyFullScreen.value = val;
     updateSubtitleStyle();
     onFullScreenChanged?.call(val);
   }
@@ -3251,6 +3264,7 @@ class PlPlayerController with BlockConfigMixin, AudioNormalizationMixin {
     _fsProcessing = true;
     this.isManualFS = isManualFS;
     try {
+      _inAppFullScreen = status && inAppFullScreen;
       if (status) {
         if (PlatformUtils.isMobile) {
           hideSystemBar();

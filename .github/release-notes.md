@@ -1,3 +1,13 @@
+### PiliBabel v3.9.10
+
+**Two player and desktop fixes — both found and reported by @masktao (#7, #8). Thank you!**
+
+**The player's time readout was too small and could not be adjusted (#7).** The current position and the total duration were drawn at a hard-coded 10px, so changing the app's font size (Settings → Font → Size) had no effect on them and there was nowhere else to adjust them. The baseline is now 12px, and it scales with that setting — the position and duration grow and shrink together with the rest of the interface.
+
+**A borderless window could not be moved (#8).** Once “Show window title bar” was turned off there was no system title bar left to grab, so the window stayed stuck in place (the only way out was to open Settings again). A transparent strip along the top edge now moves the window when dragged and maximizes or restores it on a double-click; in in-app fullscreen (right-click the video) or desktop picture-in-picture, the picture itself can also be dragged to move the window.
+
+Verification: `flutter analyze` reports 0 errors, the full `flutter test` suite passes 192/192, and `verify_readmes.py` reports 44/44 READMEs at 3.9.10. The drag gestures and the new time size have not been verified on a physical desktop yet.
+
 ### PiliBabel v3.9.9
 
 **Listening mode no longer waits on the video — it is a fallback for exactly the case where the video will not load.**
@@ -17,11 +27,3 @@ Two smaller things: a failed player creation no longer leaves the page permanent
 On wide windows the settings page switches to a two-pane layout, and the font page was embedded without its app bar — which is where the “Reset” and “Apply” buttons lived. Embedded like that, font changes had no way to be saved at all and silently reverted after a restart (#5). The same pair of buttons now sits at the foot of the font page whenever it is embedded; saving also no longer pops the whole settings page, which the old back-then-apply flow would have done from the embedded position.
 
 The settings search indexed only the entries inside the seven category pages, so the page-level entries — fonts, AI translation, theme & colors, WebDAV, About — could never be found, and searching for “font” returned nothing (#6). Those five page entries are now part of the search index and open their page when tapped.
-
-### PiliBabel v3.9.7
-
-**The app now follows your system language — with a switch to lock your own choice.**
-
-Every launch compares the chosen app language (Settings → AI Translation → “Choose app language”) against the system language. When they differ, a guided animation walks you there step by step: the AI Translation page scrolls into view, then further to the language field, the picker opens so you can see the full list, and after a short pause the system language is selected for you — whatever you tap yourself in that window wins, and the whole interface rebuilds in the new language the moment the picker closes. This replaces the old first-launch-only onboarding: new installs still auto-enable AI translation silently on the built-in free model, but the language switch is now the same guided flow as everyone else's, and it re-runs on every launch whenever the languages drift apart — including after you change your system language.
-
-A segmented toggle right below the picker controls it: **Follow system language** (default) keeps the behavior above and also aligns immediately when you switch back to it; **Lock my chosen language** opts out entirely — no detection, no switching, your pick stays untouched. All new labels are translated through the same AI translation as the rest of the interface. System-language detection also handles script subtags correctly (zh_Hant → Traditional Chinese) and no longer produces language codes retired in 3.8.10.
