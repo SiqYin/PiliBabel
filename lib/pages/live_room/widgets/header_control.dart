@@ -139,7 +139,7 @@ class _LiveHeaderControlState extends State<LiveHeaderControl>
               },
             ),
           child,
-          ...?timeBatteryWidgets,
+          ...?timeBatteryWidgets(),
           const SizedBox(width: 10),
           if (PlatformUtils.isDesktop && !plPlayerController.isDesktopPip)
             Obx(() {

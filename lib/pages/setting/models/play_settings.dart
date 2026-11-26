@@ -62,26 +62,37 @@ List<SettingsModel> get playSettings => [
     defaultVal: false,
   ),
   SwitchModel(
-    title: uiTx('全屏显示锁定按钮'),
+    title: uiTx(Pref.hasFullscreenLayout ? '直播及小窗显示锁定按钮' : '全屏显示锁定按钮'),
+    subtitle: Pref.hasFullscreenLayout
+        ? uiTx('视频全屏请通过三点菜单编辑播放器布局')
+        : null,
     leading: const Icon(Icons.lock_outline),
     setKey: SettingBoxKey.showFsLockBtn,
     defaultVal: true,
   ),
   SwitchModel(
     title: uiTx('锁定按钮显示在右侧'),
-    subtitle: uiTx('开启后锁定按钮移至右侧，与截图按钮一同垂直居中排列'),
+    subtitle: Pref.hasFullscreenLayout
+        ? uiTx('用于直播及小窗；视频全屏请通过三点菜单编辑播放器布局')
+        : uiTx('开启后锁定按钮移至右侧，与截图按钮一同垂直居中排列'),
     leading: const Icon(Icons.keyboard_double_arrow_right),
     setKey: SettingBoxKey.showFsLockBtnRight,
     defaultVal: false,
   ),
   SwitchModel(
-    title: uiTx('全屏显示截图按钮'),
+    title: uiTx(Pref.hasFullscreenLayout ? '直播及小窗显示截图按钮' : '全屏显示截图按钮'),
+    subtitle: Pref.hasFullscreenLayout
+        ? uiTx('视频全屏请通过三点菜单编辑播放器布局')
+        : null,
     leading: const Icon(Icons.photo_camera_outlined),
     setKey: SettingBoxKey.showFsScreenshotBtn,
     defaultVal: true,
   ),
   SwitchModel(
-    title: uiTx('全屏显示电池电量'),
+    title: uiTx(Pref.hasFullscreenLayout ? '其他播放界面显示电池电量' : '全屏显示电池电量'),
+    subtitle: Pref.hasFullscreenLayout
+        ? uiTx('视频全屏请通过三点菜单编辑播放器布局')
+        : null,
     leading: const Icon(Icons.battery_3_bar),
     setKey: SettingBoxKey.showBatteryLevel,
     defaultVal: PlatformUtils.isMobile,
@@ -329,14 +340,23 @@ List<SettingsModel> get playSettings => [
     defaultVal: false,
   ),
   SwitchModel(
-    title: uiTx('全屏展示点赞/投币/收藏等操作按钮'),
+    title: uiTx(
+      Pref.hasFullscreenLayout
+          ? '桌面小窗展示点赞/投币/收藏等操作按钮'
+          : '全屏展示点赞/投币/收藏等操作按钮',
+    ),
+    subtitle: Pref.hasFullscreenLayout
+        ? uiTx('视频全屏请通过三点菜单编辑播放器布局')
+        : null,
     leading: const Icon(MdiIcons.dotsHorizontalCircleOutline),
     setKey: SettingBoxKey.showFSActionItem,
     defaultVal: true,
   ),
   SwitchModel(
     title: uiTx('观看人数'),
-    subtitle: uiTx('展示同时在看人数'),
+    subtitle: Pref.hasFullscreenLayout
+        ? uiTx('视频全屏的显示由播放器布局独立控制')
+        : uiTx('展示同时在看人数'),
     leading: const Icon(Icons.people_outlined),
     setKey: SettingBoxKey.enableOnlineTotal,
     defaultVal: false,

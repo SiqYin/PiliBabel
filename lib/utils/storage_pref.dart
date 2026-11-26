@@ -36,6 +36,7 @@ import 'package:PiliPlus/models/user/info.dart';
 import 'package:PiliPlus/pages/setting/pages/fullscreen_sc_size.dart'
     show kFullScreenSCWidth;
 import 'package:PiliPlus/plugin/pl_player/models/audio_output_type.dart';
+import 'package:PiliPlus/plugin/pl_player/models/fullscreen_layout.dart';
 import 'package:PiliPlus/plugin/pl_player/models/bottom_progress_behavior.dart';
 import 'package:PiliPlus/plugin/pl_player/models/fullscreen_mode.dart';
 import 'package:PiliPlus/plugin/pl_player/models/hwdec_type.dart';
@@ -81,6 +82,17 @@ abstract final class Pref {
       defaultValue: const [60.0, 40.0],
     ),
   );
+
+  static double? get videoPaneRatio {
+    final value = _setting.get(SettingBoxKey.videoPaneRatio);
+    return value is num && value.isFinite && value > 0 && value < 1
+        ? value.toDouble()
+        : null;
+  }
+
+  static Future<void> saveVideoPaneRatio(double? ratio) => ratio == null
+      ? _setting.delete(SettingBoxKey.videoPaneRatio)
+      : _setting.put(SettingBoxKey.videoPaneRatio, ratio);
 
   static Set<int> get blackMids {
     final data = _localCache.get(
@@ -1003,6 +1015,31 @@ abstract final class Pref {
 
   static bool get showFSActionItem =>
       _setting.get(SettingBoxKey.showFSActionItem, defaultValue: true);
+
+  static bool get hasFullscreenLayout =>
+      _setting.containsKey(SettingBoxKey.fullscreenLayout);
+
+  static FullscreenLayout get fullscreenLayout {
+    final legacy = FullscreenLayout.legacy(
+      isMobile: PlatformUtils.isMobile,
+      showActions: showFSActionItem,
+      showLock: showFsLockBtn,
+      showScreenshot: showFsScreenshotBtn,
+      lockOnRight: showFsLockBtnRight,
+      showBattery: showBatteryLevel,
+      showOnline: enableOnlineTotal,
+
+    );
+    return FullscreenLayout.fromJson(
+      _setting.get(SettingBoxKey.fullscreenLayout),
+      fallback: hasFullscreenLayout
+          ? FullscreenLayout.defaults(isMobile: PlatformUtils.isMobile)
+          : legacy,
+    );
+  }
+
+  static Future<void> saveFullscreenLayout(FullscreenLayout layout) =>
+      _setting.put(SettingBoxKey.fullscreenLayout, layout.toJson());
 
   static bool get enableShrinkVideoSize =>
       _setting.get(SettingBoxKey.enableShrinkVideoSize, defaultValue: true);

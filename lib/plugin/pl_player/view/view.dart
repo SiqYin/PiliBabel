@@ -44,6 +44,7 @@ import 'package:PiliPlus/plugin/pl_player/models/bottom_control_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/data_status.dart';
 import 'package:PiliPlus/plugin/pl_player/models/double_tap_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/fullscreen_mode.dart';
+import 'package:PiliPlus/plugin/pl_player/models/fullscreen_layout.dart';
 import 'package:PiliPlus/plugin/pl_player/models/gesture_type.dart';
 import 'package:PiliPlus/plugin/pl_player/models/play_status.dart';
 import 'package:PiliPlus/plugin/pl_player/models/speed_lock_hint.dart';
@@ -228,6 +229,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
   int? tmpSubtitlePaddingB;
   StreamSubscription? _controlsListener;
+  StreamSubscription? _layoutListener;
   void _onControlChanged(bool val) {
     final visible = val && !plPlayerController.controlsLock.value;
     if (!visible && PlatformUtils.isDesktop) {
@@ -288,6 +290,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     _controlsListener = plPlayerController.showControls.listen(
       _onControlChanged,
     );
+    _layoutListener = plPlayerController.fullscreenLayout.listen((_) {
+      if (mounted) setState(() {});
+    });
 
     _transformationController = TransformationController()
       ..addListener(_onTransformChanged);
@@ -370,7 +375,9 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     }
 
     _doubleTapGestureRecognizer = DoubleTapGestureRecognizer()
-      ..onDoubleTapDown = _onDoubleTapDown;
+      ..onDoubleTapDown = _onDoubleTapDown
+      ..onDoubleTap = _onDoubleTap
+      ..onDoubleTapCancel = () => _pendingMouseDoubleTapFullScreen = null;
 
     _scaleGestureRecognizer = PlayerScaleGestureRecognizer(
       debugOwner: this,
@@ -435,10 +442,12 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     _danmakuListener?.cancel();
     _tapGestureRecognizer.dispose();
     _longPressRecognizer?.dispose();
+    _pendingMouseDoubleTapFullScreen = null;
     _doubleTapGestureRecognizer.dispose();
     _scaleGestureRecognizer.dispose();
     _brightnessListener?.cancel();
     _controlsListener?.cancel();
+    _layoutListener?.cancel();
     _animationController.dispose();
     _transformationController
       ..removeListener(_onTransformChanged)
@@ -1186,7 +1195,7 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
 
     final flag =
         isFullScreen || plPlayerController.isDesktopPip || maxWidth >= 500;
-    final List<BottomControlType> userSpecifyItemRight = [
+    List<BottomControlType> userSpecifyItemRight = [
       // HiRes 标识紧挨在「分段信息」左侧（B 站官方 App 的位置）。
       // 控件自身在「本视频没有 HiRes 音轨」时返回空盒子，所以这里可以无条件列出。
       .hires,
@@ -1201,6 +1210,18 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
       if (isNotFileSource && flag) .qa,
       if (!plPlayerController.isDesktopPip) .fullscreen,
     ];
+    if (plPlayerController.usesFullscreenLayout) {
+      final layout = plPlayerController.fullscreenLayout.value;
+      final available = userSpecifyItemRight.toSet();
+      userSpecifyItemRight = [
+        .hires,
+        for (final item in layout.items(PlayerLayoutRegion.bottom))
+          if (layout.shows(item))
+            if (BottomControlType.values.byName(item.name) case final control)
+              if (available.contains(control)) control,
+        .fullscreen,
+      ];
+    }
     return PlayerBar(
       children: [
         Row(
@@ -1520,13 +1541,35 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
     }
   }
 
+  bool? _pendingMouseDoubleTapFullScreen;
+
   void _onDoubleTapDown(TapDownDetails details) {
+    _pendingMouseDoubleTapFullScreen = null;
     switch (details.kind) {
       case ui.PointerDeviceKind.mouse when PlatformUtils.isDesktop:
-        plPlayerController.triggerFullScreen(status: !isFullScreen);
+        if (Platform.isMacOS) {
+          _pendingMouseDoubleTapFullScreen = !isFullScreen;
+        } else {
+          plPlayerController.triggerFullScreen(status: !isFullScreen);
+        }
       default:
         onDoubleTapDownMobile(details);
     }
+  }
+
+  void _onDoubleTap() {
+    final target = _pendingMouseDoubleTapFullScreen;
+    _pendingMouseDoubleTapFullScreen = null;
+    if (target == null) return;
+
+    // macOS 全屏过渡可能丢失鼠标 Up，等双击确认及本次指针路由结束后再切换。
+    scheduleMicrotask(() {
+      if (mounted &&
+          !plPlayerController.controlsLock.value &&
+          isFullScreen != target) {
+        plPlayerController.triggerFullScreen(status: target);
+      }
+    });
   }
 
   /// 淡出动画期间冻结的锁定提示内容（图标 + 文案）
@@ -1734,6 +1777,38 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             ? screenshotWebp
             : null,
         onTap: plPlayerController.takeScreenshot,
+      ),
+    );
+  }
+
+  Widget _buildLayoutSide(PlayerLayoutRegion region) {
+    final isLeft = region == PlayerLayoutRegion.left;
+    return ViewSafeArea(
+      left: isLeft && !plPlayerController.removeSafeArea,
+      right: !isLeft && !plPlayerController.removeSafeArea,
+      child: Align(
+        alignment: isLeft ? Alignment.centerLeft : Alignment.centerRight,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 34),
+          child: Obx(() {
+            final layout = plPlayerController.fullscreenLayout.value;
+            final locked = plPlayerController.controlsLock.value;
+            final items = layout.items(region).where(
+              (item) => layout.shows(item) || (item == .lock && locked),
+            );
+            return Offstage(
+              offstage: !plPlayerController.showControls.value,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                spacing: 20,
+                children: [
+                  for (final item in items)
+                    item == .lock ? _buildLockBtn() : _buildScreenshotBtn(),
+                ],
+              ),
+            );
+          }),
+        ),
       ),
     );
   }
@@ -2312,7 +2387,10 @@ class _PLVideoPlayerState extends State<PLVideoPlayer>
             ),
           ),
 
-        if (isFullScreen || plPlayerController.isDesktopPip) ...[
+        if (plPlayerController.usesFullscreenLayout) ...[
+          _buildLayoutSide(PlayerLayoutRegion.left),
+          _buildLayoutSide(PlayerLayoutRegion.right),
+        ] else if (isFullScreen || plPlayerController.isDesktopPip) ...[
           // 锁（左侧）
           if (plPlayerController.showFsLockBtn && !lockBtnOnRight)
             ViewSafeArea(
