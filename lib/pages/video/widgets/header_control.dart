@@ -1,4 +1,4 @@
-import 'dart:async' show StreamSubscription, Timer;
+import 'dart:async' show StreamSubscription, Timer, unawaited;
 import 'dart:convert' show jsonDecode, jsonEncode, utf8;
 import 'dart:io' show Platform, File;
 import 'dart:typed_data' show Uint8List;
@@ -490,6 +490,13 @@ class HeaderControlState extends State<HeaderControl>
             controller.usesFullscreenLayout &&
             !controller.isNativePip.value,
       );
+      if (!videoDetailCtr.isClosed &&
+          controller.usesFullscreenLayout &&
+          controller.fullscreenLayout.value.shows(
+            PlayerLayoutControl.dmCount,
+          )) {
+        unawaited(videoDetailCtr.ensureDmCount());
+      }
       if (sameSession) {
         controller.controls = true;
         if (resume && isResumed) {
@@ -1859,6 +1866,8 @@ class HeaderControlState extends State<HeaderControl>
     final showOnline = !isFileSource &&
         (layout?.shows(PlayerLayoutControl.online) ??
             introController.isShowOnlineTotal);
+    final showDmCount =
+        !isFileSource && (layout?.shows(PlayerLayoutControl.dmCount) ?? false);
     showCurrTimeIfNeeded(isFullScreen);
     Widget title;
     if (introController.videoDetail.value.title != null &&
@@ -1900,21 +1909,27 @@ class HeaderControlState extends State<HeaderControl>
                 },
               ),
             ),
-            if (showOnline)
+            if (showOnline || showDmCount)
               Positioned(
                 left: 0,
                 bottom: 0,
                 child: FractionalTranslation(
                   translation: const Offset(0, 1),
-                  child: Obx(
-                    () => Text(
-                      uiTx('${introController.total.value}人正在看'),
+                  child: Obx(() {
+                    final parts = <String>[
+                      if (showOnline)
+                        uiTx('${introController.total.value}人正在看'),
+                      if (showDmCount && videoDetailCtr.dmCount.value != null)
+                        uiTx('${videoDetailCtr.dmCount.value}条弹幕'),
+                    ];
+                    return Text(
+                      parts.join('  '),
                       style: const TextStyle(
                         color: Colors.white,
                         fontSize: 11,
                       ),
-                    ),
-                  ),
+                    );
+                  }),
                 ),
               ),
           ],

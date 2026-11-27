@@ -56,8 +56,7 @@ class _FullscreenLayoutEditorState extends State<FullscreenLayoutEditor> {
   bool _supported(PlayerLayoutControl item) => switch (item) {
     .pin => !widget.isMobile,
     .pip => widget.supportsPip,
-    // 本库暂无弹幕数统计，不提供该控件以免勾选后无效果。
-    .dmCount => false,
+
     _ => true,
   };
 
