@@ -77,7 +77,9 @@ class _RcmdPageState extends State<RcmdPage>
     crossAxisSpacing: Style.cardSpace,
     maxCrossAxisExtent: Pref.recommendCardWidth,
     childAspectRatio: Style.aspectRatio,
-    mainAxisExtent: MediaQuery.textScalerOf(context).scale(90) + (Pref.videoTitleFull ? 38 : 0),
+    // 主页推荐固定 2 行标题、按 90 基准高度排版：单行标题不再因「完整标题」
+    // 抬高 38px 而留下大块空白（issue #11，与网页/plus 一致）。
+    mainAxisExtent: MediaQuery.textScalerOf(context).scale(90),
   );
 
   Widget _buildBody(
@@ -122,6 +124,7 @@ class _RcmdPageState extends State<RcmdPage>
                         : index;
                     return VideoCardV(
                       videoItem: response[actualIndex],
+                      titleMaxLines: 2,
                       onRemove: () {
                         if (controller.lastRefreshAt != null &&
                             actualIndex < controller.lastRefreshAt!) {
@@ -136,6 +139,7 @@ class _RcmdPageState extends State<RcmdPage>
                   } else {
                     return VideoCardV(
                       videoItem: response[index],
+                      titleMaxLines: 2,
                       onRemove: () => controller.loadingState
                         ..value.data!.removeAt(index)
                         ..refresh(),

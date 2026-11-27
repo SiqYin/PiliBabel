@@ -32,10 +32,14 @@ class VideoCardV extends StatelessWidget {
   final BaseRcmdVideoItemModel videoItem;
   final VoidCallback? onRemove;
 
+  /// 标题最多显示行数；为空时沿用「完整视频标题」全局设置（4/2 行）。
+  final int? titleMaxLines;
+
   const VideoCardV({
     super.key,
     required this.videoItem,
     this.onRemove,
+    this.titleMaxLines,
   });
 
   Future<void> onPushDetail() async {
@@ -219,7 +223,7 @@ class VideoCardV extends StatelessWidget {
               child: Obx(
                 () => Text(
                   uiTxTight(videoItem.title),
-                  maxLines: Pref.videoTitleFull ? 4 : 2,
+                  maxLines: titleMaxLines ?? (Pref.videoTitleFull ? 4 : 2),
                   overflow: .ellipsis,
                   style: const TextStyle(height: 1.38),
                 ),
