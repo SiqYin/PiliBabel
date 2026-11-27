@@ -99,7 +99,7 @@ class _LikeMePageState extends State<LikeMePage> {
               return SliverMainAxisGroup(
                 slivers: [
                   if (latest.isNotEmpty) ...[
-                    _buildHeader(theme, '最新'),
+                    _buildHeader(theme, uiTx('最新')),
                     SliverList.separated(
                       itemBuilder: (context, index) {
                         if (total.isEmpty && index == latest.length - 1) {
@@ -114,7 +114,7 @@ class _LikeMePageState extends State<LikeMePage> {
                     ),
                   ],
                   if (total.isNotEmpty) ...[
-                    _buildHeader(theme, '累计'),
+                    _buildHeader(theme, uiTx('累计')),
                     SliverList.separated(
                       itemBuilder: (context, index) {
                         if (index == total.length - 1) {
@@ -233,7 +233,7 @@ class _LikeMePageState extends State<LikeMePage> {
                 }
               },
               child: Text(
-                isNotice ? '不再通知' : '接收通知',
+                uiTx(isNotice ? '不再通知' : '接收通知'),
                 style: const TextStyle(fontSize: 14),
               ),
             ),
@@ -270,7 +270,7 @@ class _LikeMePageState extends State<LikeMePage> {
         TextSpan(
           children: [
             TextSpan(
-              text: firstUser.nickname,
+              text: uiTxWide(firstUser.nickname ?? ''),
               style: theme.textTheme.titleSmall!.copyWith(
                 height: 1.5,
                 color: theme.colorScheme.primary,
@@ -285,7 +285,9 @@ class _LikeMePageState extends State<LikeMePage> {
                 ),
               ),
             TextSpan(
-              text: ' 赞了我的${item.item?.business}',
+              text: uiTxP(' 赞了我的{0}', [
+                uiTx(item.item?.business ?? ''),
+              ]),
               style: theme.textTheme.titleSmall!.copyWith(
                 height: 1.5,
                 color: theme.colorScheme.onSurfaceVariant,
@@ -302,7 +304,7 @@ class _LikeMePageState extends State<LikeMePage> {
           if (item.item?.title?.isNotEmpty == true) ...[
             const SizedBox(height: 4),
             Text(
-              item.item!.title!,
+              uiTxComment(item.item!.title!, 'like_${item.id}'),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.bodyMedium!.copyWith(

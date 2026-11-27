@@ -112,7 +112,10 @@ class _LikeDetailPageState extends State<LikeDetailPage> {
             PiliScheme.routePushFromUrl(_controller.uri!);
           }
         },
-        title: Text('${card.business}: ${card.title}'),
+        title: Text(
+          '${uiTx(card.business ?? '')}: '
+          '${uiTxComment(card.title ?? '', 'like_detail_${card.title?.hashCode ?? 0}')}',
+        ),
       ),
     );
   }
@@ -130,14 +133,14 @@ class _LikeDetailPageState extends State<LikeDetailPage> {
         TextSpan(
           children: [
             TextSpan(
-              text: "${item.user!.nickname}",
+              text: uiTxWide(item.user!.nickname ?? ''),
               style: theme.textTheme.titleSmall!.copyWith(
                 height: 1.5,
                 color: theme.colorScheme.primary,
               ),
             ),
             TextSpan(
-              text: " 赞了我",
+              text: uiTx(' 赞了我'),
               style: TextStyle(
                 fontSize: 13,
                 color: theme.colorScheme.onSurfaceVariant,
