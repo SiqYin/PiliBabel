@@ -1,13 +1,14 @@
 import 'dart:math' as math;
 
 import 'package:PiliPlus/common/style.dart';
+import 'package:PiliPlus/utils/page_utils.dart';
+import 'package:PiliPlus/common/widgets/sliver/sliver_reverse.dart';
 import 'package:PiliPlus/models_new/article/article_view/ops.dart';
 import 'package:PiliPlus/pages/dynamics/widgets/vote.dart';
 import 'package:PiliPlus/utils/app_scheme.dart';
 import 'package:PiliPlus/utils/extension/num_ext.dart';
 import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:cached_network_image_ce/cached_network_image.dart';
-import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 class ArticleOpus extends StatelessWidget {
@@ -15,10 +16,12 @@ class ArticleOpus extends StatelessWidget {
     super.key,
     required this._ops,
     required this.maxWidth,
+    required this.reverse,
   });
 
   final List<ArticleOps>? _ops;
   final double maxWidth;
+  final bool reverse;
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +29,8 @@ class ArticleOpus extends StatelessWidget {
       return const SliverToBoxAdapter();
     }
 
-    return SliverList.separated(
+    return SliverListReverse.separated(
+      reverse: reverse,
       itemCount: _ops.length,
       itemBuilder: (context, index) {
         try {
@@ -49,7 +53,7 @@ class ArticleOpus extends StatelessWidget {
                       switch (item.attributes?.clazz) {
                         case 'article-card card':
                           if (card.id != null) {
-                            Get.toNamed(
+                            PageUtils.toDupNamed(
                               '/articlePage',
                               parameters: {
                                 'id': card.id!.substring(2),

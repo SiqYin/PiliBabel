@@ -2,6 +2,17 @@
 
 按 Keep a Changelog 的思路编写,留个记录,方便知道每次更新都改了什么,也方便用户查看更新内容.
 
+## 3.10.3
+
+**上游同步收尾：完整線程評論、文章倒序、proto 更新與直播模型遷移。**
+
+- 完整線程評論：`ReplyThreadedIndentBox`、折疊/展開、可折疊評論列表（`FoldCard`/`FoldList`）；`ReplyItemGrpc` 增加 depth/reason/collapsed/toggleCollapse/onScrollLeft。
+- 文章正文倒序：`ArticleOpus`/`OpusContent` 改用 `SliverListReverse`；19 處 `/articlePage` 統一 `PageUtils.toArticlePage`。
+- proto/模型：`ReplyInfo` 按上游 f521 整類同步（修正 tag 18 衝突）、`HotReplyInfo`、`HotspotCard`、`MixedCard.hotspot`、`FoldCard`/`FoldList`；`live_dm_block` → `live_info_by_user` 遷移。
+- 直播/外殼：直播彈幕屏蔽規則管理卡片與開關、live trace start/stop、main ESC 返回 `maybePop`。
+- 未包含：11 個 controller mixin 拆分、`dmCount`、68fb reduce rebuilds（明確不做）、上游 scaffold/tabs 補丁（依賴 material_ui 新版）。
+- 驗證：`flutter analyze` 0 error、全量 `flutter test` 192/192、`verify_readmes.py` 44/44（3.10.3）。
+
 ## 3.10.2
 
 **修復「主頁 → 消息 → 收到的讚」頁面的介面翻譯。**

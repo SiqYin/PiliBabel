@@ -8,6 +8,7 @@ import 'package:PiliPlus/utils/connectivity_utils.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/pages/common/publish/publish_route.dart';
 import 'package:PiliPlus/pages/common/reply_controller.dart';
+import 'package:PiliPlus/pages/common/reply/fold/reply_fold_mixin.dart';
 import 'package:PiliPlus/pages/video/reply_reply/tree.dart';
 import 'package:PiliPlus/pages/video/reply_new/view.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
@@ -20,7 +21,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:super_sliver_list/super_sliver_list.dart';
 
 class VideoReplyReplyController extends ReplyController
-    with GetSingleTickerProviderStateMixin {
+    with GetSingleTickerProviderStateMixin, BaseReplyFoldMixin {
   VideoReplyReplyController({
     required this.hasRoot,
     required this.id,
@@ -32,9 +33,11 @@ class VideoReplyReplyController extends ReplyController
   final int? dialog;
   int? id;
   // 视频aid 请求时使用的oid
+  @override
   int oid;
   // rpid 请求楼中楼回复
   int rpid;
+  @override
   int replyType;
 
   bool hasRoot = false;
@@ -280,6 +283,82 @@ class VideoReplyReplyController extends ReplyController
         });
   }
 
+  Timer? _replyTimer;
+  Future<void>? _inflightReply;
+  final progress = RxDouble(0);
+
+  bool get inFetchReply => _replyTimer != null || _inflightReply != null;
+
+  void _cancelReplyTimer() {
+    _replyTimer?.cancel();
+    _replyTimer = null;
+  }
+
+  void nextReplyRound() {
+    _replyTimer = null;
+    _inflightReply = _fetchNextReply();
+  }
+
+  void _createReplyTimer() {
+    _replyTimer = Timer(const Duration(milliseconds: 300), nextReplyRound);
+  }
+
+  Future<void> _fetchNextReply() async {
+    try {
+      if (isEnd && foldCard != null) {
+        await loadFoldList(toast: false);
+      } else {
+        await queryData(false);
+      }
+    } finally {
+      _inflightReply = null;
+    }
+    if (!isClosed) {
+      if (isEnd && foldCard == null) {
+        buildTree();
+      } else {
+        _createReplyTimer();
+      }
+    }
+  }
+
+  @override
+  Future<void> queryData([bool isRefresh = true]) async {
+    await super.queryData(isRefresh);
+    if (isEnd) {
+      progress.value = 1;
+    } else if (count.rawValue > 0) {
+      progress.value =
+          (loadingState.rawValue.dataOrNull?.length ?? 0) / count.rawValue;
+    }
+  }
+
+  @override
+  Future<void> onLoadMore() {
+    if (_replyTimer != null) {
+      assert(_inflightReply == null);
+      _cancelReplyTimer();
+      return _inflightReply = _fetchNextReply();
+    } else if (_inflightReply case final future?) {
+      return future;
+    }
+    return super.onLoadMore();
+  }
+
+  @override
+  void queryBySort() {
+    if (replyTree.rawValue != null) return;
+    super.queryBySort();
+  }
+
+  @override
+  Future<void> onRefresh() async {
+    if (replyTree.rawValue != null) return Future<void>.value();
+    if (_inflightReply != null) await _inflightReply;
+    _cancelReplyTimer();
+    return super.onRefresh();
+  }
+
   void buildTree() {
     final data = loadingState.rawValue.data;
     if (data == null || data.isEmpty) return;
@@ -291,7 +370,7 @@ class VideoReplyReplyController extends ReplyController
       seen: seen,
       rootId: firstFloor.rawValue?.id ?? data.first.root,
       removed: removedReply,
-      foldDepth: 0,
+      foldDepth: Pref.foldDepth,
     );
   }
 
@@ -319,10 +398,23 @@ class VideoReplyReplyController extends ReplyController
     buildTree();
   }
 
+  void onRemoveByTreeNode(int index, ReplyInfo replyItem) {
+    replyTree
+      ..rawValue!.remove(index)
+      ..refresh();
+
+    final data = loadingState.rawValue.dataOrNull;
+    if (data != null) {
+      final index = data.reverseIdentityIndexOf(replyItem);
+      onRemove(index, replyItem, null);
+    }
+  }
+
   @override
   void onClose() {
+    _cancelReplyTimer();
     _controller?.dispose();
     _controller = null;
-    super.dispose();
+    super.onClose();
   }
 }

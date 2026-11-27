@@ -177,6 +177,34 @@ class _VideoReplyPanelState extends State<VideoReplyPanel>
                 }
               }
               if (index == response.length) {
+                final fold = _videoReplyController.foldCard;
+                if (fold != null) {
+                  return Container(
+                    height: 125,
+                    alignment: .topCenter,
+                    margin: .only(bottom: bottom),
+                    child: Material(
+                      type: MaterialType.transparency,
+                      child: InkWell(
+                        onTap: _videoReplyController.loadFoldList,
+                        child: SizedBox(
+                          width: .infinity,
+                          child: Padding(
+                            padding: const .symmetric(vertical: 12),
+                            child: Text(
+                              uiTx(fold.bottomText),
+                              textAlign: .center,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colorScheme.outline,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                }
                 _videoReplyController.onLoadMore();
                 return Container(
                   height: 125,

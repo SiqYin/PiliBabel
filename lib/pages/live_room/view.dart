@@ -212,7 +212,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
         ..danmakuController = _liveRoomController.danmakuController;
       _liveRoomController
         ..danmakuController?.resume()
-        ..startLiveTimer()
+        ..startService()
         ..startLiveMsg();
     } else {
       plPlayerController.isLive = true;
@@ -284,7 +284,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     plPlayerController.danmakuController =
         _liveRoomController.danmakuController;
     PlPlayerController.setPlayCallBack(plPlayerController.play);
-    _liveRoomController.startLiveTimer();
+    _liveRoomController.startService();
 
     // 如果是从小窗返回，直接恢复状态，不重新初始化
     if (_liveRoomController.isReturningFromPip) {
@@ -348,7 +348,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     } else {
       _liveRoomController
         ..danmakuController?.clear()
-        ..cancelLiveTimer()
+        ..stopService()
         ..closeLiveMsg()
         ..isPlaying = plPlayerController.playerStatus.isPlaying;
     }
@@ -360,12 +360,12 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     if (status.isPlaying) {
       _liveRoomController
         ..danmakuController?.resume()
-        ..startLiveTimer()
+        ..startService()
         ..startLiveMsg();
     } else {
       _liveRoomController
         ..danmakuController?.pause()
-        ..cancelLiveTimer()
+        ..stopService()
         ..closeLiveMsg();
     }
   }
@@ -409,11 +409,11 @@ class _LiveRoomPageState extends State<LiveRoomPage>
       if (!plPlayerController.showDanmaku) {
         _liveRoomController
           ..refreshMsgIfNeeded()
-          ..startLiveTimer();
+          ..startService();
         plPlayerController.showDanmaku = true;
       }
     } else if (state == .paused) {
-      _liveRoomController.cancelLiveTimer();
+      _liveRoomController.stopService();
       plPlayerController
         ..showDanmaku = false
         ..danmakuController?.clear();
@@ -690,7 +690,7 @@ class _LiveRoomPageState extends State<LiveRoomPage>
     // 注销实例是空操作，弹幕流与计时器需在此显式关闭
     _liveRoomController
       ..closeLiveMsg()
-      ..cancelLiveTimer()
+      ..stopService()
       ..cancelLikeTimer();
     videoPlayerServiceHandler?.onVideoDetailDispose(heroTag);
     if (Platform.isAndroid && !plPlayerController.setSystemBrightness) {

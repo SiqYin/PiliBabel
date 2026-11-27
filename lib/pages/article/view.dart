@@ -16,6 +16,7 @@ import 'package:PiliPlus/models/common/dynamic/article_type.dart';
 import 'package:PiliPlus/models/common/image_preview_type.dart';
 import 'package:PiliPlus/models/dynamics/article_content_model.dart' show Pic;
 import 'package:PiliPlus/models/dynamics/result.dart' show DynamicStat;
+import 'package:PiliPlus/common/widgets/sliver/sliver_reverse.dart';
 import 'package:PiliPlus/pages/article/controller.dart';
 import 'package:PiliPlus/pages/article/widgets/article_ops.dart';
 import 'package:PiliPlus/pages/article/widgets/html_render.dart';
@@ -195,6 +196,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
               images: controller.images,
               maxWidth: maxWidth,
               opusId: controller.id,
+              reverse: reverse,
             );
           } else if (controller.opusData?.modules.moduleBlocked
               case final moduleBlocked?) {
@@ -208,6 +210,7 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
               return ArticleOpus(
                 ops: controller.articleData?.ops,
                 maxWidth: maxWidth,
+                reverse: reverse,
               );
             }
             // if (kDebugMode) debugPrint('html page');
@@ -221,7 +224,8 @@ class _ArticlePageState extends CommonDynPageState<ArticlePage> {
                 ),
               );
             } else {
-              content = SliverList.separated(
+              content = SliverListReverse.separated(
+                reverse: reverse,
                 itemCount: res.body!.children.length,
                 itemBuilder: (context, index) {
                   return htmlRender(

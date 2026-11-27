@@ -4,6 +4,7 @@ import 'package:PiliPlus/grpc/reply.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models/common/video/video_type.dart';
 import 'package:PiliPlus/pages/common/reply_controller.dart';
+import 'package:PiliPlus/pages/common/reply/fold/reply_fold_mixin.dart';
 import 'package:PiliPlus/pages/video/controller.dart';
 import 'package:PiliPlus/pages/video/reply/vote/reply_vote_mixin.dart';
 import 'package:PiliPlus/utils/id_utils.dart';
@@ -12,7 +13,7 @@ import 'package:get/get.dart';
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 
 class VideoReplyController extends ReplyController<MainListReply>
-    with ReplyVoteMixin {
+    with ReplyVoteMixin, BaseReplyFoldMixin<MainListReply>, ReplyFoldMixin {
   VideoReplyController({
     required this.aid,
     required this.videoType,
@@ -24,6 +25,12 @@ class VideoReplyController extends ReplyController<MainListReply>
 
   final String heroTag;
   late final videoCtr = Get.find<VideoDetailController>(tag: heroTag);
+
+  @override
+  int get oid => isPugv ? (videoCtr.epId ?? 0) : (aid > 0 ? aid : videoCtr.aid);
+
+  @override
+  int get replyType => videoType.replyType;
 
   // 是否正在进入应用内小窗
   bool isEnteringPip = false;

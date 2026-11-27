@@ -1062,6 +1062,9 @@ abstract final class Pref {
   static bool get showRefreshFAB =>
       _setting.get(SettingBoxKey.showRefreshFAB, defaultValue: true);
 
+  static int get foldDepth =>
+      _setting.get(SettingBoxKey.foldDepth, defaultValue: 0);
+
   static bool get autoWearMedal =>
       _setting.get(SettingBoxKey.autoWearMedal, defaultValue: false);
 

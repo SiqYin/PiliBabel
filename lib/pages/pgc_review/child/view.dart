@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:PiliPlus/common/skeleton/video_reply.dart';
 import 'package:PiliPlus/common/sliver_single_child_delegate.dart';
 import 'package:PiliPlus/common/style.dart';
@@ -187,7 +188,7 @@ class _PgcReviewChildPageState extends State<PgcReviewChildPage>
       type: MaterialType.transparency,
       child: InkWell(
         onTap: isLongReview
-            ? () => Get.toNamed(
+            ? () => PageUtils.toDupNamed(
                 '/articlePage',
                 parameters: {
                   'id': item.articleId!.toString(),

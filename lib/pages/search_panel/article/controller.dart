@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/utils/page_utils.dart';
 import 'dart:math';
 
 import 'package:PiliPlus/http/loading_state.dart';
@@ -33,7 +34,7 @@ class SearchArticleController
     ).matchAsPrefix(keyword)?.group(2);
     if (cvid != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        Get.toNamed(
+        PageUtils.toDupNamed(
           '/articlePage',
           parameters: {
             'id': cvid,

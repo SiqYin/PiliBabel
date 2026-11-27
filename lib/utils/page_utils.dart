@@ -16,6 +16,8 @@ import 'package:PiliPlus/models_new/pgc/pgc_info_model/episode.dart';
 import 'package:PiliPlus/models_new/video/video_detail/dimension.dart';
 import 'package:PiliPlus/pages/common/common_intro_controller.dart';
 import 'package:PiliPlus/pages/common/publish/publish_route.dart';
+import 'package:PiliPlus/models/common/dynamic/article_type.dart';
+import 'package:PiliPlus/pages/article/view.dart';
 import 'package:PiliPlus/pages/contact/view.dart';
 import 'package:PiliPlus/pages/fav_panel/view.dart';
 import 'package:PiliPlus/pages/share/view.dart';
@@ -773,11 +775,26 @@ abstract final class PageUtils {
     dynamic arguments,
     Map<String, String>? parameters,
     bool off = false,
-  }) => Get.offOrToNamed(
-    page,
-    arguments: arguments,
-    parameters: parameters,
-    preventDuplicates: false,
-    off: off,
-  );
+  }) {
+    if (page == '/articlePage') {
+      final id = parameters?['id'];
+      if (id != null) {
+        ArticlePage.toArticlePage(
+          id: id,
+          type: parameters?['type'] == 'opus'
+              ? ArticleType.opus
+              : ArticleType.read,
+          off: off,
+        );
+        return null;
+      }
+    }
+    return Get.offOrToNamed(
+      page,
+      arguments: arguments,
+      parameters: parameters,
+      preventDuplicates: false,
+      off: off,
+    );
+  }
 }

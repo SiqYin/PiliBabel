@@ -1,4 +1,5 @@
 import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
+import 'package:PiliPlus/utils/page_utils.dart';
 import 'dart:io' show Platform;
 
 import 'package:PiliPlus/common/skeleton/video_reply.dart';
@@ -226,7 +227,7 @@ class _NoteListPageState extends State<NoteListPage>
     return Material(
       type: MaterialType.transparency,
       child: InkWell(
-        onTap: () => Get.toNamed(
+        onTap: () => PageUtils.toDupNamed(
           '/articlePage',
           parameters: {
             'id': item.cvid!.toString(),

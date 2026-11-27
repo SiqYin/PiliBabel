@@ -24,6 +24,9 @@ import 'package:material_ui/material_ui.dart';
 abstract class ReplyController<R> extends CommonListController<R, ReplyInfo> {
   ReplyController({int count = -1}) : count = RxInt(count);
 
+  int get oid;
+  int get replyType;
+
   late final RxInt count;
 
   late final Rx<ReplySortType> sortType;

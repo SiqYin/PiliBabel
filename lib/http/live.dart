@@ -16,9 +16,8 @@ import 'package:PiliPlus/models_new/live/live_area_list/area_list.dart';
 import 'package:PiliPlus/models_new/live/live_config_plugs/data.dart';
 import 'package:PiliPlus/models_new/live/live_contribution_rank/data.dart';
 import 'package:PiliPlus/models_new/live/live_danmaku/danmaku_msg.dart';
-import 'package:PiliPlus/models_new/live/live_dm_block/data.dart';
-import 'package:PiliPlus/models_new/live/live_dm_block/shield_info.dart';
-import 'package:PiliPlus/models_new/live/live_dm_block/shield_user_list.dart';
+import 'package:PiliPlus/models_new/live/live_info_by_user/data.dart';
+import 'package:PiliPlus/models_new/live/live_info_by_user/shield_user_list.dart';
 import 'package:PiliPlus/models_new/live/live_dm_info/data.dart';
 import 'package:PiliPlus/models_new/live/live_emote/data.dart';
 import 'package:PiliPlus/models_new/live/live_emote/datum.dart';
@@ -506,7 +505,7 @@ abstract final class LiveHttp {
     }
   }
 
-  static Future<LoadingState<ShieldInfo?>> getLiveInfoByUser(
+  static Future<LoadingState<LiveInfoByUserData?>> getLiveInfoByUser(
     Object roomId,
   ) async {
     final res = await Request().get(
@@ -519,7 +518,7 @@ abstract final class LiveHttp {
       }),
     );
     if (res.data['code'] == 0) {
-      return Success(LiveDmBlockData.fromJson(res.data['data']).shieldInfo);
+      return Success(LiveInfoByUserData.fromJson(res.data['data']));
     } else {
       return Error(res.data['message']);
     }

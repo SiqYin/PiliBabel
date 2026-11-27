@@ -3,6 +3,7 @@
 abstract final class SettingBoxKey {
   static const String fullscreenLayout = 'fullscreenLayout';
   static const String videoPaneRatio = 'videoPaneRatio';
+  static const String foldDepth = 'foldDepth';
 
   static const String btmProgressBehavior = 'btmProgressBehavior',
       defaultVideoQa = 'defaultVideoQa',

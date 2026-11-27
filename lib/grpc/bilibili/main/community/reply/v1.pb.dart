@@ -5570,7 +5570,7 @@ class MemberV2 extends $pb.GeneratedMessage {
   $3.UserSailing ensureUserSailing() => $_ensure(8);
 }
 
-enum MixedCard_Item { question, notSet }
+enum MixedCard_Item { question, fold, hotspot, notSet }
 
 class MixedCard extends $pb.GeneratedMessage {
   factory MixedCard({
@@ -5578,12 +5578,16 @@ class MixedCard extends $pb.GeneratedMessage {
     $core.String? oid,
     $fixnum.Int64? displayRank,
     QuestionCard? question,
+    FoldCard? fold,
+    HotspotCard? hotspot,
   }) {
     final result = create();
     if (type != null) result.type = type;
     if (oid != null) result.oid = oid;
     if (displayRank != null) result.displayRank = displayRank;
     if (question != null) result.question = question;
+    if (fold != null) result.fold = fold;
+    if (hotspot != null) result.hotspot = hotspot;
     return result;
   }
 
@@ -5598,6 +5602,8 @@ class MixedCard extends $pb.GeneratedMessage {
 
   static const $core.Map<$core.int, MixedCard_Item> _MixedCard_ItemByTag = {
     4: MixedCard_Item.question,
+    5: MixedCard_Item.fold,
+    6: MixedCard_Item.hotspot,
     0: MixedCard_Item.notSet
   };
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
@@ -5605,13 +5611,17 @@ class MixedCard extends $pb.GeneratedMessage {
       package: const $pb.PackageName(
           _omitMessageNames ? '' : 'bilibili.main.community.reply.v1'),
       createEmptyInstance: create)
-    ..oo(0, [4])
+    ..oo(0, [4, 5, 6])
     ..aE<MixedCard_Type>(1, _omitFieldNames ? '' : 'type',
         enumValues: MixedCard_Type.values)
     ..aOS(2, _omitFieldNames ? '' : 'oid')
     ..aInt64(3, _omitFieldNames ? '' : 'displayRank')
     ..aOM<QuestionCard>(4, _omitFieldNames ? '' : 'question',
         subBuilder: QuestionCard.create)
+    ..aOM<FoldCard>(5, _omitFieldNames ? '' : 'fold',
+        subBuilder: FoldCard.create)
+    ..aOM<HotspotCard>(6, _omitFieldNames ? '' : 'hotspot',
+        subBuilder: HotspotCard.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -5674,6 +5684,28 @@ class MixedCard extends $pb.GeneratedMessage {
   void clearQuestion() => $_clearField(4);
   @$pb.TagNumber(4)
   QuestionCard ensureQuestion() => $_ensure(3);
+
+  @$pb.TagNumber(5)
+  FoldCard get fold => $_getN(4);
+  @$pb.TagNumber(5)
+  set fold(FoldCard value) => $_setField(5, value);
+  @$pb.TagNumber(5)
+  $core.bool hasFold() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearFold() => $_clearField(5);
+  @$pb.TagNumber(5)
+  FoldCard ensureFold() => $_ensure(4);
+
+  @$pb.TagNumber(6)
+  HotspotCard get hotspot => $_getN(5);
+  @$pb.TagNumber(6)
+  set hotspot(HotspotCard value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasHotspot() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearHotspot() => $_clearField(6);
+  @$pb.TagNumber(6)
+  HotspotCard ensureHotspot() => $_ensure(5);
 }
 
 class Notice extends $pb.GeneratedMessage {
@@ -9502,6 +9534,216 @@ class ReplyInAppPushPayload extends $pb.GeneratedMessage {
   ReplyInAppPushPayload_SubjectMaterial ensureSubjectMaterial() => $_ensure(3);
 }
 
+class HotspotCard extends $pb.GeneratedMessage {
+  factory HotspotCard({
+    $core.String? icon,
+    $core.String? title,
+    $core.String? titleText,
+    $fixnum.Int64? rpid,
+    $fixnum.Int64? oid,
+    Content? content,
+    MemberV2? member,
+    $fixnum.Int64? hotspotId,
+    ReplyControl? replyControl,
+    $fixnum.Int64? like,
+    $core.String? arcTitle,
+    $core.String? fromText,
+    $core.int? type,
+  }) {
+    final result = HotspotCard._();
+    if (icon != null) result.icon = icon;
+    if (title != null) result.title = title;
+    if (titleText != null) result.titleText = titleText;
+    if (rpid != null) result.rpid = rpid;
+    if (oid != null) result.oid = oid;
+    if (content != null) result.content = content;
+    if (member != null) result.member = member;
+    if (hotspotId != null) result.hotspotId = hotspotId;
+    if (replyControl != null) result.replyControl = replyControl;
+    if (like != null) result.like = like;
+    if (arcTitle != null) result.arcTitle = arcTitle;
+    if (fromText != null) result.fromText = fromText;
+    if (type != null) result.type = type;
+    return result;
+  }
+
+  HotspotCard._();
+
+  factory HotspotCard.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      HotspotCard()..mergeFromBuffer(data, registry);
+  factory HotspotCard.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      HotspotCard()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'HotspotCard',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'bilibili.main.community.reply.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'icon')
+    ..aOS(2, _omitFieldNames ? '' : 'title')
+    ..aOS(3, _omitFieldNames ? '' : 'titleText')
+    ..aInt64(4, _omitFieldNames ? '' : 'rpid')
+    ..aInt64(5, _omitFieldNames ? '' : 'oid')
+    ..aOM<Content>(6, _omitFieldNames ? '' : 'content',
+        subBuilder: Content.create)
+    ..aOM<MemberV2>(7, _omitFieldNames ? '' : 'member',
+        subBuilder: MemberV2.create)
+    ..aInt64(8, _omitFieldNames ? '' : 'hotspotId')
+    ..aOM<ReplyControl>(9, _omitFieldNames ? '' : 'replyControl',
+        subBuilder: ReplyControl.create)
+    ..aInt64(10, _omitFieldNames ? '' : 'like')
+    ..aOS(11, _omitFieldNames ? '' : 'arcTitle')
+    ..aOS(12, _omitFieldNames ? '' : 'fromText')
+    ..aI(13, _omitFieldNames ? '' : 'type')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  HotspotCard clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  HotspotCard copyWith(void Function(HotspotCard) updates) =>
+      super.copyWith((message) => updates(message as HotspotCard))
+          as HotspotCard;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use HotspotCard() / HotspotCard.new instead')
+  static HotspotCard create() => HotspotCard._();
+  @$core.override
+  HotspotCard createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static HotspotCard getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<HotspotCard>(
+          HotspotCard.create);
+  static HotspotCard? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get icon => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set icon($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasIcon() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearIcon() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.String get title => $_getSZ(1);
+  @$pb.TagNumber(2)
+  set title($core.String value) => $_setString(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasTitle() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearTitle() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get titleText => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set titleText($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasTitleText() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTitleText() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $fixnum.Int64 get rpid => $_getI64(3);
+  @$pb.TagNumber(4)
+  set rpid($fixnum.Int64 value) => $_setInt64(3, value);
+  @$pb.TagNumber(4)
+  $core.bool hasRpid() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearRpid() => $_clearField(4);
+
+  @$pb.TagNumber(5)
+  $fixnum.Int64 get oid => $_getI64(4);
+  @$pb.TagNumber(5)
+  set oid($fixnum.Int64 value) => $_setInt64(4, value);
+  @$pb.TagNumber(5)
+  $core.bool hasOid() => $_has(4);
+  @$pb.TagNumber(5)
+  void clearOid() => $_clearField(5);
+
+  @$pb.TagNumber(6)
+  Content get content => $_getN(5);
+  @$pb.TagNumber(6)
+  set content(Content value) => $_setField(6, value);
+  @$pb.TagNumber(6)
+  $core.bool hasContent() => $_has(5);
+  @$pb.TagNumber(6)
+  void clearContent() => $_clearField(6);
+  @$pb.TagNumber(6)
+  Content ensureContent() => $_ensure(5);
+
+  @$pb.TagNumber(7)
+  MemberV2 get member => $_getN(6);
+  @$pb.TagNumber(7)
+  set member(MemberV2 value) => $_setField(7, value);
+  @$pb.TagNumber(7)
+  $core.bool hasMember() => $_has(6);
+  @$pb.TagNumber(7)
+  void clearMember() => $_clearField(7);
+  @$pb.TagNumber(7)
+  MemberV2 ensureMember() => $_ensure(6);
+
+  @$pb.TagNumber(8)
+  $fixnum.Int64 get hotspotId => $_getI64(7);
+  @$pb.TagNumber(8)
+  set hotspotId($fixnum.Int64 value) => $_setInt64(7, value);
+  @$pb.TagNumber(8)
+  $core.bool hasHotspotId() => $_has(7);
+  @$pb.TagNumber(8)
+  void clearHotspotId() => $_clearField(8);
+
+  @$pb.TagNumber(9)
+  ReplyControl get replyControl => $_getN(8);
+  @$pb.TagNumber(9)
+  set replyControl(ReplyControl value) => $_setField(9, value);
+  @$pb.TagNumber(9)
+  $core.bool hasReplyControl() => $_has(8);
+  @$pb.TagNumber(9)
+  void clearReplyControl() => $_clearField(9);
+  @$pb.TagNumber(9)
+  ReplyControl ensureReplyControl() => $_ensure(8);
+
+  @$pb.TagNumber(10)
+  $fixnum.Int64 get like => $_getI64(9);
+  @$pb.TagNumber(10)
+  set like($fixnum.Int64 value) => $_setInt64(9, value);
+  @$pb.TagNumber(10)
+  $core.bool hasLike() => $_has(9);
+  @$pb.TagNumber(10)
+  void clearLike() => $_clearField(10);
+
+  @$pb.TagNumber(11)
+  $core.String get arcTitle => $_getSZ(10);
+  @$pb.TagNumber(11)
+  set arcTitle($core.String value) => $_setString(10, value);
+  @$pb.TagNumber(11)
+  $core.bool hasArcTitle() => $_has(10);
+  @$pb.TagNumber(11)
+  void clearArcTitle() => $_clearField(11);
+
+  @$pb.TagNumber(12)
+  $core.String get fromText => $_getSZ(11);
+  @$pb.TagNumber(12)
+  set fromText($core.String value) => $_setString(11, value);
+  @$pb.TagNumber(12)
+  $core.bool hasFromText() => $_has(11);
+  @$pb.TagNumber(12)
+  void clearFromText() => $_clearField(12);
+
+  @$pb.TagNumber(13)
+  $core.int get type => $_getIZ(12);
+  @$pb.TagNumber(13)
+  set type($core.int value) => $_setSignedInt32(12, value);
+  @$pb.TagNumber(13)
+  $core.bool hasType() => $_has(12);
+  @$pb.TagNumber(13)
+  void clearType() => $_clearField(13);
+}
+
 class ParentReplyMember extends $pb.GeneratedMessage {
   factory ParentReplyMember({$fixnum.Int64? mid, $core.String? name}) {
     final result = ParentReplyMember._();
@@ -9566,6 +9808,345 @@ class ParentReplyMember extends $pb.GeneratedMessage {
   void clearName() => $_clearField(2);
 }
 
+class FoldCard extends $pb.GeneratedMessage {
+  factory FoldCard({
+    $core.String? bottomText,
+    $2.FeedPagination? foldPagination,
+  }) {
+    final result = FoldCard._();
+    if (bottomText != null) result.bottomText = bottomText;
+    if (foldPagination != null) result.foldPagination = foldPagination;
+    return result;
+  }
+
+  FoldCard._();
+
+  factory FoldCard.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      FoldCard()..mergeFromBuffer(data, registry);
+  factory FoldCard.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      FoldCard()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FoldCard',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'bilibili.main.community.reply.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'bottomText')
+    ..aOM<$2.FeedPagination>(2, _omitFieldNames ? '' : 'foldPagination',
+        subBuilder: $2.FeedPagination.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FoldCard clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FoldCard copyWith(void Function(FoldCard) updates) =>
+      super.copyWith((message) => updates(message as FoldCard)) as FoldCard;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use FoldCard() / FoldCard.new instead')
+  static FoldCard create() => FoldCard._();
+  @$core.override
+  FoldCard createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FoldCard getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<FoldCard>(create);
+  static FoldCard? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get bottomText => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set bottomText($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasBottomText() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearBottomText() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $2.FeedPagination get foldPagination => $_getN(1);
+  @$pb.TagNumber(2)
+  set foldPagination($2.FeedPagination value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasFoldPagination() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearFoldPagination() => $_clearField(2);
+  @$pb.TagNumber(2)
+  $2.FeedPagination ensureFoldPagination() => $_ensure(1);
+}
+
+class FoldListReq extends $pb.GeneratedMessage {
+  factory FoldListReq({
+    $fixnum.Int64? oid,
+    $fixnum.Int64? type,
+    $core.String? extra,
+    $2.FeedPagination? pagination,
+  }) {
+    final result = FoldListReq._();
+    if (oid != null) result.oid = oid;
+    if (type != null) result.type = type;
+    if (extra != null) result.extra = extra;
+    if (pagination != null) result.pagination = pagination;
+    return result;
+  }
+
+  FoldListReq._();
+
+  factory FoldListReq.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      FoldListReq()..mergeFromBuffer(data, registry);
+  factory FoldListReq.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      FoldListReq()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FoldListReq',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'bilibili.main.community.reply.v1'),
+      createEmptyInstance: create)
+    ..aInt64(1, _omitFieldNames ? '' : 'oid')
+    ..aInt64(2, _omitFieldNames ? '' : 'type')
+    ..aOS(3, _omitFieldNames ? '' : 'extra')
+    ..aOM<$2.FeedPagination>(4, _omitFieldNames ? '' : 'pagination',
+        subBuilder: $2.FeedPagination.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FoldListReq clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FoldListReq copyWith(void Function(FoldListReq) updates) =>
+      super.copyWith((message) => updates(message as FoldListReq))
+          as FoldListReq;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use FoldListReq() / FoldListReq.new instead')
+  static FoldListReq create() => FoldListReq._();
+  @$core.override
+  FoldListReq createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FoldListReq getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FoldListReq>(create);
+  static FoldListReq? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $fixnum.Int64 get oid => $_getI64(0);
+  @$pb.TagNumber(1)
+  set oid($fixnum.Int64 value) => $_setInt64(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasOid() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearOid() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $fixnum.Int64 get type => $_getI64(1);
+  @$pb.TagNumber(2)
+  set type($fixnum.Int64 value) => $_setInt64(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasType() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearType() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get extra => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set extra($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasExtra() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearExtra() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  $2.FeedPagination get pagination => $_getN(3);
+  @$pb.TagNumber(4)
+  set pagination($2.FeedPagination value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasPagination() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearPagination() => $_clearField(4);
+  @$pb.TagNumber(4)
+  $2.FeedPagination ensurePagination() => $_ensure(3);
+}
+
+class FoldListResp extends $pb.GeneratedMessage {
+  factory FoldListResp({
+    $core.Iterable<ReplyInfo>? replies,
+    $2.FeedPaginationReply? paginationReply,
+    $core.String? title,
+    SubjectControl? subjectControl,
+  }) {
+    final result = FoldListResp._();
+    if (replies != null) result.replies.addAll(replies);
+    if (paginationReply != null) result.paginationReply = paginationReply;
+    if (title != null) result.title = title;
+    if (subjectControl != null) result.subjectControl = subjectControl;
+    return result;
+  }
+
+  FoldListResp._();
+
+  factory FoldListResp.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      FoldListResp()..mergeFromBuffer(data, registry);
+  factory FoldListResp.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      FoldListResp()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'FoldListResp',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'bilibili.main.community.reply.v1'),
+      createEmptyInstance: create)
+    ..pPM<ReplyInfo>(1, _omitFieldNames ? '' : 'replies',
+        subBuilder: ReplyInfo.create)
+    ..aOM<$2.FeedPaginationReply>(2, _omitFieldNames ? '' : 'paginationReply',
+        subBuilder: $2.FeedPaginationReply.create)
+    ..aOS(3, _omitFieldNames ? '' : 'title')
+    ..aOM<SubjectControl>(4, _omitFieldNames ? '' : 'subjectControl',
+        subBuilder: SubjectControl.create)
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FoldListResp clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  FoldListResp copyWith(void Function(FoldListResp) updates) =>
+      super.copyWith((message) => updates(message as FoldListResp))
+          as FoldListResp;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use FoldListResp() / FoldListResp.new instead')
+  static FoldListResp create() => FoldListResp._();
+  @$core.override
+  FoldListResp createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static FoldListResp getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<FoldListResp>(create);
+  static FoldListResp? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $pb.PbList<ReplyInfo> get replies => $_getList(0);
+
+  @$pb.TagNumber(2)
+  $2.FeedPaginationReply get paginationReply => $_getN(1);
+  @$pb.TagNumber(2)
+  set paginationReply($2.FeedPaginationReply value) => $_setField(2, value);
+  @$pb.TagNumber(2)
+  $core.bool hasPaginationReply() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearPaginationReply() => $_clearField(2);
+  @$pb.TagNumber(2)
+  $2.FeedPaginationReply ensurePaginationReply() => $_ensure(1);
+
+  @$pb.TagNumber(3)
+  $core.String get title => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set title($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasTitle() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearTitle() => $_clearField(3);
+
+  @$pb.TagNumber(4)
+  SubjectControl get subjectControl => $_getN(3);
+  @$pb.TagNumber(4)
+  set subjectControl(SubjectControl value) => $_setField(4, value);
+  @$pb.TagNumber(4)
+  $core.bool hasSubjectControl() => $_has(3);
+  @$pb.TagNumber(4)
+  void clearSubjectControl() => $_clearField(4);
+  @$pb.TagNumber(4)
+  SubjectControl ensureSubjectControl() => $_ensure(3);
+}
+
+class HotReplyInfo extends $pb.GeneratedMessage {
+  factory HotReplyInfo({
+    $core.String? arcTitle,
+    $core.int? opinionIdx,
+    $core.String? fromText,
+  }) {
+    final result = HotReplyInfo._();
+    if (arcTitle != null) result.arcTitle = arcTitle;
+    if (opinionIdx != null) result.opinionIdx = opinionIdx;
+    if (fromText != null) result.fromText = fromText;
+    return result;
+  }
+
+  HotReplyInfo._();
+
+  factory HotReplyInfo.fromBuffer($core.List<$core.int> data,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      HotReplyInfo()..mergeFromBuffer(data, registry);
+  factory HotReplyInfo.fromJson($core.String json,
+          [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
+      HotReplyInfo()..mergeFromJson(json, registry);
+
+  static final $pb.BuilderInfo _i = $pb.BuilderInfo(
+      _omitMessageNames ? '' : 'HotReplyInfo',
+      package: const $pb.PackageName(
+          _omitMessageNames ? '' : 'bilibili.main.community.reply.v1'),
+      createEmptyInstance: create)
+    ..aOS(1, _omitFieldNames ? '' : 'arcTitle')
+    ..aI(2, _omitFieldNames ? '' : 'opinionIdx')
+    ..aOS(3, _omitFieldNames ? '' : 'fromText')
+    ..hasRequiredFields = false;
+
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  HotReplyInfo clone() => deepCopy();
+  @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
+  HotReplyInfo copyWith(void Function(HotReplyInfo) updates) =>
+      super.copyWith((message) => updates(message as HotReplyInfo))
+          as HotReplyInfo;
+
+  @$core.override
+  $pb.BuilderInfo get info_ => _i;
+
+  @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use HotReplyInfo() / HotReplyInfo.new instead')
+  static HotReplyInfo create() => HotReplyInfo._();
+  @$core.override
+  HotReplyInfo createEmptyInstance() => create();
+  @$core.pragma('dart2js:noInline')
+  static HotReplyInfo getDefault() =>
+      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<HotReplyInfo>(
+          HotReplyInfo.create);
+  static HotReplyInfo? _defaultInstance;
+
+  @$pb.TagNumber(1)
+  $core.String get arcTitle => $_getSZ(0);
+  @$pb.TagNumber(1)
+  set arcTitle($core.String value) => $_setString(0, value);
+  @$pb.TagNumber(1)
+  $core.bool hasArcTitle() => $_has(0);
+  @$pb.TagNumber(1)
+  void clearArcTitle() => $_clearField(1);
+
+  @$pb.TagNumber(2)
+  $core.int get opinionIdx => $_getIZ(1);
+  @$pb.TagNumber(2)
+  set opinionIdx($core.int value) => $_setSignedInt32(1, value);
+  @$pb.TagNumber(2)
+  $core.bool hasOpinionIdx() => $_has(1);
+  @$pb.TagNumber(2)
+  void clearOpinionIdx() => $_clearField(2);
+
+  @$pb.TagNumber(3)
+  $core.String get fromText => $_getSZ(2);
+  @$pb.TagNumber(3)
+  set fromText($core.String value) => $_setString(2, value);
+  @$pb.TagNumber(3)
+  $core.bool hasFromText() => $_has(2);
+  @$pb.TagNumber(3)
+  void clearFromText() => $_clearField(3);
+}
+
 class ReplyInfo extends $pb.GeneratedMessage {
   factory ReplyInfo({
     $core.Iterable<ReplyInfo>? replies,
@@ -9586,8 +10167,9 @@ class ReplyInfo extends $pb.GeneratedMessage {
     $core.String? trackInfo,
     Content? translatedContent,
     ParentReplyMember? parentReplyMember,
+    HotReplyInfo? hotInfo,
   }) {
-    final result = create();
+    final result = ReplyInfo._();
     if (replies != null) result.replies.addAll(replies);
     if (id != null) result.id = id;
     if (oid != null) result.oid = oid;
@@ -9606,6 +10188,7 @@ class ReplyInfo extends $pb.GeneratedMessage {
     if (trackInfo != null) result.trackInfo = trackInfo;
     if (translatedContent != null) result.translatedContent = translatedContent;
     if (parentReplyMember != null) result.parentReplyMember = parentReplyMember;
+    if (hotInfo != null) result.hotInfo = hotInfo;
     return result;
   }
 
@@ -9613,10 +10196,10 @@ class ReplyInfo extends $pb.GeneratedMessage {
 
   factory ReplyInfo.fromBuffer($core.List<$core.int> data,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromBuffer(data, registry);
+      ReplyInfo()..mergeFromBuffer(data, registry);
   factory ReplyInfo.fromJson($core.String json,
           [$pb.ExtensionRegistry registry = $pb.ExtensionRegistry.EMPTY]) =>
-      create()..mergeFromJson(json, registry);
+      ReplyInfo()..mergeFromJson(json, registry);
 
   static final $pb.BuilderInfo _i = $pb.BuilderInfo(
       _omitMessageNames ? '' : 'ReplyInfo',
@@ -9648,6 +10231,8 @@ class ReplyInfo extends $pb.GeneratedMessage {
         subBuilder: Content.create)
     ..aOM<ParentReplyMember>(18, _omitFieldNames ? '' : 'parentReplyMember',
         subBuilder: ParentReplyMember.create)
+    ..aOM<HotReplyInfo>(19, _omitFieldNames ? '' : 'hotInfo',
+        subBuilder: HotReplyInfo.create)
     ..hasRequiredFields = false;
 
   @$core.Deprecated('See https://github.com/google/protobuf.dart/issues/998.')
@@ -9660,12 +10245,13 @@ class ReplyInfo extends $pb.GeneratedMessage {
   $pb.BuilderInfo get info_ => _i;
 
   @$core.pragma('dart2js:noInline')
+  @$core.Deprecated('Use ReplyInfo() / ReplyInfo.new instead')
   static ReplyInfo create() => ReplyInfo._();
   @$core.override
   ReplyInfo createEmptyInstance() => create();
   @$core.pragma('dart2js:noInline')
-  static ReplyInfo getDefault() =>
-      _defaultInstance ??= $pb.GeneratedMessage.$_defaultFor<ReplyInfo>(create);
+  static ReplyInfo getDefault() => _defaultInstance ??=
+      $pb.GeneratedMessage.$_defaultFor<ReplyInfo>(create);
   static ReplyInfo? _defaultInstance;
 
   @$pb.TagNumber(1)
@@ -9814,6 +10400,7 @@ class ReplyInfo extends $pb.GeneratedMessage {
   @$pb.TagNumber(16)
   void clearTrackInfo() => $_clearField(16);
 
+  /// 翻译结果(仅在翻译请求中返回)
   @$pb.TagNumber(17)
   Content get translatedContent => $_getN(16);
   @$pb.TagNumber(17)
@@ -9835,8 +10422,18 @@ class ReplyInfo extends $pb.GeneratedMessage {
   void clearParentReplyMember() => $_clearField(18);
   @$pb.TagNumber(18)
   ParentReplyMember ensureParentReplyMember() => $_ensure(17);
-}
 
+  @$pb.TagNumber(19)
+  HotReplyInfo get hotInfo => $_getN(18);
+  @$pb.TagNumber(19)
+  set hotInfo(HotReplyInfo value) => $_setField(19, value);
+  @$pb.TagNumber(19)
+  $core.bool hasHotInfo() => $_has(18);
+  @$pb.TagNumber(19)
+  void clearHotInfo() => $_clearField(19);
+  @$pb.TagNumber(19)
+  HotReplyInfo ensureHotInfo() => $_ensure(18);
+}
 class ReplyInfoReply extends $pb.GeneratedMessage {
   factory ReplyInfoReply({
     ReplyInfo? reply,

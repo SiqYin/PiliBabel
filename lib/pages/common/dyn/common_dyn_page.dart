@@ -43,7 +43,10 @@ abstract class CommonDynPageState<T extends StatefulWidget> extends State<T>
         SingleTickerProviderStateMixin<T>,
         BaseFabMixin,
         FabMixin,
-        CommonDynPageMixin<T> {}
+        CommonDynPageMixin<T> {
+  /// 本库暂无评论居中定位（_centerKey），文章正文保持正序。
+  bool get reverse => false;
+}
 
 abstract class CommonDynPageMultiState<T extends StatefulWidget>
     extends State<T>

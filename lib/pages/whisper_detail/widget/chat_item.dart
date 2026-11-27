@@ -25,7 +25,6 @@ import 'package:PiliPlus/utils/image_utils.dart';
 import 'package:PiliPlus/utils/page_utils.dart';
 import 'package:cached_network_image_ce/cached_network_image.dart';
 import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
-import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
 class ChatItem extends StatelessWidget {
@@ -251,7 +250,7 @@ CoverTranslateButton(cover: content['cover']),
   Widget msgTypeArticleCard_12(dynamic content, Color textColor) {
     return GestureDetector(
       behavior: .opaque,
-      onTap: () => Get.toNamed(
+      onTap: () => PageUtils.toDupNamed(
         '/articlePage',
         parameters: {
           'id': '${content['rid']}',
@@ -555,7 +554,7 @@ CoverTranslateButton(cover: content['cover']),
       // article
       case 6:
         type = '专栏';
-        onTap = () => Get.toNamed(
+        onTap = () => PageUtils.toDupNamed(
           '/articlePage',
           parameters: {
             'id': '${content['id']}',

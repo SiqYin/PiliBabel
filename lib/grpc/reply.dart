@@ -199,6 +199,23 @@ abstract final class ReplyGrpc {
     );
   }
 
+  static Future<LoadingState<FoldListResp>> foldList({
+    required int type,
+    required int oid,
+    required FeedPagination pagination,
+  }) async {
+    final res = await GrpcReq.request(
+      GrpcUrl.foldList,
+      FoldListReq(
+        oid: Int64(oid),
+        type: Int64(type),
+        pagination: pagination,
+      ),
+      FoldListResp.fromBuffer,
+    );
+    return res..dataOrNull?.replies.removeWhere(needRemoveGrpc);
+  }
+
   static Future<LoadingState<TranslateReplyResp>> translateReply({
     required Int64 type,
     required Int64 oid,

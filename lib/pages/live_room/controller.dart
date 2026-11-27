@@ -108,6 +108,10 @@ class LiveRoomController extends GetxController {
     _stopLiveTraceTimer();
   }
 
+  void startService() => startLiveTimer();
+
+  void stopService() => cancelLiveTimer();
+
   Future<void> _initLiveTraceIfNeeded() async {
     if (isClosed || !isLoaded.value || !heartbeat.isLogin) return;
     try {
@@ -781,11 +785,12 @@ class LiveRoomController extends GetxController {
 
   Future<void> _fetchBlockRules() async {
     final res = await LiveHttp.getLiveInfoByUser(roomId);
-    if (res case Success(:final response?)) {
-      if (response.keywordList case final keywordList?) {
+    final shieldInfo = res.dataOrNull?.shieldInfo;
+    if (shieldInfo != null) {
+      if (shieldInfo.keywordList case final keywordList?) {
         _keywordList = keywordList;
       }
-      if (response.shieldUserList case final shieldUserList?) {
+      if (shieldInfo.shieldUserList case final shieldUserList?) {
         _shieldUids = shieldUserList.map((e) => e.uid).toSet();
       }
     }

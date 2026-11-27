@@ -15,7 +15,15 @@ import 'package:PiliPlus/common/widgets/text_ellipsis/text_ellipsis.dart';
 import 'package:PiliPlus/common/widgets/text_more/text_more.dart';
 import 'package:PiliPlus/common/widgets/translucent_row.dart';
 import 'package:PiliPlus/grpc/bilibili/main/community/reply/v1.pb.dart'
-    show ReplyInfo, ReplyControl, Content, Url, ReplyControl_VoteOption, Emote;
+    show
+        ReplyInfo,
+        ReplyControl,
+        Content,
+        Url,
+        ReplyControl_VoteOption,
+        Emote;
+import 'package:PiliPlus/pages/video/reply_reply/tree.dart' show ReasonType;
+import 'package:PiliPlus/pages/video/reply/widgets/reply_threaded_indent_box.dart';
 import 'package:PiliPlus/grpc/reply.dart';
 import 'package:PiliPlus/http/reply.dart';
 import 'package:PiliPlus/http/video.dart';
@@ -61,6 +69,26 @@ import 'package:protobuf/protobuf.dart';
 
 part 'package:PiliPlus/common/widgets/context_menu/reply_menu_helper.dart';
 
+final _colorsLight = [
+  Colors.red.shade300,
+  Colors.orange.shade300,
+  Colors.yellow.shade600,
+  Colors.green.shade300,
+  Colors.cyan.shade300,
+  Colors.blue.shade300,
+  Colors.deepPurple.shade300,
+];
+
+final _colorsDark = [
+  Colors.red.shade900,
+  Colors.orange.shade900,
+  Colors.yellow.shade800,
+  Colors.green.shade900,
+  Colors.cyan.shade900,
+  Colors.blue.shade900,
+  Colors.deepPurple.shade900,
+];
+
 class ReplyItemGrpc extends StatelessWidget {
   const ReplyItemGrpc({
     super.key,
@@ -77,6 +105,11 @@ class ReplyItemGrpc extends StatelessWidget {
     this.onCheckReply,
     this.onToggleTop,
     this.jumpToDialogue,
+    this.depth = -1,
+    this.reason,
+    this.collapsed = 0,
+    this.toggleCollapse,
+    this.onScrollLeft,
   });
   final ReplyInfo replyItem;
   final int replyLevel;
@@ -91,6 +124,11 @@ class ReplyItemGrpc extends StatelessWidget {
   final ValueChanged<ReplyInfo>? onCheckReply;
   final ValueChanged<ReplyInfo>? onToggleTop;
   final VoidCallback? jumpToDialogue;
+  final int depth;
+  final ReasonType? reason;
+  final int collapsed;
+  final VoidCallback? toggleCollapse;
+  final VoidCallback? onScrollLeft;
 
   static final _voteRegExp = RegExp(r"^\{vote:\d+?\}$");
   static final _timeRegExp = RegExp(r'^(?:\d+[:：])?\d+[:：]\d+$');
@@ -100,6 +138,9 @@ class ReplyItemGrpc extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = ColorScheme.of(context);
+    if (reason != null) {
+      return _buildPlaceholder(context, colorScheme);
+    }
 
     void showMore() => showModalBottomSheet(
       context: context,
@@ -127,6 +168,16 @@ class ReplyItemGrpc extends StatelessWidget {
         return _buildContent(context, colorScheme);
       }),
     );
+    if (depth >= 0) {
+      child = ReplyThreadedIndentBox(
+        depth: depth,
+        colors: colorScheme.isLight ? _colorsLight : _colorsDark,
+        divColor: colorScheme.outline.withValues(alpha: 0.08),
+        onTapLine: toggleCollapse,
+        onScrollLeft: onScrollLeft,
+        child: child,
+      );
+    }
     if (needDivider) {
       child = Column(
         mainAxisSize: .min,
@@ -147,6 +198,72 @@ class ReplyItemGrpc extends StatelessWidget {
         onTap: () => replyReply?.call(replyItem, null),
         onLongPress: showMore,
         onSecondaryTap: PlatformUtils.isMobile ? null : showMore,
+        child: child,
+      ),
+    );
+  }
+
+  Widget _buildPlaceholder(BuildContext context, ColorScheme colorScheme) {
+    Widget child = Padding(
+      padding: const .fromLTRB(12, 14, 8, 5),
+      child: Column(
+        mainAxisSize: .min,
+        crossAxisAlignment: .start,
+        children: [
+          _buildHeader(context, colorScheme),
+          const SizedBox(height: 10),
+          TextMore(
+            reason!.desc,
+            primary: colorScheme.primary,
+            style: TextStyle(
+              height: 1.75,
+              fontSize: 14,
+              color: colorScheme.error,
+            ),
+          ),
+          if (toggleCollapse != null)
+            SizedBox(
+              height: 32,
+              child: TextButton(
+                onPressed: toggleCollapse,
+                child: Text(
+                  collapsed == 0
+                      ? uiTx('折叠')
+                      : uiTxP('展开{0}条评论', [collapsed]),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (depth >= 0) {
+      child = ReplyThreadedIndentBox(
+        depth: depth,
+        colors: colorScheme.isLight ? _colorsLight : _colorsDark,
+        divColor: colorScheme.outline.withValues(alpha: 0.08),
+        onTapLine: toggleCollapse,
+        onScrollLeft: onScrollLeft,
+        child: child,
+      );
+    }
+    if (needDivider) {
+      child = Column(
+        mainAxisSize: .min,
+        children: [
+          child,
+          Divider(
+            indent: 55,
+            endIndent: 15,
+            height: 0.3,
+            color: colorScheme.outline.withValues(alpha: 0.08),
+          ),
+        ],
+      );
+    }
+    return Material(
+      type: MaterialType.transparency,
+      child: InkWell(
+        onTap: () {},
         child: child,
       ),
     );
@@ -452,6 +569,20 @@ class ReplyItemGrpc extends StatelessWidget {
     return Row(
       children: [
         const SizedBox(width: 36),
+        if (toggleCollapse != null)
+          SizedBox(
+            height: 32,
+            child: TextButton(
+              style: buttonStyle,
+              onPressed: toggleCollapse,
+              child: Text(
+                collapsed == 0
+                    ? uiTx('折叠')
+                    : uiTxP('展开{0}条评论', [collapsed]),
+                style: textStyle,
+              ),
+            ),
+          ),
         SizedBox(
           height: 32,
           child: TextButton(
@@ -793,7 +924,7 @@ class ReplyItemGrpc extends StatelessWidget {
                   String? cvid =
                       match?.group(1) ?? match?.group(2) ?? match?.group(3);
                   if (cvid != null) {
-                    Get.toNamed(
+                    PageUtils.toDupNamed(
                       '/articlePage',
                       parameters: {
                         'id': cvid,
@@ -1003,7 +1134,7 @@ class ReplyItemGrpc extends StatelessWidget {
         recognizer = NoDeadlineTapGestureRecognizer()
           ..onTap = () => hasClickUrl
               ? PiliScheme.routePushFromUrl(content.richText.note.clickUrl)
-              : Get.toNamed(
+              : PageUtils.toDupNamed(
                   '/articlePage',
                   parameters: {
                     'id': content.richText.opus.opusId.toString(),

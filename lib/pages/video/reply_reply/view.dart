@@ -259,59 +259,64 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
       child: Padding(
         padding: const .fromLTRB(12, 2.5, 6, 2.5),
         child: Row(
-          mainAxisAlignment: .spaceBetween,
+          spacing: 6,
           children: [
+            Obx(() {
+              final count = _controller.count.value;
+              return count != -1
+                  ? Text(uiTx('相关回复共${NumUtils.numFormat(count)}条'),
+                      style: const TextStyle(fontSize: 13),
+                    )
+                  : const SizedBox.shrink();
+            }),
             Obx(
-              () {
-                final count = _controller.count.value;
-                return count != -1
-                    ? Text(uiTx('相关回复共${NumUtils.numFormat(count)}条'),
-                        style: const TextStyle(fontSize: 13),
-                      )
-                    : const SizedBox.shrink();
-              },
+              () => _controller.replyTree.value == null
+                  ? IconButton(
+                      visualDensity: VisualDensity.compact,
+                      onPressed: () {
+                        if (_controller.isEnd && _controller.foldCard == null) {
+                          _controller.buildTree();
+                        } else if (_controller.inFetchReply) {
+                          SmartDialog.showToast(uiTx('正在拉取评论，请稍后'));
+                        } else {
+                          showConfirmDialog(
+                            context: context,
+                            title: Text(uiTx('是否加载全部评论以显示线程化评论？')),
+                            content: Text(
+                              uiTx('这将消耗一定流量\n且可能导致IP或账号风控'),
+                            ),
+                            onConfirm: _controller.nextReplyRound,
+                          );
+                        }
+                      },
+                      icon: const Icon(
+                        Icons.view_comfortable_outlined,
+                        size: 22,
+                      ),
+                      color: colorScheme.outline,
+                      tooltip: uiTx('线程化展示'),
+                    )
+                  : const SizedBox.shrink(),
             ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Obx(
-                  () => _controller.replyTree.value == null
-                      ? IconButton(
-                          visualDensity: VisualDensity.compact,
-                          onPressed: () {
-                            if (_controller.isEnd) {
-                              _controller.buildTree();
-                            } else {
-                              showConfirmDialog(
-                                context: context,
-                                title: Text(uiTx('是否加载全部评论以显示线程化评论？')),
-                                content: Text(
-                                  uiTx('这将消耗一定流量\n且可能导致IP或账号风控'),
-                                ),
-                                onConfirm: _loadAllForTree,
-                              );
-                            }
-                          },
-                          icon: const Icon(
-                            Icons.view_comfortable_outlined,
-                            size: 22,
-                          ),
-                          color: colorScheme.outline,
-                          tooltip: uiTx('线程化展示'),
-                        )
-                      : const SizedBox.shrink(),
+            Expanded(
+              child: Obx(
+                () => LinearProgressIndicator(
+                  borderRadius: const BorderRadius.all(Radius.circular(4)),
+                  value: _controller.progress.value,
+                  color: colorScheme.primary,
+                  backgroundColor: colorScheme.surfaceContainerHighest,
                 ),
-                TextButton.icon(
-                  style: Style.buttonStyle,
-                  onPressed: _controller.queryBySort,
-                  icon: Icon(Icons.sort, size: 16, color: colorScheme.secondary),
-                  label: Obx(
-                    () => Text(uiTx(_controller.sortType.value.label),
-                      style: TextStyle(fontSize: 13, color: colorScheme.secondary),
-                    ),
-                  ),
+              ),
+            ),
+            TextButton.icon(
+              style: Style.buttonStyle,
+              onPressed: _controller.queryBySort,
+              icon: Icon(Icons.sort, size: 16, color: colorScheme.secondary),
+              label: Obx(
+                () => Text(uiTx(_controller.sortType.value.label),
+                  style: TextStyle(fontSize: 13, color: colorScheme.secondary),
                 ),
-              ],
+              ),
             ),
           ],
         ),
@@ -369,26 +374,26 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
           return _buildFooter(context, colorScheme);
         }
         final node = tree[index];
-        final child = Padding(
-          padding: EdgeInsets.only(left: node.depth * 16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (!node.isLeaf)
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: IconButton(
-                    visualDensity: VisualDensity.compact,
-                    onPressed: () => _controller.toggleCollapseTree(index),
-                    icon: Icon(
-                      node.collapsed > 0 ? Icons.add : Icons.remove,
-                      size: 16,
-                    ),
-                  ),
-                ),
-              _replyItem(context, node.reply, index),
-            ],
-          ),
+        final child = ReplyItemGrpc(
+          replyItem: node.reply,
+          replyLevel: 2,
+          upMid: _controller.upMid,
+          getTag: () => widget.heroTag,
+          onCheckReply: (item) =>
+              _controller.onCheckReply(item, isManual: true),
+          needDivider: false,
+          depth: node.depth,
+          reason: node.reason,
+          onReply: (reply) => _controller.onReplyByTreeNode(index, reply),
+          onDelete: (reply, _) =>
+              _controller.onRemoveByTreeNode(index, reply),
+          collapsed: node.collapsed,
+          toggleCollapse: node.isLeaf
+              ? null
+              : () => _controller.toggleCollapseTree(index),
+          onScrollLeft: node.depth > 0
+              ? () => _controller.setIndexByTreeNode(index, node.parent)
+              : null,
         );
         return jumpIndex == index ? _jumpWrapper(colorScheme, child) : child;
       },
@@ -420,19 +425,6 @@ class _VideoReplyReplyPanelState extends State<VideoReplyReplyPanel>
     );
   }
 
-  Future<void> _loadAllForTree() async {
-    SmartDialog.showLoading(msg: uiTx('正在加载全部评论…'));
-    try {
-      var guard = 0;
-      while (!_controller.isEnd && guard++ < 50) {
-        _controller.onLoadMore();
-        await Future<void>.delayed(const Duration(milliseconds: 600));
-      }
-      _controller.buildTree();
-    } finally {
-      SmartDialog.dismiss();
-    }
-  }
 
   Widget _replyItem(BuildContext context, ReplyInfo replyItem, int index) {
     return ReplyItemGrpc(
