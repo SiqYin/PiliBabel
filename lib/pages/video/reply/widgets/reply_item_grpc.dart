@@ -213,7 +213,7 @@ class ReplyItemGrpc extends StatelessWidget {
           _buildHeader(context, colorScheme),
           const SizedBox(height: 10),
           TextMore(
-            reason!.desc,
+            uiTx(reason!.desc),
             primary: colorScheme.primary,
             style: TextStyle(
               height: 1.75,

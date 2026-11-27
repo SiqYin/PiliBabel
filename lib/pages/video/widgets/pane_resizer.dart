@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/pages/video/models/pane_geometry.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind;
 import 'package:material_ui/material_ui.dart';
@@ -172,11 +173,13 @@ class VideoPaneResizerState extends State<VideoPaneResizer> {
         width: active ? VideoPaneGeometry.dividerWidth : 0,
         height: constraints.maxHeight,
         child: active ? Semantics(
-          label: '页面比例',
-          value: '左侧 ${(width / geometry.contentWidth * 100).round()}%',
+          label: uiTx('页面比例'),
+          value: uiTxP('左侧{0}%', [
+            (width / geometry.contentWidth * 100).round(),
+          ]),
           onTap: showRatioDialog,
           child: Tooltip(
-            message: '拖动调整页面比例',
+            message: uiTx('拖动调整页面比例'),
             child: MouseRegion(
               cursor: SystemMouseCursors.resizeLeftRight,
               onEnter: (_) => setState(() => _hovered = true),
@@ -298,27 +301,32 @@ class _PaneRatioDialogState extends State<_PaneRatioDialog> {
       child: AlertDialog(
         alignment: Alignment.bottomRight,
         scrollable: true,
-        title: const Text('页面比例'),
+        title: Text(uiTx('页面比例')),
         content: SizedBox(
           width: 320,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('${_ratio == null ? '自动 · ' : ''}左侧 $percent% · 右侧 ${100 - percent}%'),
+              Text(uiTxP('{0}左侧{1}% · 右侧{2}%', [
+                _ratio == null ? uiTx('自动 · ') : '',
+                percent,
+                100 - percent,
+              ])),
               Slider(
                 autofocus: true,
                 min: geometry.minRatio,
                 max: geometry.maxRatio,
                 value: value,
                 label: '$percent%',
-                semanticFormatterCallback: (value) => '左侧 ${(value * 100).round()}%',
+                semanticFormatterCallback: (value) =>
+                  uiTxP('左侧{0}%', [(value * 100).round()]),
                 onChanged: _saving ? null : (value) {
                   setState(() => _ratio = value);
                   widget.onPreview(value);
                 },
               ),
-              const Text('调节范围受窗口大小限制，保留简介和右侧内容的显示空间。'),
-              if (_failed) Text('保存失败，请重试',
+              Text(uiTx('调节范围受窗口大小限制，保留简介和右侧内容的显示空间。')),
+              if (_failed) Text(uiTx('保存失败，请重试'),
                 style: TextStyle(color: Theme.of(context).colorScheme.error)),
             ],
           ),
@@ -329,15 +337,15 @@ class _PaneRatioDialogState extends State<_PaneRatioDialog> {
               setState(() => _ratio = null);
               widget.onPreview(null);
             },
-            child: const Text('恢复自动'),
+            child: Text(uiTx('恢复自动')),
           ),
           TextButton(
             onPressed: _saving ? null : () => Navigator.of(context).pop(),
-            child: const Text('取消'),
+            child: Text(uiTx('取消')),
           ),
           FilledButton(
             onPressed: _saving ? null : _save,
-            child: Text(_saving ? '保存中' : '完成'),
+            child: Text(uiTx(_saving ? '保存中' : '完成')),
           ),
         ],
       ),

@@ -4,6 +4,7 @@ import 'package:PiliPlus/common/widgets/loading_widget/loading_widget.dart';
 import 'package:PiliPlus/common/widgets/view_sliver_safe_area.dart';
 import 'package:PiliPlus/http/loading_state.dart';
 import 'package:PiliPlus/models_new/live/live_fans_medal_mgmt/item.dart';
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/pages/fans_medal/controller.dart';
 import 'package:PiliPlus/pages/fans_medal/medal_setting_mixin.dart';
 import 'package:PiliPlus/pages/member/widget/medal_widget.dart';
@@ -52,11 +53,11 @@ class _FansMedalPageState extends State<FansMedalPage> with MedalSettingMixin {
       appBar: AppBar(
         title: Obx(() {
           final count = _controller.count.value;
-          return Text('粉丝勋章${count != null ? '($count)' : ''}');
+          return Text(uiTxP('粉丝勋章{0}', [count != null ? '($count)' : '']));
         }),
         actions: [
           IconButton(
-            tooltip: '展示设置',
+            tooltip: uiTx('展示设置'),
             onPressed: showMedalSettingDialog,
             icon: const Icon(Icons.settings),
           ),
@@ -168,8 +169,8 @@ class _FansMedalPageState extends State<FansMedalPage> with MedalSettingMixin {
                             color: BiliColors.linkBlue.withValues(alpha: 0.6),
                           ),
                         ),
-                        child: const Text(
-                          '取消佩戴',
+                        child: Text(
+                          uiTx('取消佩戴'),
                           style: TextStyle(
                             height: 1,
                             fontSize: 12,
@@ -197,8 +198,8 @@ class _FansMedalPageState extends State<FansMedalPage> with MedalSettingMixin {
                               ),
                             ),
                           ),
-                          child: const Text(
-                            '佩戴',
+                          child: Text(
+                            uiTx('佩戴'),
                             style: TextStyle(
                               height: 1,
                               fontSize: 12,
@@ -221,8 +222,8 @@ class _FansMedalPageState extends State<FansMedalPage> with MedalSettingMixin {
                               ),
                             ),
                           ),
-                          child: const Text(
-                            '删除',
+                          child: Text(
+                            uiTx('删除'),
                             style: TextStyle(
                               height: 1,
                               fontSize: 12,
@@ -252,18 +253,18 @@ class _FansMedalPageState extends State<FansMedalPage> with MedalSettingMixin {
   Widget _header() {
     return DefaultTextStyle(
       style: TextStyle(fontSize: 13, color: colorScheme.onSurfaceVariant),
-      child: const Padding(
-        padding: .fromLTRB(12, 0, 12, 10),
+      child: Padding(
+        padding: const .fromLTRB(12, 0, 12, 10),
         child: Row(
           children: [
             Expanded(
               flex: 5,
-              child: Align(alignment: _kMedalAlign, child: Text('勋章')),
+              child: Align(alignment: _kMedalAlign, child: Text(uiTx('勋章'))),
             ),
-            Expanded(flex: 6, child: Text('主播呢称')),
-            Expanded(flex: 3, child: Text('累计')),
-            Expanded(flex: 3, child: Text('获得')),
-            Expanded(flex: 5, child: Text('操作')),
+            Expanded(flex: 6, child: Text(uiTx('主播呢称'))),
+            Expanded(flex: 3, child: Text(uiTx('累计'))),
+            Expanded(flex: 3, child: Text(uiTx('获得'))),
+            Expanded(flex: 5, child: Text(uiTx('操作'))),
           ],
         ),
       ),
@@ -282,7 +283,7 @@ class _FansMedalPageState extends State<FansMedalPage> with MedalSettingMixin {
         );
         final color = checked ? colorScheme.primary : colorScheme.outline;
         return AlertDialog(
-          title: const Text('删除粉丝勋章须知'),
+          title: Text(uiTx('删除粉丝勋章须知')),
           content: Column(
             spacing: 10,
             mainAxisSize: .min,
@@ -290,10 +291,10 @@ class _FansMedalPageState extends State<FansMedalPage> with MedalSettingMixin {
             children: [
               Row(
                 children: [
-                  Text('粉丝勋章:  ', style: descStyle),
+                  Text(uiTx('粉丝勋章:  '), style: descStyle),
                   medalWidget,
                   const SizedBox(width: 12),
-                  Text('主播:  ', style: descStyle),
+                  Text(uiTx('主播:  '), style: descStyle),
                   Text(
                     item.anchorInfo.nickName,
                     style: const TextStyle(
@@ -303,7 +304,7 @@ class _FansMedalPageState extends State<FansMedalPage> with MedalSettingMixin {
                 ],
               ),
               Text(
-                '确认删除后，该粉丝勋章将从「我的勋章」中删除，该粉丝勋章的所有升级进度将会清零，同时将失去该粉丝勋章目前相关的所有权益，包括特权礼物、榜单排行等，删除后不可恢复。请勾选须知，阅读10秒，谨慎操作。',
+                uiTx('确认删除后，该粉丝勋章将从「我的勋章」中删除，该粉丝勋章的所有升级进度将会清零，同时将失去该粉丝勋章目前相关的所有权益，包括特权礼物、榜单排行等，删除后不可恢复。请勾选须知，阅读10秒，谨慎操作。'),
                 style: descStyle,
               ),
               GestureDetector(
@@ -321,7 +322,7 @@ class _FansMedalPageState extends State<FansMedalPage> with MedalSettingMixin {
                       color: color,
                       checked ? Icons.check_box : Icons.check_box_outline_blank,
                     ),
-                    Text('已知晓', style: TextStyle(color: color)),
+                    Text(uiTx('已知晓'), style: TextStyle(color: color)),
                   ],
                 ),
               ),
@@ -330,13 +331,13 @@ class _FansMedalPageState extends State<FansMedalPage> with MedalSettingMixin {
           actions: [
             TextButton(
               onPressed: Get.back,
-              child: Text('取消', style: TextStyle(color: colorScheme.outline)),
+              child: Text(uiTx('取消'), style: TextStyle(color: colorScheme.outline)),
             ),
             TextButton(
               onPressed: checked
                   ? () => {Get.back(), _showDelSnackbar(item)}
                   : null,
-              child: const Text('确认删除'),
+              child: Text(uiTx('确认删除')),
             ),
           ],
         );
@@ -351,10 +352,10 @@ class _FansMedalPageState extends State<FansMedalPage> with MedalSettingMixin {
       SnackBar(
         persist: false,
         showCloseIcon: true,
-        content: const Text('即将删除'),
+        content: Text(uiTx('即将删除')),
         backgroundColor: colorScheme.onInverseSurface,
         action: SnackBarAction(
-          label: '取消删除',
+          label: uiTx('取消删除'),
           textColor: colorScheme.onSecondaryContainer,
           backgroundColor: colorScheme.secondaryContainer,
           onPressed: () {

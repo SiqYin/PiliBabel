@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
@@ -297,7 +298,7 @@ class RenderReplyThreadedIndentBox extends RenderBox
   @override
   void describeSemanticsConfiguration(SemanticsConfiguration config) {
     super.describeSemanticsConfiguration(config);
-    config.label = '第${depth + 1}层';
+    config.label = uiTxP('第{0}层', [depth + 1]);
     if (_onScrollLeft != null) {
       config.onScrollLeft = _onScrollLeft;
     }

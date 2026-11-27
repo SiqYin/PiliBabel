@@ -2,6 +2,14 @@
 
 按 Keep a Changelog 的思路编写,留个记录,方便知道每次更新都改了什么,也方便用户查看更新内容.
 
+## 3.10.4
+
+**直播控制器拆分為 11 個 mixin 模組（結構重構、行為不變），新增介面文本接入 AI 翻譯。**
+
+- 直播控制器重構：`live_room/controller.dart` 拆分為 11 個 `controller_mixin`（data／block／time／size／like／sc／dm／dm_stream／dm_trim／trace／medal），檔案由約 1330 行降至 554 行，使用者功能不變。
+- 介面翻譯：9 個頁面／控制元件的新增文字接入 `uiTx`／`uiTxP`（粉絲牌、彈幕回覆縮進、全螢幕佈局編輯、播放器控制面、動態富文本面板等）。
+- 驗證：`flutter analyze` 0 error、全量 `flutter test` 192/192、`verify_readmes.py` 44/44（3.10.4）。
+
 ## 3.10.3
 
 **上游同步收尾：完整線程評論、文章倒序、proto 更新與直播模型遷移。**

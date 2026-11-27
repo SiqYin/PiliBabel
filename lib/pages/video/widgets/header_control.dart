@@ -2024,7 +2024,7 @@ class HeaderControlState extends State<HeaderControl>
             height: btnHeight,
             child: IconButton(
               style: btnStyle,
-              tooltip: '${isAlwaysOnTop ? '取消' : ''}置顶',
+              tooltip: uiTxP('{0}置顶', [isAlwaysOnTop ? uiTx('取消') : '']),
               onPressed: () =>
                   plPlayerController.setAlwaysOnTop(!isAlwaysOnTop),
               icon: isAlwaysOnTop
@@ -2169,7 +2169,7 @@ class HeaderControlState extends State<HeaderControl>
                   height: btnHeight,
                   child: IconButton(
                     style: btnStyle,
-                    tooltip: '${isAlwaysOnTop ? '取消' : ''}置顶',
+                    tooltip: uiTxP('{0}置顶', [isAlwaysOnTop ? uiTx('取消') : '']),
                     onPressed: () =>
                         plPlayerController.setAlwaysOnTop(!isAlwaysOnTop),
                     icon: isAlwaysOnTop

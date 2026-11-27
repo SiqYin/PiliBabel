@@ -58,53 +58,53 @@ import 'package:flutter_smart_dialog/flutter_smart_dialog.dart';
 import 'package:get/get.dart';
 import 'package:material_ui/material_ui.dart';
 
+part 'controller_mixin/data.dart';
+part 'controller_mixin/block.dart';
+part 'controller_mixin/time.dart';
+part 'controller_mixin/size.dart';
+part 'controller_mixin/like.dart';
+part 'controller_mixin/sc.dart';
+part 'controller_mixin/dm.dart';
+part 'controller_mixin/dm_stream.dart';
+part 'controller_mixin/dm_trim.dart';
+part 'controller_mixin/trace.dart';
+part 'controller_mixin/medal.dart';
+
 const int _kMaxChatCount = 500;
 const int _kTrimCount = _kMaxChatCount + 50;
 const int _kSafeTrimIndex = 200;
 
-class LiveRoomController extends GetxController {
+class LiveRoomController extends GetxController
+    with
+        _LiveDataMixin,
+        _LiveBlockMixin,
+        _LiveTimeMixin,
+        _LiveSizeMixin,
+        _LiveLikeMixin,
+        _LiveScMixin,
+        _LiveDMMixin,
+        _LiveDMTrimMixin,
+        _LiveDMStreamMixin,
+        _LiveTraceMixin,
+        _LiveMedalMixin {
   LiveRoomController(this.heroTag, {this.fromPip = false});
   final String heroTag;
   final bool fromPip;
 
-  late int roomId;
   bool isReturningFromPip = false;
-  int? ruid;
-  DanmakuController<DanmakuExtra>? danmakuController;
-  PlPlayerController plPlayerController = PlPlayerController.getInstance(
-    isLive: true,
-  );
 
-  final isLoaded = false.obs;
-  final roomInfoH5 = Rxn<RoomInfoH5Data>();
-
-  final liveTime = Rxn<int>();
 
   // PiP 模式标志
   RxBool isInPipMode = false.obs;
 
-  Timer? liveTimeTimer;
-
-  // live trace
-  Timer? _liveTraceTimer;
-  LiveTraceReq? _liveTraceReq;
-  LiveTraceResp? _liveTraceResp;
-  int get _liveTraceInterval =>
-      _liveTraceResp?.interval ?? LiveTraceResp.kInterval;
 
   void startLiveTimer() {
-    if (liveTime.value != null) {
-      liveTimeTimer ??= Timer.periodic(
-        const Duration(minutes: 5),
-        (_) => liveTime.refresh(),
-      );
-    }
+    _startLiveTimeTimer();
     _startLiveTraceTimer();
   }
 
   void cancelLiveTimer() {
-    liveTimeTimer?.cancel();
-    liveTimeTimer = null;
+    _stopLiveTimeTimer();
     _stopLiveTraceTimer();
   }
 
@@ -112,229 +112,14 @@ class LiveRoomController extends GetxController {
 
   void stopService() => cancelLiveTimer();
 
-  Future<void> _initLiveTraceIfNeeded() async {
-    if (isClosed || !isLoaded.value || !heartbeat.isLogin) return;
-    try {
-      final ruid = this.ruid;
-      final roomInfo = roomInfoH5.rawValue?.roomInfo;
-      if (ruid == null || roomInfo == null) {
-        Utils.reportError('liveTrace: null roomInfo/ruid');
-        return;
-      }
-      final parentAreaId = roomInfo.parentAreaId;
-      final areaId = roomInfo.areaId;
-      if (parentAreaId == null || areaId == null) {
-        Utils.reportError('liveTrace: null area');
-        return;
-      }
 
-      final cookies = await heartbeat.cookieJar.loadForRequest(
-        Uri.parse(HttpString.baseUrl),
-      );
-      final liveBuvid = cookies
-          .firstWhereOrNull((cookie) => cookie.name == 'LIVE_BUVID')
-          ?.value;
-      if (isClosed) return;
-      if (liveBuvid == null) {
-        Utils.reportError('liveTrace: null liveBuvid');
-        return;
-      }
-
-      _liveTraceReq = LiveTraceReq(
-        parentAreaId: parentAreaId,
-        areaId: areaId,
-        roomId: roomId,
-        liveBuvid: liveBuvid,
-        ruid: ruid,
-      );
-      _startLiveTraceTimer();
-    } catch (_) {
-      if (kDebugMode) rethrow;
-    }
-  }
-
-  void _startLiveTraceTimer() {
-    if (_liveTraceReq == null || isClosed || _liveTraceTimer != null) {
-      return;
-    }
-    _liveTraceReq!.seqId = 0;
-    _onLiveTrace();
-    _liveTraceTimer = Timer.periodic(
-      Duration(seconds: _liveTraceInterval),
-      _onLiveTrace,
-    );
-  }
-
-  void _stopLiveTraceTimer() {
-    _liveTraceTimer?.cancel();
-    _liveTraceTimer = null;
-  }
-
-  Future<void> _onLiveTrace([_]) async {
-    if (kDebugMode) logger.i('liveTraceReq: $_liveTraceReq');
-    final res = _liveTraceReq!.seqId == 0
-        ? await LiveHttp.liveTraceE(
-            traceReq: _liveTraceReq!,
-            heartbeat: heartbeat,
-          )
-        : await LiveHttp.liveTraceX(
-            traceReq: _liveTraceReq!,
-            traceResp: _liveTraceResp!,
-            heartbeat: heartbeat,
-          );
-    if (isClosed) return;
-    if (res case Success(:final response)) {
-      if (kDebugMode) logger.i('liveTraceResp: $response');
-      final newInterval = response.interval;
-      if (_liveTraceInterval != newInterval) {
-        _liveTraceTimer?.cancel();
-        _liveTraceTimer = Timer.periodic(
-          Duration(seconds: newInterval),
-          _onLiveTrace,
-        );
-      }
-      _liveTraceResp = response;
-    } else {
-      Utils.reportError('live trace error: $res');
-      _stopLiveTraceTimer();
-    }
-  }
-
-  Widget get timeWidget => Obx(() {
-    final liveTime = this.liveTime.value;
-    String text = '';
-    if (liveTime != null) {
-      final duration = DurationUtils.formatDurationBetween(
-        liveTime * 1000,
-        DateTime.now().millisecondsSinceEpoch,
-      );
-      text += duration.isEmpty ? uiTx('刚刚开播') : uiTxP('开播{0}', [duration]);
-    }
-    if (text.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 12,
-        color: Colors.white,
-      ),
-    );
-  });
-
-  // dm
-  LiveDmInfoData? dmInfo;
-  List<RichTextItem>? savedDanmaku;
-  int builtLength = 0;
-  final messages = <dynamic>[].obs;
-  bool get shouldRefresh => builtLength != messages.length;
-  late final fsSC = Rxn<SuperChatItem>();
-  late final RxList<SuperChatItem> superChatMsg = <SuperChatItem>[].obs;
-
-  /// 开关直播弹幕：临时配置下不落盘（3.8.13，上游 9f1bb96af）。
-  void toggleDanmaku() {
-    final newVal = !plPlayerController.enableShowLiveDanmaku.rawValue;
-    plPlayerController.enableShowLiveDanmaku.value = newVal;
-    if (!plPlayerController.tempPlayerConf) {
-      GStorage.setting.put(SettingBoxKey.enableShowLiveDanmaku, newVal);
-    }
-  }
-  final disableAutoScroll = false.obs;
-  bool autoScroll = true;
-  LiveMessageStream? _msgStream;
-  List<String> _keywordList = const [];
-  Set<int> _shieldUids = const {};
-  late final ScrollController scrollController;
   late final RxInt pageIndex = 0.obs;
   PageController? pageController;
 
-  int? currentQn = PlatformUtils.isMobile ? null : Pref.liveQuality;
-  final currentQnDesc = ''.obs;
-  final RxBool isPortrait = false.obs;
-  late List<({int code, String desc})> acceptQnList = [];
 
-  late final bool isLogin;
-  late final int mid;
-  late final Account heartbeat;
 
-  // ---------- 粉丝勋章 ----------
-  final Rxn<FansMedalPanelData> fansMedalData = Rxn();
-  final Rxn<UinfoMedal> wearingMedal = Rxn();
-  late bool hasMedal = false;
-  final medal = Rxn<UinfoMedal>();
-  final RxBool fansMedalLoading = false.obs;
-  final Rxn<String> fansMedalError = Rxn();
-  bool _fansMedalStale = false;
-  Future<void>? _fansMedalReq;
-  int _fansMedalPage = 1;
-  bool _fansMedalLoadingMore = false;
-  final RxBool fansMedalHasMore = false.obs;
 
-  Object? get medalTargetId => ruid ?? roomInfoH5.value?.roomInfo?.uid;
 
-  String? videoUrl;
-  bool? isPlaying;
-  late bool isFullScreen = false;
-
-  final superChatType = Pref.superChatType;
-  late final showSuperChat = superChatType != SuperChatType.disable;
-  final superChatTimeType = Pref.superChatTimeType;
-
-  final headerKey = GlobalKey<TimeBatteryMixin>();
-
-  final RxString title = ''.obs;
-
-  final RxnString onlineCount = RxnString();
-
-  final RxnString watchedShow = RxnString();
-  Widget get watchedWidget => Obx(() {
-    if (watchedShow.value case final watchedShow?) {
-      return Text(
-        watchedShow,
-        style: const TextStyle(
-          fontSize: 12,
-          color: Colors.white,
-        ),
-      );
-    }
-    return const SizedBox.shrink();
-  });
-
-  int chatSimpleIndex = 0;
-  int _trimDmIndex = 0;
-  int get trimDmIndex => _trimDmIndex;
-  void _trimDm() {
-    final trimCount = messages.length - _trimDmIndex;
-    if (trimCount > _kTrimCount) {
-      final endIndex = messages.length - _kMaxChatCount;
-      final canTrim = (chatSimpleIndex - endIndex) > _kSafeTrimIndex;
-      if (canTrim) {
-        messages.fillRangeOnly(_trimDmIndex, endIndex);
-        _trimDmIndex = endIndex;
-      }
-    }
-  }
-
-  StreamSubscription? _sizeSub;
-
-  void _onSizeChanged((int, int) value) {
-    final isVertical = value.$2 > value.$1;
-    isPortrait.value = isVertical;
-    plPlayerController.isVertical = isVertical;
-  }
-
-  void _startSizeSub() {
-    if (isPortrait.value) return;
-    _stopSizeSub();
-    _sizeSub = plPlayerController.videoPlayerController?.stream.size.listen(
-      _onSizeChanged,
-    );
-  }
-
-  void _stopSizeSub() {
-    _sizeSub?.cancel();
-    _sizeSub = null;
-  }
 
   @override
   void onInit() {
@@ -419,50 +204,6 @@ class LiveRoomController extends GetxController {
             await plPlayerController.play();
           }
         });
-  }
-
-  Future<bool> getUserMedal() async {
-    if (isClosed) return false;
-    final res = await LiveHttp.userMedalInfo(uid: mid, upId: ruid!);
-    if (res case Success(:final response)) {
-      _handleMedalInfo(response, isInit: true);
-      return true;
-    }
-    return false;
-  }
-
-  void _handleMedalInfo(info.Medal response, {bool isInit = false}) {
-    hasMedal = response.hasMedal;
-    final currShow = response.currShow;
-    if (isInit && Pref.autoWearMedal) {
-      final lookupV2 = response.lookupV2;
-      final currWeared = response.currWearedV2;
-      if (lookupV2 != null && lookupV2.ruid != currWeared?.ruid) {
-        _autoWearMedal(currShow, lookupV2);
-        return;
-      }
-    }
-    medal.value = currShow;
-  }
-
-  Future<void> _autoWearMedal(UinfoMedal? currShow, UinfoMedal lookupV2) async {
-    var id = lookupV2.id;
-    if (id == null || id == 0) {
-      final realLookupV2 = (await LiveHttp.userMedalInfo(
-        uid: mid,
-        upId: ruid!,
-      )).dataOrNull?.lookupV2;
-      if (isClosed) return;
-      id = realLookupV2?.id;
-      if (realLookupV2 == null || id == null || id == 0) {
-        medal.value = currShow;
-        return;
-      }
-      lookupV2 = realLookupV2;
-    }
-    final res = await LiveHttp.wearFansMedal(medalId: id);
-    if (isClosed) return;
-    medal.value = res.isSuccess ? lookupV2 : currShow;
   }
 
   Future<void> queryLiveUrl({bool autoFullScreenFlag = false}) async {
@@ -716,136 +457,6 @@ class LiveRoomController extends GetxController {
     );
   }
 
-  void scrollToBottom() {
-    EasyThrottle.throttle(
-      'liveDm',
-      const Duration(milliseconds: 500),
-      () => WidgetsBinding.instance.addPostFrameCallback(_scrollToBottom),
-    );
-  }
-
-  void _scrollToBottom([_]) {
-    if (scrollController.hasClients) {
-      scrollController.animateTo(
-        scrollController.position.maxScrollExtent,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.linearToEaseOut,
-      );
-    }
-  }
-
-  void handleJumpToBottom() {
-    disableAutoScroll.value = false;
-    if (shouldRefresh) {
-      messages.refresh();
-      WidgetsBinding.instance.addPostFrameCallback(_jumpToBottom);
-    } else {
-      _jumpToBottom();
-    }
-  }
-
-  void _jumpToBottom([_]) {
-    if (scrollController.hasClients) {
-      scrollController.jumpTo(scrollController.position.maxScrollExtent);
-    }
-  }
-
-  void closeLiveMsg() {
-    _msgStream?.close();
-    _msgStream = null;
-  }
-
-  @pragma('vm:notify-debugger-on-exception')
-  Future<void> prefetch() async {
-    final res = await LiveHttp.liveRoomDmPrefetch(roomId: roomId);
-    if (res case Success(:final response)) {
-      if (response != null && response.isNotEmpty) {
-        messages.addAll(
-          response.where((item) => !isBlocked(item.text, item.extra.mid)),
-        );
-        scrollToBottom();
-      }
-    } else {
-      if (kDebugMode) {
-        Utils.reportError(res.toString());
-      }
-    }
-  }
-
-  Future<void> getSuperChatMsg() async {
-    final res = await LiveHttp.superChatMsg(roomId);
-    if (res.dataOrNull?.list case final list? when list.isNotEmpty) {
-      superChatMsg.addAll(list);
-    }
-  }
-
-  void clearSC() {
-    superChatMsg.removeWhere((e) => e.expired);
-  }
-
-  Future<void> _fetchBlockRules() async {
-    final res = await LiveHttp.getLiveInfoByUser(roomId);
-    final shieldInfo = res.dataOrNull?.shieldInfo;
-    if (shieldInfo != null) {
-      if (shieldInfo.keywordList case final keywordList?) {
-        _keywordList = keywordList;
-      }
-      if (shieldInfo.shieldUserList case final shieldUserList?) {
-        _shieldUids = shieldUserList.map((e) => e.uid).toSet();
-      }
-    }
-  }
-
-  void updateBlockRules(List<String> keywords, Set<int> uids) {
-    _keywordList = keywords;
-    _shieldUids = uids;
-  }
-
-  bool isBlocked(String text, Object uid) {
-    return _keywordList.any(text.contains) || _shieldUids.contains(uid);
-  }
-
-  void startLiveMsg() {
-    if (messages.isEmpty) {
-      prefetch();
-      if (showSuperChat) {
-        getSuperChatMsg();
-      }
-    }
-    if (_msgStream != null) {
-      return;
-    }
-    if (dmInfo != null) {
-      initDm(dmInfo!);
-      return;
-    }
-    LiveHttp.liveRoomGetDanmakuToken(roomId: roomId).then((res) {
-      if (res case Success(:final response)) {
-        initDm(dmInfo = response);
-      }
-    });
-  }
-
-  void listener() {
-    final userScrollDirection = scrollController.position.userScrollDirection;
-    if (userScrollDirection == .forward) {
-      disableAutoScroll.value = true;
-    } else if (userScrollDirection == .reverse) {
-      final pos = scrollController.position;
-      if (pos.maxScrollExtent - pos.pixels <= 100 && disableAutoScroll.value) {
-        disableAutoScroll.value = false;
-        refreshMsgIfNeeded();
-      }
-    }
-  }
-
-  void refreshMsgIfNeeded() {
-    if (shouldRefresh) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        messages.refresh();
-      });
-    }
-  }
 
   @override
   void onClose() {
@@ -885,192 +496,9 @@ class LiveRoomController extends GetxController {
     return queryLiveUrl();
   }
 
-  void initDm(LiveDmInfoData info) {
-    if (info.hostList.isNullOrEmpty) {
-      return;
-    }
-    _msgStream =
-        LiveMessageStream(
-            streamToken: info.token,
-            roomId: roomId,
-            uid: Accounts.heartbeat.mid,
-            servers: info.hostList
-                .map((host) => 'wss://${host.host}:${host.wssPort}/sub')
-                .toList(),
-          )
-          ..addEventListener(_danmakuListener)
-          ..init();
-  }
 
-  void addDm(dynamic msg, [DanmakuContentItem<DanmakuExtra>? item]) {
-    _trimDm();
 
-    if (plPlayerController.showDanmaku) {
-      if (item != null && plPlayerController.enableShowLiveDanmaku.value) {
-        danmakuController?.addDanmaku(item);
-      }
-      if (autoScroll && !disableAutoScroll.value) {
-        messages.add(msg);
-        scrollToBottom();
-        return;
-      }
-    }
-
-    messages.addOnly(msg);
-  }
-
-  @pragma('vm:notify-debugger-on-exception')
-  void _danmakuListener(dynamic obj) {
-    try {
-      // logger.i(' 原始弹幕消息 ======> ${jsonEncode(obj)}');
-      switch (obj['cmd']) {
-        case 'DANMU_MSG':
-          final info = obj['info'];
-          final first = info[0];
-          final content = first[15];
-          final user = content['user'];
-          // final midHash = first[7];
-          final uid = user['uid'];
-          final msg = info[1];
-          if (isBlocked(msg, uid)) {
-            return;
-          }
-          final Map<String, dynamic> extra = jsonDecode(content['extra']);
-          final name = user['base']['name'];
-          BaseEmote? uemote;
-          if (first[13] case Map<String, dynamic> map) {
-            uemote = BaseEmote.fromJson(map);
-          }
-          final checkInfo = info[9];
-          final liveExtra = LiveDanmaku(
-            id: extra['id_str'],
-            mid: uid,
-            dmType: extra['dm_type'],
-            ts: checkInfo['ts'],
-            ct: checkInfo['ct'],
-          );
-          Owner? reply;
-          final replyMid = extra['reply_mid'];
-          if (replyMid != null && replyMid != 0) {
-            reply = Owner(
-              mid: replyMid,
-              name: extra['reply_uname'],
-            );
-          }
-          addDm(
-            DanmakuMsg(
-              name: name,
-              text: msg,
-              emots: (extra['emots'] as Map<String, dynamic>?)?.map(
-                (k, v) => MapEntry(k, BaseEmote.fromJson(v)),
-              ),
-              uemote: uemote,
-              extra: liveExtra,
-              reply: reply,
-              medalInfo: !GlobalData().showMedal || user['medal'] == null
-                  ? null
-                  : UinfoMedal.fromJson(user['medal']),
-            ),
-            DanmakuContentItem(
-              msg,
-              color: DanmakuOptions.blockColorful
-                  ? Colors.white
-                  : DmUtils.decimalToColor(extra['color']),
-              type: DmUtils.getPosition(extra['mode']),
-              // extra['send_from_me'] is invalid
-              selfSend: isLogin && uid == mid,
-              extra: liveExtra,
-            ),
-          );
-          break;
-        case 'SUPER_CHAT_MESSAGE' when showSuperChat:
-          final item = SuperChatItem.fromJson(obj['data']);
-          superChatMsg.insert(0, item);
-          if (plPlayerController.showDanmaku &&
-              (isFullScreen || plPlayerController.isDesktopPip)) {
-            fsSC.value = item.copyWith(
-              endTime: math.min(
-                item.endTime,
-                DateTime.now().millisecondsSinceEpoch ~/ 1000 + 10,
-              ),
-            );
-          }
-          addDm(item);
-          break;
-        // case 'SUPER_CHAT_MESSAGE_DELETE' when showSuperChat:
-        //   if (obj['roomid'] == roomId) {
-        //     final ids = obj['data']?['ids'] as List?;
-        //     if (ids != null && ids.isNotEmpty) {
-        //       if (superChatType == .valid) {
-        //         superChatMsg.removeWhere((e) => ids.contains(e.id));
-        //       } else {
-        //         bool? refresh;
-        //         for (final id in ids) {
-        //           if (superChatMsg.firstWhereOrNull((e) => e.id == id)
-        //               case final item?) {
-        //             item.deleted = true;
-        //             refresh ??= true;
-        //           }
-        //         }
-        //         if (refresh ?? false) {
-        //           superChatMsg.refresh();
-        //         }
-        //       }
-        //     }
-        //   }
-        case 'WATCHED_CHANGE':
-          watchedShow.value = obj['data']['text_large'];
-          break;
-        case 'ONLINE_RANK_COUNT':
-          onlineCount.value = NumUtils.numFormat(obj['data']['count']);
-          break;
-        case 'ROOM_CHANGE':
-          title.value = obj['data']['title'];
-          break;
-      }
-    } catch (e, s) {
-      if (kDebugMode) {
-        Utils.reportError(e, s);
-      }
-    }
-  }
-
-  final RxInt likeClickTime = 0.obs;
-  Timer? likeClickTimer;
-
-  void cancelLikeTimer() {
-    likeClickTimer?.cancel();
-    likeClickTimer = null;
-  }
-
-  void onLikeTapDown(_) {
-    cancelLikeTimer();
-    likeClickTime.value++;
-  }
-
-  void onLikeTapUp([_]) {
-    likeClickTimer ??= Timer(const Duration(milliseconds: 800), onLike);
-  }
-
-  Future<void> onLike() async {
-    if (!isLogin) {
-      likeClickTime.value = 0;
-      return;
-    }
-    final res = await LiveHttp.liveLikeReport(
-      clickTime: likeClickTime.value,
-      roomId: roomId,
-      uid: mid,
-      anchorId: roomInfoH5.value?.roomInfo?.uid,
-    );
-    if (res.isSuccess) {
-      SmartDialog.showToast(uiTx('点赞成功'));
-    } else {
-      res.toast();
-    }
-    likeClickTime.value = 0;
-  }
-
+  @override
   void toastNotLogin() {
     SmartDialog.showToast(uiTx('账号未登录'));
   }
@@ -1123,208 +551,4 @@ class LiveRoomController extends GetxController {
     onSendDanmaku();
   }
 
-  void reportSC(SuperChatItem item) {
-    if (!isLogin) {
-      toastNotLogin();
-      return;
-    }
-    autoWrapReportDialog(
-      Get.context!,
-      ban: false,
-      ReportOptions.liveDanmakuReport,
-      withContent: ReportOptions.liveDanmakuReportCheck,
-      contentRequired: ReportOptions.liveDanmakuReportCheck,
-      (reasonType, reasonDesc, banUid) {
-        return LiveHttp.superChatReport(
-          id: item.id,
-          roomId: roomId,
-          uid: item.uid,
-          msg: item.message,
-          reason: ReportOptions.liveDanmakuReport['']![reasonType]!,
-          ts: item.ts,
-          token: item.token,
-        );
-      },
-    );
-  }
-
-  // ---------- 粉丝勋章 ----------
-
-  Future<void> loadFansMedal({bool force = false}) async {
-    if (!isLogin) return;
-    if (_fansMedalReq != null) return _fansMedalReq;
-    if (!force && !_fansMedalStale && fansMedalData.value != null) return;
-    final targetId = medalTargetId;
-    if (targetId == null) return;
-
-    fansMedalLoading.value = true;
-    _fansMedalReq = _doLoadFansMedal(targetId: targetId);
-    try {
-      await _fansMedalReq;
-    } finally {
-      fansMedalLoading.value = false;
-      _fansMedalReq = null;
-    }
-  }
-
-  Future<void> _doLoadFansMedal({
-    required Object targetId,
-  }) async {
-    final res = await LiveHttp.fansMedalPanel(
-      roomId: roomId,
-      targetId: targetId,
-      page: 1,
-    );
-    if (res case Success(:final response)) {
-      fansMedalData.value = response;
-      _fansMedalPage = 1;
-      _updateFansMedalHasMore(response);
-      _updateWearingMedal(response);
-      _fansMedalStale = false;
-      fansMedalError.value = null;
-    } else {
-      fansMedalError.value = res.toString();
-    }
-  }
-
-  void _updateFansMedalHasMore(FansMedalPanelData data) {
-    final itemCount = (data.specialList?.length ?? 0) + (data.list?.length ?? 0);
-    fansMedalHasMore.value = _calcHasMore(data, itemCount);
-  }
-
-  bool _calcHasMore(FansMedalPanelData data, int loadedCount) {
-    if (data.hasMore != true) return false;
-    if (data.nextPage == null || data.nextPage! <= _fansMedalPage) return false;
-    if (data.totalNumber != null && loadedCount >= data.totalNumber!) {
-      return false;
-    }
-    if (_fansMedalPage >= 20) return false;
-    return true;
-  }
-
-  void _updateWearingMedal(FansMedalPanelData data) {
-    final allItems = [
-      ...?data.specialList,
-      ...?data.list,
-    ];
-    final wearing = allItems.cast<FansMedalItem?>().firstWhere(
-      (item) => item?.medal?.wearingStatus == 1,
-      orElse: () => null,
-    );
-    wearingMedal.value = wearing?.uinfoMedal;
-  }
-
-  void markFansMedalStale() {
-    _fansMedalStale = true;
-  }
-
-  Future<void> loadMoreFansMedal() async {
-    if (_fansMedalLoadingMore) return;
-    if (_fansMedalReq != null) return;
-    if (!fansMedalHasMore.value) return;
-    final targetId = medalTargetId;
-    if (targetId == null) return;
-
-    _fansMedalLoadingMore = true;
-    final nextPage = _fansMedalPage + 1;
-    final res = await LiveHttp.fansMedalPanel(
-      roomId: roomId,
-      targetId: targetId,
-      page: nextPage,
-    );
-    if (res case Success(:final response)) {
-      final data = fansMedalData.value;
-      if (data != null) {
-        final existingIds = <int>{};
-        for (final item in [...?data.specialList, ...?data.list]) {
-          if (item.medal?.medalId case final id?) existingIds.add(id);
-        }
-        final newList = <FansMedalItem>[];
-        for (final item in (response.list ?? <FansMedalItem>[])) {
-          if (item.medal?.medalId case final id?) {
-            if (!existingIds.contains(id)) {
-              newList.add(item);
-              existingIds.add(id);
-            }
-          } else {
-            newList.add(item);
-          }
-        }
-        if (newList.isEmpty) {
-          fansMedalHasMore.value = false;
-          _fansMedalLoadingMore = false;
-          return;
-        }
-        data
-          ..list = [...?data.list, ...newList]
-          ..hasMore = response.hasMore
-          ..nextPage = response.nextPage;
-        _fansMedalPage = nextPage;
-        final itemCount = (data.specialList?.length ?? 0) +
-            (data.list?.length ?? 0);
-        fansMedalHasMore.value = _calcHasMore(data, itemCount);
-        fansMedalData.refresh();
-      }
-    } else {
-      res.toast();
-    }
-    _fansMedalLoadingMore = false;
-  }
-
-  Future<bool> wearFansMedal(FansMedalItem item) async {
-    final targetId = medalTargetId;
-    if (targetId == null) return false;
-    final medalId = item.medal?.medalId;
-    if (medalId == null) return false;
-
-    final res = await LiveHttp.fansMedalWear(
-      medalId: medalId,
-      targetId: targetId,
-    );
-    if (res.isSuccess) {
-      _applyWearStatus(medalId, 1);
-      wearingMedal.value = item.uinfoMedal;
-      _fansMedalStale = true;
-      SmartDialog.showToast(uiTxP('已佩戴 {0}', [item.medal?.medalName ?? '']));
-      return true;
-    } else {
-      res.toast();
-      return false;
-    }
-  }
-
-  Future<bool> takeOffFansMedal(FansMedalItem item) async {
-    final targetId = medalTargetId;
-    if (targetId == null) return false;
-    final medalId = item.medal?.medalId;
-    if (medalId == null) return false;
-
-    final res = await LiveHttp.fansMedalTakeOff(
-      medalId: medalId,
-      targetId: targetId,
-    );
-    if (res.isSuccess) {
-      _applyWearStatus(medalId, 0);
-      wearingMedal.value = null;
-      _fansMedalStale = true;
-      SmartDialog.showToast(uiTx('已取消佩戴'));
-      return true;
-    } else {
-      res.toast();
-      return false;
-    }
-  }
-
-  void _applyWearStatus(int medalId, int status) {
-    final data = fansMedalData.value;
-    if (data == null) return;
-    for (final item in [...?data.specialList, ...?data.list]) {
-      if (item.medal?.medalId == medalId) {
-        item.medal?.wearingStatus = status;
-      } else {
-        item.medal?.wearingStatus = 0;
-      }
-    }
-    fansMedalData.refresh();
-  }
 }

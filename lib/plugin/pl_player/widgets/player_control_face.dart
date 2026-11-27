@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 import 'package:PiliPlus/pages/video/introduction/ugc/widgets/action_item.dart';
 import 'package:PiliPlus/plugin/pl_player/models/fullscreen_layout.dart';
@@ -85,18 +86,18 @@ class PlayerControlFace extends StatelessWidget {
     .share => _action(FontAwesomeIcons.shareFromSquare),
     .viewPoints => _bottom(CustomIcons.view_headline_rotate_90),
     .dmChart => _bottom(Icons.show_chart),
-    .superResolution => _text(superResolution, bottom: true),
+    .superResolution => _text(uiTx(superResolution), bottom: true),
     .episode => _bottom(Icons.list),
-    .fit => _text(fit, bottom: true),
+    .fit => _text(uiTx(fit), bottom: true),
     .aiTranslate => _bottom(Icons.translate, 18),
     .subtitle => _bottom(Icons.closed_caption_off_outlined),
-    .speed => _text(speed, bottom: true),
-    .qa => _text(quality, bottom: true),
+    .speed => _text(uiTx(speed), bottom: true),
+    .qa => _text(uiTx(quality), bottom: true),
     .lock => _side(FontAwesomeIcons.lockOpen, 15),
     .screenshot => _side(Icons.photo_camera, 20),
     .clock => _text('13:24'),
     .battery => _text('100%'),
-    .online => _text('16人正在看', size: 11),
-    .dmCount => _text('12条弹幕', size: 11),
+    .online => _text(uiTxP('{0}人正在看', [16]), size: 11),
+    .dmCount => _text(uiTxP('{0}条弹幕', [12]), size: 11),
   };
 }

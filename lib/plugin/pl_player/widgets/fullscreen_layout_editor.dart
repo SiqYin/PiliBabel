@@ -1,3 +1,4 @@
+import 'package:PiliPlus/services/ui_translate/ui_translate_service.dart';
 import 'package:PiliPlus/common/widgets/custom_icon.dart';
 
 import 'package:PiliPlus/common/widgets/progress_bar/audio_video_progress_bar.dart';
@@ -79,7 +80,7 @@ class _FullscreenLayoutEditorState extends State<FullscreenLayoutEditor> {
       if (mounted) {
         setState(() {
           _saving = false;
-          _error = '保存失败，请重试';
+          _error = uiTx('保存失败，请重试');
         });
       }
     }
@@ -101,11 +102,14 @@ class _FullscreenLayoutEditorState extends State<FullscreenLayoutEditor> {
     final selected = _draft.shows(item);
     return Semantics(
       key: feedback ? null : ValueKey('layout-${item.name}'),
-      label: '显示${item.label}',
+      label: uiTxP('显示{0}', [uiTx(item.label)]),
       toggled: selected,
       button: true,
       child: Tooltip(
-        message: '${selected ? '隐藏' : '显示'}${item.label}',
+        message: uiTxP('{0}{1}', [
+          uiTx(selected ? '隐藏' : '显示'),
+          uiTx(item.label),
+        ]),
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: _saving || feedback ? null : () => _toggle(item),
@@ -274,7 +278,7 @@ class _FullscreenLayoutEditorState extends State<FullscreenLayoutEditor> {
   );
 
   Widget _fixed(Widget child, String label, {double width = 42}) => Tooltip(
-    message: '$label（固定）',
+    message: uiTxP('{0}（固定）', [uiTx(label)]),
     child: SizedBox(width: width, height: 34, child: child),
   );
 
@@ -287,27 +291,27 @@ class _FullscreenLayoutEditorState extends State<FullscreenLayoutEditor> {
         _standalone(PlayerLayoutControl.clock),
       ],
       for (final item in header.take(3).where(_supported)) _slot(item, PlayerLayoutRegion.header),
-      _fixed(const Icon(Icons.comment_outlined, size: 19, color: Colors.white), '发弹幕'),
-      _fixed(const Icon(CustomIcons.dm_on, size: 20, color: Colors.white), '弹幕开关'),
-      _fixed(const Icon(CustomIcons.dm_settings, size: 20, color: Colors.white), '弹幕设置'),
+      _fixed(const Icon(Icons.comment_outlined, size: 19, color: Colors.white), uiTx('发弹幕')),
+      _fixed(const Icon(CustomIcons.dm_on, size: 20, color: Colors.white), uiTx('弹幕开关')),
+      _fixed(const Icon(CustomIcons.dm_settings, size: 20, color: Colors.white), uiTx('弹幕设置')),
       for (final item in header.skip(3).where(_supported)) _slot(item, PlayerLayoutRegion.header),
-      _fixed(const Icon(Icons.more_vert_outlined, size: 19, color: Colors.white), '更多'),
+      _fixed(const Icon(Icons.more_vert_outlined, size: 19, color: Colors.white), uiTx('更多')),
     ];
     return Row(
       children: [
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _fixed(const Icon(FontAwesomeIcons.arrowLeft, size: 15, color: Colors.white), '返回'),
+            _fixed(const Icon(FontAwesomeIcons.arrowLeft, size: 15, color: Colors.white), uiTx('返回')),
             if (!_isPortrait)
-              _fixed(const Icon(FontAwesomeIcons.house, size: 15, color: Colors.white), '返回主页'),
+              _fixed(const Icon(FontAwesomeIcons.house, size: 15, color: Colors.white), uiTx('返回主页')),
           ],
         ),
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(right: 10),
             child: Text(
-              widget.title,
+              uiTx(widget.title),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(color: Colors.white, fontSize: 16),
@@ -336,14 +340,14 @@ class _FullscreenLayoutEditorState extends State<FullscreenLayoutEditor> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
-            '点击勾选显示或隐藏，长按拖动调整同区顺序\n锁定与截图可拖至左侧或右侧',
+          Text(
+            uiTx('点击勾选显示或隐藏，长按拖动调整同区顺序\n锁定与截图可拖至左侧或右侧'),
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.6),
           ),
           const SizedBox(height: 8),
-          const Text(
-            '因视频属性不同，部分功能可能不会展示在屏幕上',
+          Text(
+            uiTx('因视频属性不同，部分功能可能不会展示在屏幕上'),
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white54, fontSize: 12),
           ),
@@ -363,17 +367,17 @@ class _FullscreenLayoutEditorState extends State<FullscreenLayoutEditor> {
                   _draft = FullscreenLayout.defaults(isMobile: widget.isMobile);
                   _error = null;
                 }),
-                child: const Text('恢复默认'),
+                child: Text(uiTx('恢复默认')),
               ),
               OutlinedButton(
                 style: OutlinedButton.styleFrom(foregroundColor: Colors.white),
                 onPressed: _saving ? null : () => Navigator.of(context).pop(),
-                child: const Text('取消'),
+                child: Text(uiTx('取消')),
               ),
               FilledButton(
                 style: FilledButton.styleFrom(backgroundColor: _accent, foregroundColor: Colors.black),
                 onPressed: _saving ? null : _save,
-                child: Text(_saving ? '保存中…' : '完成编辑'),
+                child: Text(uiTx(_saving ? '保存中…' : '完成编辑')),
               ),
             ],
           ),
@@ -432,10 +436,10 @@ class _FullscreenLayoutEditorState extends State<FullscreenLayoutEditor> {
                 progress: AlwaysStoppedAnimation(0),
                 size: 20,
                 color: Colors.white,
-              )), '播放'),
+              )), uiTx('播放')),
               _time(),
-              _fixed(const Icon(Icons.skip_previous, size: 22, color: Colors.white), '上一集', width: _isPortrait ? 35 : 42),
-              _fixed(const Icon(Icons.skip_next, size: 22, color: Colors.white), '下一集', width: _isPortrait ? 35 : 42),
+              _fixed(const Icon(Icons.skip_previous, size: 22, color: Colors.white), uiTx('上一集'), width: _isPortrait ? 35 : 42),
+              _fixed(const Icon(Icons.skip_next, size: 22, color: Colors.white), uiTx('下一集'), width: _isPortrait ? 35 : 42),
             ],
           ),
           const Spacer(),
@@ -443,7 +447,7 @@ class _FullscreenLayoutEditorState extends State<FullscreenLayoutEditor> {
             mainAxisSize: MainAxisSize.min,
             children: [
               for (final item in controls) _slot(item, PlayerLayoutRegion.bottom),
-              _fixed(const Icon(Icons.fullscreen_exit, size: 24, color: Colors.white), '退出全屏', width: _isPortrait ? 35 : 42),
+              _fixed(const Icon(Icons.fullscreen_exit, size: 24, color: Colors.white), uiTx('退出全屏'), width: _isPortrait ? 35 : 42),
             ],
           ),
         ],
