@@ -719,7 +719,12 @@ class HeaderControlState extends State<HeaderControl>
                       final result = await showDialog<CdnSelectResult>(
                         context: context,
                         builder: (context) => CdnSelectDialog(
-                          sample: videoInfo.dash?.video?.firstOrNull,
+                          // APP 同源直链的签名绑定主机且不带 Referer，无法改写主机做
+                          // 测速（改写必 403）。此时不传样本，让测速自行获取 Web 样本，
+                          // 否则整张 CDN 列表都会显示「此视频可能无法替换为该CDN」。
+                          sample: videoInfo.isAppSource
+                              ? null
+                              : videoInfo.dash?.video?.firstOrNull,
                         ),
                       );
                       if (result != null) {

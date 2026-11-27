@@ -112,6 +112,60 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
     );
   }
 
+  // 选择某个倍速设为默认（普通/长按）
+  void _pickSpeedAsDefault({required bool longPress}) {
+    final theme = Theme.of(context);
+    final current = longPress ? longPressSpeedDefault : playSpeedDefault;
+    showModalBottomSheet(
+      context: context,
+      useSafeArea: true,
+      clipBehavior: Clip.hardEdge,
+      constraints: BoxConstraints(
+        maxWidth: min(640, context.mediaQueryShortestSide),
+      ),
+      builder: (sheetContext) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Text(
+                longPress ? uiTx('选择默认长按倍速') : uiTx('选择默认倍速'),
+                style: theme.textTheme.titleMedium,
+              ),
+            ),
+            const SizedBox(height: 6),
+            ...speedList.map(
+              (speed) => ListTile(
+                title: Text(speed.toString()),
+                trailing: speed == current
+                    ? Icon(Icons.check, color: theme.colorScheme.primary)
+                    : null,
+                onTap: () {
+                  Navigator.pop(sheetContext);
+                  setState(() {
+                    if (longPress) {
+                      longPressSpeedDefault = speed;
+                      video.put(
+                        VideoBoxKey.longPressSpeedDefault,
+                        longPressSpeedDefault,
+                      );
+                    } else {
+                      playSpeedDefault = speed;
+                      video.put(VideoBoxKey.playSpeedDefault, playSpeedDefault);
+                    }
+                  });
+                },
+              ),
+            ),
+            SizedBox(height: 25 + MediaQuery.viewPaddingOf(sheetContext).bottom),
+          ],
+        );
+      },
+    );
+  }
+
   // 设定倍速弹窗
   void showBottomSheet(ThemeData theme, int index) {
     showModalBottomSheet(
@@ -133,7 +187,7 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
                     ? false
                     : true,
                 onTap: () {
-                  Get.back();
+                  Navigator.pop(context);
                   menuAction(index, item.id);
                 },
                 minLeadingWidth: 0,
@@ -217,6 +271,8 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
             ListTile(
               title: Text(uiTx('默认倍速')),
               subtitle: Text(playSpeedDefault.toString()),
+              trailing: const Icon(Icons.chevron_right, size: 20),
+              onTap: () => _pickSpeedAsDefault(longPress: false),
             ),
             SetSwitchItem(
               title: uiTx('动态长按倍速'),
@@ -230,6 +286,8 @@ class _PlaySpeedPageState extends State<PlaySpeedPage> {
               ListTile(
                 title: Text(uiTx('默认长按倍速')),
                 subtitle: Text(longPressSpeedDefault.toString()),
+                trailing: const Icon(Icons.chevron_right, size: 20),
+                onTap: () => _pickSpeedAsDefault(longPress: true),
               ),
             Padding(
               padding: const EdgeInsets.only(

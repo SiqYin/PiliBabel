@@ -339,6 +339,13 @@ class _CdnSelectDialogState extends State<CdnSelectDialog> {
       }
     } catch (e) {
       if (kDebugMode) debugPrint('CDN speed test failed: $e');
+      // 取样本失败时不要把所有行永久停在「测速中」，给出明确原因。
+      if (mounted) {
+        final msg = uiTx('测速失败：无法获取样片');
+        for (final notifier in _speedResults) {
+          notifier.value ??= msg;
+        }
+      }
     }
   }
 

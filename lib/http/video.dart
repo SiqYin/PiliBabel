@@ -40,6 +40,7 @@ import 'package:PiliPlus/utils/recommend_filter.dart';
 import 'package:PiliPlus/utils/request_utils.dart';
 import 'package:PiliPlus/utils/storage.dart';
 import 'package:PiliPlus/utils/feed_cold_start.dart';
+import 'package:PiliPlus/models/common/video/cdn_type.dart';
 import 'package:PiliPlus/utils/storage_pref.dart';
 import 'package:PiliPlus/utils/subtitle_utils.dart';
 import 'package:PiliPlus/utils/utils.dart';
@@ -288,9 +289,17 @@ abstract final class VideoHttp {
     // 「已切 English」、耳朵里还是中文。声轨的换流必须由 Web 的 `cur_language`
     // 完成，而两边直链的令牌指纹相反（APP 不带 Referer / Web 必须带），
     // 也不能「视频用 APP、音频用 Web」地混。
+    // 用户显式选择了自定义 CDN 主机或非默认 CDN 服务时，必须走 Web 直链：
+    // APP 同源直链签名绑定主机、不能改写主机（改写必 403），只有 Web 直链才能
+    // 按所选 CDN 改写主机。否则「CDN 设置」对点播不生效 —— 用户会感觉「没选
+    // CDN、线路还是慢」（issue #10）。默认用户（未改动 CDN）不受影响。
+    final explicitCdn =
+        Pref.customCDNUrl != null ||
+        Pref.defaultCDNService != CDNService.backupUrl;
     final canUseAppSource =
         allowAppSource &&
         Pref.useAppPlayUrl &&
+        !explicitCdn &&
         videoType == .ugc &&
         (avid != null || bvid != null) &&
         !(tryLook && !Accounts.main.isLogin) &&

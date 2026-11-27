@@ -1,14 +1,14 @@
+### PiliBabel v3.10.6
+
+**Playback-speed settings and CDN fixes.**
+
+- **Playback-speed settings**: the "default speed" and "default long-press speed" rows are now tappable and open a speed picker, so the default can be changed repeatedly (previously tapping did nothing); the bottom-sheet menu now closes via the sheet's own `Navigator`.
+- **CDN**: fixed the CDN list showing every speed test as failed when playing from the app-source stream (an app-signed direct link cannot be host-rewritten); it now fetches its own web sample, with a clear message if that fails. When the user explicitly selects a custom CDN or a non-default CDN service, on-demand playback now uses web direct links so the selected CDN actually applies (fixing stutter); default users are unaffected.
+- **Verification**: `flutter analyze` reports 0 errors, the full `flutter test` suite passes 192/192, and `verify_readmes.py` reports 44/44 READMEs at 3.10.6.
+
 ### PiliBabel v3.10.5
 
 **Fullscreen layout danmaku-count control.**
 
 - **Danmaku count**: the fullscreen player layout editor now offers a "danmaku count" control; when enabled, the video header shows the current part's danmaku total next to the watcher count. It reuses `DanmakuDensityTrend.fetchAll`, cached per part and refreshed (with cancellation) when entering or switching parts.
 - **Verification**: `flutter analyze` reports 0 errors, the full `flutter test` suite passes 192/192, and `verify_readmes.py` reports 44/44 READMEs at 3.10.5.
-
-### PiliBabel v3.10.4
-
-**Live-controller mixin refactor and AI-translation coverage for new UI text.**
-
-- **Live controller refactor**: `live_room/controller.dart` is split into eleven `controller_mixin` modules (`data`/`block`/`time`/`size`/`like`/`sc`/`dm`/`dm_stream`/`dm_trim`/`trace`/`medal`); the file shrinks from ~1330 to 554 lines with no behavior change.
-- **UI translation**: newly added text across 9 pages/widgets (fans medal, threaded reply indent, fullscreen layout editor, player control face, dynamics rich-node panel, etc.) now goes through `uiTx`/`uiTxP`.
-- **Verification**: `flutter analyze` reports 0 errors, the full `flutter test` suite passes 192/192, and `verify_readmes.py` reports 44/44 READMEs at 3.10.4.
