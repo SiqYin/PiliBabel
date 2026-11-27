@@ -6,9 +6,4 @@
 - **CDN**: fixed the CDN list showing every speed test as failed when playing from the app-source stream (an app-signed direct link cannot be host-rewritten); it now fetches its own web sample, with a clear message if that fails. When the user explicitly selects a custom CDN or a non-default CDN service, on-demand playback now uses web direct links so the selected CDN actually applies (fixing stutter); default users are unaffected.
 - **Verification**: `flutter analyze` reports 0 errors, the full `flutter test` suite passes 192/192, and `verify_readmes.py` reports 44/44 READMEs at 3.10.6.
 
-### PiliBabel v3.10.5
-
-**Fullscreen layout danmaku-count control.**
-
-- **Danmaku count**: the fullscreen player layout editor now offers a "danmaku count" control; when enabled, the video header shows the current part's danmaku total next to the watcher count. It reuses `DanmakuDensityTrend.fetchAll`, cached per part and refreshed (with cancellation) when entering or switching parts.
-- **Verification**: `flutter analyze` reports 0 errors, the full `flutter test` suite passes 192/192, and `verify_readmes.py` reports 44/44 READMEs at 3.10.5.
+**Thanks**: thanks to @masktao for reporting these issues and helping make PiliBabel better.
