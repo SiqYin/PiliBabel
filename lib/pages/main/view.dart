@@ -458,9 +458,18 @@ class _MainAppState extends PopScopeState<MainApp>
     return (label + 40).clamp(72.0, 220.0);
   }
 
+  /// 隐藏系统标题栏后，左侧导航栏底部提供一个「关闭窗口」按钮（issue #13）。
+  Widget? _sideBarCloseButton() {
+    if (!PlatformUtils.isDesktop || Pref.showWindowTitleBar) return null;
+    return IconButton(
+      tooltip: uiTx('关闭窗口'),
+      icon: const Icon(Icons.power_settings_new),
+      onPressed: windowManager.close,
+    );
+  }
+
   Widget _sideBar() {
-    if (_mainController.navigationBars.length > 1) {
-      if (context.isTablet && _mainController.optTabletNav) {
+    if (_mainController.navigationBars.length > 1) {      if (context.isTablet && _mainController.optTabletNav) {
         // 宽度必须随翻译到货重算（3.8.0）：_drawerWidth 依赖 txTight 的译文，
         // 首帧只有中文原文、量出来偏窄；译文落到缓存 bump revision 后，
         // 外层 Obx 重建才会把抽屉/指示框撑到译文的实际宽度。
@@ -519,6 +528,7 @@ class _MainAppState extends PopScopeState<MainApp>
           backgroundColor: Colors.transparent,
           onDestinationSelected: _mainController.setIndex,
           selectedIndex: _mainController.selectedIndex.value,
+          trailing: _sideBarCloseButton(),
           destinations: _mainController.navigationBars
               .map(
                 (e) => NavigationRailDestination(
@@ -538,7 +548,16 @@ class _MainAppState extends PopScopeState<MainApp>
     return Container(
       width: 80,
       margin: .only(top: 12 + _padding.top, left: _padding.left),
-      child: userAndSearchVertical(),
+      child: Column(
+        children: [
+          Expanded(child: userAndSearchVertical()),
+          if (_sideBarCloseButton() case final close?)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: close,
+            ),
+        ],
+      ),
     );
   }
 

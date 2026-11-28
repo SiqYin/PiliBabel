@@ -1,9 +1,9 @@
-### PiliBabel v3.10.8
+### PiliBabel v3.10.9
 
-**Related-video sidebar and "full title" fixes.**
+**Close-window button for the title-bar-hidden desktop layout.**
 
-- **Related videos**: the sidebar is back to a single column (no longer split into two columns in windowed playback).
-- **"Show full title"**: fixed the option being ignored on the home feed; the default is now compact two lines (matching the web/plus), and enabling it shows full titles (four lines). With AI translation on, long translated titles still display in full automatically.
-- **Verification**: `flutter analyze` reports 0 errors, the full `flutter test` suite passes 192/192, and `verify_readmes.py` reports 44/44 READMEs at 3.10.8.
+- When the system title bar is hidden on desktop, a close-window button now appears at the bottom of the left navigation bar; it is hidden when the title bar is shown.
+- Note: the 3.10.8 portable package was re-verified — its launcher exe and `app.so` both report 3.10.8.6557, so the release itself was correct (issue #14 was caused by an old file / overlay-extracting over an old folder on the user side).
+- **Verification**: `flutter analyze` reports 0 errors, the full `flutter test` suite passes 192/192, and `verify_readmes.py` reports 44/44 READMEs at 3.10.9.
 
-**Thanks**: thanks to @masktao for reporting this issue.
+**Thanks**: thanks to @masktao for the suggestion.
